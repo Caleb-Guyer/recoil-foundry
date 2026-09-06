@@ -24,6 +24,8 @@ import {
   attackAngles,
 } from './enemies.ts';
 import type { EnemyState, Attack } from './enemies.ts';
+import { PropSystem, traceProp } from './props.ts';
+import type { Prop } from './props.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
 export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
@@ -85,6 +87,10 @@ export class Game {
   player!: Matter.Body;
   level!: Level;
   terrain: Matter.Body[] = [];
+  props = new PropSystem(this);
+  get solidBodies() {
+    return [...this.terrain, ...this.props.bodies];
+  }
   enemies: Enemy[] = [];
   shots: Shot[] = [];
   particles: Particle[] = [];
@@ -216,6 +222,7 @@ export class Game {
     });
     Composite.add(this.engine.world, this.player);
     for (const spawn of this.level.spawns) this.spawnEnemy(spawn.kind, spawn.x, spawn.y);
+    this.props.reset(this.level);
   }
   spawnEnemy(kind: EnemyKind, x: number, y: number) {
     if (this.enemies.length >= 14) return;
@@ -277,7 +284,7 @@ export class Game {
     this.grounded =
       vy >= -1 &&
       Query.ray(
-        this.terrain,
+        this.solidBodies,
         { x: this.player.position.x, y: this.player.bounds.max.y - 2 },
         { x: this.player.position.x, y: this.player.bounds.max.y + 5 },
         18,
@@ -351,7 +358,10 @@ export class Game {
     }
     // Capture descent before Matter resolves the landing collision and zeros velocity.
     if (!this.grounded) this.landingSpeed = this.player.velocity.y;
+    this.props.beforeStep();
     Engine.update(this.engine, 1000 / 60);
+    this.props.afterStep(dt);
+    if (this.mode !== 'playing') return;
     this.containPlayer();
     this.updateShots(dt);
     if (this.mode !== 'playing') return;
@@ -495,6 +505,16 @@ export class Game {
           y: e.body.velocity.y + rear.y * 3.5,
         });
     }
+    const targets = this.props.items.filter((prop) => {
+      const target = prop.body.position,
+        d = direction(p, target);
+      return (
+        distance(p, target) <= 130 &&
+        rear.x * d.x + rear.y * d.y >= Math.SQRT1_2 &&
+        distance(this.lineEnd(p, target, 0, prop), target) < 0.1
+      );
+    });
+    for (const prop of targets) this.props.hit(prop, damage, rear);
   }
   addShot(
     data: Omit<Shot, 'id' | 'prev' | 'hits' | 'banks' | 'bankGrowth' | 'charged'> &
@@ -530,14 +550,14 @@ export class Game {
       });
       const grounded =
         Query.ray(
-          this.terrain,
+          this.solidBodies,
           { x: p.x, y: e.body.bounds.max.y - 2 },
           { x: p.x, y: e.body.bounds.max.y + 5 },
           20,
         ).length > 0;
       const blocked =
         Query.ray(
-          this.terrain,
+          this.solidBodies,
           { x: p.x, y: p.y + 8 },
           { x: p.x + Math.sign(d.x) * 45, y: p.y + 8 },
           12,
@@ -586,14 +606,14 @@ export class Game {
     return (
       e.body.velocity.y >= -1 &&
       Query.ray(
-        this.terrain,
+        this.solidBodies,
         { x: p.x, y: e.body.bounds.max.y - 2 },
         { x: p.x, y: e.body.bounds.max.y + 5 },
         20,
       ).length > 0
     );
   }
-  lineEnd(start: Vec, end: Vec, padding = 0): Vec {
+  lineEnd(start: Vec, end: Vec, padding = 0, ignore?: Prop): Vec {
     let t = 1;
     for (const b of this.terrain) {
       const hit = segmentBox(
@@ -602,6 +622,11 @@ export class Game {
         { x: b.bounds.min.x - padding, y: b.bounds.min.y - padding },
         { x: b.bounds.max.x + padding, y: b.bounds.max.y + padding },
       );
+      if (hit) t = Math.min(t, hit.t);
+    }
+    for (const prop of this.props.items) {
+      if (prop === ignore) continue;
+      const hit = traceProp(prop, start, end, padding);
       if (hit) t = Math.min(t, hit.t);
     }
     return { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t };
@@ -649,7 +674,7 @@ export class Game {
         } else if (
           Math.abs(v.x) < 0.7 ||
           this.player.position.y < p.y - 55 ||
-          Query.ray(this.terrain, p, { x: p.x + sign * 45, y: p.y }, 12).length
+          Query.ray(this.solidBodies, p, { x: p.x + sign * 45, y: p.y }, 12).length
         ) {
           Body.setVelocity(e.body, { x: sign * 4.5, y: -12.3 });
           e.timer = 0.7;
@@ -685,7 +710,7 @@ export class Game {
       )
         continue;
       if (
-        this.terrain.some(
+        this.solidBodies.some(
           (other) =>
             other !== b &&
             target.x + 15 > other.bounds.min.x &&
@@ -811,6 +836,14 @@ export class Game {
     const end = this.lineEnd(e.body.position, muzzle);
     if (distance(end, muzzle) > 0.01) {
       this.burst(end, 3, '#ef7264', 1.5);
+      const prop = this.props.items.find((p) => {
+        const hit = traceProp(p, e.body.position, muzzle);
+        return (
+          hit &&
+          Math.abs(distance(e.body.position, end) - distance(e.body.position, muzzle) * hit.t) < 0.1
+        );
+      });
+      if (prop) this.props.hit(prop, damage, d);
       return;
     }
     this.addShot({
@@ -833,7 +866,13 @@ export class Game {
       let remaining = dt * 60;
       for (let attempt = 0; attempt < 4 && remaining > 0.001 && s.life > 0; attempt++) {
         const end = { x: s.pos.x + s.vel.x * remaining, y: s.pos.y + s.vel.y * remaining };
-        let nearest: { t: number; normal: Vec; enemy?: Enemy; player?: boolean } | null = null;
+        let nearest: {
+          t: number;
+          normal: Vec;
+          enemy?: Enemy;
+          player?: boolean;
+          prop?: Prop;
+        } | null = null;
         const targets: [Matter.Body, Enemy?, boolean?][] = this.terrain.map((b) => [b]);
         if (s.friendly) {
           for (const e of this.enemies)
@@ -847,6 +886,10 @@ export class Game {
             { x: body.bounds.max.x + s.radius, y: body.bounds.max.y + s.radius },
           );
           if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, enemy, player };
+        }
+        for (const prop of this.props.items) {
+          const h = traceProp(prop, s.pos, end, s.radius);
+          if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, prop };
         }
         if (!nearest) {
           s.pos = end;
@@ -879,6 +922,7 @@ export class Game {
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
+          if (nearest.prop) this.props.hit(nearest.prop, s.damage, s.vel);
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);
           this.splitShot(s);
           if (s.bounces > 0) {

@@ -93,6 +93,18 @@ export class Sound {
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
     } else if (kind === 'loaded') {
       this.tone(320, 620, 0.09, 0.035, 'sine');
+    } else if (kind === 'prop') {
+      this.tone(310, 100, 0.06, 0.06);
+      this.crack(0.035, 0.06, 1600);
+    } else if (kind === 'arm') {
+      this.crack(0.14, 0.065, 2800);
+      this.tone(420, 710, 0.11, 0.035, 'sine');
+    } else if (kind === 'break') {
+      this.crack(0.16, 0.13, 1100);
+      this.tone(140, 45, 0.13, 0.09);
+    } else if (kind === 'explode') {
+      this.tone(95, 24, 0.3, 0.27);
+      this.crack(0.25, 0.22, 450);
     } else if (kind === 'bank') {
       this.tone(980, 1550, 0.035, 0.025, 'sine');
     } else if (kind === 'hit') {

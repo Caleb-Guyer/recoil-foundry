@@ -18,6 +18,7 @@ function tick(g: Game, n = 1, p: Partial<Input> = {}) {
   for (let i = 0; i < n; i++) g.tick(1 / 60, input(p));
 }
 function clean(g: Game, platforms = false) {
+  for (const prop of [...g.props.items]) g.props.remove(prop);
   for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
   g.enemies = [];
   if (platforms) {

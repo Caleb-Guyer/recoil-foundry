@@ -114,6 +114,7 @@ test('every authored route traverses both ways with ordinary jumps and no upgrad
     for (const reverse of [false, true]) {
       const g = new Game();
       g.start('route-check');
+      for (const prop of [...g.props.items]) g.props.remove(prop);
       for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
       g.enemies = [];
       for (const b of g.terrain.slice(4)) Composite.remove(g.engine.world, b);
@@ -127,6 +128,8 @@ test('every authored route traverses both ways with ordinary jumps and no upgrad
         g.terrain.push(b);
         Composite.add(g.engine.world, b);
       }
+      g.level = { ...source, mirrored: false, boss: BOSS_LAYOUTS.includes(source) };
+      g.props.reset(g.level);
       Body.setPosition(g.player, { x: reverse ? 1860 : 140, y: 680 });
       const path = (reverse ? [...source.route].reverse() : [...source.route]).concat([
         { x: reverse ? 100 : 1900, y: 720 },
@@ -147,7 +150,7 @@ test('every authored route traverses both ways with ordinary jumps and no upgrad
         previousX = p.x;
         const move = dx > 12 ? 1 : dx < -12 ? -1 : 0;
         const blocked =
-          move && Query.ray(g.terrain, p, { x: p.x + move * 70, y: p.y }, 24).length > 0;
+          move && Query.ray(g.solidBodies, p, { x: p.x + move * 70, y: p.y }, 24).length > 0;
         g.tick(1 / 60, {
           left: move < 0,
           right: move > 0,

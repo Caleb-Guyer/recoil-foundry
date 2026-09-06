@@ -50,6 +50,16 @@ Climb stacks, fight from ledges, take lower routes, and use solid cover to break
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
 
+## Physics props
+
+Rooms contain up to three props, placed away from enemy entrances and the exit. Tall breakable panels stay off the main traversal route. Some furnace rooms contain a pair of canisters for a chain reaction.
+
+- **Loose crates** can be pushed, stood on, or launched with gunfire. A fast crate impact damages enemies; ordinary pushing is harmless. Repeated shots eventually break the crate.
+- **Fuel canisters** launch and light up when shot. A hard impact detonates them, damaging nearby enemies and triggering nearby canisters. Solid cover blocks the blast. Stay clear: close explosions can also hurt you.
+- **Breakable panels** stop bullets and aiming lines. Three ordinary rounds break one, opening a new firing lane. Cracks show damage without a health bar.
+
+Props block enemy fire and rear blasts as well as ordinary shots. Banked rounds reflect from their actual rotated surfaces; gun modifications still combine on the same weapon. Surviving props do not prevent a room from clearing. Continuing a run restores its props at the room entrance, like enemies.
+
 ## Enemies
 
 New behaviors appear gradually as the run advances:
@@ -93,6 +103,7 @@ npm run preview
 | `src/enemies.ts` | Enemy dimensions, health, attack timing, and boss patterns                             |
 | `src/levels.ts`  | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
 | `src/areas.ts`   | Area palettes, parallax scenery, and surface details                                   |
+| `src/props.ts`   | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
 | `src/rules.ts`   | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
 | `src/render.ts`  | Canvas world, camera feedback, character animation, and effects                        |
 | `src/main.ts`    | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
@@ -102,6 +113,8 @@ npm run preview
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
 The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, nine-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
+
+Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
 
 ## Publish
 

@@ -9,6 +9,7 @@ const { Body, Bodies, Composite } = Matter;
 function fixture(kind: EnemyKind, x = 600, y = 724) {
   const g = new Game();
   g.start('enemies');
+  for (const prop of [...g.props.items]) g.props.remove(prop);
   for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
   g.enemies = [];
   for (const b of g.terrain.slice(4)) Composite.remove(g.engine.world, b);

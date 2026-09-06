@@ -4,6 +4,7 @@ import { ENEMY_STATS, CHARGE_TELL, HOP_TELL, attackAngles } from './enemies.ts';
 import { clamp, direction } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
+import { PROP_STATS } from './props.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -117,6 +118,7 @@ export class Renderer {
       drawSurfaceDetails(c, g.level.area, x, y, w, h);
     }
     this.drawExit();
+    this.drawProps();
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
       g.trail.forEach((p, i) => {
         c.globalAlpha = (1 - i / 9) * 0.1;
@@ -355,6 +357,61 @@ export class Renderer {
     if (g.mode === 'playing' && g.time - g.hurtAt < 0.2) {
       c.fillStyle = 'rgba(222,64,44,' + (0.2 - (g.time - g.hurtAt)) * 0.28 + ')';
       c.fillRect(0, 0, this.width, this.height);
+    }
+  }
+  drawProps() {
+    const c = this.ctx,
+      g = this.game;
+    for (const prop of g.props.items) {
+      const { w, h } = PROP_STATS[prop.kind];
+      c.save();
+      c.translate(prop.body.position.x, prop.body.position.y);
+      c.rotate(prop.body.angle);
+      c.fillStyle = prop.flash > 0 ? '#c7d2cb' : prop.kind === 'canister' ? '#514536' : '#37434a';
+      c.fillRect(-w / 2, -h / 2, w, h);
+      c.strokeStyle = prop.flash > 0 ? '#f4ebcf' : prop.kind === 'canister' ? '#ba9b66' : '#91a4a7';
+      c.lineWidth = 1.5;
+      c.strokeRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2);
+      if (prop.kind === 'crate') {
+        this.line({ x: -16, y: -16 }, { x: 16, y: 16 }, '#71878c', 2);
+        this.line({ x: 16, y: -16 }, { x: -16, y: 16 }, '#71878c', 2);
+        c.fillStyle = '#c4c6ad';
+        c.fillRect(-5, -5, 10, 10);
+      } else if (prop.kind === 'canister') {
+        c.fillStyle = '#2d3538';
+        c.fillRect(-9, -14, 18, 5);
+        c.fillRect(-9, 10, 18, 5);
+        const armed = Number.isFinite(prop.armedAt);
+        c.fillStyle = armed ? '#ffda87' : '#b79a68';
+        c.fillRect(-6, -4, 12, 7);
+        if (armed) {
+          c.globalAlpha = 0.16 + (Math.sin(g.time * 25) + 1) * 0.12;
+          c.strokeStyle = '#ffcd79';
+          c.lineWidth = 3;
+          c.strokeRect(-15, -22, 30, 44);
+          c.globalAlpha = 1;
+        }
+      } else {
+        c.fillStyle = '#798b8e';
+        for (const y of [-30, 30]) {
+          c.fillRect(-7, y, 3, 3);
+          c.fillRect(4, y, 3, 3);
+        }
+        c.setLineDash([5, 5]);
+        this.line({ x: 0, y: -28 }, { x: 0, y: 28 }, '#a0aeaa');
+        c.setLineDash([]);
+      }
+      if (prop.hp < prop.maxHp) {
+        c.strokeStyle = '#141f25';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(-w / 2, -h * 0.22);
+        c.lineTo(3, -4);
+        c.lineTo(-4, 5);
+        if (prop.hp < prop.maxHp / 2) c.lineTo(w / 2, h * 0.3);
+        c.stroke();
+      }
+      c.restore();
     }
   }
   drawTell(e: Enemy) {

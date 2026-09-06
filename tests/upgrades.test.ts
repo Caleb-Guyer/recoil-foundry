@@ -21,6 +21,7 @@ function step(g: Game, count = 1, input: Partial<Input> = {}) {
 function fixture(mods: string[]) {
   const g = new Game();
   g.start('upgrades');
+  for (const prop of [...g.props.items]) g.props.remove(prop);
   for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
   g.enemies = [];
   for (const b of g.terrain.slice(4)) Composite.remove(g.engine.world, b);
