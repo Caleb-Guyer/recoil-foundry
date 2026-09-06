@@ -150,7 +150,20 @@ export class PropSystem {
     for (const prop of this.items) Composite.remove(this.game.engine.world, prop.body);
     this.items = [];
     this.impacts = [];
-    for (const p of propPlacements(level, this.game.seed)) this.spawn(p.kind, p.x, p.y);
+    for (const p of propPlacements(level, this.game.seed)) {
+      const { w, h } = PROP_STATS[p.kind];
+      const blocked = this.game.hazards.items.some(({ placement: hazard }) => {
+        const top = hazard.y - (hazard.kind === 'lift' ? hazard.travel : 0);
+        const bottom = hazard.y + hazard.h + (hazard.kind === 'crusher' ? hazard.travel : 0);
+        return (
+          p.x + w / 2 + 24 > hazard.x - hazard.w / 2 &&
+          p.x - w / 2 - 24 < hazard.x + hazard.w / 2 &&
+          p.y + h / 2 + 24 > top &&
+          p.y - h / 2 - 24 < bottom
+        );
+      });
+      if (!blocked) this.spawn(p.kind, p.x, p.y);
+    }
   }
   spawn(kind: PropKind, x: number, y: number): Prop {
     const { w, h, hp } = PROP_STATS[kind];

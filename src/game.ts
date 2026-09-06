@@ -37,6 +37,7 @@ import {
 import type { EnemyState, Attack, EliteKind } from './enemies.ts';
 import { PropSystem, traceProp } from './props.ts';
 import type { Prop } from './props.ts';
+import { HazardSystem } from './hazards.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
 export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
@@ -102,8 +103,12 @@ export class Game {
   level!: Level;
   terrain: Matter.Body[] = [];
   props = new PropSystem(this);
+  hazards = new HazardSystem(this);
+  get terrainBodies() {
+    return [...this.terrain, ...this.hazards.bodies];
+  }
   get solidBodies() {
-    return [...this.terrain, ...this.props.bodies];
+    return [...this.terrainBodies, ...this.props.bodies];
   }
   enemies: Enemy[] = [];
   shots: Shot[] = [];
@@ -237,6 +242,7 @@ export class Game {
     Composite.add(this.engine.world, this.player);
     for (const spawn of this.level.spawns)
       this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
+    this.hazards.reset(this.level, this.seed, this.stage);
     this.props.reset(this.level);
   }
   spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind) {
@@ -298,6 +304,8 @@ export class Game {
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
+    this.hazards.beforeStep(dt);
+    if (this.mode !== 'playing') return;
     const wasGrounded = this.grounded,
       vy = this.player.velocity.y;
     this.grounded =
@@ -381,6 +389,7 @@ export class Game {
     Engine.update(this.engine, 1000 / 60);
     this.props.afterStep(dt);
     if (this.mode !== 'playing') return;
+    this.hazards.afterStep(dt);
     this.containPlayer();
     this.updateShots(dt);
     if (this.mode !== 'playing') return;
@@ -741,7 +750,7 @@ export class Game {
   }
   lineEnd(start: Vec, end: Vec, padding = 0, ignore?: Prop): Vec {
     let t = 1;
-    for (const b of this.terrain) {
+    for (const b of this.terrainBodies) {
       const hit = segmentBox(
         start,
         end,
@@ -859,7 +868,7 @@ export class Game {
     const half = ENEMY_STATS.press.w / 2;
     return Math.min(
       WORLD.floor,
-      ...this.terrain
+      ...this.terrainBodies
         .filter(
           (b) =>
             b.bounds.min.y >= bottom - 1 &&
@@ -968,7 +977,7 @@ export class Game {
     const p = e.body.position,
       player = this.player.position;
     const candidates: Vec[] = [];
-    for (const b of this.terrain) {
+    for (const b of this.terrainBodies) {
       const min = b.bounds.min,
         max = b.bounds.max;
       if (
@@ -1164,7 +1173,7 @@ export class Game {
           player?: boolean;
           prop?: Prop;
         } | null = null;
-        const targets: [Matter.Body, Enemy?, boolean?][] = this.terrain.map((b) => [b]);
+        const targets: [Matter.Body, Enemy?, boolean?][] = this.terrainBodies.map((b) => [b]);
         if (s.friendly) {
           for (const e of this.enemies)
             if (!s.hits.has(e.id) && e.spawn <= 0) targets.push([e.body, e]);

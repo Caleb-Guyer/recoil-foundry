@@ -91,6 +91,12 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'machine') {
+      this.tone(110, 180, 0.45, 0.05, 'sawtooth');
+      this.tone(440, 440, 0.12, 0.025, 'sine', 0.12);
+    } else if (kind === 'strain') {
+      this.crack(0.2, 0.055, 1700);
+      this.tone(280, 110, 0.25, 0.035);
     } else if (kind === 'loaded') {
       this.tone(320, 620, 0.09, 0.035, 'sine');
     } else if (kind === 'prop') {

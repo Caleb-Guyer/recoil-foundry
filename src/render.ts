@@ -18,6 +18,7 @@ import { clamp, direction } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
+import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -131,6 +132,7 @@ export class Renderer {
       drawSurfaceDetails(c, g.level.area, x, y, w, h);
     }
     this.drawExit();
+    this.drawHazards();
     this.drawProps();
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
       g.trail.forEach((p, i) => {
@@ -493,6 +495,175 @@ export class Renderer {
     if (g.mode === 'playing' && g.time - g.hurtAt < 0.2) {
       c.fillStyle = 'rgba(222,64,44,' + (0.2 - (g.time - g.hurtAt)) * 0.28 + ')';
       c.fillRect(0, 0, this.width, this.height);
+    }
+  }
+  drawHazards() {
+    const c = this.ctx,
+      g = this.game;
+    for (const hazard of g.hazards.items) {
+      const { x, y: restY, w, h, travel } = hazard.placement,
+        left = x - w / 2,
+        right = x + w / 2,
+        y = hazard.body.position.y - h / 2;
+      c.save();
+      if (hazard.kind === 'lift') {
+        for (const side of [-1, 1]) {
+          const railX = x + side * (w / 2 - 9);
+          this.line(
+            { x: railX, y: restY - travel - 17 },
+            { x: railX, y: restY + h + 10 },
+            '#283c43',
+            5,
+          );
+          this.line(
+            { x: railX, y: restY - travel - 17 },
+            { x: railX, y: restY + h + 10 },
+            '#4a6267',
+            1,
+          );
+          c.fillStyle = '#54696c';
+          c.fillRect(railX - 5, restY - travel - 20, 10, 5);
+          c.fillRect(railX - 5, restY + h + 8, 10, 5);
+        }
+        c.fillStyle = '#30494d';
+        c.fillRect(left, y, w, h);
+        c.fillStyle = '#203438';
+        c.fillRect(left + 7, y + 5, w - 14, Math.max(3, h - 8));
+        this.line({ x: left, y }, { x: right, y }, '#a3bdb5', 2.5);
+        for (const edge of [left, right - 6]) {
+          c.fillStyle = '#819c98';
+          c.fillRect(edge, y + 3, 6, h - 3);
+        }
+        const down = hazard.phase % LIFT_PERIOD >= LIFT_PERIOD / 2 ? 1 : -1,
+          centerY = y + h / 2;
+        this.line(
+          { x: x - 5, y: centerY - down * 2 },
+          { x, y: centerY + down * 2 },
+          '#a7c9bd',
+          1.5,
+        );
+        this.line(
+          { x, y: centerY + down * 2 },
+          { x: x + 5, y: centerY - down * 2 },
+          '#a7c9bd',
+          1.5,
+        );
+      } else if (hazard.kind === 'crusher') {
+        const floor = restY + h + travel,
+          warning = hazard.state === 'warning',
+          falling = hazard.state === 'falling',
+          progress = warning ? clamp(1 - hazard.timer / CRUSHER_TELL, 0, 1) : falling ? 1 : 0;
+        // Permanent floor markings locate the machine before it begins a cycle.
+        this.line({ x: left, y: floor - 2 }, { x: right, y: floor - 2 }, '#78543d', 2);
+        for (const edge of [left, right])
+          this.line({ x: edge, y: floor - 9 }, { x: edge, y: floor }, '#986b49', 2);
+        if (warning || falling) {
+          const bottom = y + h;
+          c.fillStyle = `rgba(236,149,90,${0.025 + progress * 0.035})`;
+          c.fillRect(left, bottom, w, Math.max(0, floor - bottom));
+          c.setLineDash(falling ? [] : [5, 11]);
+          for (const edge of [left, right])
+            this.line({ x: edge, y: bottom }, { x: edge, y: floor - 7 }, '#966e4f', 1);
+          c.setLineDash([]);
+          this.line(
+            { x: x - (w / 2) * progress, y: floor - 3 },
+            { x: x + (w / 2) * progress, y: floor - 3 },
+            '#ffd299',
+            3,
+          );
+        }
+        c.fillStyle = '#342e2a';
+        c.fillRect(left + 13, restY - 44, w - 26, 20);
+        this.line({ x: left + 13, y: restY - 44 }, { x: right - 13, y: restY - 44 }, '#827561', 2);
+        for (const side of [-1, 1]) {
+          const pistonX = x + side * w * 0.27;
+          this.line({ x: pistonX, y: restY - 24 }, { x: pistonX, y: y + 1 }, '#4f4b40', 12);
+          this.line({ x: pistonX - 2, y: restY - 24 }, { x: pistonX - 2, y: y + 1 }, '#8e8a72', 3);
+          c.fillStyle = '#aea084';
+          c.fillRect(pistonX - 2, restY - 37, 4, 4);
+        }
+        c.fillStyle = '#55463a';
+        c.fillRect(left, y, w, h);
+        c.fillStyle = '#312b27';
+        c.fillRect(left + 7, y + 5, w - 14, Math.max(5, h - 13));
+        this.line({ x: left, y }, { x: right, y }, '#99866b', 2);
+        c.save();
+        c.beginPath();
+        c.rect(left + 2, y + h - 8, w - 4, 7);
+        c.clip();
+        c.fillStyle = '#be9561';
+        c.fillRect(left + 2, y + h - 8, w - 4, 7);
+        for (let stripe = left - 8; stripe < right + 10; stripe += 23)
+          this.line({ x: stripe, y: y + h }, { x: stripe + 10, y: y + h - 10 }, '#4b3d2e', 8);
+        c.restore();
+        const lamp = warning || falling ? (progress > 0.65 ? '#ffe2a5' : '#d4a570') : '#866348';
+        for (const side of [-1, 1]) {
+          c.fillStyle = lamp;
+          c.fillRect(x + side * (w / 2 - 13) - 3, y + 8, 6, 5);
+        }
+        if (falling && !this.reduced)
+          for (const side of [-1, 1])
+            this.line(
+              { x: x + side * (w / 2 - 3), y: y - 5 },
+              { x: x + side * (w / 2 - 3), y: y - 27 },
+              '#9d7954',
+              2,
+            );
+      } else {
+        const warning = hazard.state === 'warning',
+          progress = warning ? clamp(1 - hazard.timer / CRUMBLE_TELL, 0, 1) : 0;
+        if (!hazard.visible) {
+          const restore = clamp(1 - hazard.timer / CRUMBLE_RESET, 0, 1);
+          c.globalAlpha = 0.2 + restore * 0.4;
+          for (const side of [-1, 1]) {
+            const edge = x + (side * w) / 2;
+            this.line({ x: edge, y: restY + 6 }, { x: edge, y: restY + h }, '#91a39c', 1.5);
+            this.line(
+              { x: edge, y: restY + h },
+              { x: edge - side * 8, y: restY + h },
+              '#91a39c',
+              1.5,
+            );
+          }
+        } else {
+          const count = Math.max(3, Math.round(w / 28)),
+            segment = w / count;
+          for (let i = 0; i < count; i++) {
+            const tileX = left + i * segment + 1,
+              tileW = segment - 3,
+              stressed = warning && Math.abs(i - (count - 1) / 2) <= (progress * count) / 2;
+            c.fillStyle = '#354447';
+            c.fillRect(tileX, y + 2, tileW, h - 3);
+            this.line(
+              { x: tileX, y },
+              { x: tileX + tileW, y },
+              stressed ? '#e5b58a' : '#96aaa6',
+              2,
+            );
+            this.line(
+              { x: tileX + 5, y: y + 4 },
+              { x: tileX + tileW - 5, y: y + h - 4 },
+              '#647b7b',
+              1.5,
+            );
+            if (stressed) {
+              const middle = tileX + tileW / 2;
+              this.line({ x: middle - 3, y }, { x: middle + 2, y: y + h * 0.45 }, '#172629', 2.5);
+              this.line(
+                { x: middle + 2, y: y + h * 0.45 },
+                { x: middle - 2, y: y + h - 2 },
+                '#172629',
+                2.5,
+              );
+            }
+          }
+          for (const edge of [left, right - 4]) {
+            c.fillStyle = '#697f7d';
+            c.fillRect(edge, y + 3, 4, h - 1);
+          }
+        }
+      }
+      c.restore();
     }
   }
   drawProps() {

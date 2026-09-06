@@ -31,7 +31,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-06&dv=3`). Version 3 includes seeded elite encounters and predetermined upgrades; its best times are separate from earlier rulesets. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-06&dv=4`). Version 4 adds seeded moving room features alongside elite encounters and predetermined upgrades; its best times are separate from earlier rulesets. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -61,6 +61,16 @@ Each run has six different regular layouts and three boss arenas. Seeded mirrore
 Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
+
+## Moving rooms
+
+Regular rooms introduce one moving feature at a time. Room 2 introduces freight lifts, room 4 introduces crushers, and room 7 introduces collapsing platforms. Later regular rooms mix familiar features. The opening room and boss arenas stay clear of them. Placement follows the seed, including Daily Runs, with space around enemy entrances and safe ground underneath.
+
+- **Freight lifts** travel smoothly between two heights. Ride them to reach ledges, or jump and fire downward to launch ahead. Crates can ride too; the deck blocks shots and provides moving cover.
+- **Factory crushers** mark their strike lane when you approach. A 1.1-second warning gives you time to move out before the slab drops. It rests briefly, then slowly rises. A hit deals 24 damage and knocks you clear; enemies and props can also be crushed. The top is safe to stand on.
+- **Collapsing platforms** crack under your feet for 0.7 seconds before giving way. Jump or recoil away, or drop to the floor below. They rebuild after 3.5 seconds, waiting until their space is clear before becoming solid again.
+
+Rails, warning lights, floor markings, and cracks explain each feature in the arena. Pause and impact pauses freeze their timing. Continuing or retrying resets their state at the room entrance, with the same placement and lift cycle.
 
 ## Physics props
 
@@ -148,6 +158,8 @@ Prop checks cover sparse placement, baseline route clearance, real crate impacts
 Area boss checks cover locked attack warnings, wide-body crashes and platform-edge landings, bumper traversal, safe recovery windows, recoil escapes, attacks at world boundaries, pause and death cleanup, and exactly one upgrade after each intermediate boss.
 
 Elite checks cover sparse deterministic placement, checkpoint reconstruction, directional shielding and flanking, piercing and rear blasts, the sniper's second aim lock, fuse timing and defusing, blast cover and chains, and immediate cancellation on death.
+
+Moving-room checks cover seeded safe placement and traversal, lift riding and recoil escapes, moving cover, crusher warnings and swept damage, collapsing-platform timing and safe rebuilding, and pause, death, and checkpoint resets.
 
 Daily checks cover UTC rollover and real calendar dates, versioned links, reproducible room and upgrade sequences, continued elapsed time, and corrupt or slower personal records. Browser checks also exercise title and result actions, retries, blocked storage, and both clipboard outcomes.
 
