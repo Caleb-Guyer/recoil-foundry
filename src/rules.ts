@@ -35,6 +35,10 @@ export interface Gun {
   airDamage: number;
   heal: number;
   speed: number;
+  burstCount: number;
+  bankGrowth: number;
+  backblast: boolean;
+  landing: boolean;
 }
 export const MODS = [
   {
@@ -87,6 +91,30 @@ export const MODS = [
     description: 'Move 20% faster. Keep your momentum.',
     mark: 'light',
   },
+  {
+    id: 'burst',
+    name: 'Burst fire',
+    description: 'Three quick shots, then recovery. 10% lighter rounds.',
+    mark: 'burst',
+  },
+  {
+    id: 'backblast',
+    name: 'Backblast',
+    description: 'A short blast behind every shot. Slower fire.',
+    mark: 'backblast',
+  },
+  {
+    id: 'banker',
+    name: 'Banker',
+    description: 'One extra bounce. +35% damage per bounce. 20% lighter rounds.',
+    mark: 'banker',
+  },
+  {
+    id: 'landing',
+    name: 'Landing shot',
+    description: 'Hard landings double your next shot. Other shots hit 10% lighter.',
+    mark: 'landing',
+  },
 ] as const;
 export type Mod = (typeof MODS)[number];
 export function getGun(mods: readonly string[]): Gun {
@@ -102,6 +130,10 @@ export function getGun(mods: readonly string[]): Gun {
     airDamage: 1,
     heal: 0,
     speed: 1,
+    burstCount: 1,
+    bankGrowth: 0,
+    backblast: false,
+    landing: false,
   };
   for (const id of new Set(mods))
     switch (id) {
@@ -123,7 +155,7 @@ export function getGun(mods: readonly string[]): Gun {
         g.recoil /= 1.35;
         break;
       case 'ricochet':
-        g.bounces = 2;
+        g.bounces += 2;
         break;
       case 'pierce':
         g.pierce = 2;
@@ -142,6 +174,24 @@ export function getGun(mods: readonly string[]): Gun {
         break;
       case 'light':
         g.speed = 1.2;
+        break;
+      case 'burst':
+        g.burstCount = 3;
+        g.damage *= 0.9;
+        g.recoil *= 0.8;
+        break;
+      case 'backblast':
+        g.backblast = true;
+        g.interval *= 1.15;
+        break;
+      case 'banker':
+        g.bounces += 1;
+        g.bankGrowth = 0.35;
+        g.damage *= 0.8;
+        break;
+      case 'landing':
+        g.landing = true;
+        g.damage *= 0.9;
         break;
     }
   return g;

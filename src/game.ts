@@ -66,6 +66,9 @@ export interface Shot {
   fragment: boolean;
   split: boolean;
   hits: Set<number>;
+  banks: number;
+  bankGrowth: number;
+  charged: boolean;
 }
 export interface Particle {
   pos: Vec;
@@ -114,6 +117,12 @@ export class Game {
   hitStop = 0;
   muzzle = 0;
   land = 0;
+  landingSpeed = 0;
+  landingReady = false;
+  chargedFlash = false;
+  burstRemaining = 0;
+  burstAt = 0;
+  blast = { pos: { x: 0, y: 0 }, dir: { x: -1, y: 0 }, life: 0 };
   offers: Mod[] = [];
   rng = seeded('run');
   rewardTaken = false;
@@ -124,6 +133,7 @@ export class Game {
     this.loadRoom();
   }
   setMode(mode: Mode) {
+    if (mode !== 'playing') this.burstRemaining = 0;
     this.mode = mode;
     this.onChange();
   }
@@ -176,6 +186,12 @@ export class Game {
     this.hitStop = 0;
     this.muzzle = 0;
     this.land = 0;
+    this.landingSpeed = 0;
+    this.landingReady = false;
+    this.chargedFlash = false;
+    this.burstRemaining = 0;
+    this.burstAt = 0;
+    this.blast.life = 0;
     this.shootAt = this.time;
     this.rng = seeded(this.seed + ':' + this.stage);
     const wall = (x: number, y: number, w: number, h: number) => {
@@ -254,6 +270,7 @@ export class Game {
     }
     this.time += dt;
     this.elapsed += dt;
+    this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
     const wasGrounded = this.grounded,
       vy = this.player.velocity.y;
@@ -265,11 +282,20 @@ export class Game {
         { x: this.player.position.x, y: this.player.bounds.max.y + 5 },
         18,
       ).length > 0;
-    if (this.grounded && !wasGrounded && vy > 2) {
-      this.land = 0.13;
-      this.feedback(Math.min(3, vy * 0.15));
-      this.burst({ x: this.player.position.x, y: this.player.bounds.max.y }, 8, '#697477', 2);
-      this.onSound('land');
+    if (this.grounded && !wasGrounded) {
+      const impact = Math.max(vy, this.landingSpeed);
+      if (impact > 2) {
+        this.land = 0.13;
+        this.feedback(Math.min(3, impact * 0.15));
+        this.burst({ x: this.player.position.x, y: this.player.bounds.max.y }, 8, '#697477', 2);
+        this.onSound('land');
+      }
+      if (this.gun.landing && impact >= 7 && !this.landingReady) {
+        this.landingReady = true;
+        this.burst(this.player.position, 7, '#d7ebac', 2.5);
+        this.onSound('loaded');
+      }
+      this.landingSpeed = 0;
     }
     this.coyote = this.grounded ? 0.1 : Math.max(0, this.coyote - dt);
     this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
@@ -307,7 +333,15 @@ export class Game {
         });
       this.jumpCut = true;
     }
-    if ((input.fire || this.fireBuffer > 0) && this.time >= this.shootAt) {
+    if (this.burstRemaining > 0 && this.time >= this.burstAt) {
+      this.burstRemaining--;
+      this.burstAt = this.time + this.gun.interval * 0.3;
+      this.fireRound();
+    } else if (
+      (input.fire || this.fireBuffer > 0) &&
+      this.time >= this.shootAt &&
+      this.burstRemaining === 0
+    ) {
       this.fire();
       this.fireBuffer = 0;
     }
@@ -315,6 +349,8 @@ export class Game {
       this.updateEnemy(e, dt);
       if (this.mode !== 'playing') return;
     }
+    // Capture descent before Matter resolves the landing collision and zeros velocity.
+    if (!this.grounded) this.landingSpeed = this.player.velocity.y;
     Engine.update(this.engine, 1000 / 60);
     this.containPlayer();
     this.updateShots(dt);
@@ -369,38 +405,67 @@ export class Game {
     Body.setVelocity(this.player, { x: vx, y: vy });
   }
   fire() {
-    this.shootAt = this.time + this.gun.interval;
+    if (this.burstRemaining > 0) return;
+    this.shootAt = this.time + this.gun.interval * (this.gun.burstCount === 3 ? 3.1 : 1);
+    this.burstRemaining = this.gun.burstCount - 1;
+    this.burstAt = this.time + this.gun.interval * 0.3;
+    this.fireRound();
+  }
+  fireRound() {
+    const charged = this.gun.landing && this.landingReady;
+    this.landingReady = false;
+    this.chargedFlash = charged;
     this.lastShot = this.time;
     this.shotCount++;
     this.muzzle = 0.065;
     const d = direction(this.player.position, this.aim);
     if (d.x === 0 && d.y === 0) d.x = 1;
-    const impulse = this.gun.recoil * (this.grounded ? 0.21 : 1);
+    const impulse = this.gun.recoil * (this.grounded ? 0.21 : 1) * (charged ? 1.25 : 1);
     Body.setVelocity(this.player, {
       x: clamp(this.player.velocity.x - d.x * impulse, -23, 23),
       y: clamp(this.player.velocity.y - d.y * impulse, -21, 20),
     });
-    this.feedback(this.grounded ? 2.2 : 3.8, d);
+    this.feedback((this.grounded ? 2.2 : 3.8) * (charged ? 1.3 : 1), d);
     this.onSound(
-      this.mods.includes('magnum') ? 'heavy' : this.mods.includes('scatter') ? 'scatter' : 'shot',
+      charged
+        ? 'charged'
+        : this.mods.includes('magnum')
+          ? 'heavy'
+          : this.mods.includes('scatter')
+            ? 'scatter'
+            : 'shot',
     );
+    const damage = this.gun.damage * (this.grounded ? 1 : this.gun.airDamage) * (charged ? 2 : 1);
     const pos = { x: this.player.position.x + d.x * 26, y: this.player.position.y - 3 + d.y * 26 };
+    const radius = this.mods.includes('magnum') ? 4 : 2.5;
+    const spawn = this.lineEnd(
+      { x: this.player.position.x, y: this.player.position.y - 3 },
+      pos,
+      radius,
+    );
+    if (distance(spawn, pos) > 0.01) {
+      spawn.x -= d.x * 0.5;
+      spawn.y -= d.y * 0.5;
+    }
     for (let i = 0; i < this.gun.pellets; i++) {
       const a = Math.atan2(d.y, d.x) + (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
       this.addShot({
-        pos: { ...pos },
+        pos: { ...spawn },
         vel: { x: Math.cos(a) * 30, y: Math.sin(a) * 30 },
-        damage: this.gun.damage * (this.grounded ? 1 : this.gun.airDamage),
+        damage,
         life: 1.4,
         friendly: true,
-        radius: this.mods.includes('magnum') ? 4 : 2.5,
+        radius,
         bounces: this.gun.bounces,
         pierce: this.gun.pierce,
         fragment: false,
         split: false,
+        bankGrowth: this.gun.bankGrowth,
+        charged,
       });
     }
     this.burst(pos, 4, '#ffcc84', 3, d);
+    if (this.gun.backblast) this.fireBackblast(d, damage * this.gun.pellets * 0.8);
     if (this.particles.length < 220)
       this.particles.push({
         pos: { ...this.player.position },
@@ -412,9 +477,39 @@ export class Game {
         kind: 'shell',
       });
   }
-  addShot(data: Omit<Shot, 'id' | 'prev' | 'hits'>) {
+  fireBackblast(forward: Vec, damage: number) {
+    const p = { ...this.player.position },
+      rear = { x: -forward.x, y: -forward.y };
+    this.blast = { pos: p, dir: rear, life: 0.1 };
+    this.burst(p, 8, '#e3b47a', 4.5, rear);
+    for (const e of [...this.enemies]) {
+      if (e.spawn > 0 || e.hp <= 0) continue;
+      const target = e.body.position,
+        d = direction(p, target);
+      if (distance(p, target) > 130 || rear.x * d.x + rear.y * d.y < Math.SQRT1_2) continue;
+      if (distance(this.lineEnd(p, target), target) > 0.1) continue;
+      this.hitEnemy(e, damage);
+      if (e.hp > 0 && !e.body.isStatic)
+        Body.setVelocity(e.body, {
+          x: e.body.velocity.x + rear.x * 3.5,
+          y: e.body.velocity.y + rear.y * 3.5,
+        });
+    }
+  }
+  addShot(
+    data: Omit<Shot, 'id' | 'prev' | 'hits' | 'banks' | 'bankGrowth' | 'charged'> &
+      Partial<Pick<Shot, 'banks' | 'bankGrowth' | 'charged'>>,
+  ) {
     if (this.shots.length >= 180) return;
-    this.shots.push({ ...data, id: ++this.id, prev: { ...data.pos }, hits: new Set() });
+    this.shots.push({
+      banks: 0,
+      bankGrowth: 0,
+      charged: false,
+      ...data,
+      id: ++this.id,
+      prev: { ...data.pos },
+      hits: new Set(),
+    });
   }
   updateEnemy(e: Enemy, dt: number) {
     e.flash = Math.max(0, e.flash - dt);
@@ -498,10 +593,15 @@ export class Game {
       ).length > 0
     );
   }
-  lineEnd(start: Vec, end: Vec): Vec {
+  lineEnd(start: Vec, end: Vec, padding = 0): Vec {
     let t = 1;
     for (const b of this.terrain) {
-      const hit = segmentBox(start, end, b.bounds.min, b.bounds.max);
+      const hit = segmentBox(
+        start,
+        end,
+        { x: b.bounds.min.x - padding, y: b.bounds.min.y - padding },
+        { x: b.bounds.max.x + padding, y: b.bounds.max.y + padding },
+      );
       if (hit) t = Math.min(t, hit.t);
     }
     return { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t };
@@ -786,6 +886,12 @@ export class Game {
             s.vel.x -= 2 * dot * nearest.normal.x;
             s.vel.y -= 2 * dot * nearest.normal.y;
             s.bounces--;
+            s.banks++;
+            s.damage *= 1 + s.bankGrowth;
+            if (s.bankGrowth > 0) {
+              this.burst(s.pos, 4, '#a1dbbf', 2);
+              this.onSound('bank');
+            }
             s.pos.x += nearest.normal.x;
             s.pos.y += nearest.normal.y;
           } else s.life = 0;

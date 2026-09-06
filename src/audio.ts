@@ -86,11 +86,15 @@ export class Sound {
     const previous = this.played.get(kind) ?? -10;
     if (c.currentTime - previous < (kind === 'hit' ? 0.04 : 0.015)) return;
     this.played.set(kind, c.currentTime);
-    if (['shot', 'scatter', 'heavy'].includes(kind)) {
-      const heavy = kind === 'heavy',
+    if (['shot', 'scatter', 'heavy', 'charged'].includes(kind)) {
+      const heavy = kind === 'heavy' || kind === 'charged',
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'loaded') {
+      this.tone(320, 620, 0.09, 0.035, 'sine');
+    } else if (kind === 'bank') {
+      this.tone(980, 1550, 0.035, 0.025, 'sine');
     } else if (kind === 'hit') {
       this.crack(0.035, 0.09, 2200);
       this.tone(520, 220, 0.035, 0.035);

@@ -280,14 +280,34 @@ export class Renderer {
         );
       }
     }
+    if (g.blast.life > 0) {
+      const { pos, dir, life } = g.blast,
+        base = Math.atan2(dir.y, dir.x);
+      c.beginPath();
+      c.moveTo(pos.x, pos.y);
+      for (let i = 0; i <= 8; i++) {
+        const a = base - Math.PI / 4 + (i * Math.PI) / 16;
+        const end = g.lineEnd(pos, { x: pos.x + Math.cos(a) * 130, y: pos.y + Math.sin(a) * 130 });
+        c.lineTo(end.x, end.y);
+      }
+      c.closePath();
+      c.fillStyle = `rgba(242,184,116,${life * 1.8})`;
+      c.fill();
+    }
     this.drawPlayer();
     for (const s of g.shots) {
       if (s.friendly) {
         this.line(
           { x: s.pos.x - s.vel.x * 0.55, y: s.pos.y - s.vel.y * 0.55 },
           s.pos,
-          s.fragment ? '#bea88b' : '#f6d49a',
-          s.radius * 1.15,
+          s.fragment
+            ? '#bea88b'
+            : s.charged
+              ? '#eff5b5'
+              : s.bankGrowth > 0 && s.banks > 0
+                ? '#a1e0c3'
+                : '#f6d49a',
+          s.radius * 1.15 + (s.charged ? 1 : 0),
         );
         this.circle(s.pos, s.radius, '#fff2d5');
       } else {
@@ -409,6 +429,19 @@ export class Renderer {
     c.fillRect(5 - kick, -5, 22, 10);
     c.fillStyle = '#e4e5d8';
     c.fillRect(8 - kick, -4, 19, 7);
+    if (g.mods.includes('burst')) {
+      c.fillStyle = '#658b7c';
+      for (let i = 0; i < 3; i++) c.fillRect(9 - kick + i * 5, -3, 2, 4);
+    }
+    if (g.mods.includes('backblast')) {
+      c.fillStyle = '#ccac79';
+      c.fillRect(2 - kick, -5, 3, 10);
+    }
+    if (g.landingReady) {
+      this.circle({ x: 17 - kick, y: 0 }, 10, 'rgba(219,237,168,0.15)');
+      c.fillStyle = '#e5efa7';
+      c.fillRect(9 - kick, -3, 15, 3);
+    }
     c.fillStyle = '#333c3c';
     c.fillRect(
       24 - kick,
@@ -422,10 +455,10 @@ export class Renderer {
     }
     if (g.muzzle > 0) {
       c.globalAlpha = g.muzzle / 0.065;
-      c.fillStyle = '#ffe6b1';
+      c.fillStyle = g.chargedFlash ? '#f0f8b9' : '#ffe6b1';
       c.beginPath();
       c.moveTo(29, -7);
-      c.lineTo(49 + Math.random() * 8, 0);
+      c.lineTo(49 + (g.chargedFlash ? 15 : 0) + Math.random() * 8, 0);
       c.lineTo(29, 7);
       c.lineTo(34, 0);
       c.fill();

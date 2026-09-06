@@ -124,6 +124,10 @@ function modMark(mod: Mod) {
     kick: 'M45 24H10M20 14L10 24l10 10',
     heal: 'M26 10v28M12 24h28',
     light: 'M10 33l14-20M24 33l14-20M38 33l10-14',
+    burst: 'M8 16h10M22 24h10M36 32h10M46 12v6',
+    backblast: 'M27 24h21M39 17l9 7-9 7M21 24L8 12M21 24H5M21 24L8 36',
+    banker: 'M8 37l15-25 15 25 10-17M17 12h6v8M40 20h8v8',
+    landing: 'M12 8v19M6 20l6 7 6-7M6 36h18M30 24h19M41 17l8 7-8 7',
   };
   return (
     '<svg class="mod-mark" viewBox="0 0 56 48" aria-hidden="true"><path d="' +

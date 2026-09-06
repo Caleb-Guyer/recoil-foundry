@@ -313,7 +313,7 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-for (const seed of ['A', 'D'])
+for (const seed of ['B', 'E'])
   test('a combat run reaches the final exit with normal health and real input: ' + seed, () => {
     const g = new Game();
     g.start(seed);
@@ -328,6 +328,10 @@ for (const seed of ['A', 'D'])
       'scatter',
       'rapid',
       'airshot',
+      'burst',
+      'backblast',
+      'banker',
+      'landing',
       'pierce',
       'ricochet',
       'light',
@@ -412,5 +416,9 @@ for (const seed of ['A', 'D'])
     assert.equal(g.mode, 'won');
     assert.equal(g.stage, STAGES - 1);
     assert.equal(g.mods.length, STAGES - 1);
+    for (const mod of seed === 'B'
+      ? ['burst', 'backblast', 'banker']
+      : ['burst', 'banker', 'landing'])
+      assert(g.mods.includes(mod));
     assert(g.hp > 0);
   });
