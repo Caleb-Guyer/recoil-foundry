@@ -1,7 +1,16 @@
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
-export type EnemyKind = 'runner' | 'shooter' | 'flyer' | 'charger' | 'sniper' | 'hopper' | 'boss';
+export type EnemyKind =
+  | 'runner'
+  | 'shooter'
+  | 'flyer'
+  | 'charger'
+  | 'sniper'
+  | 'hopper'
+  | 'loader'
+  | 'press'
+  | 'boss';
 export interface Solid {
   x: number;
   y: number;
@@ -447,6 +456,42 @@ export const LAYOUTS: Layout[] = [
 ];
 export const BOSS_LAYOUTS: Layout[] = [
   {
+    id: 'loader-bay',
+    area: 'docks',
+    name: 'Loader bay',
+    solids: [
+      box(520, 660, 140, 80),
+      box(1250, 660, 140, 80),
+      shelf(740, 495, 260),
+      shelf(350, 405, 200),
+      shelf(1430, 405, 200),
+    ],
+    spawns: [{ kind: 'loader', x: 1470, y: 705 }],
+    route: route([300, 720], [590, 640], [900, 720], [1320, 640], [1600, 720], [1800, 720]),
+  },
+  {
+    id: 'press-hall',
+    area: 'furnace',
+    name: 'Press hall',
+    solids: [
+      box(420, 650, 140, 90),
+      shelf(560, 510, 240),
+      box(980, 645, 140, 95),
+      shelf(1200, 490, 240),
+      box(1590, 650, 140, 90),
+    ],
+    spawns: [{ kind: 'press', x: 1300, y: 260 }],
+    route: route(
+      [300, 720],
+      [490, 630],
+      [820, 720],
+      [1050, 625],
+      [1350, 720],
+      [1660, 630],
+      [1820, 720],
+    ),
+  },
+  {
     id: 'twin-towers',
     area: 'rooftops',
     name: 'Twin towers',
@@ -497,33 +542,36 @@ export const BOSS_LAYOUTS: Layout[] = [
 ];
 export function getLevel(seed: string, stage: number): Level {
   const pick = seeded(seed + ':layouts');
+  const boss = stage === 2 || stage === 5 || stage === 8;
   const order = [
     ...sample(
       LAYOUTS.filter((layout) => layout.area === 'docks'),
-      3,
+      2,
       pick,
     ),
+    BOSS_LAYOUTS.find((layout) => layout.area === 'docks')!,
     ...sample(
       LAYOUTS.filter((layout) => layout.area === 'furnace'),
-      3,
+      2,
       pick,
     ),
+    BOSS_LAYOUTS.find((layout) => layout.area === 'furnace')!,
     ...sample(
       LAYOUTS.filter((layout) => layout.area === 'rooftops'),
       2,
       pick,
     ),
   ];
-  const source =
-    stage === 8 ? BOSS_LAYOUTS[Math.floor(pick() * BOSS_LAYOUTS.length)] : order[stage];
+  const roofBosses = BOSS_LAYOUTS.filter((layout) => layout.area === 'rooftops');
+  const source = stage === 8 ? roofBosses[Math.floor(pick() * roofBosses.length)] : order[stage];
   if (!source) throw new RangeError('Invalid stage');
   const rng = seeded(seed + ':layout-variant:' + stage);
   const mirrored = rng() > 0.5;
   const solids = source.solids.map((s) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x }));
-  const count = [3, 4, 5, 6, 7, 8, 9, 10, 1][stage];
+  const count = boss ? 1 : [3, 4, 1, 6, 7, 1, 9, 10, 1][stage];
   const anchors = source.spawns
     .map((s) => ({ ...s, x: mirrored ? 2000 - s.x : s.x }))
-    .filter((s) => s.kind === 'boss' || s.x >= 380);
+    .filter((s) => boss || s.x >= 380);
   const spawns = sample(anchors, count, rng);
   // Introduce one new behavior at a time, using the same terrain-safe hull anchors.
   const introduce = (kind: EnemyKind, from: EnemyKind) => {
@@ -539,9 +587,9 @@ export function getLevel(seed: string, stage: number): Level {
     }
     spawns[index] = { ...spawns[index], kind };
   };
-  if (stage >= 1 && stage < 8) introduce('charger', 'runner');
-  if (stage >= 2 && stage < 8) introduce('sniper', 'shooter');
-  if (stage >= 3 && stage < 8) introduce('hopper', 'runner');
+  if (!boss && stage >= 1) introduce('charger', 'runner');
+  if (!boss && stage >= 2) introduce('sniper', 'shooter');
+  if (!boss && stage >= 3) introduce('hopper', 'runner');
   for (const spawn of spawns) {
     if (spawn.kind !== 'sniper') continue;
     const support = solids.find(
@@ -556,6 +604,6 @@ export function getLevel(seed: string, stage: number): Level {
     spawns,
     route: mirrored ? path.reverse() : path,
     mirrored,
-    boss: stage === 8,
+    boss,
   };
 }

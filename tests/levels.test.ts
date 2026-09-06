@@ -4,14 +4,14 @@ import { getLevel, LAYOUTS, BOSS_LAYOUTS } from '../src/levels.ts';
 import { STAGES } from '../src/rules.ts';
 import { Game } from '../src/game.ts';
 import Matter from 'matter-js';
-import { ENEMY_STATS } from '../src/enemies.ts';
+import { ENEMY_STATS, isBoss } from '../src/enemies.ts';
 const overlap = (
   a: { x: number; y: number; w: number; h: number },
   b: { x: number; y: number; w: number; h: number },
 ) =>
   Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 0.1 &&
   Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 0.1;
-test('nine-stage seeds produce eight distinct obstacle layouts and a reserved boss arena', () => {
+test('nine-stage seeds produce six regular layouts and a boss at the end of each area', () => {
   const seen = new Set<string>();
   let mirrored = 0;
   for (let i = 0; i < 100; i++) {
@@ -39,11 +39,15 @@ test('nine-stage seeds produce eight distinct obstacle layouts and a reserved bo
     for (const [stage, level] of levels.entries()) {
       seen.add(level.id);
       mirrored += Number(level.mirrored);
-      assert.equal(level.boss, stage === STAGES - 1);
+      assert.equal(level.boss, [2, 5, 8].includes(stage));
       assert.equal(
-        level.spawns.some((e) => e.kind === 'boss'),
+        level.spawns.some((e) => isBoss(e.kind)),
         level.boss,
       );
+      if (level.boss) {
+        assert.equal(level.spawns.length, 1);
+        assert.equal(level.spawns[0].kind, stage === 2 ? 'loader' : stage === 5 ? 'press' : 'boss');
+      }
       assert(level.solids.length >= 5);
       assert(level.spawns.length > 0);
     }

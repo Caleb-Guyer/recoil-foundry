@@ -1,6 +1,14 @@
 import { Game, WORLD } from './game.ts';
 import type { Enemy } from './game.ts';
-import { ENEMY_STATS, CHARGE_TELL, HOP_TELL, attackAngles } from './enemies.ts';
+import {
+  ENEMY_STATS,
+  CHARGE_TELL,
+  HOP_TELL,
+  LOADER_TELL,
+  PRESS_LOCK,
+  isBoss,
+  attackAngles,
+} from './enemies.ts';
 import { clamp, direction } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
@@ -146,7 +154,52 @@ export class Renderer {
             : e.kind === 'boss' && e.phase === 2
               ? '#ffbc83'
               : '#ee7965';
-      if (e.kind === 'charger') {
+      if (e.kind === 'loader') {
+        c.save();
+        c.scale(e.aim.x < 0 ? -1 : 1, 1);
+        c.fillStyle = e.flash > 0 ? '#fff5df' : '#393237';
+        c.fillRect(-56, -23, 112, 57);
+        c.fillRect(-31, -34, 58, 18);
+        c.fillStyle = '#171f25';
+        c.fillRect(-26, -29, 34, 15);
+        c.fillRect(-49, 17, 88, 13);
+        c.fillStyle = '#697072';
+        for (let i = 0; i < 7; i++) c.fillRect(-45 + i * 12, 20, 7, 6);
+        c.fillStyle = color;
+        c.fillRect(-54, -17, 8, 26);
+        c.fillRect(40, -22, 16, 56);
+        this.line({ x: 24, y: -7 }, { x: 42, y: 11 }, '#b79a87', 5);
+        c.fillStyle = e.state === 'recover' ? '#ffe2a0' : '#b26855';
+        for (let i = 0; i < 3; i++) c.fillRect(-32 + i * 13, -5, 7, 11);
+        if (e.state === 'windup') {
+          c.fillStyle = '#ffd19a';
+          c.fillRect(44, -20, 8, 50 * clamp(1 - e.timer / LOADER_TELL, 0, 1));
+        }
+        if (e.state === 'rush' && !this.reduced) {
+          this.line({ x: -62, y: 18 }, { x: -104, y: 18 }, '#a46b55', 3);
+          this.line({ x: -62, y: 28 }, { x: -88, y: 28 }, '#a46b55', 2);
+        }
+        c.restore();
+      } else if (e.kind === 'press') {
+        c.fillStyle = '#564a43';
+        c.fillRect(-41, -65, 10, 36);
+        c.fillRect(31, -65, 10, 36);
+        c.fillStyle = e.flash > 0 ? '#fff5df' : '#352b2b';
+        c.fillRect(-60, -31, 120, 62);
+        c.fillStyle = color;
+        c.fillRect(-60, -31, 120, 6);
+        c.fillRect(-60, 19, 120, 12);
+        c.fillStyle = '#1e2023';
+        c.fillRect(-49, -18, 98, 28);
+        c.fillStyle = e.state === 'recover' ? '#ffe0a0' : '#c38966';
+        for (let i = 0; i < 4; i++) c.fillRect(-37 + i * 22, -11, 9, 14);
+        for (const side of [-1, 1])
+          this.line({ x: side * 52, y: -19 }, { x: side * 52, y: 12 }, '#948373', 3);
+        if (e.state === 'rush' && !this.reduced) {
+          this.line({ x: -48, y: -41 }, { x: -48, y: -80 }, '#ad8562', 2);
+          this.line({ x: 48, y: -41 }, { x: 48, y: -80 }, '#ad8562', 2);
+        }
+      } else if (e.kind === 'charger') {
         c.save();
         c.scale(e.aim.x < 0 ? -1 : 1, 1);
         const brace = e.state === 'windup' ? (1 - e.timer / CHARGE_TELL) * 5 : 0;
@@ -243,13 +296,15 @@ export class Renderer {
         );
         c.restore();
       }
-      this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
+      if (e.kind !== 'loader' && e.kind !== 'press')
+        this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
       if (e.hp < e.maxHp) {
-        const w = e.kind === 'boss' ? 90 : 30;
+        const w = isBoss(e.kind) ? ENEMY_STATS[e.kind].w : 30;
+        const y = -ENEMY_STATS[e.kind].h / 2 - 13;
         c.fillStyle = '#493632';
-        c.fillRect(-w / 2, -size / 2 - 13, w, 3);
+        c.fillRect(-w / 2, y, w, 3);
         c.fillStyle = color;
-        c.fillRect(-w / 2, -size / 2 - 13, (w * e.hp) / e.maxHp, 3);
+        c.fillRect(-w / 2, y, (w * e.hp) / e.maxHp, 3);
       }
       c.restore();
       this.drawTell(e);
@@ -419,7 +474,36 @@ export class Renderer {
     const c = this.ctx,
       g = this.game,
       p = e.body.position;
-    if (e.kind === 'sniper') {
+    if (e.kind === 'loader') {
+      const end = g.lineEnd(p, { x: p.x + e.aim.x * 650, y: p.y });
+      c.setLineDash([8, 8]);
+      this.line({ x: p.x + e.aim.x * 60, y: p.y }, end, '#bc8260', 2);
+      c.setLineDash([]);
+      this.line({ x: end.x - e.aim.x * 14, y: end.y - 9 }, end, '#ffce98', 2);
+      this.line({ x: end.x - e.aim.x * 14, y: end.y + 9 }, end, '#ffce98', 2);
+    } else if (e.kind === 'press') {
+      const locked = e.timer <= PRESS_LOCK,
+        x = e.target.x;
+      const y = p.y + ENEMY_STATS.press.h / 2,
+        floor = e.target.y;
+      c.fillStyle = locked ? '#e9ad6410' : '#e9ad6406';
+      c.fillRect(x - 62, y, 124, Math.max(0, floor - y));
+      c.setLineDash(locked ? [] : [6, 10]);
+      for (const side of [-1, 1])
+        this.line(
+          { x: x + side * 62, y },
+          { x: x + side * 62, y: floor },
+          locked ? '#c69968' : '#735846',
+          1,
+        );
+      c.setLineDash([]);
+      this.line(
+        { x: x - 62, y: floor - 3 },
+        { x: x + 62, y: floor - 3 },
+        locked ? '#ffda98' : '#aa7e55',
+        locked ? 3 : 2,
+      );
+    } else if (e.kind === 'sniper') {
       const end = g.lineEnd(p, { x: p.x + e.aim.x * 1450, y: p.y + e.aim.y * 1450 });
       const locked = e.timer <= 0.32;
       c.setLineDash(locked ? [] : [7, 7]);

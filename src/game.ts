@@ -18,6 +18,10 @@ import {
   CHARGE_TELL,
   SNIPER_TELL,
   HOP_TELL,
+  LOADER_TELL,
+  PRESS_TELL,
+  PRESS_LOCK,
+  isBoss,
   bossPhase,
   bossAttack,
   attackTell,
@@ -540,6 +544,8 @@ export class Game {
       d = direction(p, this.player.position),
       dist = distance(p, this.player.position);
     if (e.kind === 'charger') this.updateCharger(e);
+    else if (e.kind === 'loader') this.updateLoader(e);
+    else if (e.kind === 'press') this.updatePress(e);
     else if (e.kind === 'hopper') this.updateHopper(e);
     else if (e.kind === 'sniper') this.updateSniper(e);
     else if (e.kind === 'boss') this.updateBoss(e);
@@ -592,11 +598,18 @@ export class Game {
       } else if (e.timer <= 0) e.timer = 0.8;
     }
     if (
-      !(e.kind === 'charger' && e.state === 'recover') &&
+      !((e.kind === 'charger' || e.kind === 'loader') && e.state === 'recover') &&
+      (e.kind !== 'press' || e.state === 'rush') &&
       Query.collides(this.player, [e.body]).length
     )
       this.damagePlayer(
-        e.kind === 'boss' ? 25 : e.kind === 'charger' && e.state === 'rush' ? 22 : 15,
+        isBoss(e.kind)
+          ? e.kind === 'loader'
+            ? 22
+            : 25
+          : e.kind === 'charger' && e.state === 'rush'
+            ? 22
+            : 15,
         p,
       );
     if (p.y > 900) this.hitEnemy(e, 9999);
@@ -679,6 +692,162 @@ export class Game {
           Body.setVelocity(e.body, { x: sign * 4.5, y: -12.3 });
           e.timer = 0.7;
         }
+      }
+    }
+  }
+  updateLoader(e: Enemy) {
+    const p = e.body.position,
+      v = e.body.velocity;
+    const sign = Math.sign(this.player.position.x - p.x) || e.aim.x || -1;
+    const grounded = this.enemyGrounded(e);
+    const nose = ENEMY_STATS.loader.w / 2 + 24;
+    if (e.state === 'rush') {
+      const end = this.lineEnd(p, { x: p.x + e.aim.x * nose, y: p.y });
+      if (Math.abs(end.x - p.x) < nose - 1 || e.timer <= 0) {
+        const crashed = e.timer > 0;
+        e.state = 'recover';
+        e.timer = crashed ? 1.7 : 0.9;
+        Body.setVelocity(e.body, { x: 0, y: v.y });
+        if (crashed) {
+          this.burst(end, 22, '#ffcf93', 5);
+          this.feedback(5);
+          this.onSound('crash');
+        }
+      } else Body.setVelocity(e.body, { x: e.aim.x * 15, y: v.y });
+    } else if (e.state === 'windup') {
+      Body.setVelocity(e.body, { x: v.x * 0.55, y: v.y });
+      if (e.timer <= 0) {
+        e.state = 'rush';
+        e.timer = 1.3;
+        this.onSound('loader');
+      }
+    } else if (e.state === 'recover') {
+      Body.setVelocity(e.body, { x: v.x * 0.7, y: v.y });
+      if (e.timer <= 0) {
+        e.state = 'idle';
+        e.timer = 0.9;
+      }
+    } else {
+      e.aim = { x: sign, y: 0 };
+      Body.setVelocity(e.body, { x: v.x + (sign * 2.8 - v.x) * 0.1, y: v.y });
+      const blocked =
+        Math.abs(this.lineEnd(p, { x: p.x + sign * nose, y: p.y }).x - p.x) < nose - 1;
+      if (grounded && blocked) {
+        Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
+        e.timer = Math.max(e.timer, 0.6);
+      } else if (grounded && e.timer <= 0 && Math.abs(this.player.position.y - p.y) < 180) {
+        e.state = 'windup';
+        e.timer = LOADER_TELL;
+        this.onSound('charge');
+      }
+    }
+  }
+  pressSurface(x: number, bottom: number) {
+    const half = ENEMY_STATS.press.w / 2;
+    return Math.min(
+      WORLD.floor,
+      ...this.terrain
+        .filter(
+          (b) =>
+            b.bounds.min.y >= bottom - 1 &&
+            b.bounds.min.y <= WORLD.floor &&
+            b.bounds.min.x < x + half &&
+            b.bounds.max.x > x - half,
+        )
+        .map((b) => b.bounds.min.y),
+    );
+  }
+  updatePress(e: Enemy) {
+    const p = e.body.position,
+      v = e.body.velocity;
+    const half = ENEMY_STATS.press.h / 2;
+    Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
+    if (e.state === 'windup') {
+      if (e.timer > PRESS_LOCK)
+        e.target.x = clamp(
+          this.player.position.x,
+          ENEMY_STATS.press.w / 2,
+          WORLD.width - ENEMY_STATS.press.w / 2,
+        );
+      e.target.y = this.pressSurface(e.target.x, 260 + half);
+      Body.setVelocity(e.body, {
+        x: clamp((e.target.x - p.x) * 0.25, -12, 12),
+        y: (260 - p.y) * 0.15,
+      });
+      if (e.timer <= 0) {
+        // The marked column is locked before descent, including its supporting ledge.
+        Body.setPosition(e.body, { x: e.target.x, y: p.y });
+        Body.setVelocity(e.body, { x: 0, y: 0 });
+        e.state = 'rush';
+        e.timer = 0.9;
+        this.onSound('press');
+      }
+    } else if (e.state === 'rush') {
+      const floor = this.pressSurface(p.x, p.y + half);
+      const nextY = Math.min(p.y + 20, floor - half);
+      const player = this.player.position;
+      if (
+        segmentBox(
+          p,
+          { x: p.x, y: nextY },
+          { x: player.x - 13 - ENEMY_STATS.press.w / 2, y: player.y - 18 - half },
+          { x: player.x + 13 + ENEMY_STATS.press.w / 2, y: player.y + 18 + half },
+        )
+      ) {
+        this.damagePlayer(25, p);
+        if (this.mode !== 'playing') return;
+      }
+      for (const prop of [...this.props.items]) {
+        if (
+          prop.body.bounds.min.x < p.x + 60 &&
+          prop.body.bounds.max.x > p.x - 60 &&
+          prop.body.bounds.min.y < nextY + half + 2 &&
+          prop.body.bounds.max.y > p.y - half
+        ) {
+          this.props.hit(prop, 144, { x: 0, y: 1 });
+        }
+      }
+      if (p.y + half + 20 >= floor || e.timer <= 0) {
+        if (p.y + half + 20 >= floor) Body.setPosition(e.body, { x: p.x, y: floor - half });
+        Body.setVelocity(e.body, { x: 0, y: 0 });
+        e.state = 'recover';
+        e.timer = 1.15;
+        this.burst({ x: p.x, y: p.y + half }, 24, '#ffcb90', 5);
+        this.feedback(6);
+        this.onSound('slam');
+      } else Body.setVelocity(e.body, { x: 0, y: 20 });
+    } else if (e.state === 'recover') {
+      Body.setVelocity(e.body, { x: 0, y: 0 });
+      if (e.timer <= 0) {
+        e.state = 'return';
+        e.timer = 2;
+      }
+    } else if (e.state === 'return') {
+      Body.setVelocity(e.body, { x: 0, y: -7 });
+      if (p.y <= 263 || e.timer <= 0) {
+        Body.setPosition(e.body, { x: p.x, y: 260 });
+        Body.setVelocity(e.body, { x: 0, y: 0 });
+        e.state = 'idle';
+        e.timer = 0.65;
+      }
+    } else {
+      e.aim = { x: 0, y: 1 };
+      Body.setVelocity(e.body, {
+        x: clamp((this.player.position.x - p.x) * 0.02, -6, 6),
+        y: (260 - p.y) * 0.15,
+      });
+      if (e.timer <= 0 && Math.abs(this.player.position.x - p.x) < 180) {
+        e.target = {
+          x: clamp(
+            this.player.position.x,
+            ENEMY_STATS.press.w / 2,
+            WORLD.width - ENEMY_STATS.press.w / 2,
+          ),
+          y: WORLD.floor,
+        };
+        e.state = 'windup';
+        e.timer = PRESS_TELL;
+        this.onSound('lock');
       }
     }
   }
@@ -967,6 +1136,8 @@ export class Game {
   hitEnemy(e: Enemy, damage: number) {
     if (e.hp <= 0) return;
     if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
+    if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.5 : 0.85;
+    if (e.kind === 'press' && e.state === 'recover') damage *= 1.35;
     e.hp -= damage;
     e.flash = 0.08;
     this.burst(e.body.position, 4, '#f28a79', 2.3);
@@ -976,21 +1147,21 @@ export class Game {
     this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);
     this.enemies = this.enemies.filter((x) => x !== e);
-    this.feedback(e.kind === 'boss' ? 10 : 4);
-    this.hitStop = Math.max(this.hitStop, e.kind === 'boss' ? 0.075 : 0.035);
-    this.burst(e.body.position, e.kind === 'boss' ? 45 : 16, '#f28371', e.kind === 'boss' ? 8 : 4);
+    this.feedback(isBoss(e.kind) ? 10 : 4);
+    this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);
+    this.burst(e.body.position, isBoss(e.kind) ? 45 : 16, '#f28371', isBoss(e.kind) ? 8 : 4);
     if (this.particles.length < 220)
       this.particles.push({
         pos: { ...e.body.position },
         vel: { x: 0, y: 0 },
         life: 0.25,
         max: 0.25,
-        size: e.kind === 'boss' ? 120 : 45,
+        size: isBoss(e.kind) ? 120 : 45,
         color: '#f28371',
         kind: 'ring',
       });
     this.onSound('kill');
-    if (e.kind === 'boss') for (const other of [...this.enemies]) this.hitEnemy(other, 9999);
+    if (isBoss(e.kind)) for (const other of [...this.enemies]) this.hitEnemy(other, 9999);
   }
   damagePlayer(amount: number, from?: Vec) {
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;

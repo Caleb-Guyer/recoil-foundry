@@ -17,7 +17,7 @@ A physics roguelike about staying in motion. Clear nine stages, change your gun 
 | Escape / P           | Pause                      |
 | 1–3 during upgrades  | Choose a modification      |
 
-Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. The final room has a boss.
+Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
 You always carry **one gun**. Fourteen possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 20 health. Eight picks per run leave room for different builds.
 
@@ -40,11 +40,11 @@ Existing modifications remain: Heavy hitter, Scattershot, Hair trigger, Bank sho
 
 Escape through three areas, each with its own scenery, lighting, and layout pool:
 
-- **Loading docks, rooms 1–3:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Three layouts drawn from loading bays, overpasses, staggered cargo, and terraces.
-- **Furnace halls, rooms 4–6:** warm boiler light, tall machinery, and tighter routes. Three layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages.
+- **Loading docks, rooms 1–3:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Two layouts drawn from loading bays, overpasses, staggered cargo, and terraces, then The Loader in its loading bay.
+- **Furnace halls, rooms 4–6:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then The Press in its machine hall.
 - **Rooftops, rooms 7–9:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, followed by one of two rooftop boss arenas.
 
-Each run has eight different regular layouts and a final boss arena. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
+Each run has six different regular layouts and three boss arenas. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
 
 Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
 
@@ -68,7 +68,13 @@ New behaviors appear gradually as the run advances:
 - **Snipers** track with a thin aiming line. The line becomes solid when their aim locks; move before the fast shot follows. Solid cover stops both the aiming line and the shot.
 - **Hoppers** crouch before jumping toward a landing spot. They climb ledges to follow you and pause after landing.
 
-The final boss changes at two-thirds and one-third health. Aimed volleys give way to alternating downward fans, then a cycle that adds slow radial volleys with gaps. Each pattern has a visible windup. Phase changes briefly interrupt the boss, and lights on its body show its current phase.
+## Area bosses
+
+- **Room 3 — The Loader:** a tracked ram that braces for 0.9 seconds before charging in a fixed direction. Jump over its charge or bait it into the low bumpers. A crash leaves it harmless to touch for 1.7 seconds and taking 50% extra damage. It hops the bumpers when repositioning, so it can follow you across the bay.
+- **Room 6 — The Press:** an overhead machine that marks a landing column before dropping. The final 0.65 seconds of the warning are locked, giving you time to dodge or recoil upward beside it. Platforms stop the slam; it rests briefly after impact and takes 35% extra damage before rising for another attack.
+- **Room 9 — Rooftop boss:** its attacks change at two-thirds and one-third health. Aimed volleys give way to alternating downward fans, then a cycle that adds slow radial volleys with gaps. Each pattern has a visible windup. Phase changes briefly interrupt the boss, and lights on its body show its current phase.
+
+Each boss has its own arena and silhouette. The Loader and Press lead to the same three-card gun upgrade and 20-health recovery as regular rooms. Only the final rooftop exit ends the run. Existing room-entrance saves resume with the correct boss; no extra controls or HUD panels are needed.
 
 ## Feel
 
@@ -115,6 +121,8 @@ Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered fram
 The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, nine-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
 
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
+
+Area boss checks cover locked attack warnings, wide-body crashes and platform-edge landings, bumper traversal, safe recovery windows, recoil escapes, attacks at world boundaries, pause and death cleanup, and exactly one upgrade after each intermediate boss.
 
 ## Publish
 

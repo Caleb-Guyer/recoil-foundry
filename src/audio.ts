@@ -126,6 +126,15 @@ export class Sound {
       this.tone(80, 175, 0.3, 0.045, 'sawtooth');
     } else if (kind === 'rush') {
       this.crack(0.1, 0.09, 650);
+    } else if (kind === 'loader') {
+      this.tone(65, 135, 0.35, 0.12, 'sawtooth');
+      this.crack(0.18, 0.1, 600);
+    } else if (kind === 'press') {
+      this.tone(270, 55, 0.24, 0.1, 'sawtooth');
+      this.crack(0.2, 0.09, 1700);
+    } else if (kind === 'slam') {
+      this.tone(85, 24, 0.3, 0.23);
+      this.crack(0.18, 0.2, 650);
     } else if (kind === 'crash') {
       this.tone(120, 30, 0.18, 0.15);
       this.crack(0.09, 0.1, 850);
