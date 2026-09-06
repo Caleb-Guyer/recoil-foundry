@@ -21,6 +21,16 @@ Shoot downward in the air to climb. Shoot sideways to launch yourself the other 
 
 You always carry **one gun**. Fourteen possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 20 health. Eight picks per run leave room for different builds.
 
+## Daily run
+
+Choose **Daily run** on the title screen for a shared nine-room challenge. A new challenge starts at midnight UTC. Everyone gets the same layouts, enemy and prop setup, and upgrade offers when making the same earlier choices. The gun, movement, and combat HUD are unchanged.
+
+Finish all nine rooms to save your fastest successful time for that challenge in this browser. The timer counts active simulation time, excluding pauses and upgrade screens. Continue keeps the elapsed time saved at the room entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
+
+The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
+
+Daily links include a ruleset version (`?daily=2026-09-06&dv=1`). Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+
 ## Gun builds
 
 | Modification | Effect and tradeoff                                                                                                                                |
@@ -111,6 +121,7 @@ npm run preview
 | `src/areas.ts`   | Area palettes, parallax scenery, and surface details                                   |
 | `src/props.ts`   | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
 | `src/rules.ts`   | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
+| `src/daily.ts`   | UTC challenge identity, versioned links, and validated local best times                |
 | `src/render.ts`  | Canvas world, camera feedback, character animation, and effects                        |
 | `src/main.ts`    | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
 | `src/audio.ts`   | Layered Web Audio effects                                                              |
@@ -123,6 +134,8 @@ The test suite covers actual movement, recoil flight, extreme builds, projectile
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
 
 Area boss checks cover locked attack warnings, wide-body crashes and platform-edge landings, bumper traversal, safe recovery windows, recoil escapes, attacks at world boundaries, pause and death cleanup, and exactly one upgrade after each intermediate boss.
+
+Daily checks cover UTC rollover and real calendar dates, versioned links, reproducible room and upgrade sequences, continued elapsed time, and corrupt or slower personal records. Browser checks also exercise title and result actions, retries, blocked storage, and both clipboard outcomes.
 
 ## Publish
 

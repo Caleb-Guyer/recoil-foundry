@@ -183,8 +183,10 @@ h1 > small {
 .quiet:hover {
   color: var(--ink);
 }
-#continue {
-  display: block;
+.title-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   margin: 7px auto -6px;
 }
 .title-controls {
@@ -326,6 +328,32 @@ h2 {
 .result-line span {
   padding: 0 9px;
   color: #677c72;
+}
+.daily-best {
+  color: var(--accent);
+  font-size: 14px;
+  margin: 14px 0 0;
+}
+.daily-best span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
+.share-fallback {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.share-link {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #354440;
+  border-radius: 3px;
+  background: #121b19;
+  color: var(--ink);
+  padding: 12px;
+  font: inherit;
 }
 .settings-list {
   border-top: 1px solid #354440;

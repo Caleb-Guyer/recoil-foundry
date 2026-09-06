@@ -6,6 +6,16 @@ import { Sound } from './audio.ts';
 import { AREAS } from './areas.ts';
 import { MODS, loadCheckpoint, STAGES } from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
+import {
+  DAILY_BESTS_KEY,
+  dailyFromSeed,
+  dailyFromUrl,
+  dailyLink,
+  formatDailyTime,
+  loadDailyBests,
+  recordDailyWin,
+  todayDaily,
+} from './daily.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 function read(key: string): unknown {
   try {
@@ -18,8 +28,10 @@ function write(key: string, value: unknown) {
   try {
     if (value === null) localStorage.removeItem(key);
     else localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
     $('save-status').textContent = 'Saving unavailable in this browser.';
+    return false;
   }
 }
 let checkpoint = loadCheckpoint(read('rf-checkpoint-v3'));
@@ -30,9 +42,9 @@ document.getElementById('app')!.innerHTML = `
  <section id="title-screen">
   <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
-   <button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button>
+   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button></div>
    <p class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
-   <p class="recoil-hint">Shoot down. Go up.</p>
+   <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><button id="settings" class="quiet title-settings">Settings</button>
  </section>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><button data-touch="jump" aria-label="Jump">↑</button></div>
@@ -69,7 +81,30 @@ const input: Input = {
   fire: false,
   aim: { x: 600, y: 550 },
 };
-const seedParam = new URLSearchParams(location.search).get('seed')?.slice(0, 40);
+const entryUrl = new URL(location.href);
+let linkedDaily = dailyFromUrl(entryUrl);
+let invalidDailyLink = entryUrl.searchParams.has('daily') && !linkedDaily;
+let seedParam = entryUrl.searchParams.has('daily')
+  ? undefined
+  : entryUrl.searchParams.get('seed')?.slice(0, 40);
+let activeDaily = dailyFromSeed(game.seed);
+let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = null;
+
+function updateTitle() {
+  $('play').innerHTML = `${linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
+  $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
+  $('daily').title = linkedDaily
+    ? 'Start a fresh random run'
+    : "Today's shared challenge · resets at midnight UTC";
+  $('continue').hidden = !checkpoint;
+  $('continue').textContent =
+    checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
+  $('title-hint').textContent = linkedDaily
+    ? `Daily · ${linkedDaily.date}`
+    : invalidDailyLink
+      ? 'Challenge link unavailable. Start a fresh run.'
+      : 'Shoot down. Go up.';
+}
 function clearInput() {
   keys.clear();
   mouseButtons = 0;
@@ -89,10 +124,15 @@ function persistSettings() {
 function newSeed() {
   return crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
 }
-function start(save?: Checkpoint, retry = false) {
+function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   sound.unlock();
   closeDialog();
-  game.start(save?.seed ?? (retry ? game.seed : (seedParam ?? newSeed())), save);
+  const seed =
+    save?.seed ??
+    (retry ? game.seed : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? newSeed()));
+  activeDaily = dailyFromSeed(seed);
+  dailyResult = null;
+  game.start(seed, save);
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -109,7 +149,7 @@ game.onChange = () => {
   $('stage').textContent =
     String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0');
   $('stage').title = `${AREAS[game.level.area].name} · ${game.level.name}`;
-  $('continue').hidden = !checkpoint;
+  updateTitle();
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
 };
@@ -173,16 +213,72 @@ function showDialog(kind: string) {
     );
   } else if (kind === 'result') {
     const win = game.mode === 'won';
+    if (activeDaily && !dailyResult) {
+      const stored = read(DAILY_BESTS_KEY);
+      const record = win ? recordDailyWin(stored, activeDaily, game.elapsed) : null;
+      dailyResult = record
+        ? {
+            best: record.best,
+            newBest: record.newBest,
+            saved: !record.newBest || write(DAILY_BESTS_KEY, record.bests),
+          }
+        : { best: loadDailyBests(stored)[activeDaily.seed], newBest: false, saved: true };
+    }
     content.innerHTML =
       '<p class="eyebrow">' +
-      (win ? 'ALL ' + STAGES + ' ROOMS' : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
+      (activeDaily
+        ? 'DAILY · ' + activeDaily.date
+        : win
+          ? 'ALL ' + STAGES + ' ROOMS'
+          : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
       '</p><h2 id="dialog-title">' +
       (win ? 'Clean escape.' : 'One more run?') +
       '</h2><p class="result-line">' +
-      formatTime(game.elapsed) +
+      (activeDaily ? formatDailyTime(game.elapsed * 100) : formatTime(game.elapsed)) +
       ' <span>·</span> ' +
       game.kills +
-      ' kills</p><div class="actions"><button id="retry" class="primary">Again ↗</button><button id="menu" class="quiet">Menu</button></div>';
+      ' kills</p>' +
+      (dailyResult?.best !== undefined
+        ? '<p class="daily-best">' +
+          (!dailyResult.saved
+            ? 'Time not saved · '
+            : dailyResult.newBest
+              ? 'New best · '
+              : 'Personal best · ') +
+          formatDailyTime(dailyResult.best) +
+          (!dailyResult.saved ? '<span>Saving unavailable in this browser.</span>' : '') +
+          '</p>'
+        : '') +
+      '<div class="actions"><button id="retry" class="primary">Again ↗</button><button id="menu" class="quiet">Menu</button>' +
+      (activeDaily ? '<button id="share" class="quiet">Copy challenge link</button>' : '') +
+      '</div>' +
+      (activeDaily
+        ? '<div id="share-fallback" class="share-fallback" hidden><label for="challenge-link">Copy this link</label><input id="challenge-link" class="share-link" readonly spellcheck="false" /></div><span id="share-status" class="sr-only" role="status"></span>'
+        : '');
+    if (activeDaily) {
+      const link = dailyLink(activeDaily, location.href);
+      $('share').onclick = async () => {
+        const button = $<HTMLButtonElement>('share');
+        button.disabled = true;
+        try {
+          await navigator.clipboard.writeText(link);
+          if (!button.isConnected) return;
+          button.textContent = 'Copied';
+          $('share-status').textContent = 'Challenge link copied.';
+        } catch {
+          if (!button.isConnected) return;
+          button.textContent = 'Copy challenge link';
+          $('share-fallback').hidden = false;
+          const field = $<HTMLInputElement>('challenge-link');
+          field.value = link;
+          field.focus();
+          field.select();
+          $('share-status').textContent = 'Select and copy the challenge link below.';
+        } finally {
+          button.disabled = false;
+        }
+      };
+    }
     $('retry').onclick = () => start(undefined, true);
     $('menu').onclick = () => {
       closeDialog();
@@ -241,6 +337,19 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () => start();
+$('daily').onclick = () => {
+  if (linkedDaily) {
+    linkedDaily = null;
+    invalidDailyLink = false;
+    seedParam = undefined;
+    const url = new URL(location.href);
+    url.searchParams.delete('daily');
+    url.searchParams.delete('dv');
+    url.searchParams.delete('seed');
+    history.replaceState(null, '', url);
+    start();
+  } else start(undefined, false, todayDaily().seed);
+};
 $('continue').onclick = () => {
   if (checkpoint) start(checkpoint);
 };
