@@ -106,6 +106,24 @@ export class Sound {
     } else if (kind === 'land') {
       this.tone(90, 35, 0.07, 0.065);
       this.crack(0.055, 0.035, 550);
+    } else if (kind === 'charge') {
+      this.tone(80, 175, 0.3, 0.045, 'sawtooth');
+    } else if (kind === 'rush') {
+      this.crack(0.1, 0.09, 650);
+    } else if (kind === 'crash') {
+      this.tone(120, 30, 0.18, 0.15);
+      this.crack(0.09, 0.1, 850);
+    } else if (kind === 'lock') {
+      this.tone(700, 1000, 0.12, 0.025, 'sine');
+    } else if (kind === 'snipe') {
+      this.tone(1000, 180, 0.1, 0.065);
+      this.crack(0.045, 0.08, 3000);
+    } else if (kind === 'hop') {
+      this.tone(160, 380, 0.085, 0.04);
+      this.crack(0.05, 0.03, 1700);
+    } else if (kind === 'phase' || kind === 'pulse') {
+      this.tone(kind === 'phase' ? 70 : 130, 35, 0.35, 0.12, 'sawtooth');
+      this.crack(0.16, 0.08, 500);
     } else if (kind === 'enemy') {
       this.tone(250, 90, 0.055, 0.06);
     } else if (kind === 'clear' || kind === 'upgrade') {

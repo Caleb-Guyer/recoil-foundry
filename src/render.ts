@@ -1,4 +1,6 @@
 import { Game, WORLD } from './game.ts';
+import type { Enemy } from './game.ts';
+import { ENEMY_STATS, CHARGE_TELL, HOP_TELL, attackAngles } from './enemies.ts';
 import { clamp, direction } from './rules.ts';
 import type { Vec } from './rules.ts';
 export class Renderer {
@@ -134,7 +136,7 @@ export class Renderer {
     }
     for (const e of g.enemies) {
       const p = e.body.position,
-        size = e.kind === 'boss' ? 90 : e.kind === 'runner' ? 30 : 36;
+        size = ENEMY_STATS[e.kind].w;
       c.save();
       c.translate(p.x, p.y);
       if (e.spawn > 0) {
@@ -143,8 +145,66 @@ export class Renderer {
         c.lineWidth = 1.5;
         c.strokeRect(-size / 2 - 8, -size / 2 - 8, size + 16, size + 16);
       }
-      const color = e.flash > 0 ? '#fff5df' : '#ee7965';
-      if (e.kind === 'flyer') {
+      const color =
+        e.flash > 0
+          ? '#fff5df'
+          : e.kind === 'sniper'
+            ? '#e9ac78'
+            : e.kind === 'boss' && e.phase === 2
+              ? '#ffbc83'
+              : '#ee7965';
+      if (e.kind === 'charger') {
+        c.save();
+        c.scale(e.aim.x < 0 ? -1 : 1, 1);
+        const brace = e.state === 'windup' ? (1 - e.timer / CHARGE_TELL) * 5 : 0;
+        c.translate(-brace, 0);
+        c.fillStyle = '#392c29';
+        c.beginPath();
+        c.moveTo(-15, -16);
+        c.lineTo(9, -16);
+        c.lineTo(18, 0);
+        c.lineTo(9, 16);
+        c.lineTo(-15, 16);
+        c.closePath();
+        c.fill();
+        this.line({ x: 8, y: -15 }, { x: 17, y: 0 }, color, 4);
+        this.line({ x: 17, y: 0 }, { x: 8, y: 15 }, color, 4);
+        c.fillStyle = e.state === 'recover' ? '#ffdfa2' : '#a65343';
+        for (let i = 0; i < 3; i++) c.fillRect(-12 + i * 6, -9, 3, 18);
+        if (e.state === 'rush' && !this.reduced) {
+          this.line({ x: -20, y: -8 }, { x: -53, y: -8 }, '#a35948', 2);
+          this.line({ x: -20, y: 8 }, { x: -41, y: 8 }, '#a35948', 2);
+        }
+        c.restore();
+      } else if (e.kind === 'hopper') {
+        const crouch = e.state === 'windup' ? 1 - e.timer / HOP_TELL : 0;
+        c.save();
+        c.translate(0, crouch * 5);
+        c.scale(1 + crouch * 0.12, 1 - crouch * 0.28);
+        c.fillStyle = '#392b2b';
+        c.beginPath();
+        c.moveTo(0, -17);
+        c.lineTo(15, -4);
+        c.lineTo(10, 12);
+        c.lineTo(-10, 12);
+        c.lineTo(-15, -4);
+        c.closePath();
+        c.fill();
+        this.line({ x: -14, y: -4 }, { x: 0, y: -17 }, color, 2.5);
+        this.line({ x: 0, y: -17 }, { x: 14, y: -4 }, color, 2.5);
+        const spread = e.state === 'airborne' ? 8 : 0;
+        for (const side of [-1, 1]) {
+          this.line({ x: side * 9, y: 4 }, { x: side * (20 + spread), y: 9 - spread }, color, 3);
+          this.line({ x: side * (20 + spread), y: 9 - spread }, { x: side * 16, y: 17 }, color, 3);
+        }
+        c.restore();
+      } else if (e.kind === 'sniper') {
+        c.fillStyle = '#392d29';
+        c.fillRect(-15, -12, 30, 25);
+        this.line({ x: -18, y: 16 }, { x: -10, y: -15 }, color, 3);
+        this.line({ x: 18, y: 16 }, { x: 10, y: -15 }, color, 3);
+        this.line({ x: -10, y: -15 }, { x: 10, y: -15 }, color, 2);
+      } else if (e.kind === 'flyer') {
         this.circle({ x: 0, y: 0 }, 18, '#392a2a');
         this.circle({ x: 0, y: 0 }, 18, color, false, 2.5);
         this.line({ x: -26, y: -5 }, { x: -18, y: 2 }, color, 3);
@@ -164,14 +224,30 @@ export class Renderer {
           c.fillStyle = '#211c20';
           c.fillRect(-35, -24, 70, 48);
           this.circle({ x: 0, y: 0 }, 21, color, false, 3);
+          for (let i = 0; i < 3; i++) {
+            c.fillStyle = i <= e.phase ? '#ffd3a0' : '#683f37';
+            c.fillRect(-15 + i * 12, -33, 6, 5);
+          }
+          if (e.phase > 0) {
+            this.line({ x: -45, y: -20 }, { x: -54, y: -30 }, color, 3);
+            this.line({ x: 45, y: -20 }, { x: 54, y: -30 }, color, 3);
+          }
+          if (e.state === 'transition')
+            this.circle({ x: 0, y: 0 }, 48 + (1.2 - e.timer) * 30, '#ffd3a0', false, 2);
         }
       }
-      const aim = e.kind === 'runner' ? direction(p, g.player.position) : e.aim;
-      if (e.kind !== 'runner') {
+      const aim =
+        e.kind === 'runner' || e.kind === 'hopper' ? direction(p, g.player.position) : e.aim;
+      if (['shooter', 'flyer', 'sniper', 'boss'].includes(e.kind)) {
         c.save();
         c.rotate(Math.atan2(aim.y, aim.x));
         c.fillStyle = color;
-        c.fillRect(e.kind === 'boss' ? 18 : 7, -3, e.kind === 'boss' ? 38 : 22, 6);
+        c.fillRect(
+          e.kind === 'boss' ? 18 : 7,
+          -3,
+          e.kind === 'boss' ? 38 : e.kind === 'sniper' ? 30 : 22,
+          e.kind === 'sniper' ? 4 : 6,
+        );
         c.restore();
       }
       this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
@@ -183,15 +259,21 @@ export class Renderer {
         c.fillRect(-w / 2, -size / 2 - 13, (w * e.hp) / e.maxHp, 3);
       }
       c.restore();
-      if (e.kind !== 'runner' && e.timer < 0.4 && e.spawn === 0) {
-        const length = e.kind === 'boss' ? 430 : 280;
+      this.drawTell(e);
+      if ((e.kind === 'shooter' || e.kind === 'flyer') && e.timer < 0.4 && e.spawn === 0) {
+        const length = 280;
         c.setLineDash([3, 10]);
-        this.line(p, { x: p.x + e.aim.x * length, y: p.y + e.aim.y * length }, '#794239', 1);
+        this.line(
+          p,
+          g.lineEnd(p, { x: p.x + e.aim.x * length, y: p.y + e.aim.y * length }),
+          '#794239',
+          1,
+        );
         c.setLineDash([]);
         this.circle(
           {
-            x: p.x + e.aim.x * (e.kind === 'boss' ? 56 : 28),
-            y: p.y + e.aim.y * (e.kind === 'boss' ? 56 : 28),
+            x: p.x + e.aim.x * 28,
+            y: p.y + e.aim.y * 28,
           },
           3 + Math.sin(this.clock * 30) * 1.5,
           '#ffd7a0',
@@ -209,6 +291,7 @@ export class Renderer {
         );
         this.circle(s.pos, s.radius, '#fff2d5');
       } else {
+        if (Math.hypot(s.vel.x, s.vel.y) > 12) this.line(s.prev, s.pos, '#ffd3a0', 2);
         this.circle(s.pos, 6, '#ee745f', false, 2);
         this.circle(s.pos, 2, '#ffcdb4');
       }
@@ -261,6 +344,36 @@ export class Renderer {
     if (g.mode === 'playing' && g.time - g.hurtAt < 0.2) {
       c.fillStyle = 'rgba(222,64,44,' + (0.2 - (g.time - g.hurtAt)) * 0.28 + ')';
       c.fillRect(0, 0, this.width, this.height);
+    }
+  }
+  drawTell(e: Enemy) {
+    if (e.spawn > 0 || e.state !== 'windup') return;
+    const c = this.ctx,
+      g = this.game,
+      p = e.body.position;
+    if (e.kind === 'sniper') {
+      const end = g.lineEnd(p, { x: p.x + e.aim.x * 1450, y: p.y + e.aim.y * 1450 });
+      const locked = e.timer <= 0.32;
+      c.setLineDash(locked ? [] : [7, 7]);
+      this.line(p, end, locked ? '#ffdda1' : '#946d51', locked ? 1.5 : 1);
+      c.setLineDash([]);
+      this.circle(end, locked ? 4 : 2, '#ffdda1', false, 1);
+    } else if (e.kind === 'charger') {
+      const end = g.lineEnd(p, { x: p.x + e.aim.x * 180, y: p.y });
+      c.setLineDash([6, 8]);
+      this.line(p, end, '#af6650', 1.5);
+      c.setLineDash([]);
+      this.line({ x: end.x - e.aim.x * 9, y: end.y - 6 }, end, '#f8b480', 2);
+      this.line({ x: end.x - e.aim.x * 9, y: end.y + 6 }, end, '#f8b480', 2);
+    } else if (e.kind === 'boss') {
+      const angles = attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x));
+      c.setLineDash([3, 12]);
+      for (const a of angles) {
+        const end = g.lineEnd(p, { x: p.x + Math.cos(a) * 380, y: p.y + Math.sin(a) * 380 });
+        this.line(p, end, e.timer <= 0.3 ? '#c38a63' : '#814a3d', 1);
+      }
+      c.setLineDash([]);
+      this.circle(p, 47 - e.timer * 8, '#f7bd83', false, 2);
     }
   }
   drawPlayer() {

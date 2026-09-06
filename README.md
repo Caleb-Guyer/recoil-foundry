@@ -29,6 +29,16 @@ Climb stacks, fight from ledges, take lower routes, and use solid cover to break
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
 
+## Enemies
+
+New behaviors appear gradually as the run advances:
+
+- **Chargers** brace, then rush in a fixed direction. Bait one into cover: the crash leaves it stunned, harmless to touch, and vulnerable to extra damage.
+- **Snipers** track with a thin aiming line. The line becomes solid when their aim locks; move before the fast shot follows. Solid cover stops both the aiming line and the shot.
+- **Hoppers** crouch before jumping toward a landing spot. They climb ledges to follow you and pause after landing.
+
+The final boss changes at two-thirds and one-third health. Aimed volleys give way to alternating downward fans, then a cycle that adds slow radial volleys with gaps. Each pattern has a visible windup. Phase changes briefly interrupt the boss, and lights on its body show its current phase.
+
 ## Feel
 
 - Buffered jumps, coyote time, variable jump height, and quick ground acceleration.
@@ -56,19 +66,20 @@ npm run build
 npm run preview
 ```
 
-| File            | Responsibility                                                                         |
-| --------------- | -------------------------------------------------------------------------------------- |
-| `src/game.ts`   | Matter.js simulation, movement, recoil, combat, and room progression                   |
-| `src/levels.ts` | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
-| `src/rules.ts`  | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
-| `src/render.ts` | Canvas world, camera feedback, character animation, and effects                        |
-| `src/main.ts`   | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
-| `src/audio.ts`  | Layered Web Audio effects                                                              |
-| `src/style.css` | Game menus and compact HUD                                                             |
+| File             | Responsibility                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `src/game.ts`    | Matter.js simulation, movement, recoil, combat, and room progression                   |
+| `src/enemies.ts` | Enemy dimensions, health, attack timing, and boss patterns                             |
+| `src/levels.ts`  | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
+| `src/rules.ts`   | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
+| `src/render.ts`  | Canvas world, camera feedback, character animation, and effects                        |
+| `src/main.ts`    | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
+| `src/audio.ts`   | Layered Web Audio effects                                                              |
+| `src/style.css`  | Game menus and compact HUD                                                             |
 
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
-The test suite covers actual movement, jump height, recoil flight, momentum preservation, camera feedback, restart timing, wall containment under extreme builds, piercing, fragmentation, saves, progression, seeded layout variety, clear spawn positions, and traversal of every layout in both directions.
+The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, nine-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop.
 
 ## Publish
 

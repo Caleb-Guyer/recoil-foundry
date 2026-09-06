@@ -13,6 +13,17 @@ import {
 import type { Vec, Gun, Mod, Checkpoint } from './rules.ts';
 import { getLevel } from './levels.ts';
 import type { Level, EnemyKind } from './levels.ts';
+import {
+  ENEMY_STATS,
+  CHARGE_TELL,
+  SNIPER_TELL,
+  HOP_TELL,
+  bossPhase,
+  bossAttack,
+  attackTell,
+  attackAngles,
+} from './enemies.ts';
+import type { EnemyState, Attack } from './enemies.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
 export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
@@ -36,6 +47,10 @@ export interface Enemy {
   spawn: number;
   phase: number;
   aim: Vec;
+  state: EnemyState;
+  target: Vec;
+  attacks: number;
+  attack: Attack;
 }
 export interface Shot {
   id: number;
@@ -188,19 +203,18 @@ export class Game {
   }
   spawnEnemy(kind: EnemyKind, x: number, y: number) {
     if (this.enemies.length >= 14) return;
-    const size = kind === 'boss' ? 90 : kind === 'runner' ? 30 : 36;
+    const { w, h, hp } = ENEMY_STATS[kind];
     const body =
       kind === 'flyer'
         ? Bodies.circle(x, y, 19, { frictionAir: 0.035, inertia: Infinity, label: 'enemy' })
-        : Bodies.rectangle(x, y, size, kind === 'boss' ? 76 : 32, {
+        : Bodies.rectangle(x, y, w, h, {
             friction: 0.05,
-            frictionAir: 0.03,
+            frictionAir: kind === 'hopper' ? 0.008 : 0.03,
             inertia: Infinity,
             chamfer: { radius: 3 },
             label: 'enemy',
           });
-    const hp = kind === 'boss' ? 850 : kind === 'runner' ? 52 : kind === 'flyer' ? 48 : 70;
-    if (kind === 'shooter') Body.setStatic(body, true);
+    if (kind === 'shooter' || kind === 'sniper') Body.setStatic(body, true);
     Composite.add(this.engine.world, body);
     this.enemies.push({
       id: ++this.id,
@@ -213,6 +227,10 @@ export class Game {
       spawn: 0.65,
       phase: 0,
       aim: { x: -1, y: 0 },
+      state: 'idle',
+      target: { x, y },
+      attacks: 0,
+      attack: 'aimed',
     });
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
@@ -406,7 +424,11 @@ export class Game {
     const p = e.body.position,
       d = direction(p, this.player.position),
       dist = distance(p, this.player.position);
-    if (e.kind === 'runner') {
+    if (e.kind === 'charger') this.updateCharger(e);
+    else if (e.kind === 'hopper') this.updateHopper(e);
+    else if (e.kind === 'sniper') this.updateSniper(e);
+    else if (e.kind === 'boss') this.updateBoss(e);
+    else if (e.kind === 'runner') {
       Body.setVelocity(e.body, {
         x: e.body.velocity.x + (d.x * 2.5 - e.body.velocity.x) * 0.08,
         y: e.body.velocity.y,
@@ -436,42 +458,265 @@ export class Game {
         Body.setVelocity(e.body, { x: d.x * 4.5, y: -11.8 });
         e.timer = 0.9;
       }
-    } else if (e.kind === 'flyer' || e.kind === 'boss') {
+    } else if (e.kind === 'flyer') {
       Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
-      const height =
-        e.kind === 'boss'
-          ? 310 + Math.sin(this.time) * 60
-          : clamp(this.player.position.y - 190, 220, 500);
+      const height = clamp(this.player.position.y - 190, 220, 500);
       Body.setVelocity(e.body, {
         x: clamp((this.player.position.x - d.x * 350 - p.x) * 0.009, -2.4, 2.4),
         y: clamp((height - p.y) * 0.04, -3, 3),
       });
     }
-    if (e.kind !== 'runner') {
+    if (e.kind === 'shooter' || e.kind === 'flyer') {
       if (e.timer > 0.35) e.aim = d;
       if (e.timer <= 0 && dist < 1450) {
         const base = Math.atan2(e.aim.y, e.aim.x);
-        const count = e.kind === 'boss' ? 5 : e.kind === 'flyer' ? 3 : 1;
-        for (let i = 0; i < count; i++)
-          this.enemyShot(e, base + (i - (count - 1) / 2) * (e.kind === 'boss' ? 0.17 : 0.18));
-        e.phase++;
-        e.timer = e.kind === 'boss' ? 1.6 : e.kind === 'flyer' ? 2.3 : 1.8;
+        const count = e.kind === 'flyer' ? 3 : 1;
+        for (let i = 0; i < count; i++) this.enemyShot(e, base + (i - (count - 1) / 2) * 0.18);
+        e.timer = e.kind === 'flyer' ? 2.3 : 1.8;
         this.onSound('enemy');
-        if (e.kind === 'boss' && e.phase % 5 === 0 && this.enemies.length < 4)
-          this.spawnEnemy('flyer', clamp(p.x + 200, 450, 1700), 280);
       } else if (e.timer <= 0) e.timer = 0.8;
     }
-    if (Query.collides(this.player, [e.body]).length)
-      this.damagePlayer(e.kind === 'boss' ? 25 : 15, p);
+    if (
+      !(e.kind === 'charger' && e.state === 'recover') &&
+      Query.collides(this.player, [e.body]).length
+    )
+      this.damagePlayer(
+        e.kind === 'boss' ? 25 : e.kind === 'charger' && e.state === 'rush' ? 22 : 15,
+        p,
+      );
     if (p.y > 900) this.hitEnemy(e, 9999);
   }
-  enemyShot(e: Enemy, a: number) {
+  enemyGrounded(e: Enemy) {
+    const p = e.body.position;
+    return (
+      e.body.velocity.y >= -1 &&
+      Query.ray(
+        this.terrain,
+        { x: p.x, y: e.body.bounds.max.y - 2 },
+        { x: p.x, y: e.body.bounds.max.y + 5 },
+        20,
+      ).length > 0
+    );
+  }
+  lineEnd(start: Vec, end: Vec): Vec {
+    let t = 1;
+    for (const b of this.terrain) {
+      const hit = segmentBox(start, end, b.bounds.min, b.bounds.max);
+      if (hit) t = Math.min(t, hit.t);
+    }
+    return { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t };
+  }
+  updateCharger(e: Enemy) {
+    const p = e.body.position,
+      v = e.body.velocity,
+      dx = this.player.position.x - p.x;
+    const grounded = this.enemyGrounded(e),
+      sign = Math.sign(dx) || 1;
+    if (e.state === 'rush') {
+      const end = this.lineEnd(p, { x: p.x + e.aim.x * 35, y: p.y });
+      if (Math.abs(end.x - p.x) < 34 || e.timer <= 0) {
+        const crashed = e.timer > 0;
+        e.state = 'recover';
+        e.timer = crashed ? 1.1 : 0.6;
+        Body.setVelocity(e.body, { x: 0, y: v.y });
+        if (crashed) {
+          this.burst(end, 12, '#ffc07a', 3.5);
+          this.feedback(2);
+          this.onSound('crash');
+        }
+      } else Body.setVelocity(e.body, { x: e.aim.x * 14, y: v.y });
+    } else if (e.state === 'windup') {
+      Body.setVelocity(e.body, { x: v.x * 0.65, y: v.y });
+      if (e.timer <= 0) {
+        e.state = 'rush';
+        e.timer = 0.62;
+        this.onSound('rush');
+      }
+    } else if (e.state === 'recover') {
+      Body.setVelocity(e.body, { x: v.x * 0.75, y: v.y });
+      if (e.timer <= 0) {
+        e.state = 'idle';
+        e.timer = 0.8;
+      }
+    } else {
+      e.aim = { x: sign, y: 0 };
+      Body.setVelocity(e.body, { x: v.x + (sign * 2.1 - v.x) * 0.08, y: v.y });
+      if (grounded && e.timer <= 0) {
+        if (Math.abs(dx) < 680 && Math.abs(this.player.position.y - p.y) < 80) {
+          e.state = 'windup';
+          e.timer = CHARGE_TELL;
+          this.onSound('charge');
+        } else if (
+          Math.abs(v.x) < 0.7 ||
+          this.player.position.y < p.y - 55 ||
+          Query.ray(this.terrain, p, { x: p.x + sign * 45, y: p.y }, 12).length
+        ) {
+          Body.setVelocity(e.body, { x: sign * 4.5, y: -12.3 });
+          e.timer = 0.7;
+        }
+      }
+    }
+  }
+  hopperTarget(e: Enemy): Vec {
+    const p = e.body.position,
+      player = this.player.position;
+    const candidates: Vec[] = [];
+    for (const b of this.terrain) {
+      const min = b.bounds.min,
+        max = b.bounds.max;
+      if (
+        min.y < 0 ||
+        min.y > WORLD.floor ||
+        max.x <= 0 ||
+        min.x >= WORLD.width ||
+        max.x - min.x < 48
+      )
+        continue;
+      const target = {
+        x: clamp(player.x, Math.max(35, min.x + 23), Math.min(1965, max.x - 23)),
+        y: min.y - 17,
+      };
+      if (Math.abs(target.x - p.x) > 390) target.x = clamp(target.x, p.x - 390, p.x + 390);
+      if (
+        target.x < min.x + 23 ||
+        target.x > max.x - 23 ||
+        p.y - target.y > 225 ||
+        target.y - p.y > 400
+      )
+        continue;
+      if (
+        this.terrain.some(
+          (other) =>
+            other !== b &&
+            target.x + 15 > other.bounds.min.x &&
+            target.x - 15 < other.bounds.max.x &&
+            target.y + 16 > other.bounds.min.y &&
+            target.y - 16 < other.bounds.max.y,
+        )
+      )
+        continue;
+      candidates.push(target);
+    }
+    return (
+      candidates.sort((a, b) => distance(a, player) - distance(b, player))[0] ?? {
+        x: clamp(p.x + Math.sign(player.x - p.x) * 200, 35, 1965),
+        y: p.y,
+      }
+    );
+  }
+  updateHopper(e: Enemy) {
+    const p = e.body.position,
+      v = e.body.velocity,
+      grounded = this.enemyGrounded(e);
+    if (e.state === 'airborne') {
+      Body.setVelocity(e.body, { x: clamp((e.target.x - p.x) * 0.07, -6.5, 6.5), y: v.y });
+      if (grounded && e.timer <= 0) {
+        e.state = 'recover';
+        e.timer = 0.5;
+        this.burst({ x: p.x, y: p.y + 16 }, 7, '#bc9685', 2);
+        this.onSound('land');
+      }
+    } else if (e.state === 'windup') {
+      Body.setVelocity(e.body, { x: v.x * 0.65, y: v.y });
+      if (e.timer <= 0 && grounded) {
+        e.state = 'airborne';
+        e.timer = 0.2;
+        Body.setVelocity(e.body, {
+          x: clamp((e.target.x - p.x) / 42, -6.5, 6.5),
+          y: -13.5 - Math.max(0, p.y - e.target.y) * 0.009,
+        });
+        this.onSound('hop');
+      } else if (e.timer < -0.5) {
+        e.state = 'airborne';
+        e.timer = 0.2;
+      }
+    } else {
+      Body.setVelocity(e.body, { x: v.x * 0.8, y: v.y });
+      if (e.timer <= 0 && grounded) {
+        e.target = this.hopperTarget(e);
+        e.aim = direction(p, e.target);
+        e.state = 'windup';
+        e.timer = HOP_TELL;
+      }
+    }
+  }
+  updateSniper(e: Enemy) {
+    if (e.state === 'windup') {
+      if (e.timer > 0.32) e.aim = direction(e.body.position, this.player.position);
+      if (e.timer <= 0) {
+        this.enemyShot(e, Math.atan2(e.aim.y, e.aim.x), 18, 20);
+        this.onSound('snipe');
+        e.state = 'recover';
+        e.timer = 2.2;
+      }
+    } else {
+      e.aim = direction(e.body.position, this.player.position);
+      if (e.timer <= 0 && distance(e.body.position, this.player.position) < 1450) {
+        e.state = 'windup';
+        e.timer = SNIPER_TELL;
+        this.onSound('lock');
+      }
+    }
+  }
+  updateBoss(e: Enemy) {
+    const p = e.body.position,
+      d = direction(p, this.player.position);
+    Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
+    const phase = bossPhase(e.hp, e.maxHp);
+    if (phase > e.phase) {
+      e.phase = phase;
+      e.state = 'transition';
+      e.timer = 1.2;
+      e.attacks = 0;
+      this.burst(p, 25, '#ffd19b', 4);
+      this.feedback(4);
+      this.onSound('phase');
+    }
+    const resting = e.state === 'windup' || e.state === 'transition';
+    Body.setVelocity(e.body, {
+      x: resting
+        ? e.body.velocity.x * 0.82
+        : clamp((this.player.position.x - d.x * 350 - p.x) * 0.009, -2.4, 2.4),
+      y: resting
+        ? e.body.velocity.y * 0.82
+        : clamp((290 + Math.sin(this.time) * 55 - p.y) * 0.04, -2.5, 2.5),
+    });
+    if (e.state === 'transition') {
+      if (e.timer <= 0) {
+        e.state = 'idle';
+        e.timer = 0.4;
+      }
+    } else if (e.state === 'windup') {
+      if (e.attack === 'aimed' && e.timer > 0.3) e.aim = d;
+      if (e.timer <= 0) {
+        for (const angle of attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)))
+          this.enemyShot(e, angle, e.attack === 'ring' ? 5 : 6.7, 16);
+        e.attacks++;
+        e.state = 'recover';
+        e.timer = [1.35, 1.15, 0.95][e.phase];
+        this.onSound(e.attack === 'ring' ? 'pulse' : 'enemy');
+      }
+    } else if (e.timer <= 0) {
+      e.attack = bossAttack(e.phase, e.attacks);
+      e.aim = d;
+      e.state = 'windup';
+      e.timer = attackTell(e.attack);
+      this.onSound('lock');
+    }
+  }
+  enemyShot(e: Enemy, a: number, speed = 6.7, damage = e.kind === 'boss' ? 16 : 12) {
     const d = { x: Math.cos(a), y: Math.sin(a) },
-      radius = e.kind === 'boss' ? 55 : 26;
+      radius = e.kind === 'boss' ? 55 : e.kind === 'sniper' ? 38 : 26;
+    const muzzle = { x: e.body.position.x + d.x * radius, y: e.body.position.y + d.y * radius };
+    const end = this.lineEnd(e.body.position, muzzle);
+    if (distance(end, muzzle) > 0.01) {
+      this.burst(end, 3, '#ef7264', 1.5);
+      return;
+    }
     this.addShot({
-      pos: { x: e.body.position.x + d.x * radius, y: e.body.position.y + d.y * radius },
-      vel: { x: d.x * 6.7, y: d.y * 6.7 },
-      damage: e.kind === 'boss' ? 16 : 12,
+      pos: muzzle,
+      vel: { x: d.x * speed, y: d.y * speed },
+      damage,
       life: 4,
       friendly: false,
       radius: 5,
@@ -571,6 +816,7 @@ export class Game {
   }
   hitEnemy(e: Enemy, damage: number) {
     if (e.hp <= 0) return;
+    if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
     e.hp -= damage;
     e.flash = 0.08;
     this.burst(e.body.position, 4, '#f28a79', 2.3);

@@ -313,103 +313,104 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-test('a combat run reaches the final exit with normal health and real input', () => {
-  const g = new Game();
-  g.start('F');
-  let previousX = 140,
-    stuck = 0,
-    lastProgress = 0,
-    lastKills = 0,
-    clearAt = -1;
-  const priority = [
-    'leech',
-    'magnum',
-    'scatter',
-    'rapid',
-    'airshot',
-    'pierce',
-    'ricochet',
-    'light',
-    'split',
-    'kick',
-  ];
-  for (let i = 0; i < 60 * 240 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
-    if (g.mode === 'upgrade') {
-      g.chooseMod(
-        [...g.offers].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))[0].id,
-      );
+for (const seed of ['A', 'D'])
+  test('a combat run reaches the final exit with normal health and real input: ' + seed, () => {
+    const g = new Game();
+    g.start(seed);
+    let previousX = 140,
+      stuck = 0,
+      lastProgress = 0,
+      lastKills = 0,
       clearAt = -1;
-      lastProgress = g.time;
-      stuck = 0;
-      previousX = g.player.position.x;
+    const priority = [
+      'leech',
+      'magnum',
+      'scatter',
+      'rapid',
+      'airshot',
+      'pierce',
+      'ricochet',
+      'light',
+      'split',
+      'kick',
+    ];
+    for (let i = 0; i < 60 * 240 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+      if (g.mode === 'upgrade') {
+        g.chooseMod(
+          [...g.offers].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))[0].id,
+        );
+        clearAt = -1;
+        lastProgress = g.time;
+        stuck = 0;
+        previousX = g.player.position.x;
+      }
+      const p = g.player.position,
+        e = [...g.enemies].sort(
+          (a, b) => distance(a.body.position, p) - distance(b.body.position, p),
+        )[0];
+      const ep = e?.body.position ?? { x: 1910, y: 700 },
+        lead = distance(p, ep) / 30,
+        dx = ep.x - p.x,
+        dy = p.y - ep.y;
+      let aim = {
+        x: ep.x + (e?.body.velocity.x ?? 0) * lead,
+        y: ep.y + (e?.body.velocity.y ?? 0) * lead,
+      };
+      stuck = Math.abs(p.x - previousX) < 0.5 ? stuck + 1 : 0;
+      previousX = p.x;
+      let move = g.clear
+        ? p.x < 1910
+          ? 1
+          : p.x > 1960
+            ? -1
+            : 0
+        : dx > 240
+          ? 1
+          : dx < -240
+            ? -1
+            : Math.abs(dx) < 100
+              ? dx < 0
+                ? 1
+                : -1
+              : 0;
+      if (!g.clear && (p.x < 100 || p.x > 1900)) move = p.x < 100 ? 1 : -1;
+      if (g.kills !== lastKills) {
+        lastKills = g.kills;
+        lastProgress = g.time;
+      }
+      if (!g.clear && g.time - lastProgress > 5) move = Math.sin(g.time * 0.65) > 0 ? 1 : -1;
+      // If cover blocks a distant target, stop recoil and take the next terrain waypoint.
+      const navigate = !g.clear && g.time - lastProgress > 8 && distance(p, ep) > 500;
+      const path = g.level.route;
+      const way = navigate
+        ? dx > 0
+          ? path.find((q) => q.x > p.x + 35)
+          : [...path].reverse().find((q) => q.x < p.x - 35)
+        : undefined;
+      if (way) move = way.x > p.x ? 1 : -1;
+      const blocked =
+        !!move && Query.ray(g.terrain, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
+      const lift =
+        (!navigate && ((!g.clear && dy > 70 && Math.abs(dx) < 500) || (blocked && stuck > 20))) ||
+        !!(navigate && way && p.y - way.y > 75 && !g.grounded && stuck > 15);
+      let jump = g.grounded && (i % 90 === 0 || blocked || stuck > 15 || lift);
+      if (lift && !g.grounded) aim = { x: p.x, y: p.y + 500 };
+      if (g.clear) {
+        if (clearAt < 0) clearAt = g.time;
+        assert(g.time - clearAt < 35, `Exit unreachable in ${g.level.id}`);
+        jump = g.grounded && (blocked || stuck > 15);
+      }
+      if (way && p.y - way.y > 50 && g.grounded) jump = true;
+      tick(g, 1, {
+        left: move < 0,
+        right: move > 0,
+        jump,
+        fire: (!g.clear && !navigate) || (lift && !g.grounded),
+        aim,
+      });
     }
-    const p = g.player.position,
-      e = [...g.enemies].sort(
-        (a, b) => distance(a.body.position, p) - distance(b.body.position, p),
-      )[0];
-    const ep = e?.body.position ?? { x: 1910, y: 700 },
-      lead = distance(p, ep) / 30,
-      dx = ep.x - p.x,
-      dy = p.y - ep.y;
-    let aim = {
-      x: ep.x + (e?.body.velocity.x ?? 0) * lead,
-      y: ep.y + (e?.body.velocity.y ?? 0) * lead,
-    };
-    stuck = Math.abs(p.x - previousX) < 0.5 ? stuck + 1 : 0;
-    previousX = p.x;
-    let move = g.clear
-      ? p.x < 1910
-        ? 1
-        : p.x > 1960
-          ? -1
-          : 0
-      : dx > 240
-        ? 1
-        : dx < -240
-          ? -1
-          : Math.abs(dx) < 100
-            ? dx < 0
-              ? 1
-              : -1
-            : 0;
-    if (!g.clear && (p.x < 100 || p.x > 1900)) move = p.x < 100 ? 1 : -1;
-    if (g.kills !== lastKills) {
-      lastKills = g.kills;
-      lastProgress = g.time;
-    }
-    if (!g.clear && g.time - lastProgress > 5) move = Math.sin(g.time * 0.65) > 0 ? 1 : -1;
-    // If cover blocks a distant target, stop recoil and take the next terrain waypoint.
-    const navigate = !g.clear && g.time - lastProgress > 8 && distance(p, ep) > 500;
-    const path = g.level.route;
-    const way = navigate
-      ? dx > 0
-        ? path.find((q) => q.x > p.x + 35)
-        : [...path].reverse().find((q) => q.x < p.x - 35)
-      : undefined;
-    if (way) move = way.x > p.x ? 1 : -1;
-    const blocked =
-      !!move && Query.ray(g.terrain, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
-    const lift =
-      (!navigate && ((!g.clear && dy > 70 && Math.abs(dx) < 500) || (blocked && stuck > 20))) ||
-      !!(navigate && way && p.y - way.y > 75 && !g.grounded && stuck > 15);
-    let jump = g.grounded && (i % 90 === 0 || blocked || stuck > 15 || lift);
-    if (lift && !g.grounded) aim = { x: p.x, y: p.y + 500 };
-    if (g.clear) {
-      if (clearAt < 0) clearAt = g.time;
-      assert(g.time - clearAt < 35, `Exit unreachable in ${g.level.id}`);
-      jump = g.grounded && (blocked || stuck > 15);
-    }
-    if (way && p.y - way.y > 50 && g.grounded) jump = true;
-    tick(g, 1, {
-      left: move < 0,
-      right: move > 0,
-      jump,
-      fire: (!g.clear && !navigate) || (lift && !g.grounded),
-      aim,
-    });
-  }
-  assert.equal(g.mode, 'won');
-  assert.equal(g.stage, STAGES - 1);
-  assert.equal(g.mods.length, STAGES - 1);
-  assert(g.hp > 0);
-});
+    assert.equal(g.mode, 'won');
+    assert.equal(g.stage, STAGES - 1);
+    assert.equal(g.mods.length, STAGES - 1);
+    assert(g.hp > 0);
+  });

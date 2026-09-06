@@ -4,6 +4,7 @@ import { getLevel, LAYOUTS, BOSS_LAYOUTS } from '../src/levels.ts';
 import { STAGES } from '../src/rules.ts';
 import { Game } from '../src/game.ts';
 import Matter from 'matter-js';
+import { ENEMY_STATS } from '../src/enemies.ts';
 const overlap = (
   a: { x: number; y: number; w: number; h: number },
   b: { x: number; y: number; w: number; h: number },
@@ -43,9 +44,7 @@ test('all generated enemy hulls, player starts and exits are clear of solid obst
       const actors = [
         { x: 127, y: 662, w: 26, h: 36 },
         ...level.spawns.map((s) => {
-          const w =
-              s.kind === 'boss' ? 90 : s.kind === 'runner' ? 30 : s.kind === 'flyer' ? 38 : 36,
-            h = s.kind === 'boss' ? 76 : s.kind === 'flyer' ? 38 : 32;
+          const { w, h } = ENEMY_STATS[s.kind];
           return { x: s.x - w / 2, y: s.y - h / 2, w, h };
         }),
       ];

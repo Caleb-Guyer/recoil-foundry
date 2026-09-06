@@ -1,6 +1,6 @@
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
-export type EnemyKind = 'runner' | 'shooter' | 'flyer' | 'boss';
+export type EnemyKind = 'runner' | 'shooter' | 'flyer' | 'charger' | 'sniper' | 'hopper' | 'boss';
 export interface Solid {
   x: number;
   y: number;
@@ -497,6 +497,30 @@ export function getLevel(seed: string, stage: number): Level {
     .map((s) => ({ ...s, x: mirrored ? 2000 - s.x : s.x }))
     .filter((s) => s.kind === 'boss' || s.x >= 380);
   const spawns = sample(anchors, count, rng);
+  // Introduce one new behavior at a time, using the same terrain-safe hull anchors.
+  const introduce = (kind: EnemyKind, from: EnemyKind) => {
+    let index = spawns.findIndex((s) => s.kind === from);
+    if (index < 0) {
+      const anchor = anchors.find(
+        (s) => s.kind === from && !spawns.some((p) => p.x === s.x && p.y === s.y),
+      );
+      if (!anchor) return;
+      index = spawns.findIndex((s) => ['runner', 'shooter', 'flyer'].includes(s.kind));
+      if (index < 0) return;
+      spawns[index] = { ...anchor };
+    }
+    spawns[index] = { ...spawns[index], kind };
+  };
+  if (stage >= 1 && stage < 8) introduce('charger', 'runner');
+  if (stage >= 2 && stage < 8) introduce('sniper', 'shooter');
+  if (stage >= 3 && stage < 8) introduce('hopper', 'runner');
+  for (const spawn of spawns) {
+    if (spawn.kind !== 'sniper') continue;
+    const support = solids.find(
+      (s) => Math.abs(s.y - spawn.y - 16) < 0.1 && spawn.x >= s.x && spawn.x <= s.x + s.w,
+    );
+    if (support && support.x + support.w - 19 >= 380) spawn.x = Math.max(380, support.x + 19);
+  }
   const path = source.route.map((p) => ({ ...p, x: mirrored ? 2000 - p.x : p.x }));
   return {
     ...source,
