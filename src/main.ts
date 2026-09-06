@@ -2,8 +2,8 @@ import './style.css';
 import { Game } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
-import { STAGES, TECHS, WEAPONS, validateCheckpoint, pointerButtons } from './rules.ts';
-import type { Checkpoint, FieldId, WeaponId } from './rules.ts';
+import { STAGES, TECHS, WEAPONS, loadCheckpoint, pointerButtons } from './rules.ts';
+import type { Checkpoint, WeaponId } from './rules.ts';
 import type { Input } from './game.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const escape = (s: string) =>
@@ -22,21 +22,24 @@ function write(key: string, data: unknown) {
   try {
     if (data === null) localStorage.removeItem(key);
     else localStorage.setItem(key, JSON.stringify(data));
+    return true;
   } catch {
     $('save-status').textContent = 'LOCAL SAVING UNAVAILABLE';
+    return false;
   }
 }
-const rawSave = read('rf-checkpoint-v1');
-let checkpoint: Checkpoint | null = validateCheckpoint(rawSave) ? rawSave : null;
-let selectedField: FieldId = 'repulsor';
+let checkpoint: Checkpoint | null =
+  loadCheckpoint(read('rf-checkpoint-v2')) ?? loadCheckpoint(read('rf-checkpoint-v1'));
+// Retire the old key only after writing a valid new checkpoint.
 document.getElementById('app')!.innerHTML = `
 <main class="game-shell">
  <div class="viewport" id="viewport">
-  <canvas id="game" tabindex="0" aria-label="Recoil Foundry physics game. Use A and D to move, W or Space to jump, mouse to aim, left click to fire, right click for field, E at the exit."></canvas>
+  <canvas id="game" tabindex="0" aria-label="Recoil Foundry physics game. Use A and D to move, W or Space to jump, mouse to aim, left click to fire, right click to reel in the core, E at the exit."></canvas>
   <section class="hud" aria-label="Run status">
    <div class="meters">
     <div class="meter" title="Health"><span aria-hidden="true">+</span><progress id="hp" aria-label="Health" value="100" max="100"></progress><span id="hp-value">100</span></div>
     <div class="meter energy" title="Energy"><span aria-hidden="true">ϟ</span><progress id="energy" aria-label="Energy" value="100" max="100"></progress><span id="energy-value">100</span></div>
+    <div class="meter cargo-meter" title="Power core"><span aria-hidden="true">◇</span><progress id="cargo" aria-label="Core integrity" value="120" max="120"></progress><span id="cargo-value">120</span></div>
    </div>
    <div class="run-controls"><span id="sector-progress" title="Sector">1 / 6</span><button id="pause" class="icon-button" aria-label="Pause game" title="Pause · Esc">Ⅱ</button></div>
   </section>
@@ -44,22 +47,20 @@ document.getElementById('app')!.innerHTML = `
   <section id="start-screen" class="start-screen" aria-label="Start a run">
    <div class="start-content">
     <img class="title-mark" src="./icon.svg" alt="" />
-    <h1>Recoil Foundry</h1>
+    <h1>Recoil Foundry</h1><p class="premise">Get the core home.</p>
     <button id="start" class="primary">Play</button>
     <button id="continue" class="text-button" ${checkpoint ? '' : 'hidden'}>Continue</button>
-    <details class="run-options"><summary>Options</summary>
-     <div class="field-options" aria-label="Starting field"><button class="field-card selected" id="field-repulsor" aria-pressed="true" title="Push objects and reflect bullets">◎ Repulsor</button><button class="field-card" id="field-tractor" aria-pressed="false" title="Catch crates and release to throw">⊹ Tractor</button></div>
-     <p class="field-description" id="field-description">Push objects and reflect bullets.</p>
+    <details class="run-options"><summary>Seed</summary>
      <label class="seed-label">Seed<input id="seed" maxlength="40" autocomplete="off" aria-label="Run seed" placeholder="Random" /></label>
     </details>
    </div>
   </section>
   <section class="equipment" aria-label="Equipment">
-   <div class="equipped-line"><span id="weapon-name">Coil driver</span><button id="build" class="text-button" title="View technologies"><span aria-hidden="true">◇</span> <span id="tech-count">0</span><span class="sr-only"> technologies</span></button></div>
-   <div class="equipment-buttons"><div class="weapon-rack" id="weapons"></div><button class="icon-button field-slot" id="field-info" aria-label="Repulsor field controls" title="Repulsor · RMB or Shift">◎</button></div>
+   <div class="equipped-line"><span id="weapon-name">Rivet gun</span><button id="build" class="text-button" title="View upgrades"><span aria-hidden="true">◇</span> <span id="tech-count">0</span><span class="sr-only"> upgrades</span></button></div>
+   <div class="equipment-buttons"><div class="weapon-rack" id="weapons"></div><button class="icon-button winch-slot" id="winch-info" aria-label="Winch controls" title="Winch · hold RMB or Shift">↤</button></div>
   </section>
   <nav class="settings" aria-label="Game settings"><button id="help" class="icon-button" aria-label="How to play" title="Controls">?</button><button id="sound" class="icon-button" aria-label="Mute sound" title="Toggle sound">♪</button></nav>
-  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button data-touch="field" aria-label="Activate field">◎</button><button data-touch="jump" aria-label="Jump">↑</button><button data-touch="interact" aria-label="Use exit">E</button></div></div>
+  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button data-touch="winch" aria-label="Reel in core">↤</button><button data-touch="jump" aria-label="Jump">↑</button><button data-touch="interact" aria-label="Use exit">E</button></div></div>
  </div>
 </main>
 <span class="sr-only" id="save-status" role="status"></span>
@@ -78,7 +79,7 @@ const input: Input = {
   crouch: false,
   jump: false,
   fire: false,
-  field: false,
+  winch: false,
   interact: false,
   aim: { x: 500, y: 650 },
 };
@@ -95,7 +96,7 @@ function clearInput() {
   keys.clear();
   arenaTouches.clear();
   heldMouseButtons = 0;
-  for (const key of ['left', 'right', 'crouch', 'jump', 'fire', 'field', 'interact'] as const)
+  for (const key of ['left', 'right', 'crouch', 'jump', 'fire', 'winch', 'interact'] as const)
     input[key] = false;
 }
 function newSeed() {
@@ -108,7 +109,7 @@ function start(save?: Checkpoint) {
   closeModal();
   clearInput();
   const seed = save?.seed ?? ($<HTMLInputElement>('seed').value.trim() || newSeed());
-  game.start(seed, selectedField, save);
+  game.start(seed, save);
   canvas.focus();
 }
 function settings() {
@@ -116,17 +117,6 @@ function settings() {
   $('sound').textContent = sound.enabled ? '♪' : '♪̸';
   $('sound').setAttribute('aria-label', sound.enabled ? 'Mute sound' : 'Enable sound');
 }
-function selectField(field: FieldId) {
-  selectedField = field;
-  for (const f of ['repulsor', 'tractor']) {
-    $('field-' + f).classList.toggle('selected', f === field);
-    $('field-' + f).setAttribute('aria-pressed', String(f === field));
-  }
-  $('field-description').textContent =
-    field === 'repulsor' ? 'Push objects and reflect bullets.' : 'Catch crates. Release to throw.';
-}
-$('field-repulsor').onclick = () => selectField('repulsor');
-$('field-tractor').onclick = () => selectField('tractor');
 $('start').onclick = () => start();
 $('continue').onclick = () => {
   if (checkpoint) start(checkpoint);
@@ -140,11 +130,11 @@ settings();
 $('help').onclick = () => showModal('help');
 $('pause').onclick = () => togglePause();
 $('build').onclick = () => showModal('build');
-$('field-info').onclick = () => showModal('help');
+$('winch-info').onclick = () => showModal('help');
 game.onSound = (kind) => sound.play(kind);
 game.onCheckpoint = (save) => {
   checkpoint = save;
-  write('rf-checkpoint-v1', save);
+  if (write('rf-checkpoint-v2', save)) write('rf-checkpoint-v1', null);
 };
 function renderEquipment() {
   const icons: Record<WeaponId, string> = {
@@ -166,10 +156,6 @@ function renderEquipment() {
         canvas.focus();
       }),
   );
-  const fieldName = game.field === 'repulsor' ? 'Repulsor' : 'Tractor';
-  $('field-info').textContent = game.field === 'repulsor' ? '◎' : '⊹';
-  $('field-info').title = `${fieldName} · RMB or Shift`;
-  $('field-info').setAttribute('aria-label', `${fieldName} field controls`);
   $('weapon-name').textContent = WEAPONS[game.weapon].name;
   $('tech-count').textContent = String(game.techs.length);
 }
@@ -219,7 +205,7 @@ function showModal(kind: string) {
   modalKind = kind;
   const content = $('modal-content');
   if (kind === 'upgrade') {
-    content.innerHTML = `<h2 id="modal-title">Choose an upgrade</h2>${game.weaponReward ? `<p class="reward-banner">Unlocked: <b>${WEAPONS[game.weaponReward].name}</b></p>` : ''}<div class="tech-grid">${game.offers.map((t, i) => `<button class="tech-card" data-tech="${t.id}"><kbd>${i + 1}</kbd><b>${t.name}</b><p>${t.description}</p></button>`).join('')}</div><p class="fine-print">+12 health · Energy restored · Checkpoint saved on entry</p>`;
+    content.innerHTML = `<h2 id="modal-title">Choose an upgrade</h2>${game.weaponReward ? `<p class="reward-banner">Unlocked: <b>${WEAPONS[game.weaponReward].name}</b></p>` : ''}<div class="tech-grid">${game.offers.map((t, i) => `<button class="tech-card" data-tech="${t.id}"><kbd>${i + 1}</kbd><b>${t.name}</b><p>${t.description}</p></button>`).join('')}</div><p class="fine-print">Rover and core repaired · Energy restored · Checkpoint saved</p>`;
     content.querySelectorAll<HTMLButtonElement>('[data-tech]').forEach(
       (b) =>
         (b.onclick = () => {
@@ -231,10 +217,9 @@ function showModal(kind: string) {
     );
   } else if (kind === 'result') {
     const win = game.mode === 'won';
-    content.innerHTML = `<h2 id="modal-title">${win ? 'Run complete' : 'Destroyed'}</h2><div class="result-stats"><span>Sector <b>${game.stage + 1}/6</b></span><span><b>${game.kills}</b> kills</span><span>${formatTime(game.elapsed)}</span></div><div class="modal-actions"><button class="primary" id="retry">Retry</button><button class="secondary" id="new-run">Main menu</button></div><details class="result-details"><summary>Run details</summary><div class="build-tags">${game.techs.map((id) => `<span>${TECHS.find((t) => t.id === id)?.name}</span>`).join('') || '<span>No upgrades</span>'}</div><p class="result-seed">Seed: ${escape(game.seed)}</p><button class="text-button" id="copy-seed">Copy seed link</button></details>`;
+    content.innerHTML = `<h2 id="modal-title">${win ? 'Core delivered' : game.failure === 'cargo' ? 'Core lost' : 'Rover destroyed'}</h2><div class="result-stats"><span>Yard <b>${game.stage + 1}/6</b></span><span><b>${game.kills}</b> kills</span><span>${formatTime(game.elapsed)}</span></div><div class="modal-actions"><button class="primary" id="retry">Retry</button><button class="secondary" id="new-run">Main menu</button></div><details class="result-details"><summary>Run details</summary><div class="build-tags">${game.techs.map((id) => `<span>${TECHS.find((t) => t.id === id)?.name}</span>`).join('') || '<span>No upgrades</span>'}</div><p class="result-seed">Seed: ${escape(game.seed)}</p><button class="text-button" id="copy-seed">Copy seed link</button></details>`;
     $('retry').onclick = () => {
       $<HTMLInputElement>('seed').value = game.seed;
-      selectedField = game.field;
       start();
     };
     $('new-run').onclick = () => {
@@ -242,7 +227,6 @@ function showModal(kind: string) {
       game.setMode('title');
       $<HTMLInputElement>('seed').value = '';
       $('continue').hidden = true;
-      selectField(selectedField);
     };
     $('copy-seed').onclick = async () => {
       try {
@@ -255,7 +239,7 @@ function showModal(kind: string) {
       }
     };
   } else if (kind === 'help') {
-    content.innerHTML = `<h2 id="modal-title">Controls</h2><div class="manual-grid"><div><h3>Move & fight</h3><p><kbd>A</kbd> <kbd>D</kbd> or arrows to move<br><kbd>W</kbd> / <kbd>Space</kbd> to jump<br><kbd>S</kbd> to crouch<br>Mouse to aim · Left click to fire<br><kbd>1</kbd>–<kbd>4</kbd>, <kbd>Q</kbd>, or wheel to switch<br><kbd>E</kbd> at a cleared exit<br><kbd>Esc</kbd> to pause</p></div><div><h3>Field · Hold right click or Shift</h3><p><b>Repulsor</b> pushes objects and reflects bullets.<br><b>Tractor</b> catches a crate. Aim and release to throw.<br>Stop using energy to recharge. The coil driver is free.</p></div></div><p class="manual-tip">Shoot downward to extend jumps. Clear each sector, choose an upgrade, and defeat the reactor boss.</p><p class="fine-print">Touch: movement buttons + hold the arena to aim/fire. Progress saves at sector entrances. Death ends a run.</p><button class="primary" id="back">${game.mode === 'paused' ? 'Resume' : 'Back'}</button>`;
+    content.innerHTML = `<h2 id="modal-title">Controls</h2><div class="manual-grid"><div><h3>Move & fight</h3><p><kbd>A</kbd> <kbd>D</kbd> or arrows to move<br><kbd>W</kbd> / <kbd>Space</kbd> to jump<br><kbd>S</kbd> to crouch<br>Mouse to aim · Left click to fire<br><kbd>1</kbd>–<kbd>4</kbd>, <kbd>Q</kbd>, or wheel to switch<br><kbd>E</kbd> at a lift with the core<br><kbd>Esc</kbd> to pause</p></div><div><h3>Haul the core</h3><p>The cable tows your cargo for free.<br>Hold right click or <kbd>Shift</kbd> to reel it closer. The winch uses energy.<br>Security drones shoot at the core. Protect it and bring it to each lift.</p></div></div><p class="manual-tip">Fight or outrun patrols. Delivery earns upgrades and repairs. Defeat the yard warden at the final dock, then extract the core.</p><p class="fine-print">Touch: movement buttons + hold the arena to aim/fire. Progress saves at yard entrances. Losing the rover or core ends the run.</p><button class="primary" id="back">${game.mode === 'paused' ? 'Resume' : 'Back'}</button>`;
     $('back').onclick = () => {
       closeModal();
       if (game.mode === 'paused') game.setMode('playing');
@@ -268,7 +252,7 @@ function showModal(kind: string) {
           const t = TECHS.find((t) => t.id === id)!;
           return `<article><b>${t.name}</b><p>${t.description}</p></article>`;
         })
-        .join('') || '<p>Clear a sector to earn your first upgrade.</p>'
+        .join('') || '<p>Deliver the core to earn your first upgrade.</p>'
     }</div><button class="primary" id="back">${game.mode === 'paused' ? 'Resume' : 'Back'}</button>`;
     $('back').onclick = () => {
       closeModal();
@@ -276,7 +260,7 @@ function showModal(kind: string) {
       canvas.focus();
     };
   } else {
-    content.innerHTML = `<h2 id="modal-title">Paused</h2><div class="pause-actions"><button class="primary" id="resume">Resume</button><button class="secondary" id="inspect">Build</button><button class="secondary" id="manual">Controls</button></div><details class="pause-options"><summary>Options</summary><label class="motion-setting"><input type="checkbox" id="reduced" ${renderer.reduced ? 'checked' : ''} /> Reduce screen shake</label><p class="fine-print">Seed: ${escape(game.seed)}</p></details><button class="text-button" id="menu">Main menu</button><p class="fine-print">Continue restarts this sector from its checkpoint.</p>`;
+    content.innerHTML = `<h2 id="modal-title">Paused</h2><div class="pause-actions"><button class="primary" id="resume">Resume</button><button class="secondary" id="inspect">Build</button><button class="secondary" id="manual">Controls</button></div><details class="pause-options"><summary>Options</summary><label class="motion-setting"><input type="checkbox" id="reduced" ${renderer.reduced ? 'checked' : ''} /> Reduce screen shake</label><p class="fine-print">Seed: ${escape(game.seed)}</p></details><button class="text-button" id="menu">Main menu</button><p class="fine-print">Continue restarts this yard from its checkpoint.</p>`;
     $('resume').onclick = () => togglePause();
     $('inspect').onclick = () => showModal('build');
     $('manual').onclick = () => showModal('help');
@@ -338,7 +322,7 @@ window.addEventListener('keyup', (e) => keys.delete(e.code));
 function syncPointer() {
   const buttons = pointerButtons(heldMouseButtons);
   input.fire = buttons.fire || arenaTouches.size > 0;
-  input.field = buttons.field;
+  input.winch = buttons.winch;
 }
 canvas.addEventListener('pointermove', (e) => {
   const r = canvas.getBoundingClientRect();
@@ -382,7 +366,7 @@ canvas.addEventListener(
   },
   { passive: false },
 );
-const touch = { left: false, right: false, field: false };
+const touch = { left: false, right: false, winch: false };
 document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((b) => {
   b.onpointerdown = (e) => {
     e.preventDefault();
@@ -401,7 +385,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((b) => {
 });
 window.addEventListener('blur', () => {
   clearInput();
-  touch.left = touch.right = touch.field = false;
+  touch.left = touch.right = touch.winch = false;
   if (game.mode === 'playing') {
     game.setMode('paused');
     showModal('pause');
@@ -429,8 +413,8 @@ function frame(now: number) {
     input.aim = renderer.toWorld(mouse.x, mouse.y);
     let steps = 0;
     while (accumulator >= 1 / 60 && steps < 5) {
-      const field = input.field || keys.has('ShiftLeft') || keys.has('ShiftRight') || touch.field;
-      game.tick(1 / 60, { ...input, field });
+      const winch = input.winch || keys.has('ShiftLeft') || keys.has('ShiftRight') || touch.winch;
+      game.tick(1 / 60, { ...input, winch });
       input.jump = false;
       input.interact = false;
       accumulator -= 1 / 60;
@@ -447,6 +431,8 @@ function frame(now: number) {
     $<HTMLProgressElement>('energy').max = game.stats.maxEnergy;
     $<HTMLProgressElement>('energy').value = game.energy;
     $('energy-value').textContent = String(Math.floor(game.energy));
+    $<HTMLProgressElement>('cargo').value = game.cargoHp;
+    $('cargo-value').textContent = String(Math.ceil(game.cargoHp));
     const showNotice = game.mode === 'playing' && game.noticeTime > 0;
     $('notice').textContent = showNotice ? game.notice : '';
     $('notice').classList.toggle('visible', showNotice);

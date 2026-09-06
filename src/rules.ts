@@ -1,10 +1,9 @@
 export type WeaponId = 'coil' | 'scatter' | 'lance' | 'mortar';
-export type FieldId = 'repulsor' | 'tractor';
 export type Vec = { x: number; y: number };
 export const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
 export function pointerButtons(buttons: number) {
-  return { fire: (buttons & 1) !== 0, field: (buttons & 2) !== 0 };
+  return { fire: (buttons & 1) !== 0, winch: (buttons & 2) !== 0 };
 }
 export function direction(a: Vec, b: Vec): Vec {
   const d = distance(a, b) || 1;
@@ -36,7 +35,7 @@ export interface Stats {
   maxHp: number;
   maxEnergy: number;
   regen: number;
-  fieldCost: number;
+  winchCost: number;
   bounce: number;
   fragments: boolean;
   induction: boolean;
@@ -45,8 +44,8 @@ export interface Stats {
   emergency: boolean;
   pierce: number;
   blast: number;
-  conductive: boolean;
-  feedback: boolean;
+  cargoArmor: number;
+  cargoRepair: number;
 }
 export function getStats(techs: readonly string[]): Stats {
   const s: Stats = {
@@ -57,7 +56,7 @@ export function getStats(techs: readonly string[]): Stats {
     maxHp: 100,
     maxEnergy: 100,
     regen: 18,
-    fieldCost: 1,
+    winchCost: 1,
     bounce: 0,
     fragments: false,
     induction: false,
@@ -66,8 +65,8 @@ export function getStats(techs: readonly string[]): Stats {
     emergency: false,
     pierce: 0,
     blast: 1,
-    conductive: false,
-    feedback: false,
+    cargoArmor: 1,
+    cargoRepair: 25,
   };
   for (const id of new Set(techs)) {
     switch (id) {
@@ -95,7 +94,7 @@ export function getStats(techs: readonly string[]): Stats {
         s.regen += 4;
         break;
       case 'efficient':
-        s.fieldCost *= 0.7;
+        s.winchCost *= 0.7;
         break;
       case 'stabilizer':
         s.recoil *= 0.5;
@@ -119,11 +118,11 @@ export function getStats(techs: readonly string[]): Stats {
       case 'cluster':
         s.blast *= 1.3;
         break;
-      case 'conductive':
-        s.conductive = true;
+      case 'cargo-armor':
+        s.cargoArmor = 0.7;
         break;
-      case 'feedback':
-        s.feedback = true;
+      case 'repair':
+        s.cargoRepair = 45;
         break;
     }
   }
@@ -136,21 +135,20 @@ export interface Tech {
   description: string;
   glyph: string;
   requiresWeapon?: WeaponId;
-  requiresField?: FieldId;
 }
 export const TECHS: Tech[] = [
   {
     id: 'dense',
-    name: 'Dense ammunition',
+    name: 'Heavy rivets',
     category: 'BALLISTICS',
     description: '+25% weapon damage. +50% recoil. Fire 15% slower.',
     glyph: 'ρ',
   },
   {
     id: 'elastic',
-    name: 'Elastic coating',
+    name: 'Bankshot rounds',
     category: 'BALLISTICS',
-    description: 'Coil and scatter rounds ricochet twice. −10% weapon damage.',
+    description: 'Rivet and breacher rounds ricochet twice. −10% weapon damage.',
     glyph: '↗',
   },
   {
@@ -158,12 +156,12 @@ export const TECHS: Tech[] = [
     name: 'Fragmentation',
     category: 'REACTION',
     description:
-      'The first ballistic impact releases 3 fragments. Mortars release 8. Fragments cannot split.',
+      'The first ballistic impact releases 3 fragments. Demo charges release 8. Fragments cannot split.',
     glyph: '※',
   },
   {
     id: 'induction',
-    name: 'Induction coil',
+    name: 'Impact dynamo',
     category: 'ENERGY',
     description:
       'Direct weapon hits return 1 energy, up to 4 per shot. Secondary effects do not trigger it.',
@@ -185,9 +183,9 @@ export const TECHS: Tech[] = [
   },
   {
     id: 'efficient',
-    name: 'Field efficiency',
-    category: 'FIELD',
-    description: 'All field actions consume 30% less energy.',
+    name: 'Geared winch',
+    category: 'HAULING',
+    description: 'The powered winch consumes 30% less energy.',
     glyph: '◎',
   },
   {
@@ -199,14 +197,14 @@ export const TECHS: Tech[] = [
   },
   {
     id: 'thrusters',
-    name: 'Vector thrusters',
+    name: 'Jump jets',
     category: 'MOTION',
     description: 'Gain a second jump in the air and 60% stronger air control.',
     glyph: '↑',
   },
   {
     id: 'armor',
-    name: 'Ablative shell',
+    name: 'Rover plating',
     category: 'SURVIVAL',
     description: '+30 maximum integrity. Immediately repair 30 integrity.',
     glyph: '⬡',
@@ -229,46 +227,37 @@ export const TECHS: Tech[] = [
     id: 'piercing',
     name: 'Piercing optics',
     category: 'OPTICS',
-    description: 'The lance penetrates 2 more targets. Each penetration retains 70% damage.',
+    description:
+      'The cutting laser penetrates 2 more targets. Each penetration retains 70% damage.',
     glyph: '⇢',
     requiresWeapon: 'lance',
   },
   {
     id: 'cluster',
-    name: 'Cluster chemistry',
+    name: 'Demolition mix',
     category: 'REACTION',
-    description: 'Mortar blast radius increases 30%. Explosion damage increases 15%.',
+    description: 'Demo charge blast radius increases 30%. Explosion damage increases 15%.',
     glyph: '✳',
     requiresWeapon: 'mortar',
   },
   {
-    id: 'conductive',
-    name: 'Conductive debris',
-    category: 'FIELD',
-    description: 'Launched crates arc 12 damage to up to 2 nearby enemies. Arcs cannot chain.',
-    glyph: 'ϟ',
-    requiresField: 'tractor',
+    id: 'cargo-armor',
+    name: 'Cargo cage',
+    category: 'HAULING',
+    description: 'The power core takes 30% less damage from hostile rounds.',
+    glyph: '⬡',
   },
   {
-    id: 'feedback',
-    name: 'Magnetic feedback',
-    category: 'FIELD',
-    description:
-      'Reflecting a hostile round repairs 5 integrity. Triggers at most once every 3 seconds.',
-    glyph: '↶',
-    requiresField: 'repulsor',
+    id: 'repair',
+    name: 'Patch kit',
+    category: 'HAULING',
+    description: 'Immediately repair 20 core integrity. Repair 45 instead of 25 between yards.',
+    glyph: '+',
   },
 ];
-export function eligibleTechs(
-  owned: readonly string[],
-  weapons: readonly WeaponId[],
-  field: FieldId,
-) {
+export function eligibleTechs(owned: readonly string[], weapons: readonly WeaponId[]) {
   return TECHS.filter(
-    (t) =>
-      !owned.includes(t.id) &&
-      (!t.requiresWeapon || weapons.includes(t.requiresWeapon)) &&
-      (!t.requiresField || field === t.requiresField),
+    (t) => !owned.includes(t.id) && (!t.requiresWeapon || weapons.includes(t.requiresWeapon)),
   );
 }
 export const WEAPONS: Record<
@@ -286,7 +275,7 @@ export const WEAPONS: Record<
   }
 > = {
   coil: {
-    name: 'Coil driver',
+    name: 'Rivet gun',
     label: 'KINETIC / 01',
     description: 'Fast, precise rounds. No energy cost. Your reliable baseline.',
     damage: 16,
@@ -297,7 +286,7 @@ export const WEAPONS: Record<
     color: '#ffc080',
   },
   scatter: {
-    name: 'Scatter array',
+    name: 'Breacher',
     label: 'KINETIC / 02',
     description: 'Seven pellets. Heavy kick. Aim down to extend a jump.',
     damage: 7,
@@ -308,7 +297,7 @@ export const WEAPONS: Record<
     color: '#ffa05f',
   },
   lance: {
-    name: 'Photon lance',
+    name: 'Cutting laser',
     label: 'OPTICS / 03',
     description: 'An instant beam with pinpoint accuracy. Consumes energy.',
     damage: 12,
@@ -319,7 +308,7 @@ export const WEAPONS: Record<
     color: '#89f7db',
   },
   mortar: {
-    name: 'Impulse mortar',
+    name: 'Demo launcher',
     label: 'REACTION / 04',
     description: 'Bouncing charges explode after a short fuse. Blasts launch nearby objects.',
     damage: 60,
@@ -332,39 +321,39 @@ export const WEAPONS: Record<
 };
 export const STAGES = [
   {
-    name: 'Intake chamber',
-    subtitle: 'Establish a baseline.',
-    label: 'SECTOR 01 / INTAKE',
+    name: 'Wreck intake',
+    subtitle: 'Recover the last power core.',
+    label: 'YARD 01 / INTAKE',
     count: 4,
   },
   {
-    name: 'Magnetic assembly',
-    subtitle: 'Everything here is a projectile.',
-    label: 'SECTOR 02 / ASSEMBLY',
+    name: 'Sorting yard',
+    subtitle: 'Find a route through the scrap.',
+    label: 'YARD 02 / SORTING',
     count: 6,
   },
   {
-    name: 'Thermal exchange',
-    subtitle: 'Maintain your momentum.',
-    label: 'SECTOR 03 / THERMAL',
+    name: 'Smelter run',
+    subtitle: 'Keep the cargo moving.',
+    label: 'YARD 03 / SMELTER',
     count: 8,
   },
   {
-    name: 'Vector laboratory',
-    subtitle: 'Adapt the experiment.',
-    label: 'SECTOR 04 / VECTOR',
+    name: 'Freight junction',
+    subtitle: 'Beat the security patrols.',
+    label: 'YARD 04 / FREIGHT',
     count: 10,
   },
   {
-    name: 'Containment breach',
-    subtitle: 'There is no safe configuration.',
-    label: 'SECTOR 05 / CONTAINMENT',
+    name: 'Dead conveyor',
+    subtitle: 'The last stretch is unpowered.',
+    label: 'YARD 05 / CONVEYOR',
     count: 12,
   },
   {
-    name: 'The prime mover',
-    subtitle: 'Shut down the foundry.',
-    label: 'SECTOR 06 / REACTOR',
+    name: 'Loading dock',
+    subtitle: 'Break the yard warden. Deliver the core.',
+    label: 'YARD 06 / EXTRACTION',
     count: 1,
   },
 ];
@@ -398,7 +387,7 @@ export function segmentBox(a: Vec, b: Vec, min: Vec, max: Vec): { t: number; nor
   return lo >= 0 && lo <= 1 ? { t: lo, normal } : null;
 }
 export interface Checkpoint {
-  version: 1;
+  version: 2;
   seed: string;
   stage: number;
   hp: number;
@@ -406,7 +395,7 @@ export interface Checkpoint {
   techs: string[];
   weapons: WeaponId[];
   weapon: WeaponId;
-  field: FieldId;
+  cargoHp: number;
   kills: number;
   elapsed: number;
 }
@@ -414,7 +403,7 @@ export function validateCheckpoint(data: unknown): data is Checkpoint {
   if (!data || typeof data !== 'object') return false;
   const d = data as Checkpoint;
   return (
-    d.version === 1 &&
+    d.version === 2 &&
     typeof d.seed === 'string' &&
     d.seed.length <= 40 &&
     Number.isInteger(d.stage) &&
@@ -437,10 +426,31 @@ export function validateCheckpoint(data: unknown): data is Checkpoint {
     new Set(d.weapons).size === d.weapons.length &&
     d.weapons.every((w) => Object.hasOwn(WEAPONS, w)) &&
     d.weapons.includes(d.weapon) &&
-    ['repulsor', 'tractor'].includes(d.field) &&
+    Number.isFinite(d.cargoHp) &&
+    d.cargoHp > 0 &&
+    d.cargoHp <= 120 &&
     Number.isFinite(d.kills) &&
     d.kills >= 0 &&
     Number.isFinite(d.elapsed) &&
     d.elapsed >= 0
   );
+}
+export function loadCheckpoint(data: unknown): Checkpoint | null {
+  if (!data || typeof data !== 'object') return null;
+  const raw = data as Record<string, unknown>;
+  if (raw.version === 1) {
+    if (!['repulsor', 'tractor'].includes(String(raw.field)) || !Array.isArray(raw.techs))
+      return null;
+    const { field: _retiredField, ...rest } = raw;
+    const migrated = {
+      ...rest,
+      version: 2,
+      cargoHp: 120,
+      techs: raw.techs.map((id) =>
+        id === 'conductive' ? 'cargo-armor' : id === 'feedback' ? 'repair' : id,
+      ),
+    };
+    return validateCheckpoint(migrated) ? migrated : null;
+  }
+  return validateCheckpoint(data) ? data : null;
 }

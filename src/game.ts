@@ -12,8 +12,8 @@ import {
   enemyTypes,
   segmentBox,
 } from './rules.ts';
-import type { Vec, WeaponId, FieldId, Stats, Tech, Checkpoint } from './rules.ts';
-const { Engine, Bodies, Body, Composite, Query } = Matter;
+import type { Vec, WeaponId, Stats, Tech, Checkpoint } from './rules.ts';
+const { Engine, Bodies, Body, Composite, Query, Constraint } = Matter;
 export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
 export interface Input {
   left: boolean;
@@ -21,7 +21,7 @@ export interface Input {
   crouch: boolean;
   jump: boolean;
   fire: boolean;
-  field: boolean;
+  winch: boolean;
   interact: boolean;
   aim: Vec;
 }
@@ -92,6 +92,12 @@ export const WORLD = { width: 2300, height: 950, floor: 810 };
 export class Game {
   engine = Engine.create({ gravity: { x: 0, y: 1, scale: 0.001 } });
   player!: Matter.Body;
+  cargo!: Matter.Body;
+  tow!: Matter.Constraint;
+  cargoHp = 120;
+  cargoHurtAt = -100;
+  cargoLastSafe: Vec = { x: 80, y: 760 };
+  failure: 'rover' | 'cargo' = 'rover';
   terrain: Matter.Body[] = [];
   props: Prop[] = [];
   enemies: Enemy[] = [];
@@ -107,7 +113,6 @@ export class Game {
   techs: string[] = [];
   weapons: WeaponId[] = ['coil'];
   weapon: WeaponId = 'coil';
-  field: FieldId = 'repulsor';
   stats: Stats = getStats([]);
   time = 0;
   elapsed = 0;
@@ -116,9 +121,8 @@ export class Game {
   clear = false;
   grounded = false;
   crouching = false;
-  fieldActive = false;
-  held: Prop | null = null;
-  feedbackAt = -100;
+  winchActive = false;
+
   shootAt = 0;
   hurtAt = -100;
   spendAt = -100;
@@ -142,15 +146,17 @@ export class Game {
   constructor() {
     this.loadRoom(true);
   }
-  start(seed: string, field: FieldId, save?: Checkpoint) {
+  start(seed: string, save?: Checkpoint) {
     this.seed = seed.slice(0, 40) || 'FOUNDRY';
     this.stage = save?.stage ?? 0;
-    this.field = save?.field ?? field;
     this.techs = save ? [...save.techs] : [];
     this.weapons = save ? [...save.weapons] : ['coil'];
     this.weapon = save?.weapon ?? 'coil';
     this.stats = getStats(this.techs);
     this.hp = save?.hp ?? 100;
+    this.cargoHp = save?.cargoHp ?? 120;
+    this.cargoHurtAt = -100;
+    this.failure = 'rover';
     this.energy = save?.energy ?? 100;
     this.kills = save?.kills ?? 0;
     this.elapsed = save?.elapsed ?? 0;
@@ -158,7 +164,6 @@ export class Game {
     this.shootAt = 0;
     this.hurtAt = -100;
     this.spendAt = -100;
-    this.feedbackAt = -100;
     this.shotCount = 0;
     this.loadRoom();
     this.setMode('playing');
@@ -175,7 +180,7 @@ export class Game {
   }
   save() {
     this.onCheckpoint({
-      version: 1,
+      version: 2,
       seed: this.seed,
       stage: this.stage,
       hp: this.hp,
@@ -183,7 +188,7 @@ export class Game {
       techs: [...this.techs],
       weapons: [...this.weapons],
       weapon: this.weapon,
-      field: this.field,
+      cargoHp: this.cargoHp,
       kills: this.kills,
       elapsed: this.elapsed,
     });
@@ -198,9 +203,8 @@ export class Game {
     this.particles = [];
     this.beams = [];
     this.drops = [];
-    this.held = null;
-    this.clear = false;
-    this.fieldActive = false;
+    this.clear = this.stage < 5;
+    this.winchActive = false;
     this.crouching = false;
     this.grounded = false;
     this.coyote = 0;
@@ -254,6 +258,7 @@ export class Game {
         friction: 0.5,
         restitution: 0.25,
         label: 'prop',
+        collisionFilter: { category: 16 },
       });
       this.props.push({ body, launched: false, hitAt: new Map() });
       Composite.add(this.engine.world, body);
@@ -265,8 +270,11 @@ export class Game {
       restitution: 0,
       density: 0.002,
       label: 'player',
+      collisionFilter: { category: 8 },
     });
     Composite.add(this.engine.world, this.player);
+    this.createCargo({ x: demo ? 235 : 65, y: 765 });
+    this.cargoLastSafe = { ...this.cargo.position };
     const types = enemyTypes(this.stage, roomRng);
     types.forEach((type, i) => {
       const x =
@@ -294,6 +302,7 @@ export class Game {
         inertia: Infinity,
         restitution: 0.05,
         label: 'enemy',
+        collisionFilter: { category: 2 },
       },
     );
     if (type === 'sentry') Body.setStatic(body, true);
@@ -321,6 +330,7 @@ export class Game {
   }
   tick(dt: number, input: Input) {
     if (this.mode !== 'playing') return;
+    this.recoverCargo();
     this.time += dt;
     this.elapsed += dt;
     this.aim = { ...input.aim };
@@ -328,7 +338,7 @@ export class Game {
     this.shake *= 0.86;
     this.grounded =
       Query.ray(
-        [...this.terrain, ...this.props.filter((p) => p !== this.held).map((p) => p.body)],
+        [...this.terrain, ...this.props.map((p) => p.body)],
         { x: this.player.position.x, y: this.player.bounds.max.y - 1 },
         { x: this.player.position.x, y: this.player.bounds.max.y + 7 },
         20,
@@ -376,9 +386,9 @@ export class Game {
       this.onSound('jump');
       this.burst(this.player.position, 8, '#8af4d3', 2);
     }
-    this.updateField(input.field, dt);
-    if (input.fire && !input.field && this.time >= this.shootAt) this.fire();
-    if (this.time - this.spendAt > 0.55 && !this.fieldActive) {
+    this.updateWinch(input.winch, dt);
+    if (input.fire && this.time >= this.shootAt) this.fire();
+    if (this.time - this.spendAt > 0.55 && !this.winchActive) {
       const extra = this.stats.emergency && this.hp < this.stats.maxHp * 0.35 ? 14 : 0;
       this.energy = clamp(this.energy + (this.stats.regen + extra) * dt, 0, this.stats.maxEnergy);
     }
@@ -388,6 +398,7 @@ export class Game {
     }
     for (const p of this.props) p.impactSpeed = p.body.speed;
     Engine.update(this.engine, 1000 / 60);
+    this.recoverCargo();
     this.updateProps();
     this.updateShots(dt);
     if (this.mode !== 'playing') return;
@@ -405,11 +416,19 @@ export class Game {
     if (this.enemies.length === 0 && !this.clear) {
       this.clear = true;
       this.shots = this.shots.filter((s) => s.friendly);
-      this.toast('Exit open →', 2);
+      this.toast('Dock unlocked →', 2);
       this.onSound('clear');
       this.onChange();
     }
-    if (this.clear && input.interact && distance(this.player.position, { x: 2190, y: 750 }) < 115) {
+    if (input.interact && distance(this.player.position, { x: 2190, y: 750 }) < 115) {
+      if (!this.clear) {
+        this.toast('Defeat the yard warden', 2);
+        return;
+      }
+      if (distance(this.cargo.position, { x: 2190, y: 765 }) > 150) {
+        this.toast('Bring the core to the lift', 2);
+        return;
+      }
       if (this.stage === 5) {
         this.setMode('won');
         this.onCheckpoint(null);
@@ -428,7 +447,7 @@ export class Game {
     const w = WEAPONS[this.weapon];
     if (!this.spend(w.cost * this.stats.cost)) {
       this.shootAt = this.time + 0.15;
-      this.toast('Low energy · press 1 for coil driver', 1);
+      this.toast('Low energy · press 1 for rivet gun', 1);
       return;
     }
     this.shootAt = this.time + w.interval * this.stats.interval;
@@ -499,97 +518,81 @@ export class Game {
     this.beams.push({ from: origin, to: target, life: 0.12, color: '#8df7dc', width: 3 });
     this.burst(target, 5, '#8df7dc', 2);
   }
-  updateField(active: boolean, dt: number) {
-    const was = this.fieldActive;
-    this.fieldActive = active && this.energy > 0.8;
-    if (!this.fieldActive) {
-      if (this.held) this.releaseProp();
-      return;
+  updateWinch(active: boolean, dt: number) {
+    const was = this.winchActive;
+    this.winchActive = active && this.spend(12 * this.stats.winchCost * dt);
+    this.tow.length = this.winchActive ? 48 : 95;
+    this.tow.stiffness = this.winchActive ? 0.055 : 0.012;
+    if (this.winchActive) {
+      const d = direction(this.cargo.position, this.player.position);
+      const stretch = Math.max(0, distance(this.cargo.position, this.player.position) - 48);
+      const force = Math.min(0.008, stretch * 0.00006) * this.cargo.mass;
+      Body.applyForce(this.cargo, this.cargo.position, {
+        x: d.x * force,
+        y: d.y * force - this.cargo.mass * 0.00025,
+      });
+      if (!was) this.onSound('winch');
     }
-    this.spend((this.field === 'repulsor' ? 22 : 10) * this.stats.fieldCost * dt);
-    const center = this.player.position;
-    if (this.field === 'repulsor') {
-      for (const e of this.enemies) {
-        const d = distance(center, e.body.position);
-        if (d < 175 && e.type !== 'boss' && !e.body.isStatic) {
-          const n = direction(center, e.body.position);
-          Body.applyForce(e.body, e.body.position, {
-            x: n.x * 0.005 * e.body.mass,
-            y: n.y * 0.004 * e.body.mass,
-          });
-        }
-      }
-      for (const p of this.props) {
-        if (distance(center, p.body.position) < 165) {
-          const n = direction(center, p.body.position);
-          Body.applyForce(p.body, p.body.position, {
-            x: n.x * 0.004 * p.body.mass,
-            y: n.y * 0.003 * p.body.mass,
-          });
-          p.launched = true;
-        }
-      }
-      for (const s of this.shots) {
-        if (!s.friendly && distance(center, s.pos) < 175 && this.spend(3 * this.stats.fieldCost)) {
-          s.friendly = true;
-          s.root = ++this.id;
-          s.kind = 'fragment';
-          s.color = '#8df7dc';
-          const d = direction(center, s.pos);
-          s.vel = { x: d.x * 14, y: d.y * 14 };
-          s.damage *= 1.5;
-          s.life = 2;
-          if (this.stats.feedback && this.time - this.feedbackAt >= 3) {
-            this.hp = Math.min(this.stats.maxHp, this.hp + 5);
-            this.feedbackAt = this.time;
-          }
-          this.burst(s.pos, 4, '#8df7dc', 1);
-        }
-      }
-    } else {
-      if (!this.held) {
-        this.held =
-          this.props
-            .filter((p) => distance(center, p.body.position) < 200)
-            .sort(
-              (a, b) => distance(a.body.position, this.aim) - distance(b.body.position, this.aim),
-            )[0] ?? null;
-      }
-      if (this.held) {
-        const d = direction(center, this.aim),
-          target = { x: center.x + d.x * 85, y: center.y + d.y * 85 };
-        const body = this.held.body;
-        Body.setVelocity(body, {
-          x: (target.x - body.position.x) * 0.2,
-          y: (target.y - body.position.y) * 0.2 - 0.27,
-        });
-        Body.setAngularVelocity(body, 0.025);
-        this.held.launched = false;
-      } else
-        for (const e of this.enemies) {
-          if (!e.body.isStatic && e.type !== 'boss' && distance(center, e.body.position) < 240) {
-            const n = direction(e.body.position, center);
-            Body.applyForce(e.body, e.body.position, {
-              x: n.x * 0.001 * e.body.mass,
-              y: n.y * 0.001 * e.body.mass,
-            });
-          }
-        }
-    }
-    if (!was) this.onSound('field');
+    Body.setVelocity(this.cargo, {
+      x: clamp(this.cargo.velocity.x, -14, 14),
+      y: clamp(this.cargo.velocity.y, -16, 18),
+    });
   }
-  releaseProp() {
-    if (!this.held) return;
-    const p = this.held;
-    this.held = null;
-    if (this.spend(8 * this.stats.fieldCost)) {
-      const d = direction(this.player.position, this.aim);
-      Body.setVelocity(p.body, { x: d.x * 20, y: d.y * 20 });
-      p.launched = true;
-      p.hitAt.clear();
-      this.onSound('scatter');
-      this.burst(p.body.position, 8, '#8df7dc', 2);
+  createCargo(position: Vec) {
+    this.cargo = Bodies.rectangle(position.x, position.y, 54, 34, {
+      density: 0.0015,
+      friction: 0.015,
+      frictionAir: 0.015,
+      restitution: 0.05,
+      inertia: Infinity,
+      label: 'cargo',
+      collisionFilter: { category: 4, mask: 1 },
+    });
+    this.tow = Constraint.create({
+      bodyA: this.player,
+      bodyB: this.cargo,
+      pointA: { x: 0, y: 10 },
+      length: 95,
+      stiffness: 0.012,
+      damping: 0.12,
+    });
+    Composite.add(this.engine.world, [this.cargo, this.tow]);
+  }
+  recoverCargo() {
+    const p = this.cargo.position;
+    if (
+      ![p, this.cargo.velocity, ...this.cargo.vertices].every(
+        (v) => Number.isFinite(v.x) && Number.isFinite(v.y),
+      )
+    ) {
+      // Translation cannot repair NaN vertices; replace before the tether reaches the solver.
+      Composite.remove(this.engine.world, [this.cargo, this.tow]);
+      this.createCargo(this.cargoLastSafe);
+    } else if (p.y > 980 || p.y < -150 || p.x < -30 || p.x > WORLD.width + 30) {
+      Body.setPosition(this.cargo, this.cargoLastSafe);
+      Body.setVelocity(this.cargo, { x: 0, y: 0 });
+      Body.setAngle(this.cargo, 0);
+      Body.setAngularVelocity(this.cargo, 0);
+    } else if (p.y > 700 && p.y < 810)
+      this.cargoLastSafe = { x: clamp(p.x, 40, WORLD.width - 40), y: 775 };
+  }
+  damageCargo(amount: number) {
+    if (this.mode !== 'playing' || this.time - this.cargoHurtAt < 0.45) return;
+    this.cargoHp = Math.max(0, this.cargoHp - amount * this.stats.cargoArmor);
+    this.cargoHurtAt = this.time;
+    this.burst(this.cargo.position, 12, '#f2bd6c', 3);
+    this.onSound('hurt');
+    if (this.cargoHp <= 0) {
+      this.failure = 'cargo';
+      this.setMode('dead');
+      this.onCheckpoint(null);
+      this.onSound('dead');
     }
+  }
+  enemyTarget(e: Enemy): Vec {
+    return e.type === 'sentry' || e.type === 'boss' || (e.type === 'drone' && e.id % 2 === 0)
+      ? this.cargo.position
+      : this.player.position;
   }
   updateProps() {
     for (const p of this.props) {
@@ -598,7 +601,7 @@ export class Game {
         continue;
       }
       const speed = p.impactSpeed ?? p.body.speed;
-      if (p === this.held || !p.launched || speed < 3.5) continue;
+      if (!p.launched || speed < 3.5) continue;
       const collisions = Query.collides(
         p.body,
         this.enemies.map((e) => e.body),
@@ -610,19 +613,6 @@ export class Game {
         p.hitAt.set(e.id, this.time);
         const dmg = clamp(speed * p.body.mass * 1.8, 6, 50);
         this.hitEnemy(e, dmg, 'prop', 0);
-        if (this.stats.conductive)
-          for (const other of this.enemies
-            .filter((x) => x.id !== e.id && distance(x.body.position, e.body.position) < 180)
-            .slice(0, 2)) {
-            this.beams.push({
-              from: { ...e.body.position },
-              to: { ...other.body.position },
-              life: 0.2,
-              color: '#a7d4ff',
-              width: 2,
-            });
-            this.hitEnemy(other, 12, 'chain', 0);
-          }
       }
     }
     this.props = this.props.filter((p) => p.body.position.y <= 1000);
@@ -632,16 +622,17 @@ export class Game {
     e.timer -= dt;
     e.flash = Math.max(0, e.flash - dt);
     const p = e.body.position,
-      delta = direction(p, this.player.position),
-      dist = distance(p, this.player.position);
+      target = this.enemyTarget(e),
+      delta = direction(p, target),
+      dist = distance(p, target);
     if (e.type === 'drone' || e.type === 'boss') {
       Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
       const desiredY =
         e.type === 'boss'
           ? 380 + Math.sin(this.time * 0.8) * 90
-          : this.player.position.y - 170 + Math.sin(this.time + e.id) * 60;
+          : target.y - 170 + Math.sin(this.time + e.id) * 60;
       Body.setVelocity(e.body, {
-        x: clamp((this.player.position.x + (delta.x > 0 ? -340 : 340) - p.x) * 0.007, -2.5, 2.5),
+        x: clamp((target.x + (delta.x > 0 ? -340 : 340) - p.x) * 0.007, -2.5, 2.5),
         y: clamp((desiredY - p.y) * 0.025, -3, 3),
       });
     } else if (e.type !== 'sentry') {
@@ -733,7 +724,7 @@ export class Game {
       ];
       if (s.friendly) {
         for (const e of this.enemies) if (!s.hits.has(e.id)) targets.push([e.body, e]);
-      } else targets.push([this.player]);
+      } else targets.push([this.player], [this.cargo]);
       for (const [body, enemy] of targets) {
         const hit = segmentBox(
           s.pos,
@@ -767,6 +758,10 @@ export class Game {
             this.fragment(s);
             s.life = 0;
           }
+        } else if (nearest.body === this.cargo) {
+          this.damageCargo(s.damage);
+          s.life = 0;
+          if (this.mode !== 'playing') return;
         } else if (nearest.body === this.player) {
           this.damagePlayer(s.damage, s.pos);
           s.life = 0;
@@ -919,6 +914,7 @@ export class Game {
       Body.setVelocity(this.player, { x: this.player.velocity.x + d.x * 5, y: -4 });
     }
     if (this.hp <= 0) {
+      this.failure = 'rover';
       this.setMode('dead');
       this.onCheckpoint(null);
       this.onSound('dead');
@@ -959,7 +955,7 @@ export class Game {
     }
   }
   openReward() {
-    this.offers = sample(eligibleTechs(this.techs, this.weapons, this.field), 3, this.lootRng);
+    this.offers = sample(eligibleTechs(this.techs, this.weapons), 3, this.lootRng);
     const next: WeaponId[] = ['scatter', 'lance', 'mortar'];
     this.weaponReward = next[this.stage] ?? null;
     this.setMode('upgrade');
@@ -977,6 +973,10 @@ export class Game {
       this.weapon = this.weaponReward;
     }
     this.hp = Math.min(this.stats.maxHp, this.hp + 12);
+    this.cargoHp = Math.min(
+      120,
+      this.cargoHp + this.stats.cargoRepair + (id === 'repair' ? 20 : 0),
+    );
     this.energy = this.stats.maxEnergy;
     this.stage++;
     this.loadRoom();

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "An experimental physics roguelike. Weaponize your momentum.",
+  "description": "A physics salvage roguelike. Tow a recovered power core through a failing freight facility.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",

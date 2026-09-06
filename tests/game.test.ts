@@ -12,7 +12,7 @@ function input(p: Partial<Input> = {}): Input {
     crouch: false,
     jump: false,
     fire: false,
-    field: false,
+    winch: false,
     interact: false,
     aim: { x: 1000, y: 700 },
     ...p,
@@ -27,15 +27,15 @@ function clean(g: Game) {
 function tick(g: Game, n = 1, patch: Partial<Input> = {}) {
   for (let i = 0; i < n; i++) g.tick(1 / 60, input(patch));
 }
-test('real physics settles player, moves, jumps, and preserves crouch rotation lock', () => {
+test('real physics settles the rover, moves with cargo, jumps, and preserves rotation lock', () => {
   const g = new Game();
-  g.start('physics', 'repulsor');
+  g.start('physics');
   clean(g);
   tick(g, 80);
   assert(g.grounded);
   const x = g.player.position.x;
   tick(g, 25, { right: true });
-  assert(g.player.position.x > x + 70);
+  assert(g.player.position.x > x + 40);
   tick(g, 1, { crouch: true });
   assert.equal(g.player.inertia, Infinity);
   tick(g, 1);
@@ -48,7 +48,7 @@ test('real physics settles player, moves, jumps, and preserves crouch rotation l
 });
 test('continuous free coil fire permits energy recovery', () => {
   const g = new Game();
-  g.start('energy', 'repulsor');
+  g.start('energy');
   clean(g);
   g.energy = 10;
   tick(g, 180, { fire: true });
@@ -57,7 +57,7 @@ test('continuous free coil fire permits energy recovery', () => {
 });
 test('damage immunity prevents repeated collision damage, then expires', () => {
   const g = new Game();
-  g.start('damage', 'repulsor');
+  g.start('damage');
   g.damagePlayer(10);
   g.damagePlayer(10);
   assert.equal(g.hp, 90);
@@ -67,7 +67,7 @@ test('damage immunity prevents repeated collision damage, then expires', () => {
 });
 test('lethal projectile freezes state before pickups or later shots can modify results', () => {
   const g = new Game();
-  g.start('death-freeze', 'repulsor');
+  g.start('death-freeze');
   clean(g);
   g.hp = 1;
   const p = g.player.position;
@@ -97,7 +97,7 @@ test('lethal projectile freezes state before pickups or later shots can modify r
 });
 test('a thrown crate damages the boss using its incoming impact speed', () => {
   const g = new Game();
-  g.start('crate', 'tractor');
+  g.start('crate');
   clean(g);
   g.spawnEnemy('boss', 1100, 500);
   const e = g.enemies[0];
@@ -111,48 +111,119 @@ test('a thrown crate damages the boss using its incoming impact speed', () => {
   g.updateProps();
   assert.equal(e.hp, hp);
 });
-test('repulsor reflects hostile projectiles and spends energy', () => {
+test('the fixed winch reels the core closer, spends energy, and permits firing', () => {
   const g = new Game();
-  g.start('field', 'repulsor');
+  g.start('winch');
   clean(g);
-  const p = g.player.position;
-  g.addShot({
-    pos: { x: p.x + 80, y: p.y },
-    vel: { x: -7, y: 0 },
-    damage: 10,
-    life: 3,
-    radius: 4,
-    friendly: false,
-    kind: 'bullet',
-    bounces: 0,
-    split: true,
-    root: 0,
-    color: 'red',
-  });
-  g.updateField(true, 1 / 60);
-  assert(g.shots[0].friendly);
-  assert(g.shots[0].vel.x > 0);
-  assert(g.energy < 100);
+  tick(g, 80);
+  const restDistance = Math.hypot(
+    g.cargo.position.x - g.player.position.x,
+    g.cargo.position.y - g.player.position.y,
+  );
+  tick(g, 45, { winch: true, fire: true });
+  assert(g.winchActive);
+  assert(g.energy < 95);
+  assert(g.shotCount >= 4);
+  assert(
+    Math.hypot(g.cargo.position.x - g.player.position.x, g.cargo.position.y - g.player.position.y) <
+      restDistance - 20,
+  );
+  g.energy = 0;
+  g.updateWinch(true, 1 / 60);
+  assert.equal(g.winchActive, false);
+  assert.equal(g.energy, 0);
 });
-test('tractor captures and launches a nearby crate', () => {
+test('passive towing delivers through every layout without energy', () => {
+  for (const seed of ['A', 'B', 'C', 'D', 'E', 'F'])
+    for (let stage = 0; stage < 5; stage++) {
+      const g = new Game();
+      g.start(seed);
+      g.stage = stage;
+      g.loadRoom();
+      for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
+      g.enemies = [];
+      for (let i = 0; i < 1800 && g.mode === 'playing'; i++) {
+        g.energy = 0;
+        tick(g, 1, {
+          right: g.player.position.x < 2190,
+          jump: g.grounded && i % 45 === 0,
+          interact: true,
+        });
+      }
+      assert.equal(g.mode, 'upgrade', seed + ':' + stage);
+      assert.equal(g.cargoHp, 120);
+    }
+});
+test('hostile rounds damage cargo, armor reduces damage, and cooldown limits bursts', () => {
   const g = new Game();
-  g.start('tractor', 'tractor');
+  g.start('cargo-damage');
   clean(g);
-  const p = g.player.position;
-  const body = Matter.Bodies.rectangle(p.x + 80, p.y, 36, 36);
-  Composite.add(g.engine.world, body);
-  g.props.push({ body, launched: false, hitAt: new Map() });
-  g.aim = { x: p.x + 400, y: p.y };
-  g.updateField(true, 1 / 60);
-  assert(g.held);
-  g.updateField(false, 1 / 60);
-  assert.equal(g.held, null);
-  assert(g.props[0].launched);
-  assert(body.velocity.x > 15);
+  const shoot = (friendly: boolean) => {
+    const p = g.cargo.position;
+    g.addShot({
+      pos: { x: p.x - 40, y: p.y },
+      vel: { x: 30, y: 0 },
+      damage: 20,
+      life: 2,
+      radius: 3,
+      friendly,
+      kind: 'bullet',
+      bounces: 0,
+      split: true,
+      root: 0,
+      color: 'red',
+    });
+    g.updateShots(1 / 60);
+  };
+  shoot(true);
+  assert.equal(g.cargoHp, 120);
+  shoot(false);
+  assert.equal(g.cargoHp, 100);
+  shoot(false);
+  assert.equal(g.cargoHp, 100);
+  g.time += 0.46;
+  g.techs = ['cargo-armor'];
+  g.stats = getStats(g.techs);
+  shoot(false);
+  assert.equal(g.cargoHp, 86);
+});
+test('destroying the core ends the run and clears its checkpoint', () => {
+  const g = new Game();
+  g.start('core-lost');
+  clean(g);
+  let cleared = false;
+  g.onCheckpoint = (s) => {
+    if (!s) cleared = true;
+  };
+  g.damageCargo(999);
+  assert.equal(g.mode, 'dead');
+  assert.equal(g.failure, 'cargo');
+  assert(cleared);
+  const elapsed = g.elapsed;
+  tick(g, 10, { right: true });
+  assert.equal(g.elapsed, elapsed);
+});
+test('fall recovery and corrupt cargo recovery retain one working tether', () => {
+  const g = new Game();
+  g.start('recovery');
+  clean(g);
+  tick(g, 60);
+  const hp = g.cargoHp;
+  Body.setPosition(g.cargo, { x: 400, y: 1200 });
+  tick(g);
+  assert(g.cargo.position.y < 900);
+  Body.setPosition(g.cargo, { x: NaN, y: NaN });
+  tick(g, 120, { right: true });
+  for (const body of [g.cargo, g.player])
+    for (const p of [body.position, ...body.vertices])
+      assert(Number.isFinite(p.x) && Number.isFinite(p.y));
+  assert.equal(Composite.allConstraints(g.engine.world).length, 1);
+  assert.equal(Composite.allBodies(g.engine.world).filter((b) => b.label === 'cargo').length, 1);
+  assert.equal(g.cargoHp, hp);
 });
 test('fragmentation cannot recurse and shot/particle caps bound heavy builds', () => {
   const g = new Game();
-  g.start('fragments', 'repulsor');
+  g.start('fragments');
   g.techs = ['fragment'];
   g.stats = getStats(g.techs);
   g.fire();
@@ -183,7 +254,7 @@ test('fragmentation cannot recurse and shot/particle caps bound heavy builds', (
 });
 test('grenade detonation is idempotent', () => {
   const g = new Game();
-  g.start('grenade', 'repulsor');
+  g.start('grenade');
   clean(g);
   g.spawnEnemy('sentry', 900, 740);
   g.addShot({
@@ -217,11 +288,12 @@ test('all six stages progress, unlock weapons, save entrances, and reach victory
     else cleared = true;
   };
   g.onChange = () => transitions.push(g.mode);
-  g.start('complete', 'repulsor');
+  g.start('complete');
   for (let stage = 0; stage < 6; stage++) {
     assert.equal(g.stage, stage);
     for (const e of [...g.enemies]) g.hitEnemy(e, 99999, 'test', 0);
     Body.setPosition(g.player, { x: 2190, y: 750 });
+    Body.setPosition(g.cargo, { x: 2110, y: 775 });
     tick(g, 1, { interact: true });
     if (stage < 5) {
       assert.equal(g.mode, 'upgrade');
@@ -239,25 +311,51 @@ test('all six stages progress, unlock weapons, save entrances, and reach victory
   assert.equal(saved, 6);
   assert(cleared);
 });
-test('exit is unavailable with hostiles remaining and death clears checkpoint', () => {
+test('delivery requires the rover and core, allows patrols, and locks the final dock', () => {
   const g = new Game();
-  let cleared = false;
-  g.onCheckpoint = (s) => {
-    if (!s) cleared = true;
-  };
-  g.start('exit', 'repulsor');
+  g.start('delivery');
   Body.setPosition(g.player, { x: 2190, y: 750 });
   tick(g, 1, { interact: true });
-  assert.equal(g.stage, 0);
   assert.equal(g.mode, 'playing');
-  g.damagePlayer(9999);
-  assert.equal(g.mode, 'dead');
-  assert(cleared);
+  Body.setPosition(g.player, { x: 2190, y: 750 });
+  Body.setPosition(g.cargo, { x: 2110, y: 775 });
+  tick(g, 1, { interact: true });
+  assert.equal(g.mode, 'upgrade');
+  assert(g.enemies.length > 0);
+  g.stage = 5;
+  g.loadRoom();
+  g.setMode('playing');
+  Body.setPosition(g.player, { x: 2190, y: 750 });
+  Body.setPosition(g.cargo, { x: 2110, y: 775 });
+  tick(g, 1, { interact: true });
+  assert.equal(g.mode, 'playing');
+  for (const e of [...g.enemies]) g.hitEnemy(e, 9999, 'test', 0);
+  tick(g, 1, { interact: true });
+  assert.equal(g.mode, 'won');
+});
+test('delivery repairs the core and checkpoints its new integrity', () => {
+  for (const id of ['dense', 'repair']) {
+    const g = new Game();
+    g.start('repair');
+    g.cargoHp = 30;
+    g.hp = 50;
+    g.openReward();
+    g.offers = [TECHS.find((t) => t.id === id)!];
+    let saved: any;
+    g.onCheckpoint = (s) => {
+      saved = s;
+    };
+    g.chooseTech(id);
+    assert.equal(g.cargoHp, id === 'repair' ? 95 : 55);
+    assert.equal(g.hp, 62);
+    assert.equal(saved.cargoHp, g.cargoHp);
+    assert.equal(Composite.allConstraints(g.engine.world).length, 1);
+  }
 });
 test('checkpoint restores equipment and fresh stage without transient projectiles', () => {
   const g = new Game();
-  g.start('save', 'tractor', {
-    version: 1,
+  g.start('save', {
+    version: 2,
     seed: 'save',
     stage: 3,
     hp: 67,
@@ -265,12 +363,13 @@ test('checkpoint restores equipment and fresh stage without transient projectile
     techs: ['dense', 'fragment'],
     weapons: ['coil', 'scatter', 'lance', 'mortar'],
     weapon: 'mortar',
-    field: 'tractor',
+    cargoHp: 73,
     kills: 18,
     elapsed: 240,
   });
   assert.equal(g.stage, 3);
   assert.equal(g.hp, 67);
+  assert.equal(g.cargoHp, 73);
   assert.equal(g.weapon, 'mortar');
   assert.equal(g.shots.length, 0);
   assert.equal(g.enemies.length, 10);
@@ -278,7 +377,7 @@ test('checkpoint restores equipment and fresh stage without transient projectile
 });
 test('a stress encounter with every technology remains finite and bounded', () => {
   const g = new Game();
-  g.start('stress', 'tractor');
+  g.start('stress');
   g.techs = TECHS.map((t) => t.id);
   g.stats = getStats(g.techs);
   g.weapons = ['coil', 'scatter', 'lance', 'mortar'];
@@ -287,6 +386,7 @@ test('a stress encounter with every technology remains finite and bounded', () =
   for (let i = 0; i < 1200; i++) {
     g.energy = g.stats.maxEnergy;
     g.hurtAt = g.time;
+    g.cargoHurtAt = g.time;
     tick(g, 1, {
       fire: true,
       right: i % 240 < 100,

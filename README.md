@@ -1,40 +1,40 @@
 # Recoil Foundry
 
-**Weaponize your momentum.**
+**Get the core home.**
 
-A single-player physics action roguelike built for the browser. Pilot an experimental machine through a failing research facility, combine technologies, and shut down the prime mover.
+A physics salvage roguelike for the browser. You're a scrap-yard rover towing the last working power core out of a failing freight facility. Its security system still considers the cargo stolen.
 
 **[Play Recoil Foundry](https://caleb-guyer.github.io/recoil-foundry/)**
 
-## The experiment
+## The job
 
-- Six sectors: five combat encounters and a reactor boss.
-- Four weapons: coil driver, scatter array, photon lance, and impulse mortar.
-- Two starting fields: reflect projectiles with the repulsor, or catch and throw crates with the tractor.
-- Sixteen technologies with explicit effects, tradeoffs, and equipment prerequisites.
-- Physical recoil, ricochets, fragmentation, thrown-object damage, beam penetration, and explosions that launch objects.
-- Seeded room layouts, encounters, and rewards. Three authored platform layouts are populated procedurally; the reactor has its own arena.
-- Local checkpoints at sector entrances, run records, optional sound, reduced screen shake, and touch controls.
+- Haul a physical core cart across six freight yards. Bring both rover and cargo to each lift; ordinary patrols can be fought or outrun.
+- One fixed winch. The cable tows for free; hold right click or Shift to spend energy reeling the core closer. You can shoot while winching.
+- Protect two things: the rover and its cargo. Hostile rounds damage the core; friendly fire, terrain, and debris don't. Losing either ends the run.
+- Deliveries repair the rover and core, restore energy, and offer upgrades. Cargo cages absorb damage; patch kits improve repairs; a geared winch saves power.
+- Four salvaged tools: rivet gun, breacher, cutting laser, and demo launcher. The first three deliveries unlock the next weapon.
+- Sixteen upgrades with explicit effects and tradeoffs. Recoil, ricochets, fragments, beam penetration, and explosive debris interact through physics.
+- Defeat the yard warden to unlock the final loading dock, then extract the core.
 
-Desktop keyboard and mouse are the primary input. The interface also provides touch movement/field controls; touch and aim inside the arena to fire.
+The game uses seeded layouts, patrols, and rewards. Three platform layouts receive procedural debris and encounters; the last dock has its own arena. Desktop keyboard and mouse are the primary input. Touch movement and winch buttons are also provided; hold the arena to aim and fire.
 
 ## Controls
 
-| Action | Input |
-| --- | --- |
-| Move | A / D or left / right arrows |
-| Jump | W, Space, or up arrow |
-| Crouch | S or down arrow |
-| Aim / fire | Mouse / left click |
-| Field | Hold right click or Shift |
-| Switch weapon | 1–4, Q, or mouse wheel |
-| Activate cleared exit | E near the exit |
-| Pause | Escape or P |
-| Choose technology | Click a card or press 1–3 |
+| Action         | Input                             |
+| -------------- | --------------------------------- |
+| Move           | A / D or left / right arrows      |
+| Jump           | W, Space, or up arrow             |
+| Crouch         | S or down arrow                   |
+| Aim / fire     | Mouse / left click                |
+| Reel in core   | Hold right click or Shift         |
+| Switch weapon  | 1–4, Q, or mouse wheel            |
+| Deliver core   | E at a lift with the cargo nearby |
+| Pause          | Escape or P                       |
+| Choose upgrade | Click a card or press 1–3         |
 
-Shoot downward with the scatter array to extend jumps. The coil driver does not consume energy; it remains useful while advanced weapons recharge. Explosions push you without self-damage. Clearing each of the first three sectors unlocks another weapon.
+The rivet gun costs no energy, so it remains available while the winch and advanced tools recharge. Explosions launch the rover and loose debris without self-damage. The core stays safe from your tools.
 
-Death ends the current run. Reloading or choosing **Resume** reconstructs the latest sector from its entrance checkpoint, including the saved loadout. Checkpoints and records are stored in this browser and do not sync across devices. Seeds reproduce generated content within this game version, not exact physics replays.
+Checkpoints save at yard entrances. **Continue** reconstructs that yard with its saved loadout and rover/core integrity. Death clears the checkpoint. Saves and records stay in this browser and don't sync across devices. Older saves migrate to the fixed winch and cargo upgrades. Seeds reproduce generated content within this version, not exact physics replays.
 
 ## Run locally
 
@@ -51,42 +51,37 @@ npm run build
 npm run preview
 ```
 
-The production build is a static `dist/` directory. Relative asset paths support a GitHub Pages project URL or another static host. Fonts use the operating system's built-in sans-serif family; all game assets and the physics engine are bundled locally.
+The production build is a static `dist/` directory. Relative asset paths support GitHub Pages project URLs and other static hosts. Fonts use the system sans-serif family; all game assets and the physics engine are bundled locally.
 
 ## Architecture
 
-| File | Purpose |
-| --- | --- |
-| `src/game.ts` | Fixed-step simulation, combat, enemy behavior, field interactions, and progression |
-| `src/rules.ts` | Technology definitions, derived stats, seeded generation, collision helpers, save validation |
-| `src/render.ts` | Canvas rendering, camera, geometric machinery, projectiles, and effects |
-| `src/main.ts` | Input, native dialogs, HUD, checkpoint persistence, and game loop |
-| `src/audio.ts` | Procedural Web Audio effects |
-| `src/style.css` | Responsive game interface |
+| File            | Purpose                                                                            |
+| --------------- | ---------------------------------------------------------------------------------- |
+| `src/game.ts`   | Fixed-step physics, combat, towing, cargo damage, deliveries, and progression      |
+| `src/rules.ts`  | Upgrade stats, seeded generation, collision helpers, save validation and migration |
+| `src/render.ts` | Canvas rendering, camera, rover, tow cable, cargo, and effects                     |
+| `src/main.ts`   | Input, dialogs, compact HUD, persistence, and game loop                            |
+| `src/audio.ts`  | Synthesized Web Audio effects                                                      |
+| `src/style.css` | Responsive game interface                                                          |
 
-Matter.js simulates the player, enemies, platforms, and crates at 60 Hz. Lightweight projectiles use swept bounding-box intersections, which prevent tunneling through thin obstacles. Collider bounds are an intentional approximation for projectile hits on rotated shapes.
+Matter.js runs at 60 Hz. The rover and cargo are connected by a spring constraint with a shorter rest length under power. Cargo collides with terrain only, preventing debris or stationary sentries from blocking delivery. Projectiles use swept bounding-box intersections with terrain, cover, and valid targets. Collider bounds approximate rotated shapes.
 
-Simulation work is bounded to five catch-up steps per rendered frame. The world pauses when the page loses focus or becomes hidden. Projectiles, particles, and enemies have explicit caps. Cosmetic randomness uses a separate source from encounter and reward generation.
-
-Technology stats are recalculated from the owned set. Secondary fragments cannot fragment again; induction credits are capped per trigger pull; crate impacts have per-target cooldowns. Object impact damage uses incoming velocity, before the physics solver slows the crate.
+Simulation catches up at most five steps per rendered frame and pauses when the page loses focus. Enemies, projectiles, and particles have explicit caps. Cosmetic randomness stays separate from encounter and reward generation. Upgrade stats are recalculated from the owned set; fragments cannot split recursively; energy credits are capped per trigger pull; debris impact damage uses incoming speed and per-target cooldowns.
 
 ## Validation
 
-Automated Node tests exercise actual Matter.js movement and grounding, crouch rotation, energy recovery, field reflection/capture, thrown-crate damage, grenade idempotence, bounded fragmentation, save validation, all six progression stages, and a stress encounter. The stat tests cover every pair of the sixteen technologies. Production builds type-check the application first.
+Node tests exercise actual Matter.js movement and grounding, zero-energy towing across layouts, simultaneous winch/fire input, cargo damage and repairs, fall recovery, delivery gates, all six stages, save migration, collision damage, grenade idempotence, bounded fragmentation, and a stress encounter. Stat tests cover every pair of the sixteen upgrades. Production builds type-check the application first.
 
 ## Deploy to GitHub Pages
 
-In repository **Settings → Pages**, select **GitHub Actions** as the source. The included workflow installs dependencies, runs the test suite, builds the static game, and deploys `dist/` on pushes to `main`.
+In repository **Settings → Pages**, select **GitHub Actions** as the source. The included workflow installs dependencies, runs tests, builds the game, and deploys `dist/` on pushes to `main`.
 
-The application needs no server, account, API key, or database. There are no online leaderboards or multiplayer systems in this release.
+The game needs no server, account, API key, or database.
 
-## Credits
-
-Original game implementation inspired by the systemic physics combat of [N-Gon](https://github.com/landgreen/n-gon).
+## Dependencies and assets
 
 - Physics: [Matter.js](https://brm.io/matter-js/) by Liam Brummitt and contributors (MIT).
 - Build tools: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/).
-- Interface: minimal full-screen arena, compact HUD, and system fonts. Controls, loadout options, and run details appear on demand.
-- Artwork: procedural geometric game rendering. Audio: synthesized Web Audio effects.
+- Artwork: procedural geometric rendering. Audio: synthesized Web Audio effects.
 
 Game source is available under the MIT license. Dependency licenses remain with their respective authors.

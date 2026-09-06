@@ -107,8 +107,8 @@ export class Renderer {
       c.rotate(p.body.angle);
       const size = Math.sqrt(p.body.area),
         half = size / 2;
-      c.fillStyle = g.held === p ? '#2d5049' : '#283e45';
-      c.strokeStyle = g.held === p ? '#9cf9dc' : p.launched ? '#79baa9' : '#68848b';
+      c.fillStyle = '#303a3c';
+      c.strokeStyle = p.launched ? '#b2c69a' : '#728180';
       c.lineWidth = 1.5;
       c.fillRect(-half, -half, size, size);
       c.strokeRect(-half, -half, size, size);
@@ -135,7 +135,7 @@ export class Renderer {
       c.strokeStyle = color;
       c.lineWidth = e.type === 'boss' ? 3 : 1.8;
       c.stroke();
-      const dir = direction(pos, g.player.position);
+      const dir = direction(pos, g.enemyTarget(e));
       this.circle(pos.x + dir.x * 8, pos.y + dir.y * 8, e.type === 'boss' ? 17 : 5, color, true);
       if (e.type === 'sentry' || e.type === 'drone' || e.type === 'boss') {
         this.line(
@@ -149,7 +149,7 @@ export class Renderer {
         );
         if (e.timer < 0.5) {
           c.setLineDash([5, 7]);
-          this.line(pos, g.player.position, '#bb675a', 1);
+          this.line(pos, g.enemyTarget(e), '#bb675a', 1);
           c.setLineDash([]);
         }
       }
@@ -162,6 +162,7 @@ export class Renderer {
       }
       c.restore();
     }
+    this.drawCargo();
     this.drawPlayer();
     for (const b of g.beams) {
       if (b.color === 'explosion') {
@@ -226,23 +227,12 @@ export class Renderer {
       p = g.player.position,
       d = direction(p, g.aim),
       a = Math.atan2(d.y, d.x);
-    if (g.fieldActive) {
-      this.circle(p.x, p.y, g.field === 'repulsor' ? 175 : 200, '#71cfb6', false, 1);
-      c.fillStyle = '#79efc80c';
-      c.beginPath();
-      c.arc(p.x, p.y, g.field === 'repulsor' ? 175 : 200, 0, Math.PI * 2);
-      c.fill();
-      c.setLineDash([5, 12]);
-      this.circle(p.x, p.y, g.field === 'repulsor' ? 163 : 185, '#84f8d4', false, 1);
-      c.setLineDash([]);
-      if (g.held) this.line(p, g.held.body.position, '#8cf6d4', 2);
-    }
     c.save();
     if (g.time - g.hurtAt < 0.6) c.globalAlpha = 0.45 + Math.abs(Math.sin(g.time * 40)) * 0.55;
     this.path(g.player.vertices);
-    c.fillStyle = '#76c9b4';
+    c.fillStyle = '#bdaf86';
     c.fill();
-    c.strokeStyle = '#c4fff0';
+    c.strokeStyle = '#efdec0';
     c.lineWidth = 2;
     c.stroke();
     this.circle(p.x, p.y - 3, 9, '#152d34', true);
@@ -258,8 +248,39 @@ export class Renderer {
     c.fillRect(15, -2, 12, 4);
     c.restore();
     const bottom = g.player.bounds.max.y;
-    this.line({ x: p.x - 10, y: bottom }, { x: p.x - 12, y: bottom + 4 }, '#b4f1dc', 4);
-    this.line({ x: p.x + 10, y: bottom }, { x: p.x + 12, y: bottom + 4 }, '#b4f1dc', 4);
+    this.circle(p.x - 11, bottom, 6, '#c6beac', true);
+    this.circle(p.x + 11, bottom, 6, '#c6beac', true);
+    this.circle(p.x - 11, bottom, 3, '#252b2d', true);
+    this.circle(p.x + 11, bottom, 3, '#252b2d', true);
+    c.restore();
+  }
+  drawCargo() {
+    const g = this.game,
+      c = this.ctx,
+      p = g.cargo.position,
+      rover = g.player.position;
+    this.line(
+      { x: rover.x, y: rover.y + 10 },
+      p,
+      g.winchActive ? '#eac280' : '#63716b',
+      g.winchActive ? 2 : 1,
+    );
+    c.save();
+    if (g.time - g.cargoHurtAt < 0.45) c.globalAlpha = 0.4 + Math.abs(Math.sin(g.time * 40)) * 0.6;
+    this.path(g.cargo.vertices);
+    c.fillStyle = '#4d4536';
+    c.fill();
+    c.strokeStyle = '#b3a078';
+    c.lineWidth = 1.5;
+    c.stroke();
+    c.fillStyle = '#e5b76b';
+    c.fillRect(p.x - 13, p.y - 12, 26, 20);
+    c.fillStyle = '#fff0bd';
+    c.fillRect(p.x - 4, p.y - 8, 8, 12);
+    for (const x of [p.x - 19, p.x + 19]) {
+      this.circle(x, p.y + 18, 7, '#a0a69b', true);
+      this.circle(x, p.y + 18, 3, '#262d2d', true);
+    }
     c.restore();
   }
   drawExit() {
@@ -268,22 +289,28 @@ export class Renderer {
       x = 2190,
       y = 748,
       color = g.clear ? '#9af6cf' : '#516873';
-    c.fillStyle = '#142932';
-    c.fillRect(x - 34, y - 53, 68, 116);
+    c.fillStyle = g.clear ? '#27382c' : '#382b28';
+    c.fillRect(x - 65, y - 53, 130, 116);
     c.strokeStyle = color;
     c.lineWidth = 2;
-    c.strokeRect(x - 34, y - 53, 68, 116);
+    c.strokeRect(x - 65, y - 53, 130, 116);
     c.setLineDash([4, 8]);
     c.beginPath();
     c.moveTo(x, y - 45);
     c.lineTo(x, y + 50);
     c.stroke();
     c.setLineDash([]);
-    this.text('→', x - 14, y + 8, color, 30);
+    this.text('↑', x - 12, y + 8, color, 30);
     if (g.clear) {
       this.circle(x, y, 70, '#54856e', false, 1);
       if (Math.hypot(g.player.position.x - x, g.player.position.y - y) < 150)
-        this.text('[ E ]', x - 18, y - 70, color, 14);
+        this.text(
+          Math.hypot(g.cargo.position.x - x, g.cargo.position.y - y) < 150 ? '[ E ]' : 'Bring core',
+          x - 32,
+          y - 70,
+          color,
+          14,
+        );
     }
   }
 }

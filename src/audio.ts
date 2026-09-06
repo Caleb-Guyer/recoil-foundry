@@ -21,7 +21,7 @@ export class Sound {
       pickup: [720, 1100, 0.1, 'sine'],
       clear: [400, 800, 0.35, 'sine'],
       upgrade: [500, 1300, 0.3, 'triangle'],
-      field: [120, 240, 0.15, 'sine'],
+      winch: [120, 240, 0.15, 'sine'],
       switch: [400, 500, 0.045, 'sine'],
       boss: [80, 45, 0.25, 'sawtooth'],
       dead: [220, 30, 0.6, 'sawtooth'],

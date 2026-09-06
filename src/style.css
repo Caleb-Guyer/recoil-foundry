@@ -219,7 +219,7 @@ progress::-moz-progress-bar {
   stroke-linejoin: round;
   stroke-linecap: round;
 }
-.field-slot {
+.winch-slot {
   margin-left: 8px;
   border-left: 1px solid #3a4746;
   border-radius: 0;
@@ -318,30 +318,6 @@ summary {
 }
 .run-options[open] > summary::after {
   content: ' −';
-}
-.field-options {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-}
-.field-card {
-  flex: 1;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: transparent;
-  font-size: 14px;
-  padding: 11px 5px;
-  color: #9eafad;
-}
-.field-card.selected {
-  background: #293b33;
-  border-color: #658e7a;
-  color: #c8e3d5;
-}
-.field-description {
-  font-size: 13px;
-  color: var(--muted);
-  margin: 12px 0 18px;
 }
 .seed-label {
   display: flex;
@@ -661,4 +637,19 @@ kbd {
   * {
     transition: none !important;
   }
+}
+
+.cargo-meter {
+  color: #e5b76b;
+}
+.cargo-meter progress::-webkit-progress-value {
+  background: #e5b76b;
+}
+.cargo-meter progress::-moz-progress-bar {
+  background: #e5b76b;
+}
+.premise {
+  margin: -20px 0 30px;
+  font-size: 14px;
+  color: #97a69f;
 }
