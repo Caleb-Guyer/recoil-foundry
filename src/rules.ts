@@ -146,7 +146,7 @@ export function getGun(mods: readonly string[]): Gun {
     }
   return g;
 }
-export const STAGES = 6;
+export const STAGES = 9;
 export interface Checkpoint {
   version: 3;
   seed: string;

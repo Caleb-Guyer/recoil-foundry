@@ -25,7 +25,7 @@ let checkpoint = loadCheckpoint(read('rf-checkpoint-v3'));
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
- <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div class="run-info"><span id="stage">01 / 06</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
+ <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
   <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
@@ -107,6 +107,7 @@ game.onChange = () => {
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent =
     String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0');
+  $('stage').title = game.level.name;
   $('continue').hidden = !checkpoint;
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
@@ -169,7 +170,7 @@ function showDialog(kind: string) {
     const win = game.mode === 'won';
     content.innerHTML =
       '<p class="eyebrow">' +
-      (win ? 'ALL SIX ROOMS' : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
+      (win ? 'ALL ' + STAGES + ' ROOMS' : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
       '</p><h2 id="dialog-title">' +
       (win ? 'Clean escape.' : 'One more run?') +
       '</h2><p class="result-line">' +
@@ -265,7 +266,10 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   if (e.code === 'Escape' || e.code === 'KeyP') {
-    if (!modal.open || e.code === 'KeyP') pause();
+    if (!modal.open || e.code === 'KeyP') {
+      e.preventDefault();
+      pause();
+    }
     return;
   }
   if (game.mode !== 'playing') return;

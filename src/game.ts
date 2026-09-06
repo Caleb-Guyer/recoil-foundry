@@ -11,6 +11,9 @@ import {
   segmentBox,
 } from './rules.ts';
 import type { Vec, Gun, Mod, Checkpoint } from './rules.ts';
+import { getLevel } from './levels.ts';
+import type { Level, EnemyKind } from './levels.ts';
+export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
 export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
 export interface Input {
@@ -22,7 +25,6 @@ export interface Input {
   firePressed?: boolean;
   aim: Vec;
 }
-export type EnemyKind = 'runner' | 'shooter' | 'flyer' | 'boss';
 export interface Enemy {
   id: number;
   body: Matter.Body;
@@ -63,6 +65,7 @@ export const WORLD = { width: 2000, height: 840, floor: 740 };
 export class Game {
   engine = Engine.create({ gravity: { x: 0, y: 1, scale: 0.001 } });
   player!: Matter.Body;
+  level!: Level;
   terrain: Matter.Body[] = [];
   enemies: Enemy[] = [];
   shots: Shot[] = [];
@@ -169,31 +172,9 @@ export class Game {
     wall(-30, 400, 60, 900);
     wall(2030, 400, 60, 900);
     wall(1000, -40, 2000, 80);
-    const layouts = [
-      [
-        [470, 590, 230],
-        [990, 440, 250],
-        [1500, 590, 260],
-      ],
-      [
-        [560, 570, 300],
-        [1120, 570, 230],
-        [1530, 400, 270],
-      ],
-      [
-        [430, 430, 250],
-        [850, 585, 270],
-        [1430, 505, 300],
-      ],
-    ];
-    const layout = layouts[Math.floor(this.rng() * layouts.length)];
-    for (const [x, y, w] of this.stage === 5
-      ? [
-          [540, 570, 260],
-          [1460, 570, 260],
-        ]
-      : layout)
-      wall(x, y, w, 18);
+    this.level = getLevel(this.seed, this.stage);
+    for (const solid of this.level.solids)
+      wall(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h);
     this.player = Bodies.rectangle(140, 680, 26, 36, {
       inertia: Infinity,
       friction: 0,
@@ -203,25 +184,7 @@ export class Game {
       label: 'player',
     });
     Composite.add(this.engine.world, this.player);
-    const count = [3, 5, 7, 8, 9, 1][this.stage];
-    for (let i = 0; i < count; i++) {
-      const kind: EnemyKind =
-        this.stage === 5
-          ? 'boss'
-          : this.stage === 0
-            ? i === 2
-              ? 'shooter'
-              : 'runner'
-            : i % 4 === 3
-              ? 'flyer'
-              : i % 3 === 2
-                ? 'shooter'
-                : 'runner';
-      const x = this.stage === 5 ? 1500 : 690 + (i % 5) * 230 + this.rng() * 60;
-      const y =
-        kind === 'boss' ? 350 : kind === 'flyer' ? 330 + this.rng() * 100 : WORLD.floor - 28;
-      this.spawnEnemy(kind, x, y);
-    }
+    for (const spawn of this.level.spawns) this.spawnEnemy(spawn.kind, spawn.x, spawn.y);
   }
   spawnEnemy(kind: EnemyKind, x: number, y: number) {
     if (this.enemies.length >= 14) return;
@@ -287,7 +250,7 @@ export class Game {
     if (this.grounded && !wasGrounded && vy > 2) {
       this.land = 0.13;
       this.feedback(Math.min(3, vy * 0.15));
-      this.burst({ x: this.player.position.x, y: WORLD.floor }, 8, '#697477', 2);
+      this.burst({ x: this.player.position.x, y: this.player.bounds.max.y }, 8, '#697477', 2);
       this.onSound('land');
     }
     this.coyote = this.grounded ? 0.1 : Math.max(0, this.coyote - dt);
@@ -448,9 +411,30 @@ export class Game {
         x: e.body.velocity.x + (d.x * 2.5 - e.body.velocity.x) * 0.08,
         y: e.body.velocity.y,
       });
-      if (e.timer <= 0 && Math.abs(e.body.velocity.x) < 0.7 && dist > 60) {
-        Body.setVelocity(e.body, { x: d.x * 4, y: -8 });
-        e.timer = 1.5;
+      const grounded =
+        Query.ray(
+          this.terrain,
+          { x: p.x, y: e.body.bounds.max.y - 2 },
+          { x: p.x, y: e.body.bounds.max.y + 5 },
+          20,
+        ).length > 0;
+      const blocked =
+        Query.ray(
+          this.terrain,
+          { x: p.x, y: p.y + 8 },
+          { x: p.x + Math.sign(d.x) * 45, y: p.y + 8 },
+          12,
+        ).length > 0;
+      if (
+        e.timer <= 0 &&
+        grounded &&
+        dist > 60 &&
+        (blocked ||
+          Math.abs(e.body.velocity.x) < 0.7 ||
+          (this.player.position.y < p.y - 60 && dist < 280))
+      ) {
+        Body.setVelocity(e.body, { x: d.x * 4.5, y: -11.8 });
+        e.timer = 0.9;
       }
     } else if (e.kind === 'flyer' || e.kind === 'boss') {
       Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });

@@ -4,7 +4,7 @@
 
 [Play in your browser](https://caleb-guyer.github.io/recoil-foundry/)
 
-A short physics roguelike about staying in motion. Clear six rooms, change your gun between fights, and get out. No inventory, ammunition, energy, cargo, or ability selection.
+A physics roguelike about staying in motion. Clear nine stages, change your gun between fights, and get out. No inventory, ammunition, energy, cargo, or ability selection.
 
 ## Play
 
@@ -20,6 +20,12 @@ A short physics roguelike about staying in motion. Clear six rooms, change your 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. The final room has a boss.
 
 You always carry **one gun**. Ten possible modifications change its shots, recoil, handling, or healing: Heavy hitter, Scattershot, Hair trigger, Bank shot, Punch through, Splinter, Airshot, Kickback, Bloodwork, and Light frame. Choose one of three after each room; each choice also restores 20 health.
+
+## Levels
+
+Each run selects eight different obstacle layouts, then one of two boss arenas. Twelve regular layouts include loading bays, overpasses, terraces, pillar halls, underpasses, split decks, gantries, a central chimney, a fortress, broken bridges, and a slalom through overhead blocks. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain.
+
+Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
 
@@ -50,18 +56,19 @@ npm run build
 npm run preview
 ```
 
-| File            | Responsibility                                                                 |
-| --------------- | ------------------------------------------------------------------------------ |
-| `src/game.ts`   | Matter.js simulation, movement, recoil, combat, and room progression           |
-| `src/rules.ts`  | Gun modifications, seeded choices, swept collisions, and checkpoint validation |
-| `src/render.ts` | Canvas world, camera feedback, character animation, and effects                |
-| `src/main.ts`   | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop         |
-| `src/audio.ts`  | Layered Web Audio effects                                                      |
-| `src/style.css` | Game menus and compact HUD                                                     |
+| File            | Responsibility                                                                         |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `src/game.ts`   | Matter.js simulation, movement, recoil, combat, and room progression                   |
+| `src/levels.ts` | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
+| `src/rules.ts`  | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
+| `src/render.ts` | Canvas world, camera feedback, character animation, and effects                        |
+| `src/main.ts`   | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
+| `src/audio.ts`  | Layered Web Audio effects                                                              |
+| `src/style.css` | Game menus and compact HUD                                                             |
 
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
-The test suite covers actual movement, jump height, recoil flight, momentum preservation, camera feedback, restart timing, wall containment under extreme builds, piercing, fragmentation, saves, progression, and a complete combat run using ordinary input.
+The test suite covers actual movement, jump height, recoil flight, momentum preservation, camera feedback, restart timing, wall containment under extreme builds, piercing, fragmentation, saves, progression, seeded layout variety, clear spawn positions, and traversal of every layout in both directions.
 
 ## Publish
 

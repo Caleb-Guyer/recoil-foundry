@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, WORLD } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
-import { getGun, MODS, distance } from '../src/rules.ts';
-const { Body, Composite } = Matter;
+import { getGun, MODS, distance, STAGES } from '../src/rules.ts';
+const { Body, Composite, Query } = Matter;
 const input = (p: Partial<Input> = {}): Input => ({
   left: false,
   right: false,
@@ -237,14 +237,14 @@ test('cleared exits advance automatically and choices modify the same gun', () =
     if (s) saves++;
     else cleared = true;
   };
-  for (let stage = 0; stage < 6; stage++) {
+  for (let stage = 0; stage < STAGES; stage++) {
     assert.equal(g.stage, stage);
     Body.setPosition(g.player, { x: 1910, y: 700 });
     tick(g);
     assert.equal(g.mode, 'playing');
     for (const e of [...g.enemies]) g.hitEnemy(e, 9999);
     tick(g, 40);
-    if (stage < 5) {
+    if (stage < STAGES - 1) {
       assert.equal(g.mode, 'upgrade');
       assert.equal(g.offers.length, 3);
       const id = g.offers[0].id;
@@ -258,8 +258,8 @@ test('cleared exits advance automatically and choices modify the same gun', () =
     }
   }
   assert.equal(g.mode, 'won');
-  assert.equal(g.mods.length, 5);
-  assert.equal(saves, 5);
+  assert.equal(g.mods.length, STAGES - 1);
+  assert.equal(saves, STAGES - 1);
   assert(cleared);
 });
 test('checkpoint reconstructs the same modified gun and fresh room', () => {
@@ -288,7 +288,7 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
   ]) {
     const g = new Game();
     g.start('stress');
-    g.stage = 5;
+    g.stage = STAGES - 1;
     g.loadRoom();
     g.mods = mods;
     g.gun = getGun(mods);
@@ -315,26 +315,46 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
 });
 test('a combat run reaches the final exit with normal health and real input', () => {
   const g = new Game();
-  g.start('B');
+  g.start('F');
   let previousX = 140,
     stuck = 0,
     lastProgress = 0,
-    lastKills = 0;
-  for (let i = 0; i < 60 * 180 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+    lastKills = 0,
+    clearAt = -1;
+  const priority = [
+    'leech',
+    'magnum',
+    'scatter',
+    'rapid',
+    'airshot',
+    'pierce',
+    'ricochet',
+    'light',
+    'split',
+    'kick',
+  ];
+  for (let i = 0; i < 60 * 240 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
     if (g.mode === 'upgrade') {
       g.chooseMod(
-        g.offers.find((m) => ['magnum', 'scatter', 'rapid', 'leech', 'airshot'].includes(m.id))
-          ?.id ?? g.offers[0].id,
+        [...g.offers].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))[0].id,
       );
+      clearAt = -1;
       lastProgress = g.time;
+      stuck = 0;
+      previousX = g.player.position.x;
     }
     const p = g.player.position,
       e = [...g.enemies].sort(
         (a, b) => distance(a.body.position, p) - distance(b.body.position, p),
       )[0];
-    const ep = e?.body.position ?? { x: 1915, y: 700 },
+    const ep = e?.body.position ?? { x: 1910, y: 700 },
       lead = distance(p, ep) / 30,
-      dx = ep.x - p.x;
+      dx = ep.x - p.x,
+      dy = p.y - ep.y;
+    let aim = {
+      x: ep.x + (e?.body.velocity.x ?? 0) * lead,
+      y: ep.y + (e?.body.velocity.y ?? 0) * lead,
+    };
     stuck = Math.abs(p.x - previousX) < 0.5 ? stuck + 1 : 0;
     previousX = p.x;
     let move = g.clear
@@ -343,11 +363,11 @@ test('a combat run reaches the final exit with normal health and real input', ()
         : p.x > 1960
           ? -1
           : 0
-      : dx > 300
+      : dx > 240
         ? 1
-        : dx < -300
+        : dx < -240
           ? -1
-          : Math.abs(dx) < 160
+          : Math.abs(dx) < 100
             ? dx < 0
               ? 1
               : -1
@@ -357,19 +377,39 @@ test('a combat run reaches the final exit with normal health and real input', ()
       lastKills = g.kills;
       lastProgress = g.time;
     }
-    if (!g.clear && g.time - lastProgress > 7) move = Math.sin(g.time * 0.65) > 0 ? 1 : -1;
+    if (!g.clear && g.time - lastProgress > 5) move = Math.sin(g.time * 0.65) > 0 ? 1 : -1;
+    // If cover blocks a distant target, stop recoil and take the next terrain waypoint.
+    const navigate = !g.clear && g.time - lastProgress > 8 && distance(p, ep) > 500;
+    const path = g.level.route;
+    const way = navigate
+      ? dx > 0
+        ? path.find((q) => q.x > p.x + 35)
+        : [...path].reverse().find((q) => q.x < p.x - 35)
+      : undefined;
+    if (way) move = way.x > p.x ? 1 : -1;
+    const blocked =
+      !!move && Query.ray(g.terrain, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
+    const lift =
+      (!navigate && ((!g.clear && dy > 70 && Math.abs(dx) < 500) || (blocked && stuck > 20))) ||
+      !!(navigate && way && p.y - way.y > 75 && !g.grounded && stuck > 15);
+    let jump = g.grounded && (i % 90 === 0 || blocked || stuck > 15 || lift);
+    if (lift && !g.grounded) aim = { x: p.x, y: p.y + 500 };
+    if (g.clear) {
+      if (clearAt < 0) clearAt = g.time;
+      assert(g.time - clearAt < 35, `Exit unreachable in ${g.level.id}`);
+      jump = g.grounded && (blocked || stuck > 15);
+    }
+    if (way && p.y - way.y > 50 && g.grounded) jump = true;
     tick(g, 1, {
       left: move < 0,
       right: move > 0,
-      jump: !g.clear && g.grounded && (i % 90 === 0 || stuck > 15),
-      fire: !g.clear,
-      aim: {
-        x: ep.x + (e?.body.velocity.x ?? 0) * lead,
-        y: ep.y + (e?.body.velocity.y ?? 0) * lead,
-      },
+      jump,
+      fire: (!g.clear && !navigate) || (lift && !g.grounded),
+      aim,
     });
   }
   assert.equal(g.mode, 'won');
-  assert.equal(g.stage, 5);
+  assert.equal(g.stage, STAGES - 1);
+  assert.equal(g.mods.length, STAGES - 1);
   assert(g.hp > 0);
 });

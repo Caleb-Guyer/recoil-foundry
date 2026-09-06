@@ -112,6 +112,11 @@ export class Renderer {
       c.fillStyle = '#20272b';
       c.fillRect(x, y + 5, w, h - 5);
       this.line({ x, y }, { x: x + w, y }, '#647174', 2);
+      if (h >= 30 && y < WORLD.floor) {
+        this.line({ x, y: y + 2 }, { x, y: y + h }, '#3c494c');
+        this.line({ x: x + w, y: y + 2 }, { x: x + w, y: y + h }, '#3c494c');
+        if (y + h < WORLD.floor) this.line({ x, y: y + h }, { x: x + w, y: y + h }, '#48575a');
+      }
       if (h < 30) {
         c.fillStyle = '#353f43';
         c.fillRect(x + 12, y + h, 4, 9);
