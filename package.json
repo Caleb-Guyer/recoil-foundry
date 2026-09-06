@@ -1,0 +1,22 @@
+{
+  "name": "recoil-foundry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An experimental physics roguelike. Weaponize your momentum.",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "matter-js": "0.20.0"
+  },
+  "devDependencies": {
+    "@types/matter-js": "0.19.8",
+    "prettier": "3.6.2",
+    "typescript": "5.9.2",
+    "vite": "7.1.3"
+  }
+}
