@@ -27,6 +27,8 @@ Choose **Daily run** on the title screen for a shared nine-room challenge. A new
 
 Finish all nine rooms to save your fastest successful time for that challenge in this browser. The timer counts active simulation time, excluding pauses and upgrade screens. Continue keeps the elapsed time saved at the room entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
 
+The room counter marks active challenges with **DAILY**, and Pause shows the challenge date. Starting a daily updates its URL and keeps **Play daily** selected when returning to the menu; choose **Random run** to leave the daily. Saves from an unsupported daily ruleset cannot continue as an ordinary run. Their saved data stays untouched until you start another run.
+
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
 Daily links include a ruleset version (`?daily=2026-09-06&dv=2`). Version 2 uses predetermined upgrades; its best times are separate from the earlier version with upgrade choices. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.

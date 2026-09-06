@@ -23,6 +23,11 @@ export function dailyFromSeed(seed: string): DailyChallenge | null {
   return seed.startsWith(prefix) ? dailyForDate(seed.slice(prefix.length)) : null;
 }
 
+export function isUnsupportedDailySeed(seed: string): boolean {
+  const match = /^RF-D([1-9]\d*)-(\d{4}-\d{2}-\d{2})$/.exec(seed);
+  return !!match && match[1] !== String(DAILY_RULESET) && !!dailyForDate(match[2]);
+}
+
 export function dailyFromUrl(url: URL): DailyChallenge | null {
   const dates = url.searchParams.getAll('daily');
   const versions = url.searchParams.getAll('dv');

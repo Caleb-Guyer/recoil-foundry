@@ -12,6 +12,7 @@ import {
   dailyFromUrl,
   dailyLink,
   formatDailyTime,
+  isUnsupportedDailySeed,
   loadDailyBests,
   recordDailyWin,
   todayDaily,
@@ -34,7 +35,9 @@ function write(key: string, value: unknown) {
     return false;
   }
 }
-let checkpoint = loadCheckpoint(read('rf-checkpoint-v3'));
+const storedCheckpoint = loadCheckpoint(read('rf-checkpoint-v3'));
+let unavailableDailySave = !!storedCheckpoint && isUnsupportedDailySeed(storedCheckpoint.seed);
+let checkpoint = unavailableDailySave ? null : storedCheckpoint;
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
@@ -103,7 +106,9 @@ function updateTitle() {
     ? `Daily · ${linkedDaily.date}`
     : invalidDailyLink
       ? 'Challenge link unavailable. Start a fresh run.'
-      : 'Shoot down. Go up.';
+      : unavailableDailySave
+        ? 'Saved daily unavailable. Start a new daily.'
+        : 'Shoot down. Go up.';
 }
 function clearInput() {
   keys.clear();
@@ -131,6 +136,22 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     save?.seed ??
     (retry ? game.seed : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? newSeed()));
   activeDaily = dailyFromSeed(seed);
+  linkedDaily = activeDaily;
+  invalidDailyLink = false;
+  unavailableDailySave = false;
+  if (activeDaily) {
+    seedParam = undefined;
+    history.replaceState(null, '', dailyLink(activeDaily, location.href));
+  } else {
+    const url = new URL(location.href);
+    url.searchParams.delete('daily');
+    url.searchParams.delete('dv');
+    if (seedParam !== seed) {
+      seedParam = undefined;
+      url.searchParams.delete('seed');
+    }
+    history.replaceState(null, '', url);
+  }
   dailyResult = null;
   game.start(seed, save);
   renderer.reset();
@@ -147,8 +168,12 @@ game.onChange = () => {
   document.body.dataset.mode = game.mode;
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent =
-    String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0');
-  $('stage').title = `${AREAS[game.level.area].name} · ${game.level.name}`;
+    (activeDaily ? 'DAILY · ' : '') +
+    String(game.stage + 1).padStart(2, '0') +
+    ' / ' +
+    String(STAGES).padStart(2, '0');
+  $('stage').title =
+    `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
   updateTitle();
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
@@ -185,7 +210,9 @@ function showDialog(kind: string) {
   const content = $('dialog-content');
   if (kind === 'upgrade') {
     content.innerHTML =
-      '<p class="eyebrow">ROOM CLEAR</p><h2 id="dialog-title">' +
+      '<p class="eyebrow">' +
+      (activeDaily ? 'DAILY · ' : '') +
+      'ROOM CLEAR</p><h2 id="dialog-title">' +
       (singleUpgrade ? 'Next upgrade.' : 'Make it kick.') +
       '</h2><div class="choices">' +
       game.offers
@@ -291,6 +318,7 @@ function showDialog(kind: string) {
   } else {
     const paused = game.mode === 'paused';
     content.innerHTML =
+      (paused && activeDaily ? '<p class="eyebrow">DAILY · ' + activeDaily.date + '</p>' : '') +
       '<h2 id="dialog-title">' +
       (paused ? 'Paused.' : 'Settings.') +
       '</h2>' +
@@ -344,13 +372,7 @@ $('play').onclick = () => start();
 $('daily').onclick = () => {
   if (linkedDaily) {
     linkedDaily = null;
-    invalidDailyLink = false;
     seedParam = undefined;
-    const url = new URL(location.href);
-    url.searchParams.delete('daily');
-    url.searchParams.delete('dv');
-    url.searchParams.delete('seed');
-    history.replaceState(null, '', url);
     start();
   } else start(undefined, false, todayDaily().seed);
 };

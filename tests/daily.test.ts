@@ -5,6 +5,7 @@ import {
   dailyForDate,
   todayDaily,
   dailyFromSeed,
+  isUnsupportedDailySeed,
   dailyFromUrl,
   dailyLink,
   loadDailyBests,
@@ -78,6 +79,32 @@ test('only canonical seeds for the current daily ruleset recover daily identity'
     ' ' + challenge.seed,
   ]) {
     assert.equal(dailyFromSeed(seed), null, seed);
+  }
+});
+
+test('obsolete daily checkpoints are distinguished from ordinary and malformed seeds', () => {
+  for (const seed of [
+    'RF-D1-2026-09-06',
+    `RF-D${DAILY_RULESET + 1}-2024-02-29`,
+    'RF-D999-2000-01-01',
+  ]) {
+    assert.equal(isUnsupportedDailySeed(seed), true, seed);
+  }
+  for (const seed of [
+    challenge.seed,
+    'ordinary-run',
+    'RF-D0-2026-09-06',
+    'RF-D01-2026-09-06',
+    'RF-D-1-2026-09-06',
+    'RF-D1.5-2026-09-06',
+    'RF-D1-2026-02-29',
+    'RF-D1-2026-9-06',
+    'RF-D1-2026-09-06-extra',
+    'rf-d1-2026-09-06',
+    ' RF-D1-2026-09-06',
+    '',
+  ]) {
+    assert.equal(isUnsupportedDailySeed(seed), false, seed);
   }
 });
 
