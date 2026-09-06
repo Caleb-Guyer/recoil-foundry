@@ -13,7 +13,7 @@ import {
 } from '../src/daily.ts';
 import { Game } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
-import { loadCheckpoint, STAGES } from '../src/rules.ts';
+import { loadCheckpoint, MODS, STAGES } from '../src/rules.ts';
 import type { Checkpoint } from '../src/rules.ts';
 
 const challenge = dailyForDate('2026-09-06')!;
@@ -70,6 +70,7 @@ test('only canonical seeds for the current daily ruleset recover daily identity'
   for (const seed of [
     'ordinary-run',
     '2026-09-06',
+    'RF-D1-2026-09-06',
     `RF-D${DAILY_RULESET + 1}-2026-09-06`,
     `RF-D${DAILY_RULESET}-2026-02-29`,
     challenge.seed.toLowerCase(),
@@ -94,6 +95,7 @@ test('challenge URLs allow past and future dates but reject ambiguous or stale v
     `?dv=${DAILY_RULESET}`,
     `?daily=2026-02-29&dv=${DAILY_RULESET}`,
     '?daily=2026-09-06&dv=0',
+    '?daily=2026-09-06&dv=1',
     `?daily=2026-09-06&dv=${DAILY_RULESET + 1}`,
     `?daily=2026-09-06&dv=0${DAILY_RULESET}`,
     `?daily=2026-09-06&daily=2026-09-06&dv=${DAILY_RULESET}`,
@@ -125,6 +127,7 @@ test('stored bests retain only positive safe integer times under canonical daily
     raw[dailyForDate(`2026-10-${String(i + 1).padStart(2, '0')}`)!.seed] = time;
   });
   raw[`RF-D${DAILY_RULESET + 1}-2026-09-06`] = 300;
+  raw['RF-D1-2026-09-06'] = 300;
   raw[`RF-D${DAILY_RULESET}-2026-02-29`] = 300;
   Object.freeze(raw);
   assert.deepEqual(loadDailyBests(raw), { [challenge.seed]: 12345 });
@@ -210,13 +213,14 @@ function propSnapshot(game: Game) {
   }));
 }
 
-test('identical daily choices reproduce all nine rooms, props, and upgrade offers after resuming', () => {
+test('shared, continued, and retried dailies reproduce nine rooms and eight forced upgrades', () => {
   const first = new Game();
   let second = new Game();
   first.start(challenge.seed);
   second.start(dailyFromUrl(new URL(dailyLink(challenge, 'https://example.com/game/')))!.seed);
   const rooms: string[] = [];
   const bosses: number[] = [];
+  const sequence: string[] = [];
   for (let stage = 0; stage < STAGES; stage++) {
     assert.equal(first.stage, stage);
     assert.equal(second.stage, stage);
@@ -232,8 +236,9 @@ test('identical daily choices reproduce all nine rooms, props, and upgrade offer
     first.openReward();
     second.openReward();
     assert.deepEqual(second.offers, first.offers);
-    assert.equal(first.offers.length, 3);
-    const chosen = first.offers[stage % 3].id;
+    assert.equal(first.offers.length, 1);
+    const chosen = first.offers[0].id;
+    sequence.push(chosen);
     first.chooseMod(chosen);
     second.chooseMod(chosen);
 
@@ -252,6 +257,93 @@ test('identical daily choices reproduce all nine rooms, props, and upgrade offer
   assert.equal(new Set(rooms).size, 9);
   assert.deepEqual(bosses, [2, 5, 8]);
   assert.equal(first.mods.length, 8);
+  assert.equal(new Set(first.mods).size, 8);
+  assert.deepEqual(first.mods, sequence);
+
+  first.start(first.seed);
+  for (let stage = 0; stage < STAGES - 1; stage++) {
+    assert.equal(first.level.id, rooms[stage]);
+    for (let i = 0; i < 31 + stage; i++) first.rng();
+    first.openReward();
+    assert.deepEqual(
+      first.offers.map((mod) => mod.id),
+      [sequence[stage]],
+    );
+    first.chooseMod(first.offers[0].id);
+  }
+  assert.equal(first.level.id, rooms[8]);
+  assert.deepEqual(first.mods, sequence);
+});
+
+test('a daily rejects alternate upgrades without changing the room, gun, or health', () => {
+  const game = new Game();
+  game.start(challenge.seed);
+  game.hp = 43;
+  game.openReward();
+  assert.equal(game.offers.length, 1);
+  const alternate = MODS.find((mod) => mod.id !== game.offers[0].id)!;
+  const room = game.level;
+  const player = game.player;
+  const gun = game.gun;
+  const mods = [...game.mods];
+  const checkpoints: Checkpoint[] = [];
+  game.onCheckpoint = (save) => {
+    if (save) checkpoints.push(save);
+  };
+
+  game.chooseMod(alternate.id);
+  assert.equal(game.mode, 'upgrade');
+  assert.equal(game.stage, 0);
+  assert.equal(game.level, room);
+  assert.equal(game.player, player);
+  assert.equal(game.gun, gun);
+  assert.equal(game.hp, 43);
+  assert.deepEqual(game.mods, mods);
+  assert.equal(checkpoints.length, 0);
+});
+
+test('accepting a daily upgrade twice advances and heals only once', () => {
+  const game = new Game();
+  game.start(challenge.seed);
+  game.hp = 43;
+  game.openReward();
+  const offered = game.offers[0].id;
+  const checkpoints: Checkpoint[] = [];
+  game.onCheckpoint = (save) => {
+    if (save) checkpoints.push(save);
+  };
+  game.chooseMod(offered);
+  const nextRoom = game.level;
+  const nextPlayer = game.player;
+  const upgradedGun = game.gun;
+  game.chooseMod(offered);
+  assert.equal(game.mode, 'playing');
+  assert.equal(game.stage, 1);
+  assert.equal(game.level, nextRoom);
+  assert.equal(game.player, nextPlayer);
+  assert.equal(game.gun, upgradedGun);
+  assert.equal(game.hp, 63);
+  assert.deepEqual(game.mods, [offered]);
+  assert.equal(checkpoints.length, 1);
+  assert.deepEqual(checkpoints[0].mods, [offered]);
+  assert.equal(checkpoints[0].stage, 1);
+});
+
+test('ordinary runs retain three distinct upgrade choices after every eligible room', () => {
+  for (const seed of ['ordinary-run', '2026-09-06', `RF-D${DAILY_RULESET}-invalid`]) {
+    const game = new Game();
+    game.start(seed);
+    for (let stage = 0; stage < STAGES - 1; stage++) {
+      game.openReward();
+      assert.equal(game.offers.length, 3, `${seed}, room ${stage + 1}`);
+      assert.equal(new Set(game.offers.map((mod) => mod.id)).size, 3);
+      assert(game.offers.every((mod) => !game.mods.includes(mod.id)));
+      const chosen = game.offers[stage % 3].id;
+      game.chooseMod(chosen);
+      assert.equal(game.stage, stage + 1);
+      assert.equal(game.mods.at(-1), chosen);
+    }
+  }
 });
 
 test('v3 checkpoints preserve daily identity and accumulated elapsed time across continue and retry', () => {

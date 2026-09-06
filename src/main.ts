@@ -180,10 +180,14 @@ function showDialog(kind: string) {
   if (game.mode === 'playing') game.setMode('paused');
   clearInput();
   dialogKind = kind;
+  const singleUpgrade = kind === 'upgrade' && game.offers.length === 1;
+  modal.classList.toggle('single-upgrade', singleUpgrade);
   const content = $('dialog-content');
   if (kind === 'upgrade') {
     content.innerHTML =
-      '<p class="eyebrow">ROOM CLEAR</p><h2 id="dialog-title">Make it kick.</h2><div class="choices">' +
+      '<p class="eyebrow">ROOM CLEAR</p><h2 id="dialog-title">' +
+      (singleUpgrade ? 'Next upgrade.' : 'Make it kick.') +
+      '</h2><div class="choices">' +
       game.offers
         .map(
           (m, i) =>

@@ -265,6 +265,12 @@ h2 {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
+dialog.single-upgrade {
+  width: min(420px, calc(100% - 28px));
+}
+.single-upgrade .choices {
+  grid-template-columns: minmax(0, 1fr);
+}
 .mod {
   background: #202a2b;
   border: 1px solid #41504a;

@@ -23,13 +23,13 @@ You always carry **one gun**. Fourteen possible modifications change its shots, 
 
 ## Daily run
 
-Choose **Daily run** on the title screen for a shared nine-room challenge. A new challenge starts at midnight UTC. Everyone gets the same layouts, enemy and prop setup, and upgrade offers when making the same earlier choices. The gun, movement, and combat HUD are unchanged.
+Choose **Daily run** on the title screen for a shared nine-room challenge. A new challenge starts at midnight UTC. Everyone gets the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first eight rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 20-health recovery. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.
 
 Finish all nine rooms to save your fastest successful time for that challenge in this browser. The timer counts active simulation time, excluding pauses and upgrade screens. Continue keeps the elapsed time saved at the room entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-06&dv=1`). Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-06&dv=2`). Version 2 uses predetermined upgrades; its best times are separate from the earlier version with upgrade choices. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 

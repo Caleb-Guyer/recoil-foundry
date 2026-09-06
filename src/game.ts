@@ -11,6 +11,7 @@ import {
   segmentBox,
 } from './rules.ts';
 import type { Vec, Gun, Mod, Checkpoint } from './rules.ts';
+import { dailyFromSeed } from './daily.ts';
 import { getLevel } from './levels.ts';
 import type { Level, EnemyKind } from './levels.ts';
 import {
@@ -1203,7 +1204,7 @@ export class Game {
   openReward() {
     this.offers = sample(
       MODS.filter((m) => !this.mods.includes(m.id)),
-      3,
+      dailyFromSeed(this.seed) ? 1 : 3,
       seeded(this.seed + ':rewards:' + this.stage),
     );
     this.rewardTaken = false;
