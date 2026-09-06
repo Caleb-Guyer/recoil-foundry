@@ -162,7 +162,7 @@ export class Game {
     this.shotCount = 0;
     this.loadRoom();
     this.setMode('playing');
-    this.toast(STAGES[this.stage].name.toUpperCase(), 3);
+    this.toast(STAGES[this.stage].name, 2);
     this.save();
   }
   setMode(mode: Mode) {
@@ -405,10 +405,7 @@ export class Game {
     if (this.enemies.length === 0 && !this.clear) {
       this.clear = true;
       this.shots = this.shots.filter((s) => s.friendly);
-      this.toast(
-        this.stage === 5 ? 'REACTOR OFFLINE — REACH THE EXIT' : 'SECTOR CLEAR — REACH THE EXIT',
-        4,
-      );
+      this.toast('Exit open →', 2);
       this.onSound('clear');
       this.onChange();
     }
@@ -431,7 +428,7 @@ export class Game {
     const w = WEAPONS[this.weapon];
     if (!this.spend(w.cost * this.stats.cost)) {
       this.shootAt = this.time + 0.15;
-      this.toast('LOW ENERGY · COIL DRIVER IS ALWAYS AVAILABLE', 1);
+      this.toast('Low energy · press 1 for coil driver', 1);
       return;
     }
     this.shootAt = this.time + w.interval * this.stats.interval;
@@ -984,7 +981,7 @@ export class Game {
     this.stage++;
     this.loadRoom();
     this.setMode('playing');
-    this.toast(STAGES[this.stage].name.toUpperCase(), 3);
+    this.toast(STAGES[this.stage].name, 2);
     this.save();
     this.onSound('upgrade');
   }

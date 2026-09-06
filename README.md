@@ -51,7 +51,7 @@ npm run build
 npm run preview
 ```
 
-The production build is a static `dist/` directory. Relative asset paths support a GitHub Pages project URL or another static host. The interface requests Google Fonts and has local system-font fallbacks; the game runtime and physics engine are bundled in the build.
+The production build is a static `dist/` directory. Relative asset paths support a GitHub Pages project URL or another static host. Fonts use the operating system's built-in sans-serif family; all game assets and the physics engine are bundled locally.
 
 ## Architecture
 
@@ -86,7 +86,7 @@ Original game implementation inspired by the systemic physics combat of [N-Gon](
 
 - Physics: [Matter.js](https://brm.io/matter-js/) by Liam Brummitt and contributors (MIT).
 - Build tools: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/).
-- Typefaces: Barlow, Barlow Condensed, and IBM Plex Mono through Google Fonts.
+- Interface: minimal full-screen arena, compact HUD, and system fonts. Controls, loadout options, and run details appear on demand.
 - Artwork: procedural geometric game rendering. Audio: synthesized Web Audio effects.
 
 Game source is available under the MIT license. Dependency licenses remain with their respective authors.

@@ -30,42 +30,39 @@ const rawSave = read('rf-checkpoint-v1');
 let checkpoint: Checkpoint | null = validateCheckpoint(rawSave) ? rawSave : null;
 let selectedField: FieldId = 'repulsor';
 document.getElementById('app')!.innerHTML = `
-<header class="topbar">
- <a class="brand" href="./" aria-label="Recoil Foundry home"><img src="./icon.svg" alt="" /><span>RECOIL <b>FOUNDRY</b><small>EXPERIMENTAL SYSTEMS DIVISION</small></span></a>
- <div class="topmeta"><span class="status-dot"></span><span>RF–01 <i>/</i> SYSTEM ONLINE</span></div>
- <nav aria-label="Game settings"><button id="help" class="text-button">HOW TO PLAY <span>?</span></button><button id="sound" class="icon-button" aria-label="Mute sound" title="Toggle sound">♪</button><button id="pause" class="icon-button" aria-label="Pause game" title="Pause / Escape">Ⅱ</button></nav>
-</header>
 <main class="game-shell">
- <section class="telemetry" aria-label="Run status">
-  <div class="sector-heading"><span class="eyebrow" id="sector-label">AWAITING INITIALIZATION</span><span id="sector-name">Experiment RF–01</span></div>
-  <div class="meter"><div><label for="hp">INTEGRITY</label><span id="hp-value">100 / 100</span></div><progress id="hp" value="100" max="100"></progress></div>
-  <div class="meter energy"><div><label for="energy">ENERGY</label><span id="energy-value">100 / 100</span></div><progress id="energy" value="100" max="100"></progress></div>
-  <div class="sector-progress" id="sector-progress" aria-label="Six sectors"><span class="active">01</span><span>02</span><span>03</span><span>04</span><span>05</span><span>06</span></div>
- </section>
  <div class="viewport" id="viewport">
   <canvas id="game" tabindex="0" aria-label="Recoil Foundry physics game. Use A and D to move, W or Space to jump, mouse to aim, left click to fire, right click for field, E at the exit."></canvas>
-  <div class="canvas-corners" aria-hidden="true"></div>
-  <div class="arena-meta"><span id="arena-left">SIMULATION / STANDBY</span><span id="arena-right">PHYSICS ACTIVE · 60 Hz</span></div>
-  <div class="notice" id="notice" role="status" aria-live="polite"></div>
-  <div class="objective" id="objective"><span class="status-dot"></span><span id="objective-text">CLEAR THE SECTOR</span></div>
-  <section id="start-screen" class="start-screen" aria-label="Start a run">
-   <div class="start-content"><div class="eyebrow accent">PHYSICS / ACTION / ROGUELIKE</div><h1>RECOIL<br><span>FOUNDRY</span><sup>01</sup></h1><p class="tagline">Weaponize your momentum.</p><p class="intro">An unstable machine. An endless experiment.<br>Chain technologies. Turn the facility against itself.</p>
-    <div class="loadout"><span class="eyebrow">01 / SELECT YOUR FIELD</span><div class="field-options"><button class="field-card selected" id="field-repulsor" aria-pressed="true"><span class="field-symbol">◎</span><span><b>Repulsor</b><small>Deflect rounds. Push everything.</small></span><span class="radio-dot"></span></button><button class="field-card" id="field-tractor" aria-pressed="false"><span class="field-symbol">⊹</span><span><b>Tractor</b><small>Capture crates. Release to launch.</small></span><span class="radio-dot"></span></button></div></div>
-    <div class="launch-row"><button id="start" class="primary">INITIALIZE RUN <span>↗</span></button><label class="seed-label">RUN SEED<input id="seed" maxlength="40" autocomplete="off" aria-label="Run seed" placeholder="Random" /></label></div>
-    <button id="continue" class="continue-button" ${checkpoint ? '' : 'hidden'}>↳ RESUME SECTOR ${checkpoint ? String(checkpoint.stage + 1).padStart(2, '0') : ''}</button>
-    <div class="start-notes"><span>6 SECTORS</span><span>4 WEAPONS</span><span>16 TECHNOLOGIES</span></div>
+  <section class="hud" aria-label="Run status">
+   <div class="meters">
+    <div class="meter" title="Health"><span aria-hidden="true">+</span><progress id="hp" aria-label="Health" value="100" max="100"></progress><span id="hp-value">100</span></div>
+    <div class="meter energy" title="Energy"><span aria-hidden="true">ϟ</span><progress id="energy" aria-label="Energy" value="100" max="100"></progress><span id="energy-value">100</span></div>
    </div>
-   <aside class="experiment-note"><div class="eyebrow">OPERATOR NOTE / 001</div><p>Recoil is a force.<br><em>Use it.</em></p><span>Shoot downward to extend a jump.<br>Launch a crate to break a firing line.</span><div class="note-axis"><span>↖</span><span>F = ma</span></div></aside>
+   <div class="run-controls"><span id="sector-progress" title="Sector">1 / 6</span><button id="pause" class="icon-button" aria-label="Pause game" title="Pause · Esc">Ⅱ</button></div>
   </section>
+  <div class="notice" id="notice" role="status" aria-live="polite"></div>
+  <section id="start-screen" class="start-screen" aria-label="Start a run">
+   <div class="start-content">
+    <img class="title-mark" src="./icon.svg" alt="" />
+    <h1>Recoil Foundry</h1>
+    <button id="start" class="primary">Play</button>
+    <button id="continue" class="text-button" ${checkpoint ? '' : 'hidden'}>Continue</button>
+    <details class="run-options"><summary>Options</summary>
+     <div class="field-options" aria-label="Starting field"><button class="field-card selected" id="field-repulsor" aria-pressed="true" title="Push objects and reflect bullets">◎ Repulsor</button><button class="field-card" id="field-tractor" aria-pressed="false" title="Catch crates and release to throw">⊹ Tractor</button></div>
+     <p class="field-description" id="field-description">Push objects and reflect bullets.</p>
+     <label class="seed-label">Seed<input id="seed" maxlength="40" autocomplete="off" aria-label="Run seed" placeholder="Random" /></label>
+    </details>
+   </div>
+  </section>
+  <section class="equipment" aria-label="Equipment">
+   <div class="equipped-line"><span id="weapon-name">Coil driver</span><button id="build" class="text-button" title="View technologies"><span aria-hidden="true">◇</span> <span id="tech-count">0</span><span class="sr-only"> technologies</span></button></div>
+   <div class="equipment-buttons"><div class="weapon-rack" id="weapons"></div><button class="icon-button field-slot" id="field-info" aria-label="Repulsor field controls" title="Repulsor · RMB or Shift">◎</button></div>
+  </section>
+  <nav class="settings" aria-label="Game settings"><button id="help" class="icon-button" aria-label="How to play" title="Controls">?</button><button id="sound" class="icon-button" aria-label="Mute sound" title="Toggle sound">♪</button></nav>
   <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button data-touch="field" aria-label="Activate field">◎</button><button data-touch="jump" aria-label="Jump">↑</button><button data-touch="interact" aria-label="Use exit">E</button></div></div>
  </div>
- <section class="equipment" aria-label="Equipment">
-  <div class="weapon-rack" id="weapons"></div>
-  <button class="field-slot" id="field-info"><span class="field-symbol">◎</span><span><small>ACTIVE FIELD / RMB</small><b id="field-name">Repulsor</b></span></button>
-  <button class="build-button" id="build"><span id="tech-count">00</span><small>TECHNOLOGIES <b>↗</b></small></button>
- </section>
 </main>
-<footer><span class="control-guide"><kbd>A</kbd><kbd>D</kbd> MOVE <i>·</i> <kbd>W</kbd> JUMP <i>·</i> LMB FIRE <i>·</i> RMB FIELD <i>·</i> <kbd>Q</kbd> WEAPON <i>·</i> <kbd>E</kbd> EXIT</span><span id="save-status">LOCAL RECORDS · v1.0</span></footer>
+<span class="sr-only" id="save-status" role="status"></span>
 <dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>`;
 const game = new Game(),
   canvas = $<HTMLCanvasElement>('game'),
@@ -125,7 +122,8 @@ function selectField(field: FieldId) {
     $('field-' + f).classList.toggle('selected', f === field);
     $('field-' + f).setAttribute('aria-pressed', String(f === field));
   }
-  $('field-name').textContent = field === 'repulsor' ? 'Repulsor' : 'Tractor';
+  $('field-description').textContent =
+    field === 'repulsor' ? 'Push objects and reflect bullets.' : 'Catch crates. Release to throw.';
 }
 $('field-repulsor').onclick = () => selectField('repulsor');
 $('field-tractor').onclick = () => selectField('tractor');
@@ -149,10 +147,16 @@ game.onCheckpoint = (save) => {
   write('rf-checkpoint-v1', save);
 };
 function renderEquipment() {
-  $('weapons').innerHTML = (Object.keys(WEAPONS) as WeaponId[])
+  const icons: Record<WeaponId, string> = {
+    coil: 'M4 8h18v5H12l-2 5H6l1-5H4z M22 9h6v3h-6',
+    scatter: 'M3 8h24v3H13l-2 7H7l1-7H3z M15 5h12 M17 14h8',
+    lance: 'M4 8h12v6H4z M16 9h7v4h-7 M23 11h7 M8 14l-1 4',
+    mortar: 'M4 8h9v6H4z M13 6h12v10H13z M25 8h4v6h-4 M7 14v4',
+  };
+  $('weapons').innerHTML = game.weapons
     .map(
-      (id, index) =>
-        `<button class="weapon ${game.weapon === id ? 'equipped' : ''} ${game.weapons.includes(id) ? '' : 'locked'}" data-weapon="${id}" ${game.weapons.includes(id) ? '' : 'disabled'} aria-label="${WEAPONS[id].name}${game.weapons.includes(id) ? '' : ' — unlock after sector ' + index}" aria-pressed="${game.weapon === id}"><span class="keycap">${index + 1}</span><span class="weapon-shape shape-${id}" aria-hidden="true">${id === 'coil' ? '━━┥' : id === 'scatter' ? '╞══' : id === 'lance' ? '──⊳' : '━◉'}</span><span><b>${WEAPONS[id].name}</b><small>${game.weapons.includes(id) ? WEAPONS[id].label : 'UNLOCK / SECTOR ' + String(index).padStart(2, '0')}</small></span></button>`,
+      (id) =>
+        `<button class="weapon ${game.weapon === id ? 'equipped' : ''}" data-weapon="${id}" title="${WEAPONS[id].name} · ${(Object.keys(WEAPONS) as WeaponId[]).indexOf(id) + 1}" aria-label="${WEAPONS[id].name}" aria-pressed="${game.weapon === id}"><svg viewBox="0 0 32 22" aria-hidden="true"><path d="${icons[id]}" /></svg></button>`,
     )
     .join('');
   document.querySelectorAll<HTMLButtonElement>('[data-weapon]').forEach(
@@ -162,32 +166,18 @@ function renderEquipment() {
         canvas.focus();
       }),
   );
-  $('field-name').textContent =
-    (game.mode === 'title' ? selectedField : game.field) === 'repulsor' ? 'Repulsor' : 'Tractor';
-  $('tech-count').textContent = String(game.techs.length).padStart(2, '0');
+  const fieldName = game.field === 'repulsor' ? 'Repulsor' : 'Tractor';
+  $('field-info').textContent = game.field === 'repulsor' ? '◎' : '⊹';
+  $('field-info').title = `${fieldName} · RMB or Shift`;
+  $('field-info').setAttribute('aria-label', `${fieldName} field controls`);
+  $('weapon-name').textContent = WEAPONS[game.weapon].name;
+  $('tech-count').textContent = String(game.techs.length);
 }
 game.onChange = () => {
   $('start-screen').hidden = game.mode !== 'title';
-  $('objective').hidden = game.mode === 'title';
   document.body.dataset.mode = game.mode;
-  $('sector-label').textContent =
-    game.mode === 'title' ? 'AWAITING INITIALIZATION' : STAGES[game.stage].label;
-  $('sector-name').textContent =
-    game.mode === 'title' ? 'Experiment RF–01' : STAGES[game.stage].name;
-  $('arena-left').textContent =
-    game.mode === 'title' ? 'SIMULATION / STANDBY' : 'SEED / ' + game.seed;
-  $('arena-right').textContent =
-    game.mode === 'title'
-      ? 'PHYSICS ACTIVE · 60 Hz'
-      : `${game.enemies.length} HOSTILES / ${game.kills} ELIMINATED`;
-  $('objective-text').textContent = game.clear
-    ? 'REACH THE EXIT · PRESS E'
-    : 'ELIMINATE ALL HOSTILES';
-  $('objective').classList.toggle('complete', game.clear);
-  $('sector-progress').innerHTML = STAGES.map(
-    (_, i) =>
-      `<span class="${i === game.stage ? 'active' : i < game.stage ? 'done' : ''}">${i < game.stage ? '✓' : String(i + 1).padStart(2, '0')}</span>`,
-  ).join('');
+  $('sector-progress').textContent = `${game.stage + 1} / 6`;
+  $('sector-progress').title = STAGES[game.stage].name;
   renderEquipment();
   if (game.mode === 'upgrade') showModal('upgrade');
   if (game.mode === 'dead' || game.mode === 'won') {
@@ -229,7 +219,7 @@ function showModal(kind: string) {
   modalKind = kind;
   const content = $('modal-content');
   if (kind === 'upgrade') {
-    content.innerHTML = `<div class="eyebrow accent">SECTOR ${String(game.stage + 1).padStart(2, '0')} / COMPLETE</div><h2 id="modal-title">Evolve the experiment.</h2><p class="modal-intro">Choose one technology. Your integrity is repaired by 12 and energy is restored.</p>${game.weaponReward ? `<div class="reward-banner"><span>WEAPON ACQUIRED</span><b>${WEAPONS[game.weaponReward].name}</b><small>${WEAPONS[game.weaponReward].description}</small></div>` : ''}<div class="tech-grid">${game.offers.map((t, i) => `<button class="tech-card" data-tech="${t.id}"><span class="tech-top"><span>${t.category}</span><kbd>${i + 1}</kbd></span><span class="tech-glyph">${t.glyph}</span><b>${t.name}</b><p>${t.description}</p><span class="tech-select">INSTALL TECHNOLOGY ↗</span></button>`).join('')}</div><p class="fine-print">The next sector is saved automatically. Return later to restart from its entrance.</p>`;
+    content.innerHTML = `<h2 id="modal-title">Choose an upgrade</h2>${game.weaponReward ? `<p class="reward-banner">Unlocked: <b>${WEAPONS[game.weaponReward].name}</b></p>` : ''}<div class="tech-grid">${game.offers.map((t, i) => `<button class="tech-card" data-tech="${t.id}"><kbd>${i + 1}</kbd><b>${t.name}</b><p>${t.description}</p></button>`).join('')}</div><p class="fine-print">+12 health · Energy restored · Checkpoint saved on entry</p>`;
     content.querySelectorAll<HTMLButtonElement>('[data-tech]').forEach(
       (b) =>
         (b.onclick = () => {
@@ -241,7 +231,7 @@ function showModal(kind: string) {
     );
   } else if (kind === 'result') {
     const win = game.mode === 'won';
-    content.innerHTML = `<div class="eyebrow ${win ? 'accent' : 'danger'}">${win ? 'EXPERIMENT SUCCESSFUL' : 'EXPERIMENT TERMINATED'}</div><h2 id="modal-title">${win ? 'The foundry is silent.' : 'Every failure is data.'}</h2><p class="modal-intro">${win ? 'You dismantled the prime mover. Try another field or seed for a different build.' : 'Reconfigure. Apply what you learned. Run the experiment again.'}</p><div class="result-stats"><div><b>${game.stage + 1}<small>/ 6</small></b><span>SECTOR REACHED</span></div><div><b>${game.kills}</b><span>ELIMINATIONS</span></div><div><b>${formatTime(game.elapsed)}</b><span>RUN TIME</span></div></div><div class="build-tags">${game.techs.map((id) => `<span>${TECHS.find((t) => t.id === id)?.name}</span>`).join('') || '<span>Baseline configuration</span>'}</div><div class="result-seed">SEED / ${escape(game.seed)}</div><div class="modal-actions"><button class="primary" id="retry">RUN IT AGAIN ↗</button><button class="secondary" id="new-run">NEW CONFIGURATION</button><button class="secondary" id="copy-seed">COPY SEED LINK</button></div>`;
+    content.innerHTML = `<h2 id="modal-title">${win ? 'Run complete' : 'Destroyed'}</h2><div class="result-stats"><span>Sector <b>${game.stage + 1}/6</b></span><span><b>${game.kills}</b> kills</span><span>${formatTime(game.elapsed)}</span></div><div class="modal-actions"><button class="primary" id="retry">Retry</button><button class="secondary" id="new-run">Main menu</button></div><details class="result-details"><summary>Run details</summary><div class="build-tags">${game.techs.map((id) => `<span>${TECHS.find((t) => t.id === id)?.name}</span>`).join('') || '<span>No upgrades</span>'}</div><p class="result-seed">Seed: ${escape(game.seed)}</p><button class="text-button" id="copy-seed">Copy seed link</button></details>`;
     $('retry').onclick = () => {
       $<HTMLInputElement>('seed').value = game.seed;
       selectedField = game.field;
@@ -259,35 +249,34 @@ function showModal(kind: string) {
         const url = new URL(location.href);
         url.searchParams.set('seed', game.seed);
         await navigator.clipboard.writeText(url.href);
-        $('copy-seed').textContent = 'LINK COPIED';
+        $('copy-seed').textContent = 'Copied';
       } catch {
-        $('copy-seed').textContent = 'SEED: ' + game.seed;
+        $('copy-seed').textContent = 'Seed: ' + game.seed;
       }
     };
   } else if (kind === 'help') {
-    content.innerHTML = `<div class="eyebrow accent">OPERATOR MANUAL / RF–01</div><h2 id="modal-title">Make physics work for you.</h2><div class="manual-grid"><div><h3>Move & fight</h3><p><kbd>A</kbd> <kbd>D</kbd> or arrow keys to move.<br><kbd>W</kbd> / <kbd>Space</kbd> / <kbd>↑</kbd> to jump.<br><kbd>S</kbd> or <kbd>↓</kbd> to crouch.<br>Mouse to aim. Left click to fire.<br><kbd>1</kbd>–<kbd>4</kbd>, <kbd>Q</kbd>, or wheel to switch weapons.<br><kbd>E</kbd> at the exit after clearing enemies.<br><kbd>Esc</kbd> or <kbd>P</kbd> to pause.</p></div><div><h3>Use your field</h3><p>Hold right click or <kbd>Shift</kbd>.<br><b>Repulsor:</b> push objects and reflect hostile rounds.<br><b>Tractor:</b> catch a nearby crate, aim, then release to launch it.<br>Fields consume energy. Stop using them to recharge.</p></div></div><div class="manual-tip">Shoot downward with the scatter array to extend a jump. The coil driver costs no energy. Explosions launch you without dealing self-damage. Clear five sectors, defeat the prime mover, and reach the final exit.</div><p class="fine-print">On touch screens, use the movement buttons and hold the arena to aim and fire. Progress saves at each sector entrance. A defeat ends that run.</p><button class="primary" id="back">${game.mode === 'paused' ? 'RESUME EXPERIMENT' : 'READY'} ↗</button>`;
+    content.innerHTML = `<h2 id="modal-title">Controls</h2><div class="manual-grid"><div><h3>Move & fight</h3><p><kbd>A</kbd> <kbd>D</kbd> or arrows to move<br><kbd>W</kbd> / <kbd>Space</kbd> to jump<br><kbd>S</kbd> to crouch<br>Mouse to aim · Left click to fire<br><kbd>1</kbd>–<kbd>4</kbd>, <kbd>Q</kbd>, or wheel to switch<br><kbd>E</kbd> at a cleared exit<br><kbd>Esc</kbd> to pause</p></div><div><h3>Field · Hold right click or Shift</h3><p><b>Repulsor</b> pushes objects and reflects bullets.<br><b>Tractor</b> catches a crate. Aim and release to throw.<br>Stop using energy to recharge. The coil driver is free.</p></div></div><p class="manual-tip">Shoot downward to extend jumps. Clear each sector, choose an upgrade, and defeat the reactor boss.</p><p class="fine-print">Touch: movement buttons + hold the arena to aim/fire. Progress saves at sector entrances. Death ends a run.</p><button class="primary" id="back">${game.mode === 'paused' ? 'Resume' : 'Back'}</button>`;
     $('back').onclick = () => {
       closeModal();
       if (game.mode === 'paused') game.setMode('playing');
       canvas.focus();
     };
   } else if (kind === 'build') {
-    content.innerHTML = `<div class="eyebrow accent">CURRENT CONFIGURATION</div><h2 id="modal-title">Your machine, redefined.</h2><div class="stat-strip"><span>DAMAGE <b>${Math.round(game.stats.damage * 100)}%</b></span><span>RECOIL <b>${Math.round(game.stats.recoil * 100)}%</b></span><span>ENERGY REGEN <b>${game.stats.regen}/s</b></span></div><div class="tech-list">${
+    content.innerHTML = `<h2 id="modal-title">Build</h2><div class="stat-strip"><span>Damage <b>${Math.round(game.stats.damage * 100)}%</b></span><span>Recoil <b>${Math.round(game.stats.recoil * 100)}%</b></span><span>Energy <b>${game.stats.regen}/s</b></span></div><div class="tech-list">${
       game.techs
         .map((id) => {
           const t = TECHS.find((t) => t.id === id)!;
-          return `<article><span class="tech-glyph">${t.glyph}</span><div><b>${t.name}</b><p>${t.description}</p></div></article>`;
+          return `<article><b>${t.name}</b><p>${t.description}</p></article>`;
         })
-        .join('') ||
-      '<p>No technologies installed yet. Clear a sector and reach the exit to choose your first upgrade.</p>'
-    }</div><button class="primary" id="back">${game.mode === 'paused' ? 'RESUME EXPERIMENT' : 'BACK'} ↗</button>`;
+        .join('') || '<p>Clear a sector to earn your first upgrade.</p>'
+    }</div><button class="primary" id="back">${game.mode === 'paused' ? 'Resume' : 'Back'}</button>`;
     $('back').onclick = () => {
       closeModal();
       if (game.mode === 'paused') game.setMode('playing');
       canvas.focus();
     };
   } else {
-    content.innerHTML = `<div class="eyebrow accent">SIMULATION SUSPENDED</div><h2 id="modal-title">Take a breath.</h2><p class="modal-intro">Sector ${game.stage + 1} · ${escape(STAGES[game.stage].name)} · ${formatTime(game.elapsed)}</p><div class="pause-actions"><button class="primary" id="resume">RESUME EXPERIMENT ↗</button><button class="secondary" id="inspect">INSPECT BUILD</button><button class="secondary" id="manual">OPERATOR MANUAL</button></div><label class="motion-setting"><input type="checkbox" id="reduced" ${renderer.reduced ? 'checked' : ''} /> Reduce screen shake</label><p class="fine-print">Your checkpoint is the entrance to this sector.</p><button class="text-button" id="menu">RETURN TO MAIN MENU</button>`;
+    content.innerHTML = `<h2 id="modal-title">Paused</h2><div class="pause-actions"><button class="primary" id="resume">Resume</button><button class="secondary" id="inspect">Build</button><button class="secondary" id="manual">Controls</button></div><details class="pause-options"><summary>Options</summary><label class="motion-setting"><input type="checkbox" id="reduced" ${renderer.reduced ? 'checked' : ''} /> Reduce screen shake</label><p class="fine-print">Seed: ${escape(game.seed)}</p></details><button class="text-button" id="menu">Main menu</button><p class="fine-print">Continue restarts this sector from its checkpoint.</p>`;
     $('resume').onclick = () => togglePause();
     $('inspect').onclick = () => showModal('build');
     $('manual').onclick = () => showModal('help');
@@ -299,8 +288,7 @@ function showModal(kind: string) {
       closeModal();
       game.setMode('title');
       $('continue').hidden = !checkpoint;
-      $('continue').textContent =
-        '↳ RESUME SECTOR ' + String((checkpoint?.stage ?? 0) + 1).padStart(2, '0');
+      $('continue').textContent = 'Continue';
     };
   }
   if (!modal.open) modal.showModal();
@@ -455,15 +443,13 @@ function frame(now: number) {
     hudAt = now;
     $<HTMLProgressElement>('hp').max = game.stats.maxHp;
     $<HTMLProgressElement>('hp').value = game.hp;
-    $('hp-value').textContent = `${Math.ceil(game.hp)} / ${game.stats.maxHp}`;
+    $('hp-value').textContent = String(Math.ceil(game.hp));
     $<HTMLProgressElement>('energy').max = game.stats.maxEnergy;
     $<HTMLProgressElement>('energy').value = game.energy;
-    $('energy-value').textContent = `${Math.floor(game.energy)} / ${game.stats.maxEnergy}`;
-    $('notice').textContent = game.noticeTime > 0 ? game.notice : '';
-    $('notice').classList.toggle('visible', game.noticeTime > 0);
-    if (game.mode !== 'title')
-      $('arena-right').textContent =
-        `${game.enemies.length} HOSTILES / ${formatTime(game.elapsed)}`;
+    $('energy-value').textContent = String(Math.floor(game.energy));
+    const showNotice = game.mode === 'playing' && game.noticeTime > 0;
+    $('notice').textContent = showNotice ? game.notice : '';
+    $('notice').classList.toggle('visible', showNotice);
   }
   requestAnimationFrame(frame);
 }

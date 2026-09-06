@@ -70,10 +70,7 @@ export class Renderer {
     const ratio = this.canvas.width / this.width;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
     c.clearRect(0, 0, this.width, this.height);
-    const background = c.createLinearGradient(0, 0, 0, this.height);
-    background.addColorStop(0, '#0c1720');
-    background.addColorStop(1, '#101b22');
-    c.fillStyle = background;
+    c.fillStyle = '#151a1d';
     c.fillRect(0, 0, this.width, this.height);
     const viewW = this.width / this.scale,
       viewH = this.height / this.scale;
@@ -90,33 +87,10 @@ export class Renderer {
       c.translate(Math.sin(this.frame * 2.4) * g.shake, Math.cos(this.frame * 1.8) * g.shake * 0.5);
     c.scale(this.scale, this.scale);
     c.translate(-this.camera.x, -this.camera.y);
-    const startX = Math.floor(this.camera.x / 48) * 48,
-      startY = Math.floor(this.camera.y / 48) * 48;
-    c.lineWidth = 1 / this.scale;
-    c.strokeStyle = '#182832';
-    c.beginPath();
-    for (let x = startX; x < this.camera.x + viewW; x += 48) {
-      c.moveTo(x, this.camera.y);
-      c.lineTo(x, this.camera.y + viewH);
-    }
-    for (let y = startY; y < this.camera.y + viewH; y += 48) {
-      c.moveTo(this.camera.x, y);
-      c.lineTo(this.camera.x + viewW, y);
-    }
-    c.stroke();
-    for (let x = 250; x < 2300; x += 460) {
-      this.line({ x, y: 140 }, { x, y: 790 }, '#23333b', 2);
-      this.text(`RF / ${String(Math.floor(x / 100)).padStart(3, '0')}`, x + 12, 175, '#364953', 14);
-      this.line({ x: x + 7, y: 208 }, { x: x + 85, y: 208 }, '#32434b', 3);
-      this.circle(x + 36, 245, 18, '#263c43');
-      this.circle(x + 36, 245, 5, '#314b51', true);
-    }
-    this.text('RECOIL FOUNDRY', 890, 285, '#203740', 58);
-    this.text('EXPERIMENTAL SYSTEMS DIVISION', 892, 315, '#2b4650', 15);
     for (const b of g.terrain) {
       if (b.bounds.max.x < 0 || b.bounds.min.x > WORLD.width) continue;
       this.path(b.vertices);
-      c.fillStyle = '#19272f';
+      c.fillStyle = '#242c30';
       c.fill();
       c.strokeStyle = '#3c505b';
       c.lineWidth = 1;
@@ -124,8 +98,6 @@ export class Renderer {
       const top = b.bounds.min.y;
       if (top > 0) {
         this.line({ x: b.bounds.min.x, y: top }, { x: b.bounds.max.x, y: top }, '#647882', 2);
-        for (let x = b.bounds.min.x + 8; x < b.bounds.max.x - 8; x += 28)
-          this.line({ x, y: top + 5 }, { x: x + 10, y: top + 15 }, '#3c4f51', 3);
       }
     }
     this.drawExit();
@@ -140,8 +112,6 @@ export class Renderer {
       c.lineWidth = 1.5;
       c.fillRect(-half, -half, size, size);
       c.strokeRect(-half, -half, size, size);
-      this.line({ x: -half + 5, y: -half + 5 }, { x: half - 5, y: half - 5 }, '#668088', 1);
-      this.line({ x: half - 5, y: -half + 5 }, { x: -half + 5, y: half - 5 }, '#668088', 1);
       c.restore();
     }
     for (const d of g.drops) {
@@ -291,9 +261,6 @@ export class Renderer {
     this.line({ x: p.x - 10, y: bottom }, { x: p.x - 12, y: bottom + 4 }, '#b4f1dc', 4);
     this.line({ x: p.x + 10, y: bottom }, { x: p.x + 12, y: bottom + 4 }, '#b4f1dc', 4);
     c.restore();
-    if (g.mode === 'title') {
-      this.text('RF–01', p.x - 24, p.y - 40, '#90cdb9', 12);
-    }
   }
   drawExit() {
     const g = this.game,
@@ -312,11 +279,11 @@ export class Renderer {
     c.lineTo(x, y + 50);
     c.stroke();
     c.setLineDash([]);
-    this.text(g.clear ? 'EXIT ONLINE' : 'SEALED', x - 38, y - 70, color, 12);
     this.text('→', x - 14, y + 8, color, 30);
     if (g.clear) {
       this.circle(x, y, 70, '#54856e', false, 1);
-      this.text('[ E ] EXIT', x - 36, y + 85, color, 12);
+      if (Math.hypot(g.player.position.x - x, g.player.position.y - y) < 150)
+        this.text('[ E ]', x - 18, y - 70, color, 14);
     }
   }
 }
