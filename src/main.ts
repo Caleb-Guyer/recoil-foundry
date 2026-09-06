@@ -3,6 +3,7 @@ import { Game } from './game.ts';
 import type { Input } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
+import { musicScene } from './music-score.ts';
 import { AREAS } from './areas.ts';
 import { MODS, loadCheckpoint, STAGES } from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
@@ -59,9 +60,11 @@ const game = new Game(),
 const rawSettings = read('rf-settings-v2');
 const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}) as {
   sound?: boolean;
+  music?: boolean;
   reduced?: boolean;
 };
 sound.enabled = prefs.sound !== false;
+sound.musicEnabled = prefs.music !== false;
 renderer.reduced =
   typeof prefs.reduced === 'boolean'
     ? prefs.reduced
@@ -75,7 +78,8 @@ let mouseButtons = 0,
   dialogKind = '',
   lastTime = performance.now(),
   accumulator = 0,
-  hudAt = 0;
+  hudAt = 0,
+  pageActive = !document.hidden;
 const input: Input = {
   left: false,
   right: false,
@@ -124,13 +128,21 @@ function closeDialog() {
   clearInput();
 }
 function persistSettings() {
-  write('rf-settings-v2', { sound: sound.enabled, reduced: renderer.reduced });
+  write('rf-settings-v2', {
+    sound: sound.enabled,
+    music: sound.musicEnabled,
+    reduced: renderer.reduced,
+  });
+}
+function updateMusic(active = pageActive && document.hasFocus() && !document.hidden) {
+  sound.updateMusic(musicScene(game), active);
 }
 function newSeed() {
   return crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
 }
 function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   sound.unlock();
+  sound.resetMusic();
   closeDialog();
   const seed =
     save?.seed ??
@@ -165,6 +177,7 @@ game.onCheckpoint = (s) => {
 };
 game.onSound = (kind) => sound.play(kind);
 game.onChange = () => {
+  updateMusic();
   document.body.dataset.mode = game.mode;
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent =
@@ -236,6 +249,7 @@ function showDialog(kind: string) {
       (b) =>
         (b.onclick = () => {
           const id = b.dataset.mod!;
+          sound.unlock();
           closeDialog();
           game.chooseMod(id);
           renderer.reset();
@@ -324,6 +338,8 @@ function showDialog(kind: string) {
       '</h2>' +
       '<div class="settings-list"><label>Sound<input id="sound" type="checkbox" ' +
       (sound.enabled ? 'checked' : '') +
+      ' /></label><label>Music<input id="music" type="checkbox" ' +
+      (sound.musicEnabled ? 'checked' : '') +
       ' /></label><label>Screen shake<input id="shake" type="checkbox" ' +
       (!renderer.reduced ? 'checked' : '') +
       ' /></label></div>' +
@@ -339,9 +355,16 @@ function showDialog(kind: string) {
       (paused ? '<button id="menu" class="quiet">Menu</button>' : '') +
       '</div>';
     $<HTMLInputElement>('sound').onchange = (e) => {
-      sound.unlock();
       sound.enabled = (e.target as HTMLInputElement).checked;
+      if (sound.enabled) sound.unlock();
       persistSettings();
+      updateMusic();
+    };
+    $<HTMLInputElement>('music').onchange = (e) => {
+      sound.musicEnabled = (e.target as HTMLInputElement).checked;
+      if (sound.musicEnabled) sound.unlock();
+      persistSettings();
+      updateMusic();
     };
     $<HTMLInputElement>('shake').onchange = (e) => {
       renderer.reduced = !(e.target as HTMLInputElement).checked;
@@ -357,6 +380,7 @@ function showDialog(kind: string) {
   if (!modal.open) modal.showModal();
 }
 function resume() {
+  sound.unlock();
   closeDialog();
   if (game.mode === 'paused') game.setMode('playing');
   canvas.focus();
@@ -398,6 +422,7 @@ window.addEventListener('keydown', (e) => {
     const i = Number(e.key) - 1;
     if (i >= 0 && i < game.offers.length) {
       const id = game.offers[i].id;
+      sound.unlock();
       closeDialog();
       game.chooseMod(id);
       renderer.reset();
@@ -459,12 +484,22 @@ document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((b) => {
   b.onpointercancel = release;
 });
 function loseFocus() {
+  pageActive = false;
+  updateMusic(false);
   clearInput();
   if (game.mode === 'playing') showDialog('pause');
 }
 window.addEventListener('blur', loseFocus);
+window.addEventListener('pagehide', loseFocus);
+function regainFocus() {
+  pageActive = document.hasFocus() && !document.hidden;
+  updateMusic();
+}
+window.addEventListener('focus', regainFocus);
+window.addEventListener('pageshow', regainFocus);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) loseFocus();
+  else regainFocus();
 });
 new ResizeObserver(() => renderer.resize()).observe($('arena'));
 function frame(now: number) {
@@ -487,6 +522,7 @@ function frame(now: number) {
     }
     if (n === 5) accumulator = 0;
   } else accumulator = 0;
+  updateMusic();
   renderer.draw(now);
   if (now - hudAt > 80) {
     hudAt = now;

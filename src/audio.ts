@@ -1,5 +1,26 @@
+import { Music } from './music.ts';
+import type { MusicScene } from './music-score.ts';
+
 export class Sound {
-  enabled = true;
+  private audioEnabled = true;
+  private scoreEnabled = true;
+  music: Music | null = null;
+  get enabled() {
+    return this.audioEnabled;
+  }
+  set enabled(value: boolean) {
+    this.audioEnabled = value;
+    if (this.master && this.context)
+      this.master.gain.setTargetAtTime(value ? 0.34 : 0, this.context.currentTime, 0.012);
+    if (!value) this.silenceMusic();
+  }
+  get musicEnabled() {
+    return this.scoreEnabled;
+  }
+  set musicEnabled(value: boolean) {
+    this.scoreEnabled = value;
+    if (!value) this.silenceMusic();
+  }
   context: AudioContext | null = null;
   master: GainNode | null = null;
   noise: AudioBuffer | null = null;
@@ -7,21 +28,42 @@ export class Sound {
   played = new Map<string, number>();
   unlock() {
     if (!this.context) {
-      const c = (this.context = new AudioContext());
-      this.master = c.createGain();
-      this.master.gain.value = 0.34;
-      const compressor = c.createDynamicsCompressor();
-      compressor.threshold.value = -18;
-      compressor.ratio.value = 8;
-      compressor.attack.value = 0.003;
-      compressor.release.value = 0.12;
-      this.master.connect(compressor);
-      compressor.connect(c.destination);
-      this.noise = c.createBuffer(1, Math.ceil(c.sampleRate * 0.3), c.sampleRate);
-      const data = this.noise.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const Context = globalThis.AudioContext;
+      if (typeof Context !== 'function') return;
+      let c: AudioContext | null = null;
+      try {
+        c = new Context();
+        const master = c.createGain();
+        master.gain.value = this.enabled ? 0.34 : 0;
+        const compressor = c.createDynamicsCompressor();
+        compressor.threshold.value = -18;
+        compressor.ratio.value = 8;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.12;
+        master.connect(compressor);
+        compressor.connect(c.destination);
+        const noise = c.createBuffer(1, Math.ceil(c.sampleRate * 0.3), c.sampleRate);
+        const data = noise.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        this.music = new Music(c, master);
+        this.context = c;
+        this.master = master;
+        this.noise = noise;
+      } catch {
+        if (c) void c.close().catch(() => {});
+        return;
+      }
     }
-    if (this.context.state === 'suspended') void this.context.resume();
+    if (this.context.state === 'suspended') void this.context.resume().catch(() => {});
+  }
+  updateMusic(scene: MusicScene, active = true) {
+    this.music?.update(scene, this.enabled && this.musicEnabled, active);
+  }
+  resetMusic() {
+    this.music?.reset();
+  }
+  silenceMusic() {
+    this.music?.stop();
   }
   tone(
     start: number,
@@ -86,6 +128,21 @@ export class Sound {
     const previous = this.played.get(kind) ?? -10;
     if (c.currentTime - previous < (kind === 'hit' ? 0.04 : 0.015)) return;
     this.played.set(kind, c.currentTime);
+    if (
+      [
+        'lock',
+        'charge',
+        'machine',
+        'strain',
+        'arm',
+        'hurt',
+        'phase',
+        'loader',
+        'press',
+        'slam',
+      ].includes(kind)
+    )
+      this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
     if (['shot', 'scatter', 'heavy', 'charged'].includes(kind)) {
       const heavy = kind === 'heavy' || kind === 'charged',
         scatter = kind === 'scatter';

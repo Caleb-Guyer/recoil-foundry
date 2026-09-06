@@ -118,6 +118,14 @@ Each boss has its own arena and silhouette. The Loader and Press lead to the sam
 
 Screen shake can be disabled in Settings or Pause and initially respects the device's reduced-motion preference. Audio starts after a player interaction. The game pauses when the tab loses focus.
 
+## Soundtrack
+
+Each area has an original, quiet four-bar score synthesized in the browser: low mechanical beats in the docks, heavier percussion and bass in the furnace, and sparse airy melodies on the rooftops. Nearby enemies, active attacks, and sustained firing gradually add layers. Boss fights add rhythmic accents; cleared rooms and upgrade screens settle into soft harmony.
+
+The music dips beneath attack warnings and damage sounds. It fades out on pause, results, the title screen, or loss of browser focus. Returning to play starts a fresh phrase; new runs and room entrances reset the arrangement. No audio files are downloaded, and the score never uses the gameplay random generator or changes Daily Run rules.
+
+**Music** in Settings or Pause switches only the soundtrack. **Sound** is the master switch for both effects and music. Both preferences are saved in this browser, and an existing muted setting stays muted. Audio begins only after a player interaction; unsupported or blocked audio does not prevent playing.
+
 Checkpoints save at room entrances. Continue reconstructs that room and area with its modified gun and saved health. Death clears the checkpoint. Existing version 3 saves remain compatible; their room number now selects from the new area pools. Saves stay in this browser. A `?seed=YOURSEED` URL repeats room layouts and upgrade selection within this version.
 
 ## Develop
@@ -135,19 +143,21 @@ npm run build
 npm run preview
 ```
 
-| File             | Responsibility                                                                         |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `src/game.ts`    | Matter.js simulation, movement, recoil, combat, and room progression                   |
-| `src/enemies.ts` | Enemy dimensions, health, attack timing, and boss patterns                             |
-| `src/levels.ts`  | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
-| `src/areas.ts`   | Area palettes, parallax scenery, and surface details                                   |
-| `src/props.ts`   | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
-| `src/rules.ts`   | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
-| `src/daily.ts`   | UTC challenge identity, versioned links, and validated local best times                |
-| `src/render.ts`  | Canvas world, camera feedback, character animation, and effects                        |
-| `src/main.ts`    | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
-| `src/audio.ts`   | Layered Web Audio effects                                                              |
-| `src/style.css`  | Game menus and compact HUD                                                             |
+| File                 | Responsibility                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `src/game.ts`        | Matter.js simulation, movement, recoil, combat, and room progression                   |
+| `src/enemies.ts`     | Enemy dimensions, health, attack timing, and boss patterns                             |
+| `src/levels.ts`      | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
+| `src/areas.ts`       | Area palettes, parallax scenery, and surface details                                   |
+| `src/props.ts`       | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
+| `src/rules.ts`       | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
+| `src/daily.ts`       | UTC challenge identity, versioned links, and validated local best times                |
+| `src/render.ts`      | Canvas world, camera feedback, character animation, and effects                        |
+| `src/main.ts`        | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
+| `src/audio.ts`       | Shared Web Audio output, effects, and audio preferences                                |
+| `src/music.ts`       | Bounded music scheduling, synthesis, fades, and warning ducking                        |
+| `src/music-score.ts` | Original area phrases and read-only combat intensity                                   |
+| `src/style.css`      | Game menus and compact HUD                                                             |
 
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
@@ -160,6 +170,8 @@ Area boss checks cover locked attack warnings, wide-body crashes and platform-ed
 Elite checks cover sparse deterministic placement, checkpoint reconstruction, directional shielding and flanking, piercing and rear blasts, the sniper's second aim lock, fuse timing and defusing, blast cover and chains, and immediate cancellation on death.
 
 Moving-room checks cover seeded safe placement and traversal, lift riding and recoil escapes, moving cover, crusher warnings and swept damage, collapsing-platform timing and safe rebuilding, and pause, death, and checkpoint resets.
+
+Music checks cover area phrases and combat intensity, independence from gameplay state and RNG, scheduling after frame stalls, voice cleanup, pause and focus loss, warning ducking, independent music and master switches, and unavailable browser audio.
 
 Daily checks cover UTC rollover and real calendar dates, versioned links, reproducible room and upgrade sequences, continued elapsed time, and corrupt or slower personal records. Browser checks also exercise title and result actions, retries, blocked storage, and both clipboard outcomes.
 
