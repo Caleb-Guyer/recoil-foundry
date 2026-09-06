@@ -1,6 +1,7 @@
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
+import type { EliteKind } from './enemies.ts';
 export type EnemyKind =
   | 'runner'
   | 'shooter'
@@ -19,6 +20,7 @@ export interface Solid {
 }
 export interface Spawn extends Vec {
   kind: EnemyKind;
+  elite?: EliteKind;
 }
 export interface Layout {
   id: string;
@@ -540,7 +542,7 @@ export const BOSS_LAYOUTS: Layout[] = [
     ),
   },
 ];
-export function getLevel(seed: string, stage: number): Level {
+function buildLevel(seed: string, stage: number): Level {
   const pick = seeded(seed + ':layouts');
   const boss = stage === 2 || stage === 5 || stage === 8;
   const order = [
@@ -606,4 +608,48 @@ export function getLevel(seed: string, stage: number): Level {
     mirrored,
     boss,
   };
+}
+
+const ELITE_HOSTS: { elite: EliteKind; kind: EnemyKind; from: EnemyKind[] }[] = [
+  { elite: 'shielded', kind: 'runner', from: ['runner', 'charger', 'hopper'] },
+  { elite: 'twin', kind: 'sniper', from: ['sniper', 'shooter'] },
+  { elite: 'volatile', kind: 'flyer', from: ['flyer'] },
+];
+
+function assignElite(level: Level, allowed: EliteKind[], rng: () => number): EliteKind | undefined {
+  const choices = ELITE_HOSTS.filter(
+    (host) =>
+      allowed.includes(host.elite) && level.spawns.some((spawn) => host.from.includes(spawn.kind)),
+  );
+  if (!choices.length) return;
+  const host = choices[Math.floor(rng() * choices.length)];
+  const matching = level.spawns.filter((spawn) => spawn.kind === host.kind);
+  const candidates = matching.length
+    ? matching
+    : level.spawns.filter((spawn) => host.from.includes(spawn.kind));
+  const spawn = candidates[Math.floor(rng() * candidates.length)];
+  // Promote in place: runner variants and shooter variants share their hull dimensions.
+  spawn.kind = host.kind;
+  spawn.elite = host.elite;
+  return host.elite;
+}
+
+export function getLevel(seed: string, stage: number): Level {
+  const level = buildLevel(seed, stage);
+  if (level.boss || stage < 3) return level;
+  // Reconstruct the same two encounters independently of room, combat, and reward RNG.
+  const rng = seeded(seed + ':elites');
+  const furnaceStage = 3 + Math.floor(rng() * 2);
+  const rooftopStage = 6 + Math.floor(rng() * 2);
+  if (stage !== furnaceStage && stage !== rooftopStage) return level;
+  const furnace = stage === furnaceStage ? level : buildLevel(seed, furnaceStage);
+  const first = assignElite(furnace, ['shielded', 'twin'], rng);
+  if (stage === rooftopStage) {
+    const different = ELITE_HOSTS.filter(
+      (host) =>
+        host.elite !== first && level.spawns.some((spawn) => host.from.includes(spawn.kind)),
+    ).map((host) => host.elite);
+    assignElite(level, different.length ? different : ELITE_HOSTS.map((host) => host.elite), rng);
+  }
+  return level;
 }

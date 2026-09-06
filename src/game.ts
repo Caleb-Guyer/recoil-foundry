@@ -16,6 +16,12 @@ import { getLevel } from './levels.ts';
 import type { Level, EnemyKind } from './levels.ts';
 import {
   ENEMY_STATS,
+  ELITE_HP,
+  SHIELD_TURN,
+  TWIN_TELL,
+  TWIN_LOCK,
+  VOLATILE_TELL,
+  VOLATILE_RADIUS,
   CHARGE_TELL,
   SNIPER_TELL,
   HOP_TELL,
@@ -28,7 +34,7 @@ import {
   attackTell,
   attackAngles,
 } from './enemies.ts';
-import type { EnemyState, Attack } from './enemies.ts';
+import type { EnemyState, Attack, EliteKind } from './enemies.ts';
 import { PropSystem, traceProp } from './props.ts';
 import type { Prop } from './props.ts';
 export type { EnemyKind } from './levels.ts';
@@ -47,6 +53,9 @@ export interface Enemy {
   id: number;
   body: Matter.Body;
   kind: EnemyKind;
+  elite?: EliteKind;
+  facing: number;
+  shieldFlash: number;
   hp: number;
   maxHp: number;
   timer: number;
@@ -226,12 +235,14 @@ export class Game {
       label: 'player',
     });
     Composite.add(this.engine.world, this.player);
-    for (const spawn of this.level.spawns) this.spawnEnemy(spawn.kind, spawn.x, spawn.y);
+    for (const spawn of this.level.spawns)
+      this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
     this.props.reset(this.level);
   }
-  spawnEnemy(kind: EnemyKind, x: number, y: number) {
+  spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind) {
     if (this.enemies.length >= 14) return;
-    const { w, h, hp } = ENEMY_STATS[kind];
+    const { w, h } = ENEMY_STATS[kind];
+    const hp = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
     const body =
       kind === 'flyer'
         ? Bodies.circle(x, y, 19, { frictionAir: 0.035, inertia: Infinity, label: 'enemy' })
@@ -248,6 +259,9 @@ export class Game {
       id: ++this.id,
       body,
       kind,
+      elite,
+      facing: Math.sign(this.player.position.x - x) || -1,
+      shieldFlash: 0,
       hp,
       maxHp: hp,
       timer: 1.1 + this.rng(),
@@ -503,7 +517,7 @@ export class Game {
         d = direction(p, target);
       if (distance(p, target) > 130 || rear.x * d.x + rear.y * d.y < Math.SQRT1_2) continue;
       if (distance(this.lineEnd(p, target), target) > 0.1) continue;
-      this.hitEnemy(e, damage);
+      this.hitEnemy(e, damage, p);
       if (e.hp > 0 && !e.body.isStatic)
         Body.setVelocity(e.body, {
           x: e.body.velocity.x + rear.x * 3.5,
@@ -537,13 +551,20 @@ export class Game {
     });
   }
   updateEnemy(e: Enemy, dt: number) {
+    if (e.hp <= 0 || !this.enemies.includes(e)) return;
     e.flash = Math.max(0, e.flash - dt);
+    e.shieldFlash = Math.max(0, e.shieldFlash - dt);
     e.spawn = Math.max(0, e.spawn - dt);
     if (e.spawn > 0) return;
     e.timer -= dt;
     const p = e.body.position,
       d = direction(p, this.player.position),
       dist = distance(p, this.player.position);
+    if (e.elite === 'volatile') {
+      this.updateVolatile(e);
+      // A volatile flyer only harms the player through its warned explosion.
+      return;
+    }
     if (e.kind === 'charger') this.updateCharger(e);
     else if (e.kind === 'loader') this.updateLoader(e);
     else if (e.kind === 'press') this.updatePress(e);
@@ -551,35 +572,8 @@ export class Game {
     else if (e.kind === 'sniper') this.updateSniper(e);
     else if (e.kind === 'boss') this.updateBoss(e);
     else if (e.kind === 'runner') {
-      Body.setVelocity(e.body, {
-        x: e.body.velocity.x + (d.x * 2.5 - e.body.velocity.x) * 0.08,
-        y: e.body.velocity.y,
-      });
-      const grounded =
-        Query.ray(
-          this.solidBodies,
-          { x: p.x, y: e.body.bounds.max.y - 2 },
-          { x: p.x, y: e.body.bounds.max.y + 5 },
-          20,
-        ).length > 0;
-      const blocked =
-        Query.ray(
-          this.solidBodies,
-          { x: p.x, y: p.y + 8 },
-          { x: p.x + Math.sign(d.x) * 45, y: p.y + 8 },
-          12,
-        ).length > 0;
-      if (
-        e.timer <= 0 &&
-        grounded &&
-        dist > 60 &&
-        (blocked ||
-          Math.abs(e.body.velocity.x) < 0.7 ||
-          (this.player.position.y < p.y - 60 && dist < 280))
-      ) {
-        Body.setVelocity(e.body, { x: d.x * 4.5, y: -11.8 });
-        e.timer = 0.9;
-      }
+      const turning = e.elite === 'shielded' && this.updateShield(e);
+      if (!turning) this.updateRunner(e, d, dist);
     } else if (e.kind === 'flyer') {
       Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
       const height = clamp(this.player.position.y - 190, 220, 500);
@@ -614,6 +608,124 @@ export class Game {
         p,
       );
     if (p.y > 900) this.hitEnemy(e, 9999);
+  }
+  updateRunner(e: Enemy, d: Vec, dist: number) {
+    const p = e.body.position;
+    Body.setVelocity(e.body, {
+      x: e.body.velocity.x + (d.x * 2.5 - e.body.velocity.x) * 0.08,
+      y: e.body.velocity.y,
+    });
+    const grounded =
+      Query.ray(
+        this.solidBodies,
+        { x: p.x, y: e.body.bounds.max.y - 2 },
+        { x: p.x, y: e.body.bounds.max.y + 5 },
+        20,
+      ).length > 0;
+    const blocked =
+      Query.ray(
+        this.solidBodies,
+        { x: p.x, y: p.y + 8 },
+        { x: p.x + Math.sign(d.x) * 45, y: p.y + 8 },
+        12,
+      ).length > 0;
+    if (
+      e.timer <= 0 &&
+      grounded &&
+      dist > 60 &&
+      (blocked ||
+        Math.abs(e.body.velocity.x) < 0.7 ||
+        (this.player.position.y < p.y - 60 && dist < 280))
+    ) {
+      Body.setVelocity(e.body, { x: d.x * 4.5, y: -11.8 });
+      e.timer = 0.9;
+    }
+  }
+  updateShield(e: Enemy): boolean {
+    if (e.state === 'windup') {
+      Body.setVelocity(e.body, { x: e.body.velocity.x * 0.65, y: e.body.velocity.y });
+      if (e.timer <= 0) {
+        e.facing = e.target.x;
+        e.state = 'recover';
+        e.timer = 0.25;
+      }
+      return true;
+    }
+    if (e.state === 'recover') {
+      if (e.timer <= 0) e.state = 'idle';
+      return true;
+    }
+    const dx = this.player.position.x - e.body.position.x;
+    if (Math.abs(dx) > 18 && Math.sign(dx) !== e.facing) {
+      e.target = { x: Math.sign(dx), y: 0 };
+      e.state = 'windup';
+      e.timer = SHIELD_TURN;
+      return true;
+    }
+    return false;
+  }
+  updateVolatile(e: Enemy) {
+    const p = e.body.position;
+    if (e.state === 'windup') {
+      if (e.timer <= 0) this.detonateVolatile(e);
+      return;
+    }
+    const target = this.player.position;
+    Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
+    Body.setVelocity(e.body, {
+      x: clamp((target.x - p.x) * 0.012, -2.7, 2.7),
+      y: clamp((target.y - 22 - p.y) * 0.016, -2.5, 2.5),
+    });
+    if (distance(p, target) <= 120 && distance(this.lineEnd(p, target), target) < 0.1) {
+      Body.setVelocity(e.body, { x: 0, y: 0 });
+      Body.setStatic(e.body, true);
+      e.state = 'windup';
+      e.timer = VOLATILE_TELL;
+      e.target = { ...p };
+      this.onSound('lock');
+    }
+  }
+  detonateVolatile(e: Enemy) {
+    if (this.mode !== 'playing' || e.hp <= 0 || !this.enemies.includes(e)) return;
+    const p = { ...e.body.position };
+    e.hp = 0;
+    Composite.remove(this.engine.world, e.body);
+    this.enemies = this.enemies.filter((other) => other !== e);
+    // Snapshot all blast cover before any prop can be broken or set off.
+    const visible = (target: Vec, ignored?: Prop) =>
+      distance(p, target) < VOLATILE_RADIUS &&
+      distance(this.lineEnd(p, target, 0, ignored), target) < 0.1;
+    const hurtsPlayer = visible(this.player.position);
+    const enemies = this.enemies.filter(
+      (other) => other.spawn <= 0 && visible(other.body.position),
+    );
+    const props = this.props.items.filter((prop) => visible(prop.body.position, prop));
+    this.burst(p, 26, '#ffd28a', 6);
+    if (this.particles.length < 220)
+      this.particles.push({
+        pos: p,
+        vel: { x: 0, y: 0 },
+        life: 0.22,
+        max: 0.22,
+        size: VOLATILE_RADIUS,
+        color: '#f5b96e',
+        kind: 'ring',
+      });
+    this.feedback(6);
+    this.onSound('explode');
+    if (hurtsPlayer)
+      this.damagePlayer(
+        Math.ceil(24 * (1 - distance(p, this.player.position) / (VOLATILE_RADIUS * 2))),
+        p,
+      );
+    if (this.mode !== 'playing') return;
+    for (const other of enemies)
+      this.hitEnemy(other, 55 * (1 - distance(p, other.body.position) / (VOLATILE_RADIUS * 2)));
+    for (const prop of props) {
+      if (prop.kind === 'canister') this.props.explode(prop);
+      else this.props.hit(prop, 65, direction(p, prop.body.position));
+      if (this.mode !== 'playing') return;
+    }
   }
   enemyGrounded(e: Enemy) {
     const p = e.body.position;
@@ -936,13 +1048,22 @@ export class Game {
     }
   }
   updateSniper(e: Enemy) {
-    if (e.state === 'windup') {
-      if (e.timer > 0.32) e.aim = direction(e.body.position, this.player.position);
+    if (e.state === 'windup' || e.state === 'followup') {
+      const second = e.state === 'followup';
+      if (e.timer > (second ? TWIN_LOCK : 0.32))
+        e.aim = direction(e.body.position, this.player.position);
       if (e.timer <= 0) {
         this.enemyShot(e, Math.atan2(e.aim.y, e.aim.x), 18, 20);
         this.onSound('snipe');
-        e.state = 'recover';
-        e.timer = 2.2;
+        if (e.elite === 'twin' && !second) {
+          e.state = 'followup';
+          e.timer = TWIN_TELL;
+          e.aim = direction(e.body.position, this.player.position);
+          this.onSound('lock');
+        } else {
+          e.state = 'recover';
+          e.timer = e.elite === 'twin' ? 2.5 : 2.2;
+        }
       }
     } else {
       e.aim = direction(e.body.position, this.player.position);
@@ -1073,7 +1194,16 @@ export class Game {
         if (nearest.enemy) {
           const e = nearest.enemy;
           s.hits.add(e.id);
-          this.hitEnemy(e, s.damage);
+          // Use this segment's incoming direction, including after a bank, rather
+          // than the player's current position or the shot's original origin.
+          const blocked = this.hitEnemy(e, s.damage, {
+            x: e.body.position.x - s.vel.x,
+            y: e.body.position.y - s.vel.y,
+          });
+          if (blocked) {
+            s.life = 0;
+            continue;
+          }
           this.splitShot(s);
           if (!e.body.isStatic)
             Body.setVelocity(e.body, {
@@ -1134,16 +1264,26 @@ export class Game {
       });
     }
   }
-  hitEnemy(e: Enemy, damage: number) {
-    if (e.hp <= 0) return;
+  hitEnemy(e: Enemy, damage: number, from?: Vec): boolean {
+    if (e.hp <= 0) return false;
+    const blocked =
+      e.elite === 'shielded' && !!from && direction(e.body.position, from).x * e.facing > 0.45;
+    if (blocked) {
+      damage *= 0.1;
+      e.shieldFlash = 0.14;
+      this.burst({ x: e.body.position.x + e.facing * 19, y: e.body.position.y }, 4, '#e7d6ac', 2);
+      this.onSound('bank');
+    }
     if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
     if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.5 : 0.85;
     if (e.kind === 'press' && e.state === 'recover') damage *= 1.35;
     e.hp -= damage;
-    e.flash = 0.08;
-    this.burst(e.body.position, 4, '#f28a79', 2.3);
-    this.onSound('hit');
-    if (e.hp > 0) return;
+    if (!blocked) {
+      e.flash = 0.08;
+      this.burst(e.body.position, 4, '#f28a79', 2.3);
+      this.onSound('hit');
+    }
+    if (e.hp > 0) return blocked;
     this.kills++;
     this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);
@@ -1163,6 +1303,7 @@ export class Game {
       });
     this.onSound('kill');
     if (isBoss(e.kind)) for (const other of [...this.enemies]) this.hitEnemy(other, 9999);
+    return blocked;
   }
   damagePlayer(amount: number, from?: Vec) {
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;

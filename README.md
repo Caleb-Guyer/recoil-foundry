@@ -31,7 +31,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-06&dv=2`). Version 2 uses predetermined upgrades; its best times are separate from the earlier version with upgrade choices. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-06&dv=3`). Version 3 includes seeded elite encounters and predetermined upgrades; its best times are separate from earlier rulesets. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -79,6 +79,16 @@ New behaviors appear gradually as the run advances:
 - **Chargers** brace, then rush in a fixed direction. Bait one into cover: the crash leaves it stunned, harmless to touch, and vulnerable to extra damage.
 - **Snipers** track with a thin aiming line. The line becomes solid when their aim locks; move before the fast shot follows. Solid cover stops both the aiming line and the shot.
 - **Hoppers** crouch before jumping toward a landing spot. They climb ledges to follow you and pause after landing.
+
+## Rare elites
+
+Each run contains two different elites: one in a regular furnace room and one in a regular rooftop room. An elite replaces one ordinary enemy at a safe existing spawn point. Early rooms and boss arenas contain none. The seed determines both encounters, including in Daily Runs and restored checkpoints.
+
+- **Shielded runners** carry a visible front plate that absorbs 90% of direct shot damage. Blocked shots stop, including piercing rounds and fragments. Recoil overhead or behind them for full damage: they commit to a 0.65-second turn before moving the shield. Crates and explosions can crush through their guard.
+- **Twin-shot snipers** have paired barrels and fire twice. The second shot has its own 0.65-second warning; its aim locks for the last 0.4 seconds. Keep moving or get behind cover, then attack during the longer recovery.
+- **Volatile flyers** have a spiked body and slowly chase you. Close contact starts a 0.9-second fuse and locks them in place. Leave the marked blast area or destroy them to defuse it. Cover blocks the blast, which can also damage nearby enemies and ignite fuel canisters. They do not shoot or deal contact damage.
+
+Silhouettes, shields, aiming lines, and fuse rings carry the information in the arena. There are no additional controls or elite menus.
 
 ## Area bosses
 
@@ -136,6 +146,8 @@ The test suite covers actual movement, recoil flight, extreme builds, projectile
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
 
 Area boss checks cover locked attack warnings, wide-body crashes and platform-edge landings, bumper traversal, safe recovery windows, recoil escapes, attacks at world boundaries, pause and death cleanup, and exactly one upgrade after each intermediate boss.
+
+Elite checks cover sparse deterministic placement, checkpoint reconstruction, directional shielding and flanking, piercing and rear blasts, the sniper's second aim lock, fuse timing and defusing, blast cover and chains, and immediate cancellation on death.
 
 Daily checks cover UTC rollover and real calendar dates, versioned links, reproducible room and upgrade sequences, continued elapsed time, and corrupt or slower personal records. Browser checks also exercise title and result actions, retries, blocked storage, and both clipboard outcomes.
 

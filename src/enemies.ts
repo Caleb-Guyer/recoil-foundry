@@ -1,5 +1,13 @@
 import type { EnemyKind } from './levels.ts';
 
+export type EliteKind = 'shielded' | 'twin' | 'volatile';
+export const ELITE_HP: Record<EliteKind, number> = { shielded: 86, twin: 85, volatile: 60 };
+export const SHIELD_TURN = 0.65;
+export const TWIN_TELL = 0.65;
+export const TWIN_LOCK = 0.4;
+export const VOLATILE_TELL = 0.9;
+export const VOLATILE_RADIUS = 135;
+
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
   runner: { w: 30, h: 32, hp: 52 },
   shooter: { w: 36, h: 32, hp: 70 },
@@ -26,6 +34,7 @@ export type EnemyState =
   | 'recover'
   | 'airborne'
   | 'transition'
+  | 'followup'
   | 'return';
 export const bossPhase = (hp: number, max: number) =>
   hp > (max * 2) / 3 ? 0 : hp > max / 3 ? 1 : 2;

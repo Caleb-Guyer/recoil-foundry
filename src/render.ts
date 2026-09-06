@@ -6,6 +6,11 @@ import {
   HOP_TELL,
   LOADER_TELL,
   PRESS_LOCK,
+  SHIELD_TURN,
+  TWIN_TELL,
+  TWIN_LOCK,
+  VOLATILE_TELL,
+  VOLATILE_RADIUS,
   isBoss,
   attackAngles,
 } from './enemies.ts';
@@ -250,11 +255,43 @@ export class Renderer {
         this.line({ x: -18, y: 16 }, { x: -10, y: -15 }, color, 3);
         this.line({ x: 18, y: 16 }, { x: 10, y: -15 }, color, 3);
         this.line({ x: -10, y: -15 }, { x: 10, y: -15 }, color, 2);
+        if (e.elite === 'twin') {
+          for (const [i, x] of [-6, 3].entries()) {
+            c.fillStyle =
+              (e.state === 'windup' && i === 0) || (e.state === 'followup' && i === 1)
+                ? '#ffe1aa'
+                : '#8c6750';
+            c.fillRect(x, -23, 4, 6);
+          }
+        }
       } else if (e.kind === 'flyer') {
-        this.circle({ x: 0, y: 0 }, 18, '#392a2a');
-        this.circle({ x: 0, y: 0 }, 18, color, false, 2.5);
-        this.line({ x: -26, y: -5 }, { x: -18, y: 2 }, color, 3);
-        this.line({ x: 18, y: 2 }, { x: 26, y: -5 }, color, 3);
+        if (e.elite === 'volatile') {
+          c.fillStyle = '#392a2a';
+          c.strokeStyle = color;
+          c.lineWidth = 2;
+          c.beginPath();
+          for (let i = 0; i < 16; i++) {
+            const a = (i * Math.PI) / 8,
+              r = i % 2 ? 16 : 25;
+            if (i === 0) c.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+            else c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+          }
+          c.closePath();
+          c.fill();
+          c.stroke();
+          this.circle({ x: 0, y: 0 }, 10, '#e7aa74', false, 2);
+          if (e.state === 'windup')
+            this.circle(
+              { x: 0, y: 0 },
+              4 + clamp(1 - e.timer / VOLATILE_TELL, 0, 1) * 5,
+              '#ffe1a6',
+            );
+        } else {
+          this.circle({ x: 0, y: 0 }, 18, '#392a2a');
+          this.circle({ x: 0, y: 0 }, 18, color, false, 2.5);
+          this.line({ x: -26, y: -5 }, { x: -18, y: 2 }, color, 3);
+          this.line({ x: 18, y: 2 }, { x: 26, y: -5 }, color, 3);
+        }
       } else {
         c.fillStyle = e.flash > 0 ? '#fff5df' : '#33282a';
         c.fillRect(-size / 2, -(e.kind === 'boss' ? 38 : 16), size, e.kind === 'boss' ? 76 : 32);
@@ -282,21 +319,60 @@ export class Renderer {
             this.circle({ x: 0, y: 0 }, 48 + (1.2 - e.timer) * 30, '#ffd3a0', false, 2);
         }
       }
-      const aim =
-        e.kind === 'runner' || e.kind === 'hopper' ? direction(p, g.player.position) : e.aim;
-      if (['shooter', 'flyer', 'sniper', 'boss'].includes(e.kind)) {
+      if (e.elite === 'shielded') {
         c.save();
-        c.rotate(Math.atan2(aim.y, aim.x));
-        c.fillStyle = color;
-        c.fillRect(
-          e.kind === 'boss' ? 18 : 7,
-          -3,
-          e.kind === 'boss' ? 38 : e.kind === 'sniper' ? 30 : 22,
-          e.kind === 'sniper' ? 4 : 6,
-        );
+        c.scale(e.facing, 1);
+        c.fillStyle = e.shieldFlash > 0 ? '#f6e6bb' : '#4c5351';
+        c.strokeStyle = e.shieldFlash > 0 ? '#fff7df' : '#aab4ac';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(18, -23);
+        c.lineTo(28, -18);
+        c.lineTo(28, 18);
+        c.lineTo(18, 23);
+        c.closePath();
+        c.fill();
+        c.stroke();
+        this.line({ x: 28, y: -15 }, { x: 28, y: 15 }, c.strokeStyle, 4);
+        this.line({ x: 20, y: -7 }, { x: 26, y: -7 }, '#79857e', 2);
+        this.line({ x: 20, y: 7 }, { x: 26, y: 7 }, '#79857e', 2);
+        if (e.state === 'windup') {
+          const x = -23 - clamp(1 - e.timer / SHIELD_TURN, 0, 1) * 5;
+          this.line({ x: x + 7, y: -8 }, { x, y: 0 }, '#e5c898', 2);
+          this.line({ x, y: 0 }, { x: x + 7, y: 8 }, '#e5c898', 2);
+        }
+        if (e.shieldFlash > 0) {
+          for (const y of [-15, 0, 15])
+            this.line({ x: 34, y }, { x: 40, y: y * 1.25 }, '#ffeac4', 2);
+        }
         c.restore();
       }
-      if (e.kind !== 'loader' && e.kind !== 'press')
+      const aim =
+        e.elite === 'shielded'
+          ? { x: e.facing, y: 0 }
+          : e.kind === 'runner' || e.kind === 'hopper'
+            ? direction(p, g.player.position)
+            : e.aim;
+      if (['shooter', 'flyer', 'sniper', 'boss'].includes(e.kind) && e.elite !== 'volatile') {
+        c.save();
+        c.rotate(Math.atan2(aim.y, aim.x));
+        if (e.elite === 'twin') {
+          c.fillStyle = e.state === 'followup' ? '#85624e' : color;
+          c.fillRect(7, -8, 30, 4);
+          c.fillStyle = e.state === 'followup' ? '#ffe1aa' : color;
+          c.fillRect(7, 4, 30, 4);
+        } else {
+          c.fillStyle = color;
+          c.fillRect(
+            e.kind === 'boss' ? 18 : 7,
+            -3,
+            e.kind === 'boss' ? 38 : e.kind === 'sniper' ? 30 : 22,
+            e.kind === 'sniper' ? 4 : 6,
+          );
+        }
+        c.restore();
+      }
+      if (e.kind !== 'loader' && e.kind !== 'press' && e.elite !== 'volatile')
         this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
       if (e.hp < e.maxHp) {
         const w = isBoss(e.kind) ? ENEMY_STATS[e.kind].w : 30;
@@ -308,7 +384,12 @@ export class Renderer {
       }
       c.restore();
       this.drawTell(e);
-      if ((e.kind === 'shooter' || e.kind === 'flyer') && e.timer < 0.4 && e.spawn === 0) {
+      if (
+        (e.kind === 'shooter' || e.kind === 'flyer') &&
+        e.elite !== 'volatile' &&
+        e.timer < 0.4 &&
+        e.spawn === 0
+      ) {
         const length = 280;
         c.setLineDash([3, 10]);
         this.line(
@@ -470,11 +551,38 @@ export class Renderer {
     }
   }
   drawTell(e: Enemy) {
-    if (e.spawn > 0 || e.state !== 'windup') return;
+    if (e.spawn > 0 || (e.state !== 'windup' && e.state !== 'followup')) return;
     const c = this.ctx,
       g = this.game,
       p = e.body.position;
-    if (e.kind === 'loader') {
+    if (e.elite === 'volatile') {
+      const progress = clamp(1 - e.timer / VOLATILE_TELL, 0, 1);
+      c.save();
+      // The blast warning respects the same cover as the actual explosion.
+      c.beginPath();
+      for (let i = 0; i <= 64; i++) {
+        const a = (i * Math.PI) / 32,
+          end = g.lineEnd(p, {
+            x: p.x + Math.cos(a) * VOLATILE_RADIUS,
+            y: p.y + Math.sin(a) * VOLATILE_RADIUS,
+          });
+        if (i === 0) c.moveTo(end.x, end.y);
+        else c.lineTo(end.x, end.y);
+      }
+      c.closePath();
+      c.fillStyle = `rgba(232,133,89,${0.045 + progress * 0.065})`;
+      c.fill();
+      c.clip();
+      this.circle(p, VOLATILE_RADIUS - 1, '#bd7960', false, 1.5);
+      this.circle(
+        p,
+        18 + (VOLATILE_RADIUS - 18) * (1 - progress),
+        '#ffce98',
+        false,
+        progress > 0.7 ? 3 : 2,
+      );
+      c.restore();
+    } else if (e.kind === 'loader') {
       const end = g.lineEnd(p, { x: p.x + e.aim.x * 650, y: p.y });
       c.setLineDash([8, 8]);
       this.line({ x: p.x + e.aim.x * 60, y: p.y }, end, '#bc8260', 2);
@@ -505,11 +613,25 @@ export class Renderer {
       );
     } else if (e.kind === 'sniper') {
       const end = g.lineEnd(p, { x: p.x + e.aim.x * 1450, y: p.y + e.aim.y * 1450 });
-      const locked = e.timer <= 0.32;
+      const second = e.state === 'followup',
+        locked = e.timer <= (second ? TWIN_LOCK : 0.32);
       c.setLineDash(locked ? [] : [7, 7]);
-      this.line(p, end, locked ? '#ffdda1' : '#946d51', locked ? 1.5 : 1);
+      this.line(
+        p,
+        end,
+        locked ? (second ? '#ffe8b9' : '#ffdda1') : '#946d51',
+        locked ? (second ? 2 : 1.5) : 1,
+      );
       c.setLineDash([]);
       this.circle(end, locked ? 4 : 2, '#ffdda1', false, 1);
+      if (second)
+        this.circle(
+          { x: p.x + e.aim.x * 38, y: p.y + e.aim.y * 38 },
+          4 + clamp(e.timer / TWIN_TELL, 0, 1) * 8,
+          '#ffe8b9',
+          false,
+          2,
+        );
     } else if (e.kind === 'charger') {
       const end = g.lineEnd(p, { x: p.x + e.aim.x * 180, y: p.y });
       c.setLineDash([6, 8]);
