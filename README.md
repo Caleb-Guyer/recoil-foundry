@@ -38,7 +38,13 @@ Existing modifications remain: Heavy hitter, Scattershot, Hair trigger, Bank sho
 
 ## Levels
 
-Each run selects eight different obstacle layouts, then one of two boss arenas. Twelve regular layouts include loading bays, overpasses, terraces, pillar halls, underpasses, split decks, gantries, a central chimney, a fortress, broken bridges, and a slalom through overhead blocks. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain.
+Escape through three areas, each with its own scenery, lighting, and layout pool:
+
+- **Loading docks, rooms 1–3:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Three layouts drawn from loading bays, overpasses, staggered cargo, and terraces.
+- **Furnace halls, rooms 4–6:** warm boiler light, tall machinery, and tighter routes. Three layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages.
+- **Rooftops, rooms 7–9:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, followed by one of two rooftop boss arenas.
+
+Each run has eight different regular layouts and a final boss arena. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
 
 Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
 
@@ -64,7 +70,7 @@ The final boss changes at two-thirds and one-third health. Aimed volleys give wa
 
 Screen shake can be disabled in Settings or Pause and initially respects the device's reduced-motion preference. Audio starts after a player interaction. The game pauses when the tab loses focus.
 
-Checkpoints save at room entrances. Continue reconstructs that room with its modified gun and saved health. Death clears the checkpoint. This rebuild uses a new save format; runs from the previous game rules do not resume. Saves stay in this browser. A `?seed=YOURSEED` URL repeats room layouts and upgrade selection within this version.
+Checkpoints save at room entrances. Continue reconstructs that room and area with its modified gun and saved health. Death clears the checkpoint. Existing version 3 saves remain compatible; their room number now selects from the new area pools. Saves stay in this browser. A `?seed=YOURSEED` URL repeats room layouts and upgrade selection within this version.
 
 ## Develop
 
@@ -86,6 +92,7 @@ npm run preview
 | `src/game.ts`    | Matter.js simulation, movement, recoil, combat, and room progression                   |
 | `src/enemies.ts` | Enemy dimensions, health, attack timing, and boss patterns                             |
 | `src/levels.ts`  | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
+| `src/areas.ts`   | Area palettes, parallax scenery, and surface details                                   |
 | `src/rules.ts`   | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
 | `src/render.ts`  | Canvas world, camera feedback, character animation, and effects                        |
 | `src/main.ts`    | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |

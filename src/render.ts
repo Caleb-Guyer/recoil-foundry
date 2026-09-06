@@ -3,6 +3,7 @@ import type { Enemy } from './game.ts';
 import { ENEMY_STATS, CHARGE_TELL, HOP_TELL, attackAngles } from './enemies.ts';
 import { clamp, direction } from './rules.ts';
 import type { Vec } from './rules.ts';
+import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -65,8 +66,6 @@ export class Renderer {
     this.clock += dt;
     const ratio = this.canvas.width / this.width;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
-    c.fillStyle = '#101416';
-    c.fillRect(0, 0, this.width, this.height);
     const viewW = this.width / this.scale,
       viewH = this.height / this.scale;
     const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
@@ -83,14 +82,9 @@ export class Renderer {
       this.camera.x = 200;
       this.camera.y = Math.max(0, 825 - viewH);
     }
-    // Background structure is deliberately lower contrast than playable surfaces.
     c.save();
     c.scale(this.scale, this.scale);
-    c.fillStyle = '#151b1e';
-    for (let i = 0; i < 7; i++) {
-      const x = i * 390 - this.camera.x * 0.25;
-      c.fillRect(x, 40 - this.camera.y * 0.18, 90, viewH);
-    }
+    drawScenery(c, g.level.area, this.camera, viewW, viewH);
     c.restore();
     c.save();
     if (!this.reduced && g.mode !== 'title') {
@@ -103,27 +97,24 @@ export class Renderer {
     }
     c.scale(this.scale, this.scale);
     c.translate(-this.camera.x, -this.camera.y);
+    const palette = AREAS[g.level.area];
     for (const b of g.terrain) {
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= WORLD.width || b.bounds.min.y < 0) continue;
       const x = b.bounds.min.x,
         y = b.bounds.min.y,
         w = b.bounds.max.x - x,
         h = b.bounds.max.y - y;
-      c.fillStyle = '#252d31';
+      c.fillStyle = palette.body;
       c.fillRect(x, y, w, h);
-      c.fillStyle = '#20272b';
+      c.fillStyle = palette.face;
       c.fillRect(x, y + 5, w, h - 5);
-      this.line({ x, y }, { x: x + w, y }, '#647174', 2);
+      this.line({ x, y }, { x: x + w, y }, palette.surface, 2);
       if (h >= 30 && y < WORLD.floor) {
-        this.line({ x, y: y + 2 }, { x, y: y + h }, '#3c494c');
-        this.line({ x: x + w, y: y + 2 }, { x: x + w, y: y + h }, '#3c494c');
-        if (y + h < WORLD.floor) this.line({ x, y: y + h }, { x: x + w, y: y + h }, '#48575a');
+        this.line({ x, y: y + 2 }, { x, y: y + h }, palette.edge);
+        this.line({ x: x + w, y: y + 2 }, { x: x + w, y: y + h }, palette.edge);
+        if (y + h < WORLD.floor) this.line({ x, y: y + h }, { x: x + w, y: y + h }, palette.edge);
       }
-      if (h < 30) {
-        c.fillStyle = '#353f43';
-        c.fillRect(x + 12, y + h, 4, 9);
-        c.fillRect(x + w - 16, y + h, 4, 9);
-      }
+      drawSurfaceDetails(c, g.level.area, x, y, w, h);
     }
     this.drawExit();
     if (!this.reduced && !g.grounded && g.player.speed > 8) {

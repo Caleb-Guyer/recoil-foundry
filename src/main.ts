@@ -3,6 +3,7 @@ import { Game } from './game.ts';
 import type { Input } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
+import { AREAS } from './areas.ts';
 import { MODS, loadCheckpoint, STAGES } from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -107,7 +108,7 @@ game.onChange = () => {
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent =
     String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0');
-  $('stage').title = game.level.name;
+  $('stage').title = `${AREAS[game.level.area].name} · ${game.level.name}`;
   $('continue').hidden = !checkpoint;
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');

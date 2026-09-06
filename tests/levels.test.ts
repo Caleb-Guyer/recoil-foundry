@@ -22,6 +22,20 @@ test('nine-stage seeds produce eight distinct obstacle layouts and a reserved bo
       Array.from({ length: STAGES }, (_, stage) => getLevel(seed, stage)),
     );
     assert.equal(new Set(levels.map((l) => l.id)).size, STAGES);
+    assert.deepEqual(
+      levels.map((l) => l.area),
+      [
+        'docks',
+        'docks',
+        'docks',
+        'furnace',
+        'furnace',
+        'furnace',
+        'rooftops',
+        'rooftops',
+        'rooftops',
+      ],
+    );
     for (const [stage, level] of levels.entries()) {
       seen.add(level.id);
       mirrored += Number(level.mirrored);
@@ -36,6 +50,29 @@ test('nine-stage seeds produce eight distinct obstacle layouts and a reserved bo
   }
   assert.equal(seen.size, LAYOUTS.length + BOSS_LAYOUTS.length);
   assert(mirrored > 100);
+});
+
+test('room-entrance checkpoints reconstruct the correct area across both transitions', () => {
+  for (let stage = 0; stage < STAGES; stage++) {
+    const save = {
+      version: 3 as const,
+      seed: 'area-continue',
+      stage,
+      hp: 63,
+      mods: ['burst', 'banker'],
+      kills: 12,
+      elapsed: 48,
+    };
+    const g = new Game();
+    g.start(save.seed, save);
+    assert.equal(g.mode, 'playing');
+    assert.deepEqual(g.level, getLevel(save.seed, stage));
+    assert.equal(g.level.area, stage < 3 ? 'docks' : stage < 6 ? 'furnace' : 'rooftops');
+    assert.equal(g.hp, save.hp);
+    assert.deepEqual(g.mods, save.mods);
+    assert.equal(g.kills, save.kills);
+    assert.equal(g.elapsed, save.elapsed);
+  }
 });
 test('all generated enemy hulls, player starts and exits are clear of solid obstacles', () => {
   for (let i = 0; i < 60; i++)

@@ -1,5 +1,6 @@
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
+import type { AreaId } from './areas.ts';
 export type EnemyKind = 'runner' | 'shooter' | 'flyer' | 'charger' | 'sniper' | 'hopper' | 'boss';
 export interface Solid {
   x: number;
@@ -13,6 +14,7 @@ export interface Spawn extends Vec {
 export interface Layout {
   id: string;
   name: string;
+  area: AreaId;
   solids: Solid[];
   spawns: Spawn[];
   route: Vec[];
@@ -32,6 +34,7 @@ const route = (...points: number[][]): Vec[] => points.map(([x, y]) => ({ x, y }
 export const LAYOUTS: Layout[] = [
   {
     id: 'loading-bays',
+    area: 'docks',
     name: 'Loading bays',
     solids: [
       box(390, 650, 150, 90),
@@ -62,6 +65,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'overpass',
+    area: 'docks',
     name: 'Overpass',
     solids: [
       box(510, 665, 180, 75),
@@ -92,6 +96,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'staggered',
+    area: 'docks',
     name: 'Staggered cover',
     solids: [
       box(440, 635, 120, 105),
@@ -124,6 +129,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'terraces',
+    area: 'docks',
     name: 'Terraces',
     solids: [
       box(400, 655, 190, 85),
@@ -158,6 +164,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'pillars',
+    area: 'furnace',
     name: 'Pillar hall',
     solids: [
       box(400, 640, 170, 100),
@@ -194,6 +201,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'underpass',
+    area: 'furnace',
     name: 'Underpass',
     solids: [
       box(350, 300, 360, 250),
@@ -226,6 +234,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'split-deck',
+    area: 'rooftops',
     name: 'Split deck',
     solids: [
       box(360, 660, 170, 80),
@@ -262,6 +271,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'gantry',
+    area: 'rooftops',
     name: 'Gantry',
     solids: [
       box(400, 640, 160, 100),
@@ -294,6 +304,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'chimney',
+    area: 'furnace',
     name: 'Chimney',
     solids: [
       box(350, 630, 170, 110),
@@ -328,6 +339,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'fortress',
+    area: 'furnace',
     name: 'Fortress',
     solids: [
       box(420, 650, 150, 90),
@@ -363,6 +375,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'broken-bridge',
+    area: 'rooftops',
     name: 'Broken bridge',
     solids: [
       box(390, 650, 160, 90),
@@ -397,6 +410,7 @@ export const LAYOUTS: Layout[] = [
   },
   {
     id: 'slalom',
+    area: 'furnace',
     name: 'Slalom',
     solids: [
       box(390, 630, 140, 110),
@@ -434,6 +448,7 @@ export const LAYOUTS: Layout[] = [
 export const BOSS_LAYOUTS: Layout[] = [
   {
     id: 'twin-towers',
+    area: 'rooftops',
     name: 'Twin towers',
     solids: [
       box(390, 650, 150, 90),
@@ -459,6 +474,7 @@ export const BOSS_LAYOUTS: Layout[] = [
   },
   {
     id: 'last-crossing',
+    area: 'rooftops',
     name: 'Last crossing',
     solids: [
       box(410, 650, 150, 90),
@@ -482,9 +498,21 @@ export const BOSS_LAYOUTS: Layout[] = [
 export function getLevel(seed: string, stage: number): Level {
   const pick = seeded(seed + ':layouts');
   const order = [
-    ...sample(LAYOUTS.slice(0, 4), 2, pick),
-    ...sample(LAYOUTS.slice(4, 8), 3, pick),
-    ...sample(LAYOUTS.slice(8), 3, pick),
+    ...sample(
+      LAYOUTS.filter((layout) => layout.area === 'docks'),
+      3,
+      pick,
+    ),
+    ...sample(
+      LAYOUTS.filter((layout) => layout.area === 'furnace'),
+      3,
+      pick,
+    ),
+    ...sample(
+      LAYOUTS.filter((layout) => layout.area === 'rooftops'),
+      2,
+      pick,
+    ),
   ];
   const source =
     stage === 8 ? BOSS_LAYOUTS[Math.floor(pick() * BOSS_LAYOUTS.length)] : order[stage];
