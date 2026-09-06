@@ -162,7 +162,14 @@ export class PropSystem {
           p.y - h / 2 - 24 < bottom
         );
       });
-      if (!blocked) this.spawn(p.kind, p.x, p.y);
+      const ventBlocked = this.game.breaches.bodies.some(
+        (body) =>
+          p.x + w / 2 + 12 > body.bounds.min.x &&
+          p.x - w / 2 - 12 < body.bounds.max.x &&
+          p.y + h / 2 + 12 > body.bounds.min.y &&
+          p.y - h / 2 - 12 < body.bounds.max.y,
+      );
+      if (!blocked && !ventBlocked) this.spawn(p.kind, p.x, p.y);
     }
   }
   spawn(kind: PropKind, x: number, y: number): Prop {
@@ -293,6 +300,7 @@ export class PropSystem {
       (other) => distance(p, other.body.position) < 160 && visible(other.body.position, other),
     );
     const hurtsPlayer = distance(p, g.player.position) < 140 && visible(g.player.position);
+    const panels = g.breaches.targets(p, 160);
     g.burst(p, 30, '#ffd28a', 7);
     if (g.particles.length < 220)
       g.particles.push({
@@ -323,5 +331,7 @@ export class PropSystem {
       if (g.mode !== 'playing') return;
     }
     if (hurtsPlayer) g.damagePlayer(Math.ceil(20 * (1 - distance(p, g.player.position) / 180)), p);
+    if (g.mode !== 'playing') return;
+    for (const panel of panels) g.breaches.hit(panel, 80, direction(p, panel.body.position));
   }
 }

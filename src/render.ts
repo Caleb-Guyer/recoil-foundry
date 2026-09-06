@@ -79,7 +79,7 @@ export class Renderer {
       g = this.game,
       dt = Math.min(0.05, (now - this.last) / 1000 || 1 / 60);
     this.last = now;
-    this.clock += dt;
+    if (g.mode === 'playing' || g.mode === 'title') this.clock += dt;
     const ratio = this.canvas.width / this.width;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
     const viewW = this.width / this.scale,
@@ -114,6 +114,7 @@ export class Renderer {
     }
     c.scale(this.scale, this.scale);
     c.translate(-this.camera.x, -this.camera.y);
+    this.drawBreachBackdrop();
     const palette = AREAS[g.level.area];
     for (const b of g.terrain) {
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < 0) continue;
@@ -137,6 +138,7 @@ export class Renderer {
     this.drawExit();
     this.drawHazards();
     this.drawProps();
+    this.drawBreaches();
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
       g.trail.forEach((p, i) => {
         c.globalAlpha = (1 - i / 9) * 0.1;
@@ -790,6 +792,126 @@ export class Renderer {
       }
       c.restore();
     }
+  }
+  drawBreachBackdrop() {
+    const c = this.ctx,
+      placement = this.game.breaches.placement;
+    if (!placement) return;
+    const roof = placement.solids.filter((rect) => rect.w > rect.h).sort((a, b) => b.w - a.w)[0];
+    if (!roof) return;
+    const left = roof.x,
+      top = roof.y,
+      right = roof.x + roof.w,
+      bottom = Math.max(roof.y + roof.h, ...placement.panels.map((rect) => rect.y + rect.h));
+    c.fillStyle = '#121e23';
+    c.fillRect(left, top, right - left, bottom - top);
+    c.fillStyle = '#1a292e';
+    c.fillRect(left + 8, top + 8, right - left - 16, bottom - top - 16);
+    for (let y = top + 27; y < bottom - 12; y += 27)
+      this.line({ x: left + 12, y }, { x: right - 12, y }, '#243338', 1);
+  }
+  drawBreaches() {
+    const c = this.ctx,
+      g = this.game,
+      breach = g.breaches,
+      palette = AREAS[g.level.area];
+    for (const body of breach.supports) {
+      const x = body.bounds.min.x,
+        y = body.bounds.min.y,
+        w = body.bounds.max.x - x,
+        h = body.bounds.max.y - y;
+      c.fillStyle = palette.body;
+      c.fillRect(x, y, w, h);
+      c.fillStyle = palette.face;
+      c.fillRect(x + 2, y + 4, w - 4, h - 5);
+      this.line({ x, y }, { x: x + w, y }, palette.surface, 2);
+      this.line({ x, y: y + h }, { x: x + w, y: y + h }, palette.edge, 1);
+      for (const point of [
+        { x: x + 4, y: y + 4 },
+        { x: x + w - 6, y: y + h - 6 },
+      ]) {
+        c.fillStyle = '#79857b';
+        c.fillRect(point.x, point.y, 2, 2);
+      }
+    }
+    for (const panel of breach.panels) {
+      const { x, y, w, h } = panel.rect,
+        horizontal = w >= h,
+        damage = clamp(1 - panel.hp / panel.maxHp, 0, 1),
+        flash = panel.flash > 0;
+      c.save();
+      c.fillStyle = flash ? '#ac9875' : '#504b40';
+      c.fillRect(x, y, w, h);
+      c.strokeStyle = flash ? '#e9d2a1' : '#897d66';
+      c.lineWidth = 1.25;
+      c.strokeRect(x + 1, y + 1, w - 2, h - 2);
+      c.fillStyle = '#2c302b';
+      if (horizontal) {
+        c.fillRect(x + 6, y + 3, w - 12, 2);
+        c.fillRect(x + 6, y + h - 5, w - 12, 2);
+      } else {
+        c.fillRect(x + 3, y + 6, 2, h - 12);
+        c.fillRect(x + w - 5, y + 6, 2, h - 12);
+      }
+      const crack = [
+        [0.03, 0.53],
+        [0.23, 0.3],
+        [0.43, 0.68],
+        [0.63, 0.33],
+        [0.79, 0.61],
+        [0.97, 0.45],
+      ].map(([along, across]) =>
+        horizontal
+          ? { x: x + w * along, y: y + h * across }
+          : { x: x + w * across, y: y + h * along },
+      );
+      c.beginPath();
+      c.moveTo(crack[0].x, crack[0].y);
+      for (const point of crack.slice(1)) c.lineTo(point.x, point.y);
+      c.lineJoin = 'miter';
+      c.strokeStyle = '#182222';
+      c.lineWidth = 2 + damage * 4;
+      c.stroke();
+      c.strokeStyle = flash ? '#fff0be' : damage > 0.35 ? '#dfbd89' : '#b09a78';
+      c.lineWidth = 0.8 + damage * 1.5;
+      c.stroke();
+      if (damage > 0) {
+        const branch = crack[damage > 0.55 ? 3 : 2];
+        this.line(
+          branch,
+          horizontal
+            ? { x: branch.x + w * 0.08, y: y + 2 }
+            : { x: x + w - 2, y: branch.y + h * 0.08 },
+          flash ? '#fff0be' : '#c8a979',
+          0.8 + damage,
+        );
+      }
+      c.restore();
+    }
+    if (breach.pickup) {
+      const p = breach.pickup,
+        glow = this.reduced ? 0.065 : 0.055 + (Math.sin(g.time * 2.5) + 1) * 0.012;
+      this.circle(p, 12, `rgba(153,216,176,${glow})`);
+      c.fillStyle = '#a9d9b9';
+      c.fillRect(p.x - 2, p.y - 6, 4, 12);
+      c.fillRect(p.x - 6, p.y - 2, 12, 4);
+    }
+    if (!this.reduced)
+      for (const shard of breach.debris) {
+        c.save();
+        c.globalAlpha = clamp(shard.life / shard.max, 0, 1);
+        c.translate(shard.pos.x, shard.pos.y);
+        c.rotate(shard.angle);
+        c.fillStyle = '#655a46';
+        c.fillRect(-shard.w / 2, -shard.h / 2, shard.w, shard.h);
+        this.line(
+          { x: -shard.w / 2, y: -shard.h / 2 },
+          { x: shard.w / 2, y: -shard.h / 2 },
+          '#b49d77',
+          1,
+        );
+        c.restore();
+      }
   }
   drawProps() {
     const c = this.ctx,

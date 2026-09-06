@@ -173,6 +173,12 @@ export class Sound {
     } else if (kind === 'arm') {
       this.crack(0.14, 0.065, 2800);
       this.tone(420, 710, 0.11, 0.035, 'sine');
+    } else if (kind === 'breach') {
+      this.crack(0.18, 0.13, 2100);
+      this.tone(220, 65, 0.16, 0.065);
+    } else if (kind === 'mend') {
+      this.tone(520, 650, 0.1, 0.035, 'sine');
+      this.tone(780, 780, 0.16, 0.025, 'sine', 0.06);
     } else if (kind === 'break') {
       this.crack(0.16, 0.13, 1100);
       this.tone(140, 45, 0.13, 0.09);

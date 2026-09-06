@@ -38,6 +38,7 @@ import type { EnemyState, Attack, EliteKind } from './enemies.ts';
 import { PropSystem, traceProp } from './props.ts';
 import type { Prop } from './props.ts';
 import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
+import { BreachSystem } from './breaches.ts';
 import { ESCAPE_WIDTH, ESCAPE_LAYOUT, ESCAPE_PLATFORMS, EXTRACTION } from './escape-layout.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
@@ -111,6 +112,7 @@ export class Game {
   terrain: Matter.Body[] = [];
   props = new PropSystem(this);
   hazards = new HazardSystem(this);
+  breaches = new BreachSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -120,6 +122,7 @@ export class Game {
     return [
       ...this.terrain,
       ...this.hazards.bodies,
+      ...this.breaches.bodies,
       ...(this.extractionLift ? [this.extractionLift] : []),
     ];
   }
@@ -212,6 +215,7 @@ export class Game {
     Engine.clear(this.engine);
     this.escape = escapeRoom ? { phase: 'route', time: 0, depart: 0 } : null;
     this.extractionLift = null;
+    this.breaches.clear();
     this.terrain = [];
     this.enemies = [];
     this.shots = [];
@@ -284,6 +288,7 @@ export class Game {
       Composite.add(this.engine.world, this.extractionLift);
     } else {
       this.hazards.reset(this.level, this.seed, this.stage);
+      this.breaches.reset(this.level, this.seed, this.stage);
       this.props.reset(this.level);
     }
   }
@@ -510,6 +515,7 @@ export class Game {
     this.containPlayer();
     this.updateShots(dt);
     if (this.mode !== 'playing') return;
+    this.breaches.update(dt);
     this.particles = this.particles.filter((p) => {
       p.life -= dt;
       p.pos.x += p.vel.x * dt * 60;
@@ -662,7 +668,12 @@ export class Game {
         distance(this.lineEnd(p, target, 0, prop), target) < 0.1
       );
     });
+    const panels = this.breaches.targets(p, 130, (target) => {
+      const d = direction(p, target);
+      return rear.x * d.x + rear.y * d.y >= Math.SQRT1_2;
+    });
     for (const prop of targets) this.props.hit(prop, damage, rear);
+    for (const panel of panels) this.breaches.hit(panel, damage, rear);
   }
   addShot(
     data: Omit<Shot, 'id' | 'prev' | 'hits' | 'banks' | 'bankGrowth' | 'charged'> &
@@ -829,6 +840,7 @@ export class Game {
       (other) => other.spawn <= 0 && visible(other.body.position),
     );
     const props = this.props.items.filter((prop) => visible(prop.body.position, prop));
+    const panels = this.breaches.targets(p, VOLATILE_RADIUS);
     this.burst(p, 26, '#ffd28a', 6);
     if (this.particles.length < 220)
       this.particles.push({
@@ -855,6 +867,7 @@ export class Game {
       else this.props.hit(prop, 65, direction(p, prop.body.position));
       if (this.mode !== 'playing') return;
     }
+    for (const panel of panels) this.breaches.hit(panel, 65, direction(p, panel.body.position));
   }
   enemyGrounded(e: Enemy) {
     const p = e.body.position;
@@ -868,9 +881,10 @@ export class Game {
       ).length > 0
     );
   }
-  lineEnd(start: Vec, end: Vec, padding = 0, ignore?: Prop): Vec {
+  lineEnd(start: Vec, end: Vec, padding = 0, ignore?: Prop | Matter.Body): Vec {
     let t = 1;
     for (const b of this.terrainBodies) {
+      if (b === ignore) continue;
       const hit = segmentBox(
         start,
         end,
@@ -1264,6 +1278,7 @@ export class Game {
         );
       });
       if (prop) this.props.hit(prop, damage, d);
+      this.breaches.hitAlong(e.body.position, muzzle, end, damage, d);
       return;
     }
     this.addShot({
@@ -1292,6 +1307,7 @@ export class Game {
           enemy?: Enemy;
           player?: boolean;
           prop?: Prop;
+          body?: Matter.Body;
         } | null = null;
         const targets: [Matter.Body, Enemy?, boolean?][] = this.terrainBodies.map((b) => [b]);
         if (s.friendly) {
@@ -1305,7 +1321,7 @@ export class Game {
             { x: body.bounds.min.x - s.radius, y: body.bounds.min.y - s.radius },
             { x: body.bounds.max.x + s.radius, y: body.bounds.max.y + s.radius },
           );
-          if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, enemy, player };
+          if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, enemy, player, body };
         }
         for (const prop of this.props.items) {
           const h = traceProp(prop, s.pos, end, s.radius);
@@ -1352,6 +1368,7 @@ export class Game {
           if (this.mode !== 'playing') return;
         } else {
           if (nearest.prop) this.props.hit(nearest.prop, s.damage, s.vel);
+          this.breaches.hitBody(nearest.body, s.damage, s.vel);
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);
           this.splitShot(s);
           if (s.bounces > 0) {

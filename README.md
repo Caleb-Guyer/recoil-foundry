@@ -31,7 +31,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-06&dv=5`). Version 5 includes the final escape route in the challenge; its best times are separate from earlier rulesets. The escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-06&dv=6`). Version 6 adds breakable vent passages and health pickups; its best times are separate from earlier rulesets. Passage placement and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -71,6 +71,14 @@ Regular rooms introduce one moving feature at a time. Room 2 introduces freight 
 - **Collapsing platforms** crack under your feet for 0.7 seconds before giving way. Jump or recoil away, or drop to the floor below. They rebuild after 3.5 seconds, waiting until their space is clear before becoming solid again.
 
 Rails, warning lights, floor markings, and cracks explain each feature in the arena. Pause and impact pauses freeze their timing. Continuing or retrying resets their state at the room entrance, with the same placement and lift cycle.
+
+## Hidden routes
+
+Look above the main path in the second room of each area for a recessed maintenance vent. Its cracked floor hatch and side panel break after two ordinary rounds, opening a passage to a higher perch. Shoot the hatch from below, then fire downward in the air to climb through. You can also open the side panel from outside. Crowded rooms omit the vent so the ordinary route remains clear.
+
+Some vents contain a small mint health pickup. Touch it to recover 18 health, capped at 100; it stays available while you are at full health. Panels and walls block collection, bullets, aiming lines, and blasts until opened. Breaking metal flies in the shot's direction as harmless debris, with flight hidden when screen shake is disabled.
+
+Passages and pickups follow the run seed, including Daily Runs. Continuing restores the room entrance with its original panels, pickup, and saved health. Boss arenas and the final escape contain none.
 
 ## Physics props
 
@@ -172,6 +180,8 @@ Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered fram
 The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, nine-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
 
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
+
+Hidden-route checks cover panel collision and destruction, fast and close-muzzle shots, blast cover, physical passage after breaking, health collection and occlusion, harmless bounded debris, daily reproduction, and room-entrance restoration. Placement checks cover mirrored geometry, enemy and hazard clearances, baseline traversal, and actual recoil ascent through the hatch.
 
 Area boss checks cover locked attack warnings, wide-body crashes and platform-edge landings, bumper traversal, safe recovery windows, recoil escapes, attacks at world boundaries, pause and death cleanup, and exactly one upgrade after each intermediate boss.
 
