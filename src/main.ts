@@ -79,6 +79,7 @@ let mouseButtons = 0,
   lastTime = performance.now(),
   accumulator = 0,
   hudAt = 0,
+  shownRoom = '',
   pageActive = !document.hidden;
 const input: Input = {
   left: false,
@@ -178,13 +179,18 @@ game.onCheckpoint = (s) => {
 game.onSound = (kind) => sound.play(kind);
 game.onChange = () => {
   updateMusic();
+  const room = game.seed + ':' + game.stage + ':' + game.level.id;
+  if (room !== shownRoom) {
+    renderer.reset();
+    shownRoom = room;
+  }
   document.body.dataset.mode = game.mode;
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent =
     (activeDaily ? 'DAILY · ' : '') +
-    String(game.stage + 1).padStart(2, '0') +
-    ' / ' +
-    String(STAGES).padStart(2, '0');
+    (game.escape
+      ? 'ESCAPE'
+      : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
   $('stage').title =
     `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
   updateTitle();
@@ -343,7 +349,11 @@ function showDialog(kind: string) {
       ' /></label><label>Screen shake<input id="shake" type="checkbox" ' +
       (!renderer.reduced ? 'checked' : '') +
       ' /></label></div>' +
-      '<div class="controls-copy"><p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>Clear the room, then leave through the right door.</p></div>' +
+      '<div class="controls-copy"><p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
+      (game.escape
+        ? 'Reach the extraction lift.'
+        : 'Clear the room, then leave through the right door.') +
+      '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun</summary><ul>' +
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +

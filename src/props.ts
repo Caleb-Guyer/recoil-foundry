@@ -270,7 +270,7 @@ export class PropSystem {
         p = b.position;
       const w = Math.max(...b.vertices.map((v) => Math.abs(v.x - p.x)));
       const h = Math.max(...b.vertices.map((v) => Math.abs(v.y - p.y)));
-      const x = clamp(p.x, w, 2000 - w),
+      const x = clamp(p.x, w, g.worldWidth - w),
         y = clamp(p.y, h, 740 - h);
       if (x !== p.x || y !== p.y) {
         Body.setVelocity(b, { x: x !== p.x ? 0 : b.velocity.x, y: y !== p.y ? 0 : b.velocity.y });

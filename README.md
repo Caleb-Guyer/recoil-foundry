@@ -25,13 +25,13 @@ You always carry **one gun**. Fourteen possible modifications change its shots, 
 
 Choose **Daily run** on the title screen for a shared nine-room challenge. A new challenge starts at midnight UTC. Everyone gets the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first eight rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 20-health recovery. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.
 
-Finish all nine rooms to save your fastest successful time for that challenge in this browser. The timer counts active simulation time, excluding pauses and upgrade screens. Continue keeps the elapsed time saved at the room entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
+Finish all nine rooms and reach the extraction lift to save your fastest successful time for that challenge in this browser. The timer counts active simulation time through the escape route, excluding pauses, upgrade screens, and the automatic lift departure. Continue keeps the elapsed time saved at the room or escape entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
 
 The room counter marks active challenges with **DAILY**, and Pause shows the challenge date. Starting a daily updates its URL and keeps **Play daily** selected when returning to the menu; choose **Random run** to leave the daily. Saves from an unsupported daily ruleset cannot continue as an ordinary run. Their saved data stays untouched until you start another run.
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-06&dv=4`). Version 4 adds seeded moving room features alongside elite encounters and predetermined upgrades; its best times are separate from earlier rulesets. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-06&dv=5`). Version 5 includes the final escape route in the challenge; its best times are separate from earlier rulesets. The escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -106,7 +106,15 @@ Silhouettes, shields, aiming lines, and fuse rings carry the information in the 
 - **Room 6 — The Press:** an overhead machine that marks a landing column before dropping. The final 0.65 seconds of the warning are locked, giving you time to dodge or recoil upward beside it. Platforms stop the slam; it rests briefly after impact and takes 35% extra damage before rising for another attack.
 - **Room 9 — Rooftop boss:** its attacks change at two-thirds and one-third health. Aimed volleys give way to alternating downward fans, then a cycle that adds slow radial volleys with gaps. Each pattern has a visible windup. Phase changes briefly interrupt the boss, and lights on its body show its current phase.
 
-Each boss has its own arena and silhouette. The Loader and Press lead to the same three-card gun upgrade and 20-health recovery as regular rooms. Only the final rooftop exit ends the run. Existing room-entrance saves resume with the correct boss; no extra controls or HUD panels are needed.
+Each boss has its own arena and silhouette. The Loader and Press lead to the usual gun upgrade and 20-health recovery. The final rooftop exit leads to the escape route. Existing room-entrance saves resume with the correct boss; no extra controls or HUD panels are needed.
+
+## Final escape
+
+After defeating the last boss, leave through its exit to begin a continuous rooftop escape. Three clusters of failing machinery form a short traversal finale, with ordinary jumps along the lower route and faster recoil shortcuts above. Lights fade, debris falls in the background, and collapsing platforms crack before dropping away permanently. The ground stays safe, and there is no fatal countdown.
+
+Follow the green direction marks to the extraction lift and land on its deck. Its gates close and it carries you away before the results appear. Your gun, health, upgrades, and elapsed time carry over from the boss fight. The room counter simply changes to **ESCAPE**; no extra weapon, upgrade, or panel is added. The rooftop score builds during the run and settles as the lift departs.
+
+The escape entrance is saved automatically. Continue rebuilds the same route from that entrance, with the same gun and accumulated time; Again starts the complete run over. Pause and focus loss freeze both traversal and departure. Boarding stops the run timer, and the 2.6-second departure animation cannot cause damage or fire queued shots.
 
 ## Feel
 
@@ -170,6 +178,8 @@ Area boss checks cover locked attack warnings, wide-body crashes and platform-ed
 Elite checks cover sparse deterministic placement, checkpoint reconstruction, directional shielding and flanking, piercing and rear blasts, the sniper's second aim lock, fuse timing and defusing, blast cover and chains, and immediate cancellation on death.
 
 Moving-room checks cover seeded safe placement and traversal, lift riding and recoil escapes, moving cover, crusher warnings and swept damage, collapsing-platform timing and safe rebuilding, and pause, death, and checkpoint resets.
+
+Escape checks cover final-boss entry, ordinary traversal and faster recoil routes, full-width physics and projectiles, permanent platform collapse, safe boarding and departure, checkpoint reconstruction, Daily Run timing, and exactly one victory after extraction.
 
 Music checks cover area phrases and combat intensity, independence from gameplay state and RNG, scheduling after frame stalls, voice cleanup, pause and focus loss, warning ducking, independent music and master switches, and unavailable browser audio.
 

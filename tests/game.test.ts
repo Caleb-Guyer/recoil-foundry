@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
-import { Game, WORLD } from '../src/game.ts';
+import { Game, WORLD, EXTRACTION_DURATION } from '../src/game.ts';
+import { EXTRACTION } from '../src/escape-layout.ts';
 import type { Input } from '../src/game.ts';
 import { getGun, MODS, distance, STAGES } from '../src/rules.ts';
 const { Body, Composite, Query } = Matter;
@@ -258,9 +259,17 @@ test('cleared exits advance automatically and choices modify the same gun', () =
       assert.equal(g.mods.length, count);
     }
   }
-  assert.equal(g.mode, 'won');
+  assert.equal(g.mode, 'playing');
+  assert.equal(g.escape?.phase, 'route');
   assert.equal(g.mods.length, STAGES - 1);
-  assert.equal(saves, STAGES - 1);
+  assert.equal(saves, STAGES);
+  assert(!cleared);
+  Body.setPosition(g.player, { x: EXTRACTION.x, y: EXTRACTION.y - 18 });
+  Body.setVelocity(g.player, { x: 0, y: 0 });
+  tick(g, 3);
+  assert.equal(g.escape?.phase, 'extracting');
+  tick(g, Math.ceil(EXTRACTION_DURATION * 60) + 3);
+  assert.equal(g.mode, 'won');
   assert(cleared);
 });
 test('checkpoint reconstructs the same modified gun and fresh room', () => {
@@ -322,7 +331,8 @@ for (const seed of ['A', 'E'])
       stuck = 0,
       lastProgress = 0,
       lastKills = 0,
-      clearAt = -1;
+      clearAt = -1,
+      escapeSeen = false;
     const priority = [
       'leech',
       'magnum',
@@ -340,6 +350,16 @@ for (const seed of ['A', 'E'])
       'kick',
     ];
     for (let i = 0; i < 60 * 240 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+      if (g.escape?.phase === 'extracting') {
+        tick(g);
+        continue;
+      }
+      if (g.escape && !escapeSeen) {
+        escapeSeen = true;
+        clearAt = -1;
+        stuck = 0;
+        previousX = g.player.position.x;
+      }
       if (g.mode === 'upgrade') {
         g.chooseMod(
           [...g.offers].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))[0].id,
@@ -353,7 +373,8 @@ for (const seed of ['A', 'E'])
         e = [...g.enemies].sort(
           (a, b) => distance(a.body.position, p) - distance(b.body.position, p),
         )[0];
-      const ep = e?.body.position ?? { x: 1910, y: 700 },
+      const exitX = g.escape ? EXTRACTION.x : 1910;
+      const ep = e?.body.position ?? { x: exitX, y: 700 },
         lead = distance(p, ep) / 30,
         dx = ep.x - p.x,
         dy = p.y - ep.y;
@@ -364,9 +385,9 @@ for (const seed of ['A', 'E'])
       stuck = Math.abs(p.x - previousX) < 0.5 ? stuck + 1 : 0;
       previousX = p.x;
       let move = g.clear
-        ? p.x < 1910
+        ? p.x < exitX - (g.escape ? 10 : 0)
           ? 1
-          : p.x > 1960
+          : p.x > exitX + (g.escape ? 10 : 50)
             ? -1
             : 0
         : dx > 240
@@ -394,7 +415,9 @@ for (const seed of ['A', 'E'])
         : undefined;
       if (way) move = way.x > p.x ? 1 : -1;
       const blocked =
-        !!move && Query.ray(g.terrain, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
+        !!move &&
+        Query.ray(g.escape ? g.solidBodies : g.terrain, p, { x: p.x + move * 65, y: p.y }, 20)
+          .length > 0;
       const lift =
         (!navigate && ((!g.clear && dy > 70 && Math.abs(dx) < 500) || (blocked && stuck > 20))) ||
         !!(navigate && way && p.y - way.y > 75 && !g.grounded && stuck > 15);
@@ -414,7 +437,12 @@ for (const seed of ['A', 'E'])
         aim,
       });
     }
-    assert.equal(g.mode, 'won');
+    assert.equal(
+      g.mode,
+      'won',
+      `Run stopped in ${g.level.id} at (${Math.round(g.player.position.x)}, ${Math.round(g.player.position.y)}), stage ${g.stage}, ${Math.round(g.time)}s, ${g.enemies.length} enemies remaining`,
+    );
+    assert(escapeSeen, 'The run bypassed the escape route');
     assert.equal(g.stage, STAGES - 1);
     assert.equal(g.mods.length, STAGES - 1);
     for (const mod of seed === 'A' ? ['burst', 'backblast'] : ['burst', 'banker', 'landing'])

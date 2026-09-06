@@ -204,7 +204,7 @@ test('new boss telegraphs freeze through pause and hitstop; death removes the ma
   }
 });
 
-test('area boss exits award one ordinary upgrade; only the rooftop boss ends the run', () => {
+test('area boss exits award one ordinary upgrade and the rooftop boss opens the escape route', () => {
   for (const stage of [2, 5, 8]) {
     const save: Checkpoint = {
       version: 3,
@@ -226,9 +226,11 @@ test('area boss exits award one ordinary upgrade; only the rooftop boss ends the
     g.hitEnemy(g.enemies[0], 99999);
     Body.setPosition(g.player, { x: 1910, y: 722 });
     step(g, 50);
-    assert.equal(g.mode, stage === 8 ? 'won' : 'upgrade');
+    assert.equal(g.mode, stage === 8 ? 'playing' : 'upgrade');
     if (stage === 8) {
-      assert.equal(checkpoint, null);
+      assert.equal(g.escape?.phase, 'route');
+      assert.equal(loadCheckpoint(checkpoint)?.escape, true);
+      assert.equal(g.mods.length, 8);
       continue;
     }
     const hp = g.hp,

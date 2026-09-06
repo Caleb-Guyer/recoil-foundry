@@ -148,6 +148,17 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'evacuate') {
+      this.tone(440, 440, 0.2, 0.055, 'sine');
+      this.tone(330, 330, 0.35, 0.055, 'sine', 0.28);
+      this.crack(0.22, 0.075, 350);
+      this.music?.duck(0.7);
+    } else if (kind === 'collapse') {
+      this.tone(65, 30, 0.22, 0.06);
+      this.crack(0.18, 0.045, 600);
+    } else if (kind === 'extract') {
+      this.tone(100, 350, 0.85, 0.075, 'triangle');
+      this.crack(0.22, 0.04, 1500);
     } else if (kind === 'machine') {
       this.tone(110, 180, 0.45, 0.05, 'sawtooth');
       this.tone(440, 440, 0.12, 0.025, 'sine', 0.12);

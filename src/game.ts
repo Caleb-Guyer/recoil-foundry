@@ -37,7 +37,8 @@ import {
 import type { EnemyState, Attack, EliteKind } from './enemies.ts';
 import { PropSystem, traceProp } from './props.ts';
 import type { Prop } from './props.ts';
-import { HazardSystem } from './hazards.ts';
+import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
+import { ESCAPE_WIDTH, ESCAPE_LAYOUT, ESCAPE_PLATFORMS, EXTRACTION } from './escape-layout.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
 export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
@@ -97,6 +98,12 @@ export interface Particle {
   kind: 'spark' | 'ring' | 'shell';
 }
 export const WORLD = { width: 2000, height: 840, floor: 740 };
+export const EXTRACTION_DURATION = 2.6;
+export interface EscapeState {
+  phase: 'route' | 'extracting';
+  time: number;
+  depart: number;
+}
 export class Game {
   engine = Engine.create({ gravity: { x: 0, y: 1, scale: 0.001 } });
   player!: Matter.Body;
@@ -104,8 +111,17 @@ export class Game {
   terrain: Matter.Body[] = [];
   props = new PropSystem(this);
   hazards = new HazardSystem(this);
+  escape: EscapeState | null = null;
+  extractionLift: Matter.Body | null = null;
+  get worldWidth() {
+    return this.escape ? ESCAPE_WIDTH : WORLD.width;
+  }
   get terrainBodies() {
-    return [...this.terrain, ...this.hazards.bodies];
+    return [
+      ...this.terrain,
+      ...this.hazards.bodies,
+      ...(this.extractionLift ? [this.extractionLift] : []),
+    ];
   }
   get solidBodies() {
     return [...this.terrainBodies, ...this.props.bodies];
@@ -175,7 +191,7 @@ export class Game {
     this.shootAt = 0;
     this.hurtAt = -100;
     this.lastShot = -100;
-    this.loadRoom();
+    this.loadRoom(save?.escape === true);
     this.setMode('playing');
     this.save();
   }
@@ -188,11 +204,14 @@ export class Game {
       mods: [...this.mods],
       kills: this.kills,
       elapsed: this.elapsed,
+      ...(this.escape ? { escape: true as const } : {}),
     });
   }
-  loadRoom() {
+  loadRoom(escapeRoom = false) {
     Composite.clear(this.engine.world, false);
     Engine.clear(this.engine);
+    this.escape = escapeRoom ? { phase: 'route', time: 0, depart: 0 } : null;
+    this.extractionLift = null;
     this.terrain = [];
     this.enemies = [];
     this.shots = [];
@@ -224,11 +243,18 @@ export class Game {
       this.terrain.push(b);
       Composite.add(this.engine.world, b);
     };
-    wall(1000, 790, 2000, 100);
+    wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, 400, 60, 900);
-    wall(2030, 400, 60, 900);
-    wall(1000, -40, 2000, 80);
-    this.level = getLevel(this.seed, this.stage);
+    wall(this.worldWidth + 30, 400, 60, 900);
+    wall(this.worldWidth / 2, -40, this.worldWidth, 80);
+    this.level = escapeRoom
+      ? {
+          ...ESCAPE_LAYOUT,
+          solids: ESCAPE_LAYOUT.solids.map((s) => ({ ...s })),
+          route: ESCAPE_LAYOUT.route.map((p) => ({ ...p })),
+          spawns: [],
+        }
+      : getLevel(this.seed, this.stage);
     for (const solid of this.level.solids)
       wall(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h);
     this.player = Bodies.rectangle(140, 680, 26, 36, {
@@ -242,8 +268,94 @@ export class Game {
     Composite.add(this.engine.world, this.player);
     for (const spawn of this.level.spawns)
       this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
-    this.hazards.reset(this.level, this.seed, this.stage);
-    this.props.reset(this.level);
+    if (escapeRoom) {
+      this.hazards.clear();
+      for (const placement of ESCAPE_PLATFORMS) this.hazards.spawn(placement).permanent = true;
+      this.props.items = [];
+      this.props.impacts = [];
+      this.clear = true;
+      this.clearAt = this.time;
+      const { x, y, w, h } = EXTRACTION;
+      this.extractionLift = Bodies.rectangle(x, y + h / 2, w, h, {
+        isStatic: true,
+        friction: 0,
+        label: 'extraction',
+      });
+      Composite.add(this.engine.world, this.extractionLift);
+    } else {
+      this.hazards.reset(this.level, this.seed, this.stage);
+      this.props.reset(this.level);
+    }
+  }
+  startEscape() {
+    if (this.escape || this.stage !== STAGES - 1 || !this.clear || this.mode !== 'playing') return;
+    this.loadRoom(true);
+    this.save();
+    this.onSound('evacuate');
+    this.onChange();
+  }
+  updateEscape(dt: number) {
+    const escape = this.escape;
+    if (!escape) return;
+    const before = escape.time;
+    escape.time += dt;
+    if (Math.floor(before / 2.8) !== Math.floor(escape.time / 2.8)) {
+      this.feedback(1.6);
+      this.onSound('collapse');
+      this.burst({ x: Math.max(180, this.player.position.x - 180), y: 350 }, 12, '#ba9872', 2);
+    }
+    for (const h of this.hazards.items) {
+      if (
+        h.kind === 'crumble' &&
+        h.state === 'idle' &&
+        h.placement.x < this.player.position.x - 100
+      ) {
+        h.state = 'warning';
+        h.timer = CRUMBLE_TELL;
+      }
+    }
+  }
+  boardExtraction() {
+    if (this.escape?.phase !== 'route' || !this.extractionLift) return;
+    const p = this.player;
+    if (
+      !this.hazards.supported(p, this.extractionLift) ||
+      p.bounds.min.x < EXTRACTION.x - EXTRACTION.w / 2 + 8 ||
+      p.bounds.max.x > EXTRACTION.x + EXTRACTION.w / 2 - 8
+    )
+      return;
+    this.escape.phase = 'extracting';
+    this.escape.depart = 0;
+    this.shots = [];
+    this.trail = [];
+    this.particles = [];
+    this.burstRemaining = 0;
+    this.fireBuffer = this.jumpBuffer = 0;
+    this.blast.life = this.muzzle = this.hitStop = 0;
+    Body.setVelocity(p, { x: 0, y: 0 });
+    Body.setPosition(p, { x: EXTRACTION.x, y: EXTRACTION.y - 18 });
+    this.grounded = true;
+    this.onSound('extract');
+    this.onChange();
+  }
+  updateExtraction(dt: number) {
+    if (!this.escape || !this.extractionLift) return;
+    this.time += dt;
+    this.escape.time += dt;
+    this.escape.depart = Math.min(EXTRACTION_DURATION, this.escape.depart + dt);
+    const t = this.escape.depart / EXTRACTION_DURATION;
+    const top = EXTRACTION.y - t * t * (3 - 2 * t) * 580;
+    Body.setPosition(this.extractionLift, { x: EXTRACTION.x, y: top + EXTRACTION.h / 2 });
+    Body.setPosition(this.player, { x: EXTRACTION.x, y: top - 18 });
+    Body.setVelocity(this.player, { x: 0, y: 0 });
+    this.shake *= 0.8;
+    this.kick.x *= 0.72;
+    this.kick.y *= 0.72;
+    if (t >= 1) {
+      this.setMode('won');
+      this.onCheckpoint(null);
+      this.onSound('win');
+    }
   }
   spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind) {
     if (this.enemies.length >= 14) return;
@@ -288,6 +400,10 @@ export class Game {
   }
   tick(dt: number, input: Input) {
     if (this.mode !== 'playing') return;
+    if (this.escape?.phase === 'extracting') {
+      this.updateExtraction(dt);
+      return;
+    }
     this.shake *= 0.8;
     this.kick.x *= 0.72;
     this.kick.y *= 0.72;
@@ -304,6 +420,7 @@ export class Game {
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
+    this.updateEscape(dt);
     this.hazards.beforeStep(dt);
     if (this.mode !== 'playing') return;
     const wasGrounded = this.grounded,
@@ -407,6 +524,10 @@ export class Game {
       this.die();
       return;
     }
+    if (this.escape) {
+      this.boardExtraction();
+      return;
+    }
     if (!this.enemies.length && !this.clear) {
       this.clear = true;
       this.clearAt = this.time;
@@ -421,9 +542,7 @@ export class Game {
       this.player.position.y > 590
     ) {
       if (this.stage === STAGES - 1) {
-        this.setMode('won');
-        this.onCheckpoint(null);
-        this.onSound('win');
+        this.startEscape();
       } else this.openReward();
     }
   }
@@ -433,7 +552,7 @@ export class Game {
     // Matter's broad-phase bounds include velocity; use the actual hull extents here.
     const halfW = Math.max(...this.player.vertices.map((v) => Math.abs(v.x - p.x))),
       halfH = Math.max(...this.player.vertices.map((v) => Math.abs(v.y - p.y)));
-    const x = clamp(p.x, halfW, WORLD.width - halfW),
+    const x = clamp(p.x, halfW, this.worldWidth - halfW),
       y = clamp(p.y, halfH, WORLD.floor - halfH);
     if (x === p.x && y === p.y) return;
     // Keep tangential momentum when a boosted shot hits an arena boundary.
@@ -443,6 +562,7 @@ export class Game {
     Body.setVelocity(this.player, { x: vx, y: vy });
   }
   fire() {
+    if (this.escape?.phase === 'extracting') return;
     if (this.burstRemaining > 0) return;
     this.shootAt = this.time + this.gun.interval * (this.gun.burstCount === 3 ? 3.1 : 1);
     this.burstRemaining = this.gun.burstCount - 1;
@@ -889,7 +1009,7 @@ export class Game {
         e.target.x = clamp(
           this.player.position.x,
           ENEMY_STATS.press.w / 2,
-          WORLD.width - ENEMY_STATS.press.w / 2,
+          this.worldWidth - ENEMY_STATS.press.w / 2,
         );
       e.target.y = this.pressSurface(e.target.x, 260 + half);
       Body.setVelocity(e.body, {
@@ -963,7 +1083,7 @@ export class Game {
           x: clamp(
             this.player.position.x,
             ENEMY_STATS.press.w / 2,
-            WORLD.width - ENEMY_STATS.press.w / 2,
+            this.worldWidth - ENEMY_STATS.press.w / 2,
           ),
           y: WORLD.floor,
         };
@@ -984,7 +1104,7 @@ export class Game {
         min.y < 0 ||
         min.y > WORLD.floor ||
         max.x <= 0 ||
-        min.x >= WORLD.width ||
+        min.x >= this.worldWidth ||
         max.x - min.x < 48
       )
         continue;
@@ -1250,7 +1370,8 @@ export class Game {
           } else s.life = 0;
         }
       }
-      if (s.pos.x < -50 || s.pos.x > 2050 || s.pos.y < -100 || s.pos.y > 900) s.life = 0;
+      if (s.pos.x < -50 || s.pos.x > this.worldWidth + 50 || s.pos.y < -100 || s.pos.y > 900)
+        s.life = 0;
     }
     this.shots = this.shots.filter((s) => s.life > 0);
   }
@@ -1315,6 +1436,7 @@ export class Game {
     return blocked;
   }
   damagePlayer(amount: number, from?: Vec) {
+    if (this.escape?.phase === 'extracting') return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     this.hp = Math.max(0, this.hp - amount);
     this.hurtAt = this.time;

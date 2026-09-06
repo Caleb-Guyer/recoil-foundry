@@ -21,6 +21,7 @@ export interface Hazard {
   phase: number;
   visible: boolean;
   hits: Set<number>;
+  permanent?: boolean;
 }
 
 // Read actual hulls: Matter's cached bounds can include velocity padding.
@@ -157,7 +158,7 @@ export class HazardSystem {
         this.game.burst(h.body.position, 10, '#9eaaa8', 2.5);
         this.game.onSound('break');
       }
-    } else if (h.state === 'gone') {
+    } else if (h.state === 'gone' && !h.permanent) {
       h.timer = Math.max(0, h.timer - dt);
       if (h.timer <= 0 && !this.actors().some((actor) => overlaps(hull(actor), hull(h.body), 6))) {
         h.visible = true;

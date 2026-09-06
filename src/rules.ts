@@ -205,6 +205,7 @@ export interface Checkpoint {
   mods: string[];
   kills: number;
   elapsed: number;
+  escape?: true;
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
@@ -225,7 +226,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     Number.isInteger(d.kills) &&
     d.kills >= 0 &&
     Number.isFinite(d.elapsed) &&
-    d.elapsed >= 0
+    d.elapsed >= 0 &&
+    (d.escape === undefined ||
+      (d.escape === true && d.stage === STAGES - 1 && d.mods.length === STAGES - 1))
     ? d
     : null;
 }

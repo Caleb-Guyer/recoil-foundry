@@ -1,4 +1,4 @@
-import { Game, WORLD } from './game.ts';
+import { Game, WORLD, EXTRACTION_DURATION } from './game.ts';
 import type { Enemy } from './game.ts';
 import {
   ENEMY_STATS,
@@ -19,6 +19,7 @@ import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
+import { EXTRACTION } from './escape-layout.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -87,7 +88,7 @@ export class Renderer {
     const desiredX = clamp(
       g.player.position.x - viewW * 0.42 + lead,
       0,
-      Math.max(0, WORLD.width - viewW),
+      Math.max(0, g.worldWidth - viewW),
     );
     const desiredY = clamp(g.player.position.y - viewH * 0.58, 0, Math.max(0, 835 - viewH));
     const follow = 1 - Math.exp(-dt * 9);
@@ -99,7 +100,8 @@ export class Renderer {
     }
     c.save();
     c.scale(this.scale, this.scale);
-    drawScenery(c, g.level.area, this.camera, viewW, viewH);
+    if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
+    else drawScenery(c, g.level.area, this.camera, viewW, viewH);
     c.restore();
     c.save();
     if (!this.reduced && g.mode !== 'title') {
@@ -114,7 +116,7 @@ export class Renderer {
     c.translate(-this.camera.x, -this.camera.y);
     const palette = AREAS[g.level.area];
     for (const b of g.terrain) {
-      if (b.bounds.max.x <= 0 || b.bounds.min.x >= WORLD.width || b.bounds.min.y < 0) continue;
+      if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < 0) continue;
       const x = b.bounds.min.x,
         y = b.bounds.min.y,
         w = b.bounds.max.x - x,
@@ -131,6 +133,7 @@ export class Renderer {
       }
       drawSurfaceDetails(c, g.level.area, x, y, w, h);
     }
+    if (g.escape?.phase === 'route') this.drawEscapeDirections();
     this.drawExit();
     this.drawHazards();
     this.drawProps();
@@ -466,7 +469,8 @@ export class Renderer {
         );
     }
     c.globalAlpha = 1;
-    if (g.mode === 'playing') {
+    if (g.escape) this.drawExtraction(true);
+    if (g.mode === 'playing' && g.escape?.phase !== 'extracting') {
       const a = g.aim,
         r = 6 + g.muzzle * 70;
       this.circle(a, r, '#dce8e1', false, 1 / this.scale);
@@ -484,7 +488,7 @@ export class Renderer {
           1 / this.scale,
         );
       }
-      if (g.clear && 1870 > this.camera.x + viewW - 80) {
+      if (g.clear && (g.escape ? EXTRACTION.x : 1870) > this.camera.x + viewW - 80) {
         const x = this.camera.x + viewW - 45,
           y = this.camera.y + viewH / 2;
         this.line({ x: x - 12, y: y - 8 }, { x, y }, '#96d4c2', 2);
@@ -496,11 +500,132 @@ export class Renderer {
       c.fillStyle = 'rgba(222,64,44,' + (0.2 - (g.time - g.hurtAt)) * 0.28 + ')';
       c.fillRect(0, 0, this.width, this.height);
     }
+    if (g.escape?.phase === 'extracting' && g.mode !== 'title') {
+      const fade = clamp((g.escape.depart / EXTRACTION_DURATION - 0.82) / 0.18, 0, 1);
+      if (fade > 0) {
+        c.fillStyle = `rgba(10,17,21,${fade})`;
+        c.fillRect(0, 0, this.width, this.height);
+      }
+    }
+  }
+  drawEscapeScenery(width: number, height: number) {
+    const c = this.ctx,
+      escape = this.game.escape!,
+      dark = clamp(escape.time / 24, 0, 1);
+    const sky = c.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, '#111b23');
+    sky.addColorStop(1, '#303739');
+    c.fillStyle = sky;
+    c.fillRect(0, 0, width, height);
+    for (const layer of [0, 1]) {
+      const spacing = layer === 0 ? 250 : 390,
+        offset = this.camera.x * (layer === 0 ? 0.12 : 0.26),
+        first = Math.floor(offset / spacing) - 1,
+        horizon = height * 0.55 + layer * 70 - this.camera.y * 0.15;
+      for (let i = first; i < first + Math.ceil(width / spacing) + 3; i++) {
+        const x = i * spacing - offset,
+          top = horizon - 65 - Math.abs((i * 73 + layer * 29) % 150),
+          w = spacing - 23;
+        c.fillStyle = layer === 0 ? '#26343d' : '#1c2a31';
+        c.fillRect(x, top, w, height - top);
+        c.fillRect(x + 21, top - 30, w * 0.36, 30);
+        this.line({ x: x + 12, y: top + 8 }, { x: x + w - 12, y: top + 8 }, '#3b4b50', 2);
+        if (layer === 1) {
+          for (const rail of [x + 29, x + w - 29])
+            this.line({ x: rail, y: top + 25 }, { x: rail, y: height }, '#2e3e43', 3);
+          const failure = this.reduced
+            ? 0.6
+            : clamp((escape.time - 3 - Math.abs((i * 7) % 16)) / 1.2, 0, 1);
+          c.globalAlpha = 0.6 - failure * 0.48;
+          c.fillStyle = '#bd9c6e';
+          c.fillRect(x + w / 2 - 9, top + 28, 18, 3);
+          c.globalAlpha = 1;
+        }
+      }
+    }
+    c.fillStyle = `rgba(9,17,23,${0.08 + dark * 0.2})`;
+    c.fillRect(0, 0, width, height);
+    if (!this.reduced) {
+      const spacing = 370,
+        offset = this.camera.x * 0.45,
+        first = Math.floor(offset / spacing) - 1;
+      for (let i = first; i < first + Math.ceil(width / spacing) + 3; i++) {
+        const x = i * spacing - offset + 80 + Math.sin(escape.time * 0.7 + i) * 12,
+          y = ((escape.time * 34 + Math.abs(i * 137)) % (height + 120)) - 60;
+        this.line({ x, y }, { x: x - 1, y: y + 4 }, '#c3986b', 1);
+      }
+    }
+  }
+  drawEscapeDirections() {
+    const g = this.game;
+    for (let x = 520; x < EXTRACTION.x - 220; x += 880) {
+      if (x < this.camera.x - 30 || x > this.camera.x + this.width / this.scale + 30) continue;
+      const surface = g.lineEnd({ x, y: 300 }, { x, y: WORLD.floor });
+      const y = surface.y - 10;
+      this.line({ x: x - 7, y: y - 5 }, { x, y }, '#73998d', 1.5);
+      this.line({ x, y }, { x: x - 7, y: y + 5 }, '#73998d', 1.5);
+    }
+  }
+  drawExtraction(foreground = false) {
+    const c = this.ctx,
+      g = this.game;
+    if (!g.escape || !g.extractionLift) return;
+    const { x, y: restY, w, h } = EXTRACTION,
+      left = x - w / 2,
+      right = x + w / 2,
+      floor = g.extractionLift.position.y - h / 2,
+      roof = floor - 100,
+      closing = clamp(g.escape.depart / 0.55, 0, 1);
+    c.save();
+    if (foreground) {
+      if (closing > 0) {
+        for (const side of [-1, 1]) {
+          const doorWidth = (w / 2 - 7) * closing,
+            edge = side < 0 ? left + 7 : right - 7 - doorWidth;
+          c.fillStyle = 'rgba(57,85,77,0.28)';
+          c.fillRect(edge, roof + 10, doorWidth, 82);
+          c.strokeStyle = '#77998b';
+          c.lineWidth = 1.5;
+          c.strokeRect(edge, roof + 10, doorWidth, 82);
+          for (let rail = edge + 12; rail < edge + doorWidth; rail += 16)
+            this.line({ x: rail, y: roof + 13 }, { x: rail, y: floor - 11 }, '#587567', 1);
+        }
+      }
+      c.restore();
+      return;
+    }
+    for (const side of [-1, 1]) {
+      const rail = x + side * (w / 2 + 10);
+      this.line({ x: rail, y: restY - 690 }, { x: rail, y: restY + h }, '#293d40', 7);
+      this.line({ x: rail - 1, y: restY - 690 }, { x: rail - 1, y: restY + h }, '#647e76', 2);
+    }
+    c.fillStyle = 'rgba(121,190,151,0.06)';
+    c.fillRect(left + 7, floor - 95, w - 14, 95);
+    c.fillStyle = '#243c36';
+    c.fillRect(left, roof, w, 7);
+    c.fillRect(left, floor, w, h);
+    for (const edge of [left, right - 6]) {
+      c.fillStyle = '#627d70';
+      c.fillRect(edge, roof + 7, 6, 93);
+    }
+    c.fillStyle = '#a8d2b8';
+    c.fillRect(left + 4, floor, w - 8, 3);
+    c.fillRect(x - 17, roof + 3, 34, 2);
+    c.fillStyle = '#172c28';
+    c.fillRect(left + 8, floor + 6, w - 16, Math.max(3, h - 8));
+    this.line({ x: x - 8, y: roof + 44 }, { x, y: roof + 35 }, '#a2c8af', 2);
+    this.line({ x, y: roof + 35 }, { x: x + 8, y: roof + 44 }, '#a2c8af', 2);
+    if (g.escape.phase === 'route') {
+      this.line({ x: left - 34, y: restY - 20 }, { x: left - 22, y: restY - 11 }, '#9bbfac', 2);
+      this.line({ x: left - 22, y: restY - 11 }, { x: left - 34, y: restY - 2 }, '#9bbfac', 2);
+    }
+    c.restore();
   }
   drawHazards() {
     const c = this.ctx,
       g = this.game;
     for (const hazard of g.hazards.items) {
+      if (!hazard.visible && hazard.permanent) continue;
       const { x, y: restY, w, h, travel } = hazard.placement,
         left = x - w / 2,
         right = x + w / 2,
@@ -891,6 +1016,10 @@ export class Renderer {
     c.restore();
   }
   drawExit() {
+    if (this.game.escape) {
+      this.drawExtraction();
+      return;
+    }
     const c = this.ctx,
       g = this.game,
       x = 1930,

@@ -27,6 +27,17 @@ export const MUSIC_PROFILES: Record<AreaId, { bpm: number }> = {
 const unit = (value: number) => (Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0);
 
 export function musicScene(game: Game): MusicScene {
+  if (game.escape) {
+    const departing = game.escape.phase === 'extracting';
+    return {
+      area: 'rooftops',
+      room: game.seed + ':escape',
+      mode: game.mode,
+      intensity: game.mode === 'playing' && !departing ? 0.86 : 0,
+      boss: false,
+      clear: departing,
+    };
+  }
   const alive = game.enemies.filter((enemy) => enemy.hp > 0);
   const boss = alive.some((enemy) => isBoss(enemy.kind));
   const clear = game.clear || alive.length === 0;
