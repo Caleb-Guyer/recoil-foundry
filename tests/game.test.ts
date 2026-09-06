@@ -1,404 +1,375 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
-import { Game } from '../src/game.ts';
+import { Game, WORLD } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
-import { getStats, TECHS } from '../src/rules.ts';
+import { getGun, MODS, distance } from '../src/rules.ts';
 const { Body, Composite } = Matter;
-function input(p: Partial<Input> = {}): Input {
-  return {
-    left: false,
-    right: false,
-    crouch: false,
-    jump: false,
-    fire: false,
-    winch: false,
-    interact: false,
-    aim: { x: 1000, y: 700 },
-    ...p,
-  };
+const input = (p: Partial<Input> = {}): Input => ({
+  left: false,
+  right: false,
+  jump: false,
+  jumpHeld: true,
+  fire: false,
+  aim: { x: 1000, y: 680 },
+  ...p,
+});
+function tick(g: Game, n = 1, p: Partial<Input> = {}) {
+  for (let i = 0; i < n; i++) g.tick(1 / 60, input(p));
 }
-function clean(g: Game) {
+function clean(g: Game, platforms = false) {
   for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
   g.enemies = [];
-  for (const p of g.props) Composite.remove(g.engine.world, p.body);
-  g.props = [];
+  if (platforms) {
+    for (const b of g.terrain.slice(4)) Composite.remove(g.engine.world, b);
+    g.terrain = g.terrain.slice(0, 4);
+  }
 }
-function tick(g: Game, n = 1, patch: Partial<Input> = {}) {
-  for (let i = 0; i < n; i++) g.tick(1 / 60, input(patch));
-}
-test('real physics settles the rover, moves with cargo, jumps, and preserves rotation lock', () => {
+function ready() {
   const g = new Game();
   g.start('physics');
-  clean(g);
-  tick(g, 80);
+  clean(g, true);
+  tick(g, 60);
+  return g;
+}
+test('movement accelerates promptly and stops cleanly on the floor', () => {
+  const g = ready(),
+    x = g.player.position.x;
   assert(g.grounded);
-  const x = g.player.position.x;
-  tick(g, 25, { right: true });
-  assert(g.player.position.x > x + 40);
-  tick(g, 1, { crouch: true });
+  tick(g, 20, { right: true });
+  assert(g.player.position.x > x + 95);
+  tick(g, 20);
+  assert(Math.abs(g.player.velocity.x) < 0.15);
   assert.equal(g.player.inertia, Infinity);
-  tick(g, 1);
-  assert.equal(g.player.inertia, Infinity);
-  const y = g.player.position.y;
-  tick(g, 1, { jump: true });
-  tick(g, 8);
-  assert(g.player.position.y < y - 55);
-  assert(Math.abs(g.player.angle) < 0.01);
 });
-test('continuous free coil fire permits energy recovery', () => {
-  const g = new Game();
-  g.start('energy');
-  clean(g);
-  g.energy = 10;
-  tick(g, 180, { fire: true });
-  assert(g.energy > 55);
-  assert(g.shotCount > 10);
-});
-test('damage immunity prevents repeated collision damage, then expires', () => {
-  const g = new Game();
-  g.start('damage');
-  g.damagePlayer(10);
-  g.damagePlayer(10);
-  assert.equal(g.hp, 90);
-  g.time += 0.61;
-  g.damagePlayer(10);
-  assert.equal(g.hp, 80);
-});
-test('lethal projectile freezes state before pickups or later shots can modify results', () => {
-  const g = new Game();
-  g.start('death-freeze');
-  clean(g);
-  g.hp = 1;
-  const p = g.player.position;
-  g.drops.push({ pos: { ...p }, type: 'health', phase: 0 });
-  g.addShot({
-    pos: { x: p.x + 35, y: p.y },
-    vel: { x: -30, y: 0 },
-    damage: 10,
-    life: 2,
-    radius: 5,
-    friendly: false,
-    kind: 'bullet',
-    bounces: 0,
-    split: true,
-    root: 0,
-    color: 'red',
-  });
-  let capturedHp = -1;
-  g.onChange = () => {
-    if (g.mode === 'dead') capturedHp = g.hp;
-  };
-  tick(g);
-  assert.equal(g.mode, 'dead');
-  assert.equal(g.hp, 0);
-  assert.equal(capturedHp, 0);
-  assert.equal(g.drops.filter((drop) => drop.type === 'health').length, 1);
-});
-test('a thrown crate damages the boss using its incoming impact speed', () => {
-  const g = new Game();
-  g.start('crate');
-  clean(g);
-  g.spawnEnemy('boss', 1100, 500);
-  const e = g.enemies[0];
-  const body = Matter.Bodies.rectangle(1030, 500, 40, 40, { density: 0.0018 });
-  Composite.add(g.engine.world, body);
-  g.props.push({ body, launched: true, hitAt: new Map(), impactSpeed: 20 });
-  Body.setVelocity(body, { x: 1, y: 0 });
-  g.updateProps();
-  assert(e.hp < e.maxHp);
-  const hp = e.hp;
-  g.updateProps();
-  assert.equal(e.hp, hp);
-});
-test('the fixed winch reels the core closer, spends energy, and permits firing', () => {
-  const g = new Game();
-  g.start('winch');
-  clean(g);
-  tick(g, 80);
-  const restDistance = Math.hypot(
-    g.cargo.position.x - g.player.position.x,
-    g.cargo.position.y - g.player.position.y,
-  );
-  tick(g, 45, { winch: true, fire: true });
-  assert(g.winchActive);
-  assert(g.energy < 95);
-  assert(g.shotCount >= 4);
-  assert(
-    Math.hypot(g.cargo.position.x - g.player.position.x, g.cargo.position.y - g.player.position.y) <
-      restDistance - 20,
-  );
-  g.energy = 0;
-  g.updateWinch(true, 1 / 60);
-  assert.equal(g.winchActive, false);
-  assert.equal(g.energy, 0);
-});
-test('passive towing delivers through every layout without energy', () => {
-  for (const seed of ['A', 'B', 'C', 'D', 'E', 'F'])
-    for (let stage = 0; stage < 5; stage++) {
-      const g = new Game();
-      g.start(seed);
-      g.stage = stage;
-      g.loadRoom();
-      for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
-      g.enemies = [];
-      for (let i = 0; i < 1800 && g.mode === 'playing'; i++) {
-        g.energy = 0;
-        tick(g, 1, {
-          right: g.player.position.x < 2190,
-          jump: g.grounded && i % 45 === 0,
-          interact: true,
-        });
-      }
-      assert.equal(g.mode, 'upgrade', seed + ':' + stage);
-      assert.equal(g.cargoHp, 120);
+test('held jumps are taller than taps, and downward shots add substantial lift', () => {
+  const heights = [false, true, 'recoil'].map((kind) => {
+    const g = ready(),
+      start = g.player.position.y;
+    let min = start;
+    for (let i = 0; i < 100; i++) {
+      tick(g, 1, {
+        jump: i === 0,
+        jumpHeld: kind !== false || i === 0,
+        fire: kind === 'recoil' && i < 60,
+        aim: { x: g.player.position.x, y: 1000 },
+      });
+      min = Math.min(min, g.player.position.y);
     }
+    return start - min;
+  });
+  assert(heights[0] > 45 && heights[0] < 120);
+  assert(heights[1] > heights[0] + 70);
+  assert(heights[2] > heights[1] + 180);
 });
-test('hostile rounds damage cargo, armor reduces damage, and cooldown limits bursts', () => {
-  const g = new Game();
-  g.start('cargo-damage');
-  clean(g);
-  const shoot = (friendly: boolean) => {
-    const p = g.cargo.position;
-    g.addShot({
-      pos: { x: p.x - 40, y: p.y },
-      vel: { x: 30, y: 0 },
-      damage: 20,
-      life: 2,
-      radius: 3,
-      friendly,
-      kind: 'bullet',
-      bounces: 0,
-      split: true,
-      root: 0,
-      color: 'red',
-    });
-    g.updateShots(1 / 60);
-  };
-  shoot(true);
-  assert.equal(g.cargoHp, 120);
-  shoot(false);
-  assert.equal(g.cargoHp, 100);
-  shoot(false);
-  assert.equal(g.cargoHp, 100);
-  g.time += 0.46;
-  g.techs = ['cargo-armor'];
-  g.stats = getStats(g.techs);
-  shoot(false);
-  assert.equal(g.cargoHp, 86);
+test('airborne recoil is much stronger and steering retains boosted momentum', () => {
+  const ground = ready();
+  Body.setVelocity(ground.player, { x: 0, y: 0 });
+  ground.aim = { x: 1000, y: ground.player.position.y };
+  ground.fire();
+  const groundKick = Math.abs(ground.player.velocity.x);
+  const air = ready();
+  Body.setPosition(air.player, { x: 1000, y: 200 });
+  Body.setVelocity(air.player, { x: 0, y: 0 });
+  air.grounded = false;
+  air.aim = { x: 1500, y: 200 };
+  air.fire();
+  assert(Math.abs(air.player.velocity.x) > groundKick * 4);
+  Body.setVelocity(air.player, { x: 16, y: 0 });
+  tick(air, 8, { right: true });
+  assert(air.player.velocity.x > 14);
 });
-test('destroying the core ends the run and clears its checkpoint', () => {
-  const g = new Game();
-  g.start('core-lost');
-  clean(g);
+test('firing has camera impulse and short muzzle flash which settle afterward', () => {
+  const g = ready();
+  g.fire();
+  assert(g.shake >= 2);
+  assert(g.muzzle > 0);
+  assert(Math.abs(g.kick.x) > 0);
+  tick(g, 30);
+  assert(g.shake < 0.01);
+  assert.equal(g.muzzle, 0);
+});
+test('the one gun fires indefinitely and scatter adds one recoil impulse per trigger', () => {
+  const g = ready();
+  tick(g, 600, { fire: true });
+  assert(g.shotCount > 40);
+  g.mods = ['scatter'];
+  g.gun = getGun(g.mods);
+  g.grounded = false;
+  g.shots = [];
+  Body.setVelocity(g.player, { x: 0, y: 0 });
+  g.aim = { x: g.player.position.x + 300, y: g.player.position.y };
+  g.fire();
+  assert.equal(g.shots.length, 5);
+  assert(Math.abs(g.player.velocity.x + g.gun.recoil) < 0.001);
+});
+test('a jump tap survives a kill impact pause', () => {
+  const g = ready();
+  g.hitStop = 0.035;
+  tick(g, 1, { jump: true });
+  tick(g, 4);
+  assert(g.player.velocity.y < -8);
+});
+test('a quick click survives an impact pause and fires exactly once', () => {
+  const g = ready();
+  g.hitStop = 0.035;
+  tick(g, 1, { firePressed: true, fire: false });
+  tick(g, 10);
+  assert.equal(g.shotCount, 1);
+});
+test('upgrade offers depend on the seed and room, not shots fired', () => {
+  const a = ready(),
+    b = ready();
+  tick(a, 120, { fire: true });
+  a.openReward();
+  b.openReward();
+  assert.deepEqual(a.offers, b.offers);
+});
+test('fresh runs reset jump release timing and keep the first recoil boost', () => {
+  const g = ready();
+  g.jumpAt = 100;
+  g.start('fresh');
+  clean(g, true);
+  Body.setPosition(g.player, { x: 900, y: 250 });
+  Body.setVelocity(g.player, { x: 0, y: 0 });
+  tick(g, 1, { fire: true, jumpHeld: false, aim: { x: 900, y: 1000 } });
+  const initial = g.player.velocity.y;
+  tick(g, 1, { jumpHeld: false });
+  assert.equal(g.jumpAt, -100);
+  assert(g.player.velocity.y < initial * 0.8);
+});
+test('boundary containment cancels outward speed and preserves tangential momentum', () => {
+  const g = ready();
+  Body.setPosition(g.player, { x: -4, y: 200 });
+  Body.setVelocity(g.player, { x: -15, y: -8 });
+  g.containPlayer();
+  assert(g.player.vertices.every((v) => v.x >= -0.01));
+  assert.equal(g.player.velocity.x, 0);
+  assert.equal(g.player.velocity.y, -8);
+  Body.setPosition(g.player, { x: 500, y: -4 });
+  Body.setVelocity(g.player, { x: 12, y: -18 });
+  g.containPlayer();
+  assert(g.player.vertices.every((v) => v.y >= -0.01));
+  assert.equal(g.player.velocity.x, 12);
+  assert.equal(g.player.velocity.y, 0);
+});
+test('piercing rounds hit successive enemies while cover stops a normal round', () => {
+  const g = ready();
+  g.spawnEnemy('shooter', 800, 350);
+  g.spawnEnemy('shooter', 845, 350);
+  for (const e of g.enemies) e.spawn = 0;
+  const enemies = [...g.enemies];
+  g.addShot({
+    pos: { x: 760, y: 350 },
+    vel: { x: 130, y: 0 },
+    damage: 20,
+    life: 2,
+    friendly: true,
+    radius: 2,
+    bounces: 0,
+    pierce: 2,
+    fragment: false,
+    split: false,
+  });
+  g.updateShots(1 / 60);
+  assert(enemies.every((e) => e.hp < e.maxHp));
+  assert.equal(enemies[0].maxHp - enemies[0].hp, 20);
+  const wall = Matter.Bodies.rectangle(950, 350, 4, 100, { isStatic: true });
+  Composite.add(g.engine.world, wall);
+  g.terrain.push(wall);
+  g.spawnEnemy('shooter', 1000, 350);
+  const target = g.enemies.at(-1)!;
+  target.spawn = 0;
+  g.shots = [];
+  g.addShot({
+    pos: { x: 900, y: 350 },
+    vel: { x: 150, y: 0 },
+    damage: 30,
+    life: 2,
+    friendly: true,
+    radius: 2,
+    bounces: 0,
+    pierce: 0,
+    fragment: false,
+    split: false,
+  });
+  g.updateShots(1 / 60);
+  assert.equal(target.hp, target.maxHp);
+  assert.equal(g.shots.length, 0);
+});
+test('splinter rounds split only once and fragments never recurse', () => {
+  const g = ready();
+  g.mods = ['split'];
+  g.gun = getGun(g.mods);
+  g.fire();
+  const s = g.shots[0];
+  g.splitShot(s);
+  assert.equal(g.shots.length, 4);
+  g.splitShot(s);
+  for (const fragment of g.shots.filter((s) => s.fragment)) g.splitShot(fragment);
+  assert.equal(g.shots.length, 4);
+});
+test('damage grants brief immunity and lethal damage freezes the run', () => {
+  const g = ready();
   let cleared = false;
   g.onCheckpoint = (s) => {
     if (!s) cleared = true;
   };
-  g.damageCargo(999);
+  g.damagePlayer(20);
+  g.damagePlayer(20);
+  assert.equal(g.hp, 80);
+  g.time += 0.76;
+  g.damagePlayer(999);
   assert.equal(g.mode, 'dead');
-  assert.equal(g.failure, 'cargo');
   assert(cleared);
-  const elapsed = g.elapsed;
-  tick(g, 10, { right: true });
+  const elapsed = g.elapsed,
+    shots = g.shotCount;
+  tick(g, 100, { right: true, fire: true });
   assert.equal(g.elapsed, elapsed);
+  assert.equal(g.shotCount, shots);
 });
-test('fall recovery and corrupt cargo recovery retain one working tether', () => {
+test('cleared exits advance automatically and choices modify the same gun', () => {
   const g = new Game();
-  g.start('recovery');
-  clean(g);
-  tick(g, 60);
-  const hp = g.cargoHp;
-  Body.setPosition(g.cargo, { x: 400, y: 1200 });
-  tick(g);
-  assert(g.cargo.position.y < 900);
-  Body.setPosition(g.cargo, { x: NaN, y: NaN });
-  tick(g, 120, { right: true });
-  for (const body of [g.cargo, g.player])
-    for (const p of [body.position, ...body.vertices])
-      assert(Number.isFinite(p.x) && Number.isFinite(p.y));
-  assert.equal(Composite.allConstraints(g.engine.world).length, 1);
-  assert.equal(Composite.allBodies(g.engine.world).filter((b) => b.label === 'cargo').length, 1);
-  assert.equal(g.cargoHp, hp);
-});
-test('fragmentation cannot recurse and shot/particle caps bound heavy builds', () => {
-  const g = new Game();
-  g.start('fragments');
-  g.techs = ['fragment'];
-  g.stats = getStats(g.techs);
-  g.fire();
-  const shot = g.shots[0];
-  g.fragment(shot);
-  const count = g.shots.length;
-  g.fragment(shot);
-  for (const fragment of g.shots.filter((s) => s.kind === 'fragment')) g.fragment(fragment);
-  assert.equal(g.shots.length, count);
-  assert.equal(count, 4);
-  for (let i = 0; i < 500; i++)
-    g.addShot({
-      pos: { x: 0, y: 0 },
-      vel: { x: 1, y: 0 },
-      damage: 1,
-      life: 1,
-      radius: 2,
-      friendly: true,
-      kind: 'fragment',
-      bounces: 0,
-      split: true,
-      root: 0,
-      color: 'red',
-    });
-  assert.equal(g.shots.length, 220);
-  g.burst({ x: 0, y: 0 }, 1000, 'red', 1);
-  assert.equal(g.particles.length, 450);
-});
-test('grenade detonation is idempotent', () => {
-  const g = new Game();
-  g.start('grenade');
-  clean(g);
-  g.spawnEnemy('sentry', 900, 740);
-  g.addShot({
-    pos: { x: 840, y: 740 },
-    vel: { x: 0, y: 0 },
-    damage: 10,
-    life: 0.1,
-    radius: 7,
-    friendly: true,
-    kind: 'grenade',
-    bounces: 10,
-    split: false,
-    root: 1,
-    color: 'purple',
-  });
-  const e = g.enemies[0],
-    s = g.shots[0];
-  g.explode(s);
-  const hp = e.hp;
-  g.explode(s);
-  assert.equal(e.hp, hp);
-  assert(hp < e.maxHp);
-});
-test('all six stages progress, unlock weapons, save entrances, and reach victory', () => {
-  const g = new Game();
-  let saved = 0;
-  let cleared = false;
-  const transitions: string[] = [];
+  g.start('progress');
+  let saves = 0,
+    cleared = false;
   g.onCheckpoint = (s) => {
-    if (s) saved++;
+    if (s) saves++;
     else cleared = true;
   };
-  g.onChange = () => transitions.push(g.mode);
-  g.start('complete');
   for (let stage = 0; stage < 6; stage++) {
     assert.equal(g.stage, stage);
-    for (const e of [...g.enemies]) g.hitEnemy(e, 99999, 'test', 0);
-    Body.setPosition(g.player, { x: 2190, y: 750 });
-    Body.setPosition(g.cargo, { x: 2110, y: 775 });
-    tick(g, 1, { interact: true });
+    Body.setPosition(g.player, { x: 1910, y: 700 });
+    tick(g);
+    assert.equal(g.mode, 'playing');
+    for (const e of [...g.enemies]) g.hitEnemy(e, 9999);
+    tick(g, 40);
     if (stage < 5) {
       assert.equal(g.mode, 'upgrade');
       assert.equal(g.offers.length, 3);
-      const before = transitions.length;
-      g.chooseTech(g.offers[0].id);
+      const id = g.offers[0].id;
+      g.chooseMod(id);
+      assert(g.mods.includes(id));
+      assert.deepEqual(g.gun, getGun(g.mods));
       assert.equal(g.mode, 'playing');
-      assert.deepEqual(transitions.slice(before), ['playing']);
-      assert.equal(g.enemies.length > 0, true);
+      const count = g.mods.length;
+      g.chooseMod(id);
+      assert.equal(g.mods.length, count);
     }
   }
   assert.equal(g.mode, 'won');
-  assert.equal(g.weapons.length, 4);
-  assert.equal(g.techs.length, 5);
-  assert.equal(saved, 6);
+  assert.equal(g.mods.length, 5);
+  assert.equal(saves, 5);
   assert(cleared);
 });
-test('delivery requires the rover and core, allows patrols, and locks the final dock', () => {
+test('checkpoint reconstructs the same modified gun and fresh room', () => {
   const g = new Game();
-  g.start('delivery');
-  Body.setPosition(g.player, { x: 2190, y: 750 });
-  tick(g, 1, { interact: true });
-  assert.equal(g.mode, 'playing');
-  Body.setPosition(g.player, { x: 2190, y: 750 });
-  Body.setPosition(g.cargo, { x: 2110, y: 775 });
-  tick(g, 1, { interact: true });
-  assert.equal(g.mode, 'upgrade');
-  assert(g.enemies.length > 0);
-  g.stage = 5;
-  g.loadRoom();
-  g.setMode('playing');
-  Body.setPosition(g.player, { x: 2190, y: 750 });
-  Body.setPosition(g.cargo, { x: 2110, y: 775 });
-  tick(g, 1, { interact: true });
-  assert.equal(g.mode, 'playing');
-  for (const e of [...g.enemies]) g.hitEnemy(e, 9999, 'test', 0);
-  tick(g, 1, { interact: true });
-  assert.equal(g.mode, 'won');
+  g.start('saved', {
+    version: 3,
+    seed: 'saved',
+    stage: 3,
+    hp: 56,
+    mods: ['scatter', 'rapid', 'kick'],
+    kills: 17,
+    elapsed: 40,
+  });
+  assert.equal(g.hp, 56);
+  assert.equal(g.stage, 3);
+  assert.equal(g.gun.pellets, 5);
+  assert(g.gun.interval < 0.22);
+  assert.equal(g.shots.length, 0);
+  assert.equal(Composite.allConstraints(g.engine.world).length, 0);
 });
-test('delivery repairs the core and checkpoints its new integrity', () => {
-  for (const id of ['dense', 'repair']) {
+test('extreme recoil combos remain inside the arena with bounded effects', () => {
+  for (const mods of [
+    MODS.map((m) => m.id),
+    ['magnum', 'scatter', 'rapid', 'kick', 'split'],
+    ['rapid', 'scatter', 'ricochet', 'pierce', 'split'],
+  ]) {
     const g = new Game();
-    g.start('repair');
-    g.cargoHp = 30;
-    g.hp = 50;
-    g.openReward();
-    g.offers = [TECHS.find((t) => t.id === id)!];
-    let saved: any;
-    g.onCheckpoint = (s) => {
-      saved = s;
-    };
-    g.chooseTech(id);
-    assert.equal(g.cargoHp, id === 'repair' ? 95 : 55);
-    assert.equal(g.hp, 62);
-    assert.equal(saved.cargoHp, g.cargoHp);
-    assert.equal(Composite.allConstraints(g.engine.world).length, 1);
+    g.start('stress');
+    g.stage = 5;
+    g.loadRoom();
+    g.mods = mods;
+    g.gun = getGun(mods);
+    g.enemies[0].hp = 1e9;
+    for (let i = 0; i < 1800; i++) {
+      g.hurtAt = g.time;
+      const p = g.player.position;
+      tick(g, 1, {
+        left: i % 240 >= 120,
+        right: i % 240 < 120,
+        jump: g.grounded && i % 40 === 0,
+        fire: true,
+        aim: { x: p.x + Math.cos(i * 0.02) * 600, y: p.y + Math.sin(i * 0.02) * 600 },
+      });
+      assert.equal(g.mode, 'playing');
+      assert(g.player.vertices.every((v) => v.x >= -0.01 && v.x <= WORLD.width + 0.01));
+      assert(g.player.vertices.every((v) => v.y >= -0.01 && v.y <= WORLD.floor + 0.01));
+      assert(g.shots.length <= 180);
+      assert(g.particles.length <= 220);
+    }
+    for (const b of Composite.allBodies(g.engine.world))
+      assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-test('checkpoint restores equipment and fresh stage without transient projectiles', () => {
+test('a combat run reaches the final exit with normal health and real input', () => {
   const g = new Game();
-  g.start('save', {
-    version: 2,
-    seed: 'save',
-    stage: 3,
-    hp: 67,
-    energy: 42,
-    techs: ['dense', 'fragment'],
-    weapons: ['coil', 'scatter', 'lance', 'mortar'],
-    weapon: 'mortar',
-    cargoHp: 73,
-    kills: 18,
-    elapsed: 240,
-  });
-  assert.equal(g.stage, 3);
-  assert.equal(g.hp, 67);
-  assert.equal(g.cargoHp, 73);
-  assert.equal(g.weapon, 'mortar');
-  assert.equal(g.shots.length, 0);
-  assert.equal(g.enemies.length, 10);
-  assert(g.stats.fragments);
-});
-test('a stress encounter with every technology remains finite and bounded', () => {
-  const g = new Game();
-  g.start('stress');
-  g.techs = TECHS.map((t) => t.id);
-  g.stats = getStats(g.techs);
-  g.weapons = ['coil', 'scatter', 'lance', 'mortar'];
-  g.weapon = 'mortar';
-  g.hp = 1e6;
-  for (let i = 0; i < 1200; i++) {
-    g.energy = g.stats.maxEnergy;
-    g.hurtAt = g.time;
-    g.cargoHurtAt = g.time;
+  g.start('B');
+  let previousX = 140,
+    stuck = 0,
+    lastProgress = 0,
+    lastKills = 0;
+  for (let i = 0; i < 60 * 180 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+    if (g.mode === 'upgrade') {
+      g.chooseMod(
+        g.offers.find((m) => ['magnum', 'scatter', 'rapid', 'leech', 'airshot'].includes(m.id))
+          ?.id ?? g.offers[0].id,
+      );
+      lastProgress = g.time;
+    }
+    const p = g.player.position,
+      e = [...g.enemies].sort(
+        (a, b) => distance(a.body.position, p) - distance(b.body.position, p),
+      )[0];
+    const ep = e?.body.position ?? { x: 1915, y: 700 },
+      lead = distance(p, ep) / 30,
+      dx = ep.x - p.x;
+    stuck = Math.abs(p.x - previousX) < 0.5 ? stuck + 1 : 0;
+    previousX = p.x;
+    let move = g.clear
+      ? p.x < 1910
+        ? 1
+        : p.x > 1960
+          ? -1
+          : 0
+      : dx > 300
+        ? 1
+        : dx < -300
+          ? -1
+          : Math.abs(dx) < 160
+            ? dx < 0
+              ? 1
+              : -1
+            : 0;
+    if (!g.clear && (p.x < 100 || p.x > 1900)) move = p.x < 100 ? 1 : -1;
+    if (g.kills !== lastKills) {
+      lastKills = g.kills;
+      lastProgress = g.time;
+    }
+    if (!g.clear && g.time - lastProgress > 7) move = Math.sin(g.time * 0.65) > 0 ? 1 : -1;
     tick(g, 1, {
-      fire: true,
-      right: i % 240 < 100,
-      jump: i % 90 === 0,
-      aim: g.enemies[0] ? { ...g.enemies[0].body.position } : { x: 1600, y: 600 },
+      left: move < 0,
+      right: move > 0,
+      jump: !g.clear && g.grounded && (i % 90 === 0 || stuck > 15),
+      fire: !g.clear,
+      aim: {
+        x: ep.x + (e?.body.velocity.x ?? 0) * lead,
+        y: ep.y + (e?.body.velocity.y ?? 0) * lead,
+      },
     });
   }
-  assert.equal(g.mode, 'playing');
-  assert(g.elapsed > 19);
-  for (const b of Composite.allBodies(g.engine.world))
-    assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
-  assert(g.shots.length <= 220);
-  assert(g.particles.length <= 450);
-  assert(Composite.allBodies(g.engine.world).length < 90);
+  assert.equal(g.mode, 'won');
+  assert.equal(g.stage, 5);
+  assert(g.hp > 0);
 });

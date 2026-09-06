@@ -1,9 +1,9 @@
 {
   "name": "recoil-foundry",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "A physics salvage roguelike. Tow a recovered power core through a failing freight facility.",
+  "description": "One gun. Six rooms. A physics roguelike built around recoil and movement.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",

@@ -1,128 +1,65 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  seeded,
-  sample,
-  getStats,
-  eligibleTechs,
-  TECHS,
-  enemyTypes,
-  segmentBox,
-  validateCheckpoint,
-  loadCheckpoint,
-  pointerButtons,
-} from '../src/rules.ts';
-test('overlapping mouse buttons follow current button state and fully release', () => {
-  assert.deepEqual([1, 3, 2, 0].map(pointerButtons), [
-    { fire: true, winch: false },
-    { fire: true, winch: true },
-    { fire: false, winch: true },
-    { fire: false, winch: false },
-  ]);
-  assert.deepEqual(pointerButtons(4), { fire: false, winch: false });
-});
-test('a seed reproduces each room and encounter stream independently', () => {
-  const a = seeded('run:room:3'),
-    b = seeded('run:room:3'),
-    noise = seeded('run:cosmetics');
+import { seeded, sample, getGun, MODS, segmentBox, loadCheckpoint } from '../src/rules.ts';
+test('seeded layouts and rewards reproduce without sharing random state', () => {
+  const a = seeded('room'),
+    b = seeded('room'),
+    other = seeded('noise');
   assert.deepEqual(
-    Array.from({ length: 200 }, () => {
-      noise();
+    Array.from({ length: 100 }, () => {
+      other();
       return a();
     }),
-    Array.from({ length: 200 }, () => b()),
+    Array.from({ length: 100 }, () => b()),
   );
-  assert.notDeepEqual(enemyTypes(4, seeded('a')), enemyTypes(4, seeded('b')));
+  assert.notDeepEqual(sample(MODS, 3, seeded('A')), sample(MODS, 3, seeded('B')));
 });
-test('reward selection is unique and respects equipment prerequisites', () => {
-  const eligible = eligibleTechs(['dense'], ['coil']);
-  assert(!eligible.some((t) => ['dense', 'piercing', 'cluster'].includes(t.id)));
-  const offered = sample(eligible, 3, seeded('offers'));
-  assert.equal(new Set(offered.map((t) => t.id)).size, 3);
-  assert(['cargo-armor', 'repair'].every((id) => eligible.some((t) => t.id === id)));
-});
-test('all 120 technology pairs produce finite bounded stats, independent of acquisition order', () => {
-  for (let i = 0; i < TECHS.length; i++)
-    for (let j = i + 1; j < TECHS.length; j++) {
-      const a = getStats([TECHS[i].id, TECHS[j].id]),
-        b = getStats([TECHS[j].id, TECHS[i].id]);
-      assert.deepEqual(a, b);
-      for (const v of Object.values(a))
-        if (typeof v === 'number') assert(Number.isFinite(v) && v >= 0);
+test('every pair of gun mods combines independently of order and cannot stack twice', () => {
+  for (const a of MODS)
+    for (const b of MODS) {
+      const first = getGun([a.id, b.id]),
+        second = getGun([b.id, a.id]);
+      for (const k of Object.keys(first) as (keyof typeof first)[]) {
+        if (typeof first[k] === 'number') {
+          assert(Number.isFinite(first[k]));
+          assert(Math.abs((first[k] as number) - (second[k] as number)) < 1e-9);
+        } else assert.equal(first[k], second[k]);
+      }
     }
-  assert.deepEqual(getStats(['dense', 'dense']), getStats(['dense']));
+  assert.deepEqual(getGun(['magnum', 'magnum']), getGun(['magnum']));
 });
-test('swept collision finds a thin wall even when a projectile crosses it in one tick', () => {
-  const hit = segmentBox({ x: 0, y: 10 }, { x: 100, y: 10 }, { x: 49, y: 0 }, { x: 51, y: 20 });
-  assert(hit);
-  assert.equal(hit.t, 0.49);
-  assert.deepEqual(hit.normal, { x: -1, y: 0 });
+test('a swept round detects thin cover and misses outside its bounds', () => {
+  const h = segmentBox({ x: 0, y: 10 }, { x: 100, y: 10 }, { x: 49, y: 0 }, { x: 51, y: 20 });
+  assert(h);
+  assert.equal(h.t, 0.49);
+  assert.deepEqual(h.normal, { x: -1, y: 0 });
   assert.equal(
     segmentBox({ x: 0, y: 30 }, { x: 100, y: 30 }, { x: 49, y: 0 }, { x: 51, y: 20 }),
     null,
   );
 });
-test('checkpoint validation rejects malformed, unknown, duplicated and terminal state', () => {
+test('only valid current single-gun checkpoints resume', () => {
   const valid = {
-    version: 2,
-    seed: 'TEST',
+    version: 3,
+    seed: 'run',
     stage: 2,
-    hp: 100,
-    energy: 80,
-    techs: ['dense'],
-    weapons: ['coil', 'scatter'],
-    weapon: 'coil',
-    cargoHp: 95,
-    kills: 10,
-    elapsed: 90,
+    hp: 72,
+    mods: ['magnum', 'rapid'],
+    kills: 12,
+    elapsed: 30,
   };
-  assert(validateCheckpoint(valid));
+  assert.equal(loadCheckpoint(valid), valid);
   for (const bad of [
     null,
     {},
-    { ...valid, stage: 6 },
+    { ...valid, version: 2 },
     { ...valid, hp: 0 },
-    { ...valid, cargoHp: 0 },
-    { ...valid, cargoHp: 121 },
-    { ...valid, cargoHp: NaN },
-    { ...valid, techs: ['made-up'] },
-    { ...valid, techs: ['dense', 'dense'] },
-    { ...valid, weapon: 'mortar' },
-    { ...valid, energy: Infinity },
-    { ...valid, weapons: ['__proto__'] },
-    { ...valid, seed: 'x'.repeat(100) },
+    { ...valid, stage: 6 },
+    { ...valid, mods: ['unknown'] },
+    { ...valid, mods: ['rapid', 'rapid'] },
+    { ...valid, elapsed: Infinity },
+    { ...valid, kills: -1 },
+    { ...valid, seed: 'x'.repeat(41) },
   ])
-    assert.equal(validateCheckpoint(bad), false);
-});
-test('both retired field saves migrate into a winch run with preserved progress', () => {
-  for (const field of ['repulsor', 'tractor']) {
-    const old = {
-      version: 1,
-      seed: 'MIGRATE',
-      stage: 3,
-      hp: 67,
-      energy: 42,
-      techs: ['dense', 'conductive', 'feedback'],
-      weapons: ['coil', 'scatter', 'lance', 'mortar'],
-      weapon: 'mortar',
-      field,
-      kills: 18,
-      elapsed: 240,
-    };
-    const next = loadCheckpoint(old);
-    assert(next);
-    assert.equal(next.version, 2);
-    assert.equal(next.cargoHp, 120);
-    assert.equal(next.stage, 3);
-    assert.equal(next.hp, 67);
-    assert.equal(next.energy, 42);
-    assert.equal(next.weapon, 'mortar');
-    assert.equal(next.elapsed, 240);
-    assert.equal('field' in next, false);
-    assert.deepEqual(next.techs, ['dense', 'cargo-armor', 'repair']);
-    assert.equal(loadCheckpoint(next), next);
-    assert.equal(loadCheckpoint({ ...old, techs: ['bad-id'] }), null);
-    assert.equal(loadCheckpoint({ ...old, field: 'unknown' }), null);
-    assert.equal(loadCheckpoint({ ...old, hp: 0 }), null);
-  }
+    assert.equal(loadCheckpoint(bad), null);
 });

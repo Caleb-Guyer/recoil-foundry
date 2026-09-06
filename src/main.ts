@@ -1,16 +1,11 @@
 import './style.css';
 import { Game } from './game.ts';
+import type { Input } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
-import { STAGES, TECHS, WEAPONS, loadCheckpoint, pointerButtons } from './rules.ts';
-import type { Checkpoint, WeaponId } from './rules.ts';
-import type { Input } from './game.ts';
+import { MODS, loadCheckpoint, STAGES } from './rules.ts';
+import type { Checkpoint, Mod } from './rules.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const escape = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
-  );
 function read(key: string): unknown {
   try {
     return JSON.parse(localStorage.getItem(key) ?? 'null');
@@ -18,424 +13,342 @@ function read(key: string): unknown {
     return null;
   }
 }
-function write(key: string, data: unknown) {
+function write(key: string, value: unknown) {
   try {
-    if (data === null) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(data));
-    return true;
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    $('save-status').textContent = 'LOCAL SAVING UNAVAILABLE';
-    return false;
+    $('save-status').textContent = 'Saving unavailable in this browser.';
   }
 }
-let checkpoint: Checkpoint | null =
-  loadCheckpoint(read('rf-checkpoint-v2')) ?? loadCheckpoint(read('rf-checkpoint-v1'));
-// Retire the old key only after writing a valid new checkpoint.
+let checkpoint = loadCheckpoint(read('rf-checkpoint-v3'));
 document.getElementById('app')!.innerHTML = `
-<main class="game-shell">
- <div class="viewport" id="viewport">
-  <canvas id="game" tabindex="0" aria-label="Recoil Foundry physics game. Use A and D to move, W or Space to jump, mouse to aim, left click to fire, right click to reel in the core, E at the exit."></canvas>
-  <section class="hud" aria-label="Run status">
-   <div class="meters">
-    <div class="meter" title="Health"><span aria-hidden="true">+</span><progress id="hp" aria-label="Health" value="100" max="100"></progress><span id="hp-value">100</span></div>
-    <div class="meter energy" title="Energy"><span aria-hidden="true">ϟ</span><progress id="energy" aria-label="Energy" value="100" max="100"></progress><span id="energy-value">100</span></div>
-    <div class="meter cargo-meter" title="Power core"><span aria-hidden="true">◇</span><progress id="cargo" aria-label="Core integrity" value="120" max="120"></progress><span id="cargo-value">120</span></div>
-   </div>
-   <div class="run-controls"><span id="sector-progress" title="Sector">1 / 6</span><button id="pause" class="icon-button" aria-label="Pause game" title="Pause · Esc">Ⅱ</button></div>
-  </section>
-  <div class="notice" id="notice" role="status" aria-live="polite"></div>
-  <section id="start-screen" class="start-screen" aria-label="Start a run">
-   <div class="start-content">
-    <img class="title-mark" src="./icon.svg" alt="" />
-    <h1>Recoil Foundry</h1><p class="premise">Get the core home.</p>
-    <button id="start" class="primary">Play</button>
-    <button id="continue" class="text-button" ${checkpoint ? '' : 'hidden'}>Continue</button>
-    <details class="run-options"><summary>Seed</summary>
-     <label class="seed-label">Seed<input id="seed" maxlength="40" autocomplete="off" aria-label="Run seed" placeholder="Random" /></label>
-    </details>
-   </div>
-  </section>
-  <section class="equipment" aria-label="Equipment">
-   <div class="equipped-line"><span id="weapon-name">Rivet gun</span><button id="build" class="text-button" title="View upgrades"><span aria-hidden="true">◇</span> <span id="tech-count">0</span><span class="sr-only"> upgrades</span></button></div>
-   <div class="equipment-buttons"><div class="weapon-rack" id="weapons"></div><button class="icon-button winch-slot" id="winch-info" aria-label="Winch controls" title="Winch · hold RMB or Shift">↤</button></div>
-  </section>
-  <nav class="settings" aria-label="Game settings"><button id="help" class="icon-button" aria-label="How to play" title="Controls">?</button><button id="sound" class="icon-button" aria-label="Mute sound" title="Toggle sound">♪</button></nav>
-  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button data-touch="winch" aria-label="Reel in core">↤</button><button data-touch="jump" aria-label="Jump">↑</button><button data-touch="interact" aria-label="Use exit">E</button></div></div>
- </div>
-</main>
-<span class="sr-only" id="save-status" role="status"></span>
-<dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>`;
+<main id="arena">
+ <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
+ <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div class="run-info"><span id="stage">01 / 06</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
+ <section id="title-screen">
+  <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+   <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
+   <button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button>
+   <p class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
+   <p class="recoil-hint">Shoot down. Go up.</p>
+  </div><button id="settings" class="quiet title-settings">Settings</button>
+ </section>
+ <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><button data-touch="jump" aria-label="Jump">↑</button></div>
+</main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog><span id="save-status" class="sr-only" role="status"></span>`;
 const game = new Game(),
   canvas = $<HTMLCanvasElement>('game'),
   renderer = new Renderer(canvas, game),
   sound = new Sound();
-const storedSettings = read('rf-settings-v1') as { sound?: boolean; reduced?: boolean } | null;
-sound.enabled = storedSettings?.sound !== false;
+const rawSettings = read('rf-settings-v2');
+const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}) as {
+  sound?: boolean;
+  reduced?: boolean;
+};
+sound.enabled = prefs.sound !== false;
 renderer.reduced =
-  storedSettings?.reduced ?? window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  typeof prefs.reduced === 'boolean'
+    ? prefs.reduced
+    : matchMedia('(prefers-reduced-motion: reduce)').matches;
+const modal = $<HTMLDialogElement>('modal'),
+  keys = new Set<string>(),
+  touch = { left: false, right: false, jump: false },
+  pointer = { x: 500, y: 400 };
+let mouseButtons = 0,
+  touchAim = new Set<number>(),
+  dialogKind = '',
+  lastTime = performance.now(),
+  accumulator = 0,
+  hudAt = 0;
 const input: Input = {
   left: false,
   right: false,
-  crouch: false,
   jump: false,
+  jumpHeld: false,
   fire: false,
-  winch: false,
-  interact: false,
-  aim: { x: 500, y: 650 },
+  aim: { x: 600, y: 550 },
 };
-const mouse = { x: 500, y: 350 };
-const keys = new Set<string>();
-let modalKind = '';
-let lastMode = game.mode;
-const arenaTouches = new Set<number>();
-let heldMouseButtons = 0;
-const modal = $<HTMLDialogElement>('modal');
-const params = new URLSearchParams(location.search);
-$<HTMLInputElement>('seed').value = (params.get('seed') ?? '').slice(0, 40);
+const seedParam = new URLSearchParams(location.search).get('seed')?.slice(0, 40);
 function clearInput() {
   keys.clear();
-  arenaTouches.clear();
-  heldMouseButtons = 0;
-  for (const key of ['left', 'right', 'crouch', 'jump', 'fire', 'winch', 'interact'] as const)
-    input[key] = false;
+  mouseButtons = 0;
+  touchAim.clear();
+  touch.left = touch.right = touch.jump = false;
+  input.left = input.right = input.jump = input.jumpHeld = input.fire = false;
+  input.firePressed = false;
+}
+function closeDialog() {
+  if (modal.open) modal.close();
+  dialogKind = '';
+  clearInput();
+}
+function persistSettings() {
+  write('rf-settings-v2', { sound: sound.enabled, reduced: renderer.reduced });
 }
 function newSeed() {
-  const n = new Uint32Array(1);
-  crypto.getRandomValues(n);
-  return n[0].toString(36).toUpperCase();
+  return crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
 }
-function start(save?: Checkpoint) {
+function start(save?: Checkpoint, retry = false) {
   sound.unlock();
-  closeModal();
-  clearInput();
-  const seed = save?.seed ?? ($<HTMLInputElement>('seed').value.trim() || newSeed());
-  game.start(seed, save);
+  closeDialog();
+  game.start(save?.seed ?? (retry ? game.seed : (seedParam ?? newSeed())), save);
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
 }
-function settings() {
-  write('rf-settings-v1', { sound: sound.enabled, reduced: renderer.reduced });
-  $('sound').textContent = sound.enabled ? '♪' : '♪̸';
-  $('sound').setAttribute('aria-label', sound.enabled ? 'Mute sound' : 'Enable sound');
-}
-$('start').onclick = () => start();
-$('continue').onclick = () => {
-  if (checkpoint) start(checkpoint);
+game.onCheckpoint = (s) => {
+  checkpoint = s;
+  write('rf-checkpoint-v3', s);
 };
-$('sound').onclick = () => {
-  sound.unlock();
-  sound.enabled = !sound.enabled;
-  settings();
-};
-settings();
-$('help').onclick = () => showModal('help');
-$('pause').onclick = () => togglePause();
-$('build').onclick = () => showModal('build');
-$('winch-info').onclick = () => showModal('help');
 game.onSound = (kind) => sound.play(kind);
-game.onCheckpoint = (save) => {
-  checkpoint = save;
-  if (write('rf-checkpoint-v2', save)) write('rf-checkpoint-v1', null);
-};
-function renderEquipment() {
-  const icons: Record<WeaponId, string> = {
-    coil: 'M4 8h18v5H12l-2 5H6l1-5H4z M22 9h6v3h-6',
-    scatter: 'M3 8h24v3H13l-2 7H7l1-7H3z M15 5h12 M17 14h8',
-    lance: 'M4 8h12v6H4z M16 9h7v4h-7 M23 11h7 M8 14l-1 4',
-    mortar: 'M4 8h9v6H4z M13 6h12v10H13z M25 8h4v6h-4 M7 14v4',
-  };
-  $('weapons').innerHTML = game.weapons
-    .map(
-      (id) =>
-        `<button class="weapon ${game.weapon === id ? 'equipped' : ''}" data-weapon="${id}" title="${WEAPONS[id].name} · ${(Object.keys(WEAPONS) as WeaponId[]).indexOf(id) + 1}" aria-label="${WEAPONS[id].name}" aria-pressed="${game.weapon === id}"><svg viewBox="0 0 32 22" aria-hidden="true"><path d="${icons[id]}" /></svg></button>`,
-    )
-    .join('');
-  document.querySelectorAll<HTMLButtonElement>('[data-weapon]').forEach(
-    (b) =>
-      (b.onclick = () => {
-        game.equip(b.dataset.weapon as WeaponId);
-        canvas.focus();
-      }),
-  );
-  $('weapon-name').textContent = WEAPONS[game.weapon].name;
-  $('tech-count').textContent = String(game.techs.length);
-}
 game.onChange = () => {
-  $('start-screen').hidden = game.mode !== 'title';
   document.body.dataset.mode = game.mode;
-  $('sector-progress').textContent = `${game.stage + 1} / 6`;
-  $('sector-progress').title = STAGES[game.stage].name;
-  renderEquipment();
-  if (game.mode === 'upgrade') showModal('upgrade');
-  if (game.mode === 'dead' || game.mode === 'won') {
-    const records = read('rf-records-v1') as { runs?: number; wins?: number; best?: number } | null;
-    if (lastMode !== game.mode)
-      write('rf-records-v1', {
-        runs: (records?.runs ?? 0) + 1,
-        wins: (records?.wins ?? 0) + (game.mode === 'won' ? 1 : 0),
-        best: Math.max(records?.best ?? 0, game.kills),
-      });
-    showModal('result');
-  }
-  lastMode = game.mode;
+  $('title-screen').hidden = game.mode !== 'title';
+  $('stage').textContent =
+    String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0');
+  $('continue').hidden = !checkpoint;
+  if (game.mode === 'upgrade') showDialog('upgrade');
+  if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
 };
-function closeModal() {
-  if (modal.open) modal.close();
-  modalKind = '';
+function modMark(mod: Mod) {
+  const paths: Record<string, string> = {
+    heavy: 'M10 24h34M34 17l10 7-10 7',
+    spread: 'M9 24h12M27 24h18M27 13l16-5M27 35l16 5',
+    rapid: 'M8 24h8M24 24h8M40 24h8',
+    bounce: 'M10 38l18-28 18 28M20 10h8v8',
+    pierce: 'M8 24h42M22 10v28M36 10v28',
+    split: 'M8 24h17M25 24l21-14M25 24h21M25 24l21 14',
+    air: 'M12 34l14-22 14 22M19 12h7v8M9 40h34',
+    kick: 'M45 24H10M20 14L10 24l10 10',
+    heal: 'M26 10v28M12 24h28',
+    light: 'M10 33l14-20M24 33l14-20M38 33l10-14',
+  };
+  return (
+    '<svg class="mod-mark" viewBox="0 0 56 48" aria-hidden="true"><path d="' +
+    paths[mod.mark] +
+    '"/></svg>'
+  );
 }
-function togglePause() {
-  if (game.mode === 'playing') {
-    game.setMode('paused');
-    showModal('pause');
-  } else if (game.mode === 'paused') {
-    closeModal();
-    game.setMode('playing');
-    canvas.focus();
-  }
-}
-function showModal(kind: string) {
-  if (
-    (game.mode === 'upgrade' || game.mode === 'dead' || game.mode === 'won') &&
-    !['upgrade', 'result'].includes(kind)
-  )
-    return;
-  if (game.mode === 'playing') {
-    game.setMode('paused');
-    clearInput();
-  }
-  modalKind = kind;
-  const content = $('modal-content');
+function showDialog(kind: string) {
+  if (game.mode === 'playing') game.setMode('paused');
+  clearInput();
+  dialogKind = kind;
+  const content = $('dialog-content');
   if (kind === 'upgrade') {
-    content.innerHTML = `<h2 id="modal-title">Choose an upgrade</h2>${game.weaponReward ? `<p class="reward-banner">Unlocked: <b>${WEAPONS[game.weaponReward].name}</b></p>` : ''}<div class="tech-grid">${game.offers.map((t, i) => `<button class="tech-card" data-tech="${t.id}"><kbd>${i + 1}</kbd><b>${t.name}</b><p>${t.description}</p></button>`).join('')}</div><p class="fine-print">Rover and core repaired · Energy restored · Checkpoint saved</p>`;
-    content.querySelectorAll<HTMLButtonElement>('[data-tech]').forEach(
+    content.innerHTML =
+      '<p class="eyebrow">ROOM CLEAR</p><h2 id="dialog-title">Make it kick.</h2><div class="choices">' +
+      game.offers
+        .map(
+          (m, i) =>
+            '<button class="mod" data-mod="' +
+            m.id +
+            '"><span class="mod-top">' +
+            modMark(m) +
+            '<kbd>' +
+            (i + 1) +
+            '</kbd></span><strong>' +
+            m.name +
+            '</strong><span class="mod-copy">' +
+            m.description +
+            '</span></button>',
+        )
+        .join('') +
+      '</div>';
+    content.querySelectorAll<HTMLButtonElement>('[data-mod]').forEach(
       (b) =>
         (b.onclick = () => {
-          closeModal();
-          clearInput();
-          game.chooseTech(b.dataset.tech!);
+          const id = b.dataset.mod!;
+          closeDialog();
+          game.chooseMod(id);
+          renderer.reset();
           canvas.focus();
         }),
     );
   } else if (kind === 'result') {
     const win = game.mode === 'won';
-    content.innerHTML = `<h2 id="modal-title">${win ? 'Core delivered' : game.failure === 'cargo' ? 'Core lost' : 'Rover destroyed'}</h2><div class="result-stats"><span>Yard <b>${game.stage + 1}/6</b></span><span><b>${game.kills}</b> kills</span><span>${formatTime(game.elapsed)}</span></div><div class="modal-actions"><button class="primary" id="retry">Retry</button><button class="secondary" id="new-run">Main menu</button></div><details class="result-details"><summary>Run details</summary><div class="build-tags">${game.techs.map((id) => `<span>${TECHS.find((t) => t.id === id)?.name}</span>`).join('') || '<span>No upgrades</span>'}</div><p class="result-seed">Seed: ${escape(game.seed)}</p><button class="text-button" id="copy-seed">Copy seed link</button></details>`;
-    $('retry').onclick = () => {
-      $<HTMLInputElement>('seed').value = game.seed;
-      start();
-    };
-    $('new-run').onclick = () => {
-      closeModal();
+    content.innerHTML =
+      '<p class="eyebrow">' +
+      (win ? 'ALL SIX ROOMS' : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
+      '</p><h2 id="dialog-title">' +
+      (win ? 'Clean escape.' : 'One more run?') +
+      '</h2><p class="result-line">' +
+      formatTime(game.elapsed) +
+      ' <span>·</span> ' +
+      game.kills +
+      ' kills</p><div class="actions"><button id="retry" class="primary">Again ↗</button><button id="menu" class="quiet">Menu</button></div>';
+    $('retry').onclick = () => start(undefined, true);
+    $('menu').onclick = () => {
+      closeDialog();
       game.setMode('title');
-      $<HTMLInputElement>('seed').value = '';
-      $('continue').hidden = true;
-    };
-    $('copy-seed').onclick = async () => {
-      try {
-        const url = new URL(location.href);
-        url.searchParams.set('seed', game.seed);
-        await navigator.clipboard.writeText(url.href);
-        $('copy-seed').textContent = 'Copied';
-      } catch {
-        $('copy-seed').textContent = 'Seed: ' + game.seed;
-      }
-    };
-  } else if (kind === 'help') {
-    content.innerHTML = `<h2 id="modal-title">Controls</h2><div class="manual-grid"><div><h3>Move & fight</h3><p><kbd>A</kbd> <kbd>D</kbd> or arrows to move<br><kbd>W</kbd> / <kbd>Space</kbd> to jump<br><kbd>S</kbd> to crouch<br>Mouse to aim · Left click to fire<br><kbd>1</kbd>–<kbd>4</kbd>, <kbd>Q</kbd>, or wheel to switch<br><kbd>E</kbd> at a lift with the core<br><kbd>Esc</kbd> to pause</p></div><div><h3>Haul the core</h3><p>The cable tows your cargo for free.<br>Hold right click or <kbd>Shift</kbd> to reel it closer. The winch uses energy.<br>Security drones shoot at the core. Protect it and bring it to each lift.</p></div></div><p class="manual-tip">Fight or outrun patrols. Delivery earns upgrades and repairs. Defeat the yard warden at the final dock, then extract the core.</p><p class="fine-print">Touch: movement buttons + hold the arena to aim/fire. Progress saves at yard entrances. Losing the rover or core ends the run.</p><button class="primary" id="back">${game.mode === 'paused' ? 'Resume' : 'Back'}</button>`;
-    $('back').onclick = () => {
-      closeModal();
-      if (game.mode === 'paused') game.setMode('playing');
-      canvas.focus();
-    };
-  } else if (kind === 'build') {
-    content.innerHTML = `<h2 id="modal-title">Build</h2><div class="stat-strip"><span>Damage <b>${Math.round(game.stats.damage * 100)}%</b></span><span>Recoil <b>${Math.round(game.stats.recoil * 100)}%</b></span><span>Energy <b>${game.stats.regen}/s</b></span></div><div class="tech-list">${
-      game.techs
-        .map((id) => {
-          const t = TECHS.find((t) => t.id === id)!;
-          return `<article><b>${t.name}</b><p>${t.description}</p></article>`;
-        })
-        .join('') || '<p>Deliver the core to earn your first upgrade.</p>'
-    }</div><button class="primary" id="back">${game.mode === 'paused' ? 'Resume' : 'Back'}</button>`;
-    $('back').onclick = () => {
-      closeModal();
-      if (game.mode === 'paused') game.setMode('playing');
-      canvas.focus();
     };
   } else {
-    content.innerHTML = `<h2 id="modal-title">Paused</h2><div class="pause-actions"><button class="primary" id="resume">Resume</button><button class="secondary" id="inspect">Build</button><button class="secondary" id="manual">Controls</button></div><details class="pause-options"><summary>Options</summary><label class="motion-setting"><input type="checkbox" id="reduced" ${renderer.reduced ? 'checked' : ''} /> Reduce screen shake</label><p class="fine-print">Seed: ${escape(game.seed)}</p></details><button class="text-button" id="menu">Main menu</button><p class="fine-print">Continue restarts this yard from its checkpoint.</p>`;
-    $('resume').onclick = () => togglePause();
-    $('inspect').onclick = () => showModal('build');
-    $('manual').onclick = () => showModal('help');
-    $('reduced').onchange = () => {
-      renderer.reduced = $<HTMLInputElement>('reduced').checked;
-      settings();
+    const paused = game.mode === 'paused';
+    content.innerHTML =
+      '<h2 id="dialog-title">' +
+      (paused ? 'Paused.' : 'Settings.') +
+      '</h2>' +
+      '<div class="settings-list"><label>Sound<input id="sound" type="checkbox" ' +
+      (sound.enabled ? 'checked' : '') +
+      ' /></label><label>Screen shake<input id="shake" type="checkbox" ' +
+      (!renderer.reduced ? 'checked' : '') +
+      ' /></label></div>' +
+      '<div class="controls-copy"><p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>Clear the room, then leave through the right door.</p></div>' +
+      (paused && game.mods.length
+        ? '<details class="build"><summary>Your gun</summary><ul>' +
+          game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
+          '</ul></details>'
+        : '') +
+      '<div class="actions"><button id="back" class="primary">' +
+      (paused ? 'Resume' : 'Back') +
+      '</button>' +
+      (paused ? '<button id="menu" class="quiet">Menu</button>' : '') +
+      '</div>';
+    $<HTMLInputElement>('sound').onchange = (e) => {
+      sound.unlock();
+      sound.enabled = (e.target as HTMLInputElement).checked;
+      persistSettings();
     };
-    $('menu').onclick = () => {
-      closeModal();
-      game.setMode('title');
-      $('continue').hidden = !checkpoint;
-      $('continue').textContent = 'Continue';
+    $<HTMLInputElement>('shake').onchange = (e) => {
+      renderer.reduced = !(e.target as HTMLInputElement).checked;
+      persistSettings();
     };
+    $('back').onclick = resume;
+    if (paused)
+      $('menu').onclick = () => {
+        closeDialog();
+        game.setMode('title');
+      };
   }
   if (!modal.open) modal.showModal();
 }
-modal.addEventListener('cancel', (event) => {
-  event.preventDefault();
-  if (modalKind === 'upgrade' || modalKind === 'result') return;
-  closeModal();
+function resume() {
+  closeDialog();
   if (game.mode === 'paused') game.setMode('playing');
   canvas.focus();
-});
-function formatTime(t: number) {
-  return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 }
+function pause() {
+  if (game.mode === 'playing') showDialog('pause');
+  else if (game.mode === 'paused') resume();
+}
+function formatTime(n: number) {
+  return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
+}
+$('play').onclick = () => start();
+$('continue').onclick = () => {
+  if (checkpoint) start(checkpoint);
+};
+$('settings').onclick = () => showDialog('settings');
+$('pause').onclick = pause;
+modal.addEventListener('cancel', (e) => {
+  e.preventDefault();
+  if (game.mode === 'upgrade' || game.mode === 'dead' || game.mode === 'won') return;
+  resume();
+});
 window.addEventListener('keydown', (e) => {
-  if (e.target instanceof HTMLInputElement || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLInputElement) return;
   if (
-    ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code) &&
-    e.code !== 'Tab'
+    game.mode === 'playing' &&
+    ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)
   )
     e.preventDefault();
   if (e.repeat) return;
   if (game.mode === 'upgrade') {
-    const n = Number(e.key) - 1;
-    if (n >= 0 && n < game.offers.length) {
-      closeModal();
-      clearInput();
-      game.chooseTech(game.offers[n].id);
+    const i = Number(e.key) - 1;
+    if (i >= 0 && i < game.offers.length) {
+      const id = game.offers[i].id;
+      closeDialog();
+      game.chooseMod(id);
+      renderer.reset();
       canvas.focus();
     }
     return;
   }
   if (e.code === 'Escape' || e.code === 'KeyP') {
-    if (!modal.open) togglePause();
-    else if (e.code === 'KeyP' && game.mode === 'paused') togglePause();
+    if (!modal.open || e.code === 'KeyP') pause();
     return;
   }
   if (game.mode !== 'playing') return;
   keys.add(e.code);
-  if (['KeyW', 'Space', 'ArrowUp'].includes(e.code)) input.jump = true;
-  if (e.code === 'KeyE') input.interact = true;
-  if (e.code === 'KeyQ') game.cycleWeapon();
-  if (/^Digit[1-4]$/.test(e.code))
-    game.equip((Object.keys(WEAPONS) as WeaponId[])[Number(e.code.slice(-1)) - 1]);
+  if (['Space', 'KeyW', 'ArrowUp'].includes(e.code)) input.jump = true;
 });
 window.addEventListener('keyup', (e) => keys.delete(e.code));
-function syncPointer() {
-  const buttons = pointerButtons(heldMouseButtons);
-  input.fire = buttons.fire || arenaTouches.size > 0;
-  input.winch = buttons.winch;
-}
-canvas.addEventListener('pointermove', (e) => {
+function updatePointer(e: PointerEvent) {
   const r = canvas.getBoundingClientRect();
-  mouse.x = e.clientX - r.left;
-  mouse.y = e.clientY - r.top;
-  if (e.pointerType !== 'touch' && game.mode === 'playing') {
-    heldMouseButtons = e.buttons;
-    syncPointer();
-  }
-});
-canvas.addEventListener('pointerdown', (e) => {
+  pointer.x = e.clientX - r.left;
+  pointer.y = e.clientY - r.top;
+}
+canvas.onpointerdown = (e) => {
   if (game.mode !== 'playing') return;
   sound.unlock();
   canvas.focus();
   canvas.setPointerCapture(e.pointerId);
-  const r = canvas.getBoundingClientRect();
-  mouse.x = e.clientX - r.left;
-  mouse.y = e.clientY - r.top;
-  if (e.pointerType === 'touch') arenaTouches.add(e.pointerId);
-  else heldMouseButtons = e.buttons;
-  syncPointer();
-});
+  updatePointer(e);
+  if (e.pointerType === 'touch' || e.button === 0) input.firePressed = true;
+  if (e.pointerType === 'touch') touchAim.add(e.pointerId);
+  else mouseButtons = e.buttons;
+};
+canvas.onpointermove = (e) => {
+  updatePointer(e);
+  if (e.pointerType !== 'touch') mouseButtons = e.buttons;
+};
 window.addEventListener('pointerup', (e) => {
-  if (e.pointerType === 'touch') arenaTouches.delete(e.pointerId);
-  else heldMouseButtons = e.buttons;
-  syncPointer();
+  if (e.pointerType === 'touch') touchAim.delete(e.pointerId);
+  else mouseButtons = e.buttons;
 });
-canvas.addEventListener('pointercancel', (e) => {
-  arenaTouches.delete(e.pointerId);
-  if (e.pointerType !== 'touch') heldMouseButtons = 0;
-  syncPointer();
-});
-canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-canvas.addEventListener(
-  'wheel',
-  (e) => {
-    if (game.mode === 'playing') {
-      e.preventDefault();
-      game.cycleWeapon();
-    }
-  },
-  { passive: false },
-);
-const touch = { left: false, right: false, winch: false };
+canvas.onpointercancel = (e) => {
+  touchAim.delete(e.pointerId);
+  mouseButtons = 0;
+};
+canvas.oncontextmenu = (e) => e.preventDefault();
 document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((b) => {
   b.onpointerdown = (e) => {
+    if (game.mode !== 'playing') return;
     e.preventDefault();
     b.setPointerCapture(e.pointerId);
-    const action = b.dataset.touch!;
+    const action = b.dataset.touch as keyof typeof touch;
+    touch[action] = true;
     if (action === 'jump') input.jump = true;
-    else if (action === 'interact') input.interact = true;
-    else touch[action as keyof typeof touch] = true;
   };
-  const release = () => {
-    const action = b.dataset.touch!;
-    if (action in touch) touch[action as keyof typeof touch] = false;
-  };
+  const release = () => (touch[b.dataset.touch as keyof typeof touch] = false);
   b.onpointerup = release;
   b.onpointercancel = release;
 });
-window.addEventListener('blur', () => {
+function loseFocus() {
   clearInput();
-  touch.left = touch.right = touch.winch = false;
-  if (game.mode === 'playing') {
-    game.setMode('paused');
-    showModal('pause');
-  }
-});
+  if (game.mode === 'playing') showDialog('pause');
+}
+window.addEventListener('blur', loseFocus);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && game.mode === 'playing') {
-    clearInput();
-    game.setMode('paused');
-    showModal('pause');
-  }
+  if (document.hidden) loseFocus();
 });
-new ResizeObserver(() => renderer.resize()).observe($('viewport'));
-let previous = performance.now(),
-  accumulator = 0,
-  hudAt = 0;
+new ResizeObserver(() => renderer.resize()).observe($('arena'));
 function frame(now: number) {
-  const delta = Math.min((now - previous) / 1000, 0.1);
-  previous = now;
+  const dt = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime = now;
   if (game.mode === 'playing') {
-    accumulator += delta;
+    accumulator += dt;
     input.left = keys.has('KeyA') || keys.has('ArrowLeft') || touch.left;
     input.right = keys.has('KeyD') || keys.has('ArrowRight') || touch.right;
-    input.crouch = keys.has('KeyS') || keys.has('ArrowDown');
-    input.aim = renderer.toWorld(mouse.x, mouse.y);
-    let steps = 0;
-    while (accumulator >= 1 / 60 && steps < 5) {
-      const winch = input.winch || keys.has('ShiftLeft') || keys.has('ShiftRight') || touch.winch;
-      game.tick(1 / 60, { ...input, winch });
+    input.jumpHeld = keys.has('Space') || keys.has('KeyW') || keys.has('ArrowUp') || touch.jump;
+    input.fire = (mouseButtons & 1) !== 0 || touchAim.size > 0;
+    input.aim = renderer.toWorld(pointer.x, pointer.y);
+    let n = 0;
+    while (accumulator >= 1 / 60 && n < 5) {
+      game.tick(1 / 60, input);
       input.jump = false;
-      input.interact = false;
+      input.firePressed = false;
       accumulator -= 1 / 60;
-      steps++;
+      n++;
     }
-    if (steps === 5) accumulator = 0;
+    if (n === 5) accumulator = 0;
   } else accumulator = 0;
-  renderer.draw();
+  renderer.draw(now);
   if (now - hudAt > 80) {
     hudAt = now;
-    $<HTMLProgressElement>('hp').max = game.stats.maxHp;
-    $<HTMLProgressElement>('hp').value = game.hp;
-    $('hp-value').textContent = String(Math.ceil(game.hp));
-    $<HTMLProgressElement>('energy').max = game.stats.maxEnergy;
-    $<HTMLProgressElement>('energy').value = game.energy;
-    $('energy-value').textContent = String(Math.floor(game.energy));
-    $<HTMLProgressElement>('cargo').value = game.cargoHp;
-    $('cargo-value').textContent = String(Math.ceil(game.cargoHp));
-    const showNotice = game.mode === 'playing' && game.noticeTime > 0;
-    $('notice').textContent = showNotice ? game.notice : '';
-    $('notice').classList.toggle('visible', showNotice);
+    $<HTMLProgressElement>('health').value = game.hp;
+    $('health').setAttribute('aria-valuetext', Math.ceil(game.hp) + ' health');
+    $('health').classList.toggle('low', game.hp <= 30);
   }
   requestAnimationFrame(frame);
 }
