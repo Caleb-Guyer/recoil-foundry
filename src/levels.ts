@@ -10,6 +10,7 @@ export type EnemyKind =
   | 'sniper'
   | 'hopper'
   | 'loader'
+  | 'crane'
   | 'press'
   | 'boss';
 export interface Solid {
@@ -472,6 +473,20 @@ export const BOSS_LAYOUTS: Layout[] = [
     route: route([300, 720], [590, 640], [900, 720], [1320, 640], [1600, 720], [1800, 720]),
   },
   {
+    id: 'crane-bay',
+    area: 'docks',
+    name: 'Crane bay',
+    solids: [
+      box(480, 660, 140, 80),
+      box(1240, 660, 140, 80),
+      shelf(740, 500, 220),
+      shelf(350, 410, 180),
+      shelf(1490, 420, 180),
+    ],
+    spawns: [{ kind: 'crane', x: 1450, y: 150 }],
+    route: route([300, 720], [550, 640], [1100, 720], [1310, 640], [1590, 720], [1800, 720]),
+  },
+  {
     id: 'press-hall',
     area: 'furnace',
     name: 'Press hall',
@@ -545,13 +560,16 @@ export const BOSS_LAYOUTS: Layout[] = [
 function buildLevel(seed: string, stage: number): Level {
   const pick = seeded(seed + ':layouts');
   const boss = stage === 2 || stage === 5 || stage === 8;
+  // Choose the docks encounter independently so later rooms keep their seeded layouts.
+  const docksBosses = BOSS_LAYOUTS.filter((layout) => layout.area === 'docks');
+  const docksBoss = docksBosses[Math.floor(seeded(seed + ':docks-boss')() * docksBosses.length)];
   const order = [
     ...sample(
       LAYOUTS.filter((layout) => layout.area === 'docks'),
       2,
       pick,
     ),
-    BOSS_LAYOUTS.find((layout) => layout.area === 'docks')!,
+    docksBoss,
     ...sample(
       LAYOUTS.filter((layout) => layout.area === 'furnace'),
       2,

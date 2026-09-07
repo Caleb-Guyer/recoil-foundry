@@ -39,6 +39,8 @@ import { BreachSystem } from './breaches.ts';
 import { updateLoader, updatePress } from './area-boss-ai.ts';
 import { huntBoss, bossHasLane } from './boss-hunt.ts';
 import type { BossHunt } from './boss-hunt.ts';
+import { createCrane, updateCrane } from './crane-ai.ts';
+import type { CraneRig } from './crane-ai.ts';
 import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
 import type { ShotTrace } from './shot-trails.ts';
@@ -75,6 +77,7 @@ export interface Enemy {
   attacks: number;
   attack: Attack;
   hunt?: BossHunt;
+  crane?: CraneRig;
 }
 export interface Shot {
   id: number;
@@ -383,9 +386,9 @@ export class Game {
             chamfer: { radius: 3 },
             label: 'enemy',
           });
-    if (kind === 'shooter' || kind === 'sniper') Body.setStatic(body, true);
+    if (kind === 'shooter' || kind === 'sniper' || kind === 'crane') Body.setStatic(body, true);
     Composite.add(this.engine.world, body);
-    this.enemies.push({
+    const enemy: Enemy = {
       id: ++this.id,
       body,
       kind,
@@ -403,7 +406,9 @@ export class Game {
       target: { x, y },
       attacks: 0,
       attack: 'aimed',
-    });
+    };
+    this.enemies.push(enemy);
+    if (kind === 'crane') enemy.crane = createCrane(this, enemy);
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
     this.shake = Math.min(12, this.shake + amount);
@@ -719,6 +724,7 @@ export class Game {
     }
     if (e.kind === 'charger') this.updateCharger(e);
     else if (e.kind === 'loader') this.updateLoader(e);
+    else if (e.kind === 'crane') updateCrane(this, e);
     else if (e.kind === 'press') this.updatePress(e);
     else if (e.kind === 'hopper') this.updateHopper(e);
     else if (e.kind === 'sniper') this.updateSniper(e);
@@ -747,6 +753,7 @@ export class Game {
     if (
       !((e.kind === 'charger' || e.kind === 'loader') && e.state === 'recover') &&
       (e.kind !== 'press' || e.state === 'rush') &&
+      e.kind !== 'crane' &&
       Query.collides(this.player, [e.body]).length
     )
       this.damagePlayer(
@@ -1184,6 +1191,7 @@ export class Game {
           body?: Matter.Body;
         } | null = null;
         const targets: [Matter.Body, Enemy?, boolean?][] = this.terrainBodies.map((b) => [b]);
+        for (const e of this.enemies) if (e.crane && e.spawn <= 0) targets.push([e.crane.body]);
         if (s.friendly) {
           for (const e of this.enemies)
             if (!s.hits.has(e.id) && e.spawn <= 0) targets.push([e.body, e]);
@@ -1300,6 +1308,7 @@ export class Game {
     }
     if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
     if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.25 : 0.7;
+    if (e.kind === 'crane') damage *= e.state === 'recover' && e.crane && !e.crane.hit ? 1.4 : 0.6;
     if (e.kind === 'press') damage *= e.state === 'recover' ? 1.25 : 0.75;
     if (e.kind === 'boss' && e.state === 'transition') damage *= 0.35;
     e.hp -= damage;
@@ -1312,6 +1321,7 @@ export class Game {
     this.kills++;
     this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);
+    if (e.crane) Composite.remove(this.engine.world, e.crane.body);
     this.enemies = this.enemies.filter((x) => x !== e);
     this.feedback(isBoss(e.kind) ? 10 : 4);
     this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);

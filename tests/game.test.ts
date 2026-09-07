@@ -458,6 +458,10 @@ for (const seed of ['A', 'E'])
           Math.abs(center - p.x) < 35 &&
           g.breaches.panels.some((panel) => panel.rect.w > panel.rect.h);
       }
+      if (e?.kind === 'boss' && (p.x < 160 || p.x > 1840)) {
+        move = p.x < 160 ? 1 : -1;
+        firing = false;
+      }
       tick(g, 1, {
         left: move < 0,
         right: move > 0,

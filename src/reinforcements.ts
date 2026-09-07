@@ -32,6 +32,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           charger: 5,
           sniper: 6,
           loader: 0,
+          crane: 0,
           press: 0,
           boss: 0,
         }[spawn.kind];

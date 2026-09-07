@@ -104,8 +104,9 @@ test('both overhead counters track early, lock their aim, and fire only after th
 test('an overhead player must react to the locked volley, and ordinary sideways movement can dodge it', () => {
   for (const stage of [2, 5] as const) {
     const results = [false, true].map((dodge) => {
-      const { g, e } = room(stage),
+      const { g, e } = room(stage, stage === 2 ? 'crane-1' : 'boss-cheese-0'),
         home = e.body.position.x;
+      assert.equal(e.kind, stage === 2 ? 'loader' : 'press');
       Body.setPosition(g.player, { x: home, y: stage === 2 ? 620 : 160 });
       Body.setVelocity(g.player, { x: 0, y: 0 });
       let firedAt = -1,

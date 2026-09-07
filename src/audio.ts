@@ -134,6 +134,8 @@ export class Sound {
         'charge',
         'machine',
         'reinforce',
+        'crane-wind',
+        'crane-hit',
         'strain',
         'arm',
         'hurt',
@@ -166,6 +168,16 @@ export class Sound {
     } else if (kind === 'reinforce') {
       this.tone(240, 190, 0.11, 0.045, 'triangle');
       this.tone(360, 280, 0.14, 0.035, 'triangle', 0.12);
+    } else if (kind === 'crane-wind') {
+      this.tone(110, 220, 0.42, 0.065, 'sawtooth');
+      this.tone(580, 580, 0.12, 0.025, 'sine', 0.18);
+    } else if (kind === 'crane-swing') {
+      this.crack(0.2, 0.07, 850);
+      this.tone(160, 55, 0.18, 0.085);
+    } else if (kind === 'crane-hit') {
+      this.tone(85, 28, 0.24, 0.17);
+      this.tone(460, 95, 0.08, 0.045);
+      this.crack(0.16, 0.12, 1300);
     } else if (kind === 'strain') {
       this.crack(0.2, 0.055, 1700);
       this.tone(280, 110, 0.25, 0.035);

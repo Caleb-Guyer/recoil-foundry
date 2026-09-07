@@ -17,6 +17,7 @@ export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }
   sniper: { w: 36, h: 32, hp: 60 },
   hopper: { w: 30, h: 32, hp: 60 },
   loader: { w: 112, h: 68, hp: 620 },
+  crane: { w: 90, h: 54, hp: 720 },
   press: { w: 120, h: 62, hp: 1000 },
   boss: { w: 90, h: 76, hp: 1400 },
 };
@@ -39,8 +40,9 @@ export function flakAngles(aim: number, enraged: boolean): number[] {
     (_, i) => aim + (i - (count - 1) / 2) * (enraged ? 0.13 : 0.16),
   );
 }
-export const isBoss = (kind: EnemyKind) => kind === 'loader' || kind === 'press' || kind === 'boss';
-export type Attack = 'aimed' | 'fan' | 'ring' | 'flak';
+export const isBoss = (kind: EnemyKind) =>
+  kind === 'loader' || kind === 'crane' || kind === 'press' || kind === 'boss';
+export type Attack = 'aimed' | 'fan' | 'ring' | 'flak' | 'sweep' | 'slam';
 export type EnemyState =
   | 'idle'
   | 'windup'
