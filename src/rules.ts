@@ -181,13 +181,7 @@ export function validBuild(mods: readonly string[]) {
 }
 export function modPathLabel(id: string): string {
   const branch = MOD_PATHS[id];
-  if (!branch) return '';
-  return (
-    PATH_NAMES[branch.path] +
-    (branch.requires
-      ? ''
-      : ' · Locks ' + PATH_NAMES[branch.path === 'precision' ? 'bullet-hell' : 'precision'])
-  );
+  return branch ? PATH_NAMES[branch.path] : '';
 }
 export function getGun(mods: readonly string[]): Gun {
   const g: Gun = {

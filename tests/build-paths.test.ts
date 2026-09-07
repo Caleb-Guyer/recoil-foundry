@@ -28,9 +28,9 @@ test('only the two entry upgrades appear before committing, and existing upgrade
   }
 });
 
-test('path cards state the lock before selection and follow-ups display the chosen path', () => {
-  assert.equal(modPathLabel('crossfire'), 'Bullet hell · Locks Precision');
-  assert.equal(modPathLabel('deadeye'), 'Precision · Locks Bullet hell');
+test('entry and follow-up cards display only their path name', () => {
+  assert.equal(modPathLabel('crossfire'), 'Bullet hell');
+  assert.equal(modPathLabel('deadeye'), 'Precision');
   assert.equal(modPathLabel('bloom'), 'Bullet hell');
   assert.equal(modPathLabel('execute'), 'Precision');
   assert.equal(modPathLabel('kick'), '');

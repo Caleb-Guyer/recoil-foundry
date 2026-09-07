@@ -39,7 +39,7 @@ Daily links include a ruleset version (`?daily=2026-09-07&dv=15`). Version 15 ad
 
 ## Build paths
 
-Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. Choosing either entry locks the other path for that run. The card states the lock before you choose; the follow-up can appear in later rewards. The fourteen existing upgrades stay shared, so older combinations remain available.
+Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. Choosing either entry locks the other path for that run. Cards show only the path name; the follow-up can appear in later rewards. The fourteen existing upgrades stay shared, so older combinations remain available.
 
 | Path        | Upgrade     | Effect                                                                                                                                                         |
 | ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -256,7 +256,7 @@ Enemy collision checks exercise all eleven enemy types with fast crates and gent
 
 Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; both full combat runs reach extraction with normal health and earned upgrades.
 
-Path tests cover entry and follow-up eligibility, explicit lock notices, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision and Bullet hell builds with normal health and earned upgrades.
+Path tests cover entry and follow-up eligibility, concise path labels, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision and Bullet hell builds with normal health and earned upgrades.
 
 ## Publish
 
