@@ -38,6 +38,13 @@ export interface Gun {
   burstCount: number;
   bankGrowth: number;
   backblast: boolean;
+  rearVolley: boolean;
+  redline: boolean;
+  breach: boolean;
+  shatter: boolean;
+  convergence: boolean;
+  deadlock: boolean;
+  shockfront: boolean;
   landing: boolean;
   lanes: number;
   projectileSpeed: number;
@@ -108,7 +115,7 @@ export const MODS = [
   {
     id: 'backblast',
     name: 'Backblast',
-    description: 'Fire both ways, plus a rear blast. 40% longer shot delay.',
+    description: 'A rear blast. 25% more damage. 20% longer shot delay.',
     mark: 'backblast',
   },
   {
@@ -177,6 +184,60 @@ export const MODS = [
     description: 'Destroyed crates and cover trigger another blast.',
     mark: 'chain-reaction',
   },
+  {
+    id: 'rewire',
+    name: 'Rewire',
+    description: 'Reposition your two portals as often as you like.',
+    mark: 'rewire',
+  },
+  {
+    id: 'slingshot',
+    name: 'Slingshot',
+    description: 'Exit portals faster. Your next shot hits 50% harder.',
+    mark: 'slingshot',
+  },
+  {
+    id: 'redline',
+    name: 'Redline',
+    description: 'Moving faster adds up to 50% shot damage.',
+    mark: 'redline',
+  },
+  {
+    id: 'breach',
+    name: 'Breach',
+    description: 'Your rear blast also destroys incoming bullets.',
+    mark: 'breach',
+  },
+  {
+    id: 'shatter',
+    name: 'Shatter',
+    description: 'Wall hits scatter six stronger fragments back into the room.',
+    mark: 'shatter',
+  },
+  {
+    id: 'convergence',
+    name: 'Convergence',
+    description: 'Outer firing lanes bend inward and cross at your aim point.',
+    mark: 'convergence',
+  },
+  {
+    id: 'deadlock',
+    name: 'Deadlock',
+    description: 'Each accurate shot adds 12% damage, up to 60%. A miss resets it.',
+    mark: 'deadlock',
+  },
+  {
+    id: 'shockfront',
+    name: 'Shockfront',
+    description: 'Aftershocks reach 50% farther and push enemies away.',
+    mark: 'shockfront',
+  },
+  {
+    id: 'backfire',
+    name: 'Backfire',
+    description: 'Also fire rounds backward. 20% longer shot delay.',
+    mark: 'backfire',
+  },
 ] as const;
 export type Mod = (typeof MODS)[number];
 export type BuildPath = 'bullet-hell' | 'precision' | 'demolition';
@@ -185,15 +246,34 @@ export const PATH_NAMES: Record<BuildPath, string> = {
   precision: 'Precision',
   demolition: 'Demolition',
 };
-export const MOD_PATHS: Record<string, { path: BuildPath; requires?: string }> = {
+export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   shellshock: { path: 'demolition' },
-  'blast-surf': { path: 'demolition', requires: 'shellshock' },
-  aftershock: { path: 'demolition', requires: 'shellshock' },
-  'chain-reaction': { path: 'demolition', requires: 'shellshock' },
+  'blast-surf': { path: 'demolition' },
+  aftershock: { path: 'demolition' },
+  'chain-reaction': { path: 'demolition' },
   crossfire: { path: 'bullet-hell' },
-  bloom: { path: 'bullet-hell', requires: 'crossfire' },
+  bloom: { path: 'bullet-hell' },
   deadeye: { path: 'precision' },
-  execute: { path: 'precision', requires: 'deadeye' },
+  execute: { path: 'precision' },
+  deadlock: { path: 'precision' },
+  convergence: { path: 'bullet-hell' },
+  shockfront: { path: 'demolition' },
+};
+export const MOD_REQUIRES: Record<string, string> = {
+  'blast-surf': 'shellshock',
+  aftershock: 'shellshock',
+  'chain-reaction': 'shellshock',
+  bloom: 'crossfire',
+  execute: 'deadeye',
+  rewire: 'fold',
+  slingshot: 'fold',
+  redline: 'kick',
+  breach: 'backblast',
+  shatter: 'split',
+  convergence: 'crossfire',
+  deadlock: 'deadeye',
+  shockfront: 'aftershock',
+  backfire: 'backblast',
 };
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
@@ -204,9 +284,8 @@ export function availableMods(mods: readonly string[]): Mod[] {
     const branch = MOD_PATHS[mod.id];
     return (
       !mods.includes(mod.id) &&
-      (!branch ||
-        ((!chosen || branch.path === chosen) &&
-          (!branch.requires || mods.includes(branch.requires))))
+      (!MOD_REQUIRES[mod.id] || mods.includes(MOD_REQUIRES[mod.id])) &&
+      (!branch || !chosen || branch.path === chosen)
     );
   });
 }
@@ -252,6 +331,13 @@ export function getGun(mods: readonly string[]): Gun {
     burstCount: 1,
     bankGrowth: 0,
     backblast: false,
+    rearVolley: false,
+    redline: false,
+    breach: false,
+    shatter: false,
+    convergence: false,
+    deadlock: false,
+    shockfront: false,
     landing: false,
     lanes: 1,
     projectileSpeed: 30,
@@ -310,7 +396,30 @@ export function getGun(mods: readonly string[]): Gun {
         break;
       case 'backblast':
         g.backblast = true;
-        g.interval *= 1.4;
+        g.damage *= 1.25;
+        g.interval *= 1.2;
+        break;
+      case 'backfire':
+        g.rearVolley = true;
+        g.interval *= 1.2;
+        break;
+      case 'redline':
+        g.redline = true;
+        break;
+      case 'breach':
+        g.breach = true;
+        break;
+      case 'shatter':
+        g.shatter = true;
+        break;
+      case 'convergence':
+        g.convergence = true;
+        break;
+      case 'deadlock':
+        g.deadlock = true;
+        break;
+      case 'shockfront':
+        g.shockfront = true;
         break;
       case 'banker':
         g.bounces += 1;

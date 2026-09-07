@@ -68,7 +68,10 @@ export class PortalSystem {
     return this.game.mods.includes('fold');
   }
   get canPlace() {
-    return this.equipped && this.next < 2;
+    return this.equipped && (this.next < 2 || this.game.mods.includes('rewire'));
+  }
+  get nextIndex() {
+    return this.next % 2;
   }
   get linked() {
     return this.equipped && this.pair.every((p) => p && this.game.terrain.includes(p.body));
@@ -121,7 +124,7 @@ export class PortalSystem {
         if (score > 28) continue;
         const center = clamp(along, lo + PORTAL_RADIUS, hi - PORTAL_RADIUS);
         const pos = vertical ? { x: edge, y: center } : { x: center, y: edge };
-        const other = this.pair[1 - this.next];
+        const other = this.pair[1 - this.nextIndex];
         if (other && distance(pos, other.pos) < PORTAL_RADIUS * 2 + 8) continue;
         // The entire opening needs an exposed, permanent face and room to emerge.
         const clearance = { x: pos.x + normal.x * 20.5, y: pos.y + normal.y * 20.5 };
@@ -144,12 +147,12 @@ export class PortalSystem {
       this.game.onSound('portal-denied');
       return false;
     }
-    this.pair[this.next] = p;
-    this.game.burst(p.pos, 8, PORTAL_COLORS[this.next], 1.7);
-    this.game.onSound(this.next === 0 ? 'portal-blue' : 'portal-orange');
-    // Each endpoint is committed once. Only restarting or leaving the room
-    // resets the pair; blocked exits and repeated travel never refund placement.
-    this.next++;
+    this.pair[this.nextIndex] = p;
+    this.game.burst(p.pos, 8, PORTAL_COLORS[this.nextIndex], 1.7);
+    this.game.onSound(this.nextIndex === 0 ? 'portal-blue' : 'portal-orange');
+    // Saturate after the initial pair; Rewire alternates 2 (blue) and 3 (orange).
+    // Keeping the spent state independent of linkage prevents accidental refunds.
+    this.next = this.next < 2 ? this.next + 1 : this.next === 2 ? 3 : 2;
     this.rejected = null;
     return true;
   }
@@ -285,6 +288,7 @@ export class PortalSystem {
       const prop = g.props.items.find((p) => p.body === body);
       if (prop) prop.velocity = { ...velocity };
       if (body === g.player) {
+        g.evolutions.travel();
         this.revision++;
         g.trail = [];
         g.grounded = false;

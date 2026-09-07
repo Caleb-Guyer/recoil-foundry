@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { EvolutionSystem } from './evolutions.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
 import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
 import type { ShellPayload } from './demolition.ts';
@@ -110,6 +111,8 @@ export interface Shot {
   charged: boolean;
   trace?: ShotTrace;
   shell?: ShellPayload;
+  discharge?: number;
+  waypoints?: Vec[];
 }
 export interface Particle {
   pos: Vec;
@@ -139,6 +142,7 @@ export class Game {
   portals = new PortalSystem(this);
   portalRequest: Vec | null = null;
   demolition = new DemolitionSystem(this);
+  evolutions = new EvolutionSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -210,7 +214,10 @@ export class Game {
       this.burstRemaining = 0;
       this.portalRequest = null;
     }
-    if (mode === 'dead' || mode === 'won' || mode === 'title') this.demolition.clear();
+    if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.demolition.clear();
+      this.evolutions.reset();
+    }
     this.mode = mode;
     this.onChange();
   }
@@ -253,6 +260,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false) {
+    this.evolutions.reset();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -377,6 +385,7 @@ export class Game {
     )
       return;
     this.escape.phase = 'extracting';
+    this.evolutions.reset();
     this.demolition.clear();
     this.escape.depart = 0;
     this.shots = [];
@@ -641,9 +650,11 @@ export class Game {
   fireRound() {
     const charged = this.gun.landing && this.landingReady;
     this.landingReady = false;
-    this.chargedFlash = charged;
+    this.chargedFlash = charged || this.evolutions.slingReady;
     this.lastShot = this.time;
     this.shotCount++;
+    // Snapshot movement and earned charges before this discharge applies recoil.
+    const evolutionDamage = this.evolutions.discharge(this.shotCount);
     this.muzzle = 0.065;
     const d = direction(this.player.position, this.aim);
     if (d.x === 0 && d.y === 0) d.x = 1;
@@ -654,7 +665,7 @@ export class Game {
     });
     this.feedback((this.grounded ? 2.2 : 3.8) * (charged ? 1.3 : 1), d);
     this.onSound(
-      charged
+      this.chargedFlash
         ? 'charged'
         : this.gun.shellshock
           ? 'shell-shot'
@@ -664,14 +675,16 @@ export class Game {
               ? 'scatter'
               : 'shot',
     );
-    const damage = this.gun.damage * (this.grounded ? 1 : this.gun.airDamage) * (charged ? 2 : 1);
-    this.fireVolley(d, damage, charged);
-    if (this.gun.backblast) {
-      // Both directions share the discharge's modifiers and landing charge.
-      // Recoil belongs to the aimed shot; the rear volley never cancels movement.
-      this.fireVolley({ x: -d.x, y: -d.y }, damage, charged);
-      this.fireBackblast(d, damage * this.gun.pellets * this.gun.lanes * 0.8);
-    }
+    const damage =
+      this.gun.damage *
+      (this.grounded ? 1 : this.gun.airDamage) *
+      (charged ? 2 : 1) *
+      evolutionDamage;
+    this.fireVolley(d, damage, this.chargedFlash);
+    // Recoil belongs to the aimed shot; Backfire never cancels movement.
+    if (this.gun.rearVolley) this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash);
+    if (this.gun.backblast) this.fireBackblast(d, damage * this.gun.pellets * this.gun.lanes * 0.8);
+    this.evolutions.settle();
     if (this.particles.length < 220)
       this.particles.push({
         pos: { ...this.player.position },
@@ -697,10 +710,38 @@ export class Game {
     }
     for (let lane = 0; lane < this.gun.lanes; lane++)
       for (let i = 0; i < this.gun.pellets; i++) {
-        const a =
+        let a =
           Math.atan2(d.y, d.x) +
           (lane - (this.gun.lanes - 1) / 2) * 0.22 +
           (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
+        let waypoints: Vec[] | undefined;
+        if (this.gun.convergence && this.gun.lanes > 1) {
+          const origin = { x: this.player.position.x, y: this.player.position.y - 3 };
+          const rear = d.x * (this.aim.x - origin.x) + d.y * (this.aim.y - origin.y) < 0;
+          const target = rear
+            ? { x: origin.x * 2 - this.aim.x, y: origin.y * 2 - this.aim.y }
+            : this.aim;
+          const range = Math.max(32, distance(spawn, target));
+          const axis = distance(spawn, target) > 32 ? direction(spawn, target) : d;
+          const spread = (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
+          const side = lane - (this.gun.lanes - 1) / 2;
+          a = Math.atan2(axis.y, axis.x) + side * 0.22 + spread;
+          if (side !== 0) {
+            const along = range * 0.5,
+              across = Math.tan(side * 0.22 + spread) * along;
+            const endAcross = Math.tan(spread) * range;
+            waypoints = [
+              {
+                x: spawn.x + axis.x * along - axis.y * across,
+                y: spawn.y + axis.y * along + axis.x * across,
+              },
+              {
+                x: spawn.x + axis.x * range - axis.y * endAcross,
+                y: spawn.y + axis.y * range + axis.x * endAcross,
+              },
+            ];
+          }
+        }
         this.addShot({
           pos: { ...spawn },
           vel: {
@@ -717,6 +758,8 @@ export class Game {
           split: false,
           bankGrowth: this.gun.bankGrowth,
           charged,
+          discharge: this.gun.deadlock ? this.shotCount : undefined,
+          waypoints,
         });
       }
     this.burst(pos, 4, '#ffcc84', 3, d);
@@ -726,6 +769,24 @@ export class Game {
       rear = { x: -forward.x, y: -forward.y };
     this.blast = { pos: p, dir: rear, life: 0.1 };
     this.burst(p, 8, '#e3b47a', 4.5, rear);
+    // Check cover before this same blast can break it. Only ordinary hostile
+    // rounds are cleared; warned hazards, bombs and boss machinery stay intact.
+    if (this.gun.breach) {
+      for (const shot of this.shots) {
+        const d = direction(p, shot.pos);
+        if (
+          shot.friendly ||
+          shot.life <= 0 ||
+          distance(p, shot.pos) > 130 ||
+          rear.x * d.x + rear.y * d.y < Math.SQRT1_2 ||
+          distance(this.lineEnd(p, shot.pos), shot.pos) > 0.1
+        )
+          continue;
+        shot.life = 0;
+        this.burst(shot.pos, 2, '#e3b47a', 1.4);
+      }
+      this.shots = this.shots.filter((shot) => shot.life > 0);
+    }
     for (const e of [...this.enemies]) {
       if (e.spawn > 0 || e.hp <= 0) continue;
       const target = e.body.position,
@@ -1291,7 +1352,13 @@ export class Game {
       s.prev = { ...s.pos };
       let remaining = dt * 60;
       for (let attempt = 0; attempt < 4 && remaining > 0.001 && s.life > 0; attempt++) {
-        const end = { x: s.pos.x + s.vel.x * remaining, y: s.pos.y + s.vel.y * remaining };
+        const waypoint = s.waypoints?.[0];
+        const speed = Math.hypot(s.vel.x, s.vel.y);
+        const segment =
+          waypoint && speed > 0
+            ? Math.min(remaining, distance(s.pos, waypoint) / speed)
+            : remaining;
+        const end = { x: s.pos.x + s.vel.x * segment, y: s.pos.y + s.vel.y * segment };
         let nearest: {
           t: number;
           normal: Vec;
@@ -1324,13 +1391,24 @@ export class Game {
           s.pos = { ...passage.pos };
           s.prev = { ...s.pos };
           s.vel = portalVector(s.vel, passage.entry, passage.exit);
+          s.waypoints = undefined;
           if (s.trace) s.trace.points = [{ ...s.pos }];
-          remaining *= 1 - passage.t;
+          remaining -= segment * passage.t;
           continue;
         }
         if (!nearest) {
           s.pos = end;
           recordShotTrace(s.trace, s.pos);
+          if (waypoint && distance(s.pos, waypoint) < 0.01) {
+            s.waypoints!.shift();
+            const next = s.waypoints![0];
+            if (next) {
+              const d = direction(s.pos, next);
+              s.vel = { x: d.x * speed, y: d.y * speed };
+            } else s.waypoints = undefined;
+            remaining -= segment;
+            continue;
+          }
           break;
         }
         s.pos = {
@@ -1338,7 +1416,8 @@ export class Game {
           y: s.pos.y + (end.y - s.pos.y) * nearest.t,
         };
         recordShotTrace(s.trace, s.pos);
-        remaining *= 1 - nearest.t;
+        remaining -= segment * nearest.t;
+        s.waypoints = undefined;
         if (nearest.enemy) {
           const e = nearest.enemy;
           s.hits.add(e.id);
@@ -1357,6 +1436,7 @@ export class Game {
             s.life = 0;
             continue;
           }
+          this.evolutions.hit(s);
           if (e.hp <= 0 && this.gun.deathBloom && !s.fragment) this.deathBloom(s, e.body.position);
           this.splitShot(s);
           if (!e.body.isStatic)
@@ -1384,7 +1464,7 @@ export class Game {
           if (nearest.prop) this.props.hit(nearest.prop, s.damage, s.vel);
           this.breaches.hitBody(nearest.body, s.damage, s.vel);
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);
-          this.splitShot(s);
+          this.splitShot(s, nearest.normal);
           if (s.bounces > 0) {
             const dot = s.vel.x * nearest.normal.x + s.vel.y * nearest.normal.y;
             s.vel.x -= 2 * dot * nearest.normal.x;
@@ -1411,17 +1491,23 @@ export class Game {
         s.life = 0;
     }
     this.shots = this.shots.filter((s) => s.life > 0);
+    this.evolutions.settle();
   }
-  splitShot(s: Shot) {
+  splitShot(s: Shot, surface?: Vec) {
     if (!this.gun.fragments || s.split || !s.friendly || s.fragment) return;
     s.split = true;
-    for (let i = 0; i < 3; i++) {
-      const a = this.rng() * Math.PI * 2;
+    const shatter = this.gun.shatter && surface && Math.hypot(surface.x, surface.y) > 0;
+    for (let i = 0; i < (shatter ? 6 : 3); i++) {
+      const a = shatter
+        ? Math.atan2(surface.y, surface.x) + (i - 2.5) * 0.48
+        : this.rng() * Math.PI * 2;
       this.addShot({
-        pos: { ...s.pos },
-        vel: { x: Math.cos(a) * 16, y: Math.sin(a) * 16 },
-        damage: s.damage * 0.2,
-        life: 0.4,
+        pos: shatter
+          ? { x: s.pos.x + surface.x * 0.6, y: s.pos.y + surface.y * 0.6 }
+          : { ...s.pos },
+        vel: { x: Math.cos(a) * (shatter ? 20 : 16), y: Math.sin(a) * (shatter ? 20 : 16) },
+        damage: s.damage * (shatter ? 0.3 : 0.2),
+        life: shatter ? 0.6 : 0.4,
         friendly: true,
         radius: 2,
         bounces: 0,

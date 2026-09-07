@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear twelve stages, change your gu
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Twenty-three possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eleven picks per run leave room for different builds.
+You always carry **one gun**. Thirty-two possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eleven picks per run leave room for different builds.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -36,11 +36,11 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=19`). Version 19 limits Fold to one fixed portal pair per room; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=20`). Version 20 adds prerequisite-based follow-up upgrades and separates Backblast from backward projectiles; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Build paths
 
-Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. **Shellshock** commits the run to **Demolition** and unlocks **Blast surfing**, **Aftershock**, and **Chain reaction**. Choosing an entry locks the other paths for that run. Cards show only the path name; follow-ups can appear in later rewards. Shared upgrades remain available to every path. After committing, eligible upgrades on your path get 1.5 times the normal selection weight, sampled without duplicates. This slightly improves their chance without guaranteeing them, including in the deterministic Daily sequence.
+Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom** and **Convergence**. **Deadeye** commits the run to **Precision** and unlocks **Executioner** and **Deadlock**. **Shellshock** commits the run to **Demolition** and unlocks **Blast surfing**, **Aftershock**, and **Chain reaction**. Choosing an entry locks the other paths for that run. Cards show only the path name; follow-ups can appear in later rewards. Shared upgrades remain available to every path. After committing, eligible upgrades on your path get 1.5 times the normal selection weight, sampled without duplicates. This slightly improves their chance without guaranteeing them, including in the deterministic Daily sequence.
 
 | Path        | Upgrade     | Effect                                                                                                                                                         |
 | ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,13 +49,13 @@ Specialization happens through ordinary upgrade choices. **Crossfire** commits t
 | Precision   | Deadeye     | 30% more damage, 50% faster projectiles, and half the pellet spread. Shot delays are 20% longer.                                                               |
 | Precision   | Executioner | Requires Deadeye. Main projectiles deal 60% more damage to enemies below 30% health. Health is checked separately at each impact, before armor.                |
 
-Crossfire works with Scattershot, Burst fire, Backblast, and the existing projectile modifications. Deadeye keeps those shared options too, tightening Scattershot rather than removing it. Death bloom fragments respect walls and remain separate from Splinter; fragments receive neither Executioner's bonus nor recursive fragmentation. All paths keep the same shot and particle limits.
+Crossfire works with Scattershot, Burst fire, Backfire, and the existing projectile modifications. Deadeye keeps those shared options too, tightening Scattershot rather than removing it. Death bloom fragments respect walls and remain separate from Splinter; fragments receive neither Executioner's bonus nor recursive fragmentation. All paths keep the same shot and particle limits.
 
 Normal rewards still show three available choices. Daily Runs still force one predetermined legal upgrade per room, including any path commitment. Continuing preserves the selected path; starting a fresh run clears it. The pause screen's existing gun summary shows the current path. Existing ordinary checkpoints keep their saved room number, gun, health, and time. A saved room 7–9 now resumes in Cooling Works. A previously completed nine-room escape resumes its escape route with its original eight upgrades.
 
 ## Demolition
 
-A third path built around explosive impacts and movement. Taking **Shellshock** makes later Demolition upgrades eligible; each follow-up is independent and optional.
+A third path built around explosive impacts and movement. Taking **Shellshock** makes later Demolition upgrades eligible. **Shockfront** requires **Aftershock**; the other follow-ups require Shellshock.
 
 | Upgrade        | Effect and tradeoff                                                                                                                                                          |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -66,7 +66,7 @@ A third path built around explosive impacts and movement. Taking **Shellshock** 
 
 Explosion damage falls with distance from the target's visible hull, to 35% at the edge. Terrain and intact props block blasts. Cover is checked before each explosion destroys anything, so a chain can open a firing lane without the first blast leaking through it. Shields and boss armor still reduce damage, and bosses resist knockback. Your own Demolition blasts never cost health; Blast surfing adds the launch. Fuel canisters remain dangerous and use their existing arming and explosion rules.
 
-Shared upgrades combine with the same gun: Scattershot distributes the payload across pellets, Burst fire sends three explosive discharges, and Backblast fires explosive rounds in both directions. Punch through postpones detonation until the final hit and attenuates both damage portions. Bank shot and Banker preserve the payload through reflections; Banker increases both portions. Splinter fragments do not explode. Fold transports the intact shell, which detonates only when it later strikes something. Rounds that expire in flight disappear without an explosion.
+Shared upgrades combine with the same gun: Scattershot distributes the payload across pellets, Burst fire sends three explosive discharges, and Backfire fires explosive rounds in both directions. Punch through postpones detonation until the final hit and attenuates both damage portions. Bank shot and Banker preserve the payload through reflections; Banker increases both portions. Splinter fragments do not explode. Fold transports the intact shell, which detonates only when it later strikes something. Rounds that expire in flight disappear without an explosion.
 
 Airshot and Landing shot strengthen both direct and blast damage. Blast surfing's launch budget is shared across a discharge's pellets and forward/rear volleys, keeping dense builds controllable. Player speeds stay bounded. Overlapping effects are grouped visually, and short flashes, restrained sparks, and low impact sounds preserve combat visibility. Reduced-motion settings soften the effects.
 
@@ -80,19 +80,39 @@ Walk or fall into either linked opening to emerge from the other. Momentum rotat
 
 Each opening needs 80 units of exposed permanent surface. Moving hazards, props, and destructible walls cannot host one. A single unlinked opening remains solid, and a blocked or undersized exit prevents travel. Portals reset at each room entrance, on retry, and when continuing a checkpoint; the Fold upgrade stays equipped. Opening the pause screen clears pending placement input. Portal travel cuts trails and snaps the camera to the destination instead of drawing or panning across the intervening map.
 
+Rewire removes the placement limit while retaining exactly two portals. Its preview and touch placement button remain available after the first pair. Slingshot rewards player travel; enemy and projectile speeds are unchanged.
+
+## Follow-up upgrades
+
+Follow-ups enter the ordinary reward pool only after their prerequisite has been taken. Shared follow-ups stay available to every build path; Convergence, Deadlock, and Shockfront inherit their respective paths and their existing selection weight. A card needs no extra lock text or new menu. Checkpoints and Daily rewards validate the same prerequisite order.
+
+| Upgrade     | Requires   | Effect                                                                                                                                                                                                                                                                                                                   |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Rewire      | Fold       | Unlimited alternating blue/orange replacements. Exactly two active portals; invalid attempts do not switch color.                                                                                                                                                                                                        |
+| Slingshot   | Fold       | Player portal travel boosts velocity by 25%, within the normal movement caps, and grants 50% more damage to the next discharge. Repeated travel cannot stack or refresh either boost until firing.                                                                                                                       |
+| Redline     | Kickback   | Damage scales with speed before recoil is applied, from no bonus at rest to 50% at speed 18. All pellets, rear rounds, and shell payloads share that discharge's bonus.                                                                                                                                                  |
+| Breach      | Backblast  | The rear cone destroys visible hostile bullets within its existing 130-unit range. Cover blocks it even when that blast breaks the cover. Bombs, warned hazards, and machinery remain dangerous.                                                                                                                         |
+| Shatter     | Splinter   | A first solid impact creates six outward fragments at 30% round damage, speed 20, and 0.6-second lifetime. Ordinary enemy hits still produce three fragments at 20%. No recursive splitting.                                                                                                                             |
+| Convergence | Crossfire  | Outer lanes fan out, then turn inward halfway to the aim point fixed when firing. They cross and continue beyond it. Each pellet keeps its spread; Backfire mirrors the pattern. Near-muzzle aim has a minimum focus distance of 32 units. Cover stops shots; banks and portal travel cancel the old convergence target. |
+| Deadlock    | Deadeye    | Each accurate discharge adds 12% damage to later discharges, capped at 60%. At least one direct, unblocked enemy hit qualifies, regardless of pellet or piercing count. A discharge whose main rounds all miss resets the streak. Results resolve in firing order; fragments and rear blasts cannot build it.            |
+| Shockfront  | Aftershock | Echo radius grows by 50%, keeping 40% damage and adding stronger outward knockback. Cover and boss knockback resistance still apply. Echoes cannot create more echoes.                                                                                                                                                   |
+| Backfire    | Backblast  | Adds a matching backward volley and another 20% firing delay. The aimed shot still applies the only recoil impulse.                                                                                                                                                                                                      |
+
+Slingshot's ready charge appears as a blue strip on the gun. Redline warms the gun's lower edge as speed increases; Deadlock lights up to five tiny receiver marks. No extra HUD text is added. Charges and streaks survive pauses but reset on a new room, retry, death, or checkpoint reconstruction.
+
 ## Gun builds
 
-| Modification | Effect and tradeoff                                                                                                                                      |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Burst fire   | Three committed shots in quick succession, then recovery. Each round deals 10% less damage and has 20% less recoil. Aim can change between rounds.       |
-| Kickback     | 20% more damage and 40% more recoil, with no firing delay penalty. The damage bonus stacks with other modifications.                                     |
-| Backblast    | Each discharge fires a matching full-strength volley backward and hits a short rear cone for 80% of its total pellet damage. Shot delays are 40% longer. |
-| Banker       | One additional bounce and 35% more damage after each reflection, starting with 20% less damage. Works on its own; Bank shot adds two more bounces.       |
-| Landing shot | A hard landing doubles the next discharge's damage and adds 25% recoil. Base damage is 10% lower. The gun glows when ready.                              |
+| Modification | Effect and tradeoff                                                                                                                                |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Burst fire   | Three committed shots in quick succession, then recovery. Each round deals 10% less damage and has 20% less recoil. Aim can change between rounds. |
+| Kickback     | 20% more damage and 40% more recoil, with no firing delay penalty. The damage bonus stacks with other modifications.                               |
+| Backblast    | 25% more damage, plus a short rear cone for 80% of total pellet damage. Shot delays are 20% longer. Backward rounds require Backfire.              |
+| Banker       | One additional bounce and 35% more damage after each reflection, starting with 20% less damage. Works on its own; Bank shot adds two more bounces. |
+| Landing shot | A hard landing doubles the next discharge's damage and adds 25% recoil. Base damage is 10% lower. The gun glows when ready.                        |
 
 Burst fire plus Scattershot fires three five-pellet volleys. Landing shot boosts all pellets of the next discharge, then the rest of a burst returns to ordinary damage. The boost lasts until your next shot or room change, so you can jump again and combine it with Airshot. Repeated landings do not stack charges.
 
-Banked rounds change color as they gain damage. Punch through retains its damage reduction after each enemy, and Splinter only creates fragments on the first impact. Backblast fires its cone once per discharge, regardless of pellet count. Its rear volley mirrors the forward pellets, including airborne damage, Landing shot, bouncing, piercing, and Splinter; Burst fire sends all three discharges both ways. Both muzzles respect solid cover. The aimed shot applies recoil once, so the backward volley does not cancel your movement. At the base firing rate, Backblast increases the shot delay from 0.22 to 0.308 seconds. Pause cancels an unfinished burst while preserving its recovery time.
+Banked rounds change color as they gain damage. Punch through retains its damage reduction after each enemy, and Splinter only creates fragments on the first impact. Backblast fires its cone once per discharge, regardless of pellet count. Backfire unlocks a rear volley that mirrors the forward pellets, including airborne damage, Landing shot, bouncing, piercing, and Splinter; Burst fire sends all three discharges both ways. Both muzzles respect solid cover. The aimed shot applies recoil once, so the backward volley does not cancel your movement. At the base firing rate, Backblast increases the shot delay from 0.22 to 0.264 seconds. Backfire adds another 20%, bringing it to 0.3168 seconds. Pause cancels an unfinished burst while preserving its recovery time.
 
 Existing modifications remain: Heavy hitter, Scattershot, Hair trigger, Bank shot, Punch through, Splinter, Airshot, Kickback, Bloodwork, and Light frame. No extra weapon slots or controls are needed.
 
@@ -237,6 +257,7 @@ npm run preview
 
 | File                    | Responsibility                                                                         |
 | ----------------------- | -------------------------------------------------------------------------------------- |
+| `src/evolutions.ts`     | Per-discharge accuracy streaks, speed damage, and portal travel charges                |
 | `src/game.ts`           | Matter.js simulation, movement, recoil, combat, and room progression                   |
 | `src/enemies.ts`        | Enemy dimensions, health, attack timing, and boss patterns                             |
 | `src/kiln-ai.ts`        | Mortar planning, swept shell collisions, surface heat, and boiler movement             |
@@ -303,3 +324,5 @@ GitHub Pages uses the included GitHub Actions workflow. Pushes to `main` run tes
 Physics: [Matter.js](https://brm.io/matter-js/) (MIT). Build: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/). Artwork and sound are generated by the game's rendering and audio code. Game source is MIT licensed; dependencies retain their own licenses.
 
 Cooling Works regression checks cover coolant momentum, locked jet volleys, separately warned follow-ups, rotating purge gaps, armor, physical cover navigation, pause and death cleanup, save migration, and final-area rosters. Full-run pilots use ordinary movement and firing inputs, with short trajectory prediction for the new ranged fights; they retain normal health and earn all eleven upgrades before extraction. A rooftop placement regression keeps collapsing platforms away from the launch space beside steps.
+
+Follow-up checks cover prerequisite rewards and saves, repeated portal replacement, capped travel and movement bonuses, defensive rear cones, wall fragment fans, converging lanes through cover and portals, firing-order accuracy streaks, enlarged echoes, and combined projectile/effect limits.

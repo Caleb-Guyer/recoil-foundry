@@ -64,23 +64,23 @@ test('Kickback adds damage without slowing fire and preserves its airborne recoi
   }
 });
 
-test('Backblast fires full-strength projectiles beyond its cone in both directions', () => {
-  const g = fixture(['backblast']);
+test('Backfire fires full-strength projectiles beyond its cone in both directions', () => {
+  const g = fixture(['backblast', 'backfire']);
   const rear = target(g, 380),
     front = target(g, 820);
   g.fire();
   assert.equal(g.shots.length, 2);
   close(g.shots[0].vel.x, -g.shots[1].vel.x);
   close(g.player.velocity.x, -g.gun.recoil);
-  close(g.shootAt - g.time, getGun([]).interval * 1.4);
+  close(g.shootAt - g.time, getGun([]).interval * 1.44);
   assert.equal(rear.hp, rear.maxHp, 'the cone extended beyond its range');
   g.updateShots(1 / 6);
   close(rear.maxHp - rear.hp, g.gun.damage);
   close(front.maxHp - front.hp, g.gun.damage);
 });
 
-test('Backblast mirrors scatter, air damage and one landing charge through all three burst rounds', () => {
-  const g = fixture(['backblast', 'burst', 'scatter', 'airshot', 'landing', 'kick']);
+test('Backfire mirrors scatter, air damage and one landing charge through all three burst rounds', () => {
+  const g = fixture(['backblast', 'backfire', 'burst', 'scatter', 'airshot', 'landing', 'kick']);
   g.landingReady = true;
   g.fire();
   const first = [...g.shots];
@@ -105,7 +105,7 @@ test('Backblast mirrors scatter, air damage and one landing charge through all t
 });
 
 test('backward rounds use real bounce, piercing and nonrecursive splinter collisions', () => {
-  const g = fixture(['backblast', 'banker', 'ricochet', 'pierce', 'split']);
+  const g = fixture(['backblast', 'backfire', 'banker', 'ricochet', 'pierce', 'split']);
   wall(g, 360);
   const first = target(g, 450),
     second = target(g, 400);
@@ -129,7 +129,7 @@ test('backward rounds use real bounce, piercing and nonrecursive splinter collis
 });
 
 test('a wall inside the rear muzzle blocks the backward volley before it can hit actors', () => {
-  const g = fixture(['backblast', 'banker']);
+  const g = fixture(['backblast', 'backfire', 'banker']);
   wall(g, 577);
   const enemy = target(g, 530);
   g.fire();
@@ -142,7 +142,7 @@ test('a wall inside the rear muzzle blocks the backward volley before it can hit
 });
 
 test('backward projectiles hit props through the normal impact path', () => {
-  const g = fixture(['backblast']);
+  const g = fixture(['backblast', 'backfire']);
   const fuel = g.props.spawn('canister', 380, 297);
   g.fire();
   assert.equal(fuel.armedAt, Infinity);
@@ -363,7 +363,7 @@ test('new gun builds survive checkpoints without saving transient burst or landi
 });
 
 test('Crossfire adds three lanes to each forward and rear burst with one recoil impulse', () => {
-  const g = fixture(['crossfire', 'scatter', 'burst', 'backblast', 'landing']);
+  const g = fixture(['crossfire', 'scatter', 'burst', 'backblast', 'backfire', 'landing']);
   g.landingReady = true;
   g.fire();
   assert.equal(g.shots.length, 30);
@@ -371,7 +371,7 @@ test('Crossfire adds three lanes to each forward and rear burst with one recoil 
   assert.equal(g.shots.filter((s) => s.vel.x > 0).length, 15);
   assert.equal(g.shots.filter((s) => s.vel.x < 0).length, 15);
   assert(g.shots.every((s) => s.charged));
-  const base = getGun(['scatter', 'burst', 'backblast', 'landing']);
+  const base = getGun(['scatter', 'burst', 'backblast', 'backfire', 'landing']);
   close(g.gun.damage, base.damage * 0.55);
   close(g.gun.interval, base.interval * 1.2);
   const emitted = [...g.shots];

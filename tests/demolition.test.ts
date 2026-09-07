@@ -224,9 +224,14 @@ test('front shields and each boss armor state still reduce explosive damage and 
 });
 test('Blast surfing launches away from your blast without damage, and divides impulse across scatter and rear volleys', () => {
   const speeds: number[] = [];
-  for (const extra of [[], ['scatter'], ['scatter', 'backblast']]) {
+  for (const extra of [
+    [],
+    ['scatter'],
+    ['scatter', 'backblast'],
+    ['scatter', 'backblast', 'backfire'],
+  ]) {
     const g = fixture(['shellshock', 'blast-surf', ...extra]);
-    const count = g.gun.pellets * (g.gun.backblast ? 2 : 1);
+    const count = g.gun.pellets * (g.gun.rearVolley ? 2 : 1);
     for (let i = 0; i < count; i++) blast(g);
     assert.equal(g.hp, 100);
     assert.equal(g.hurtAt, -100);
@@ -235,6 +240,7 @@ test('Blast surfing launches away from your blast without damage, and divides im
   }
   near(speeds[0], speeds[1]);
   near(speeds[0], speeds[2]);
+  near(speeds[0], speeds[3]);
   const plain = fixture();
   blast(plain);
   near(plain.player.velocity.y, 0);
@@ -247,6 +253,7 @@ test('air damage, landing charge, scatter, burst, and Backblast apply to both pa
     'scatter',
     'burst',
     'backblast',
+    'backfire',
     'airshot',
     'landing',
     'magnum',
@@ -425,7 +432,7 @@ test('death, room changes, retries, and extraction clear delayed blasts without 
   }
 });
 test('sustained scatter bursts keep projectiles, aftershocks, particles, and blast effects bounded', () => {
-  const g = fixture([...ids, 'scatter', 'burst', 'rapid', 'backblast']);
+  const g = fixture([...ids, 'scatter', 'burst', 'rapid', 'backblast', 'backfire']);
   g.engine.gravity.y = 1;
   for (let i = 0; i < 600; i++) {
     step(g, 1, { fire: true, aim: { x: 600, y: 740 } });

@@ -57,7 +57,7 @@ export function drawPortals(c: CanvasRenderingContext2D, g: Game, clock: number,
   });
   if (g.mode === 'playing' && g.escape?.phase !== 'extracting') {
     const preview = g.portals.candidate(g.aim);
-    if (preview) aperture(preview, g.portals.next, true);
+    if (preview) aperture(preview, g.portals.nextIndex, true);
     const rejected = g.portals.rejected;
     if (rejected && rejected.until > g.time) {
       c.save();

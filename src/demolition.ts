@@ -77,7 +77,7 @@ export class DemolitionSystem {
     if (!gun.shellshock) return undefined;
     return {
       damage: damage * SHELL_BLAST,
-      launch: gun.blastSurf ? 10 / (gun.pellets * gun.lanes * (gun.backblast ? 2 : 1)) : 0,
+      launch: gun.blastSurf ? 10 / (gun.pellets * gun.lanes * (gun.rearVolley ? 2 : 1)) : 0,
     };
   }
   impact(shot: Shot) {
@@ -162,6 +162,7 @@ export class DemolitionSystem {
         {
           ...blast,
           damage: damage * AFTERSHOCK_DAMAGE,
+          radius: radius * (g.gun.shockfront ? 1.5 : 1),
           launch: blast.launch * AFTERSHOCK_DAMAGE,
           kind: 'echo',
         },
@@ -172,7 +173,10 @@ export class DemolitionSystem {
       g.hitEnemy(enemy, damage * amount, pos);
       if (enemy.hp > 0 && !enemy.body.isStatic) {
         const d = direction(pos, enemy.body.position);
-        const push = Math.min(7, damage * 0.16) * amount * (isBoss(enemy.kind) ? 0.08 : 1);
+        const push =
+          (blast.kind === 'echo' && g.gun.shockfront ? 10 : Math.min(7, damage * 0.16)) *
+          amount *
+          (isBoss(enemy.kind) ? 0.08 : 1);
         Matter.Body.setVelocity(enemy.body, {
           x: enemy.body.velocity.x + d.x * push,
           y: enemy.body.velocity.y + d.y * push,

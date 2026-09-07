@@ -34,6 +34,12 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(2, -4.5, 4, 9);
     c.fillStyle = '#34493f';
     c.fillRect(2, -2.5, 2, 5);
+    if (g.gun.rearVolley) {
+      c.fillStyle = '#b4c3a8';
+      c.fillRect(-7, -3, 9, 6);
+      c.fillStyle = '#26392f';
+      c.fillRect(-8, -2, 2, 4);
+    }
   }
   c.translate(-receiverKick, 0);
 
@@ -143,10 +149,20 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillStyle = '#637e68';
     c.fillRect(9, 1, 6, 2);
   }
-  if (g.landingReady) {
+  if (g.gun.redline && g.evolutions.redline > 0) {
+    c.fillStyle = '#eead76';
+    c.fillRect(10, half - 1, (12 * g.evolutions.redline) / 0.5, 1.5);
+  }
+  if (g.gun.deadlock) {
+    for (let i = 0; i < g.evolutions.streak; i++) {
+      c.fillStyle = '#d3dfb7';
+      c.fillRect(9 + i * 3, -half, 2, 2);
+    }
+  }
+  if (g.landingReady || g.evolutions.slingReady) {
     c.fillStyle = reduced ? 'rgba(220,240,166,0.06)' : 'rgba(220,240,166,0.12)';
     c.fillRect(7, -half - 3, 18, 5);
-    c.fillStyle = '#e2edaa';
+    c.fillStyle = g.evolutions.slingReady ? '#8edaff' : '#e2edaa';
     c.fillRect(9, -half - 1, 14, 2);
   }
 

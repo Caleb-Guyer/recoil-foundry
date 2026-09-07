@@ -269,6 +269,15 @@ function modMark(mod: Mod) {
     bloom: 'M28 9v30M15 16l26 16M15 32l26-16M24 20h8v8h-8z',
     deadeye: 'M8 24h40M28 7v10M28 31v10M18 14h20v20H18z',
     execute: 'M10 10v28h12M28 10v28M36 24h14M43 17l7 7-7 7',
+    rewire: 'M12 16C20 3 38 6 43 18M36 17l7 1 1-8M44 32C36 45 18 42 13 30M20 31l-7-1-1 8',
+    slingshot: 'M12 9c-9 0-9 30 0 30M12 9c9 0 9 30 0 30M23 24h24M37 14l10 10-10 10',
+    redline: 'M8 34a20 20 0 0 1 40 0M28 34l13-18M10 27l5 2M20 15l2 6M34 15l-2 6',
+    breach: 'M30 9v30M30 24h18M22 24H7M16 17l-7 7 7 7M10 10l5 3M10 38l5-3',
+    shatter: 'M34 7v34M8 24h26M32 24L14 9M32 24L9 16M32 24L9 32M32 24L14 39',
+    convergence: 'M7 24l18-14 23 23M7 24h41M7 24l18 14L48 15',
+    deadlock: 'M16 12h24v24H16zM8 24h12M36 24h12M24 20h8v8h-8zM24 7h8M24 41h8',
+    shockfront: 'M26 17a7 7 0 1 0 0 14M26 9a15 15 0 1 0 0 30M34 24h14M41 17l7 7-7 7',
+    backfire: 'M6 24h44M16 14L6 24l10 10M40 14l10 10-10 10',
   };
   return (
     '<svg class="mod-mark" viewBox="0 0 56 48" aria-hidden="true"><path d="' +
@@ -445,9 +454,11 @@ function showDialog(kind: string) {
       ' /></label></div>' +
       '<div class="controls-copy">' +
       (game.portals.equipped
-        ? game.portals.canPlace
-          ? '<p>Right-click or <kbd>E</kbd> on two surfaces. One portal pair per room.</p>'
-          : '<p>Portals are fixed until the next room.</p>'
+        ? game.mods.includes('rewire')
+          ? '<p>Right-click or <kbd>E</kbd> to place or move either portal.</p>'
+          : game.portals.canPlace
+            ? '<p>Right-click or <kbd>E</kbd> on two surfaces. One portal pair per room.</p>'
+            : '<p>Portals are fixed until the next room.</p>'
         : '') +
       '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
       (game.practice
