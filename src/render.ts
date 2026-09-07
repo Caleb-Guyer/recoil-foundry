@@ -1,3 +1,4 @@
+import { drawBossSignal } from './boss-signals.ts';
 import { Game, WORLD, EXTRACTION_DURATION } from './game.ts';
 import type { Enemy } from './game.ts';
 import {
@@ -184,7 +185,7 @@ export class Renderer {
         this.line({ x: 24, y: -7 }, { x: 42, y: 11 }, '#b79a87', 5);
         c.fillStyle = e.state === 'recover' ? '#ffe2a0' : '#b26855';
         for (let i = 0; i < 3; i++) c.fillRect(-32 + i * 13, -5, 7, 11);
-        if (e.state === 'windup') {
+        if (e.state === 'windup' && e.attack !== 'flak') {
           c.fillStyle = '#ffd19a';
           c.fillRect(44, -20, 8, 50 * clamp(1 - e.timer / LOADER_TELL, 0, 1));
         }
@@ -323,8 +324,6 @@ export class Renderer {
             this.line({ x: -45, y: -20 }, { x: -54, y: -30 }, color, 3);
             this.line({ x: 45, y: -20 }, { x: 54, y: -30 }, color, 3);
           }
-          if (e.state === 'transition')
-            this.circle({ x: 0, y: 0 }, 48 + (1.2 - e.timer) * 30, '#ffd3a0', false, 2);
         }
       }
       if (e.elite === 'shielded') {
@@ -978,6 +977,8 @@ export class Renderer {
     }
   }
   drawTell(e: Enemy) {
+    drawBossSignal(this.ctx, this.game, e, this.reduced);
+    if (e.attack === 'flak') return;
     if (e.spawn > 0 || (e.state !== 'windup' && e.state !== 'followup')) return;
     const c = this.ctx,
       g = this.game,

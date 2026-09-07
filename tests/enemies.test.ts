@@ -175,13 +175,14 @@ test('boss phases switch at health thresholds and cancel a pending attack with a
   step(g);
   assert.equal(e.phase, 2);
   assert.equal(e.state, 'transition');
+  assert.equal(e.timer, 0.75);
   assert.equal(g.shots.length, 0);
-  step(g, 60);
+  step(g, 44);
   assert.equal(e.state, 'transition');
   assert.equal(g.shots.length, 0);
-  step(g, 13);
+  step(g, 2);
   assert.equal(e.state, 'idle');
-  step(g, 25);
+  for (let i = 0; i < 60 && e.state === 'idle'; i++) step(g);
   assert.equal(e.state, 'windup');
   assert(e.timer > 0.75);
   assert.equal(g.shots.length, 0);
@@ -194,7 +195,7 @@ test('boss attacks cycle from aimed volleys to fans and radial volleys with full
   ];
   for (let phase = 0; phase < 3; phase++) {
     const { g, e } = fixture('boss', 600, 200);
-    e.hp = [1000, 600, 300][phase];
+    e.hp = e.maxHp * [1, 0.6, 0.3][phase];
     e.phase = phase;
     e.timer = 0;
     const fired: string[] = [];
@@ -213,6 +214,41 @@ test('boss attacks cycle from aimed volleys to fans and radial volleys with full
       }
     }
     assert.deepEqual(fired, expected[phase]);
+  }
+});
+test('rooftop fan and ring volleys track the player early and preserve their locked orientation through firing', () => {
+  for (const attack of ['fan', 'ring'] as const) {
+    const { g, e } = fixture('boss', 600, 200);
+    e.hp = e.maxHp * (attack === 'fan' ? 0.6 : 0.3);
+    e.phase = attack === 'fan' ? 1 : 2;
+    e.attacks = attack === 'fan' ? 1 : 2;
+    step(g);
+    assert.equal(e.state, 'windup');
+    assert.equal(e.attack, attack);
+    const started = g.time,
+      firstAim = { ...e.aim };
+    Body.setPosition(g.player, { x: 900, y: 300 });
+    step(g, 10);
+    assert.notDeepEqual(e.aim, firstAim);
+    while (e.timer > 0.3) step(g);
+    const locked = { ...e.aim },
+      lockedAt = g.time;
+    Body.setPosition(g.player, { x: 300, y: 600 });
+    while (e.state === 'windup') {
+      step(g);
+      assert.deepEqual(e.aim, locked);
+    }
+    assert(g.time - started >= attackTell(attack) - 1e-8);
+    assert(g.time - lockedAt >= 0.3 - 1 / 60);
+    const shots = g.shots.filter((shot) => !shot.friendly);
+    assert.equal(shots.length, attack === 'fan' ? 7 : 12);
+    const base = Math.atan2(locked.y, locked.x),
+      speed = attack === 'fan' ? 8.8 : 6.2;
+    for (const [i, shot] of shots.entries()) {
+      const angle = base + (attack === 'fan' ? (i - 3) * 0.27 : (i * Math.PI) / 6 + Math.PI / 12);
+      assert(Math.abs(shot.vel.x - Math.cos(angle) * speed) < 1e-8);
+      assert(Math.abs(shot.vel.y - Math.sin(angle) * speed) < 1e-8);
+    }
   }
 });
 test('pause and hitstop freeze attack warnings, and death removes queued attackers', () => {

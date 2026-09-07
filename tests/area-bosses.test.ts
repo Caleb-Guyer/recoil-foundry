@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
-import { LOADER_TELL, PRESS_LOCK, PRESS_TELL } from '../src/enemies.ts';
+import { FLAK_TELL, LOADER_TELL, PRESS_LOCK, PRESS_TELL } from '../src/enemies.ts';
 import { MODS, loadCheckpoint } from '../src/rules.ts';
 import type { Checkpoint } from '../src/rules.ts';
-const { Body, Bodies, Composite } = Matter;
+const { Body, Bodies, Composite, Query } = Matter;
 function step(g: Game, count = 1, input: Partial<Input> = {}) {
   for (let i = 0; i < count; i++)
     g.tick(1 / 60, {
@@ -40,6 +40,7 @@ function wall(g: Game, x: number, y: number, w: number, h: number) {
   const b = Bodies.rectangle(x, y, w, h, { isStatic: true });
   g.terrain.push(b);
   Composite.add(g.engine.world, b);
+  return b;
 }
 
 test('Loader gives a full tell, commits direction, then rushes at a dodgeable height', () => {
@@ -71,11 +72,11 @@ test('Loader nose catches cover before penetration and its crash is a safe damag
   Body.setVelocity(e.body, { x: 15, y: 0 });
   step(g);
   assert.equal(e.state, 'recover');
-  assert(e.timer >= 1.6);
+  assert.equal(e.timer, 1.25);
   assert(e.body.bounds.max.x < 865.1);
   const hp = e.hp;
   g.hitEnemy(e, 20);
-  assert.equal(hp - e.hp, 30);
+  assert.equal(hp - e.hp, 25);
   Body.setPosition(g.player, { ...e.body.position });
   step(g);
   assert.equal(g.hp, 100);
@@ -113,15 +114,17 @@ test('Press tracks early, locks the column, and preserves a full escape window',
   assert.equal(e.state, 'rush');
 });
 
-test('Press can mark and hit players at either arena boundary', () => {
+test('Press warns and fires its ranged counter at players camping either arena boundary', () => {
   for (const right of [false, true]) {
     const { g, e } = fixture('press');
     Body.setPosition(g.player, { x: right ? 1987 : 13, y: 722 });
     Body.setPosition(e.body, { x: right ? 1940 : 60, y: 260 });
     step(g);
-    assert.equal(e.target.x, right ? 1940 : 60);
+    assert.equal(e.state, 'windup');
+    assert.equal(e.attack, 'flak');
+    assert.equal(e.timer, FLAK_TELL);
     step(g, 130, { left: !right, right });
-    assert(g.hp <= 75);
+    assert.equal(g.hp, 86);
   }
 });
 
@@ -138,10 +141,10 @@ test('Press catches either edge of a platform, rests on top, and returns overhea
     assert(Math.abs(e.body.bounds.max.y - 500) < 0.2);
     const hp = e.hp;
     g.hitEnemy(e, 20);
-    assert.equal(hp - e.hp, 27);
+    assert.equal(hp - e.hp, 25);
     for (let i = 0; i < 200 && e.state !== 'idle'; i++) step(g);
     assert.equal(e.state, 'idle');
-    assert(Math.abs(e.body.position.y - 260) < 0.2);
+    assert(e.body.position.y >= 260 && e.body.position.y <= 263);
   }
 });
 
@@ -158,6 +161,29 @@ test('Press hits once during descent and solid platforms protect actors undernea
     step(g, 30);
     assert.equal(g.hp, hp);
   }
+});
+
+test('a Press displaced beneath a shelf returns around its edge without clipping or stalling', () => {
+  const { g, e } = fixture('press'),
+    shelf = wall(g, 600, 511, 240, 22);
+  Body.setPosition(g.player, { x: 1000, y: 722 });
+  Body.setPosition(e.body, { x: 600, y: 565 });
+  Body.setVelocity(e.body, { x: 0, y: 0 });
+  e.state = 'return';
+  e.timer = 2;
+  let passedEdge = false;
+  for (let i = 0; i < 150 && e.state === 'return'; i++) {
+    const before = { ...e.body.position };
+    step(g);
+    assert(Math.hypot(e.body.position.x - before.x, e.body.position.y - before.y) < 10);
+    assert(Query.collides(e.body, [shelf]).every((hit) => hit.depth < 1));
+    passedEdge ||=
+      e.body.bounds.max.x <= shelf.bounds.min.x || e.body.bounds.min.x >= shelf.bounds.max.x;
+  }
+  assert(passedEdge);
+  assert.equal(e.state, 'idle');
+  assert(e.body.position.y >= 260 && e.body.position.y <= 263);
+  assert.equal(g.hp, 100);
 });
 
 test('sideways movement and an airborne recoil escape both evade a marked slam', () => {
