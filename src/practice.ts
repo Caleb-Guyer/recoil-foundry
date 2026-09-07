@@ -9,6 +9,7 @@ export const PRACTICE_BOSSES = {
   press: { name: 'The Press', stage: 5 },
   kiln: { name: 'The Kiln', stage: 5 },
   condenser: { name: 'The Condenser', stage: 8 },
+  turbine: { name: 'The Turbine', stage: 8 },
   boss: { name: 'Rooftop', stage: 11 },
 } as const;
 export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
@@ -33,7 +34,12 @@ export function loadEncounters(value: unknown): Encounter[] {
     )
       continue;
     const kind = item.kind as PracticeBoss;
-    if (getLevel(item.seed, PRACTICE_BOSSES[kind].stage).spawns[0]?.kind === kind)
+    // Every seed used the Condenser before the alternate boss existed. Retain
+    // those earned victories, reconstructing its original arena for practice.
+    if (
+      kind === 'condenser' ||
+      getLevel(item.seed, PRACTICE_BOSSES[kind].stage).spawns[0]?.kind === kind
+    )
       records.push({ kind, seed: item.seed });
   }
   return records;

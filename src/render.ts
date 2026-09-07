@@ -1,4 +1,5 @@
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
+import { drawTurbine, drawBlade } from './turbine-art.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
@@ -164,6 +165,10 @@ export class Renderer {
       c.globalAlpha = 1;
     }
     for (const e of g.enemies) {
+      if (e.kind === 'turbine') {
+        drawTurbine(c, g, e, this.reduced);
+        continue;
+      }
       if (e.kind === 'skimmer' || e.kind === 'condenser') {
         drawCoolingEnemy(c, g, e, this.reduced);
         continue;
@@ -460,6 +465,10 @@ export class Renderer {
     }
     this.drawPlayer();
     for (const s of g.shots) {
+      if (s.blade) {
+        drawBlade(c, s, g.time, this.reduced);
+        continue;
+      }
       if (s.friendly) {
         if (s.trace) {
           const { points, bank, pierce } = s.trace;

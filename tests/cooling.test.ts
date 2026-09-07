@@ -191,15 +191,19 @@ test('later purges warn again before filling the first ring gaps', () => {
 test('cover cannot nullify Condenser damage even with a strong shared gun build', () => {
   const seed = 'boss-cheese-0',
     g = new Game();
-  g.start(seed, {
-    version: 3,
+  g.start(
     seed,
-    stage: 8,
-    hp: 100,
-    mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'],
-    kills: 0,
-    elapsed: 0,
-  });
+    {
+      version: 3,
+      seed,
+      stage: 8,
+      hp: 100,
+      mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'],
+      kills: 0,
+      elapsed: 0,
+    },
+    { kind: 'condenser', seed },
+  );
   const boss = g.enemies[0];
   Body.setPosition(g.player, { x: 355, y: 722 });
   Body.setVelocity(g.player, { x: 0, y: 0 });
@@ -297,7 +301,7 @@ test('the fourth area supplies twelve rooms, three Cooling Works layouts and a h
       assert(level.spawns.filter((e) => e.kind === 'sniper').length >= 2);
       assert.equal(level.spawns.filter((e) => e.elite).length, 1);
     }
-    assert.equal(getLevel(seed, 8).spawns[0].kind, 'condenser');
+    assert(['condenser', 'turbine'].includes(getLevel(seed, 8).spawns[0].kind));
   }
   assert.equal(layouts.size, 3);
 });

@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=21`). Version 21 adds optional challenge detours and their bonus rewards; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=22`). Version 22 adds the alternate Cooling Works boss and its arena; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Build paths
 
@@ -122,7 +122,7 @@ Escape through four areas, each with its own scenery, lighting, and layout pool:
 
 - **Loading docks, rooms 1–3:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Two layouts drawn from loading bays, overpasses, staggered cargo, and terraces, then either The Loader in its loading bay or The Crane among raised shelves and cargo stacks.
 - **Furnace halls, rooms 4–6:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then The Press in its machine hall or The Kiln among low stacks and raised shelves.
-- **Cooling Works, rooms 7–9:** teal tanks, overhead pipes, and shallow coolant channels. Two layouts drawn from settling tanks, a pump gallery, and a return channel, then the Condenser hall. Low stacks support ordinary jumping routes; higher shelves reward recoil movement. Coolant preserves sliding momentum without dealing damage or reducing steering. Lifts and crushers reuse their familiar warnings.
+- **Cooling Works, rooms 7–9:** teal tanks, overhead pipes, and shallow coolant channels. Two layouts drawn from settling tanks, a pump gallery, and a return channel, then either the Condenser hall or the Turbine gallery. Low stacks support ordinary jumping routes; higher shelves reward recoil movement. Coolant preserves sliding momentum without dealing damage or reducing steering. Lifts and crushers reuse their familiar warnings.
 - **Rooftops, rooms 10–12:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, followed by one of two rooftop boss arenas. Both regular rooms contain an elite and multiple snipers, alongside faster shooters and the new Skimmer.
 
 Each run has eight different regular layouts and four boss arenas. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
@@ -130,6 +130,16 @@ Each run has eight different regular layouts and four boss arenas. Seeded mirror
 Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
+
+## The Turbine
+
+Cooling Works ends with either the Condenser or **The Turbine**, selected independently from other rooms. The Turbine gallery has low stacks, separated shelves, and two coolant channels, with a mirrored variant and an ordinary jumping route.
+
+The rotor moves around cover to find an angle wide enough for its blades. Gusts have a 1.15-second warning; blade sweeps have a 1.05-second warning. Both track early, then lock their entire marked fan for the final 0.45 seconds. Gusts push much harder in the air, adding to existing recoil momentum within the movement limits. Exposed crates and fuel move too; solid cover blocks the airflow.
+
+A committed gust lasts 1.8 seconds and sends two blade passes through the marked lanes, 0.95 seconds apart. Sweeps release a wider fan. Each blade deals 22 damage, collides with scenery and props across its full width, and can travel through Fold portals. Wind itself deals no damage. Later phases widen the fan from three lanes to five; the final phase reverses the release order. Phase changes cancel unreleased blades and active wind.
+
+After an attack, the center opens for 1.35, 1.25, or 1.15 seconds as the fight progresses. The exposed rotor takes 135% damage; closed armor takes 32%. The boss has 2,400 health. No new controls, meters, or encounter previews are added. Practice lists the Turbine only after a normal-run defeat. Previously earned Condenser victories retain their original practice arena even if their seed now selects the Turbine.
 
 ## Optional challenges
 
@@ -212,7 +222,7 @@ Silhouettes, shields, aiming lines, and fuse rings carry the information in the 
 
 Turret volleys warn for 0.85 seconds and lock their aim for the final 0.38 seconds. Dashed amber lines track you, then turn solid: move across the firing direction once they lock. Below half health, a new volley contains five bolts instead of three; the complete spread is shown before firing. Cover still blocks every projectile. Bosses resist bullet knockback. The Loader and Crane each have 800 health, the Press and Kiln each have 1,250, and the Condenser has 2,600, and the rooftop boss has 3,200.
 
-Each boss has its own arena and silhouette. Separate seeded draws select the loading-docks and furnace bosses, including in Daily Runs, and replaying or continuing that seed keeps the same selections. The docks, furnace, and Cooling Works bosses lead to the usual gun upgrade and 12-health recovery. The final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
+Each boss has its own arena and silhouette. Separate seeded draws select the loading-docks, furnace, and Cooling Works bosses, including in Daily Runs, and replaying or continuing that seed keeps the same selections. The docks, furnace, and Cooling Works bosses lead to the usual gun upgrade and 12-health recovery. The final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
 
 ## Boss practice
 
@@ -338,3 +348,5 @@ Cooling Works regression checks cover coolant momentum, locked jet volleys, sepa
 Follow-up checks cover prerequisite rewards and saves, repeated portal replacement, capped travel and movement bonuses, defensive rear cones, wall fragment fans, converging lanes through cover and portals, firing-order accuracy streaks, enlarged echoes, and combined projectile/effect limits.
 
 Detour tests cover both exit routes with ordinary movement, four mirrored challenge layouts, warned reinforcement entrances, direct and extended run progression, bonus healing rules, deterministic Daily routes, and continued challenge/escape checkpoints.
+
+Turbine tests cover full warning and lock timing, both marked blade passes, airborne versus grounded wind, recoil preservation, solid cover and prop interactions, blade portals, pause and phase cancellation, saved entrances, earned Practice unlocks, and both mirrored fights. Reactive pilots win with normal health and eight upgrades; passive overhead, corner, and cover camps lose.

@@ -583,7 +583,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
           firing = false;
         }
       }
-      if (e?.kind === 'boss' || e?.kind === 'condenser') {
+      if (e?.kind === 'boss' || e?.kind === 'condenser' || e?.kind === 'turbine') {
         const choice = dodgePilot(g, e);
         move = Number(choice.right) - Number(choice.left);
         jump = choice.jump!;
@@ -614,6 +614,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         !g.clear &&
         e?.kind !== 'boss' &&
         e?.kind !== 'condenser' &&
+        e?.kind !== 'turbine' &&
         e?.kind !== 'press' &&
         e?.kind !== 'crane'
       ) {

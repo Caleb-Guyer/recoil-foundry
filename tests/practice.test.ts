@@ -113,7 +113,7 @@ test('all normal boss defeats unlock practice, but ordinary enemy kills do not',
     g.hitEnemy(g.enemies[0], 99999);
     assert.equal(victories.at(-1), kind);
   }
-  assert.equal(victories.length, 6);
+  assert.equal(victories.length, Object.keys(PRACTICE_BOSSES).length);
 });
 
 test('every practice boss keeps its discovered arena and gets the right number of real upgrades', () => {

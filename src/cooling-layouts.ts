@@ -149,3 +149,30 @@ export const COOLING_BOSS: Layout = {
     { x: 1810, y: 720 },
   ],
 };
+
+export const TURBINE_ARENA: Layout = {
+  id: 'turbine-gallery',
+  name: 'Turbine gallery',
+  area: 'cooling',
+  solids: [
+    { x: 400, y: 655, w: 150, h: 85 },
+    { x: 880, y: 650, w: 180, h: 90 },
+    { x: 1440, y: 655, w: 160, h: 85 },
+    { x: 590, y: 455, w: 220, h: 22 },
+    { x: 1140, y: 430, w: 230, h: 22 },
+  ],
+  coolant: [
+    { x: 560, y: 731, w: 280, h: 9 },
+    { x: 1090, y: 731, w: 310, h: 9 },
+  ],
+  spawns: [{ kind: 'turbine', x: 1450, y: 260 }],
+  route: [
+    { x: 280, y: 720 },
+    { x: 475, y: 635 },
+    { x: 720, y: 720 },
+    { x: 970, y: 630 },
+    { x: 1220, y: 720 },
+    { x: 1520, y: 635 },
+    { x: 1800, y: 720 },
+  ],
+};

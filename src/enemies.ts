@@ -22,6 +22,7 @@ export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }
   kiln: { w: 116, h: 84, hp: 1250 },
   skimmer: { w: 38, h: 38, hp: 76 },
   condenser: { w: 90, h: 76, hp: 2600 },
+  turbine: { w: 90, h: 90, hp: 2400 },
   boss: { w: 90, h: 76, hp: 3200 },
 };
 export const CHARGE_TELL = 0.7;
@@ -49,12 +50,13 @@ export const isBoss = (kind: EnemyKind) =>
   kind === 'press' ||
   kind === 'kiln' ||
   kind === 'condenser' ||
+  kind === 'turbine' ||
   kind === 'boss';
 export function enemyHealth(kind: EnemyKind, stage: number, elite?: EliteKind): number {
   const base = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
   return Math.ceil(base * (isBoss(kind) ? 1 : 1 + Math.max(0, Math.min(11, stage)) * 0.08));
 }
-export type Attack = 'aimed' | 'fan' | 'ring' | 'flak' | 'sweep' | 'slam' | 'mortar';
+export type Attack = 'aimed' | 'fan' | 'ring' | 'flak' | 'sweep' | 'slam' | 'mortar' | 'gust';
 export type EnemyState =
   | 'idle'
   | 'windup'

@@ -9,21 +9,24 @@ export interface BossHunt {
   nextPlan: number;
 }
 
-function firingLane(g: Game, from: Vec) {
+function firingLane(g: Game, from: Vec, padding = 9) {
   // A center ray can skim a platform that still catches the five-pixel bolt.
   // Leave a little clearance for both the projectile and the braking drift.
   return !g.solidBodies.some((body) =>
     segmentBox(
       from,
       g.player.position,
-      { x: body.bounds.min.x - 9, y: body.bounds.min.y - 9 },
-      { x: body.bounds.max.x + 9, y: body.bounds.max.y + 9 },
+      { x: body.bounds.min.x - padding, y: body.bounds.min.y - padding },
+      { x: body.bounds.max.x + padding, y: body.bounds.max.y + padding },
     ),
   );
 }
 
 export function bossHasLane(g: Game, e: Enemy) {
-  return distance(e.body.position, g.player.position) < 760 && firingLane(g, e.body.position);
+  return (
+    distance(e.body.position, g.player.position) < 760 &&
+    firingLane(g, e.body.position, e.kind === 'turbine' ? 16 : 9)
+  );
 }
 
 // Navigate the hull around solid corners. Shots still use the ordinary swept
@@ -61,7 +64,11 @@ function plan(g: Game, e: Enemy): Vec[] {
       })),
     ),
   ].filter(
-    (p) => valid(p) && distance(p, player) >= 175 && distance(p, player) <= 600 && firingLane(g, p),
+    (p) =>
+      valid(p) &&
+      distance(p, player) >= 175 &&
+      distance(p, player) <= 600 &&
+      firingLane(g, p, e.kind === 'turbine' ? 16 : 9),
   );
   const corners = blocks
     .flatMap((b) => [

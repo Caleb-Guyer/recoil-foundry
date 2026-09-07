@@ -1,4 +1,4 @@
-import { COOLING_LAYOUTS, COOLING_BOSS } from './cooling-layouts.ts';
+import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
@@ -17,6 +17,7 @@ export type EnemyKind =
   | 'kiln'
   | 'skimmer'
   | 'condenser'
+  | 'turbine'
   | 'boss';
 export interface Solid {
   x: number;
@@ -468,6 +469,7 @@ export const LAYOUTS: Layout[] = [
 ];
 export const BOSS_LAYOUTS: Layout[] = [
   COOLING_BOSS,
+  TURBINE_ARENA,
   {
     id: 'loader-bay',
     area: 'docks',
@@ -581,7 +583,7 @@ export const BOSS_LAYOUTS: Layout[] = [
     ),
   },
 ];
-function buildLevel(seed: string, stage: number): Level {
+function buildLevel(seed: string, stage: number, coolingBoss?: 'condenser' | 'turbine'): Level {
   const pick = seeded(seed + ':layouts');
   const boss = stage % 3 === 2;
   // Draw alternate area bosses independently so all other seeded rooms stay unchanged.
@@ -612,11 +614,16 @@ function buildLevel(seed: string, stage: number): Level {
   const roofBosses = BOSS_LAYOUTS.filter((layout) => layout.area === 'rooftops');
   const roofBoss = roofBosses[Math.floor(pick() * roofBosses.length)];
   const cooling = sample(COOLING_LAYOUTS, 2, seeded(seed + ':cooling-layouts'));
+  const coolingArena =
+    (coolingBoss ?? (seeded(seed + ':cooling-boss')() < 0.5 ? 'condenser' : 'turbine')) ===
+    'turbine'
+      ? TURBINE_ARENA
+      : COOLING_BOSS;
   const source =
     stage === 11
       ? roofBoss
       : stage === 8
-        ? COOLING_BOSS
+        ? coolingArena
         : stage >= 6 && stage < 8
           ? cooling[stage - 6]
           : order[stage >= 9 ? stage - 3 : stage];
@@ -698,8 +705,12 @@ function assignElite(level: Level, allowed: EliteKind[], rng: () => number): Eli
   return host.elite;
 }
 
-export function getLevel(seed: string, stage: number): Level {
-  const level = buildLevel(seed, stage);
+export function getLevel(
+  seed: string,
+  stage: number,
+  coolingBoss?: 'condenser' | 'turbine',
+): Level {
+  const level = buildLevel(seed, stage, coolingBoss);
   if (level.boss || stage < 3) return level;
   // Reconstruct the four elite encounters independently of room, combat, and reward RNG.
   const rng = seeded(seed + ':elites');

@@ -153,6 +153,18 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'turbine-wind') {
+      this.tone(90, 260, 0.55, 0.065, 'sawtooth');
+      this.tone(540, 620, 0.14, 0.025, 'sine', 0.22);
+      this.crack(0.25, 0.035, 1800);
+    } else if (kind === 'turbine-gust') {
+      this.crack(0.3, 0.11, 1400);
+      this.tone(170, 70, 0.35, 0.075, 'triangle');
+    } else if (kind === 'turbine-cut') {
+      this.tone(650, 160, 0.2, 0.065, 'triangle');
+      this.crack(0.16, 0.065, 2900);
+    } else if (kind === 'turbine-open') {
+      this.tone(240, 80, 0.22, 0.045, 'triangle');
     } else if (kind === 'cooling-shot') {
       this.tone(420, 105, 0.11, 0.085, 'triangle');
       this.crack(0.09, 0.07, 2500);

@@ -1,4 +1,6 @@
 import Matter from 'matter-js';
+import { createTurbine, updateTurbine } from './turbine.ts';
+import type { TurbineRig } from './turbine.ts';
 import { EvolutionSystem } from './evolutions.ts';
 import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
@@ -93,6 +95,7 @@ export interface Enemy {
   hunt?: BossHunt;
   crane?: CraneRig;
   kiln?: KilnRig;
+  turbine?: TurbineRig;
 }
 export interface Shot {
   id: number;
@@ -115,6 +118,7 @@ export interface Shot {
   shell?: ShellPayload;
   discharge?: number;
   waypoints?: Vec[];
+  blade?: true;
 }
 export interface Particle {
   pos: Vec;
@@ -338,7 +342,11 @@ export class Game {
         }
       : this.detour
         ? getDetour(this.seed, this.stage)
-        : getLevel(this.seed, this.stage);
+        : getLevel(
+            this.seed,
+            this.stage,
+            this.practice?.kind === 'condenser' ? 'condenser' : undefined,
+          );
     for (const solid of this.level.solids)
       wall(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h);
     this.player = Bodies.rectangle(140, 680, 26, 36, {
@@ -507,6 +515,7 @@ export class Game {
     this.enemies.push(enemy);
     if (kind === 'crane') enemy.crane = createCrane(this, enemy);
     if (kind === 'kiln') enemy.kiln = createKiln();
+    if (kind === 'turbine') enemy.turbine = createTurbine();
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
     this.shake = Math.min(12, this.shake + amount);
@@ -929,6 +938,7 @@ export class Game {
     else if (e.kind === 'sniper') this.updateSniper(e);
     else if (e.kind === 'boss') this.updateBoss(e);
     else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
+    else if (e.kind === 'turbine') updateTurbine(this, e, dt);
     else if (e.kind === 'runner') {
       const turning = e.elite === 'shielded' && this.updateShield(e);
       if (!turning) this.updateRunner(e, d, dist);
@@ -1380,16 +1390,27 @@ export class Game {
     speed = [7.2, 8, 8.8, 9.6][Math.floor(this.stage / 3)],
     damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20][Math.floor(this.stage / 3)],
     origin: Vec = e.body.position,
+    blade = false,
   ) {
     const d = { x: Math.cos(a), y: Math.sin(a) },
-      radius = e.kind === 'boss' || e.kind === 'condenser' ? 55 : e.kind === 'sniper' ? 38 : 26;
+      radius =
+        e.kind === 'turbine'
+          ? 62
+          : e.kind === 'boss' || e.kind === 'condenser'
+            ? 55
+            : e.kind === 'sniper'
+              ? 38
+              : 26;
     const muzzle = { x: origin.x + d.x * radius, y: origin.y + d.y * radius };
-    const end = this.lineEnd(origin, muzzle);
-    const portalMuzzle = this.portals.trace(origin, muzzle, { x: 5, y: 5 });
+    const end = this.lineEnd(origin, muzzle, blade ? 11 : 0);
+    const portalMuzzle = this.portals.trace(origin, muzzle, {
+      x: blade ? 11 : 5,
+      y: blade ? 11 : 5,
+    });
     if (distance(end, muzzle) > 0.01 && !portalMuzzle) {
       this.burst(end, 3, '#ef7264', 1.5);
       const prop = this.props.items.find((p) => {
-        const hit = traceProp(p, origin, muzzle);
+        const hit = traceProp(p, origin, muzzle, blade ? 11 : 0);
         return hit && Math.abs(distance(origin, end) - distance(origin, muzzle) * hit.t) < 0.1;
       });
       if (prop) this.props.hit(prop, damage, d);
@@ -1402,7 +1423,8 @@ export class Game {
       damage,
       life: 4,
       friendly: false,
-      radius: 5,
+      radius: blade ? 11 : 5,
+      ...(blade ? { blade: true as const } : {}),
       bounces: 0,
       pierce: 0,
       fragment: false,
@@ -1614,6 +1636,7 @@ export class Game {
     if (e.kind === 'press') damage *= e.state === 'recover' ? 1.25 : 0.4;
     if (e.kind === 'kiln') damage *= e.state === 'recover' ? 1.35 : 0.4;
     if (e.kind === 'condenser') damage *= e.state === 'recover' ? 1.3 : 0.25;
+    if (e.kind === 'turbine') damage *= e.state === 'recover' ? 1.35 : 0.32;
     if (e.kind === 'boss')
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;

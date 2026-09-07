@@ -1,6 +1,7 @@
 import type { Enemy, Game, Input } from '../src/game.ts';
 import { attackAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
+import { turbineRelease } from '../src/turbine.ts';
 import { clamp, distance, direction } from '../src/rules.ts';
 
 // Test-only player: compare short movement trajectories with visible bolts and
@@ -22,6 +23,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
       p: s.pos,
       v: s.vel,
       delay: 0,
+      radius: s.radius,
       life: Math.min(
         s.life * 60,
         distance(
@@ -30,7 +32,34 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
         ) / Math.hypot(s.vel.x, s.vel.y),
       ),
     }));
-  if ((e.state === 'windup' || e.state === 'followup') && e.timer <= 0.35) {
+  if (e.kind === 'turbine' && e.turbine && (e.state === 'windup' || e.state === 'rush')) {
+    const rig = e.turbine;
+    for (
+      let index = e.state === 'rush' ? rig.sent : 0;
+      index < rig.angles.length * (e.attack === 'gust' ? 2 : 1);
+      index++
+    ) {
+      const next = index % rig.angles.length;
+      const a = rig.angles[e.phase === 2 ? rig.angles.length - 1 - next : next];
+      const start = { x: rig.origin.x + Math.cos(a) * 62, y: rig.origin.y + Math.sin(a) * 62 };
+      const speed = 9.6 + e.phase * 0.5;
+      const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+      bolts.push({
+        p: start,
+        v,
+        radius: 11,
+        delay:
+          ((e.state === 'windup' ? e.timer : -rig.active) +
+            turbineRelease(e.attack === 'gust', index, rig.angles.length)) *
+          60,
+        life:
+          distance(
+            start,
+            g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 }, 11),
+          ) / speed,
+      });
+    }
+  } else if ((e.state === 'windup' || e.state === 'followup') && e.timer <= 0.35) {
     const angles =
       e.kind === 'boss' ? attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)) : coolingAngles(e);
     for (const a of angles) {
@@ -41,6 +70,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
         p: start,
         v,
         delay: e.timer * 60,
+        radius: 5,
         life:
           distance(start, g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 })) /
           speed,
@@ -52,7 +82,9 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
   for (const move of [-1, 0, 1])
     for (const jump of g.grounded ? [false, true] : [false])
       for (const fire of [true, false])
-        for (const lift of fire && e.kind === 'boss' ? [false, true] : [false]) {
+        for (const lift of fire && (e.kind === 'boss' || e.kind === 'turbine')
+          ? [false, true]
+          : [false]) {
           let x = p.x,
             y = p.y,
             vx = g.player.velocity.x,
@@ -95,6 +127,25 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
             }
             vx *= 0.992;
             vy = vy * 0.992 + 1000 / 3600;
+            if (
+              e.kind === 'turbine' &&
+              e.attack === 'gust' &&
+              e.turbine &&
+              (e.state === 'rush' || (e.state === 'windup' && frame / 60 > e.timer))
+            ) {
+              const origin = e.turbine.origin;
+              const along = (x - origin.x) * e.aim.x + (y - origin.y) * e.aim.y;
+              const across = Math.abs((x - origin.x) * e.aim.y - (y - origin.y) * e.aim.x);
+              if (
+                along > 50 &&
+                along < 850 &&
+                across < 48 + along * 0.14 &&
+                distance(g.lineEnd(origin, { x, y }), { x, y }) < 1
+              ) {
+                vx += e.aim.x * (ground ? 0.18 : 0.62);
+                vy += e.aim.y * (ground ? 0.18 : 0.62);
+              }
+            }
             x += vx;
             for (const b of boxes)
               if (y + 17 > b.top && y - 17 < b.bottom && x + 13 > b.left && x - 13 < b.right) {
@@ -124,7 +175,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
               if (t < 0 || t > b.life) continue;
               const dx = Math.abs(b.p.x + b.v.x * t - x),
                 dy = Math.abs(b.p.y + b.v.y * t - y);
-              if (dx < 25 && dy < 31) score += 1000 / (frame + 8);
+              if (dx < 20 + b.radius && dy < 26 + b.radius) score += 1000 / (frame + 8);
               else if (dx < 42 && dy < 45) score += 8 / (frame + 8);
             }
             const ex = target.x + e.body.velocity.x * Math.min(frame, 8),
