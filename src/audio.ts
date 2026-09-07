@@ -136,6 +136,8 @@ export class Sound {
         'reinforce',
         'crane-wind',
         'crane-hit',
+        'kiln-wind',
+        'kiln-impact',
         'strain',
         'arm',
         'hurt',
@@ -178,6 +180,17 @@ export class Sound {
       this.tone(85, 28, 0.24, 0.17);
       this.tone(460, 95, 0.08, 0.045);
       this.crack(0.16, 0.12, 1300);
+    } else if (kind === 'kiln-wind') {
+      this.crack(0.38, 0.035, 1400);
+      this.tone(135, 220, 0.4, 0.06, 'triangle');
+      this.tone(620, 680, 0.16, 0.02, 'sine', 0.2);
+    } else if (kind === 'kiln-fire') {
+      this.tone(85, 30, 0.18, 0.14);
+      this.crack(0.09, 0.1, 550);
+    } else if (kind === 'kiln-impact') {
+      this.tone(80, 26, 0.26, 0.16);
+      this.tone(400, 120, 0.05, 0.025);
+      this.crack(0.18, 0.11, 950);
     } else if (kind === 'strain') {
       this.crack(0.2, 0.055, 1700);
       this.tone(280, 110, 0.25, 0.035);

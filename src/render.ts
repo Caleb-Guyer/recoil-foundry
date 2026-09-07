@@ -1,4 +1,5 @@
 import { drawCrane } from './crane-art.ts';
+import { drawKiln } from './kiln-art.ts';
 import { drawBossSignal } from './boss-signals.ts';
 import { drawReinforcementDoors } from './reinforcement-art.ts';
 import { Game, WORLD, EXTRACTION_DURATION } from './game.ts';
@@ -155,6 +156,10 @@ export class Renderer {
     for (const e of g.enemies) {
       if (e.kind === 'crane') {
         drawCrane(c, g, e, this.reduced);
+        continue;
+      }
+      if (e.kind === 'kiln') {
+        drawKiln(c, g, e, this.reduced);
         continue;
       }
       const p = e.body.position,

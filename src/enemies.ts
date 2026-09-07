@@ -19,6 +19,7 @@ export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }
   loader: { w: 112, h: 68, hp: 800 },
   crane: { w: 90, h: 54, hp: 800 },
   press: { w: 120, h: 62, hp: 1250 },
+  kiln: { w: 116, h: 84, hp: 1250 },
   boss: { w: 90, h: 76, hp: 1800 },
 };
 export const CHARGE_TELL = 0.7;
@@ -41,12 +42,12 @@ export function flakAngles(aim: number, enraged: boolean): number[] {
   );
 }
 export const isBoss = (kind: EnemyKind) =>
-  kind === 'loader' || kind === 'crane' || kind === 'press' || kind === 'boss';
+  kind === 'loader' || kind === 'crane' || kind === 'press' || kind === 'kiln' || kind === 'boss';
 export function enemyHealth(kind: EnemyKind, stage: number, elite?: EliteKind): number {
   const base = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
   return Math.ceil(base * (isBoss(kind) ? 1 : 1 + Math.max(0, Math.min(8, stage)) * 0.08));
 }
-export type Attack = 'aimed' | 'fan' | 'ring' | 'flak' | 'sweep' | 'slam';
+export type Attack = 'aimed' | 'fan' | 'ring' | 'flak' | 'sweep' | 'slam' | 'mortar';
 export type EnemyState =
   | 'idle'
   | 'windup'

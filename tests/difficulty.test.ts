@@ -187,8 +187,8 @@ test('sustained fire from the old overhead and cover camps cannot win the boss d
   const cases = [
     { stage: 2, seed: 'crane-1', x: 1470, y: 620 },
     { stage: 2, seed: 'crane-1', x: 13, y: 722 },
-    { stage: 5, seed: 'boss-cheese-0', x: 700, y: 160 },
-    { stage: 5, seed: 'boss-cheese-0', x: 235, y: 722 },
+    { stage: 5, seed: 'kiln-layout-0', x: 700, y: 160 },
+    { stage: 5, seed: 'kiln-layout-0', x: 235, y: 722 },
     { stage: 8, seed: 'boss-cheese-0', x: 1490, y: 160 },
     { stage: 8, seed: 'boss-cheese-0', x: 355, y: 722 },
   ];
@@ -301,7 +301,7 @@ test('reacting to the Crane beats the same fight that kills passive sustained fi
 
 test('the Press cover trap remains winnable by reading its locks and moving between volleys', () => {
   const g = new Game(),
-    seed = 'boss-cheese-0';
+    seed = 'kiln-layout-0';
   g.start(seed, {
     version: 3,
     seed,

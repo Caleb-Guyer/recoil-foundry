@@ -12,6 +12,7 @@ export type EnemyKind =
   | 'loader'
   | 'crane'
   | 'press'
+  | 'kiln'
   | 'boss';
 export interface Solid {
   x: number;
@@ -509,6 +510,20 @@ export const BOSS_LAYOUTS: Layout[] = [
     ),
   },
   {
+    id: 'kiln-hall',
+    area: 'furnace',
+    name: 'Kiln hall',
+    solids: [
+      box(440, 660, 160, 80),
+      box(1050, 660, 160, 80),
+      shelf(640, 460, 200),
+      shelf(950, 390, 180),
+      shelf(1600, 445, 180),
+    ],
+    spawns: [{ kind: 'kiln', x: 1450, y: 698 }],
+    route: route([300, 720], [520, 640], [900, 720], [1130, 640], [1430, 720], [1820, 720]),
+  },
+  {
     id: 'twin-towers',
     area: 'rooftops',
     name: 'Twin towers',
@@ -560,9 +575,12 @@ export const BOSS_LAYOUTS: Layout[] = [
 function buildLevel(seed: string, stage: number): Level {
   const pick = seeded(seed + ':layouts');
   const boss = stage === 2 || stage === 5 || stage === 8;
-  // Choose the docks encounter independently so later rooms keep their seeded layouts.
+  // Draw alternate area bosses independently so all other seeded rooms stay unchanged.
   const docksBosses = BOSS_LAYOUTS.filter((layout) => layout.area === 'docks');
   const docksBoss = docksBosses[Math.floor(seeded(seed + ':docks-boss')() * docksBosses.length)];
+  const furnaceBosses = BOSS_LAYOUTS.filter((layout) => layout.area === 'furnace');
+  const furnaceBoss =
+    furnaceBosses[Math.floor(seeded(seed + ':furnace-boss')() * furnaceBosses.length)];
   const order = [
     ...sample(
       LAYOUTS.filter((layout) => layout.area === 'docks'),
@@ -575,7 +593,7 @@ function buildLevel(seed: string, stage: number): Level {
       2,
       pick,
     ),
-    BOSS_LAYOUTS.find((layout) => layout.area === 'furnace')!,
+    furnaceBoss,
     ...sample(
       LAYOUTS.filter((layout) => layout.area === 'rooftops'),
       2,

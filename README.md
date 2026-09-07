@@ -35,7 +35,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-06&dv=10`). Version 10 tightens enemy pressure, boss armor, gun balance, and healing; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=11`). Version 11 adds The Kiln to the furnace boss selection; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -57,7 +57,7 @@ Existing modifications remain: Heavy hitter, Scattershot, Hair trigger, Bank sho
 Escape through three areas, each with its own scenery, lighting, and layout pool:
 
 - **Loading docks, rooms 1–3:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Two layouts drawn from loading bays, overpasses, staggered cargo, and terraces, then either The Loader in its loading bay or The Crane among raised shelves and cargo stacks.
-- **Furnace halls, rooms 4–6:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then The Press in its machine hall.
+- **Furnace halls, rooms 4–6:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then The Press in its machine hall or The Kiln among low stacks and raised shelves.
 - **Rooftops, rooms 7–9:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, followed by one of two rooftop boss arenas.
 
 Each run has six different regular layouts and three boss arenas. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
@@ -129,11 +129,12 @@ Silhouettes, shields, aiming lines, and fuse rings carry the information in the 
 - **Room 3 — The Loader:** a tracked ram that braces for 0.9 seconds before charging in a fixed direction. Jump over its charge or bait it into the low bumpers. A crash leaves it harmless to touch for 1.25 seconds and taking 25% extra damage. Its armor reduces incoming damage by 60% while active. It hops obstacles and uses an aimed turret volley against players hovering overhead or camping a corner.
 - **Room 3 — The Crane:** an overhead motor carries a suspended hammer. Its sweeps warn for 0.95 seconds and slams for 1.1 seconds; both lock their marked path for the final 0.45 seconds. Jump or recoil over a sweep and step out of a locked slam. The hammer stops on solid cover and smashes loose crates. A missed strike opens the motor shutters for 1.25 seconds, taking 40% extra damage. Closed shutters reduce incoming damage by 65%. Aim at the motor: the hammer blocks shots. A moving turret finds a clear firing lane when the hammer cannot reach you, including overhead hovering and protected corners.
 - **Room 6 — The Press:** an overhead machine that marks a landing column before dropping. The final 0.65 seconds of the warning are locked, giving you time to dodge or recoil upward beside it. Platforms stop the slam; its 0.8-second recovery takes 25% extra damage before it rises again. Active armor reduces incoming damage by 60%. Its turret pressures players above it, behind a protected slam column, or camping a corner; it moves into position before attacking.
+- **Room 6 — The Kiln:** a mobile boiler that lobs three molten shells over low cover, or four below half health. Curved warnings show their actual paths and landing surfaces for 1.1 seconds, locking for the final 0.5 seconds. Impacts leave short hot strips that glow for 0.4 seconds before burning for 1.8 seconds. Move out of the marked landing, then jump or recoil across the heat. Its cooling vents open for 1.5 seconds after each mortar volley, taking 35% extra damage; closed armor reduces incoming damage by 60%. It physically advances and hops stacks to find a turret firing lane against overhead or sheltered players. Cover blocks shells and turret shots.
 - **Room 9 — Rooftop boss:** physically flies around cover to find a clear firing lane. Its attacks change at two-thirds and one-third health: aimed volleys, wider aimed fans, then radial volleys with changing gaps. Each pattern has a visible windup and locks its aim for the final 0.3 seconds. Armor closes during the windup, reducing incoming damage by 55%, then opens after firing. Phase changes close its shutters for 0.75 seconds, reducing incoming damage by 65%. Lights on its body show the phase.
 
-Turret volleys warn for 0.85 seconds and lock their aim for the final 0.38 seconds. Dashed amber lines track you, then turn solid: move across the firing direction once they lock. Below half health, a new volley contains five bolts instead of three; the complete spread is shown before firing. Cover still blocks every projectile. Bosses resist bullet knockback. The Loader has 612 health, the Crane 720, the Press 1,000, and the rooftop boss 1,400.
+Turret volleys warn for 0.85 seconds and lock their aim for the final 0.38 seconds. Dashed amber lines track you, then turn solid: move across the firing direction once they lock. Below half health, a new volley contains five bolts instead of three; the complete spread is shown before firing. Cover still blocks every projectile. Bosses resist bullet knockback. The Loader and Crane each have 800 health, the Press and Kiln each have 1,250, and the rooftop boss has 1,800.
 
-Each boss has its own arena and silhouette. The seed selects the loading-docks boss, including in Daily Runs, and replaying or continuing that seed keeps the same selection. The docks and furnace bosses lead to the usual gun upgrade and 12-health recovery. The final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
+Each boss has its own arena and silhouette. Separate seeded draws select the loading-docks and furnace bosses, including in Daily Runs, and replaying or continuing that seed keeps the same selections. The docks and furnace bosses lead to the usual gun upgrade and 12-health recovery. The final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
 
 ## Final escape
 
@@ -182,6 +183,8 @@ npm run preview
 | -------------------- | -------------------------------------------------------------------------------------- |
 | `src/game.ts`        | Matter.js simulation, movement, recoil, combat, and room progression                   |
 | `src/enemies.ts`     | Enemy dimensions, health, attack timing, and boss patterns                             |
+| `src/kiln-ai.ts`     | Mortar planning, swept shell collisions, surface heat, and boiler movement              |
+| `src/kiln-art.ts`    | Boiler silhouette, cooling vents, arc warnings, and molten shell effects               |
 | `src/levels.ts`      | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
 | `src/areas.ts`       | Area palettes, parallax scenery, and surface details                                   |
 | `src/props.ts`       | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
@@ -207,6 +210,8 @@ Shot-trail checks cover real collision corners, bounded path history, persistent
 Reinforcement checks cover deterministic composition, full arrival warnings, blocked entries, room completion, one reward per room, pause and death, and fresh checkpoint reconstruction.
 
 Area boss checks cover locked attack warnings, airborne camping versus reactive dodging, corner pressure, shotgun knockback resistance, transition armor, and physical flanking across both rooftop arenas and their mirrors. They also cover wide-body crashes, platform-edge landings, returning from beneath shelves, safe recovery windows, recoil escapes, pause and death cleanup, and exactly one upgrade after each intermediate boss.
+
+Kiln checks cover seeded arena selection, unchanged non-furnace rooms, locked mortar plans, live collisions with cover and props, hot-strip warnings and expiry, vent armor, displaced-muzzle cancellation, and reactive combat in both mirrors. Shells and hot strips reset when restarting or leaving the room.
 
 Elite checks cover sparse deterministic placement, checkpoint reconstruction, directional shielding and flanking, piercing and rear blasts, the sniper's second aim lock, fuse timing and defusing, blast cover and chains, and immediate cancellation on death.
 

@@ -34,6 +34,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           loader: 0,
           crane: 0,
           press: 0,
+          kiln: 0,
           boss: 0,
         }[spawn.kind];
   ranked.sort((a, b) => strength(b.spawn) - strength(a.spawn) || a.tie - b.tie);

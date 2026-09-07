@@ -107,14 +107,13 @@ test('the docks choose Loader or Crane deterministically with both mirrored aren
   assert(isBoss('crane'));
 });
 
-test('the independent docks boss draw preserves every other room in established runs', () => {
+test('the independent docks boss draw preserves regular rooms and the rooftop encounter', () => {
   const expected = {
     A: [
       'loading-bays:false',
       'overpass:false',
       'fortress:false',
       'pillars:true',
-      'press-hall:true',
       'split-deck:false',
       'gantry:false',
       'twin-towers:false',
@@ -124,7 +123,6 @@ test('the independent docks boss draw preserves every other room in established 
       'overpass:true',
       'chimney:false',
       'fortress:false',
-      'press-hall:true',
       'split-deck:true',
       'broken-bridge:true',
       'last-crossing:false',
@@ -132,7 +130,7 @@ test('the independent docks boss draw preserves every other room in established 
   };
   for (const [seed, rooms] of Object.entries(expected)) {
     assert.deepEqual(
-      [0, 1, 3, 4, 5, 6, 7, 8].map((stage) => {
+      [0, 1, 3, 4, 6, 7, 8].map((stage) => {
         const level = getLevel(seed, stage);
         return `${level.id}:${level.mirrored}`;
       }),
