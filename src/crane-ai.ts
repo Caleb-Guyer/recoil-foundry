@@ -135,7 +135,7 @@ function route(g: Game, from: Vec, to: Vec): Vec[] {
   }
   return points;
 }
-function moveHead(g: Game, rig: CraneRig, target: Vec, speed = 12) {
+function moveHead(g: Game, rig: CraneRig, target: Vec, speed = 15) {
   if (g.time >= rig.planAt || !rig.route.length || distance(rig.route.at(-1)!, target) > 20) {
     rig.route = route(g, rig.head, target);
     rig.planAt = g.time + 0.3;
@@ -262,10 +262,10 @@ export function updateCrane(g: Game, e: Enemy) {
       if (e.timer > FLAK_LOCK) e.aim = direction(bossMuzzle(e), g.player.position);
       if (e.timer <= 0) {
         for (const angle of flakAngles(Math.atan2(e.aim.y, e.aim.x), e.phase === 1))
-          g.enemyShot(e, angle, 10, 14, bossMuzzle(e));
+          g.enemyShot(e, angle, 10, 18, bossMuzzle(e));
         e.attacks++;
         e.state = 'idle';
-        e.timer = 0.55;
+        e.timer = 0.3;
         g.onSound('enemy');
       }
       return;
@@ -286,7 +286,7 @@ export function updateCrane(g: Game, e: Enemy) {
       g.onSound(e.attack === 'sweep' ? 'crane-swing' : 'press');
     } else if (e.timer < -0.25) {
       e.state = 'idle';
-      e.timer = 0.2;
+      e.timer = 0.1;
     }
     return;
   }
@@ -300,11 +300,17 @@ export function updateCrane(g: Game, e: Enemy) {
   }
   if (e.state === 'return') {
     moveMotor(g, e, false);
-    const home = { x: e.body.position.x, y: 250 };
-    moveHead(g, rig, home);
-    if (distance(rig.head, home) < 8 || e.timer < -2) {
+    const nextAttack = e.attacks % 2 ? 'slam' : 'sweep',
+      plan = g.player.position.y < 215 ? null : primaryPlan(g, e, nextAttack),
+      home = { x: e.body.position.x, y: 250 },
+      target = plan?.from ?? home;
+    // Retract toward the next setup through the same collision-safe route.
+    // A blocked setup falls back to the overhead home, where flak can seek a lane.
+    const moving = moveHead(g, rig, target);
+    if (!moving && plan) moveHead(g, rig, home);
+    if (distance(rig.head, target) < 8 || e.timer < -2) {
       e.state = 'idle';
-      e.timer = 0.2;
+      e.timer = 0.1;
     }
     return;
   }

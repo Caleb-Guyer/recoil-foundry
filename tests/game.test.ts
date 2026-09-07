@@ -337,7 +337,17 @@ for (const seed of ['A', 'E'])
       lastProgress = 0,
       lastKills = 0,
       clearAt = -1,
-      escapeSeen = false;
+      escapeSeen = false,
+      pressDodgeUntil = 0,
+      pressDirection = 1,
+      pressReacted = false,
+      roofDirection = 1,
+      roofLastJump = -5,
+      roofLastTell = -1,
+      roofVolleys = 0;
+    g.onSound = (sound) => {
+      if (g.stage === 8 && (sound === 'enemy' || sound === 'pulse')) roofVolleys++;
+    };
     const priority = [
       'leech',
       'magnum',
@@ -434,10 +444,6 @@ for (const seed of ['A', 'E'])
         jump = g.grounded && (blocked || stuck > 15);
       }
       if (way && p.y - way.y > 50 && g.grounded) jump = true;
-      if (e?.kind === 'boss' && e.state === 'windup' && e.attack !== 'ring' && e.timer <= 0.3) {
-        jump ||= g.grounded;
-        move = p.x < 160 ? 1 : p.x > 1840 ? -1 : Math.sign(e.aim.y) || move;
-      }
       let firing = (!g.clear && !navigate) || (lift && !g.grounded);
       const breach = g.breaches.placement,
         hatch = breach?.panels.find((rect) => rect.w > rect.h);
@@ -458,9 +464,55 @@ for (const seed of ['A', 'E'])
           Math.abs(center - p.x) < 35 &&
           g.breaches.panels.some((panel) => panel.rect.w > panel.rect.h);
       }
-      if (e?.kind === 'boss' && (p.x < 160 || p.x > 1840)) {
-        move = p.x < 160 ? 1 : -1;
-        firing = false;
+      if (e?.kind === 'press') {
+        move = dx > 320 ? 1 : dx < -320 ? -1 : 0;
+        jump = false;
+        firing = true;
+        aim = { ...e.body.position };
+        const pressBlocked =
+          move && Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length;
+        if (g.grounded && (pressBlocked || stuck > 25)) jump = true;
+        if (
+          e.state === 'windup' &&
+          e.timer <= (e.attack === 'flak' ? 0.38 : 0.65) &&
+          !pressReacted
+        ) {
+          pressReacted = true;
+          // Continue across the locked lanes rather than reversing into old bolts.
+          pressDirection = p.x < 400 ? 1 : p.x > 1600 ? -1 : pressDirection;
+          pressDodgeUntil = g.time + 1.1;
+          jump = g.grounded;
+        }
+        if (e.state !== 'windup') pressReacted = false;
+        if (g.time < pressDodgeUntil) {
+          move = pressDirection;
+          firing = false;
+        }
+        if (p.x < 160 || p.x > 1840) {
+          move = p.x < 160 ? 1 : -1;
+          firing = false;
+        }
+      }
+      if (e?.kind === 'boss') {
+        if (p.x < 150) roofDirection = 1;
+        else if (p.x > 1850) roofDirection = -1;
+        move = roofDirection;
+        aim = { ...e.body.position };
+        const roofBlocked =
+            Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 18).length > 0,
+          locked = e.state === 'windup' && e.timer <= 0.3;
+        // Patrol across each volley and fire in the exposed cooldown. Wait for
+        // any committed burst before beginning the next evasive jump.
+        firing = e.state === 'recover' || e.state === 'idle';
+        jump =
+          g.grounded &&
+          g.burstRemaining === 0 &&
+          g.time - roofLastJump > 0.3 &&
+          (roofBlocked || (locked && roofLastTell !== roofVolleys));
+        if (jump) {
+          roofLastJump = g.time;
+          roofLastTell = roofVolleys;
+        }
       }
       tick(g, 1, {
         left: move < 0,

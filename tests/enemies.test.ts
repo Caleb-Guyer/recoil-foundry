@@ -244,7 +244,7 @@ test('rooftop fan and ring volleys track the player early and preserve their loc
     const shots = g.shots.filter((shot) => !shot.friendly);
     assert.equal(shots.length, attack === 'fan' ? 7 : 12);
     const base = Math.atan2(locked.y, locked.x),
-      speed = attack === 'fan' ? 8.8 : 6.2;
+      speed = attack === 'fan' ? 10.4 : 7.2;
     for (const [i, shot] of shots.entries()) {
       const angle = base + (attack === 'fan' ? (i - 3) * 0.27 : (i * Math.PI) / 6 + Math.PI / 12);
       assert(Math.abs(shot.vel.x - Math.cos(angle) * speed) < 1e-8);

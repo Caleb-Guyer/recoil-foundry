@@ -9,7 +9,7 @@ export function drawBossSignal(
   reduced: boolean,
 ): void {
   if (e.spawn > 0) return;
-  if (e.kind === 'boss' && e.state === 'transition') {
+  if (e.kind === 'boss' && (e.state === 'transition' || e.state === 'windup')) {
     c.save();
     c.translate(e.body.position.x, e.body.position.y);
     // Narrow seams and an exposed warm center read as armor, not immunity.

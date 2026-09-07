@@ -349,7 +349,7 @@ test('accepting a daily upgrade twice advances and heals only once', () => {
   assert.equal(game.level, nextRoom);
   assert.equal(game.player, nextPlayer);
   assert.equal(game.gun, upgradedGun);
-  assert.equal(game.hp, 63);
+  assert.equal(game.hp, 55);
   assert.deepEqual(game.mods, [offered]);
   assert.equal(checkpoints.length, 1);
   assert.deepEqual(checkpoints[0].mods, [offered]);

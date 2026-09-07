@@ -111,18 +111,25 @@ test('ordinary rooms split their exact authored roster into two groups without c
     }
 });
 
-test('reinforcements warn early once two opening enemies are defeated and only one remains', () => {
-  const g = fixture(9);
-  assert(g.enemies.length >= 3);
-  while (g.enemies.length > 2) g.hitEnemy(g.enemies[0], 99999);
-  step(g, 10);
-  assert.equal(g.waves.phase, 'opening');
-  g.hitEnemy(g.enemies[0], 99999);
-  until(g, () => g.waves.phase === 'warning');
-  assert.equal(g.enemies.length, 1);
-  assert(
-    g.waves.doors.every((door) => door.state === 'warning' && door.timer === REINFORCEMENT_TELL),
-  );
+test('later waves overlap the last opening enemy while the docks preserve their gentler introduction', () => {
+  for (const stage of [0, 3]) {
+    const g = fixture(6);
+    g.stage = stage;
+    assert.equal(g.enemies.length, 2);
+    step(g, 10);
+    assert.equal(g.waves.phase, 'opening');
+    g.hitEnemy(g.enemies[0], 99999);
+    if (stage === 0) {
+      step(g, 10);
+      assert.equal(g.waves.phase, 'opening');
+      g.hitEnemy(g.enemies[0], 99999);
+    }
+    until(g, () => g.waves.phase === 'warning');
+    assert.equal(g.enemies.length, stage === 0 ? 0 : 1);
+    assert(
+      g.waves.doors.every((door) => door.state === 'warning' && door.timer === REINFORCEMENT_TELL),
+    );
+  }
 });
 
 test('a fast opening clear gives the full warning and cannot clear, heal, or open the exit before the final group', () => {
@@ -155,7 +162,7 @@ test('a fast opening clear gives the full warning and cannot clear, heal, or ope
   assert.equal(g.hp, 50);
   assert.equal(sounds.filter((sound) => sound === 'clear').length, 1);
   g.chooseMod(g.offers[0].id);
-  assert.equal(g.hp, 70);
+  assert.equal(g.hp, 62);
   assert.equal(g.stage, 1);
   assert.equal(g.mods.length, 1);
 });

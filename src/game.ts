@@ -8,6 +8,7 @@ import {
   getGun,
   MODS,
   STAGES,
+  ROOM_HEAL,
   segmentBox,
 } from './rules.ts';
 import type { Vec, Gun, Mod, Checkpoint } from './rules.ts';
@@ -16,7 +17,7 @@ import { getLevel } from './levels.ts';
 import type { Level, EnemyKind } from './levels.ts';
 import {
   ENEMY_STATS,
-  ELITE_HP,
+  enemyHealth,
   SHIELD_TURN,
   TWIN_TELL,
   TWIN_LOCK,
@@ -375,7 +376,7 @@ export class Game {
   spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind, attackDelay?: number) {
     if (this.enemies.length >= 14) return;
     const { w, h } = ENEMY_STATS[kind];
-    const hp = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
+    const hp = enemyHealth(kind, this.stage, elite);
     const body =
       kind === 'flyer'
         ? Bodies.circle(x, y, 19, { frictionAir: 0.035, inertia: Infinity, label: 'enemy' })
@@ -746,7 +747,8 @@ export class Game {
         const base = Math.atan2(e.aim.y, e.aim.x);
         const count = e.kind === 'flyer' ? 3 : 1;
         for (let i = 0; i < count; i++) this.enemyShot(e, base + (i - (count - 1) / 2) * 0.18);
-        e.timer = e.kind === 'flyer' ? 2.3 : 1.8;
+        const area = Math.floor(this.stage / 3);
+        e.timer = e.kind === 'flyer' ? [1.9, 1.7, 1.5][area] : [1.5, 1.35, 1.2][area];
         this.onSound('enemy');
       } else if (e.timer <= 0) e.timer = 0.8;
     }
@@ -759,8 +761,8 @@ export class Game {
       this.damagePlayer(
         isBoss(e.kind)
           ? e.kind === 'loader'
-            ? 22
-            : 25
+            ? 28
+            : 30
           : e.kind === 'charger' && e.state === 'rush'
             ? 22
             : 15,
@@ -1089,7 +1091,7 @@ export class Game {
           this.onSound('lock');
         } else {
           e.state = 'recover';
-          e.timer = e.elite === 'twin' ? 2.5 : 2.2;
+          e.timer = e.elite === 'twin' ? 1.9 : 1.65;
         }
       }
     } else {
@@ -1127,7 +1129,7 @@ export class Game {
       if (e.timer > 0.3) e.aim = d;
       if (e.timer <= 0) {
         for (const angle of attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)))
-          this.enemyShot(e, angle, e.attack === 'ring' ? 6.2 : 8.8, 18);
+          this.enemyShot(e, angle, e.attack === 'ring' ? 7.2 : 10.4, 22);
         e.attacks++;
         e.state = 'recover';
         e.timer = [0.9, 0.7, 0.55][e.phase];
@@ -1144,8 +1146,8 @@ export class Game {
   enemyShot(
     e: Enemy,
     a: number,
-    speed = 6.7,
-    damage = e.kind === 'boss' ? 18 : 12,
+    speed = [7.2, 8, 8.8][Math.floor(this.stage / 3)],
+    damage = e.kind === 'boss' ? 22 : [14, 16, 18][Math.floor(this.stage / 3)],
     origin: Vec = e.body.position,
   ) {
     const d = { x: Math.cos(a), y: Math.sin(a) },
@@ -1307,10 +1309,11 @@ export class Game {
       this.onSound('bank');
     }
     if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
-    if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.25 : 0.7;
-    if (e.kind === 'crane') damage *= e.state === 'recover' && e.crane && !e.crane.hit ? 1.4 : 0.6;
-    if (e.kind === 'press') damage *= e.state === 'recover' ? 1.25 : 0.75;
-    if (e.kind === 'boss' && e.state === 'transition') damage *= 0.35;
+    if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.25 : 0.4;
+    if (e.kind === 'crane') damage *= e.state === 'recover' && e.crane && !e.crane.hit ? 1.4 : 0.35;
+    if (e.kind === 'press') damage *= e.state === 'recover' ? 1.25 : 0.4;
+    if (e.kind === 'boss')
+      damage *= e.state === 'transition' ? 0.35 : e.state === 'windup' ? 0.45 : 1;
     e.hp -= damage;
     if (!blocked) {
       e.flash = 0.08;
@@ -1393,7 +1396,7 @@ export class Game {
     this.rewardTaken = true;
     this.mods.push(id);
     this.gun = getGun(this.mods);
-    this.hp = Math.min(100, this.hp + 20);
+    this.hp = Math.min(100, this.hp + ROOM_HEAL);
     this.stage++;
     this.loadRoom();
     this.setMode('playing');

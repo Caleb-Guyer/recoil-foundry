@@ -13,10 +13,29 @@ import {
   flakAngles,
 } from './enemies.ts';
 
-const { Body } = Matter;
+const { Body, Query } = Matter;
+
+function loaderGrounded(g: Game, e: Enemy) {
+  if (g.enemyGrounded(e)) return true;
+  if (e.body.velocity.y < -1) return false;
+  const p = e.body.position,
+    tread = ENEMY_STATS.loader.w / 2 - 10;
+  // Either tread can rest on a prop edge while the center hangs over a gap.
+  return [-tread, tread].some(
+    (offset) =>
+      Query.ray(
+        g.solidBodies,
+        { x: p.x + offset, y: e.body.bounds.max.y - 2 },
+        { x: p.x + offset, y: e.body.bounds.max.y + 5 },
+        12,
+      ).length > 0,
+  );
+}
 
 function visible(g: Game, from: Vec, target = g.player.position) {
-  return distance(g.lineEnd(from, target), target) < 0.1;
+  // Check the entire muzzle-to-player lane with room for the five-pixel bolt
+  // and a little braking drift, rather than accepting a ray that skims cover.
+  return distance(g.lineEnd(from, target, 7), target) < 0.1;
 }
 
 function beginFlak(g: Game, e: Enemy) {
@@ -25,6 +44,7 @@ function beginFlak(g: Game, e: Enemy) {
   e.state = 'windup';
   e.timer = FLAK_TELL;
   e.aim = direction(bossMuzzle(e), g.player.position);
+  if (e.kind === 'press') Body.setVelocity(e.body, { x: 0, y: 0 });
   g.onSound('lock');
 }
 
@@ -33,17 +53,17 @@ function updateFlak(g: Game, e: Enemy) {
   if (e.timer > 0) return;
   const origin = bossMuzzle(e);
   for (const angle of flakAngles(Math.atan2(e.aim.y, e.aim.x), e.phase === 1))
-    g.enemyShot(e, angle, 10, 14, origin);
+    g.enemyShot(e, angle, 10, 18, origin);
   e.attacks++;
   // This is a firing cooldown, not the exposed crash/slam recovery state.
   e.state = 'idle';
-  e.timer = 0.55;
+  e.timer = 0.3;
   g.onSound('enemy');
 }
 
-function loaderApproach(g: Game, e: Enemy, above: boolean) {
+function loaderApproach(g: Game, e: Enemy, counter: boolean) {
   const p = e.body.position;
-  if (!above || visible(g, bossMuzzle(e))) return g.player.position.x;
+  if (!counter || visible(g, bossMuzzle(e))) return g.player.position.x;
   // A ledge remains real cover. Seek its side, then use the existing physical
   // hop to find an elevated angle instead of firing through the platform.
   const candidates = [220, -220, 380, -380, 560, -560]
@@ -57,14 +77,16 @@ export function updateLoader(g: Game, e: Enemy) {
   const p = e.body.position,
     v = e.body.velocity,
     above = g.player.position.y < p.y - 130,
-    grounded = g.enemyGrounded(e),
+    corner = g.player.position.x < 95 || g.player.position.x > g.worldWidth - 95,
+    counter = above || corner,
+    grounded = loaderGrounded(g, e),
     nose = ENEMY_STATS.loader.w / 2 + 24;
   if (e.state === 'rush') {
     const end = g.lineEnd(p, { x: p.x + e.aim.x * nose, y: p.y });
     if (Math.abs(end.x - p.x) < nose - 1 || e.timer <= 0) {
       const crashed = e.timer > 0;
       e.state = 'recover';
-      e.timer = crashed ? 1.25 : 0.7;
+      e.timer = crashed ? 1.25 : 0.5;
       Body.setVelocity(e.body, { x: 0, y: v.y });
       if (crashed) {
         g.burst(end, 22, '#ffcf93', 5);
@@ -84,20 +106,20 @@ export function updateLoader(g: Game, e: Enemy) {
     Body.setVelocity(e.body, { x: v.x * 0.7, y: v.y });
     if (e.timer <= 0) {
       e.state = 'idle';
-      e.timer = 0.4;
+      e.timer = 0.15;
     }
   } else {
-    const targetX = loaderApproach(g, e, above),
+    const targetX = loaderApproach(g, e, counter),
       sign = Math.sign(targetX - p.x) || Math.sign(g.player.position.x - p.x) || -1;
     e.aim = { x: sign, y: 0 };
-    Body.setVelocity(e.body, { x: v.x + (sign * 2.8 - v.x) * 0.1, y: v.y });
+    Body.setVelocity(e.body, { x: v.x + (sign * 3.4 - v.x) * 0.1, y: v.y });
     const blocked = Math.abs(g.lineEnd(p, { x: p.x + sign * nose, y: p.y }).x - p.x) < nose - 1;
-    if (above && e.timer <= 0 && visible(g, bossMuzzle(e))) beginFlak(g, e);
+    if (counter && e.timer <= 0 && visible(g, bossMuzzle(e))) beginFlak(g, e);
     else if (grounded && blocked) {
       Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
       e.timer = Math.max(e.timer, 0.6);
     } else if (grounded && e.timer <= 0) {
-      if (above) {
+      if (counter) {
         Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
         e.timer = 0.45;
       } else if (Math.abs(g.player.position.y - p.y) < 180) {
@@ -176,7 +198,7 @@ export function updatePress(g: Game, e: Enemy) {
         { x: player.x + 13 + halfWidth, y: player.y + 18 + half },
       )
     ) {
-      g.damagePlayer(25, p);
+      g.damagePlayer(30, p);
       if (g.mode !== 'playing') return;
     }
     for (const prop of [...g.props.items]) {
@@ -222,16 +244,16 @@ export function updatePress(g: Game, e: Enemy) {
       if (exits.length) {
         // Getting knocked under a shelf is recoverable: slide around its edge
         // before rising, while ordinary Matter collisions keep the hull solid.
-        Body.setVelocity(e.body, { x: clamp((exits[0] - p.x) * 0.15, -8, 8), y: 0 });
+        Body.setVelocity(e.body, { x: clamp((exits[0] - p.x) * 0.15, -10, 10), y: 0 });
         return;
       }
     }
-    const rise = Math.min(9, Math.max(0, p.y - 260));
+    const rise = Math.min(12, Math.max(0, p.y - 260));
     Body.setVelocity(e.body, { x: 0, y: -rise });
     if (p.y <= 263) {
       Body.setVelocity(e.body, { x: 0, y: 0 });
       e.state = 'idle';
-      e.timer = 0.35;
+      e.timer = 0.1;
     }
   } else {
     const hover = player.y < 220 ? clamp(player.y - 95, 90, 260) : 260,

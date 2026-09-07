@@ -84,7 +84,7 @@ export const MODS = [
     description: '40% more recoil. Turn shots into movement.',
     mark: 'kick',
   },
-  { id: 'leech', name: 'Bloodwork', description: 'Every kill restores 5 health.', mark: 'heal' },
+  { id: 'leech', name: 'Bloodwork', description: 'Every kill restores 2 health.', mark: 'heal' },
   {
     id: 'light',
     name: 'Light frame',
@@ -144,7 +144,7 @@ export function getGun(mods: readonly string[]): Gun {
         break;
       case 'scatter':
         g.pellets = 5;
-        g.damage *= 0.38;
+        g.damage *= 0.32;
         g.interval *= 1.25;
         g.recoil *= 1.2;
         g.spread = 0.105;
@@ -170,7 +170,7 @@ export function getGun(mods: readonly string[]): Gun {
         g.recoil *= 1.4;
         break;
       case 'leech':
-        g.heal = 5;
+        g.heal = 2;
         break;
       case 'light':
         g.speed = 1.2;
@@ -197,6 +197,7 @@ export function getGun(mods: readonly string[]): Gun {
   return g;
 }
 export const STAGES = 9;
+export const ROOM_HEAL = 12;
 export interface Checkpoint {
   version: 3;
   seed: string;

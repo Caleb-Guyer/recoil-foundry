@@ -228,7 +228,7 @@ test('rear blasts and enemy muzzle shots damage the blocking prop before actors 
   assert.equal(cover.hp, 48);
   Body.setPosition(e.body, { x: 526, y: 400 });
   g.enemyShot(e, 0);
-  assert.equal(cover.hp, 36);
+  assert.equal(cover.hp, 34);
   assert.equal(g.shots.length, 0);
 });
 

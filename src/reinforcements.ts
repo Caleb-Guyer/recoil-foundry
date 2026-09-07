@@ -81,7 +81,7 @@ export class ReinforcementSystem {
       state: 'sealed',
       timer: 0,
       blocked: 0,
-      attackDelay: 1.1 + random(),
+      attackDelay: 0.65 + random() * 0.65,
     }));
     this.phase = final.length ? 'opening' : 'done';
     return opening;
@@ -127,7 +127,10 @@ export class ReinforcementSystem {
     const g = this.game;
     if (g.mode !== 'playing' || g.escape || g.level.boss) return;
     if (this.phase === 'opening') {
-      if (g.enemies.length === 0 || (this.openingCount >= 3 && g.enemies.length <= 1)) {
+      if (
+        g.enemies.length === 0 ||
+        (g.stage >= 3 && this.openingCount >= 2 && g.enemies.length <= 1)
+      ) {
         this.phase = 'warning';
         for (const door of this.doors) {
           door.state = 'warning';

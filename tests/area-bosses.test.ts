@@ -125,7 +125,7 @@ test('Press warns and fires its ranged counter at players camping either arena b
     assert.equal(e.attack, 'flak');
     assert.equal(e.timer, FLAK_TELL);
     step(g, 130, { left: !right, right });
-    assert.equal(g.hp, 86);
+    assert.equal(g.hp, 82);
   }
 });
 
@@ -157,7 +157,7 @@ test('Press hits once during descent and solid platforms protect actors undernea
     e.timer = 0.9;
     for (let i = 0; i < 80 && e.state === 'rush'; i++) step(g);
     assert.equal(e.state, 'recover');
-    assert.equal(g.hp, protectedByPlatform ? 100 : 75);
+    assert.equal(g.hp, protectedByPlatform ? 100 : 70);
     const hp = g.hp;
     step(g, 30);
     assert.equal(g.hp, hp);
@@ -176,7 +176,7 @@ test('a Press displaced beneath a shelf returns around its edge without clipping
   for (let i = 0; i < 150 && e.state === 'return'; i++) {
     const before = { ...e.body.position };
     step(g);
-    assert(Math.hypot(e.body.position.x - before.x, e.body.position.y - before.y) < 10);
+    assert(Math.hypot(e.body.position.x - before.x, e.body.position.y - before.y) <= 12.1);
     assert(Query.collides(e.body, [shelf]).every((hit) => hit.depth < 1));
     passedEdge ||=
       e.body.bounds.max.x <= shelf.bounds.min.x || e.body.bounds.min.x >= shelf.bounds.max.x;
@@ -266,7 +266,7 @@ test('area boss exits award one ordinary upgrade and the rooftop boss opens the 
     g.chooseMod(mod);
     assert.equal(g.stage, stage + 1);
     assert.equal(g.mods.length, stage + 1);
-    assert.equal(g.hp, Math.min(100, hp + 20));
+    assert.equal(g.hp, Math.min(100, hp + 12));
     assert.equal(g.mode, 'playing');
     assert.equal(loadCheckpoint(checkpoint)?.stage, stage + 1);
   }

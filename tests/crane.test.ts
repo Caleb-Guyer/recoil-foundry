@@ -270,7 +270,7 @@ test('a stationary player takes one head strike, while a jump or side step after
       assert(Math.abs(e.timer - (dodge ? 1.25 : 0.55)) < 1e-8);
       const hp = e.hp;
       g.hitEnemy(e, 20);
-      assert.equal(hp - e.hp, dodge ? 28 : 12);
+      assert.equal(hp - e.hp, dodge ? 28 : 7);
       step(g, dodge ? 50 : 20);
       assert.equal(g.hp, dodge ? 100 : 76, 'A resting head dealt repeated contact damage');
     }
@@ -329,7 +329,7 @@ test('the hammer blocks piercing bullets while the separate motor remains the da
   assert.equal(e.hp, e.maxHp);
   shot(400, e.body.position.y, 350, 0);
   g.updateShots(1 / 60);
-  assert.equal(e.hp, e.maxHp - 12);
+  assert.equal(e.hp, e.maxHp - 7);
   assert.deepEqual(e.body.position, { x: 600, y: 150 });
   assert(e.body.isStatic && rig.body.isSensor);
 });
@@ -354,7 +354,7 @@ test('an overhead volley tracks then locks and never adds unwarned bolts across 
   assert.notDeepEqual(e.aim, original);
   until(g, () => e.timer <= FLAK_LOCK);
   const locked = { ...e.aim };
-  g.hitEnemy(e, e.maxHp);
+  g.hitEnemy(e, e.maxHp * 1.6);
   assert(e.hp > 0 && e.hp < e.maxHp / 2);
   Body.setPosition(g.player, { x: 300, y: 180 });
   while (e.state === 'windup') {
@@ -363,7 +363,7 @@ test('an overhead volley tracks then locks and never adds unwarned bolts across 
   }
   assert.equal(shots.length, 3);
   assert(
-    shots.every((s) => s.speed === 10 && s.damage === 14 && s.time - started >= FLAK_TELL - 1e-8),
+    shots.every((s) => s.speed === 10 && s.damage === 18 && s.time - started >= FLAK_TELL - 1e-8),
   );
   assert(Math.abs(shots[1].angle - Math.atan2(locked.y, locked.x)) < 1e-8);
   until(g, () => e.state === 'windup');

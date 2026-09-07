@@ -91,7 +91,7 @@ test('both overhead counters track early, lock their aim, and fire only after th
     assert.equal(fired.length, 3);
     assert(fired.every((shot) => shot.time - started >= FLAK_TELL - 1e-8));
     assert(fired[0].time - lockedAt >= FLAK_LOCK - 1 / 60);
-    assert(fired.every((shot) => shot.speed === 10 && shot.damage === 14));
+    assert(fired.every((shot) => shot.speed === 10 && shot.damage === 18));
     assert(Math.abs(fired[1].angle - Math.atan2(locked.y, locked.x)) < 1e-8);
     assert.notEqual(
       e.state,
@@ -153,7 +153,7 @@ test('crossing half health during the aim lock never adds bolts that were absent
       enemyShot(...args);
     };
     while (e.timer > FLAK_LOCK) step(g);
-    g.hitEnemy(e, e.maxHp * 0.8);
+    g.hitEnemy(e, e.maxHp * 1.4);
     assert(e.hp > 0 && e.hp < e.maxHp / 2);
     while (e.state === 'windup') step(g);
     assert.equal(bolts, 3);
