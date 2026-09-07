@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { PortalSystem, portalVector, bodyHalf } from './portals.ts';
+import { PortalSystem, portalVector } from './portals.ts';
 import { firstSolid } from './collisions.ts';
 import {
   clamp,
@@ -843,11 +843,7 @@ export class Game {
         { x: p.x, y: e.body.bounds.max.y + 5 },
         20,
       ).length > 0;
-    const portalAhead = this.portals.trace(
-      p,
-      { x: p.x + Math.sign(d.x) * 45, y: p.y },
-      bodyHalf(e.body),
-    );
+    const portalAhead = this.portals.traceBody(p, { x: p.x + Math.sign(d.x) * 45, y: p.y }, e.body);
     const blocked =
       !portalAhead &&
       Query.ray(
@@ -1005,11 +1001,7 @@ export class Game {
             )
           : undefined;
       const prop = contact && this.props.items.find((prop) => prop.body === contact.body);
-      const portalAhead = this.portals.trace(
-        p,
-        { x: p.x + e.aim.x * 35, y: p.y },
-        bodyHalf(e.body),
-      );
+      const portalAhead = this.portals.traceBody(p, { x: p.x + e.aim.x * 35, y: p.y }, e.body);
       const crashed =
         e.timer > 0 && !portalAhead && (prop ? contact!.t * 20 <= 14 : Math.abs(end.x - p.x) < 34);
       if (crashed || e.timer <= 0) {

@@ -194,6 +194,66 @@ test('walk into a wall portal at floor height, and high-speed actors cannot skip
     assert(g.player.position.x > 1000);
   }
 });
+test('normal walking enters wall portals under gravity, in both directions and on raised floors', () => {
+  for (const floor of [740, 500])
+    for (const sign of [-1, 1])
+      for (const exit of ['floor', 'wall']) {
+        const g = fixture();
+        g.engine.gravity.y = 1;
+        g.player.frictionAir = 0.008;
+        if (floor < 740) wall(g, 1000, floor + 20, 2000, 40);
+        wall(g, 800, floor - 150, 40, 300);
+        wall(g, 1200, floor - 150, 40, 300);
+        assert(g.portals.place({ x: 800 - sign * 20, y: floor - 5 }));
+        assert(
+          g.portals.place(
+            exit === 'floor'
+              ? { x: sign > 0 ? 1400 : 400, y: floor }
+              : { x: 1200 + sign * 20, y: floor - 5 },
+          ),
+        );
+        Body.setPosition(g.player, { x: sign > 0 ? 600 : 1000, y: floor - 60 });
+        for (let i = 0; i < 90; i++) step(g);
+        assert(g.grounded, 'the walking test must start on its support');
+        for (let i = 0; i < 90 && !g.portals.revision; i++)
+          step(g, { left: sign < 0, right: sign > 0 });
+        assert.equal(g.portals.revision, 1, `${floor}, ${sign}, ${exit}`);
+        assert.equal(g.hp, 100);
+        assert(g.player.position.y + bodyHalf(g.player).y <= floor + 0.06);
+      }
+});
+
+test('linking the second portal while already pushing against the first wall lets the player through', () => {
+  const g = fixture();
+  g.engine.gravity.y = 1;
+  g.player.frictionAir = 0.008;
+  wall(g);
+  g.portals.place({ x: 780, y: 735 });
+  Body.setPosition(g.player, { x: 700, y: 700 });
+  for (let i = 0; i < 90; i++) step(g, { right: true });
+  assert.equal(g.portals.revision, 0);
+  assert(g.grounded);
+  assert(Math.abs(g.player.position.x - 767) < 0.1);
+  g.portals.place({ x: 1100, y: 740 });
+  for (let i = 0; i < 10 && !g.portals.revision; i++) step(g, { right: true });
+  assert.equal(g.portals.revision, 1);
+});
+
+test('walking enemies also pass wall portals while resting on the floor', () => {
+  const g = fixture();
+  g.engine.gravity.y = 1;
+  wall(g);
+  wall(g, 1200);
+  g.portals.place({ x: 780, y: 735 });
+  g.portals.place({ x: 1220, y: 735 });
+  Body.setPosition(g.player, { x: 1600, y: 700 });
+  g.spawnEnemy('runner', 720, 700);
+  const enemy = g.enemies.at(-1)!;
+  enemy.spawn = 0;
+  enemy.timer = 100;
+  for (let i = 0; i < 180 && enemy.body.position.x < 1200; i++) step(g);
+  assert(enemy.body.position.x > 1200);
+});
 test('rim misses, back-side approaches, occupied exits, and entry obstacles remain solid', () => {
   for (const kind of ['rim', 'back', 'exit', 'entry']) {
     const g = fixture();
@@ -210,6 +270,7 @@ test('rim misses, back-side approaches, occupied exits, and entry obstacles rema
     if (kind === 'exit') wall(g, 750, 400, 20, 100);
     if (kind === 'entry') wall(g, 600, 730, 100, 4);
     assert.equal(g.portals.trace(from, to, { x: 13, y: 18 }), null, kind);
+    assert.equal(g.portals.traceBody(from, to, g.player), null, kind);
   }
 });
 test('hostile and friendly projectiles travel, preserve upgrades and ownership, and break their trail', () => {

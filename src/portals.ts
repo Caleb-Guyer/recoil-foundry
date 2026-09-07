@@ -1,6 +1,6 @@
 import Matter from 'matter-js';
 import type { Game } from './game.ts';
-import { firstSolid } from './collisions.ts';
+import { firstSolid, sweepBox } from './collisions.ts';
 import { clamp, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
 
@@ -148,7 +148,18 @@ export class PortalSystem {
     this.rejected = null;
     return true;
   }
-  trace(from: Vec, to: Vec, half: Vec, blockers = this.game.solidBodies): Passage | null {
+  traceBody(from: Vec, to: Vec, body: Matter.Body, blockers = this.game.solidBodies) {
+    // Before collision resolution, gravity and Matter's resting slop put feet
+    // a fraction of a unit inside their support. Rounds get no such tolerance.
+    return this.trace(from, to, bodyHalf(body), blockers, 0.5);
+  }
+  trace(
+    from: Vec,
+    to: Vec,
+    half: Vec,
+    blockers = this.game.solidBodies,
+    contactTolerance = 0,
+  ): Passage | null {
     if (!this.linked || Math.max(half.x, half.y) > PORTAL_RADIUS) return null;
     let nearest: Passage | null = null;
     for (let i = 0; i < 2; i++) {
@@ -162,20 +173,32 @@ export class PortalSystem {
       // Matter permits a small resting overlap. Never admit travel from behind a wall.
       if (gap < -1.5 || gap > approach + 0.15) continue;
       const t = clamp((gap - 0.15) / approach, 0, 1);
-      const offset = dot({ x: rel.x + delta.x * t, y: rel.y + delta.y * t }, tangent(entry.normal));
-      if (
-        Math.abs(offset) +
-          Math.max(extent(half, tangent(entry.normal)), extent(half, tangent(exit.normal))) >
-        PORTAL_RADIUS + 0.01
-      )
-        continue;
-      const obstacle = firstSolid(
-        from,
-        to,
-        half,
-        blockers.filter((b) => b !== entry.body),
+      const rawOffset = dot(
+        { x: rel.x + delta.x * t, y: rel.y + delta.y * t },
+        tangent(entry.normal),
       );
-      if (obstacle && obstacle.t <= t + 1e-6) continue;
+      const capacity =
+        PORTAL_RADIUS -
+        Math.max(extent(half, tangent(entry.normal)), extent(half, tangent(exit.normal)));
+      if (Math.abs(rawOffset) > capacity + contactTolerance + 0.01) continue;
+      // Keep the entire body inside the exit, even if its feet were fractionally
+      // below the entrance rim during the unresolved gravity step.
+      const offset = clamp(rawOffset, -capacity, capacity);
+      const obstructed = blockers.some((body) => {
+        if (body === entry.body) return false;
+        const hit = sweepBox(from, to, half, body);
+        if (!hit || hit.t > t + 1e-6) return false;
+        if (contactTolerance && Math.abs(dot(hit.normal, entry.normal)) < 1e-6) {
+          const plane = Math.max(...body.vertices.map((v) => dot(v, hit.normal)));
+          const fromGap = dot(from, hit.normal) - plane - extent(half, hit.normal);
+          const toGap = dot(to, hit.normal) - plane - extent(half, hit.normal);
+          // Only allow sliding along an existing support. Steps, props in front,
+          // and deeper penetration still block the approach normally.
+          if (Math.abs(fromGap) <= contactTolerance && toGap >= -contactTolerance) return false;
+        }
+        return true;
+      });
+      if (obstructed) continue;
       const out = extent(half, exit.normal) + 0.75,
         axis = tangent(exit.normal);
       const pos = {
@@ -226,7 +249,7 @@ export class PortalSystem {
         ...g.enemies.map((e) => e.body),
         ...g.enemies.flatMap((e) => (e.crane ? [e.crane.body] : [])),
       ].filter((b) => b !== body);
-      const passage = this.trace(from, body.position, half, blockers);
+      const passage = this.traceBody(from, body.position, body, blockers);
       if (!passage) continue;
       const { entry, exit, pos, t } = passage;
       const rest = portalVector(
