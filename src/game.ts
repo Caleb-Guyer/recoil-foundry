@@ -190,6 +190,7 @@ export class Game {
   onChange: () => void = () => {};
   onSound: (kind: string) => void = () => {};
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
+  onBossDefeated: (kind: EnemyKind) => void = () => {};
   constructor() {
     this.loadRoom();
   }
@@ -1355,6 +1356,8 @@ export class Game {
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);
     clearKiln(e);
     this.enemies = this.enemies.filter((x) => x !== e);
+    if (isBoss(e.kind) && !this.practice && this.mode === 'playing' && this.hp > 0 && e.spawn <= 0)
+      this.onBossDefeated(e.kind);
     this.feedback(isBoss(e.kind) ? 10 : 4);
     this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);
     this.burst(e.body.position, isBoss(e.kind) ? 45 : 16, '#f28371', isBoss(e.kind) ? 8 : 4);

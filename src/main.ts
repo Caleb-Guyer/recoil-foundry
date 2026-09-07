@@ -7,7 +7,7 @@ import { musicScene } from './music-score.ts';
 import { AREAS } from './areas.ts';
 import { MODS, loadCheckpoint, STAGES } from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
-import { ENCOUNTERS_KEY, PRACTICE_BOSSES, loadEncounters, visibleEncounter } from './practice.ts';
+import { VICTORIES_KEY, PRACTICE_BOSSES, loadEncounters } from './practice.ts';
 import type { Encounter } from './practice.ts';
 import {
   DAILY_BESTS_KEY,
@@ -41,7 +41,7 @@ function write(key: string, value: unknown) {
 const storedCheckpoint = loadCheckpoint(read('rf-checkpoint-v3'));
 let unavailableDailySave = !!storedCheckpoint && isUnsupportedDailySeed(storedCheckpoint.seed);
 let checkpoint = unavailableDailySave ? null : storedCheckpoint;
-const encounters = loadEncounters(read(ENCOUNTERS_KEY));
+const encounters = loadEncounters(read(VICTORIES_KEY));
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
@@ -211,6 +211,13 @@ game.onCheckpoint = (s) => {
   write('rf-checkpoint-v3', s);
 };
 game.onSound = (kind) => sound.play(kind);
+game.onBossDefeated = (kind) => {
+  const victory = loadEncounters([{ kind, seed: game.seed }])[0];
+  if (!victory || encounters.some((record) => record.kind === kind)) return;
+  encounters.push(victory);
+  write(VICTORIES_KEY, encounters);
+  updateTitle();
+};
 game.onChange = () => {
   updateMusic();
   const room = game.seed + ':' + game.stage + ':' + game.level.id;
@@ -625,22 +632,6 @@ function frame(now: number) {
   } else accumulator = 0;
   updateMusic();
   renderer.draw(now);
-  if (pageActive && !document.hidden) {
-    const encounter = visibleEncounter(
-      game,
-      {
-        ...renderer.camera,
-        w: renderer.width / renderer.scale,
-        h: renderer.height / renderer.scale,
-      },
-      encounters,
-    );
-    if (encounter) {
-      encounters.push(encounter);
-      write(ENCOUNTERS_KEY, encounters);
-      updateTitle();
-    }
-  }
   if (now - hudAt > 80) {
     hudAt = now;
     $<HTMLProgressElement>('health').value = game.hp;

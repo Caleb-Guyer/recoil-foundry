@@ -138,9 +138,9 @@ Each boss has its own arena and silhouette. Separate seeded draws select the loa
 
 ## Boss practice
 
-Practice appears on the title screen after a boss has appeared on camera in a normal or Daily Run. You do not need to win the fight. Its menu lists only encounters you have discovered, without locked entries, silhouettes, or a total count. Discoveries stay in this browser; earlier encounters are not inferred from an old save.
+Practice appears on the title screen after you defeat a boss in a normal or Daily Run. Its menu lists only bosses you have beaten, without locked entries, silhouettes, or a total count. Victories stay in this browser. Previous encounter-only unlocks do not carry over, because they did not record whether you won; defeat those bosses again to unlock them.
 
-Choose a discovered boss to replay its arena with 100 health and a preset gun containing two, five, or eight upgrades for that stage. Defeating the boss ends the practice fight. Retry from the result screen, or press **R** during a fight to restart immediately. Pause also offers Retry and Choose fight. The usual Your gun list shows the preset upgrades.
+Choose a defeated boss to replay its arena with 100 health and a preset gun containing two, five, or eight upgrades for that stage. Defeating the boss ends the practice fight. Retry from the result screen, or press **R** during a fight to restart immediately. Pause also offers Retry and Choose fight. The usual Your gun list shows the preset upgrades.
 
 Practice preserves your normal checkpoint, Daily selection, and best times. Returning to the menu and choosing Continue restores your saved room with its original health and gun. Practice cannot unlock other encounters or advance into another room. Ordinary and Daily gameplay rules remain unchanged.
 
@@ -198,7 +198,7 @@ npm run preview
 | `src/props.ts`       | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
 | `src/rules.ts`       | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
 | `src/daily.ts`       | UTC challenge identity, versioned links, and validated local best times                |
-| `src/practice.ts`    | Visible boss discovery, validated encounter storage, and stage-appropriate practice builds |
+| `src/practice.ts`    | Validated boss victory storage and stage-appropriate practice builds |
 | `src/render.ts`      | Canvas world, camera feedback, character animation, and effects                        |
 | `src/main.ts`        | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
 | `src/audio.ts`       | Shared Web Audio output, effects, and audio preferences                                |
@@ -222,7 +222,7 @@ Area boss checks cover locked attack warnings, airborne camping versus reactive 
 
 Kiln checks cover seeded arena selection, unchanged non-furnace rooms, locked mortar plans, live collisions with cover and props, hot-strip warnings and expiry, vent armor, displaced-muzzle cancellation, and reactive combat in both mirrors. Shells and hot strips reset when restarting or leaving the room.
 
-Practice checks cover discovery through the live camera, hidden offscreen encounters, malformed storage, every boss arena in both mirrors, fresh retry state, isolated victory and death, and resuming an untouched normal or Daily checkpoint.
+Practice checks cover victory-only unlocks, excluded practice wins and losses, malformed storage, every boss arena in both mirrors, fresh retry state, and resuming an untouched normal or Daily checkpoint.
 
 Elite checks cover sparse deterministic placement, checkpoint reconstruction, directional shielding and flanking, piercing and rear blasts, the sniper's second aim lock, fuse timing and defusing, blast cover and chains, and immediate cancellation on death.
 

@@ -9,7 +9,7 @@ import { dailyForDate } from '../src/daily.ts';
 import {
   PRACTICE_BOSSES,
   loadEncounters,
-  visibleEncounter,
+  VICTORIES_KEY,
   practiceCheckpoint,
 } from '../src/practice.ts';
 import type { Encounter, PracticeBoss } from '../src/practice.ts';
@@ -34,7 +34,8 @@ function record(kind: PracticeBoss, mirrored = false): Encounter {
   assert.fail('No fixture for ' + kind);
 }
 
-test('discovery storage accepts only actual encounters and preserves first discovery order', () => {
+test('victory storage validates boss arenas and uses a separate key from old encounter-only unlocks', () => {
+  assert.notEqual(VICTORIES_KEY, 'rf-encounters-v1');
   const kiln = record('kiln'),
     loader = record('loader');
   for (const raw of [null, {}, 'kiln', 3]) assert.deepEqual(loadEncounters(raw), []);
@@ -57,32 +58,62 @@ test('discovery storage accepts only actual encounters and preserves first disco
   assert.equal(practiceCheckpoint({ kind: 'kiln', seed: record('press').seed }), null);
 });
 
-test('a boss must actually appear on the live camera before it becomes available', () => {
+test('seeing or damaging a boss never unlocks it; a normal-run defeat emits exactly one victory', () => {
   const g = new Game(),
     entry = record('kiln'),
-    save = practiceCheckpoint(entry)!;
+    save = practiceCheckpoint(entry)!,
+    victories: string[] = [];
+  g.onBossDefeated = (kind) => victories.push(kind);
   g.start(entry.seed, save);
-  const e = g.enemies[0],
-    p = e.body.position,
-    seen = { x: p.x - 100, y: p.y - 100, w: 200, h: 200 },
-    unseen = { x: 0, y: 0, w: 500, h: 800 };
-  assert.equal(visibleEncounter(g, seen, []), null, 'The spawn warning revealed a boss');
+  const e = g.enemies[0];
+  step(g, 60);
+  assert.deepEqual(victories, []);
   e.spawn = 0;
-  assert.equal(visibleEncounter(g, unseen, []), null, 'Room entry revealed an offscreen boss');
-  for (const mode of ['title', 'paused', 'dead', 'won'] as const) {
-    g.setMode(mode);
-    assert.equal(visibleEncounter(g, seen, []), null);
+  g.hitEnemy(e, 100);
+  assert(e.hp > 0);
+  assert.deepEqual(victories, []);
+  g.hitEnemy(e, 99999);
+  assert.deepEqual(victories, ['kiln']);
+  g.hitEnemy(e, 99999);
+  step(g, 30);
+  assert.deepEqual(victories, ['kiln']);
+});
+
+test('practice wins, player deaths, and inactive or spawning bosses cannot grant victory unlocks', () => {
+  for (const scenario of ['practice', 'loss', 'title', 'paused', 'dead', 'won', 'spawn'] as const) {
+    const g = new Game(),
+      entry = record('kiln'),
+      victories: string[] = [];
+    g.onBossDefeated = (kind) => victories.push(kind);
+    if (scenario === 'practice') g.startPractice(entry);
+    else g.start(entry.seed, practiceCheckpoint(entry)!);
+    const e = g.enemies[0];
+    if (scenario !== 'spawn') e.spawn = 0;
+    if (scenario === 'loss') g.damagePlayer(999);
+    else if (['title', 'paused', 'dead', 'won'].includes(scenario))
+      g.setMode(scenario as 'title' | 'paused' | 'dead' | 'won');
+    g.hitEnemy(e, 99999);
+    step(g, 20);
+    assert.deepEqual(victories, [], scenario);
   }
-  g.setMode('playing');
-  assert.deepEqual(visibleEncounter(g, seen, []), entry);
-  assert.equal(visibleEncounter(g, seen, [entry]), null);
-  e.hp = 0;
-  assert.equal(visibleEncounter(g, seen, []), null);
-  g.startPractice(entry);
+});
+
+test('all normal boss defeats unlock practice, but ordinary enemy kills do not', () => {
+  const g = new Game(),
+    victories: string[] = [];
+  g.onBossDefeated = (kind) => victories.push(kind);
+  g.start('A');
   g.enemies[0].spawn = 0;
-  assert.equal(visibleEncounter(g, seen, []), null, 'Practice revealed an encounter');
-  g.start('normal');
-  assert.equal(visibleEncounter(g, { x: 0, y: 0, w: 2000, h: 840 }, []), null);
+  g.hitEnemy(g.enemies[0], 99999);
+  assert.deepEqual(victories, []);
+  for (const kind of Object.keys(PRACTICE_BOSSES) as PracticeBoss[]) {
+    const entry = record(kind);
+    g.start(entry.seed, practiceCheckpoint(entry)!);
+    g.enemies[0].spawn = 0;
+    g.hitEnemy(g.enemies[0], 99999);
+    assert.equal(victories.at(-1), kind);
+  }
+  assert.equal(victories.length, 5);
 });
 
 test('every practice boss keeps its discovered arena and gets the right number of real upgrades', () => {
@@ -188,8 +219,11 @@ test('a Daily encounter can be practised without touching its checkpoint, and Co
   g.start(day.seed, dailySave);
   const original = structuredClone(stored),
     entry: Encounter = { seed: day.seed, kind: g.enemies[0].kind as PracticeBoss };
+  const victories: string[] = [];
+  g.onBossDefeated = (kind) => victories.push(kind);
   g.enemies[0].spawn = 0;
-  assert.deepEqual(visibleEncounter(g, { x: 0, y: 0, w: 2000, h: 840 }, []), entry);
+  g.hitEnemy(g.enemies[0], 99999);
+  assert.deepEqual(victories, [entry.kind]);
   g.startPractice(entry);
   g.die();
   g.startPractice(entry);
@@ -197,6 +231,7 @@ test('a Daily encounter can be practised without touching its checkpoint, and Co
   g.hitEnemy(g.enemies[0], 99999);
   step(g, 20);
   assert.equal(calls, 1);
+  assert.deepEqual(victories, [entry.kind], 'Practice must not add victory unlocks');
   assert.deepEqual(stored, original);
   g.start(dailySave.seed, dailySave);
   assert.equal(g.practice, null);
