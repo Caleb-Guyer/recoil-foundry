@@ -7,6 +7,8 @@ import { musicScene } from './music-score.ts';
 import { AREAS } from './areas.ts';
 import { MODS, loadCheckpoint, STAGES } from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
+import { ENCOUNTERS_KEY, PRACTICE_BOSSES, loadEncounters, visibleEncounter } from './practice.ts';
+import type { Encounter } from './practice.ts';
 import {
   DAILY_BESTS_KEY,
   dailyFromSeed,
@@ -39,6 +41,7 @@ function write(key: string, value: unknown) {
 const storedCheckpoint = loadCheckpoint(read('rf-checkpoint-v3'));
 let unavailableDailySave = !!storedCheckpoint && isUnsupportedDailySeed(storedCheckpoint.seed);
 let checkpoint = unavailableDailySave ? null : storedCheckpoint;
+const encounters = loadEncounters(read(ENCOUNTERS_KEY));
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
@@ -46,7 +49,7 @@ document.getElementById('app')!.innerHTML = `
  <section id="title-screen">
   <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
-   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button></div>
+   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button></div>
    <p class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><button id="settings" class="quiet title-settings">Settings</button>
@@ -105,6 +108,7 @@ function updateTitle() {
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
   $('continue').hidden = !checkpoint;
+  $('practice').hidden = encounters.length === 0;
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
   $('title-hint').textContent = linkedDaily
@@ -142,6 +146,10 @@ function newSeed() {
   return crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
 }
 function start(save?: Checkpoint, retry = false, seedOverride?: string) {
+  if (retry && game.practice) {
+    startPractice(game.practice);
+    return;
+  }
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -172,7 +180,33 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
 }
+function startPractice(encounter: Encounter) {
+  if (
+    !encounters.some((record) => record.kind === encounter.kind && record.seed === encounter.seed)
+  )
+    return;
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  activeDaily = null;
+  dailyResult = null;
+  game.startPractice(encounter);
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
+  canvas.focus();
+}
+function menu() {
+  closeDialog();
+  game.setMode('title');
+}
+function backFromPractice() {
+  if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
+  else if (game.mode === 'paused') showDialog('pause');
+  else resume();
+}
 game.onCheckpoint = (s) => {
+  if (game.practice) return;
   checkpoint = s;
   write('rf-checkpoint-v3', s);
 };
@@ -186,13 +220,15 @@ game.onChange = () => {
   }
   document.body.dataset.mode = game.mode;
   $('title-screen').hidden = game.mode !== 'title';
-  $('stage').textContent =
-    (activeDaily ? 'DAILY · ' : '') +
-    (game.escape
-      ? 'ESCAPE'
-      : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
-  $('stage').title =
-    `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
+  $('stage').textContent = game.practice
+    ? 'PRACTICE'
+    : (activeDaily ? 'DAILY · ' : '') +
+      (game.escape
+        ? 'ESCAPE'
+        : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
+  $('stage').title = game.practice
+    ? PRACTICE_BOSSES[game.practice.kind].name
+    : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
   updateTitle();
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
@@ -226,8 +262,30 @@ function showDialog(kind: string) {
   dialogKind = kind;
   const singleUpgrade = kind === 'upgrade' && game.offers.length === 1;
   modal.classList.toggle('single-upgrade', singleUpgrade);
+  modal.classList.toggle('practice-dialog', kind === 'practice');
   const content = $('dialog-content');
-  if (kind === 'upgrade') {
+  if (kind === 'practice') {
+    content.innerHTML =
+      '<h2 id="dialog-title">Practice.</h2><p class="practice-note">Full health. Preset gun.</p><div class="practice-list">' +
+      encounters
+        .map(
+          (record) =>
+            '<button class="practice-fight" data-boss="' +
+            record.kind +
+            '"><span>' +
+            PRACTICE_BOSSES[record.kind].name +
+            '</span><span aria-hidden="true">↗</span></button>',
+        )
+        .join('') +
+      '</div><div class="actions"><button id="practice-back" class="quiet">Back</button></div>';
+    content.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((button) => {
+      button.onclick = () => {
+        const encounter = encounters.find((record) => record.kind === button.dataset.boss);
+        if (encounter) startPractice(encounter);
+      };
+    });
+    $('practice-back').onclick = backFromPractice;
+  } else if (kind === 'upgrade') {
     content.innerHTML =
       '<p class="eyebrow">' +
       (activeDaily ? 'DAILY · ' : '') +
@@ -262,6 +320,19 @@ function showDialog(kind: string) {
           canvas.focus();
         }),
     );
+  } else if (kind === 'result' && game.practice) {
+    const win = game.mode === 'won';
+    content.innerHTML =
+      '<p class="eyebrow">PRACTICE · ' +
+      PRACTICE_BOSSES[game.practice.kind].name +
+      '</p><h2 id="dialog-title">' +
+      (win ? 'Fight cleared.' : 'Try again.') +
+      '</h2><p class="result-line">' +
+      formatTime(game.elapsed) +
+      '</p><div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button><button id="choose-fight" class="quiet">Choose fight</button><button id="menu" class="quiet">Menu</button></div>';
+    $('retry').onclick = () => start(undefined, true);
+    $('choose-fight').onclick = () => showDialog('practice');
+    $('menu').onclick = menu;
   } else if (kind === 'result') {
     const win = game.mode === 'won';
     if (activeDaily && !dailyResult) {
@@ -331,14 +402,15 @@ function showDialog(kind: string) {
       };
     }
     $('retry').onclick = () => start(undefined, true);
-    $('menu').onclick = () => {
-      closeDialog();
-      game.setMode('title');
-    };
+    $('menu').onclick = menu;
   } else {
     const paused = game.mode === 'paused';
     content.innerHTML =
-      (paused && activeDaily ? '<p class="eyebrow">DAILY · ' + activeDaily.date + '</p>' : '') +
+      (paused && game.practice
+        ? '<p class="eyebrow">PRACTICE · ' + PRACTICE_BOSSES[game.practice.kind].name + '</p>'
+        : paused && activeDaily
+          ? '<p class="eyebrow">DAILY · ' + activeDaily.date + '</p>'
+          : '') +
       '<h2 id="dialog-title">' +
       (paused ? 'Paused.' : 'Settings.') +
       '</h2>' +
@@ -350,9 +422,11 @@ function showDialog(kind: string) {
       (!renderer.reduced ? 'checked' : '') +
       ' /></label></div>' +
       '<div class="controls-copy"><p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
-      (game.escape
-        ? 'Reach the extraction lift.'
-        : 'Clear the room, then leave through the right door.') +
+      (game.practice
+        ? 'Defeat the boss. Press R to retry.'
+        : game.escape
+          ? 'Reach the extraction lift.'
+          : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun</summary><ul>' +
@@ -362,6 +436,9 @@ function showDialog(kind: string) {
       '<div class="actions"><button id="back" class="primary">' +
       (paused ? 'Resume' : 'Back') +
       '</button>' +
+      (paused && game.practice
+        ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet">Choose fight</button>'
+        : '') +
       (paused ? '<button id="menu" class="quiet">Menu</button>' : '') +
       '</div>';
     $<HTMLInputElement>('sound').onchange = (e) => {
@@ -381,13 +458,15 @@ function showDialog(kind: string) {
       persistSettings();
     };
     $('back').onclick = resume;
-    if (paused)
-      $('menu').onclick = () => {
-        closeDialog();
-        game.setMode('title');
-      };
+    if (paused && game.practice) {
+      $('retry').onclick = () => start(undefined, true);
+      $('choose-fight').onclick = () => showDialog('practice');
+    }
+    if (paused) $('menu').onclick = menu;
   }
   if (!modal.open) modal.showModal();
+  if (kind === 'practice' || (kind === 'result' && game.practice))
+    content.querySelector<HTMLButtonElement>('button')?.focus();
 }
 function resume() {
   sound.unlock();
@@ -414,9 +493,16 @@ $('continue').onclick = () => {
   if (checkpoint) start(checkpoint);
 };
 $('settings').onclick = () => showDialog('settings');
+$('practice').onclick = () => {
+  if (encounters.length) showDialog('practice');
+};
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (dialogKind === 'practice') {
+    backFromPractice();
+    return;
+  }
   if (game.mode === 'upgrade' || game.mode === 'dead' || game.mode === 'won') return;
   resume();
 });
@@ -428,6 +514,11 @@ window.addEventListener('keydown', (e) => {
   )
     e.preventDefault();
   if (e.repeat) return;
+  if (e.code === 'KeyR' && game.practice && game.mode !== 'title' && dialogKind !== 'practice') {
+    e.preventDefault();
+    start(undefined, true);
+    return;
+  }
   if (game.mode === 'upgrade') {
     const i = Number(e.key) - 1;
     if (i >= 0 && i < game.offers.length) {
@@ -534,6 +625,22 @@ function frame(now: number) {
   } else accumulator = 0;
   updateMusic();
   renderer.draw(now);
+  if (pageActive && !document.hidden) {
+    const encounter = visibleEncounter(
+      game,
+      {
+        ...renderer.camera,
+        w: renderer.width / renderer.scale,
+        h: renderer.height / renderer.scale,
+      },
+      encounters,
+    );
+    if (encounter) {
+      encounters.push(encounter);
+      write(ENCOUNTERS_KEY, encounters);
+      updateTitle();
+    }
+  }
   if (now - hudAt > 80) {
     hudAt = now;
     $<HTMLProgressElement>('health').value = game.hp;

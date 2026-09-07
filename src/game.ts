@@ -44,6 +44,8 @@ import { createCrane, updateCrane } from './crane-ai.ts';
 import type { CraneRig } from './crane-ai.ts';
 import { createKiln, updateKiln, clearKiln } from './kiln-ai.ts';
 import type { KilnRig } from './kiln-ai.ts';
+import { practiceCheckpoint } from './practice.ts';
+import type { Encounter } from './practice.ts';
 import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
 import type { ShotTrace } from './shot-trails.ts';
@@ -148,6 +150,7 @@ export class Game {
   particles: Particle[] = [];
   trail: Vec[] = [];
   mode: Mode = 'title';
+  practice: Encounter | null = null;
   seed = '';
   stage = 0;
   hp = 100;
@@ -195,7 +198,14 @@ export class Game {
     this.mode = mode;
     this.onChange();
   }
-  start(seed: string, save?: Checkpoint) {
+  startPractice(encounter: Encounter) {
+    const save = practiceCheckpoint(encounter);
+    if (!save) return false;
+    this.start(save.seed, save, { ...encounter });
+    return true;
+  }
+  start(seed: string, save?: Checkpoint, practice: Encounter | null = null) {
+    this.practice = practice;
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.stage = save?.stage ?? 0;
     this.hp = save?.hp ?? 100;
@@ -208,11 +218,13 @@ export class Game {
     this.shootAt = 0;
     this.hurtAt = -100;
     this.lastShot = -100;
+    this.offers = [];
     this.loadRoom(save?.escape === true);
     this.setMode('playing');
     this.save();
   }
   save() {
+    if (this.practice) return;
     this.onCheckpoint({
       version: 3,
       seed: this.seed,
@@ -308,6 +320,7 @@ export class Game {
     }
   }
   startEscape() {
+    if (this.practice) return;
     if (this.escape || this.stage !== STAGES - 1 || !this.clear || this.mode !== 'playing') return;
     this.loadRoom(true);
     this.save();
@@ -559,6 +572,10 @@ export class Game {
       this.shots = this.shots.filter((s) => s.friendly);
       this.onSound('clear');
       this.onChange();
+    }
+    if (this.practice && this.clear) {
+      this.setMode('won');
+      return;
     }
     if (
       this.clear &&
@@ -1372,7 +1389,7 @@ export class Game {
   }
   die() {
     this.setMode('dead');
-    this.onCheckpoint(null);
+    if (!this.practice) this.onCheckpoint(null);
     this.onSound('dead');
   }
   burst(pos: Vec, count: number, color: string, speed: number, dir?: Vec) {
@@ -1394,6 +1411,7 @@ export class Game {
     }
   }
   openReward() {
+    if (this.practice) return;
     this.offers = sample(
       MODS.filter((m) => !this.mods.includes(m.id)),
       dailyFromSeed(this.seed) ? 1 : 3,
@@ -1403,6 +1421,7 @@ export class Game {
     this.setMode('upgrade');
   }
   chooseMod(id: string) {
+    if (this.practice) return;
     if (this.mode !== 'upgrade' || this.rewardTaken || !this.offers.some((m) => m.id === id))
       return;
     this.rewardTaken = true;
