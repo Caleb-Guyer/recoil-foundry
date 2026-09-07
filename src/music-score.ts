@@ -21,6 +21,7 @@ export interface MusicNote {
 export const MUSIC_PROFILES: Record<AreaId, { bpm: number }> = {
   docks: { bpm: 88 },
   furnace: { bpm: 104 },
+  cooling: { bpm: 98 },
   rooftops: { bpm: 118 },
 };
 
@@ -119,6 +120,23 @@ const PHRASES: Record<AreaId, Phrase> = {
       [46, 67, 0.25],
       [54, 69, 0.5],
       [61, 66, 0.75],
+    ],
+  },
+  cooling: {
+    roots: [37, 40, 33, 35],
+    chords: [
+      [61, 65, 68],
+      [64, 68, 71],
+      [57, 61, 64],
+      [59, 63, 66],
+    ],
+    motif: [
+      [3, 80, 0.5],
+      [14, 75, 1],
+      [23, 76, 0.75],
+      [35, 73, 1],
+      [46, 68, 0.5],
+      [59, 75, 1.25],
     ],
   },
   rooftops: {

@@ -98,7 +98,7 @@ function escapeFixture() {
   game.start('escape-layout', {
     version: 3,
     seed: 'escape-layout',
-    stage: 8,
+    stage: 11,
     hp: 100,
     mods: [],
     kills: 0,

@@ -30,7 +30,7 @@ const playerHull = (position: Vec): Solid => ({
 });
 
 export function breachPlacement(level: Level, seed: string, stage: number): BreachPlacement | null {
-  if (level.boss || level.id === 'last-flight' || ![1, 4, 7].includes(stage)) return null;
+  if (level.boss || level.id === 'last-flight' || ![1, 4, 7, 10].includes(stage)) return null;
   const canonical = (rect: Solid): Solid => ({
     ...rect,
     x: level.mirrored ? 2000 - rect.x - rect.w : rect.x,
@@ -57,7 +57,7 @@ export function breachPlacement(level: Level, seed: string, stage: number): Brea
     return [{ x: low.x - 65, y: low.y - 170, w: 130, h: 170 }];
   });
   const candidates: BreachPlacement[] = [];
-  const rewardArea = Math.floor(seeded(seed + ':breach-pickups')() * 3);
+  const rewardArea = Math.floor(seeded(seed + ':breach-pickups')() * 4);
   const add = (left: number, floor: number, direction: number, ownPerch = false) => {
     const top = floor - 98;
     if (left < 280 || left + WIDTH > 1720) return;

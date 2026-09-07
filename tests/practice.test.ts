@@ -113,7 +113,7 @@ test('all normal boss defeats unlock practice, but ordinary enemy kills do not',
     g.hitEnemy(g.enemies[0], 99999);
     assert.equal(victories.at(-1), kind);
   }
-  assert.equal(victories.length, 5);
+  assert.equal(victories.length, 6);
 });
 
 test('every practice boss keeps its discovered arena and gets the right number of real upgrades', () => {
@@ -193,7 +193,7 @@ test('rooftop practice ends at the boss instead of starting the escape route', (
   step(g, 20);
   assert.equal(g.mode, 'won');
   assert.equal(g.escape, null);
-  assert.equal(g.mods.length, 8);
+  assert.equal(g.mods.length, 11);
   g.startEscape();
   assert.equal(g.escape, null);
 });

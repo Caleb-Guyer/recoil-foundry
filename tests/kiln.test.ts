@@ -119,7 +119,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
   };
   for (const [seed, rooms] of Object.entries(expected))
     assert.deepEqual(
-      [0, 1, 2, 3, 4, 6, 7, 8].map((stage) => {
+      [0, 1, 2, 3, 4, 9, 10, 11].map((stage) => {
         const level = getLevel(seed, stage);
         return `${level.id}:${level.mirrored}`;
       }),

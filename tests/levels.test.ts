@@ -11,7 +11,7 @@ const overlap = (
 ) =>
   Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 0.1 &&
   Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 0.1;
-test('nine-stage seeds produce six regular layouts and a boss at the end of each area', () => {
+test('twelve-stage seeds produce eight regular layouts and a boss at the end of each area', () => {
   const seen = new Set<string>();
   let mirrored = 0;
   for (let i = 0; i < 100; i++) {
@@ -31,6 +31,9 @@ test('nine-stage seeds produce six regular layouts and a boss at the end of each
         'furnace',
         'furnace',
         'furnace',
+        'cooling',
+        'cooling',
+        'cooling',
         'rooftops',
         'rooftops',
         'rooftops',
@@ -39,7 +42,7 @@ test('nine-stage seeds produce six regular layouts and a boss at the end of each
     for (const [stage, level] of levels.entries()) {
       seen.add(level.id);
       mirrored += Number(level.mirrored);
-      assert.equal(level.boss, [2, 5, 8].includes(stage));
+      assert.equal(level.boss, [2, 5, 8, 11].includes(stage));
       assert.equal(
         level.spawns.some((e) => isBoss(e.kind)),
         level.boss,
@@ -48,7 +51,7 @@ test('nine-stage seeds produce six regular layouts and a boss at the end of each
         assert.equal(level.spawns.length, 1);
         if (stage === 2) assert(['loader', 'crane'].includes(level.spawns[0].kind));
         else if (stage === 5) assert(['press', 'kiln'].includes(level.spawns[0].kind));
-        else assert.equal(level.spawns[0].kind, 'boss');
+        else assert.equal(level.spawns[0].kind, stage === 8 ? 'condenser' : 'boss');
       }
       assert(level.solids.length >= 5);
       assert(level.spawns.length > 0);
@@ -58,7 +61,7 @@ test('nine-stage seeds produce six regular layouts and a boss at the end of each
   assert(mirrored > 100);
 });
 
-test('room-entrance checkpoints reconstruct the correct area across both transitions', () => {
+test('room-entrance checkpoints reconstruct the correct area across all transitions', () => {
   for (let stage = 0; stage < STAGES; stage++) {
     const save = {
       version: 3 as const,
@@ -73,7 +76,10 @@ test('room-entrance checkpoints reconstruct the correct area across both transit
     g.start(save.seed, save);
     assert.equal(g.mode, 'playing');
     assert.deepEqual(g.level, getLevel(save.seed, stage));
-    assert.equal(g.level.area, stage < 3 ? 'docks' : stage < 6 ? 'furnace' : 'rooftops');
+    assert.equal(
+      g.level.area,
+      stage < 3 ? 'docks' : stage < 6 ? 'furnace' : stage < 9 ? 'cooling' : 'rooftops',
+    );
     assert.equal(g.hp, save.hp);
     assert.deepEqual(g.mods, save.mods);
     assert.equal(g.kills, save.kills);

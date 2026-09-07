@@ -355,7 +355,7 @@ export function getGun(mods: readonly string[]): Gun {
   if (mods.includes('deadeye')) g.spread *= 0.5;
   return g;
 }
-export const STAGES = 9;
+export const STAGES = 12;
 export const ROOM_HEAL = 12;
 export interface Checkpoint {
   version: 3;
@@ -369,7 +369,16 @@ export interface Checkpoint {
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
-  const d = value as Checkpoint;
+  let d = value as Checkpoint;
+  // A saved nine-room escape has already earned its ending. Keep it intact.
+  if (
+    d.version === 3 &&
+    d.escape === true &&
+    d.stage === 8 &&
+    Array.isArray(d.mods) &&
+    d.mods.length === 8
+  )
+    d = { ...d, stage: STAGES - 1 };
   return d.version === 3 &&
     typeof d.seed === 'string' &&
     d.seed.length <= 40 &&
@@ -388,7 +397,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     Number.isFinite(d.elapsed) &&
     d.elapsed >= 0 &&
     (d.escape === undefined ||
-      (d.escape === true && d.stage === STAGES - 1 && d.mods.length === STAGES - 1))
+      (d.escape === true &&
+        d.stage === STAGES - 1 &&
+        (d.mods.length === STAGES - 1 || d.mods.length === 8)))
     ? d
     : null;
 }

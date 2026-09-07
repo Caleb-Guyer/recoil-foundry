@@ -8,7 +8,8 @@ export const PRACTICE_BOSSES = {
   crane: { name: 'The Crane', stage: 2 },
   press: { name: 'The Press', stage: 5 },
   kiln: { name: 'The Kiln', stage: 5 },
-  boss: { name: 'Rooftop', stage: 8 },
+  condenser: { name: 'The Condenser', stage: 8 },
+  boss: { name: 'Rooftop', stage: 11 },
 } as const;
 export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
 export interface Encounter {
@@ -42,7 +43,19 @@ export function practiceCheckpoint(record: Encounter): Checkpoint | null {
   const encounter = loadEncounters([record])[0];
   if (!encounter) return null;
   const stage = PRACTICE_BOSSES[encounter.kind].stage;
-  const build = ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'light'];
+  const build = [
+    'magnum',
+    'rapid',
+    'kick',
+    'airshot',
+    'scatter',
+    'ricochet',
+    'pierce',
+    'light',
+    'leech',
+    'deadeye',
+    'execute',
+  ];
   return {
     version: 3,
     seed: encounter.seed,

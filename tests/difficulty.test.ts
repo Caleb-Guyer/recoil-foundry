@@ -190,17 +190,27 @@ test('sustained fire from the old overhead and cover camps cannot win the boss d
     { stage: 5, seed: 'kiln-layout-0', x: 700, y: 160 },
     { stage: 5, seed: 'kiln-layout-0', x: 235, y: 722 },
     { stage: 8, seed: 'boss-cheese-0', x: 1490, y: 160 },
-    { stage: 8, seed: 'boss-cheese-0', x: 355, y: 722 },
+    { stage: 11, seed: 'boss-cheese-0', x: 1490, y: 160 },
+    { stage: 11, seed: 'boss-cheese-0', x: 355, y: 722 },
   ];
   for (const scenario of cases) {
     const g = new Game(),
       mods =
         scenario.stage === 2
           ? ['magnum', 'rapid']
-          : ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'].slice(
-              0,
-              scenario.stage,
-            );
+          : [
+              'magnum',
+              'rapid',
+              'kick',
+              'airshot',
+              'scatter',
+              'ricochet',
+              'pierce',
+              'split',
+              'deadeye',
+              'execute',
+              'burst',
+            ].slice(0, scenario.stage);
     g.start(scenario.seed, {
       version: 3,
       seed: scenario.seed,
@@ -227,7 +237,11 @@ test('sustained fire from the old overhead and cover camps cannot win the boss d
       });
     }
     const label = `${boss.kind} (${scenario.x},${scenario.y})`;
-    assert.equal(g.mode, 'dead', `${label}: passive fire won with ${g.hp} HP`);
+    assert.equal(
+      g.mode,
+      'dead',
+      `${label}: passive fire ended with ${g.hp} HP against ${Math.round(boss.hp)} boss HP at ${JSON.stringify(boss.body.position)}, state ${boss.state}, attacks ${boss.attacks}, route ${JSON.stringify(boss.hunt)}`,
+    );
     assert(boss.hp > 0 && g.shotCount > 15, label);
     assert(warnings >= 3, `${label}: damage arrived without repeated readable warnings`);
   }

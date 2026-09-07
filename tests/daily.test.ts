@@ -240,7 +240,7 @@ function propSnapshot(game: Game) {
   }));
 }
 
-test('shared, continued, and retried dailies reproduce nine rooms and eight forced upgrades', () => {
+test('shared, continued, and retried dailies reproduce twelve rooms and eleven forced upgrades', () => {
   const first = new Game();
   let second = new Game();
   first.start(challenge.seed);
@@ -281,10 +281,10 @@ test('shared, continued, and retried dailies reproduce nine rooms and eight forc
       second.start(restored.seed, restored);
     }
   }
-  assert.equal(new Set(rooms).size, 9);
-  assert.deepEqual(bosses, [2, 5, 8]);
-  assert.equal(first.mods.length, 8);
-  assert.equal(new Set(first.mods).size, 8);
+  assert.equal(new Set(rooms).size, STAGES);
+  assert.deepEqual(bosses, [2, 5, 8, 11]);
+  assert.equal(first.mods.length, STAGES - 1);
+  assert.equal(new Set(first.mods).size, STAGES - 1);
   assert.deepEqual(first.mods, sequence);
 
   first.start(first.seed);
@@ -298,7 +298,7 @@ test('shared, continued, and retried dailies reproduce nine rooms and eight forc
     );
     first.chooseMod(first.offers[0].id);
   }
-  assert.equal(first.level.id, rooms[8]);
+  assert.equal(first.level.id, rooms[STAGES - 1]);
   assert.deepEqual(first.mods, sequence);
 });
 
@@ -387,7 +387,7 @@ test('v3 checkpoints preserve daily identity and accumulated elapsed time across
   assert.deepEqual(restored, save);
   for (const broken of [
     { ...save, version: 2 },
-    { ...save, stage: 9 },
+    { ...save, stage: STAGES },
     { ...save, elapsed: -1 },
     { ...save, elapsed: Infinity },
     { ...save, mods: ['removed-upgrade'] },

@@ -1,3 +1,4 @@
+import { dodgePilot } from './combat-pilot.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
@@ -336,19 +337,55 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     seed: 'path-run-65',
     pressSpacing: 160,
     pathMods: ['deadeye', 'execute'],
-    rewards: ['pierce', 'airshot', 'leech', 'deadeye', 'burst', 'execute', 'magnum', 'rapid'],
+    rewards: [
+      'pierce',
+      'airshot',
+      'leech',
+      'deadeye',
+      'burst',
+      'execute',
+      'magnum',
+      'rapid',
+      'kick',
+      'scatter',
+      'light',
+    ],
   },
   {
     seed: 'path-run-66',
     pressSpacing: 320,
     pathMods: ['crossfire', 'bloom'],
-    rewards: ['magnum', 'banker', 'burst', 'ricochet', 'rapid', 'leech', 'airshot', 'crossfire'],
+    rewards: [
+      'magnum',
+      'banker',
+      'burst',
+      'ricochet',
+      'rapid',
+      'leech',
+      'airshot',
+      'crossfire',
+      'bloom',
+      'scatter',
+      'kick',
+    ],
   },
   {
     seed: 'path-run-93',
     pressSpacing: 160,
     pathMods: ['deadeye', 'execute'],
-    rewards: ['magnum', 'deadeye', 'leech', 'execute', 'ricochet', 'airshot', 'rapid', 'banker'],
+    rewards: [
+      'magnum',
+      'deadeye',
+      'leech',
+      'execute',
+      'ricochet',
+      'airshot',
+      'rapid',
+      'banker',
+      'scatter',
+      'burst',
+      'kick',
+    ],
   },
   {
     seed: 'path-run-65',
@@ -377,14 +414,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       escapeSeen = false,
       pressDodgeUntil = 0,
       pressDirection = 1,
-      pressReacted = false,
-      roofDirection = 1,
-      roofLastJump = -5,
-      roofLastTell = -1,
-      roofVolleys = 0;
-    g.onSound = (sound) => {
-      if (g.stage === 8 && (sound === 'enemy' || sound === 'pulse')) roofVolleys++;
-    };
+      pressReacted = false;
     const priority = [
       ...pathMods,
       'leech',
@@ -407,7 +437,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'execute',
       'fold',
     ];
-    for (let i = 0; i < 60 * 360 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+    for (let i = 0; i < 60 * 540 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       if (g.escape?.phase === 'extracting') {
         tick(g);
         continue;
@@ -473,8 +503,8 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       }
       if (!g.clear && g.time - lastProgress > 5) move = Math.sin(g.time * 0.65) > 0 ? 1 : -1;
       // If cover blocks a distant target, stop recoil and take the next terrain waypoint.
-      const navigate = !g.clear && g.time - lastProgress > 8 && distance(p, ep) > 500;
-      const path = g.level.route;
+      const navigate = g.clear || (g.time - lastProgress > 8 && distance(p, ep) > 500);
+      const path = [...g.level.route, { x: exitX, y: 720 }];
       const way = navigate
         ? dx > 0
           ? path.find((q) => q.x > p.x + 35)
@@ -490,8 +520,11 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       if (lift && !g.grounded) aim = { x: p.x, y: p.y + 500 };
       if (g.clear) {
         if (clearAt < 0) clearAt = g.time;
-        assert(g.time - clearAt < 35, `Exit unreachable in ${g.level.id}`);
-        jump = g.grounded && (blocked || stuck > 15);
+        assert(
+          g.time - clearAt < 35,
+          `Exit unreachable in ${g.level.id}, stage ${g.stage}, at (${Math.round(p.x)}, ${Math.round(p.y)}), props ${JSON.stringify(g.props.items.map((p) => ({ kind: p.kind, pos: p.body.position })))}`,
+        );
+        jump = g.grounded && (blocked || stuck > 15 || !!(way && p.y - way.y > 50));
       }
       if (way && p.y - way.y > 50 && g.grounded) jump = true;
       let firing = (!g.clear && !navigate) || (lift && !g.grounded);
@@ -543,34 +576,14 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
           firing = false;
         }
       }
-      if (e?.kind === 'boss') {
-        if (p.x < 150) roofDirection = 1;
-        else if (p.x > 1850) roofDirection = -1;
-        else if (g.gun.backblast && stuck > 20) {
-          // The slower two-way build retreats from a blocked lane instead of
-          // spending another long burst pinned against the obstacle.
-          roofDirection *= -1;
-          stuck = 0;
-        }
-        move = roofDirection;
-        aim = { ...e.body.position };
-        const roofBlocked =
-            Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 18).length > 0,
-          locked = e.state === 'windup' && e.timer <= 0.3;
-        // Patrol across each volley and fire in the exposed cooldown. Wait for
-        // any committed burst before beginning the next evasive jump.
-        firing = e.state === 'recover' || e.state === 'idle';
-        jump =
-          g.grounded &&
-          g.burstRemaining === 0 &&
-          g.time - roofLastJump > 0.3 &&
-          (roofBlocked || (locked && roofLastTell !== roofVolleys));
-        if (jump) {
-          roofLastJump = g.time;
-          roofLastTell = roofVolleys;
-        }
+      if (e?.kind === 'boss' || e?.kind === 'condenser') {
+        const choice = dodgePilot(g, e);
+        move = Number(choice.right) - Number(choice.left);
+        jump = choice.jump!;
+        firing = choice.fire!;
+        aim = choice.aim!;
       }
-      if (!g.clear && e?.kind !== 'boss' && e?.kind !== 'press') {
+      if (!g.clear && e?.kind !== 'boss' && e?.kind !== 'condenser' && e?.kind !== 'press') {
         const threat = g.shots.find((s) => {
           if (s.friendly) return false;
           const rx = s.pos.x - p.x,

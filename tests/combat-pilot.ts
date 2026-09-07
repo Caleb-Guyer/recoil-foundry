@@ -1,0 +1,146 @@
+import type { Enemy, Game, Input } from '../src/game.ts';
+import { attackAngles } from '../src/enemies.ts';
+import { coolingAngles } from '../src/cooling.ts';
+import { clamp, distance, direction } from '../src/rules.ts';
+
+// Test-only player: compare short movement trajectories with visible bolts and
+// locked warnings. It sends ordinary inputs; it never changes health, enemies,
+// shots, upgrades, or the simulation. Approximate terrain/recoil prediction is
+// deliberately independent from Matter's collision solver.
+export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
+  const p = g.player.position,
+    target = e.body.position;
+  const boxes = g.solidBodies.map((b) => ({
+    left: Math.min(...b.vertices.map((v) => v.x)),
+    right: Math.max(...b.vertices.map((v) => v.x)),
+    top: Math.min(...b.vertices.map((v) => v.y)),
+    bottom: Math.max(...b.vertices.map((v) => v.y)),
+  }));
+  const bolts = g.shots
+    .filter((s) => !s.friendly)
+    .map((s) => ({
+      p: s.pos,
+      v: s.vel,
+      delay: 0,
+      life: Math.min(
+        s.life * 60,
+        distance(
+          s.pos,
+          g.lineEnd(s.pos, { x: s.pos.x + s.vel.x * 120, y: s.pos.y + s.vel.y * 120 }),
+        ) / Math.hypot(s.vel.x, s.vel.y),
+      ),
+    }));
+  if ((e.state === 'windup' || e.state === 'followup') && e.timer <= 0.35) {
+    const angles =
+      e.kind === 'boss' ? attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)) : coolingAngles(e);
+    for (const a of angles) {
+      const start = { x: target.x + Math.cos(a) * 55, y: target.y + Math.sin(a) * 55 };
+      const speed = e.attack === 'ring' ? 7.8 : e.kind === 'boss' ? 11.2 : 10.2;
+      const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+      bolts.push({
+        p: start,
+        v,
+        delay: e.timer * 60,
+        life:
+          distance(start, g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 })) /
+          speed,
+      });
+    }
+  }
+  let best = Infinity,
+    result: Partial<Input> = {};
+  for (const move of [-1, 0, 1])
+    for (const jump of g.grounded ? [false, true] : [false])
+      for (const fire of [true, false])
+        for (const lift of fire && e.kind === 'boss' ? [false, true] : [false]) {
+          let x = p.x,
+            y = p.y,
+            vx = g.player.velocity.x,
+            vy = g.player.velocity.y,
+            ground = g.grounded;
+          let score = 0,
+            shootAt = g.shootAt,
+            burst = g.burstRemaining,
+            burstAt = g.burstAt;
+          const aim = lift ? { x: p.x, y: p.y + 500 } : { ...target };
+          for (let frame = 1; frame <= 40; frame++) {
+            const time = g.time + frame / 60,
+              ox = x,
+              oy = y;
+            if (move && (Math.sign(vx) !== move || Math.abs(vx) < 7.3 * g.gun.speed))
+              vx += move * (ground ? 1.05 : 0.42) * g.gun.speed;
+            if (ground && !move) vx *= 0.72;
+            vx = clamp(vx, -23, 23);
+            vy = clamp(vy, -21, 20);
+            if (frame === 1 && jump && ground) {
+              vy = -11.6;
+              ground = false;
+            }
+            let shot = false;
+            if (burst > 0 && time >= burstAt) {
+              burst--;
+              burstAt = time + g.gun.interval * 0.3;
+              shot = true;
+            } else if (fire && time >= shootAt && burst === 0) {
+              shootAt = time + g.gun.interval * (g.gun.burstCount === 3 ? 3.1 : 1);
+              burst = g.gun.burstCount - 1;
+              burstAt = time + g.gun.interval * 0.3;
+              shot = true;
+            }
+            if (shot) {
+              const d = direction({ x, y }, aim),
+                force = g.gun.recoil * (ground ? 0.21 : 1);
+              vx = clamp(vx - d.x * force, -23, 23);
+              vy = clamp(vy - d.y * force, -21, 20);
+            }
+            vx *= 0.992;
+            vy = vy * 0.992 + 1000 / 3600;
+            x += vx;
+            for (const b of boxes)
+              if (y + 17 > b.top && y - 17 < b.bottom && x + 13 > b.left && x - 13 < b.right) {
+                if (ox + 13 <= b.left + 0.1) {
+                  x = b.left - 13;
+                  vx = 0;
+                } else if (ox - 13 >= b.right - 0.1) {
+                  x = b.right + 13;
+                  vx = 0;
+                }
+              }
+            y += vy;
+            ground = false;
+            for (const b of boxes)
+              if (x + 12 > b.left && x - 12 < b.right && y + 18 > b.top && y - 18 < b.bottom) {
+                if (oy + 18 <= b.top + 0.2) {
+                  y = b.top - 18;
+                  vy = 0;
+                  ground = true;
+                } else if (oy - 18 >= b.bottom - 0.2) {
+                  y = b.bottom + 18;
+                  vy = 0;
+                }
+              }
+            for (const b of bolts) {
+              const t = frame - b.delay;
+              if (t < 0 || t > b.life) continue;
+              const dx = Math.abs(b.p.x + b.v.x * t - x),
+                dy = Math.abs(b.p.y + b.v.y * t - y);
+              if (dx < 25 && dy < 31) score += 1000 / (frame + 8);
+              else if (dx < 42 && dy < 45) score += 8 / (frame + 8);
+            }
+            const ex = target.x + e.body.velocity.x * Math.min(frame, 8),
+              ey = target.y + e.body.velocity.y * Math.min(frame, 8);
+            if (Math.abs(x - ex) < 72 && Math.abs(y - ey) < 73) score += 2000 / (frame + 8);
+            score += x < 90 || x > 1910 ? 4 : 0;
+          }
+          // Prefer a useful firing lane and modest spacing when trajectories are safe.
+          score += Math.abs(distance({ x, y }, target) - 340) * 0.008;
+          if (distance(g.lineEnd({ x, y }, target), target) > 10) score += 9;
+          if (fire) score += lift ? 2 : -6;
+          if (jump) score += 0.2;
+          if (score < best) {
+            best = score;
+            result = { left: move < 0, right: move > 0, jump, fire, aim };
+          }
+        }
+  return result;
+}

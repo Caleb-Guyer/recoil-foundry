@@ -11,7 +11,19 @@ import { dailyForDate, recordDailyWin } from '../src/daily.ts';
 import { musicScene } from '../src/music-score.ts';
 
 const { Body, Composite } = Matter;
-const mods = ['magnum', 'scatter', 'rapid', 'airshot', 'kick', 'burst', 'backblast', 'landing'];
+const mods = [
+  'magnum',
+  'scatter',
+  'rapid',
+  'airshot',
+  'kick',
+  'burst',
+  'backblast',
+  'landing',
+  'deadeye',
+  'execute',
+  'pierce',
+];
 
 function step(g: Game, count = 1, input: Partial<Input> = {}) {
   for (let i = 0; i < count; i++)
@@ -138,7 +150,7 @@ test('passing the old room exit keeps the escape playable without a lethal count
   assert.equal(g.escape?.phase, 'route');
   assert(g.escape!.time > 29);
   assert.equal(g.hp, 73);
-  assert.equal(g.mods.length, 8);
+  assert.equal(g.mods.length, 11);
   assert(g.player.position.y <= WORLD.floor);
 });
 

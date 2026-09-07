@@ -54,7 +54,7 @@ test('only valid current single-gun checkpoints resume', () => {
     {},
     { ...valid, version: 2 },
     { ...valid, hp: 0 },
-    { ...valid, stage: 9 },
+    { ...valid, stage: 12 },
     { ...valid, mods: ['unknown'] },
     { ...valid, mods: ['rapid', 'rapid'] },
     { ...valid, elapsed: Infinity },

@@ -207,7 +207,8 @@ test('front shields and each boss armor state still reduce explosive damage and 
     ['crane', 0.35],
     ['press', 0.4],
     ['kiln', 0.4],
-    ['boss', 0.45],
+    ['condenser', 0.25],
+    ['boss', 0.3],
   ] as const) {
     const game = fixture();
     game.spawnEnemy(kind, 900, 400);
@@ -415,7 +416,7 @@ test('death, room changes, retries, and extraction clear delayed blasts without 
     } else if (end === 'room') g.loadRoom();
     else if (end === 'retry') g.start(g.seed);
     else {
-      g.stage = 8;
+      g.stage = 11;
       g.clear = true;
       g.startEscape();
     }
@@ -463,7 +464,7 @@ test('shooting the floor launches a grounded player through a real shell collisi
 
 test('boarding extraction discards a pending aftershock and its warning', () => {
   const g = fixture(ids);
-  g.stage = 8;
+  g.stage = 11;
   g.clear = true;
   g.startEscape();
   blast(g, { x: EXTRACTION.x, y: EXTRACTION.y - 5 });

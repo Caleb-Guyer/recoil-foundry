@@ -1,6 +1,6 @@
 import type { Vec } from './rules.ts';
 
-export type AreaId = 'docks' | 'furnace' | 'rooftops';
+export type AreaId = 'docks' | 'furnace' | 'cooling' | 'rooftops';
 
 export const AREAS = {
   docks: {
@@ -20,6 +20,15 @@ export const AREAS = {
     face: '#2c2927',
     edge: '#5e5144',
     detail: '#433a31',
+  },
+  cooling: {
+    name: 'Cooling Works',
+    sky: ['#0b1d22', '#1e383b'],
+    surface: '#94babb',
+    body: '#294448',
+    face: '#1f363b',
+    edge: '#45696b',
+    detail: '#315356',
   },
   rooftops: {
     name: 'Rooftops',
@@ -129,6 +138,31 @@ export function drawScenery(
       c.fillStyle = '#392c25';
       c.fillRect(x + 55, 480, 150, 5);
       c.fillRect(x + 55, 558, 150, 5);
+    }
+  } else if (area === 'cooling') {
+    c.translate(-camera.x * 0.18, -camera.y * 0.14);
+    for (let i = 0; i < 6; i++) {
+      const x = 80 + i * 440;
+      c.fillStyle = '#163035';
+      c.fillRect(x, 170, 270, 610);
+      c.fillStyle = '#1e3b3e';
+      c.fillRect(x + 14, 182, 242, 574);
+      c.fillStyle = '#142c31';
+      c.fillRect(x + 28, 225, 214, 486);
+      c.fillStyle = '#294c4e';
+      c.fillRect(x + 36, 564, 198, 142);
+      c.fillStyle = '#426c69';
+      c.fillRect(x + 36, 562, 198, 2);
+      c.strokeStyle = '#254448';
+      c.lineWidth = 14;
+      c.beginPath();
+      c.moveTo(x + 48, 0);
+      c.lineTo(x + 48, 137);
+      c.lineTo(x + 280, 137);
+      c.stroke();
+      c.fillStyle = '#345658';
+      c.fillRect(x + 11, 320, 248, 8);
+      c.fillRect(x + 11, 700, 248, 8);
     }
   } else {
     // The horizon and distant roofs stay below the open upper half of the sky.

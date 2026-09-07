@@ -44,13 +44,14 @@ function candidates(level: Level, kind: HazardKind): HazardPlacement[] {
       const clearance = { x: swept.x - 12, y: swept.y, w: swept.w + 24, h: swept.h };
       // Riders have headroom throughout motion. Optional platforms also leave a
       // clear floor below them, so their removal or position cannot break a route.
+      const launchRoom = kind === 'crumble' ? 64 : 12;
       const floorSpace: Solid =
         kind === 'crusher'
           ? { x: swept.x - 36, y: 700, w: swept.w + 72, h: 40 }
           : {
-              x: swept.x - 12,
+              x: swept.x - launchRoom,
               y: placement.y + placement.h,
-              w: swept.w + 24,
+              w: swept.w + launchRoom * 2,
               h: 740 - placement.y - placement.h,
             };
       if (level.solids.some((solid) => overlaps(clearance, solid) || overlaps(floorSpace, solid)))
@@ -80,15 +81,15 @@ export function hazardPlacement(
   seed: string,
   stage: number,
 ): HazardPlacement | undefined {
-  if (level.boss || ![1, 3, 4, 6, 7].includes(stage)) return;
+  if (level.boss || ![1, 3, 4, 6, 7, 9, 10].includes(stage)) return;
   const kinds: HazardKind[] =
     stage === 1
       ? ['lift']
       : stage === 3
         ? ['crusher']
-        : stage === 6
+        : stage === 9
           ? ['crumble']
-          : stage === 4
+          : stage === 4 || stage === 6 || stage === 7
             ? ['lift', 'crusher']
             : ['lift', 'crusher', 'crumble'];
   const rng = seeded(seed + ':hazards:' + stage);

@@ -153,6 +153,9 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'cooling-shot') {
+      this.tone(420, 105, 0.11, 0.085, 'triangle');
+      this.crack(0.09, 0.07, 2500);
     } else if (kind === 'shell-shot') {
       this.tone(105, 42, 0.13, 0.22);
       this.crack(0.08, 0.14, 1100);

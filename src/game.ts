@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { onCoolant, updateCoolingEnemy } from './cooling.ts';
 import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
 import type { ShellPayload } from './demolition.ts';
 import { PortalSystem, portalVector } from './portals.ts';
@@ -518,7 +519,7 @@ export class Game {
     // Steering never clamps a recoil boost back to walking speed.
     if (move && (Math.sign(vx) !== move || Math.abs(vx) < max))
       vx += move * (this.grounded ? 1.05 : 0.42) * this.gun.speed;
-    if (this.grounded && !move) vx *= 0.72;
+    if (this.grounded && !move) vx *= onCoolant(this) ? 0.965 : 0.72;
     Body.setVelocity(this.player, { x: clamp(vx, -23, 23), y: clamp(vy, -21, 20) });
     if (this.jumpBuffer > 0 && this.coyote > 0) {
       Body.setVelocity(this.player, { x: this.player.velocity.x, y: -11.6 });
@@ -803,6 +804,7 @@ export class Game {
     else if (e.kind === 'hopper') this.updateHopper(e);
     else if (e.kind === 'sniper') this.updateSniper(e);
     else if (e.kind === 'boss') this.updateBoss(e);
+    else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
     else if (e.kind === 'runner') {
       const turning = e.elite === 'shielded' && this.updateShield(e);
       if (!turning) this.updateRunner(e, d, dist);
@@ -821,7 +823,7 @@ export class Game {
         const count = e.kind === 'flyer' ? 3 : 1;
         for (let i = 0; i < count; i++) this.enemyShot(e, base + (i - (count - 1) / 2) * 0.18);
         const area = Math.floor(this.stage / 3);
-        e.timer = e.kind === 'flyer' ? [1.9, 1.7, 1.5][area] : [1.5, 1.35, 1.2][area];
+        e.timer = e.kind === 'flyer' ? [1.9, 1.7, 1.5, 1.3][area] : [1.5, 1.35, 1.2, 1.05][area];
         this.onSound('enemy');
       } else if (e.timer <= 0) e.timer = 0.8;
     }
@@ -1214,7 +1216,7 @@ export class Game {
       this.feedback(4);
       this.onSound('phase');
     }
-    if (e.state === 'windup' || e.state === 'transition') {
+    if (e.state === 'windup' || e.state === 'followup' || e.state === 'transition') {
       Body.setVelocity(e.body, { x: e.body.velocity.x * 0.65, y: e.body.velocity.y * 0.65 });
     } else huntBoss(this, e);
     if (e.state === 'transition') {
@@ -1222,14 +1224,22 @@ export class Game {
         e.state = 'idle';
         e.timer = 0.25;
       }
-    } else if (e.state === 'windup') {
+    } else if (e.state === 'windup' || e.state === 'followup') {
+      const second = e.state === 'followup';
       if (e.timer > 0.3) e.aim = d;
       if (e.timer <= 0) {
         for (const angle of attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)))
-          this.enemyShot(e, angle, e.attack === 'ring' ? 7.2 : 10.4, 22);
-        e.attacks++;
-        e.state = 'recover';
-        e.timer = [0.9, 0.7, 0.55][e.phase];
+          this.enemyShot(e, angle, e.attack === 'ring' ? 7.8 : 11.2, 23);
+        if (e.phase > 0 && !second && e.attack !== 'ring') {
+          e.state = 'followup';
+          e.timer = 0.7;
+          e.aim = d;
+          this.onSound('lock');
+        } else {
+          e.attacks++;
+          e.state = 'recover';
+          e.timer = [0.95, 0.85, 0.75][e.phase];
+        }
         this.onSound(e.attack === 'ring' ? 'pulse' : 'enemy');
       }
     } else if (e.timer <= 0 && bossHasLane(this, e)) {
@@ -1243,12 +1253,12 @@ export class Game {
   enemyShot(
     e: Enemy,
     a: number,
-    speed = [7.2, 8, 8.8][Math.floor(this.stage / 3)],
-    damage = e.kind === 'boss' ? 22 : [14, 16, 18][Math.floor(this.stage / 3)],
+    speed = [7.2, 8, 8.8, 9.6][Math.floor(this.stage / 3)],
+    damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20][Math.floor(this.stage / 3)],
     origin: Vec = e.body.position,
   ) {
     const d = { x: Math.cos(a), y: Math.sin(a) },
-      radius = e.kind === 'boss' ? 55 : e.kind === 'sniper' ? 38 : 26;
+      radius = e.kind === 'boss' || e.kind === 'condenser' ? 55 : e.kind === 'sniper' ? 38 : 26;
     const muzzle = { x: origin.x + d.x * radius, y: origin.y + d.y * radius };
     const end = this.lineEnd(origin, muzzle);
     const portalMuzzle = this.portals.trace(origin, muzzle, { x: 5, y: 5 });
@@ -1454,8 +1464,10 @@ export class Game {
     if (e.kind === 'crane') damage *= e.state === 'recover' && e.crane && !e.crane.hit ? 1.4 : 0.35;
     if (e.kind === 'press') damage *= e.state === 'recover' ? 1.25 : 0.4;
     if (e.kind === 'kiln') damage *= e.state === 'recover' ? 1.35 : 0.4;
+    if (e.kind === 'condenser') damage *= e.state === 'recover' ? 1.3 : 0.25;
     if (e.kind === 'boss')
-      damage *= e.state === 'transition' ? 0.35 : e.state === 'windup' ? 0.45 : 1;
+      damage *=
+        e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
     e.hp -= damage;
     if (!blocked) {
       e.flash = 0.08;

@@ -36,6 +36,8 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           press: 0,
           kiln: 0,
           boss: 0,
+          skimmer: 7,
+          condenser: 0,
         }[spawn.kind];
   ranked.sort((a, b) => strength(b.spawn) - strength(a.spawn) || a.tie - b.tie);
   const final = new Set<number>();
@@ -106,7 +108,10 @@ export class ReinforcementSystem {
     // Use only reserved authored anchors. Props, moving hazards, and vents
     // already keep these anchors clear across the whole room's layout.
     const alternatives = g.level.spawns
-      .filter((s) => (s.kind === 'flyer') === (door.spawn.kind === 'flyer'))
+      .filter(
+        (s) =>
+          ['flyer', 'skimmer'].includes(s.kind) === ['flyer', 'skimmer'].includes(door.spawn.kind),
+      )
       .map((anchor) => ({ ...door.spawn, x: anchor.x, y: anchor.y }))
       .filter(
         (s) =>

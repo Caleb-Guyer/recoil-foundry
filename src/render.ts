@@ -1,3 +1,4 @@
+import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawCrane } from './crane-art.ts';
@@ -20,7 +21,7 @@ import {
   isBoss,
   attackAngles,
 } from './enemies.ts';
-import { clamp, direction } from './rules.ts';
+import { clamp, direction, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
@@ -147,6 +148,7 @@ export class Renderer {
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
     this.drawExit();
     this.drawHazards();
+    drawCoolant(c, g, this.reduced);
     this.drawProps();
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced);
@@ -160,6 +162,10 @@ export class Renderer {
       c.globalAlpha = 1;
     }
     for (const e of g.enemies) {
+      if (e.kind === 'skimmer' || e.kind === 'condenser') {
+        drawCoolingEnemy(c, g, e, this.reduced);
+        continue;
+      }
       if (e.kind === 'crane') {
         drawCrane(c, g, e, this.reduced);
         continue;
@@ -1098,11 +1104,19 @@ export class Renderer {
       this.line({ x: end.x - e.aim.x * 9, y: end.y - 6 }, end, '#f8b480', 2);
       this.line({ x: end.x - e.aim.x * 9, y: end.y + 6 }, end, '#f8b480', 2);
     } else if (e.kind === 'boss') {
-      const angles = attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x));
-      c.setLineDash([3, 12]);
+      const angles = attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)),
+        locked = e.timer <= 0.3,
+        length = e.attack === 'ring' ? 380 : 800;
+      c.setLineDash(locked ? [] : [5, 12]);
       for (const a of angles) {
-        const end = g.lineEnd(p, { x: p.x + Math.cos(a) * 380, y: p.y + Math.sin(a) * 380 });
-        this.line(p, end, e.timer <= 0.3 ? '#c38a63' : '#814a3d', 1);
+        const end = g.lineEnd(p, { x: p.x + Math.cos(a) * length, y: p.y + Math.sin(a) * length });
+        if (distance(p, end) < 55) continue;
+        this.line(
+          { x: p.x + Math.cos(a) * 55, y: p.y + Math.sin(a) * 55 },
+          end,
+          locked ? '#d9ad7e' : '#8e6c52',
+          locked ? 1.4 : 1,
+        );
       }
       c.setLineDash([]);
       this.circle(p, 47 - e.timer * 8, '#f7bd83', false, 2);

@@ -7,7 +7,7 @@ import type { AreaId } from '../src/areas.ts';
 import { MUSIC_PROFILES, musicNotes, musicScene } from '../src/music-score.ts';
 import type { MusicNote } from '../src/music-score.ts';
 
-const areas: AreaId[] = ['docks', 'furnace', 'rooftops'];
+const areas: AreaId[] = ['docks', 'furnace', 'cooling', 'rooftops'];
 const phrase = (area: AreaId, intensity = 0, boss = false, clear = false) =>
   Array.from({ length: 64 }, (_, step) => musicNotes(area, step, intensity, boss, clear));
 const percussion = (notes: MusicNote[][]) =>
@@ -16,13 +16,13 @@ const percussion = (notes: MusicNote[][]) =>
 test('area scores have distinct tempos, harmony and restrained phrases with deliberate rests', () => {
   assert.deepEqual(
     areas.map((area) => MUSIC_PROFILES[area].bpm),
-    [88, 104, 118],
+    [88, 104, 98, 118],
   );
   const scores = areas.map((area) => phrase(area));
   assert.notDeepEqual(scores[0], scores[1]);
   assert.notDeepEqual(scores[1], scores[2]);
   assert(percussion(scores[1]).length > percussion(scores[0]).length);
-  assert(percussion(scores[2]).length < percussion(scores[1]).length);
+  assert(percussion(scores[3]).length < percussion(scores[1]).length);
   for (const [index, score] of scores.entries()) {
     assert(
       score.filter((notes) => notes.length === 0).length >= 20,
@@ -44,7 +44,7 @@ test('area scores have distinct tempos, harmony and restrained phrases with deli
     assert(score.flat().every((note) => note.velocity < 0.5));
   }
   const roofMean =
-    scores[2].flat().reduce((sum, note) => sum + note.velocity, 0) / scores[2].flat().length;
+    scores[3].flat().reduce((sum, note) => sum + note.velocity, 0) / scores[3].flat().length;
   const furnaceMean =
     scores[1].flat().reduce((sum, note) => sum + note.velocity, 0) / scores[1].flat().length;
   assert(roofMean < furnaceMean, 'Rooftops should settle into a lighter texture');
@@ -172,7 +172,7 @@ test('scene identity maps room and mode correctly while menus, clear rooms and d
   game.enemies[0].hp = 0;
   assert.equal(musicScene(game).boss, false);
 
-  for (const stage of [0, 4, 7]) {
+  for (const stage of [0, 4, 7, 10]) {
     game.start('continued-score', {
       version: 3,
       seed: 'continued-score',
@@ -184,7 +184,7 @@ test('scene identity maps room and mode correctly while menus, clear rooms and d
     });
     assert.equal(
       musicScene(game).area,
-      stage === 0 ? 'docks' : stage === 4 ? 'furnace' : 'rooftops',
+      stage === 0 ? 'docks' : stage === 4 ? 'furnace' : stage === 7 ? 'cooling' : 'rooftops',
     );
     assert.equal(musicScene(game).room, 'continued-score:' + stage);
   }

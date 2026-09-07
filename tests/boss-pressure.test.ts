@@ -53,7 +53,7 @@ function startOverheadTell(kind: 'loader' | 'press') {
   return { g, e };
 }
 
-function room(stage: 2 | 5 | 8, seed = 'boss-cheese-0') {
+function room(stage: 2 | 5 | 11, seed = 'boss-cheese-0') {
   const g = new Game();
   const mods =
     stage === 2
@@ -170,14 +170,14 @@ test('both rooftop arenas and their mirrors let the boss flank cover and threate
   const layouts = new Map<string, string>();
   for (let i = 0; i < 100 && layouts.size < 4; i++) {
     const seed = i === 0 ? 'boss-cheese-0' : `boss-flank-${i}`,
-      level = getLevel(seed, 8);
+      level = getLevel(seed, 11);
     layouts.set(`${level.id}:${level.mirrored}`, seed);
   }
   assert.equal(layouts.size, 4);
   let coveredCases = 0;
   for (const [layout, seed] of layouts) {
     for (const spot of ['left-corner', 'right-corner', 'box-edge', 'under-shelf']) {
-      const { g, e } = room(8, seed),
+      const { g, e } = room(11, seed),
         boxes = g.level.solids.filter((s) => s.h >= 80).sort((a, b) => a.x - b.x),
         shelf = g.level.solids.filter((s) => s.h < 80).sort((a, b) => a.x - b.x)[0],
         home =

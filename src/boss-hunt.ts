@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { ENEMY_STATS } from './enemies.ts';
 import type { Enemy, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, distance, segmentBox } from './rules.ts';
@@ -30,9 +31,11 @@ export function bossHasLane(g: Game, e: Enemy) {
 function plan(g: Game, e: Enemy): Vec[] {
   const start = e.body.position,
     player = g.player.position;
+  const halfW = ENEMY_STATS[e.kind].w / 2 - 0.5,
+    halfH = ENEMY_STATS[e.kind].h / 2 - 0.5;
   const blocks = g.solidBodies.map((body) => ({
-    min: { x: body.bounds.min.x - 44.5, y: body.bounds.min.y - 37.5 },
-    max: { x: body.bounds.max.x + 44.5, y: body.bounds.max.y + 37.5 },
+    min: { x: body.bounds.min.x - halfW, y: body.bounds.min.y - halfH },
+    max: { x: body.bounds.max.x + halfW, y: body.bounds.max.y + halfH },
   }));
   const valid = (p: Vec) =>
     p.x >= 48 &&

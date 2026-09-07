@@ -28,7 +28,7 @@ test('hazards introduce one type at a time and keep sweeps, headroom, spawns and
         continue;
       }
       assert(hazard, `${seed}, ${level.id}, room ${stage + 1}: missing safe feature`);
-      const introduced = ({ 1: 'lift', 3: 'crusher', 6: 'crumble' } as Record<number, string>)[
+      const introduced = ({ 1: 'lift', 3: 'crusher', 9: 'crumble' } as Record<number, string>)[
         stage
       ];
       if (introduced) assert.equal(hazard.kind, introduced);
@@ -94,7 +94,7 @@ test('unsafe rooms omit their optional feature instead of overlapping cover or c
   const level = getLevel('hazard-blocked', 1);
   level.solids = [{ x: 180, y: 100, w: 1640, h: 640 }];
   const before = JSON.stringify(level);
-  for (const stage of [1, 3, 4, 6, 7])
+  for (const stage of [1, 3, 4, 6, 7, 9, 10])
     assert.equal(hazardPlacement(level, 'hazard-blocked', stage), undefined);
   assert.equal(JSON.stringify(level), before);
   assert.equal(hazardPlacement({ ...level, solids: [], boss: true }, 'boss', 3), undefined);
@@ -105,7 +105,7 @@ test('all layout orientations remain traversable with active hazards, ordinary j
   const cases = new Map<string, { seed: string; stage: number }>();
   for (let index = 0; index < 256 && cases.size < LAYOUTS.length * 2; index++) {
     const seed = 'hazard-route-' + index;
-    for (const stage of [1, 3, 4, 6, 7]) {
+    for (const stage of [1, 3, 4, 6, 7, 9, 10]) {
       const level = getLevel(seed, stage);
       if (hazardPlacement(level, seed, stage))
         cases.set(level.id + ':' + level.mirrored, { seed, stage });

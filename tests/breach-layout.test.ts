@@ -25,12 +25,12 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
   for (let i = 0; i < 256; i++) {
     const seed = 'breach-' + i;
     let runPickups = 0;
-    for (let stage = 0; stage < 9; stage++) {
+    for (let stage = 0; stage < 12; stage++) {
       const level = getLevel(seed, stage);
       const before = JSON.stringify(level);
       const vent = breachPlacement(level, seed, stage);
       assert.equal(JSON.stringify(level), before);
-      if (![1, 4, 7].includes(stage) || level.boss) {
+      if (![1, 4, 7, 10].includes(stage) || level.boss) {
         assert.equal(vent, null);
         continue;
       }
@@ -88,7 +88,7 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
       );
       assert.deepEqual(breachPlacement(level, seed, stage), vent);
     }
-    assert(runPickups <= 2, 'A run must not add more than two supply detours');
+    assert(runPickups <= 3, 'A run must not add more than three supply detours');
     pickups += runPickups;
   }
   assert.equal(coverage.size, LAYOUTS.length * 2);
@@ -147,7 +147,7 @@ function cases() {
   const result = new Map<string, { seed: string; stage: number }>();
   for (let i = 0; i < 256 && result.size < LAYOUTS.length * 2; i++) {
     const seed = 'breach-route-' + i;
-    for (const stage of [1, 4, 7]) {
+    for (const stage of [1, 4, 7, 10]) {
       const level = getLevel(seed, stage);
       if (breachPlacement(level, seed, stage))
         result.set(level.id + ':' + level.mirrored, { seed, stage });

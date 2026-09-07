@@ -11,7 +11,7 @@ import { dailyForDate } from '../src/daily.ts';
 
 const elites = (level: Level) => level.spawns.filter((spawn) => spawn.elite);
 
-test('every run gets exactly two different elites, one per eligible area and at most one per room', () => {
+test('every run gets four elites, one per eligible room and at most one per room', () => {
   const seen = new Set<EliteKind>();
   const selectedStages = new Set<number>();
   for (let index = 0; index < 256; index++) {
@@ -22,11 +22,15 @@ test('every run gets exactly two different elites, one per eligible area and at 
       if (stage < 3 || level.boss) assert.equal(found.length, 0);
       return found.map((spawn) => ({ stage, elite: spawn.elite!, kind: spawn.kind }));
     });
-    assert.equal(encounters.length, 2);
+    assert.equal(encounters.length, 4);
     assert([3, 4].includes(encounters[0].stage));
     assert([6, 7].includes(encounters[1].stage));
     assert(['shielded', 'twin'].includes(encounters[0].elite));
     assert.notEqual(encounters[0].elite, encounters[1].elite);
+    assert.deepEqual(
+      encounters.slice(2).map((e) => e.stage),
+      [9, 10],
+    );
     for (const encounter of encounters) {
       seen.add(encounter.elite);
       selectedStages.add(encounter.stage);
@@ -37,7 +41,10 @@ test('every run gets exactly two different elites, one per eligible area and at 
     }
   }
   assert.deepEqual([...seen].sort(), ['shielded', 'twin', 'volatile']);
-  assert.deepEqual([...selectedStages].sort(), [3, 4, 6, 7]);
+  assert.deepEqual(
+    [...selectedStages].sort((a, b) => a - b),
+    [3, 4, 6, 7, 9, 10],
+  );
 });
 
 test('elite promotion keeps authored safe hull anchors, mirrored geometry, and unique spawn positions', () => {
@@ -45,7 +52,7 @@ test('elite promotion keeps authored safe hull anchors, mirrored geometry, and u
   const before = JSON.stringify(sources);
   const variants = new Set<string>();
   for (let index = 0; index < 128; index++) {
-    for (const stage of [3, 4, 6, 7]) {
+    for (const stage of [3, 4, 6, 7, 9, 10]) {
       const level = getLevel('elite-hull-' + index, stage);
       const source = sources.find((layout) => layout.id === level.id)!;
       assert.equal(new Set(level.spawns.map(({ x, y }) => `${x},${y}`)).size, level.spawns.length);
@@ -122,7 +129,7 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
     'elite-save-2',
     dailyForDate('2026-09-06')!.seed,
   ]) {
-    for (const stage of [3, 4, 6, 7]) {
+    for (const stage of [3, 4, 6, 7, 9, 10]) {
       const checkpoint: Checkpoint = {
         version: 3,
         seed,

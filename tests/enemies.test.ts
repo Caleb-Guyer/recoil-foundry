@@ -190,9 +190,9 @@ test('boss phases switch at health thresholds and cancel a pending attack with a
 });
 test('boss attacks cycle from aimed volleys to fans and radial volleys with full windups', () => {
   const expected = [
-    ['aimed', 'aimed', 'aimed'],
     ['aimed', 'fan', 'aimed'],
     ['aimed', 'fan', 'ring'],
+    ['fan', 'ring', 'aimed'],
   ];
   for (let phase = 0; phase < 3; phase++) {
     const { g, e } = fixture('boss', 600, 200);
@@ -209,7 +209,11 @@ test('boss attacks cycle from aimed volleys to fans and radial volleys with full
       if (state !== 'windup' && e.state === 'windup') warningAt = g.time;
       if (e.attacks > attacks) {
         assert(g.time - warningAt >= attackTell(e.attack) - 0.001);
-        assert.equal(g.shots.length, e.attack === 'ring' ? 12 : e.attack === 'fan' ? 7 : 5);
+        assert.equal(
+          g.shots.length,
+          (e.attack === 'ring' ? 12 : e.attack === 'fan' ? 7 : 5) *
+            (phase > 0 && e.attack !== 'ring' ? 2 : 1),
+        );
         fired.push(e.attack);
         g.shots = [];
       }
@@ -222,7 +226,7 @@ test('rooftop fan and ring volleys track the player early and preserve their loc
     const { g, e } = fixture('boss', 600, 200);
     e.hp = e.maxHp * (attack === 'fan' ? 0.6 : 0.3);
     e.phase = attack === 'fan' ? 1 : 2;
-    e.attacks = attack === 'fan' ? 1 : 2;
+    e.attacks = 1;
     step(g);
     assert.equal(e.state, 'windup');
     assert.equal(e.attack, attack);
@@ -237,14 +241,14 @@ test('rooftop fan and ring volleys track the player early and preserve their loc
     Body.setPosition(g.player, { x: 300, y: 600 });
     while (e.state === 'windup') {
       step(g);
-      assert.deepEqual(e.aim, locked);
+      if (e.state === 'windup') assert.deepEqual(e.aim, locked);
     }
     assert(g.time - started >= attackTell(attack) - 1e-8);
     assert(g.time - lockedAt >= 0.3 - 1 / 60);
     const shots = g.shots.filter((shot) => !shot.friendly);
     assert.equal(shots.length, attack === 'fan' ? 7 : 12);
     const base = Math.atan2(locked.y, locked.x),
-      speed = attack === 'fan' ? 10.4 : 7.2;
+      speed = attack === 'fan' ? 11.2 : 7.8;
     for (const [i, shot] of shots.entries()) {
       const angle = base + (attack === 'fan' ? (i - 3) * 0.27 : (i * Math.PI) / 6 + Math.PI / 12);
       assert(Math.abs(shot.vel.x - Math.cos(angle) * speed) < 1e-8);

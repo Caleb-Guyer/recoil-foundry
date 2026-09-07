@@ -100,7 +100,7 @@ test('random and forced daily rewards stay legal and plentiful throughout comple
       : 'path-' + i;
     const g = new Game();
     g.start(seed);
-    for (let stage = 0; stage < 8; stage++) {
+    for (let stage = 0; stage < 11; stage++) {
       g.openReward();
       assert.equal(g.offers.length, daily ? 1 : 3);
       assert(g.offers.every((mod) => availableMods(g.mods).some((m) => m.id === mod.id)));

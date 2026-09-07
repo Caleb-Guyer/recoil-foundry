@@ -20,7 +20,9 @@ export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }
   crane: { w: 90, h: 54, hp: 800 },
   press: { w: 120, h: 62, hp: 1250 },
   kiln: { w: 116, h: 84, hp: 1250 },
-  boss: { w: 90, h: 76, hp: 1800 },
+  skimmer: { w: 38, h: 38, hp: 76 },
+  condenser: { w: 90, h: 76, hp: 2600 },
+  boss: { w: 90, h: 76, hp: 3200 },
 };
 export const CHARGE_TELL = 0.7;
 export const SNIPER_TELL = 0.95;
@@ -42,10 +44,15 @@ export function flakAngles(aim: number, enraged: boolean): number[] {
   );
 }
 export const isBoss = (kind: EnemyKind) =>
-  kind === 'loader' || kind === 'crane' || kind === 'press' || kind === 'kiln' || kind === 'boss';
+  kind === 'loader' ||
+  kind === 'crane' ||
+  kind === 'press' ||
+  kind === 'kiln' ||
+  kind === 'condenser' ||
+  kind === 'boss';
 export function enemyHealth(kind: EnemyKind, stage: number, elite?: EliteKind): number {
   const base = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
-  return Math.ceil(base * (isBoss(kind) ? 1 : 1 + Math.max(0, Math.min(8, stage)) * 0.08));
+  return Math.ceil(base * (isBoss(kind) ? 1 : 1 + Math.max(0, Math.min(11, stage)) * 0.08));
 }
 export type Attack = 'aimed' | 'fan' | 'ring' | 'flak' | 'sweep' | 'slam' | 'mortar';
 export type EnemyState =
@@ -61,7 +68,11 @@ export const bossPhase = (hp: number, max: number) =>
   hp > (max * 2) / 3 ? 0 : hp > max / 3 ? 1 : 2;
 export function bossAttack(phase: number, count: number): Attack {
   const cycle: Attack[] =
-    phase === 0 ? ['aimed'] : phase === 1 ? ['aimed', 'fan'] : ['aimed', 'fan', 'ring'];
+    phase === 0
+      ? ['aimed', 'fan']
+      : phase === 1
+        ? ['aimed', 'fan', 'ring']
+        : ['fan', 'ring', 'aimed', 'ring'];
   return cycle[count % cycle.length];
 }
 export const attackTell = (attack: Attack) =>
