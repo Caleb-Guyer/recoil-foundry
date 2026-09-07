@@ -35,7 +35,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=11`). Version 11 adds The Kiln to the furnace boss selection; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=12`). Version 12 makes Loader rams detonate fuel canisters on contact; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -101,7 +101,7 @@ Passages and pickups follow the run seed, including Daily Runs. Continuing resto
 Rooms contain up to three props, placed away from enemy entrances and the exit. Tall breakable panels stay off the main traversal route. Some furnace rooms contain a pair of canisters for a chain reaction.
 
 - **Loose crates** can be pushed, stood on, or launched with gunfire. A fast crate impact damages enemies; ordinary pushing is harmless. Repeated shots eventually break the crate.
-- **Fuel canisters** launch and light up when shot. A hard impact detonates them, damaging nearby enemies and triggering nearby canisters. Solid cover blocks the blast. Stay clear: close explosions can also hurt you.
+- **Fuel canisters** launch and light up when shot. A hard impact detonates them, damaging nearby enemies and triggering nearby canisters. A direct Loader charge detonates even unlit or tipped canisters, stopping the ram in its exposed recovery. Solid cover blocks the blast. Stay clear: close explosions can also hurt you.
 - **Breakable panels** stop bullets and aiming lines. Three ordinary rounds break one, opening a new firing lane. Cracks show damage without a health bar.
 
 Props block enemy fire and rear blasts as well as ordinary shots. Banked rounds reflect from their actual rotated surfaces; gun modifications still combine on the same weapon. Surviving props do not prevent a room from clearing. Continuing a run restores its props at the room entrance, like enemies.
@@ -219,6 +219,8 @@ Shot-trail checks cover real collision corners, bounded path history, persistent
 Reinforcement checks cover deterministic composition, full arrival warnings, blocked entries, room completion, one reward per room, pause and death, and fresh checkpoint reconstruction.
 
 Area boss checks cover locked attack warnings, airborne camping versus reactive dodging, corner pressure, shotgun knockback resistance, transition armor, and physical flanking across both rooftop arenas and their mirrors. They also cover wide-body crashes, platform-edge landings, returning from beneath shelves, safe recovery windows, recoil escapes, pause and death cleanup, and exactly one upgrade after each intermediate boss.
+
+Loader fuel checks cover direct contact in both directions, upright and rotated canisters, a complete warned charge, closing the braking gap before detonation, nearer walls shielding fuel, overhead misses, pause, and exactly one explosion.
 
 Kiln checks cover seeded arena selection, unchanged non-furnace rooms, locked mortar plans, live collisions with cover and props, hot-strip warnings and expiry, vent armor, displaced-muzzle cancellation, and reactive combat in both mirrors. Shells and hot strips reset when restarting or leaving the room.
 

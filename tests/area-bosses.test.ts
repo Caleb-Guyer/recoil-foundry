@@ -83,6 +83,108 @@ test('Loader nose catches cover before penetration and its crash is a safe damag
   assert.equal(g.hp, 100);
 });
 
+test('Loader rams upright and tipped fuel from either direction and detonates it exactly once', () => {
+  for (const sign of [-1, 1])
+    for (const angle of [0, Math.PI / 2, Math.PI / 4]) {
+      const { g, e } = fixture('loader');
+      Body.setPosition(e.body, { x: 800, y: 706 });
+      Body.setPosition(g.player, { x: 1400, y: 722 });
+      e.state = 'rush';
+      e.timer = 1;
+      e.aim = { x: sign, y: 0 };
+      Body.setVelocity(e.body, { x: sign * 15, y: 0 });
+      const halfW = Math.abs(Math.cos(angle)) * 12 + Math.abs(Math.sin(angle)) * 19,
+        halfH = Math.abs(Math.sin(angle)) * 12 + Math.abs(Math.cos(angle)) * 19,
+        fuel = g.props.spawn('canister', 800 + sign * (56 + 9 + halfW), 740 - halfH);
+      Body.setAngle(fuel.body, angle);
+      let explosions = 0;
+      g.onSound = (sound) => {
+        if (sound === 'explode') explosions++;
+      };
+      step(g);
+      assert(!g.props.items.includes(fuel), `No detonation for direction ${sign}, angle ${angle}`);
+      assert.equal(e.state, 'recover');
+      assert.equal(e.timer, 1.25);
+      assert(e.hp < e.maxHp, 'The rammer should take the nearby blast damage');
+      assert(!Composite.allBodies(g.engine.world).includes(fuel.body));
+      step(g, 20);
+      assert.equal(explosions, 1);
+    }
+});
+
+test('a fully warned Loader charge reaches and explodes untouched floor fuel', () => {
+  const { g, e } = fixture('loader'),
+    fuel = g.props.spawn('canister', 850, 721),
+    started = g.time;
+  let explodedAt = 0;
+  g.onSound = (sound) => {
+    if (sound === 'explode') explodedAt = g.time;
+  };
+  step(g);
+  assert.equal(e.state, 'windup');
+  for (let i = 0; i < 200 && !explodedAt; i++) step(g);
+  assert(explodedAt >= started + LOADER_TELL);
+  assert(!g.props.items.includes(fuel));
+  assert.equal(e.state, 'recover');
+  assert(Math.abs(e.body.position.x - 782) < 10, 'The ram should reach physical contact');
+});
+
+test('Loader closes the old braking gap before detonating fuel', () => {
+  const { g, e } = fixture('loader');
+  Body.setPosition(e.body, { x: 800, y: 706 });
+  e.state = 'rush';
+  e.timer = 1;
+  e.aim = { x: 1, y: 0 };
+  Body.setVelocity(e.body, { x: 15, y: 0 });
+  const fuel = g.props.spawn('canister', 888, 721);
+  step(g);
+  assert(g.props.items.includes(fuel), 'Fuel detonated before the ram reached it');
+  assert.equal(e.state, 'rush');
+  assert(e.body.position.x > 810, 'The old center ray stopped the ram short');
+  step(g);
+  assert(!g.props.items.includes(fuel));
+  assert.equal(e.state, 'recover');
+});
+
+test('a nearer wall blocks the ram and shields fuel behind it', () => {
+  const { g, e } = fixture('loader');
+  Body.setPosition(e.body, { x: 800, y: 706 });
+  e.state = 'rush';
+  e.timer = 1;
+  e.aim = { x: 1, y: 0 };
+  Body.setVelocity(e.body, { x: 15, y: 0 });
+  wall(g, 865, 700, 8, 80);
+  const fuel = g.props.spawn('canister', 886, 721);
+  step(g);
+  assert.equal(e.state, 'recover');
+  assert(g.props.items.includes(fuel));
+  assert.equal(fuel.armedAt, Infinity);
+  assert.equal(e.hp, e.maxHp);
+  assert(e.body.position.x + 56 < 861.1);
+});
+
+test('fuel outside the ram hull stays intact, and pause cannot trigger a pending impact', () => {
+  const { g, e } = fixture('loader');
+  Body.setPosition(e.body, { x: 800, y: 706 });
+  e.state = 'rush';
+  e.timer = 1;
+  e.aim = { x: 1, y: 0 };
+  Body.setVelocity(e.body, { x: 15, y: 0 });
+  const overhead = g.props.spawn('canister', 877, 645);
+  step(g);
+  assert.equal(e.state, 'rush');
+  assert(g.props.items.includes(overhead));
+  g.props.remove(overhead);
+  const fuel = g.props.spawn('canister', e.body.position.x + 77, 721);
+  g.setMode('paused');
+  step(g, 60);
+  assert(g.props.items.includes(fuel));
+  g.setMode('playing');
+  step(g);
+  assert(!g.props.items.includes(fuel));
+  assert.equal(e.state, 'recover');
+});
+
 test('Loader can hop the low arena bumpers while repositioning', () => {
   const { g, e } = fixture('loader');
   Body.setPosition(e.body, { x: 540, y: 706 });
