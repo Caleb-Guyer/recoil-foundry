@@ -1,5 +1,6 @@
 import Matter from 'matter-js';
 import { EvolutionSystem } from './evolutions.ts';
+import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
 import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
 import type { ShellPayload } from './demolition.ts';
@@ -16,6 +17,7 @@ import {
   STAGES,
   ROOM_HEAL,
   segmentBox,
+  isDetourStage,
 } from './rules.ts';
 import type { Vec, Gun, Mod, Checkpoint } from './rules.ts';
 import { dailyFromSeed } from './daily.ts';
@@ -167,6 +169,22 @@ export class Game {
   practice: Encounter | null = null;
   seed = '';
   stage = 0;
+  detour = false;
+  detours: number[] = [];
+  enteringDetour = false;
+  detourStepsReady = false;
+  get canDetour() {
+    return (
+      !this.practice &&
+      !this.escape &&
+      !this.detour &&
+      isDetourStage(this.stage) &&
+      !this.detours.includes(Math.floor(this.stage / 3))
+    );
+  }
+  get roomSeed() {
+    return this.seed + (this.detour ? ':detour:' + this.stage : '');
+  }
   hp = 100;
   mods: string[] = [];
   gun: Gun = getGun([]);
@@ -231,6 +249,8 @@ export class Game {
     this.practice = practice;
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.stage = save?.stage ?? 0;
+    this.detour = !practice && save?.detour === true;
+    this.detours = !practice ? [...(save?.detours ?? [])] : [];
     this.hp = save?.hp ?? 100;
     this.mods = save ? [...save.mods] : [];
     this.gun = getGun(this.mods);
@@ -257,9 +277,13 @@ export class Game {
       kills: this.kills,
       elapsed: this.elapsed,
       ...(this.escape ? { escape: true as const } : {}),
+      ...(this.detour ? { detour: true as const } : {}),
+      ...(this.detours.length ? { detours: [...this.detours] } : {}),
     });
   }
   loadRoom(escapeRoom = false) {
+    this.enteringDetour = false;
+    this.detourStepsReady = false;
     this.evolutions.reset();
     this.portals.reset();
     this.demolition.clear();
@@ -295,7 +319,7 @@ export class Game {
     this.burstAt = 0;
     this.blast.life = 0;
     this.shootAt = this.time;
-    this.rng = seeded(this.seed + ':' + this.stage);
+    this.rng = seeded(this.roomSeed + ':' + this.stage);
     const wall = (x: number, y: number, w: number, h: number) => {
       const b = Bodies.rectangle(x, y, w, h, { isStatic: true, friction: 0, label: 'terrain' });
       this.terrain.push(b);
@@ -312,7 +336,9 @@ export class Game {
           route: ESCAPE_LAYOUT.route.map((p) => ({ ...p })),
           spawns: [],
         }
-      : getLevel(this.seed, this.stage);
+      : this.detour
+        ? getDetour(this.seed, this.stage)
+        : getLevel(this.seed, this.stage);
     for (const solid of this.level.solids)
       wall(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h);
     this.player = Bodies.rectangle(140, 680, 26, 36, {
@@ -341,18 +367,40 @@ export class Game {
       });
       Composite.add(this.engine.world, this.extractionLift);
     } else {
-      this.hazards.reset(this.level, this.seed, this.stage);
-      this.breaches.reset(this.level, this.seed, this.stage);
+      this.hazards.reset(this.level, this.roomSeed, this.stage);
+      if (!this.detour) this.breaches.reset(this.level, this.seed, this.stage);
       this.props.reset(this.level);
     }
   }
   startEscape() {
-    if (this.practice) return;
+    if (this.practice || this.detour) return;
     if (this.escape || this.stage !== STAGES - 1 || !this.clear || this.mode !== 'playing') return;
     this.loadRoom(true);
     this.save();
     this.onSound('evacuate');
     this.onChange();
+  }
+  extendDetourSteps() {
+    if (!this.clear || !this.canDetour || this.detourStepsReady) return;
+    // Never materialize a step through the player or a loose prop.
+    for (const s of DETOUR_STEPS)
+      if (
+        Query.region([this.player, ...this.props.bodies], {
+          min: { x: s.x - 1, y: s.y - 1 },
+          max: { x: s.x + s.w + 1, y: s.y + s.h + 1 },
+        }).length
+      )
+        return;
+    for (const s of DETOUR_STEPS) {
+      const body = Bodies.rectangle(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h, {
+        isStatic: true,
+        friction: 0,
+        label: 'detour-step',
+      });
+      this.terrain.push(body);
+      Composite.add(this.engine.world, body);
+    }
+    this.detourStepsReady = true;
   }
   updateEscape(dt: number) {
     const escape = this.escape;
@@ -422,7 +470,9 @@ export class Game {
   spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind, attackDelay?: number) {
     if (this.enemies.length >= 14) return;
     const { w, h } = ENEMY_STATS[kind];
-    const hp = enemyHealth(kind, this.stage, elite);
+    const hp = Math.ceil(
+      enemyHealth(kind, this.stage, elite) * (this.detour && !isBoss(kind) ? DETOUR_HEALTH : 1),
+    );
     const body =
       kind === 'flyer'
         ? Bodies.circle(x, y, 19, { frictionAir: 0.035, inertia: Infinity, label: 'enemy' })
@@ -611,6 +661,19 @@ export class Game {
     }
     if (this.practice && this.clear) {
       this.setMode('won');
+      return;
+    }
+    this.extendDetourSteps();
+    if (
+      this.clear &&
+      this.canDetour &&
+      this.time - this.clearAt > 0.4 &&
+      this.grounded &&
+      this.player.position.x > DETOUR_DOOR.x - 24 &&
+      this.player.position.x < DETOUR_DOOR.x + 40 &&
+      Math.abs(this.player.position.y - (DETOUR_DOOR.floor - 18)) < 8
+    ) {
+      this.openReward(true);
       return;
     }
     if (
@@ -1624,12 +1687,19 @@ export class Game {
       });
     }
   }
-  openReward() {
-    if (this.practice) return;
+  openReward(enterDetour = false) {
+    if (this.practice || this.escape || this.mode !== 'playing') return;
+    if (
+      enterDetour &&
+      (!this.canDetour || !this.clear || this.enemies.length || this.waves.pending)
+    )
+      return;
+    if (this.detour && (!this.clear || this.enemies.length || this.waves.pending)) return;
+    this.enteringDetour = enterDetour;
     this.offers = rewardMods(
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
-      seeded(this.seed + ':rewards:' + this.stage),
+      seeded(this.seed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage),
     );
     this.rewardTaken = false;
     this.setMode('upgrade');
@@ -1643,11 +1713,19 @@ export class Game {
       !availableMods(this.mods).some((m) => m.id === id)
     )
       return;
+    if (this.enteringDetour && !this.canDetour) return;
     this.rewardTaken = true;
     this.mods.push(id);
     this.gun = getGun(this.mods);
-    this.hp = Math.min(100, this.hp + ROOM_HEAL);
-    this.stage++;
+    if (this.detour) {
+      this.detours.push(Math.floor(this.stage / 3));
+      this.detour = false;
+      this.stage++;
+    } else {
+      this.hp = Math.min(100, this.hp + ROOM_HEAL);
+      if (this.enteringDetour) this.detour = true;
+      else this.stage++;
+    }
     this.loadRoom();
     this.setMode('playing');
     this.save();

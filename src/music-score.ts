@@ -72,7 +72,7 @@ export function musicScene(game: Game): MusicScene {
   }
   return {
     area: game.level.area,
-    room: game.seed + ':' + game.stage,
+    room: game.roomSeed + ':' + game.stage,
     mode: game.mode,
     intensity,
     boss,

@@ -236,7 +236,9 @@ game.onChange = () => {
     : (activeDaily ? 'DAILY · ' : '') +
       (game.escape
         ? 'ESCAPE'
-        : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
+        : game.detour
+          ? 'CHALLENGE'
+          : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
@@ -318,7 +320,12 @@ function showDialog(kind: string) {
     content.innerHTML =
       '<p class="eyebrow">' +
       (activeDaily ? 'DAILY · ' : '') +
-      'ROOM CLEAR</p><h2 id="dialog-title">' +
+      (game.detour
+        ? 'BONUS UPGRADE · NO HEALING'
+        : game.enteringDetour
+          ? 'ROOM CLEAR · CHALLENGE NEXT'
+          : 'ROOM CLEAR') +
+      '</p><h2 id="dialog-title">' +
       (singleUpgrade ? 'Next upgrade.' : 'Make it kick.') +
       '</h2><div class="choices">' +
       game.offers
@@ -382,8 +389,13 @@ function showDialog(kind: string) {
       (activeDaily
         ? 'DAILY · ' + activeDaily.date
         : win
-          ? 'ALL ' + STAGES + ' ROOMS'
-          : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
+          ? 'ALL ' +
+            STAGES +
+            ' ROOMS' +
+            (game.detours.length ? ' · ' + game.detours.length + ' CHALLENGES' : '')
+          : game.detour
+            ? 'CHALLENGE'
+            : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
       '</p><h2 id="dialog-title">' +
       (win ? 'Clean escape.' : 'One more run?') +
       '</h2><p class="result-line">' +
@@ -465,7 +477,11 @@ function showDialog(kind: string) {
         ? 'Defeat the boss. Press R to retry.'
         : game.escape
           ? 'Reach the extraction lift.'
-          : 'Clear the room, then leave through the right door.') +
+          : game.detour
+            ? 'Survive for an extra upgrade, without a health refill.'
+            : game.canDetour
+              ? 'After clearing, the upper door offers an optional challenge.'
+              : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun' +

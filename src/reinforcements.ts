@@ -17,7 +17,11 @@ export interface ReinforcementDoor {
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
   if (level.boss || level.spawns.length < 3) return [level.spawns.map((s) => ({ ...s })), []];
   const count = level.spawns.length;
-  const openingCount = count === 4 ? 2 : Math.max(1, Math.floor(count / 3));
+  const openingCount = level.detour
+    ? Math.ceil(count / 2)
+    : count === 4
+      ? 2
+      : Math.max(1, Math.floor(count / 3));
   const finalCount = count - openingCount;
   const random = seeded(seed + ':waves:' + stage);
   const ranked = level.spawns.map((spawn, index) => ({ spawn, index, tie: random() }));
@@ -76,9 +80,9 @@ export class ReinforcementSystem {
   }
   reset(level: Level) {
     this.clear();
-    const [opening, final] = splitWaves(level, this.game.seed, this.game.stage);
+    const [opening, final] = splitWaves(level, this.game.roomSeed, this.game.stage);
     this.openingCount = opening.length;
-    const random = seeded(this.game.seed + ':reinforcement-timers:' + this.game.stage);
+    const random = seeded(this.game.roomSeed + ':reinforcement-timers:' + this.game.stage);
     this.doors = final.map((spawn) => ({
       spawn,
       state: 'sealed',
@@ -135,7 +139,9 @@ export class ReinforcementSystem {
     if (this.phase === 'opening') {
       if (
         g.enemies.length === 0 ||
-        (g.stage >= 3 && this.openingCount >= 2 && g.enemies.length <= 1)
+        ((g.stage >= 3 || g.detour) &&
+          this.openingCount >= 2 &&
+          g.enemies.length <= (g.detour ? 2 : 1))
       ) {
         this.phase = 'warning';
         for (const door of this.doors) {

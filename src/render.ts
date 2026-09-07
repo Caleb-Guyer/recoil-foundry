@@ -1,6 +1,7 @@
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
+import { drawDetourDoor } from './detour-art.ts';
 import { drawCrane } from './crane-art.ts';
 import { drawKiln } from './kiln-art.ts';
 import { drawBossSignal } from './boss-signals.ts';
@@ -147,6 +148,7 @@ export class Renderer {
     }
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
     this.drawExit();
+    drawDetourDoor(c, g);
     this.drawHazards();
     drawCoolant(c, g, this.reduced);
     this.drawProps();

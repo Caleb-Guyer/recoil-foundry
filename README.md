@@ -4,7 +4,7 @@
 
 [Play in your browser](https://caleb-guyer.github.io/recoil-foundry/)
 
-A physics roguelike about staying in motion. Clear twelve stages, change your gun between fights, and get out. No inventory, ammunition, energy, cargo, or ability selection.
+A physics roguelike about staying in motion. Clear twelve stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, cargo, or ability selection.
 
 ## Play
 
@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear twelve stages, change your gu
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Thirty-two possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eleven picks per run leave room for different builds.
+You always carry **one gun**. Thirty-two possible modifications change its shots, recoil, handling, or healing. Choose one of three after each main room; these rewards also restore 12 health. The direct route gives eleven picks. Taking all four optional detours extends the run to sixteen fights and fifteen picks; bonus rewards give no healing.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -28,7 +28,7 @@ Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, S
 
 ## Daily run
 
-Choose **Daily run** on the title screen for a shared twelve-room challenge. A new challenge starts at midnight UTC. Everyone gets the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first eleven rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 12-health recovery. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.
+Choose **Daily run** on the title screen for a shared twelve-room challenge. A new challenge starts at midnight UTC. Players taking the same route get the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first eleven rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 12-health recovery. Optional detours also give exactly one predetermined bonus card, without healing. Choosing a detour can change later upgrades because your build changes. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.
 
 Finish all twelve rooms and reach the extraction lift to save your fastest successful time for that challenge in this browser. The timer counts active simulation time through the escape route, excluding pauses, upgrade screens, and the automatic lift departure. Continue keeps the elapsed time saved at the room or escape entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
 
@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=20`). Version 20 adds prerequisite-based follow-up upgrades and separates Backblast from backward projectiles; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=21`). Version 21 adds optional challenge detours and their bonus rewards; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Build paths
 
@@ -131,13 +131,23 @@ Climb stacks, fight from ledges, take lower routes, and use solid cover to break
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
 
+## Optional challenges
+
+After clearing room 2, 5, 8, or 11, take the ordinary ground exit to continue or climb the two suspended steps to the upper **CHALLENGE** door. Its amber warning frame and small +1 symbol identify the risk and reward without revealing the encounter. The steps extend after combat and keep the ground exit clear. Both doors work by walking through them; there is no route menu.
+
+The upper door gives the main room's earned upgrade and usual 12-health recovery, then enters an extra fight in the current area. Each area has its own authored challenge layout with mirrored variants, obstacles, active machinery, and larger coordinated waves. Regular enemies have 15% more health than at the same stage. Reinforcements arrive with two opening enemies still alive, keeping their full warning and emergence grace period.
+
+Survive and take one bonus upgrade, with **no reward healing**, before rejoining the main route at the area's boss. Bloodwork can still heal from kills. Each detour can be taken once; a full run therefore contains 12–16 fights and 11–15 upgrades. The main room counter and final escape remain unchanged.
+
+Continue remembers whether you entered a challenge, its starting health and gun, and completed detours. It restarts the saved fight without repaying the entrance reward. Fold gets its normal fresh placement allowance on entering and leaving a challenge. Daily Runs use the same doors and force one legal card at every reward, including bonuses. Practice has no detours.
+
 ## Reinforcements
 
 Regular rooms have two compact waves: a small opening group, then the tougher part of the room’s roster. The second group reserves elites and mixes flyers with mobile ground enemies when that roster supports it. Both waves share the room’s fixed roster. Reinforcements do not add extra enemies or healing opportunities.
 
 Regular enemies gain 8% of their base health per room after the first, including elites. Shooters and flyers attack more often through each area, with faster, harder-hitting bolts in the furnace and on the rooftops. Their warning windows stay readable. Arriving reinforcements still get a full door warning and emergence grace period before attacking.
 
-Service-door lights turn amber and a short mechanical cue warns of the next group for 0.75 seconds. Clearing the opening group starts the warning immediately; from the furnace onward, opening groups of two or more call reinforcements while their last enemy remains. Each door opens as its enemy emerges. The exit unlocks only after both groups are defeated, with the usual single upgrade and 12-health recovery.
+Service-door lights turn amber and a short mechanical cue warns of the next group for 0.75 seconds. Clearing the opening group starts the warning immediately; from the furnace onward, opening groups of two or more call reinforcements while their last enemy remains. Each door opens as its enemy emerges. The exit unlocks only after both groups are defeated. Main-room rewards give the usual single upgrade and 12-health recovery; challenge bonuses give only the upgrade.
 
 Doors wait if you, another enemy, or a moved prop block the entry. When another suitable authored entrance is free, that door gets its own full warning before the delayed enemy arrives. Shots and explosions do not damage enemies still behind sealed doors. Boss rooms and the final escape keep their existing encounters.
 
@@ -326,3 +336,5 @@ Physics: [Matter.js](https://brm.io/matter-js/) (MIT). Build: [Vite](https://vit
 Cooling Works regression checks cover coolant momentum, locked jet volleys, separately warned follow-ups, rotating purge gaps, armor, physical cover navigation, pause and death cleanup, save migration, and final-area rosters. Full-run pilots use ordinary movement and firing inputs, with short trajectory prediction for the new ranged fights; they retain normal health and earn all eleven upgrades before extraction. A rooftop placement regression keeps collapsing platforms away from the launch space beside steps.
 
 Follow-up checks cover prerequisite rewards and saves, repeated portal replacement, capped travel and movement bonuses, defensive rear cones, wall fragment fans, converging lanes through cover and portals, firing-order accuracy streaks, enlarged echoes, and combined projectile/effect limits.
+
+Detour tests cover both exit routes with ordinary movement, four mirrored challenge layouts, warned reinforcement entrances, direct and extended run progression, bonus healing rules, deterministic Daily routes, and continued challenge/escape checkpoints.

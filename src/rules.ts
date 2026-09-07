@@ -466,6 +466,8 @@ export function getGun(mods: readonly string[]): Gun {
 }
 export const STAGES = 12;
 export const ROOM_HEAL = 12;
+export const isDetourStage = (stage: number) =>
+  Number.isInteger(stage) && stage >= 0 && stage < STAGES && stage % 3 === 1;
 export interface Checkpoint {
   version: 3;
   seed: string;
@@ -475,6 +477,8 @@ export interface Checkpoint {
   kills: number;
   elapsed: number;
   escape?: true;
+  detour?: true;
+  detours?: number[];
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
@@ -488,6 +492,18 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     d.mods.length === 8
   )
     d = { ...d, stage: STAGES - 1 };
+  const completed = d.detours ?? [];
+  const validDetours =
+    Array.isArray(completed) &&
+    completed.length <= 4 &&
+    completed.every(
+      (area, index) =>
+        Number.isInteger(area) &&
+        area >= 0 &&
+        area < 4 &&
+        area * 3 + 1 < d.stage &&
+        (index === 0 || completed[index - 1] < area),
+    );
   return d.version === 3 &&
     typeof d.seed === 'string' &&
     d.seed.length <= 40 &&
@@ -505,10 +521,17 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     d.kills >= 0 &&
     Number.isFinite(d.elapsed) &&
     d.elapsed >= 0 &&
+    validDetours &&
+    ((d.detour === undefined && d.detours === undefined) ||
+      d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length) &&
+    (d.detour === undefined ||
+      (d.detour === true && isDetourStage(d.stage) && d.escape === undefined)) &&
+    (d.detours === undefined || (d.detours !== null && Array.isArray(d.detours))) &&
     (d.escape === undefined ||
       (d.escape === true &&
         d.stage === STAGES - 1 &&
-        (d.mods.length === STAGES - 1 || d.mods.length === 8)))
+        (d.mods.length === STAGES - 1 + completed.length ||
+          (d.mods.length === 8 && completed.length === 0))))
     ? d
     : null;
 }

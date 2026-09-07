@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, WORLD, EXTRACTION_DURATION } from '../src/game.ts';
 import { EXTRACTION } from '../src/escape-layout.ts';
+import { CRANE_LOCK } from '../src/crane-ai.ts';
 import type { Input } from '../src/game.ts';
 import { getGun, MODS, distance, STAGES, availableMods } from '../src/rules.ts';
 const { Body, Composite, Query } = Matter;
@@ -399,8 +400,8 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     g.start(seed);
     if (rewards) {
       const openReward = g.openReward.bind(g);
-      g.openReward = () => {
-        openReward();
+      g.openReward = (enterDetour = false) => {
+        openReward(enterDetour);
         const preferred = MODS.find((m) => m.id === rewards[g.stage])!;
         assert(availableMods(g.mods).includes(preferred), 'Scripted offer is not legal');
         g.offers = [preferred, ...g.offers.filter((m) => m !== preferred)].slice(0, 3);
@@ -411,10 +412,14 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       lastProgress = 0,
       lastKills = 0,
       clearAt = -1,
+      directExitReady = false,
+      takingLowerRoute = false,
       escapeSeen = false,
       pressDodgeUntil = 0,
       pressDirection = 1,
-      pressReacted = false;
+      pressReacted = false,
+      craneDodgeUntil = 0,
+      craneDirection = 1;
     const priority = [
       ...pathMods,
       'leech',
@@ -459,6 +464,8 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         );
         clearAt = -1;
         lastProgress = g.time;
+        directExitReady = false;
+        takingLowerRoute = false;
         stuck = 0;
         previousX = g.player.position.x;
       }
@@ -583,7 +590,33 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         firing = choice.fire!;
         aim = choice.aim!;
       }
-      if (!g.clear && e?.kind !== 'boss' && e?.kind !== 'condenser' && e?.kind !== 'press') {
+      if (e?.kind === 'crane') {
+        // Use the docks boss pilot's visible warning reactions. Treating these
+        // bosses as ordinary shooters made survival depend on arrival timing.
+        move = dx > 320 ? 1 : dx < -320 ? -1 : 0;
+        if (distance(g.lineEnd(p, ep), ep) > 1) move = Math.sign(dx);
+        jump =
+          g.grounded &&
+          ((!!move && Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0) ||
+            stuck > 25);
+        if (e.state === 'windup' && e.timer <= CRANE_LOCK) {
+          if (e.attack === 'sweep') jump ||= g.grounded;
+          else {
+            craneDodgeUntil = g.time + 0.65;
+            craneDirection = p.x < 1000 ? 1 : -1;
+          }
+        }
+        if (g.time < craneDodgeUntil) move = craneDirection;
+        firing = e.state !== 'rush' && !(e.state === 'windup' && e.timer <= CRANE_LOCK);
+        aim = { ...ep };
+      }
+      if (
+        !g.clear &&
+        e?.kind !== 'boss' &&
+        e?.kind !== 'condenser' &&
+        e?.kind !== 'press' &&
+        e?.kind !== 'crane'
+      ) {
         const threat = g.shots.find((s) => {
           if (s.friendly) return false;
           const rx = s.pos.x - p.x,
@@ -598,6 +631,19 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
           firing = false;
           move = threat.pos.x < p.x ? 1 : -1;
         }
+      }
+      if (g.clear && g.canDetour && p.x > 1700 && p.y < 442) {
+        const vy = g.player.velocity.y;
+        const landingFrames = (-vy + Math.sqrt(vy * vy + 2 * 0.278 * (442 - p.y))) / 0.278;
+        if (p.x + g.player.velocity.x * landingFrames > 1880) takingLowerRoute = true;
+      }
+      if (g.clear && g.canDetour && takingLowerRoute) {
+        // These four runs verify the direct route. Land before the fork, then
+        // walk below the steps instead of accidentally selecting the upper door.
+        if (g.grounded && p.y > 690) directExitReady = true;
+        move = directExitReady ? 1 : Math.abs(p.x - 1755) > 8 ? Math.sign(1755 - p.x) : 0;
+        jump = false;
+        firing = false;
       }
       tick(g, 1, {
         left: move < 0,

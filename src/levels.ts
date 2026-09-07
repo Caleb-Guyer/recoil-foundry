@@ -3,6 +3,7 @@ import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
 import type { EliteKind } from './enemies.ts';
+import type { HazardPlacement } from './hazard-layouts.ts';
 export type EnemyKind =
   | 'runner'
   | 'shooter'
@@ -39,6 +40,8 @@ export interface Layout {
 export interface Level extends Layout {
   mirrored: boolean;
   boss: boolean;
+  detour?: true;
+  hazards?: HazardPlacement[];
 }
 const box = (x: number, y: number, w: number, h: number): Solid => ({ x, y, w, h });
 const shelf = (x: number, y: number, w: number) => box(x, y, w, 22);
