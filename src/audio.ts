@@ -153,6 +153,13 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'shell-shot') {
+      this.tone(105, 42, 0.13, 0.22);
+      this.crack(0.08, 0.14, 1100);
+    } else if (kind === 'shell-blast' || kind === 'aftershock') {
+      const echo = kind === 'aftershock';
+      this.tone(echo ? 110 : 85, 30, echo ? 0.12 : 0.18, echo ? 0.065 : 0.11);
+      this.crack(echo ? 0.06 : 0.1, echo ? 0.045 : 0.075, 900);
     } else if (kind === 'portal-blue' || kind === 'portal-orange') {
       const f = kind === 'portal-blue' ? 280 : 390;
       this.tone(f, f * 2.4, 0.16, 0.05, 'sine');

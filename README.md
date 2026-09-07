@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear nine stages, change your gun 
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Nineteen possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eight picks per run leave room for different builds.
+You always carry **one gun**. Twenty-three possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eight picks per run leave room for different builds.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -36,11 +36,11 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=16`). Version 16 adds Fold portals and a modest preference for upgrades on your chosen path; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=17`). Version 17 adds the Demolition path and its four upgrades; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Build paths
 
-Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. Choosing either entry locks the other path for that run. Cards show only the path name; the follow-up can appear in later rewards. Shared upgrades remain available to both paths. After committing, eligible upgrades on your path get 1.5 times the normal selection weight, sampled without duplicates. This slightly improves their chance without guaranteeing them, including in the deterministic Daily sequence.
+Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. **Shellshock** commits the run to **Demolition** and unlocks **Blast surfing**, **Aftershock**, and **Chain reaction**. Choosing an entry locks the other paths for that run. Cards show only the path name; follow-ups can appear in later rewards. Shared upgrades remain available to every path. After committing, eligible upgrades on your path get 1.5 times the normal selection weight, sampled without duplicates. This slightly improves their chance without guaranteeing them, including in the deterministic Daily sequence.
 
 | Path        | Upgrade     | Effect                                                                                                                                                         |
 | ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,13 +49,32 @@ Specialization happens through ordinary upgrade choices. **Crossfire** commits t
 | Precision   | Deadeye     | 30% more damage, 50% faster projectiles, and half the pellet spread. Shot delays are 20% longer.                                                               |
 | Precision   | Executioner | Requires Deadeye. Main projectiles deal 60% more damage to enemies below 30% health. Health is checked separately at each impact, before armor.                |
 
-Crossfire works with Scattershot, Burst fire, Backblast, and the existing projectile modifications. Deadeye keeps those shared options too, tightening Scattershot rather than removing it. Death bloom fragments respect walls and remain separate from Splinter; fragments receive neither Executioner's bonus nor recursive fragmentation. Both paths keep the same shot and particle limits.
+Crossfire works with Scattershot, Burst fire, Backblast, and the existing projectile modifications. Deadeye keeps those shared options too, tightening Scattershot rather than removing it. Death bloom fragments respect walls and remain separate from Splinter; fragments receive neither Executioner's bonus nor recursive fragmentation. All paths keep the same shot and particle limits.
 
 Normal rewards still show three available choices. Daily Runs still force one predetermined legal upgrade per room, including any path commitment. Continuing preserves the selected path; starting a fresh run clears it. The pause screen's existing gun summary shows the current path. Existing ordinary checkpoints remain compatible.
 
+## Demolition
+
+A third path built around explosive impacts and movement. Taking **Shellshock** makes later Demolition upgrades eligible; each follow-up is independent and optional.
+
+| Upgrade        | Effect and tradeoff                                                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shellshock     | Rounds deal 55% of their usual direct damage, then explode on their final impact for up to another 85% in a 96-unit radius. Shot delays are 35% longer.                      |
+| Blast surfing  | Your shell, aftershock, and chain blasts push you away from their center. Shoot the floor to launch upward, or a nearby wall to gain sideways speed.                         |
+| Aftershock     | Each shell or chain blast repeats once after 0.38 seconds, at 40% damage and launch strength. A quiet amber ring marks the pending blast. Echoes cannot repeat themselves.   |
+| Chain reaction | Destroying a crate, movable cover, or cracked passage panel schedules one 48-damage blast after 0.12 seconds, within a 110-unit radius. Nearby props can continue the chain. |
+
+Explosion damage falls with distance from the target's visible hull, to 35% at the edge. Terrain and intact props block blasts. Cover is checked before each explosion destroys anything, so a chain can open a firing lane without the first blast leaking through it. Shields and boss armor still reduce damage, and bosses resist knockback. Your own Demolition blasts never cost health; Blast surfing adds the launch. Fuel canisters remain dangerous and use their existing arming and explosion rules.
+
+Shared upgrades combine with the same gun: Scattershot distributes the payload across pellets, Burst fire sends three explosive discharges, and Backblast fires explosive rounds in both directions. Punch through postpones detonation until the final hit and attenuates both damage portions. Bank shot and Banker preserve the payload through reflections; Banker increases both portions. Splinter fragments do not explode. Fold transports the intact shell, which detonates only when it later strikes something. Rounds that expire in flight disappear without an explosion.
+
+Airshot and Landing shot strengthen both direct and blast damage. Blast surfing's launch budget is shared across a discharge's pellets and forward/rear volleys, keeping dense builds controllable. Player speeds stay bounded. Overlapping effects are grouped visually, and short flashes, restrained sparks, and low impact sounds preserve combat visibility. Reduced-motion settings soften the effects.
+
+Delayed blasts freeze on pause, upgrade screens, and impact pauses. Room changes, retries, death, and boarding the extraction lift clear them. Ordinary checkpoints preserve the build and reconstruct transient effects at the entrance. Daily Runs offer a single predetermined legal card, using the same modest preference for the chosen path.
+
 ## Fold portals
 
-**Fold** is a shared, unique upgrade available to either path. Right-click a permanent wall, floor, or ceiling to place the blue opening, then right-click another surface to place orange. Later clicks replace blue and orange in turn. A dashed surface preview shows the next opening. Invalid placements give a brief visual and audio cue without replacing either endpoint. **E** places at the mouse aim point; on touch devices, select the small portal button, then tap a surface.
+**Fold** is a shared, unique upgrade available to every path. Right-click a permanent wall, floor, or ceiling to place the blue opening, then right-click another surface to place orange. Later clicks replace blue and orange in turn. A dashed surface preview shows the next opening. Invalid placements give a brief visual and audio cue without replacing either endpoint. **E** places at the mouse aim point; on touch devices, select the small portal button, then tap a surface.
 
 Walk or fall into either linked opening to emerge from the other. Momentum rotates with the exit: falling into a floor can launch you sideways from a wall. Friendly and hostile projectiles, smaller mobile enemies, crates, and canisters can pass through. Shots keep their damage, ownership, piercing, and bounce charges; teleporting is not a bounce. Enemies can follow you, and their bullets can come back through your own portals. Heavy bosses and anchored machines do not fit the opening.
 
@@ -212,24 +231,26 @@ npm run build
 npm run preview
 ```
 
-| File                 | Responsibility                                                                         |
-| -------------------- | -------------------------------------------------------------------------------------- |
-| `src/game.ts`        | Matter.js simulation, movement, recoil, combat, and room progression                   |
-| `src/enemies.ts`     | Enemy dimensions, health, attack timing, and boss patterns                             |
-| `src/kiln-ai.ts`     | Mortar planning, swept shell collisions, surface heat, and boiler movement             |
-| `src/kiln-art.ts`    | Boiler silhouette, cooling vents, arc warnings, and molten shell effects               |
-| `src/levels.ts`      | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
-| `src/areas.ts`       | Area palettes, parallax scenery, and surface details                                   |
-| `src/props.ts`       | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
-| `src/rules.ts`       | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
-| `src/daily.ts`       | UTC challenge identity, versioned links, and validated local best times                |
-| `src/practice.ts`    | Validated boss victory storage and stage-appropriate practice builds                   |
-| `src/render.ts`      | Canvas world, camera feedback, character animation, and effects                        |
-| `src/main.ts`        | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
-| `src/audio.ts`       | Shared Web Audio output, effects, and audio preferences                                |
-| `src/music.ts`       | Bounded music scheduling, synthesis, fades, and warning ducking                        |
-| `src/music-score.ts` | Original area phrases and read-only combat intensity                                   |
-| `src/style.css`      | Game menus and compact HUD                                                             |
+| File                    | Responsibility                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `src/game.ts`           | Matter.js simulation, movement, recoil, combat, and room progression                   |
+| `src/enemies.ts`        | Enemy dimensions, health, attack timing, and boss patterns                             |
+| `src/kiln-ai.ts`        | Mortar planning, swept shell collisions, surface heat, and boiler movement             |
+| `src/kiln-art.ts`       | Boiler silhouette, cooling vents, arc warnings, and molten shell effects               |
+| `src/levels.ts`         | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
+| `src/areas.ts`          | Area palettes, parallax scenery, and surface details                                   |
+| `src/props.ts`          | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
+| `src/demolition.ts`     | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
+| `src/demolition-art.ts` | Restrained blast outlines, delayed warnings, and reduced-motion effects                |
+| `src/rules.ts`          | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
+| `src/daily.ts`          | UTC challenge identity, versioned links, and validated local best times                |
+| `src/practice.ts`       | Validated boss victory storage and stage-appropriate practice builds                   |
+| `src/render.ts`         | Canvas world, camera feedback, character animation, and effects                        |
+| `src/main.ts`           | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
+| `src/audio.ts`          | Shared Web Audio output, effects, and audio preferences                                |
+| `src/music.ts`          | Bounded music scheduling, synthesis, fades, and warning ducking                        |
+| `src/music-score.ts`    | Original area phrases and read-only combat intensity                                   |
+| `src/style.css`         | Game menus and compact HUD                                                             |
 
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
@@ -265,9 +286,11 @@ Enemy collision checks exercise all eleven enemy types with fast crates and gent
 
 Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; the complete combat runs reach extraction with normal health and earned upgrades.
 
-Path tests cover entry and follow-up eligibility, concise path labels, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision and Bullet hell builds with normal health and earned upgrades.
+Path tests cover entry and follow-up eligibility, concise path labels, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision, Bullet hell, and Demolition builds with normal health and earned upgrades.
 
-Portal checks cover grounded walking under normal gravity in both directions, raised supports, linking while already pressing against a wall, walking enemies, surface fitting, alternating replacement, all velocity orientations, swept high-speed travel, blocked exits, enemy rushes, close hostile muzzles, preserved projectile modifiers, props, pause/reset handling, and prevention of idle floor-to-floor loops. Path odds are checked over 40,000 deterministic draws. Two full combat runs retain fixed, legal earned-build offers to isolate combat from pool changes; a third reaches extraction using the current weighted reward pool. Browser checks cover real right clicks, player travel, invalid placement, the desktop and phone-width upgrade card, and console errors.
+Portal checks cover grounded walking under normal gravity in both directions, raised supports, linking while already pressing against a wall, walking enemies, surface fitting, alternating replacement, all velocity orientations, swept high-speed travel, blocked exits, enemy rushes, close hostile muzzles, preserved projectile modifiers, props, pause/reset handling, and prevention of idle floor-to-floor loops. Path odds are checked over 40,000 deterministic draws. Three full combat runs retain fixed, legal earned-build offers to isolate combat from pool changes; a fourth reaches extraction with Demolition using the current weighted reward pool. Browser checks cover real right clicks, player travel, invalid placement, the desktop and phone-width upgrade card, and console errors.
+
+Demolition checks cover direct and area damage, falloff, shield and boss armor, terrain and rotated-prop occlusion, real floor-shot launches, per-volley launch limits, bank and pierce payloads, air and landing bonuses, delayed and finite chains, escape boarding, checkpoint legality, deterministic path odds, portal travel, and sustained dense builds.
 
 ## Publish
 

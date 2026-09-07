@@ -43,6 +43,10 @@ export interface Gun {
   projectileSpeed: number;
   deathBloom: boolean;
   execute: boolean;
+  shellshock: boolean;
+  blastSurf: boolean;
+  aftershock: boolean;
+  chainReaction: boolean;
 }
 export const MODS = [
   {
@@ -149,14 +153,43 @@ export const MODS = [
     description: 'Right-click two surfaces to link portals. Carry your momentum through.',
     mark: 'fold',
   },
+  {
+    id: 'shellshock',
+    name: 'Shellshock',
+    description: 'Explosive rounds. Lighter direct hits. 35% longer shot delay.',
+    mark: 'shellshock',
+  },
+  {
+    id: 'blast-surf',
+    name: 'Blast surfing',
+    description: 'Your blasts launch you without hurting you.',
+    mark: 'blast-surf',
+  },
+  {
+    id: 'aftershock',
+    name: 'Aftershock',
+    description: 'Your blasts repeat after a brief delay at 40% strength.',
+    mark: 'aftershock',
+  },
+  {
+    id: 'chain-reaction',
+    name: 'Chain reaction',
+    description: 'Destroyed crates and cover trigger another blast.',
+    mark: 'chain-reaction',
+  },
 ] as const;
 export type Mod = (typeof MODS)[number];
-export type BuildPath = 'bullet-hell' | 'precision';
+export type BuildPath = 'bullet-hell' | 'precision' | 'demolition';
 export const PATH_NAMES: Record<BuildPath, string> = {
   'bullet-hell': 'Bullet hell',
   precision: 'Precision',
+  demolition: 'Demolition',
 };
 export const MOD_PATHS: Record<string, { path: BuildPath; requires?: string }> = {
+  shellshock: { path: 'demolition' },
+  'blast-surf': { path: 'demolition', requires: 'shellshock' },
+  aftershock: { path: 'demolition', requires: 'shellshock' },
+  'chain-reaction': { path: 'demolition', requires: 'shellshock' },
   crossfire: { path: 'bullet-hell' },
   bloom: { path: 'bullet-hell', requires: 'crossfire' },
   deadeye: { path: 'precision' },
@@ -224,6 +257,10 @@ export function getGun(mods: readonly string[]): Gun {
     projectileSpeed: 30,
     deathBloom: false,
     execute: false,
+    shellshock: false,
+    blastSurf: false,
+    aftershock: false,
+    chainReaction: false,
   };
   for (const id of new Set(mods))
     switch (id) {
@@ -296,6 +333,19 @@ export function getGun(mods: readonly string[]): Gun {
         g.damage *= 1.3;
         g.interval *= 1.2;
         g.projectileSpeed *= 1.5;
+        break;
+      case 'shellshock':
+        g.shellshock = true;
+        g.interval *= 1.35;
+        break;
+      case 'blast-surf':
+        g.blastSurf = true;
+        break;
+      case 'aftershock':
+        g.aftershock = true;
+        break;
+      case 'chain-reaction':
+        g.chainReaction = true;
         break;
       case 'execute':
         g.execute = true;

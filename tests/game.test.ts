@@ -4,7 +4,7 @@ import Matter from 'matter-js';
 import { Game, WORLD, EXTRACTION_DURATION } from '../src/game.ts';
 import { EXTRACTION } from '../src/escape-layout.ts';
 import type { Input } from '../src/game.ts';
-import { getGun, MODS, distance, STAGES } from '../src/rules.ts';
+import { getGun, MODS, distance, STAGES, availableMods } from '../src/rules.ts';
 const { Body, Composite, Query } = Matter;
 const input = (p: Partial<Input> = {}): Input => ({
   left: false,
@@ -328,9 +328,9 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-// Keep the two established combat builds stable when the reward pool expands.
+// Keep the three established combat builds stable when the reward pool expands.
 // Only offers are scripted: every upgrade is earned through an actual room clear.
-// The third run uses current weighted rewards. Pool/retry coverage lives in build-paths and daily.
+// The Demolition run uses current weighted rewards. Pool/retry coverage lives in build-paths and daily.
 for (const { seed, pressSpacing, pathMods, rewards } of [
   {
     seed: 'path-run-65',
@@ -344,9 +344,20 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     pathMods: ['crossfire', 'bloom'],
     rewards: ['magnum', 'banker', 'burst', 'ricochet', 'rapid', 'leech', 'airshot', 'crossfire'],
   },
-  { seed: 'path-run-93', pressSpacing: 160, pathMods: ['deadeye', 'execute'], rewards: undefined },
+  {
+    seed: 'path-run-93',
+    pressSpacing: 160,
+    pathMods: ['deadeye', 'execute'],
+    rewards: ['magnum', 'deadeye', 'leech', 'execute', 'ricochet', 'airshot', 'rapid', 'banker'],
+  },
+  {
+    seed: 'path-run-65',
+    pressSpacing: 160,
+    pathMods: ['shellshock', 'aftershock', 'blast-surf', 'chain-reaction'],
+    rewards: undefined,
+  },
 ])
-  test('a combat run reaches the final exit with normal health and real input: ' + seed, () => {
+  test(`combat reaches extraction: ${seed} ${pathMods[0]}`, () => {
     const g = new Game();
     g.start(seed);
     if (rewards) {
@@ -354,6 +365,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       g.openReward = () => {
         openReward();
         const preferred = MODS.find((m) => m.id === rewards[g.stage])!;
+        assert(availableMods(g.mods).includes(preferred), 'Scripted offer is not legal');
         g.offers = [preferred, ...g.offers.filter((m) => m !== preferred)].slice(0, 3);
       };
     }
@@ -409,7 +421,11 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       if (g.mode === 'upgrade') {
         g.chooseMod(
           rewards?.[g.stage] ??
-            [...g.offers].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))[0].id,
+            [...g.offers].sort(
+              (a, b) =>
+                (priority.includes(a.id) ? priority.indexOf(a.id) : Infinity) -
+                (priority.includes(b.id) ? priority.indexOf(b.id) : Infinity),
+            )[0].id,
         );
         clearAt = -1;
         lastProgress = g.time;
@@ -588,5 +604,9 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     assert.equal(g.mods.length, STAGES - 1);
     assert(g.mods.includes(pathMods[0]));
     if (pathMods[0] === 'deadeye') assert(g.mods.includes('execute'));
+    if (pathMods[0] === 'shellshock') {
+      assert(g.mods.includes('aftershock'));
+      assert(g.mods.includes('chain-reaction'));
+    }
     assert(g.hp > 0);
   });

@@ -1,4 +1,6 @@
 import Matter from 'matter-js';
+import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
+import type { ShellPayload } from './demolition.ts';
 import { PortalSystem, portalVector } from './portals.ts';
 import { firstSolid } from './collisions.ts';
 import {
@@ -106,6 +108,7 @@ export interface Shot {
   bankGrowth: number;
   charged: boolean;
   trace?: ShotTrace;
+  shell?: ShellPayload;
 }
 export interface Particle {
   pos: Vec;
@@ -134,6 +137,7 @@ export class Game {
   waves = new ReinforcementSystem(this);
   portals = new PortalSystem(this);
   portalRequest: Vec | null = null;
+  demolition = new DemolitionSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -205,6 +209,7 @@ export class Game {
       this.burstRemaining = 0;
       this.portalRequest = null;
     }
+    if (mode === 'dead' || mode === 'won' || mode === 'title') this.demolition.clear();
     this.mode = mode;
     this.onChange();
   }
@@ -248,6 +253,7 @@ export class Game {
   }
   loadRoom(escapeRoom = false) {
     this.portals.reset();
+    this.demolition.clear();
     this.portalRequest = null;
     for (const enemy of this.enemies) clearKiln(enemy);
     Composite.clear(this.engine.world, false);
@@ -370,6 +376,7 @@ export class Game {
     )
       return;
     this.escape.phase = 'extracting';
+    this.demolition.clear();
     this.escape.depart = 0;
     this.shots = [];
     this.trail = [];
@@ -475,6 +482,7 @@ export class Game {
     }
     this.updateEscape(dt);
     this.hazards.beforeStep(dt);
+    this.demolition.update();
     if (this.mode !== 'playing') return;
     const wasGrounded = this.grounded,
       vy = this.player.velocity.y;
@@ -647,11 +655,13 @@ export class Game {
     this.onSound(
       charged
         ? 'charged'
-        : this.mods.includes('magnum')
-          ? 'heavy'
-          : this.mods.includes('scatter')
-            ? 'scatter'
-            : 'shot',
+        : this.gun.shellshock
+          ? 'shell-shot'
+          : this.mods.includes('magnum')
+            ? 'heavy'
+            : this.mods.includes('scatter')
+              ? 'scatter'
+              : 'shot',
     );
     const damage = this.gun.damage * (this.grounded ? 1 : this.gun.airDamage) * (charged ? 2 : 1);
     this.fireVolley(d, damage, charged);
@@ -745,15 +755,22 @@ export class Game {
     for (const panel of panels) this.breaches.hit(panel, damage, rear);
   }
   addShot(
-    data: Omit<Shot, 'id' | 'prev' | 'hits' | 'banks' | 'bankGrowth' | 'charged' | 'trace'> &
+    data: Omit<
+      Shot,
+      'id' | 'prev' | 'hits' | 'banks' | 'bankGrowth' | 'charged' | 'trace' | 'shell'
+    > &
       Partial<Pick<Shot, 'banks' | 'bankGrowth' | 'charged'>>,
   ) {
     if (this.shots.length >= 180) return;
+    const shell =
+      data.friendly && !data.fragment ? this.demolition.payload(data.damage) : undefined;
     this.shots.push({
       banks: 0,
       bankGrowth: 0,
       charged: false,
       ...data,
+      shell,
+      damage: shell ? data.damage * SHELL_DIRECT : data.damage,
       trace:
         data.friendly && !data.fragment && (data.bounces > 0 || data.pierce > 0)
           ? { bank: data.bounces > 0, pierce: data.pierce > 0, points: [{ ...data.pos }] }
@@ -1325,6 +1342,8 @@ export class Game {
             y: e.body.position.y - s.vel.y,
           });
           if (blocked) {
+            this.demolition.impact(s);
+            if (this.mode !== 'playing') return;
             s.life = 0;
             continue;
           }
@@ -1338,10 +1357,15 @@ export class Game {
           if (s.pierce > 0) {
             s.pierce--;
             s.damage *= 0.8;
+            if (s.shell) s.shell.damage *= 0.8;
             const d = direction({ x: 0, y: 0 }, s.vel);
             s.pos.x += d.x;
             s.pos.y += d.y;
-          } else s.life = 0;
+          } else {
+            s.life = 0;
+            this.demolition.impact(s);
+            if (this.mode !== 'playing') return;
+          }
         } else if (nearest.player) {
           this.damagePlayer(s.damage, s.pos);
           s.life = 0;
@@ -1358,13 +1382,18 @@ export class Game {
             s.bounces--;
             s.banks++;
             s.damage *= 1 + s.bankGrowth;
+            if (s.shell) s.shell.damage *= 1 + s.bankGrowth;
             if (s.bankGrowth > 0) {
               this.burst(s.pos, 4, '#a1dbbf', 2);
               this.onSound('bank');
             }
             s.pos.x += nearest.normal.x;
             s.pos.y += nearest.normal.y;
-          } else s.life = 0;
+          } else {
+            s.life = 0;
+            this.demolition.impact(s);
+            if (this.mode !== 'playing') return;
+          }
         }
         recordShotTrace(s.trace, s.pos);
       }

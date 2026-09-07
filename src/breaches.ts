@@ -116,6 +116,7 @@ export class BreachSystem {
     this.debris = this.debris.slice(-DEBRIS_LIMIT);
     g.feedback(2.2);
     g.onSound('breach');
+    g.demolition.brokenProp(panel.body.position);
   }
   // Select all targets before damage so one blast cannot pass through its own breach.
   targets(origin: Vec, radius: number, accept: (target: Vec) => boolean = () => true) {

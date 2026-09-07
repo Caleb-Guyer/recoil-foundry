@@ -109,6 +109,12 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillStyle = '#c0ab7c';
     c.fillRect(23, heavy ? 6 : 3, heavy ? 9 : 5, 1.5);
   }
+  if (g.gun.shellshock) {
+    c.fillStyle = '#ba8b56';
+    c.fillRect(muzzle - 7, -muzzleHalf - 1.5, 3, muzzleHalf * 2 + 3);
+    c.fillStyle = '#edc791';
+    c.fillRect(muzzle - 7, -muzzleHalf - 1.5, 3, 2);
+  }
   c.restore();
 
   const half = burst ? 6 : 5;

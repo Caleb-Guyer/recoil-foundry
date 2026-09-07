@@ -1,3 +1,4 @@
+import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawCrane } from './crane-art.ts';
 import { drawKiln } from './kiln-art.ts';
@@ -149,6 +150,7 @@ export class Renderer {
     this.drawProps();
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced);
+    drawDemolition(c, g, this.reduced);
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
       g.trail.forEach((p, i) => {
         c.globalAlpha = (1 - i / 9) * 0.1;
@@ -471,6 +473,16 @@ export class Renderer {
             s.radius * 1.15 + (s.charged ? 1 : 0),
           );
           this.circle(s.pos, s.radius, '#fff2d5');
+        }
+        if (s.shell) {
+          const d = direction({ x: 0, y: 0 }, s.vel);
+          this.line(
+            { x: s.pos.x - d.x * 7, y: s.pos.y - d.y * 7 },
+            s.pos,
+            '#f1ad61',
+            s.radius * 2 + 1,
+          );
+          this.circle(s.pos, Math.max(1.5, s.radius * 0.6), '#ffe1a8');
         }
       } else {
         if (Math.hypot(s.vel.x, s.vel.y) > 12) this.line(s.prev, s.pos, '#ffd3a0', 2);

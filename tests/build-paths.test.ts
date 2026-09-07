@@ -12,9 +12,11 @@ import {
 } from '../src/rules.ts';
 import { dailyForDate } from '../src/daily.ts';
 
-test('only the two entry upgrades appear before committing, and existing upgrades stay shared', () => {
+test('only entry upgrades appear before committing, and existing upgrades stay shared', () => {
   const initial = availableMods([]).map((m) => m.id);
-  assert(initial.includes('crossfire') && initial.includes('deadeye'));
+  assert(
+    initial.includes('crossfire') && initial.includes('deadeye') && initial.includes('shellshock'),
+  );
   assert(!initial.includes('bloom') && !initial.includes('execute'));
   for (const [root, follow, opposing] of [
     ['crossfire', 'bloom', 'deadeye'],
@@ -107,8 +109,18 @@ test('random and forced daily rewards stay legal and plentiful throughout comple
       g.openReward();
       assert.deepEqual(g.offers, offers);
       const choice =
-        g.offers.find((m) => ['bloom', 'execute', 'crossfire', 'deadeye'].includes(m.id)) ??
-        g.offers[(i + stage) % g.offers.length];
+        g.offers.find((m) =>
+          [
+            'bloom',
+            'execute',
+            'crossfire',
+            'deadeye',
+            'shellshock',
+            'blast-surf',
+            'aftershock',
+            'chain-reaction',
+          ].includes(m.id),
+        ) ?? g.offers[(i + stage) % g.offers.length];
       seen.add(choice.id);
       g.chooseMod(choice.id);
       assert(validBuild(g.mods));
@@ -116,7 +128,17 @@ test('random and forced daily rewards stay legal and plentiful throughout comple
     }
     assert(availableMods(g.mods).length >= 3);
   }
-  for (const id of ['crossfire', 'bloom', 'deadeye', 'execute']) assert(seen.has(id));
+  for (const id of [
+    'crossfire',
+    'bloom',
+    'deadeye',
+    'execute',
+    'shellshock',
+    'blast-surf',
+    'aftershock',
+    'chain-reaction',
+  ])
+    assert(seen.has(id));
 });
 
 test('retry clears commitment and a resumed run reproduces its next path-aware offers', () => {

@@ -242,6 +242,7 @@ export class PropSystem {
     this.game.burst(prop.body.position, 16, '#a9b5b3', 4);
     this.game.feedback(2);
     this.game.onSound('break');
+    this.game.demolition.brokenProp(prop.body.position);
   }
   beforeStep() {
     this.impacts = [];
