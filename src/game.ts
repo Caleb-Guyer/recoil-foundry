@@ -39,6 +39,8 @@ import { PropSystem, traceProp } from './props.ts';
 import type { Prop } from './props.ts';
 import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
 import { BreachSystem } from './breaches.ts';
+import { recordShotTrace } from './shot-trails.ts';
+import type { ShotTrace } from './shot-trails.ts';
 import { ESCAPE_WIDTH, ESCAPE_LAYOUT, ESCAPE_PLATFORMS, EXTRACTION } from './escape-layout.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
@@ -88,6 +90,7 @@ export interface Shot {
   banks: number;
   bankGrowth: number;
   charged: boolean;
+  trace?: ShotTrace;
 }
 export interface Particle {
   pos: Vec;
@@ -676,7 +679,7 @@ export class Game {
     for (const panel of panels) this.breaches.hit(panel, damage, rear);
   }
   addShot(
-    data: Omit<Shot, 'id' | 'prev' | 'hits' | 'banks' | 'bankGrowth' | 'charged'> &
+    data: Omit<Shot, 'id' | 'prev' | 'hits' | 'banks' | 'bankGrowth' | 'charged' | 'trace'> &
       Partial<Pick<Shot, 'banks' | 'bankGrowth' | 'charged'>>,
   ) {
     if (this.shots.length >= 180) return;
@@ -685,6 +688,10 @@ export class Game {
       bankGrowth: 0,
       charged: false,
       ...data,
+      trace:
+        data.friendly && !data.fragment && (data.bounces > 0 || data.pierce > 0)
+          ? { bank: data.bounces > 0, pierce: data.pierce > 0, points: [{ ...data.pos }] }
+          : undefined,
       id: ++this.id,
       prev: { ...data.pos },
       hits: new Set(),
@@ -1329,12 +1336,14 @@ export class Game {
         }
         if (!nearest) {
           s.pos = end;
+          recordShotTrace(s.trace, s.pos);
           break;
         }
         s.pos = {
           x: s.pos.x + (end.x - s.pos.x) * nearest.t,
           y: s.pos.y + (end.y - s.pos.y) * nearest.t,
         };
+        recordShotTrace(s.trace, s.pos);
         remaining *= 1 - nearest.t;
         if (nearest.enemy) {
           const e = nearest.enemy;
@@ -1386,6 +1395,7 @@ export class Game {
             s.pos.y += nearest.normal.y;
           } else s.life = 0;
         }
+        recordShotTrace(s.trace, s.pos);
       }
       if (s.pos.x < -50 || s.pos.x > this.worldWidth + 50 || s.pos.y < -100 || s.pos.y > 900)
         s.life = 0;

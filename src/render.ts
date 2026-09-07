@@ -20,6 +20,7 @@ import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
 import { EXTRACTION } from './escape-layout.ts';
+import { drawWeapon } from './weapon-art.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -433,19 +434,27 @@ export class Renderer {
     this.drawPlayer();
     for (const s of g.shots) {
       if (s.friendly) {
-        this.line(
-          { x: s.pos.x - s.vel.x * 0.55, y: s.pos.y - s.vel.y * 0.55 },
-          s.pos,
-          s.fragment
-            ? '#bea88b'
-            : s.charged
-              ? '#eff5b5'
-              : s.bankGrowth > 0 && s.banks > 0
-                ? '#a1e0c3'
-                : '#f6d49a',
-          s.radius * 1.15 + (s.charged ? 1 : 0),
-        );
-        this.circle(s.pos, s.radius, '#fff2d5');
+        if (s.trace) {
+          const { points, bank, pierce } = s.trace;
+          c.save();
+          c.lineCap = 'round';
+          for (let i = 1; i < points.length; i++) {
+            c.globalAlpha = (this.reduced ? 0.32 : 0.48) * (0.3 + (0.7 * i) / (points.length - 1));
+            const color = s.charged ? '#e2edaf' : bank ? '#9dccb5' : '#bedde9';
+            this.line(points[i - 1], points[i], color, bank && pierce ? 2.6 : pierce ? 1.25 : 1.8);
+            if (bank && pierce) this.line(points[i - 1], points[i], '#d5ebf2', 0.8);
+          }
+          c.restore();
+          this.circle(s.pos, s.radius, s.charged ? '#eff5b5' : pierce ? '#e9f4f6' : '#ddedda');
+        } else {
+          this.line(
+            { x: s.pos.x - s.vel.x * 0.55, y: s.pos.y - s.vel.y * 0.55 },
+            s.pos,
+            s.fragment ? '#bea88b' : s.charged ? '#eff5b5' : '#f6d49a',
+            s.radius * 1.15 + (s.charged ? 1 : 0),
+          );
+          this.circle(s.pos, s.radius, '#fff2d5');
+        }
       } else {
         if (Math.hypot(s.vel.x, s.vel.y) > 12) this.line(s.prev, s.pos, '#ffd3a0', 2);
         this.circle(s.pos, 6, '#ee745f', false, 2);
@@ -1096,45 +1105,7 @@ export class Renderer {
     c.restore();
     c.translate(0, -3);
     c.rotate(a);
-    const kick = (g.muzzle / 0.065) * 5;
-    c.fillStyle = '#899894';
-    c.fillRect(5 - kick, -5, 22, 10);
-    c.fillStyle = '#e4e5d8';
-    c.fillRect(8 - kick, -4, 19, 7);
-    if (g.mods.includes('burst')) {
-      c.fillStyle = '#658b7c';
-      for (let i = 0; i < 3; i++) c.fillRect(9 - kick + i * 5, -3, 2, 4);
-    }
-    if (g.mods.includes('backblast')) {
-      c.fillStyle = '#ccac79';
-      c.fillRect(2 - kick, -5, 3, 10);
-    }
-    if (g.landingReady) {
-      this.circle({ x: 17 - kick, y: 0 }, 10, 'rgba(219,237,168,0.15)');
-      c.fillStyle = '#e5efa7';
-      c.fillRect(9 - kick, -3, 15, 3);
-    }
-    c.fillStyle = '#333c3c';
-    c.fillRect(
-      24 - kick,
-      -5,
-      g.mods.includes('magnum') ? 12 : 8,
-      g.mods.includes('scatter') ? 13 : 10,
-    );
-    if (g.mods.includes('rapid')) {
-      c.fillStyle = '#718d83';
-      c.fillRect(9 - kick, 5, 5, 5);
-    }
-    if (g.muzzle > 0) {
-      c.globalAlpha = g.muzzle / 0.065;
-      c.fillStyle = g.chargedFlash ? '#f0f8b9' : '#ffe6b1';
-      c.beginPath();
-      c.moveTo(29, -7);
-      c.lineTo(49 + (g.chargedFlash ? 15 : 0) + Math.random() * 8, 0);
-      c.lineTo(29, 7);
-      c.lineTo(34, 0);
-      c.fill();
-    }
+    drawWeapon(c, g, this.reduced);
     c.restore();
   }
   drawExit() {
