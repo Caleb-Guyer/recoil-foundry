@@ -153,6 +153,15 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'portal-blue' || kind === 'portal-orange') {
+      const f = kind === 'portal-blue' ? 280 : 390;
+      this.tone(f, f * 2.4, 0.16, 0.05, 'sine');
+      this.crack(0.07, 0.025, 2200);
+    } else if (kind === 'portal-travel') {
+      this.tone(180, 720, 0.18, 0.065, 'sine');
+      this.tone(720, 260, 0.16, 0.035, 'triangle', 0.07);
+    } else if (kind === 'portal-denied') {
+      this.tone(160, 120, 0.065, 0.025, 'sine');
     } else if (kind === 'evacuate') {
       this.tone(440, 440, 0.2, 0.055, 'sine');
       this.tone(330, 330, 0.35, 0.055, 'sine', 0.28);

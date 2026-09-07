@@ -1,3 +1,4 @@
+import { drawPortals } from './portal-art.ts';
 import { drawCrane } from './crane-art.ts';
 import { drawKiln } from './kiln-art.ts';
 import { drawBossSignal } from './boss-signals.ts';
@@ -36,6 +37,7 @@ export class Renderer {
   reduced = false;
   last = 0;
   clock = 0;
+  portalRevision = 0;
   constructor(canvas: HTMLCanvasElement, game: Game) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
@@ -96,7 +98,8 @@ export class Renderer {
       Math.max(0, g.worldWidth - viewW),
     );
     const desiredY = clamp(g.player.position.y - viewH * 0.58, 0, Math.max(0, 835 - viewH));
-    const follow = 1 - Math.exp(-dt * 9);
+    const follow = this.portalRevision !== g.portals.revision ? 1 : 1 - Math.exp(-dt * 9);
+    this.portalRevision = g.portals.revision;
     this.camera.x += (desiredX - this.camera.x) * follow;
     this.camera.y += (desiredY - this.camera.y) * follow;
     if (g.mode === 'title') {
@@ -145,6 +148,7 @@ export class Renderer {
     this.drawHazards();
     this.drawProps();
     this.drawBreaches();
+    drawPortals(c, g, this.clock, this.reduced);
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
       g.trail.forEach((p, i) => {
         c.globalAlpha = (1 - i / 9) * 0.1;

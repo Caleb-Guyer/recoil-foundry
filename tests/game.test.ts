@@ -328,14 +328,35 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-// Complete runs with earned Precision and Bullet hell builds.
-for (const { seed, pressSpacing, pathMods } of [
-  { seed: 'path-run-65', pressSpacing: 160, pathMods: ['deadeye', 'execute'] },
-  { seed: 'path-run-66', pressSpacing: 320, pathMods: ['crossfire', 'bloom'] },
+// Keep the two established combat builds stable when the reward pool expands.
+// Only offers are scripted: every upgrade is earned through an actual room clear.
+// The third run uses current weighted rewards. Pool/retry coverage lives in build-paths and daily.
+for (const { seed, pressSpacing, pathMods, rewards } of [
+  {
+    seed: 'path-run-65',
+    pressSpacing: 160,
+    pathMods: ['deadeye', 'execute'],
+    rewards: ['pierce', 'airshot', 'leech', 'deadeye', 'burst', 'execute', 'magnum', 'rapid'],
+  },
+  {
+    seed: 'path-run-66',
+    pressSpacing: 320,
+    pathMods: ['crossfire', 'bloom'],
+    rewards: ['magnum', 'banker', 'burst', 'ricochet', 'rapid', 'leech', 'airshot', 'crossfire'],
+  },
+  { seed: 'path-run-93', pressSpacing: 160, pathMods: ['deadeye', 'execute'], rewards: undefined },
 ])
   test('a combat run reaches the final exit with normal health and real input: ' + seed, () => {
     const g = new Game();
     g.start(seed);
+    if (rewards) {
+      const openReward = g.openReward.bind(g);
+      g.openReward = () => {
+        openReward();
+        const preferred = MODS.find((m) => m.id === rewards[g.stage])!;
+        g.offers = [preferred, ...g.offers.filter((m) => m !== preferred)].slice(0, 3);
+      };
+    }
     let previousX = 140,
       stuck = 0,
       lastProgress = 0,
@@ -372,6 +393,7 @@ for (const { seed, pressSpacing, pathMods } of [
       'bloom',
       'deadeye',
       'execute',
+      'fold',
     ];
     for (let i = 0; i < 60 * 360 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       if (g.escape?.phase === 'extracting') {
@@ -386,7 +408,8 @@ for (const { seed, pressSpacing, pathMods } of [
       }
       if (g.mode === 'upgrade') {
         g.chooseMod(
-          [...g.offers].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))[0].id,
+          rewards?.[g.stage] ??
+            [...g.offers].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))[0].id,
         );
         clearAt = -1;
         lastProgress = g.time;

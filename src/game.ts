@@ -1,11 +1,12 @@
 import Matter from 'matter-js';
+import { PortalSystem, portalVector, bodyHalf } from './portals.ts';
 import { firstSolid } from './collisions.ts';
 import {
   clamp,
   direction,
   distance,
   seeded,
-  sample,
+  rewardMods,
   getGun,
   availableMods,
   STAGES,
@@ -61,6 +62,7 @@ export interface Input {
   jumpHeld: boolean;
   fire: boolean;
   firePressed?: boolean;
+  portal?: Vec;
   aim: Vec;
 }
 export interface Enemy {
@@ -130,6 +132,8 @@ export class Game {
   hazards = new HazardSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
+  portals = new PortalSystem(this);
+  portalRequest: Vec | null = null;
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -193,10 +197,14 @@ export class Game {
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
   onBossDefeated: (kind: EnemyKind) => void = () => {};
   constructor() {
+    Matter.Events.on(this.engine, 'beforeSolve', () => this.portals.afterIntegrate());
     this.loadRoom();
   }
   setMode(mode: Mode) {
-    if (mode !== 'playing') this.burstRemaining = 0;
+    if (mode !== 'playing') {
+      this.burstRemaining = 0;
+      this.portalRequest = null;
+    }
     this.mode = mode;
     this.onChange();
   }
@@ -239,6 +247,8 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false) {
+    this.portals.reset();
+    this.portalRequest = null;
     for (const enemy of this.enemies) clearKiln(enemy);
     Composite.clear(this.engine.world, false);
     Engine.clear(this.engine);
@@ -450,6 +460,7 @@ export class Game {
     // Keep jump taps through the tiny impact pause.
     if (input.jump) this.jumpBuffer = 0.12;
     if (input.firePressed) this.fireBuffer = 0.12;
+    if (input.portal) this.portalRequest = { ...input.portal };
     if (this.hitStop > 0) {
       this.hitStop = Math.max(0, this.hitStop - dt);
       return;
@@ -458,6 +469,10 @@ export class Game {
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
+    if (this.portalRequest) {
+      this.portals.place(this.portalRequest);
+      this.portalRequest = null;
+    }
     this.updateEscape(dt);
     this.hazards.beforeStep(dt);
     if (this.mode !== 'playing') return;
@@ -541,6 +556,7 @@ export class Game {
     // Capture descent before Matter resolves the landing collision and zeros velocity.
     if (!this.grounded) this.landingSpeed = this.player.velocity.y;
     this.props.beforeStep();
+    this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
     this.props.afterStep(dt);
     if (this.mode !== 'playing') return;
@@ -827,7 +843,13 @@ export class Game {
         { x: p.x, y: e.body.bounds.max.y + 5 },
         20,
       ).length > 0;
+    const portalAhead = this.portals.trace(
+      p,
+      { x: p.x + Math.sign(d.x) * 45, y: p.y },
+      bodyHalf(e.body),
+    );
     const blocked =
+      !portalAhead &&
       Query.ray(
         this.solidBodies,
         { x: p.x, y: p.y + 8 },
@@ -983,7 +1005,13 @@ export class Game {
             )
           : undefined;
       const prop = contact && this.props.items.find((prop) => prop.body === contact.body);
-      const crashed = e.timer > 0 && (prop ? contact!.t * 20 <= 14 : Math.abs(end.x - p.x) < 34);
+      const portalAhead = this.portals.trace(
+        p,
+        { x: p.x + e.aim.x * 35, y: p.y },
+        bodyHalf(e.body),
+      );
+      const crashed =
+        e.timer > 0 && !portalAhead && (prop ? contact!.t * 20 <= 14 : Math.abs(end.x - p.x) < 34);
       if (crashed || e.timer <= 0) {
         e.state = 'recover';
         e.timer = crashed ? 1.1 : 0.6;
@@ -1214,7 +1242,8 @@ export class Game {
       radius = e.kind === 'boss' ? 55 : e.kind === 'sniper' ? 38 : 26;
     const muzzle = { x: origin.x + d.x * radius, y: origin.y + d.y * radius };
     const end = this.lineEnd(origin, muzzle);
-    if (distance(end, muzzle) > 0.01) {
+    const portalMuzzle = this.portals.trace(origin, muzzle, { x: 5, y: 5 });
+    if (distance(end, muzzle) > 0.01 && !portalMuzzle) {
       this.burst(end, 3, '#ef7264', 1.5);
       const prop = this.props.items.find((p) => {
         const hit = traceProp(p, origin, muzzle);
@@ -1225,7 +1254,7 @@ export class Game {
       return;
     }
     this.addShot({
-      pos: muzzle,
+      pos: portalMuzzle ? { ...origin } : muzzle,
       vel: { x: d.x * speed, y: d.y * speed },
       damage,
       life: 4,
@@ -1270,6 +1299,15 @@ export class Game {
         for (const prop of this.props.items) {
           const h = traceProp(prop, s.pos, end, s.radius);
           if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, prop };
+        }
+        const passage = this.portals.trace(s.pos, end, { x: s.radius, y: s.radius });
+        if (passage && (!nearest || passage.t <= nearest.t + 1e-6)) {
+          s.pos = { ...passage.pos };
+          s.prev = { ...s.pos };
+          s.vel = portalVector(s.vel, passage.entry, passage.exit);
+          if (s.trace) s.trace.points = [{ ...s.pos }];
+          remaining *= 1 - passage.t;
+          continue;
         }
         if (!nearest) {
           s.pos = end;
@@ -1469,8 +1507,8 @@ export class Game {
   }
   openReward() {
     if (this.practice) return;
-    this.offers = sample(
-      availableMods(this.mods),
+    this.offers = rewardMods(
+      this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
       seeded(this.seed + ':rewards:' + this.stage),
     );

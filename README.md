@@ -8,18 +8,19 @@ A physics roguelike about staying in motion. Clear nine stages, change your gun 
 
 ## Play
 
-| Input                | Action                     |
-| -------------------- | -------------------------- |
-| A / D or arrows      | Move                       |
-| Space / W / up arrow | Jump; hold for more height |
-| Mouse                | Aim                        |
-| Left click / hold    | Fire                       |
-| Escape / P           | Pause                      |
-| 1–3 during upgrades  | Choose a modification      |
+| Input                  | Action                     |
+| ---------------------- | -------------------------- |
+| A / D or arrows        | Move                       |
+| Space / W / up arrow   | Jump; hold for more height |
+| Mouse                  | Aim                        |
+| Left click / hold      | Fire                       |
+| Right click / E (Fold) | Place the next portal      |
+| Escape / P             | Pause                      |
+| 1–3 during upgrades    | Choose a modification      |
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Eighteen possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eight picks per run leave room for different builds.
+You always carry **one gun**. Nineteen possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eight picks per run leave room for different builds.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -35,11 +36,11 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=15`). Version 15 adds four upgrades and mutually exclusive Bullet hell and Precision paths; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=16`). Version 16 adds Fold portals and a modest preference for upgrades on your chosen path; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Build paths
 
-Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. Choosing either entry locks the other path for that run. Cards show only the path name; the follow-up can appear in later rewards. The fourteen existing upgrades stay shared, so older combinations remain available.
+Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. Choosing either entry locks the other path for that run. Cards show only the path name; the follow-up can appear in later rewards. Shared upgrades remain available to both paths. After committing, eligible upgrades on your path get 1.5 times the normal selection weight, sampled without duplicates. This slightly improves their chance without guaranteeing them, including in the deterministic Daily sequence.
 
 | Path        | Upgrade     | Effect                                                                                                                                                         |
 | ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -51,6 +52,14 @@ Specialization happens through ordinary upgrade choices. **Crossfire** commits t
 Crossfire works with Scattershot, Burst fire, Backblast, and the existing projectile modifications. Deadeye keeps those shared options too, tightening Scattershot rather than removing it. Death bloom fragments respect walls and remain separate from Splinter; fragments receive neither Executioner's bonus nor recursive fragmentation. Both paths keep the same shot and particle limits.
 
 Normal rewards still show three available choices. Daily Runs still force one predetermined legal upgrade per room, including any path commitment. Continuing preserves the selected path; starting a fresh run clears it. The pause screen's existing gun summary shows the current path. Existing ordinary checkpoints remain compatible.
+
+## Fold portals
+
+**Fold** is a shared, unique upgrade available to either path. Right-click a permanent wall, floor, or ceiling to place the blue opening, then right-click another surface to place orange. Later clicks replace blue and orange in turn. A dashed surface preview shows the next opening. Invalid placements give a brief visual and audio cue without replacing either endpoint. **E** places at the mouse aim point; on touch devices, select the small portal button, then tap a surface.
+
+Walk or fall into either linked opening to emerge from the other. Momentum rotates with the exit: falling into a floor can launch you sideways from a wall. Friendly and hostile projectiles, smaller mobile enemies, crates, and canisters can pass through. Shots keep their damage, ownership, piercing, and bounce charges; teleporting is not a bounce. Enemies can follow you, and their bullets can come back through your own portals. Heavy bosses and anchored machines do not fit the opening.
+
+Each opening needs 80 units of exposed permanent surface. Moving hazards, props, and destructible walls cannot host one. A single unlinked opening remains solid, and a blocked or undersized exit prevents travel. Portals reset at each room entrance, on retry, and when continuing a checkpoint; the Fold upgrade stays equipped. Opening the pause screen clears pending placement input. Portal travel cuts trails and snaps the camera to the destination instead of drawing or panning across the intervening map.
 
 ## Gun builds
 
@@ -254,9 +263,11 @@ Daily checks cover UTC rollover and real calendar dates, versioned links, reprod
 
 Enemy collision checks exercise all eleven enemy types with fast crates and gentle contact, hard impacts into stationary props, both ram directions, low tipped crates, Press and Crane slams, blocked impacts, the solid resting hammer, and props entering the motor rail. Complete combat runs retain normal health, earned upgrades, and real input, using solid-object navigation and two fighting distances.
 
-Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; both full combat runs reach extraction with normal health and earned upgrades.
+Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; the complete combat runs reach extraction with normal health and earned upgrades.
 
 Path tests cover entry and follow-up eligibility, concise path labels, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision and Bullet hell builds with normal health and earned upgrades.
+
+Portal checks cover surface fitting, alternating replacement, all velocity orientations, swept high-speed travel, blocked exits, enemy rushes, close hostile muzzles, preserved projectile modifiers, props, pause/reset handling, and prevention of idle floor-to-floor loops. Path odds are checked over 40,000 deterministic draws. Two full combat runs retain fixed, legal earned-build offers to isolate combat from pool changes; a third reaches extraction using the current weighted reward pool. Browser checks cover real right clicks, player travel, invalid placement, the desktop and phone-width upgrade card, and console errors.
 
 ## Publish
 

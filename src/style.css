@@ -570,3 +570,9 @@ dialog.practice-dialog {
     transition: none !important;
   }
 }
+
+#portal-touch[aria-pressed='true'] {
+  border-color: #64ceff;
+  color: #64ceff;
+  background: #193d51;
+}

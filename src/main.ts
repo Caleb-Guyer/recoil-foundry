@@ -54,7 +54,7 @@ document.getElementById('app')!.innerHTML = `
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><button id="settings" class="quiet title-settings">Settings</button>
  </section>
- <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><button data-touch="jump" aria-label="Jump">↑</button></div>
+ <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
 </main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog><span id="save-status" class="sr-only" role="status"></span>`;
 const game = new Game(),
   canvas = $<HTMLCanvasElement>('game'),
@@ -76,6 +76,7 @@ const modal = $<HTMLDialogElement>('modal'),
   keys = new Set<string>(),
   touch = { left: false, right: false, jump: false },
   pointer = { x: 500, y: 400 };
+let portalTouch = false;
 let mouseButtons = 0,
   touchAim = new Set<number>(),
   dialogKind = '',
@@ -126,6 +127,9 @@ function clearInput() {
   touch.left = touch.right = touch.jump = false;
   input.left = input.right = input.jump = input.jumpHeld = input.fire = false;
   input.firePressed = false;
+  input.portal = undefined;
+  portalTouch = false;
+  $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
   if (modal.open) modal.close();
@@ -253,6 +257,7 @@ function modMark(mod: Mod) {
     heal: 'M26 10v28M12 24h28',
     light: 'M10 33l14-20M24 33l14-20M38 33l10-14',
     burst: 'M8 16h10M22 24h10M36 32h10M46 12v6',
+    fold: 'M17 8C3 8 3 40 17 40M17 8c14 0 14 32 0 32M35 8c14 0 14 32 0 32M35 8c-14 0-14 32 0 32',
     backblast: 'M27 24h21M39 17l9 7-9 7M21 24L8 12M21 24H5M21 24L8 36',
     banker: 'M8 37l15-25 15 25 10-17M17 12h6v8M40 20h8v8',
     landing: 'M12 8v19M6 20l6 7 6-7M6 36h18M30 24h19M41 17l8 7-8 7',
@@ -434,7 +439,11 @@ function showDialog(kind: string) {
       ' /></label><label>Screen shake<input id="shake" type="checkbox" ' +
       (!renderer.reduced ? 'checked' : '') +
       ' /></label></div>' +
-      '<div class="controls-copy"><p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
+      '<div class="controls-copy">' +
+      (game.portals.equipped
+        ? '<p>Right-click or <kbd>E</kbd> on two surfaces to place portals.</p>'
+        : '') +
+      '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
       (game.practice
         ? 'Defeat the boss. Press R to retry.'
         : game.escape
@@ -555,6 +564,7 @@ window.addEventListener('keydown', (e) => {
   }
   if (game.mode !== 'playing') return;
   keys.add(e.code);
+  if (e.code === 'KeyE') input.portal = renderer.toWorld(pointer.x, pointer.y);
   if (['Space', 'KeyW', 'ArrowUp'].includes(e.code)) input.jump = true;
 });
 window.addEventListener('keyup', (e) => keys.delete(e.code));
@@ -569,6 +579,12 @@ canvas.onpointerdown = (e) => {
   canvas.focus();
   canvas.setPointerCapture(e.pointerId);
   updatePointer(e);
+  if (e.button === 2 || (e.pointerType === 'touch' && portalTouch)) {
+    input.portal = renderer.toWorld(pointer.x, pointer.y);
+    portalTouch = false;
+    $('portal-touch').setAttribute('aria-pressed', 'false');
+    return;
+  }
   if (e.pointerType === 'touch' || e.button === 0) input.firePressed = true;
   if (e.pointerType === 'touch') touchAim.add(e.pointerId);
   else mouseButtons = e.buttons;
@@ -586,6 +602,12 @@ canvas.onpointercancel = (e) => {
   mouseButtons = 0;
 };
 canvas.oncontextmenu = (e) => e.preventDefault();
+$('portal-touch').onpointerdown = (e) => {
+  if (game.mode !== 'playing' || !game.portals.equipped) return;
+  e.preventDefault();
+  portalTouch = !portalTouch;
+  $('portal-touch').setAttribute('aria-pressed', String(portalTouch));
+};
 document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((b) => {
   b.onpointerdown = (e) => {
     if (game.mode !== 'playing') return;
@@ -633,6 +655,7 @@ function frame(now: number) {
       game.tick(1 / 60, input);
       input.jump = false;
       input.firePressed = false;
+      input.portal = undefined;
       accumulator -= 1 / 60;
       n++;
     }
@@ -642,6 +665,7 @@ function frame(now: number) {
   renderer.draw(now);
   if (now - hudAt > 80) {
     hudAt = now;
+    $('portal-touch').hidden = !game.portals.equipped;
     $<HTMLProgressElement>('health').value = game.hp;
     $('health').setAttribute('aria-valuetext', Math.ceil(game.hp) + ' health');
     $('health').classList.toggle('low', game.hp <= 30);

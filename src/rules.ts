@@ -143,6 +143,12 @@ export const MODS = [
     description: 'Rounds hit 60% harder against enemies below 30% health.',
     mark: 'execute',
   },
+  {
+    id: 'fold',
+    name: 'Fold',
+    description: 'Right-click two surfaces to link portals. Carry your momentum through.',
+    mark: 'fold',
+  },
 ] as const;
 export type Mod = (typeof MODS)[number];
 export type BuildPath = 'bullet-hell' | 'precision';
@@ -170,6 +176,20 @@ export function availableMods(mods: readonly string[]): Mod[] {
           (!branch.requires || mods.includes(branch.requires))))
     );
   });
+}
+// A small preference for the chosen path, sampled without replacement.
+export function rewardMods(mods: readonly string[], count: number, rng: () => number): Mod[] {
+  const path = buildPath(mods),
+    pool = availableMods(mods),
+    offers: Mod[] = [];
+  const weight = (mod: Mod) => (path && MOD_PATHS[mod.id]?.path === path ? 1.5 : 1);
+  while (pool.length && offers.length < count) {
+    let roll = rng() * pool.reduce((sum, mod) => sum + weight(mod), 0);
+    let index = 0;
+    while (index < pool.length - 1 && roll >= weight(pool[index])) roll -= weight(pool[index++]);
+    offers.push(pool.splice(index, 1)[0]);
+  }
+  return offers;
 }
 export function validBuild(mods: readonly string[]) {
   const picked: string[] = [];
