@@ -35,20 +35,21 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=13`). Version 13 unifies enemy and boss impacts with crates, fuel, and breakable cover; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=14`). Version 14 strengthens Kickback and adds backward projectiles to Backblast with a longer firing delay; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
-| Modification | Effect and tradeoff                                                                                                                                |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Burst fire   | Three committed shots in quick succession, then recovery. Each round deals 10% less damage and has 20% less recoil. Aim can change between rounds. |
-| Backblast    | Each discharge also hits a short rear cone for 80% of its total pellet damage. Solid cover blocks it. Shot delays are 15% longer.                  |
-| Banker       | One additional bounce and 35% more damage after each reflection, starting with 20% less damage. Works on its own; Bank shot adds two more bounces. |
-| Landing shot | A hard landing doubles the next discharge's damage and adds 25% recoil. Base damage is 10% lower. The gun glows when ready.                        |
+| Modification | Effect and tradeoff                                                                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Burst fire   | Three committed shots in quick succession, then recovery. Each round deals 10% less damage and has 20% less recoil. Aim can change between rounds.       |
+| Kickback     | 20% more damage and 40% more recoil, with no firing delay penalty. The damage bonus stacks with other modifications.                                     |
+| Backblast    | Each discharge fires a matching full-strength volley backward and hits a short rear cone for 80% of its total pellet damage. Shot delays are 40% longer. |
+| Banker       | One additional bounce and 35% more damage after each reflection, starting with 20% less damage. Works on its own; Bank shot adds two more bounces.       |
+| Landing shot | A hard landing doubles the next discharge's damage and adds 25% recoil. Base damage is 10% lower. The gun glows when ready.                              |
 
 Burst fire plus Scattershot fires three five-pellet volleys. Landing shot boosts all pellets of the next discharge, then the rest of a burst returns to ordinary damage. The boost lasts until your next shot or room change, so you can jump again and combine it with Airshot. Repeated landings do not stack charges.
 
-Banked rounds change color as they gain damage. Punch through retains its damage reduction after each enemy, and Splinter only creates fragments on the first impact. Backblast fires once per discharge, regardless of pellet count. Pause cancels an unfinished burst while preserving its recovery time.
+Banked rounds change color as they gain damage. Punch through retains its damage reduction after each enemy, and Splinter only creates fragments on the first impact. Backblast fires its cone once per discharge, regardless of pellet count. Its rear volley mirrors the forward pellets, including airborne damage, Landing shot, bouncing, piercing, and Splinter; Burst fire sends all three discharges both ways. Both muzzles respect solid cover. The aimed shot applies recoil once, so the backward volley does not cancel your movement. At the base firing rate, Backblast increases the shot delay from 0.22 to 0.308 seconds. Pause cancels an unfinished burst while preserving its recovery time.
 
 Existing modifications remain: Heavy hitter, Scattershot, Hair trigger, Bank shot, Punch through, Splinter, Airshot, Kickback, Bloodwork, and Light frame. No extra weapon slots or controls are needed.
 
@@ -243,3 +244,5 @@ GitHub Pages uses the included GitHub Actions workflow. Pushes to `main` run tes
 Physics: [Matter.js](https://brm.io/matter-js/) (MIT). Build: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/). Artwork and sound are generated by the game's rendering and audio code. Game source is MIT licensed; dependencies retain their own licenses.
 
 Enemy collision checks exercise all eleven enemy types with fast crates and gentle contact, hard impacts into stationary props, both ram directions, low tipped crates, Press and Crane slams, blocked impacts, the solid resting hammer, and props entering the motor rail. Complete combat runs retain normal health, earned upgrades, and real input, using solid-object navigation and two fighting distances.
+
+Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; both full combat runs reach extraction with normal health and earned upgrades.

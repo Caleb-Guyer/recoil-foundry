@@ -49,6 +49,108 @@ function wall(g: Game, x: number, y = 300, w = 4, h = 180) {
   g.terrain.push(b);
   Composite.add(g.engine.world, b);
 }
+test('Kickback adds damage without slowing fire and preserves its airborne recoil boost', () => {
+  for (const mods of [[], ['magnum', 'scatter'], ['airshot', 'landing']]) {
+    const ordinary = fixture(mods),
+      boosted = fixture([...mods, 'kick']);
+    ordinary.landingReady = boosted.landingReady = mods.includes('landing');
+    ordinary.fire();
+    boosted.fire();
+    close(boosted.gun.interval, ordinary.gun.interval);
+    close(boosted.player.velocity.x, ordinary.player.velocity.x * 1.4);
+    assert.equal(boosted.shots.length, ordinary.shots.length);
+    for (let i = 0; i < ordinary.shots.length; i++)
+      close(boosted.shots[i].damage, ordinary.shots[i].damage * 1.2);
+  }
+});
+
+test('Backblast fires full-strength projectiles beyond its cone in both directions', () => {
+  const g = fixture(['backblast']);
+  const rear = target(g, 380),
+    front = target(g, 820);
+  g.fire();
+  assert.equal(g.shots.length, 2);
+  close(g.shots[0].vel.x, -g.shots[1].vel.x);
+  close(g.player.velocity.x, -g.gun.recoil);
+  close(g.shootAt - g.time, getGun([]).interval * 1.4);
+  assert.equal(rear.hp, rear.maxHp, 'the cone extended beyond its range');
+  g.updateShots(1 / 6);
+  close(rear.maxHp - rear.hp, g.gun.damage);
+  close(front.maxHp - front.hp, g.gun.damage);
+});
+
+test('Backblast mirrors scatter, air damage and one landing charge through all three burst rounds', () => {
+  const g = fixture(['backblast', 'burst', 'scatter', 'airshot', 'landing', 'kick']);
+  g.landingReady = true;
+  g.fire();
+  const first = [...g.shots];
+  assert.equal(first.length, 10);
+  close(g.player.velocity.x, -g.gun.recoil * 1.25);
+  for (let i = 0; i < 5; i++) {
+    close(first[i].vel.x, -first[i + 5].vel.x);
+    close(first[i].vel.y, -first[i + 5].vel.y);
+    close(first[i].damage, g.gun.damage * g.gun.airDamage * 2);
+    close(first[i + 5].damage, first[i].damage);
+    assert(first[i].charged && first[i + 5].charged);
+    assert.notEqual(first[i].hits, first[i + 5].hits);
+  }
+  step(g, 16);
+  assert.equal(g.shotCount, 3);
+  assert.equal(g.shots.length, 30);
+  assert.equal(g.shots.filter((s) => s.charged).length, 10);
+  for (const shot of g.shots.filter((s) => !s.charged))
+    close(shot.damage, g.gun.damage * g.gun.airDamage);
+  assert.equal(g.landingReady, false);
+  assert(g.shootAt - g.time > 0.8);
+});
+
+test('backward rounds use real bounce, piercing and nonrecursive splinter collisions', () => {
+  const g = fixture(['backblast', 'banker', 'ricochet', 'pierce', 'split']);
+  wall(g, 360);
+  const first = target(g, 450),
+    second = target(g, 400);
+  g.fire();
+  const rear = g.shots.find((s) => s.vel.x < 0)!;
+  assert.equal(rear.bounces, 3);
+  assert.equal(rear.pierce, 2);
+  assert(rear.trace?.bank && rear.trace.pierce);
+  g.updateShots(1 / 6);
+  close(first.maxHp - first.hp, g.gun.damage);
+  close(second.maxHp - second.hp, g.gun.damage * 0.8);
+  assert.equal(rear.banks, 1);
+  close(rear.damage, g.gun.damage * 0.8 ** 2 * 1.35);
+  const fragments = g.shots.filter((s) => s.fragment);
+  assert.equal(fragments.length, 3);
+  for (const shot of fragments) {
+    assert.equal(shot.bounces, 0);
+    g.splitShot(shot);
+  }
+  assert.equal(g.shots.filter((s) => s.fragment).length, 3);
+});
+
+test('a wall inside the rear muzzle blocks the backward volley before it can hit actors', () => {
+  const g = fixture(['backblast', 'banker']);
+  wall(g, 577);
+  const enemy = target(g, 530);
+  g.fire();
+  const rear = g.shots.find((s) => s.vel.x < 0)!;
+  assert(rear.pos.x > 579);
+  g.updateShots(1 / 60);
+  assert.equal(rear.banks, 1);
+  assert(rear.vel.x > 0);
+  assert.equal(enemy.hp, enemy.maxHp);
+});
+
+test('backward projectiles hit props through the normal impact path', () => {
+  const g = fixture(['backblast']);
+  const fuel = g.props.spawn('canister', 380, 297);
+  g.fire();
+  assert.equal(fuel.armedAt, Infinity);
+  g.updateShots(1 / 6);
+  assert(Number.isFinite(fuel.armedAt));
+  assert(fuel.body.velocity.x < -8);
+});
+
 test('one click commits three rounds, uses one recoil per discharge, and has recovery', () => {
   const g = fixture(['burst', 'scatter']);
   g.fire();

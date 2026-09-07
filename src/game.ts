@@ -638,6 +638,25 @@ export class Game {
             : 'shot',
     );
     const damage = this.gun.damage * (this.grounded ? 1 : this.gun.airDamage) * (charged ? 2 : 1);
+    this.fireVolley(d, damage, charged);
+    if (this.gun.backblast) {
+      // Both directions share the discharge's modifiers and landing charge.
+      // Recoil belongs to the aimed shot; the rear volley never cancels movement.
+      this.fireVolley({ x: -d.x, y: -d.y }, damage, charged);
+      this.fireBackblast(d, damage * this.gun.pellets * 0.8);
+    }
+    if (this.particles.length < 220)
+      this.particles.push({
+        pos: { ...this.player.position },
+        vel: { x: -d.x * 2 + (this.rng() - 0.5), y: -2.8 },
+        life: 0.6,
+        max: 0.6,
+        size: 2,
+        color: '#bdae84',
+        kind: 'shell',
+      });
+  }
+  fireVolley(d: Vec, damage: number, charged: boolean) {
     const pos = { x: this.player.position.x + d.x * 26, y: this.player.position.y - 3 + d.y * 26 };
     const radius = this.mods.includes('magnum') ? 4 : 2.5;
     const spawn = this.lineEnd(
@@ -667,17 +686,6 @@ export class Game {
       });
     }
     this.burst(pos, 4, '#ffcc84', 3, d);
-    if (this.gun.backblast) this.fireBackblast(d, damage * this.gun.pellets * 0.8);
-    if (this.particles.length < 220)
-      this.particles.push({
-        pos: { ...this.player.position },
-        vel: { x: -d.x * 2 + (this.rng() - 0.5), y: -2.8 },
-        life: 0.6,
-        max: 0.6,
-        size: 2,
-        color: '#bdae84',
-        kind: 'shell',
-      });
   }
   fireBackblast(forward: Vec, damage: number) {
     const p = { ...this.player.position },

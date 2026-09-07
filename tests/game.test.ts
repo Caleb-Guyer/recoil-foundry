@@ -498,6 +498,12 @@ for (const { seed, pressSpacing } of [
       if (e?.kind === 'boss') {
         if (p.x < 150) roofDirection = 1;
         else if (p.x > 1850) roofDirection = -1;
+        else if (g.gun.backblast && stuck > 20) {
+          // The slower two-way build retreats from a blocked lane instead of
+          // spending another long burst pinned against the obstacle.
+          roofDirection *= -1;
+          stuck = 0;
+        }
         move = roofDirection;
         aim = { ...e.body.position };
         const roofBlocked =

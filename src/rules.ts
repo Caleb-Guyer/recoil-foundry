@@ -81,7 +81,7 @@ export const MODS = [
   {
     id: 'kick',
     name: 'Kickback',
-    description: '40% more recoil. Turn shots into movement.',
+    description: '20% more damage. 40% more recoil.',
     mark: 'kick',
   },
   { id: 'leech', name: 'Bloodwork', description: 'Every kill restores 2 health.', mark: 'heal' },
@@ -100,7 +100,7 @@ export const MODS = [
   {
     id: 'backblast',
     name: 'Backblast',
-    description: 'A short blast behind every shot. Slower fire.',
+    description: 'Fire both ways, plus a rear blast. 40% longer shot delay.',
     mark: 'backblast',
   },
   {
@@ -167,6 +167,7 @@ export function getGun(mods: readonly string[]): Gun {
         g.airDamage = 1.45;
         break;
       case 'kick':
+        g.damage *= 1.2;
         g.recoil *= 1.4;
         break;
       case 'leech':
@@ -182,7 +183,7 @@ export function getGun(mods: readonly string[]): Gun {
         break;
       case 'backblast':
         g.backblast = true;
-        g.interval *= 1.15;
+        g.interval *= 1.4;
         break;
       case 'banker':
         g.bounces += 1;
