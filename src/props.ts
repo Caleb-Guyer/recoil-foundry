@@ -121,7 +121,8 @@ export function traceProp(prop: Prop, start: Vec, end: Vec, padding = 0) {
 export class PropSystem {
   game: Game;
   items: Prop[] = [];
-  impacts: { prop: Prop; other: Matter.Body; speed: number }[] = [];
+  velocities = new Map<Matter.Body, Vec>();
+  impacts: { prop: Prop; other: Matter.Body; speed: number; incomingSpeed: number }[] = [];
   constructor(game: Game) {
     this.game = game;
     // Collect contacts while Matter steps; remove destroyed bodies only afterward.
@@ -133,10 +134,12 @@ export class PropSystem {
           if (!a && !b) continue;
           const other = a ? pair.bodyB : pair.bodyA;
           const n = pair.collision.normal;
+          const velocity = this.velocities.get(other) ?? other.velocity;
           const speed =
-            (prop.velocity.x - other.velocity.x) * n.x * (a ? -1 : 1) +
-            (prop.velocity.y - other.velocity.y) * n.y * (a ? -1 : 1);
-          if (speed > 5) this.impacts.push({ prop, other, speed });
+            (prop.velocity.x - velocity.x) * n.x * (a ? -1 : 1) +
+            (prop.velocity.y - velocity.y) * n.y * (a ? -1 : 1);
+          const incomingSpeed = (velocity.x * n.x + velocity.y * n.y) * (a ? 1 : -1);
+          if (speed > 5) this.impacts.push({ prop, other, speed, incomingSpeed });
         }
       }
     };
@@ -150,6 +153,7 @@ export class PropSystem {
     for (const prop of this.items) Composite.remove(this.game.engine.world, prop.body);
     this.items = [];
     this.impacts = [];
+    this.velocities.clear();
     for (const p of propPlacements(level, this.game.seed)) {
       const { w, h } = PROP_STATS[p.kind];
       const blocked = this.game.hazards.items.some(({ placement: hazard }) => {
@@ -227,6 +231,11 @@ export class PropSystem {
     }
     if (prop.hp <= 0) this.break(prop);
   }
+  // Direct heavy contact shares the same material response across every enemy.
+  strike(prop: Prop, damage: number, velocity: Vec) {
+    if (prop.kind === 'canister') this.explode(prop);
+    else this.hit(prop, damage, velocity);
+  }
   break(prop: Prop) {
     if (!this.items.includes(prop)) return;
     this.remove(prop);
@@ -236,6 +245,9 @@ export class PropSystem {
   }
   beforeStep() {
     this.impacts = [];
+    this.velocities.clear();
+    for (const body of Composite.allBodies(this.game.engine.world))
+      this.velocities.set(body, { ...body.velocity });
     for (const prop of this.items) {
       prop.velocity = { ...prop.body.velocity };
       if (!prop.body.isStatic) {
@@ -250,13 +262,28 @@ export class PropSystem {
   afterStep(dt: number) {
     const g = this.game;
     for (const prop of this.items) prop.flash = Math.max(0, prop.flash - dt);
-    for (const { prop, other, speed } of this.impacts) {
+    for (const { prop, other, speed, incomingSpeed } of this.impacts) {
       if (!this.items.includes(prop)) continue;
+      const enemy = g.enemies.find((e) => e.body === other || e.crane?.body === other);
+      const incoming = this.velocities.get(other);
+      if (
+        enemy &&
+        enemy.spawn <= 0 &&
+        enemy.hp > 0 &&
+        incoming &&
+        incomingSpeed >= 6 &&
+        speed >= 6 &&
+        g.time - (prop.hits.get(enemy.id) ?? -10) > 0.35
+      ) {
+        prop.hits.set(enemy.id, g.time);
+        this.strike(prop, clamp(speed * 10, 60, 160), incoming);
+        if (g.mode !== 'playing') return;
+        continue;
+      }
       if (prop.kind === 'canister' && Number.isFinite(prop.armedAt) && speed >= 6) {
         // A wall immediately beside a canister must not swallow an impact during arming.
         prop.detonateAt = Math.min(prop.detonateAt, Math.max(g.time, prop.armedAt));
       } else if (prop.kind === 'crate' && Math.hypot(prop.velocity.x, prop.velocity.y) >= 5) {
-        const enemy = g.enemies.find((e) => e.body === other);
         if (enemy && enemy.spawn <= 0 && g.time - (prop.hits.get(enemy.id) ?? -10) > 0.35) {
           prop.hits.set(enemy.id, g.time);
           g.hitEnemy(enemy, clamp(speed * 7, 28, 100));

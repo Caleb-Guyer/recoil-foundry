@@ -329,7 +329,7 @@ test('the hammer blocks piercing bullets while the separate motor remains the da
   g.updateShots(1 / 60);
   assert.equal(e.hp, e.maxHp - 7);
   assert.deepEqual(e.body.position, { x: 600, y: 150 });
-  assert(e.body.isStatic && rig.body.isSensor);
+  assert(e.body.isStatic && !rig.body.isSensor);
 });
 
 test('an overhead volley tracks then locks and never adds unwarned bolts across half health', () => {
@@ -482,7 +482,7 @@ test('both docks bosses can be beaten in either mirror using two upgrades and no
     }
 });
 
-test('a falling crate overlapping the resting sensor cannot permanently stall retraction', () => {
+test('a falling crate contacting the resting hammer cannot permanently stall retraction', () => {
   const g = new Game(),
     seed = 'crane-layout-5';
   g.start(seed, { version: 3, seed, stage: 2, hp: 100, mods: [], kills: 0, elapsed: 0 });

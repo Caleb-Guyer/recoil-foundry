@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { firstSolid, sweepBox } from './collisions.ts';
 import type { Game, Enemy } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, direction, distance, segmentBox } from './rules.ts';
@@ -25,7 +26,7 @@ export function createCrane(g: Game, e: Enemy): CraneRig {
   const head = { x: e.body.position.x, y: 300 };
   const body = Bodies.rectangle(head.x, head.y, CRANE_HEAD.w, CRANE_HEAD.h, {
     isStatic: true,
-    isSensor: true,
+    isSensor: false,
     label: 'crane-head',
   });
   Composite.add(g.engine.world, body);
@@ -44,7 +45,7 @@ export function createCrane(g: Game, e: Enemy): CraneRig {
 function trace(g: Game, from: Vec, to: Vec, retract = false) {
   let nearest: { t: number; normal: Vec; body: Matter.Body } | undefined;
   for (const body of g.solidBodies) {
-    // A falling prop may enter the sensor while it rests. Harmless retraction
+    // Physics may leave a small existing overlap. Harmless retraction
     // can leave that existing overlap; attacks still stop on every solid.
     if (
       retract &&
@@ -55,12 +56,7 @@ function trace(g: Game, from: Vec, to: Vec, retract = false) {
       from.y < body.bounds.max.y + 23
     )
       continue;
-    const hit = segmentBox(
-      from,
-      to,
-      { x: body.bounds.min.x - 25, y: body.bounds.min.y - 23 },
-      { x: body.bounds.max.x + 25, y: body.bounds.max.y + 23 },
-    );
+    const hit = sweepBox(from, to, { x: 25, y: 23 }, body);
     if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, body };
   }
   return nearest;
@@ -200,10 +196,23 @@ function moveMotor(g: Game, e: Enemy, seekShot: boolean) {
     choices.sort((a, b) => Math.abs(a - e.body.position.x) - Math.abs(b - e.body.position.x));
     x = choices[0] ?? x;
   }
-  Body.setPosition(e.body, {
+  const from = { ...e.body.position };
+  const to = {
     x: e.body.position.x + clamp(x - e.body.position.x, -7, 7),
     y: CRANE_RAIL.y,
-  });
+  };
+  const contact = firstSolid(from, to, { x: 45, y: 27 }, g.solidBodies);
+  Body.setPosition(
+    e.body,
+    contact
+      ? {
+          x: from.x + (to.x - from.x) * contact.t + contact.normal.x * 0.05,
+          y: from.y + (to.y - from.y) * contact.t + contact.normal.y * 0.05,
+        }
+      : to,
+  );
+  const prop = contact && g.props.items.find((prop) => prop.body === contact.body);
+  if (prop) g.props.strike(prop, 160, direction(from, to));
 }
 function recover(g: Game, e: Enemy, impact: boolean) {
   const rig = e.crane!;
@@ -251,7 +260,7 @@ export function updateCrane(g: Game, e: Enemy) {
         : undefined);
     if (impact) {
       const prop = g.props.items.find((p) => p.body === impact.body);
-      if (prop) g.props.hit(prop, 160, d);
+      if (prop) g.props.strike(prop, 160, d);
       if (e.hp <= 0 || g.mode !== 'playing') return;
     }
     if (obstruction || finished || e.timer <= 0) recover(g, e, !!impact || e.attack === 'slam');
@@ -300,6 +309,7 @@ export function updateCrane(g: Game, e: Enemy) {
   }
   if (e.state === 'return') {
     moveMotor(g, e, false);
+    if (e.hp <= 0 || g.mode !== 'playing') return;
     const nextAttack = e.attacks % 2 ? 'slam' : 'sweep',
       plan = g.player.position.y < 215 ? null : primaryPlan(g, e, nextAttack),
       home = { x: e.body.position.x, y: 250 },
@@ -318,6 +328,7 @@ export function updateCrane(g: Game, e: Enemy) {
   let plan = g.player.position.y < 215 ? null : primaryPlan(g, e, nextAttack);
   if (plan && e.timer <= 0 && !moveHead(g, rig, plan.from)) plan = null;
   moveMotor(g, e, !plan);
+  if (e.hp <= 0 || g.mode !== 'playing') return;
   if (e.timer > 0) return;
   if (!plan) {
     moveHead(g, rig, { x: e.body.position.x, y: 250 });

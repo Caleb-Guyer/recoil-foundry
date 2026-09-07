@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { firstSolid } from './collisions.ts';
 import {
   clamp,
   direction,
@@ -957,15 +958,31 @@ export class Game {
       sign = Math.sign(dx) || 1;
     if (e.state === 'rush') {
       const end = this.lineEnd(p, { x: p.x + e.aim.x * 35, y: p.y });
-      if (Math.abs(end.x - p.x) < 34 || e.timer <= 0) {
-        const crashed = e.timer > 0;
+      const contact =
+        e.timer > 0
+          ? firstSolid(
+              p,
+              { x: p.x + e.aim.x * 20, y: p.y },
+              { x: ENEMY_STATS.charger.w / 2, y: ENEMY_STATS.charger.h / 2 - 1 },
+              this.solidBodies,
+            )
+          : undefined;
+      const prop = contact && this.props.items.find((prop) => prop.body === contact.body);
+      const crashed = e.timer > 0 && (prop ? contact!.t * 20 <= 14 : Math.abs(end.x - p.x) < 34);
+      if (crashed || e.timer <= 0) {
         e.state = 'recover';
         e.timer = crashed ? 1.1 : 0.6;
         Body.setVelocity(e.body, { x: 0, y: v.y });
         if (crashed) {
-          this.burst(end, 12, '#ffc07a', 3.5);
+          if (prop && contact)
+            Body.setPosition(e.body, {
+              x: p.x + e.aim.x * Math.max(0, contact.t * 20 - 0.05),
+              y: p.y,
+            });
+          this.burst(prop ? prop.body.position : end, 12, '#ffc07a', 3.5);
           this.feedback(2);
           this.onSound('crash');
+          if (prop) this.props.strike(prop, 140, e.aim);
         }
       } else Body.setVelocity(e.body, { x: e.aim.x * 14, y: v.y });
     } else if (e.state === 'windup') {

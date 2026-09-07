@@ -328,7 +328,11 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-for (const seed of ['A', 'E'])
+// Exercise both a ranged spread build and a closer single-projectile build.
+for (const { seed, pressSpacing } of [
+  { seed: 'A', pressSpacing: 320 },
+  { seed: 'E', pressSpacing: 160 },
+])
   test('a combat run reaches the final exit with normal health and real input: ' + seed, () => {
     const g = new Game();
     g.start(seed);
@@ -430,9 +434,7 @@ for (const seed of ['A', 'E'])
         : undefined;
       if (way) move = way.x > p.x ? 1 : -1;
       const blocked =
-        !!move &&
-        Query.ray(g.escape ? g.solidBodies : g.terrain, p, { x: p.x + move * 65, y: p.y }, 20)
-          .length > 0;
+        !!move && Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
       const lift =
         (!navigate && ((!g.clear && dy > 70 && Math.abs(dx) < 500) || (blocked && stuck > 20))) ||
         !!(navigate && way && p.y - way.y > 75 && !g.grounded && stuck > 15);
@@ -465,7 +467,7 @@ for (const seed of ['A', 'E'])
           g.breaches.panels.some((panel) => panel.rect.w > panel.rect.h);
       }
       if (e?.kind === 'press') {
-        move = dx > 320 ? 1 : dx < -320 ? -1 : 0;
+        move = dx > pressSpacing ? 1 : dx < -pressSpacing ? -1 : 0;
         jump = false;
         firing = true;
         aim = { ...e.body.position };

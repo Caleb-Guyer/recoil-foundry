@@ -35,7 +35,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=12`). Version 12 makes Loader rams detonate fuel canisters on contact; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=13`). Version 13 unifies enemy and boss impacts with crates, fuel, and breakable cover; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -100,11 +100,11 @@ Passages and pickups follow the run seed, including Daily Runs. Continuing resto
 
 Rooms contain up to three props, placed away from enemy entrances and the exit. Tall breakable panels stay off the main traversal route. Some furnace rooms contain a pair of canisters for a chain reaction.
 
-- **Loose crates** can be pushed, stood on, or launched with gunfire. A fast crate impact damages enemies; ordinary pushing is harmless. Repeated shots eventually break the crate.
-- **Fuel canisters** launch and light up when shot. A hard impact detonates them, damaging nearby enemies and triggering nearby canisters. A direct Loader charge detonates even unlit or tipped canisters, stopping the ram in its exposed recovery. Solid cover blocks the blast. Stay clear: close explosions can also hurt you.
+- **Loose crates** can be pushed, stood on, or launched with gunfire. A fast crate impact damages enemies; ordinary pushing is harmless. Repeated shots eventually break the crate. Hard enemy body impacts damage crates; committed charges and heavy slams smash them.
+- **Fuel canisters** launch and light up when shot. A hard impact detonates them, damaging nearby enemies and triggering nearby canisters. Hard enemy body impacts and direct charges or hammer slams detonate even unlit canisters. Charges stop in recovery on contact, including tipped props. Solid cover blocks the blast. Stay clear: close explosions can also hurt you.
 - **Breakable panels** stop bullets and aiming lines. Three ordinary rounds break one, opening a new firing lane. Cracks show damage without a health bar.
 
-Props block enemy fire and rear blasts as well as ordinary shots. Banked rounds reflect from their actual rotated surfaces; gun modifications still combine on the same weapon. Surviving props do not prevent a room from clearing. Continuing a run restores its props at the room entrance, like enemies.
+Every enemy hull is solid against props, and the resting Crane hammer can support them. Swept charges and slams stop at the first solid object, respecting rotated prop surfaces and anything protected behind a wall. Props block enemy fire and rear blasts as well as ordinary shots. Banked rounds reflect from their actual rotated surfaces; gun modifications still combine on the same weapon. Surviving props do not prevent a room from clearing. Continuing a run restores its props at the room entrance, like enemies.
 
 ## Enemies
 
@@ -191,14 +191,14 @@ npm run preview
 | -------------------- | -------------------------------------------------------------------------------------- |
 | `src/game.ts`        | Matter.js simulation, movement, recoil, combat, and room progression                   |
 | `src/enemies.ts`     | Enemy dimensions, health, attack timing, and boss patterns                             |
-| `src/kiln-ai.ts`     | Mortar planning, swept shell collisions, surface heat, and boiler movement              |
+| `src/kiln-ai.ts`     | Mortar planning, swept shell collisions, surface heat, and boiler movement             |
 | `src/kiln-art.ts`    | Boiler silhouette, cooling vents, arc warnings, and molten shell effects               |
 | `src/levels.ts`      | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
 | `src/areas.ts`       | Area palettes, parallax scenery, and surface details                                   |
 | `src/props.ts`       | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
 | `src/rules.ts`       | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
 | `src/daily.ts`       | UTC challenge identity, versioned links, and validated local best times                |
-| `src/practice.ts`    | Validated boss victory storage and stage-appropriate practice builds |
+| `src/practice.ts`    | Validated boss victory storage and stage-appropriate practice builds                   |
 | `src/render.ts`      | Canvas world, camera feedback, character animation, and effects                        |
 | `src/main.ts`        | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
 | `src/audio.ts`       | Shared Web Audio output, effects, and audio preferences                                |
@@ -241,3 +241,5 @@ Daily checks cover UTC rollover and real calendar dates, versioned links, reprod
 GitHub Pages uses the included GitHub Actions workflow. Pushes to `main` run tests and a production build before deploying the static `dist/` directory. Relative assets also support other static hosts. No server or external game service is needed.
 
 Physics: [Matter.js](https://brm.io/matter-js/) (MIT). Build: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/). Artwork and sound are generated by the game's rendering and audio code. Game source is MIT licensed; dependencies retain their own licenses.
+
+Enemy collision checks exercise all eleven enemy types with fast crates and gentle contact, hard impacts into stationary props, both ram directions, low tipped crates, Press and Crane slams, blocked impacts, the solid resting hammer, and props entering the motor rail. Complete combat runs retain normal health, earned upgrades, and real input, using solid-object navigation and two fighting distances.

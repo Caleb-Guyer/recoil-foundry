@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { firstSolid } from './collisions.ts';
 import type { Enemy, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, direction, distance, segmentBox } from './rules.ts';
@@ -73,37 +74,6 @@ function loaderApproach(g: Game, e: Enemy, counter: boolean) {
   return candidates[0] ?? g.player.position.x;
 }
 
-function loaderContact(g: Game, e: Enemy) {
-  const p = e.body.position,
-    sign = Math.sign(e.aim.x),
-    halfW = ENEMY_STATS.loader.w / 2,
-    top = p.y - ENEMY_STATS.loader.h / 2 + 1,
-    bottom = p.y + ENEMY_STATS.loader.h / 2 - 1;
-  let nearest: { travel: number; point: Vec; body: Matter.Body } | undefined;
-  for (const body of g.solidBodies) {
-    // Clip the real hull to the ram's height. Unlike a center ray or padded
-    // Matter bounds, this catches tipped fuel without catching empty corners.
-    const points: Vec[] = [];
-    for (let i = 0; i < body.vertices.length; i++) {
-      const a = body.vertices[i],
-        b = body.vertices[(i + 1) % body.vertices.length];
-      if (a.y >= top && a.y <= bottom) points.push(a);
-      for (const y of [top, bottom]) {
-        if ((a.y < y && b.y > y) || (b.y < y && a.y > y))
-          points.push({ x: a.x + ((b.x - a.x) * (y - a.y)) / (b.y - a.y), y });
-      }
-    }
-    if (!points.length) continue;
-    points.sort((a, b) => sign * (a.x - b.x));
-    const point = points[0],
-      rear = points[points.length - 1];
-    if (sign * (rear.x - p.x) <= -halfW + 0.01) continue;
-    const travel = Math.max(0, sign * (point.x - p.x) - halfW);
-    if (travel <= 24 && (!nearest || travel < nearest.travel)) nearest = { travel, point, body };
-  }
-  return nearest;
-}
-
 export function updateLoader(g: Game, e: Enemy) {
   const p = e.body.position,
     v = e.body.velocity,
@@ -113,29 +83,39 @@ export function updateLoader(g: Game, e: Enemy) {
     grounded = loaderGrounded(g, e),
     nose = ENEMY_STATS.loader.w / 2 + 24;
   if (e.state === 'rush') {
-    const contact = e.timer > 0 ? loaderContact(g, e) : undefined;
-    const fuel =
-      contact &&
-      g.props.items.find((prop) => prop.body === contact.body && prop.kind === 'canister');
+    const contact =
+      e.timer > 0
+        ? firstSolid(
+            p,
+            { x: p.x + e.aim.x * 24, y: p.y },
+            { x: ENEMY_STATS.loader.w / 2, y: ENEMY_STATS.loader.h / 2 - 1 },
+            g.solidBodies,
+          )
+        : undefined;
+    const prop = contact && g.props.items.find((prop) => prop.body === contact.body);
     const end = g.lineEnd(p, { x: p.x + e.aim.x * nose, y: p.y });
-    // Preserve ordinary obstacle braking. Fuel must be reached by this frame's
-    // movement before the ram can detonate it.
+    // Keep the wall braking distance; destructible props need actual contact.
     const crashed =
-      e.timer > 0 && (fuel ? contact!.travel <= 15 : Math.abs(end.x - p.x) < nose - 1);
+      e.timer > 0 && (prop ? contact!.t * 24 <= 15 : Math.abs(end.x - p.x) < nose - 1);
     if (crashed || e.timer <= 0) {
       e.state = 'recover';
       e.timer = crashed ? 1.25 : 0.5;
       Body.setVelocity(e.body, { x: 0, y: v.y });
       if (crashed) {
-        if (fuel && contact)
+        if (prop && contact)
           Body.setPosition(e.body, {
-            x: p.x + e.aim.x * Math.max(0, contact.travel - 0.05),
+            x: p.x + e.aim.x * Math.max(0, contact.t * 24 - 0.05),
             y: p.y,
           });
-        g.burst(fuel && contact ? contact.point : end, 22, '#ffcf93', 5);
+        g.burst(
+          prop ? { x: p.x + (e.aim.x * ENEMY_STATS.loader.w) / 2, y: p.y } : end,
+          22,
+          '#ffcf93',
+          5,
+        );
         g.feedback(5);
         g.onSound('crash');
-        if (fuel) g.props.explode(fuel);
+        if (prop) g.props.strike(prop, 160, e.aim);
       }
     } else Body.setVelocity(e.body, { x: e.aim.x * 15, y: v.y });
   } else if (e.state === 'windup') {
@@ -232,8 +212,13 @@ export function updatePress(g: Game, e: Enemy) {
       e.timer = 0.2;
     }
   } else if (e.state === 'rush') {
-    const floor = g.pressSurface(p.x, p.y + half),
-      nextY = Math.min(p.y + 20, floor - half);
+    const contact = firstSolid(
+      p,
+      { x: p.x, y: p.y + 20 },
+      { x: halfWidth - 0.05, y: half },
+      g.solidBodies,
+    );
+    const nextY = p.y + 20 * (contact?.t ?? 1);
     if (
       segmentBox(
         p,
@@ -245,17 +230,8 @@ export function updatePress(g: Game, e: Enemy) {
       g.damagePlayer(30, p);
       if (g.mode !== 'playing') return;
     }
-    for (const prop of [...g.props.items]) {
-      if (
-        prop.body.bounds.min.x < p.x + halfWidth &&
-        prop.body.bounds.max.x > p.x - halfWidth &&
-        prop.body.bounds.min.y < nextY + half + 2 &&
-        prop.body.bounds.max.y > p.y - half
-      )
-        g.props.hit(prop, 144, { x: 0, y: 1 });
-    }
-    if (p.y + half + 20 >= floor || e.timer <= 0) {
-      if (p.y + half + 20 >= floor) Body.setPosition(e.body, { x: p.x, y: floor - half });
+    if (contact || e.timer <= 0) {
+      if (contact) Body.setPosition(e.body, { x: p.x, y: nextY - 0.05 });
       Body.setVelocity(e.body, { x: 0, y: 0 });
       e.state = 'recover';
       e.timer = 0.8;
@@ -263,6 +239,8 @@ export function updatePress(g: Game, e: Enemy) {
       g.burst({ x: p.x, y: p.y + half }, 24, '#ffcb90', 5);
       g.feedback(6);
       g.onSound('slam');
+      const prop = contact && g.props.items.find((prop) => prop.body === contact.body);
+      if (prop) g.props.strike(prop, 144, { x: 0, y: 1 });
     } else Body.setVelocity(e.body, { x: 0, y: 20 });
   } else if (e.state === 'recover') {
     Body.setVelocity(e.body, { x: 0, y: 0 });
