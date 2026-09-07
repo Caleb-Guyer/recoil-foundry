@@ -328,10 +328,10 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-// Exercise both a ranged spread build and a closer single-projectile build.
-for (const { seed, pressSpacing } of [
-  { seed: 'A', pressSpacing: 320 },
-  { seed: 'E', pressSpacing: 160 },
+// Complete runs with earned Precision and Bullet hell builds.
+for (const { seed, pressSpacing, pathMods } of [
+  { seed: 'path-run-65', pressSpacing: 160, pathMods: ['deadeye', 'execute'] },
+  { seed: 'path-run-66', pressSpacing: 320, pathMods: ['crossfire', 'bloom'] },
 ])
   test('a combat run reaches the final exit with normal health and real input: ' + seed, () => {
     const g = new Game();
@@ -353,6 +353,7 @@ for (const { seed, pressSpacing } of [
       if (g.stage === 8 && (sound === 'enemy' || sound === 'pulse')) roofVolleys++;
     };
     const priority = [
+      ...pathMods,
       'leech',
       'magnum',
       'scatter',
@@ -367,6 +368,10 @@ for (const { seed, pressSpacing } of [
       'light',
       'split',
       'kick',
+      'crossfire',
+      'bloom',
+      'deadeye',
+      'execute',
     ];
     for (let i = 0; i < 60 * 360 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       if (g.escape?.phase === 'extracting') {
@@ -390,11 +395,15 @@ for (const { seed, pressSpacing } of [
       }
       const p = g.player.position,
         e = [...g.enemies].sort(
-          (a, b) => distance(a.body.position, p) - distance(b.body.position, p),
+          (a, b) =>
+            distance(a.body.position, p) +
+            (distance(g.lineEnd(p, a.body.position), a.body.position) > 1 ? 800 : 0) -
+            (distance(b.body.position, p) +
+              (distance(g.lineEnd(p, b.body.position), b.body.position) > 1 ? 800 : 0)),
         )[0];
       const exitX = g.escape ? EXTRACTION.x : 1910;
       const ep = e?.body.position ?? { x: exitX, y: 700 },
-        lead = distance(p, ep) / 30,
+        lead = distance(p, ep) / g.gun.projectileSpeed,
         dx = ep.x - p.x,
         dy = p.y - ep.y;
       let aim = {
@@ -522,6 +531,22 @@ for (const { seed, pressSpacing } of [
           roofLastTell = roofVolleys;
         }
       }
+      if (!g.clear && e?.kind !== 'boss' && e?.kind !== 'press') {
+        const threat = g.shots.find((s) => {
+          if (s.friendly) return false;
+          const rx = s.pos.x - p.x,
+            ry = s.pos.y - p.y;
+          const vx = s.vel.x - g.player.velocity.x,
+            vy = s.vel.y - g.player.velocity.y;
+          const t = Math.max(0, Math.min(12, -(rx * vx + ry * vy) / (vx * vx + vy * vy || 1)));
+          return Math.hypot(rx + vx * t, ry + vy * t) < 38;
+        });
+        if (threat) {
+          jump = g.grounded;
+          firing = false;
+          move = threat.pos.x < p.x ? 1 : -1;
+        }
+      }
       tick(g, 1, {
         left: move < 0,
         right: move > 0,
@@ -538,7 +563,7 @@ for (const { seed, pressSpacing } of [
     assert(escapeSeen, 'The run bypassed the escape route');
     assert.equal(g.stage, STAGES - 1);
     assert.equal(g.mods.length, STAGES - 1);
-    for (const mod of seed === 'A' ? ['burst', 'backblast'] : ['burst', 'banker', 'landing'])
-      assert(g.mods.includes(mod));
+    assert(g.mods.includes(pathMods[0]));
+    if (pathMods[0] === 'deadeye') assert(g.mods.includes('execute'));
     assert(g.hp > 0);
   });

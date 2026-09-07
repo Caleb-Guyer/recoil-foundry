@@ -361,3 +361,136 @@ test('new gun builds survive checkpoints without saving transient burst or landi
   assert.equal(g.burstRemaining, 0);
   assert.equal(g.landingReady, false);
 });
+
+test('Crossfire adds three lanes to each forward and rear burst with one recoil impulse', () => {
+  const g = fixture(['crossfire', 'scatter', 'burst', 'backblast', 'landing']);
+  g.landingReady = true;
+  g.fire();
+  assert.equal(g.shots.length, 30);
+  close(g.player.velocity.x, -g.gun.recoil * 1.25);
+  assert.equal(g.shots.filter((s) => s.vel.x > 0).length, 15);
+  assert.equal(g.shots.filter((s) => s.vel.x < 0).length, 15);
+  assert(g.shots.every((s) => s.charged));
+  const base = getGun(['scatter', 'burst', 'backblast', 'landing']);
+  close(g.gun.damage, base.damage * 0.55);
+  close(g.gun.interval, base.interval * 1.2);
+  const emitted = [...g.shots];
+  const addShot = g.addShot.bind(g);
+  g.addShot = (data) => {
+    addShot(data);
+    emitted.push(g.shots.at(-1)!);
+  };
+  step(g, 20);
+  assert.equal(g.shotCount, 3);
+  assert.equal(emitted.length, 90);
+  assert.equal(emitted.filter((s) => s.charged).length, 30);
+});
+
+test('Deadeye tightens existing spread in either acquisition order and keeps fast rounds collision-safe', () => {
+  const a = getGun(['deadeye', 'scatter']),
+    b = getGun(['scatter', 'deadeye']);
+  close(a.damage, b.damage);
+  close(a.spread, b.spread);
+  close(a.interval, b.interval);
+  close(a.spread, getGun(['scatter']).spread * 0.5);
+  close(a.projectileSpeed, 45);
+  const g = fixture(['deadeye']);
+  wall(g, 650, 300, 2);
+  const enemy = target(g, 700);
+  g.fire();
+  close(g.shots[0].damage, 24 * 1.3);
+  g.updateShots(1 / 6);
+  assert.equal(enemy.hp, enemy.maxHp);
+  assert.equal(g.shots.length, 0);
+});
+
+test('Executioner checks health on impact without carrying the bonus into the next pierced target', () => {
+  const g = fixture(['deadeye', 'execute', 'pierce']);
+  const wounded = target(g, 690),
+    healthy = target(g, 770);
+  wounded.hp = wounded.maxHp * 0.29;
+  g.fire();
+  const shot = g.shots[0];
+  shot.damage = 8;
+  g.updateShots(1 / 6);
+  close(wounded.hp, wounded.maxHp * 0.29 - 8 * 1.6);
+  close(healthy.hp, healthy.maxHp - 8 * 0.8);
+  const boundary = fixture(['deadeye', 'execute']);
+  const e = target(boundary, 690);
+  e.hp = e.maxHp * 0.3;
+  boundary.fire();
+  boundary.shots[0].damage = 8;
+  boundary.updateShots(1 / 6);
+  close(e.hp, e.maxHp * 0.3 - 8);
+});
+
+test('Death bloom triggers once per bullet kill, respects cover and cannot chain from fragments', () => {
+  const g = fixture(['crossfire', 'bloom']);
+  const victim = target(g, 700),
+    next = target(g, 760),
+    covered = target(g, 640);
+  victim.hp = 1;
+  next.hp = 1;
+  wall(g, 660, 300, 4);
+  // A round already on the far side of cover kills its target.
+  g.addShot({
+    pos: { x: 680, y: 300 },
+    vel: { x: 30, y: 0 },
+    damage: 20,
+    life: 1,
+    friendly: true,
+    radius: 2,
+    bounces: 0,
+    pierce: 0,
+    fragment: false,
+    split: false,
+  });
+  g.updateShots(1 / 60);
+  assert.equal(g.shots.length, 6);
+  assert(g.shots.every((s) => s.fragment && s.split && s.damage === 7));
+  g.updateShots(1 / 6);
+  assert(next.hp <= 0);
+  assert.equal(covered.hp, covered.maxHp);
+  assert(g.shots.length < 6, 'a fragment kill created another bloom');
+});
+
+test('Death bloom does not trigger on nonlethal hits, props or blocked shield impacts', () => {
+  for (const kind of ['enemy', 'prop', 'shield'] as const) {
+    const g = fixture(['crossfire', 'bloom']);
+    if (kind === 'prop') g.props.spawn('crate', 700, 300);
+    else {
+      const e = target(g, 700);
+      if (kind === 'shield') {
+        e.elite = 'shielded';
+        e.facing = -1;
+      }
+    }
+    g.fire();
+    g.updateShots(1 / 6);
+    assert.equal(g.shots.filter((s) => s.fragment).length, 0);
+  }
+});
+
+test('a dense Bullet hell build stays within projectile and effect limits during sustained combat', () => {
+  const g = fixture([
+    'crossfire',
+    'bloom',
+    'scatter',
+    'burst',
+    'backblast',
+    'rapid',
+    'split',
+    'ricochet',
+  ]);
+  let fragmentsSeen = false;
+  for (let i = 0; i < 1200; i++) {
+    if (i % 60 === 0) target(g, g.player.position.x + 160, g.player.position.y).hp = 1;
+    step(g, 1, { fire: true, aim: { x: g.player.position.x + 500, y: g.player.position.y } });
+    fragmentsSeen ||= g.shots.some((s) => s.fragment);
+    assert(g.shots.length <= 180);
+    assert(g.particles.length <= 220);
+    assert.equal(g.mode, 'playing');
+  }
+  assert(fragmentsSeen && g.kills > 0);
+  assert(g.shotCount > 50);
+});

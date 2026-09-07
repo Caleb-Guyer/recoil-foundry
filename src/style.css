@@ -347,6 +347,13 @@ dialog.practice-dialog {
   color: #b0bdb5;
   margin-top: 10px;
 }
+.mod-path {
+  color: var(--accent);
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: auto;
+  padding-top: 14px;
+}
 .actions {
   display: flex;
   gap: 12px;
@@ -515,6 +522,10 @@ dialog.practice-dialog {
   }
   .mod-copy {
     margin-top: 5px;
+  }
+  .mod-path {
+    grid-column: 2;
+    padding-top: 6px;
   }
   .mod strong {
     align-self: end;

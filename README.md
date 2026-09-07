@@ -19,7 +19,7 @@ A physics roguelike about staying in motion. Clear nine stages, change your gun 
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Fourteen possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eight picks per run leave room for different builds.
+You always carry **one gun**. Eighteen possible modifications change its shots, recoil, handling, or healing. Choose one of three after each room; each choice also restores 12 health. Eight picks per run leave room for different builds.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -35,7 +35,22 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=14`). Version 14 strengthens Kickback and adds backward projectiles to Backblast with a longer firing delay; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=15`). Version 15 adds four upgrades and mutually exclusive Bullet hell and Precision paths; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+
+## Build paths
+
+Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom**. **Deadeye** commits the run to **Precision** and unlocks **Executioner**. Choosing either entry locks the other path for that run. The card states the lock before you choose; the follow-up can appear in later rewards. The fourteen existing upgrades stay shared, so older combinations remain available.
+
+| Path        | Upgrade     | Effect                                                                                                                                                         |
+| ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bullet hell | Crossfire   | Three firing lanes, each carrying the gun's pellet pattern at 55% damage. Shot delays are 20% longer; recoil still happens once per discharge.                 |
+| Bullet hell | Death bloom | Requires Crossfire. Unblocked bullet kills release six radial fragments, each dealing 35% of the killing round's damage. Fragments cannot trigger more blooms. |
+| Precision   | Deadeye     | 30% more damage, 50% faster projectiles, and half the pellet spread. Shot delays are 20% longer.                                                               |
+| Precision   | Executioner | Requires Deadeye. Main projectiles deal 60% more damage to enemies below 30% health. Health is checked separately at each impact, before armor.                |
+
+Crossfire works with Scattershot, Burst fire, Backblast, and the existing projectile modifications. Deadeye keeps those shared options too, tightening Scattershot rather than removing it. Death bloom fragments respect walls and remain separate from Splinter; fragments receive neither Executioner's bonus nor recursive fragmentation. Both paths keep the same shot and particle limits.
+
+Normal rewards still show three available choices. Daily Runs still force one predetermined legal upgrade per room, including any path commitment. Continuing preserves the selected path; starting a fresh run clears it. The pause screen's existing gun summary shows the current path. Existing ordinary checkpoints remain compatible.
 
 ## Gun builds
 
@@ -237,12 +252,14 @@ Music checks cover area phrases and combat intensity, independence from gameplay
 
 Daily checks cover UTC rollover and real calendar dates, versioned links, reproducible room and upgrade sequences, continued elapsed time, and corrupt or slower personal records. Browser checks also exercise title and result actions, retries, blocked storage, and both clipboard outcomes.
 
+Enemy collision checks exercise all eleven enemy types with fast crates and gentle contact, hard impacts into stationary props, both ram directions, low tipped crates, Press and Crane slams, blocked impacts, the solid resting hammer, and props entering the motor rail. Complete combat runs retain normal health, earned upgrades, and real input, using solid-object navigation and two fighting distances.
+
+Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; both full combat runs reach extraction with normal health and earned upgrades.
+
+Path tests cover entry and follow-up eligibility, explicit lock notices, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision and Bullet hell builds with normal health and earned upgrades.
+
 ## Publish
 
 GitHub Pages uses the included GitHub Actions workflow. Pushes to `main` run tests and a production build before deploying the static `dist/` directory. Relative assets also support other static hosts. No server or external game service is needed.
 
 Physics: [Matter.js](https://brm.io/matter-js/) (MIT). Build: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/). Artwork and sound are generated by the game's rendering and audio code. Game source is MIT licensed; dependencies retain their own licenses.
-
-Enemy collision checks exercise all eleven enemy types with fast crates and gentle contact, hard impacts into stationary props, both ram directions, low tipped crates, Press and Crane slams, blocked impacts, the solid resting hammer, and props entering the motor rail. Complete combat runs retain normal health, earned upgrades, and real input, using solid-object navigation and two fighting distances.
-
-Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; both full combat runs reach extraction with normal health and earned upgrades.

@@ -7,7 +7,7 @@ import {
   seeded,
   sample,
   getGun,
-  MODS,
+  availableMods,
   STAGES,
   ROOM_HEAL,
   segmentBox,
@@ -643,7 +643,7 @@ export class Game {
       // Both directions share the discharge's modifiers and landing charge.
       // Recoil belongs to the aimed shot; the rear volley never cancels movement.
       this.fireVolley({ x: -d.x, y: -d.y }, damage, charged);
-      this.fireBackblast(d, damage * this.gun.pellets * 0.8);
+      this.fireBackblast(d, damage * this.gun.pellets * this.gun.lanes * 0.8);
     }
     if (this.particles.length < 220)
       this.particles.push({
@@ -668,23 +668,30 @@ export class Game {
       spawn.x -= d.x * 0.5;
       spawn.y -= d.y * 0.5;
     }
-    for (let i = 0; i < this.gun.pellets; i++) {
-      const a = Math.atan2(d.y, d.x) + (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
-      this.addShot({
-        pos: { ...spawn },
-        vel: { x: Math.cos(a) * 30, y: Math.sin(a) * 30 },
-        damage,
-        life: 1.4,
-        friendly: true,
-        radius,
-        bounces: this.gun.bounces,
-        pierce: this.gun.pierce,
-        fragment: false,
-        split: false,
-        bankGrowth: this.gun.bankGrowth,
-        charged,
-      });
-    }
+    for (let lane = 0; lane < this.gun.lanes; lane++)
+      for (let i = 0; i < this.gun.pellets; i++) {
+        const a =
+          Math.atan2(d.y, d.x) +
+          (lane - (this.gun.lanes - 1) / 2) * 0.22 +
+          (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
+        this.addShot({
+          pos: { ...spawn },
+          vel: {
+            x: Math.cos(a) * this.gun.projectileSpeed,
+            y: Math.sin(a) * this.gun.projectileSpeed,
+          },
+          damage,
+          life: 1.4,
+          friendly: true,
+          radius,
+          bounces: this.gun.bounces,
+          pierce: this.gun.pierce,
+          fragment: false,
+          split: false,
+          bankGrowth: this.gun.bankGrowth,
+          charged,
+        });
+      }
     this.burst(pos, 4, '#ffcc84', 3, d);
   }
   fireBackblast(forward: Vec, damage: number) {
@@ -1280,7 +1287,10 @@ export class Game {
           s.hits.add(e.id);
           // Use this segment's incoming direction, including after a bank, rather
           // than the player's current position or the shot's original origin.
-          const blocked = this.hitEnemy(e, s.damage, {
+          const damage =
+            s.damage *
+            (this.gun.execute && s.friendly && !s.fragment && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
+          const blocked = this.hitEnemy(e, damage, {
             x: e.body.position.x - s.vel.x,
             y: e.body.position.y - s.vel.y,
           });
@@ -1288,6 +1298,7 @@ export class Game {
             s.life = 0;
             continue;
           }
+          if (e.hp <= 0 && this.gun.deathBloom && !s.fragment) this.deathBloom(s, e.body.position);
           this.splitShot(s);
           if (!e.body.isStatic)
             Body.setVelocity(e.body, {
@@ -1342,6 +1353,24 @@ export class Game {
         vel: { x: Math.cos(a) * 16, y: Math.sin(a) * 16 },
         damage: s.damage * 0.2,
         life: 0.4,
+        friendly: true,
+        radius: 2,
+        bounces: 0,
+        pierce: 0,
+        fragment: true,
+        split: true,
+      });
+    }
+  }
+  deathBloom(s: Shot, pos: Vec) {
+    const base = Math.atan2(s.vel.y, s.vel.x);
+    for (let i = 0; i < 6; i++) {
+      const angle = base + (i * Math.PI) / 3;
+      this.addShot({
+        pos: { ...pos },
+        vel: { x: Math.cos(angle) * 16, y: Math.sin(angle) * 16 },
+        damage: s.damage * 0.35,
+        life: 0.65,
         friendly: true,
         radius: 2,
         bounces: 0,
@@ -1441,7 +1470,7 @@ export class Game {
   openReward() {
     if (this.practice) return;
     this.offers = sample(
-      MODS.filter((m) => !this.mods.includes(m.id)),
+      availableMods(this.mods),
       dailyFromSeed(this.seed) ? 1 : 3,
       seeded(this.seed + ':rewards:' + this.stage),
     );
@@ -1450,7 +1479,12 @@ export class Game {
   }
   chooseMod(id: string) {
     if (this.practice) return;
-    if (this.mode !== 'upgrade' || this.rewardTaken || !this.offers.some((m) => m.id === id))
+    if (
+      this.mode !== 'upgrade' ||
+      this.rewardTaken ||
+      !this.offers.some((m) => m.id === id) ||
+      !availableMods(this.mods).some((m) => m.id === id)
+    )
       return;
     this.rewardTaken = true;
     this.mods.push(id);

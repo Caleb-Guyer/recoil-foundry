@@ -5,7 +5,7 @@ import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
 import { musicScene } from './music-score.ts';
 import { AREAS } from './areas.ts';
-import { MODS, loadCheckpoint, STAGES } from './rules.ts';
+import { MODS, loadCheckpoint, STAGES, modPathLabel, buildPath, PATH_NAMES } from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
 import { VICTORIES_KEY, PRACTICE_BOSSES, loadEncounters } from './practice.ts';
 import type { Encounter } from './practice.ts';
@@ -256,6 +256,10 @@ function modMark(mod: Mod) {
     backblast: 'M27 24h21M39 17l9 7-9 7M21 24L8 12M21 24H5M21 24L8 36',
     banker: 'M8 37l15-25 15 25 10-17M17 12h6v8M40 20h8v8',
     landing: 'M12 8v19M6 20l6 7 6-7M6 36h18M30 24h19M41 17l8 7-8 7',
+    crossfire: 'M8 24h40M8 24L44 9M8 24l36 15',
+    bloom: 'M28 9v30M15 16l26 16M15 32l26-16M24 20h8v8h-8z',
+    deadeye: 'M8 24h40M28 7v10M28 31v10M18 14h20v20H18z',
+    execute: 'M10 10v28h12M28 10v28M36 24h14M43 17l7 7-7 7',
   };
   return (
     '<svg class="mod-mark" viewBox="0 0 56 48" aria-hidden="true"><path d="' +
@@ -312,7 +316,9 @@ function showDialog(kind: string) {
             m.name +
             '</strong><span class="mod-copy">' +
             m.description +
-            '</span></button>',
+            '</span>' +
+            (modPathLabel(m.id) ? '<span class="mod-path">' + modPathLabel(m.id) + '</span>' : '') +
+            '</button>',
         )
         .join('') +
       '</div>';
@@ -436,7 +442,9 @@ function showDialog(kind: string) {
           : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
-        ? '<details class="build"><summary>Your gun</summary><ul>' +
+        ? '<details class="build"><summary>Your gun' +
+          (buildPath(game.mods) ? ' · ' + PATH_NAMES[buildPath(game.mods)!] : '') +
+          '</summary><ul>' +
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
           '</ul></details>'
         : '') +

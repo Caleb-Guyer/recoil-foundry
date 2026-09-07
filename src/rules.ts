@@ -39,6 +39,10 @@ export interface Gun {
   bankGrowth: number;
   backblast: boolean;
   landing: boolean;
+  lanes: number;
+  projectileSpeed: number;
+  deathBloom: boolean;
+  execute: boolean;
 }
 export const MODS = [
   {
@@ -115,8 +119,76 @@ export const MODS = [
     description: 'Hard landings double your next shot. Other shots hit 10% lighter.',
     mark: 'landing',
   },
+  {
+    id: 'crossfire',
+    name: 'Crossfire',
+    description: 'Three firing lanes. 55% damage each. 20% longer shot delay.',
+    mark: 'crossfire',
+  },
+  {
+    id: 'bloom',
+    name: 'Death bloom',
+    description: 'Bullet kills release six fragments at 35% round damage.',
+    mark: 'bloom',
+  },
+  {
+    id: 'deadeye',
+    name: 'Deadeye',
+    description: '30% more damage. Faster, tighter rounds. 20% longer shot delay.',
+    mark: 'deadeye',
+  },
+  {
+    id: 'execute',
+    name: 'Executioner',
+    description: 'Rounds hit 60% harder against enemies below 30% health.',
+    mark: 'execute',
+  },
 ] as const;
 export type Mod = (typeof MODS)[number];
+export type BuildPath = 'bullet-hell' | 'precision';
+export const PATH_NAMES: Record<BuildPath, string> = {
+  'bullet-hell': 'Bullet hell',
+  precision: 'Precision',
+};
+export const MOD_PATHS: Record<string, { path: BuildPath; requires?: string }> = {
+  crossfire: { path: 'bullet-hell' },
+  bloom: { path: 'bullet-hell', requires: 'crossfire' },
+  deadeye: { path: 'precision' },
+  execute: { path: 'precision', requires: 'deadeye' },
+};
+export function buildPath(mods: readonly string[]): BuildPath | undefined {
+  return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
+}
+export function availableMods(mods: readonly string[]): Mod[] {
+  const chosen = buildPath(mods);
+  return MODS.filter((mod) => {
+    const branch = MOD_PATHS[mod.id];
+    return (
+      !mods.includes(mod.id) &&
+      (!branch ||
+        ((!chosen || branch.path === chosen) &&
+          (!branch.requires || mods.includes(branch.requires))))
+    );
+  });
+}
+export function validBuild(mods: readonly string[]) {
+  const picked: string[] = [];
+  for (const id of mods) {
+    if (!availableMods(picked).some((mod) => mod.id === id)) return false;
+    picked.push(id);
+  }
+  return true;
+}
+export function modPathLabel(id: string): string {
+  const branch = MOD_PATHS[id];
+  if (!branch) return '';
+  return (
+    PATH_NAMES[branch.path] +
+    (branch.requires
+      ? ''
+      : ' · Locks ' + PATH_NAMES[branch.path === 'precision' ? 'bullet-hell' : 'precision'])
+  );
+}
 export function getGun(mods: readonly string[]): Gun {
   const g: Gun = {
     damage: 24,
@@ -134,6 +206,10 @@ export function getGun(mods: readonly string[]): Gun {
     bankGrowth: 0,
     backblast: false,
     landing: false,
+    lanes: 1,
+    projectileSpeed: 30,
+    deathBloom: false,
+    execute: false,
   };
   for (const id of new Set(mods))
     switch (id) {
@@ -194,7 +270,25 @@ export function getGun(mods: readonly string[]): Gun {
         g.landing = true;
         g.damage *= 0.9;
         break;
+      case 'crossfire':
+        g.lanes = 3;
+        g.damage *= 0.55;
+        g.interval *= 1.2;
+        break;
+      case 'bloom':
+        g.deathBloom = true;
+        break;
+      case 'deadeye':
+        g.damage *= 1.3;
+        g.interval *= 1.2;
+        g.projectileSpeed *= 1.5;
+        break;
+      case 'execute':
+        g.execute = true;
+        break;
     }
+  // Apply spread after Scattershot so acquisition order cannot change the build.
+  if (mods.includes('deadeye')) g.spread *= 0.5;
   return g;
 }
 export const STAGES = 9;
@@ -224,7 +318,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     Array.isArray(d.mods) &&
     new Set(d.mods).size === d.mods.length &&
     d.mods.length <= MODS.length &&
-    d.mods.every((id) => MODS.some((m) => m.id === id)) &&
+    validBuild(d.mods) &&
     Number.isInteger(d.kills) &&
     d.kills >= 0 &&
     Number.isFinite(d.elapsed) &&
