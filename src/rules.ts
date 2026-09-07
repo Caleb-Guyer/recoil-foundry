@@ -150,7 +150,7 @@ export const MODS = [
   {
     id: 'fold',
     name: 'Fold',
-    description: 'Right-click two surfaces to link portals. Carry your momentum through.',
+    description: 'Right-click two surfaces to link portals. One pair per room.',
     mark: 'fold',
   },
   {

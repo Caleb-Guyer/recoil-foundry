@@ -77,6 +77,9 @@ test('Fold is shared, unique, saveable, and leaves the one gun unchanged', () =>
     assert.deepEqual(getGun(path), getGun([...path, 'fold']));
   }
   const g = fixture();
+  assert(g.portals.place({ x: 600, y: 740 }));
+  assert(g.portals.place({ x: 1100, y: 740 }));
+  assert(!g.portals.canPlace);
   let save: unknown;
   g.onCheckpoint = (s) => {
     save = s;
@@ -87,9 +90,17 @@ test('Fold is shared, unique, saveable, and leaves the one gun unchanged', () =>
   g.start(checkpoint.seed, checkpoint);
   assert(g.portals.equipped);
   assert.deepEqual(g.portals.pair, [null, null]);
+  assert(g.portals.canPlace);
 });
-test('surface placement alternates, replaces only one end, and rejects air, props, short and buried faces', () => {
+test('invalid surfaces and overlapping openings never spend either placement', () => {
   const g = fixture();
+  wall(g, 800, 400, 40, 40);
+  wall(g, 1200, 710, 200, 60);
+  g.props.spawn('crate', 1500, 690);
+  assert(!g.portals.candidate({ x: 780, y: 400 }), 'short face accepted');
+  assert(!g.portals.candidate({ x: 1200, y: 740 }), 'buried floor accepted');
+  assert(!g.portals.candidate({ x: 1500, y: 668 }), 'prop accepted');
+  assert(!g.portals.candidate({ x: NaN, y: 740 }));
   assert(!g.portals.place({ x: 300, y: 300 }));
   assert.equal(g.portals.next, 0);
   assert(g.portals.place({ x: 600, y: 740 }));
@@ -97,16 +108,60 @@ test('surface placement alternates, replaces only one end, and rejects air, prop
   const blue = g.portals.pair[0];
   assert(!g.portals.place({ x: 620, y: 740 }));
   assert.equal(g.portals.pair[0], blue);
+  assert.equal(g.portals.next, 1);
+  assert(g.portals.canPlace);
   assert(g.portals.place({ x: 1000, y: 745 }));
   assert(g.portals.linked);
-  const orange = g.portals.pair[1];
-  assert(g.portals.place({ x: 1400, y: 740 }));
-  assert.equal(g.portals.pair[1], orange);
-  wall(g, 800, 400, 40, 40);
-  assert(!g.portals.candidate({ x: 780, y: 400 }));
-  wall(g, 1200, 710, 200, 60);
-  assert(!g.portals.candidate({ x: 1200, y: 740 }), 'buried floor accepted');
-  assert(!g.portals.candidate({ x: NaN, y: 740 }));
+  assert.equal(g.portals.next, 2);
+  assert(!g.portals.canPlace);
+});
+
+test('a completed pair cannot be moved by repeated placement requests, pause, or a blocked exit', () => {
+  const g = fixture();
+  assert(g.portals.place({ x: 600, y: 740 }));
+  assert(g.portals.place({ x: 1100, y: 740 }));
+  const pair = [...g.portals.pair];
+  const sounds: string[] = [];
+  g.onSound = (sound) => sounds.push(sound);
+  for (const point of [
+    { x: 1400, y: 740 },
+    { x: 0, y: 400 },
+    { x: 1200, y: 0 },
+  ]) {
+    assert.equal(g.portals.candidate(point), null, 'Spent placement still offered a preview');
+    assert(!g.portals.place(point));
+    assert.deepEqual(g.portals.pair, pair);
+  }
+  assert.deepEqual(sounds, ['portal-denied', 'portal-denied', 'portal-denied']);
+  assert.equal(g.portals.next, 2);
+  g.hitStop = 0.03;
+  step(g, { portal: { x: 1500, y: 740 } });
+  step(g);
+  step(g);
+  g.setMode('paused');
+  g.setMode('playing');
+  step(g, { portal: { x: 1700, y: 740 } });
+  g.props.spawn('crate', 1100, 718);
+  assert(!g.portals.place({ x: 1800, y: 740 }));
+  assert.deepEqual(g.portals.pair, pair);
+  assert(!g.portals.canPlace);
+});
+
+test('leaving a cleared room restores one fresh pair and keeps Fold equipped', () => {
+  const g = fixture();
+  g.portals.place({ x: 600, y: 740 });
+  g.portals.place({ x: 1100, y: 740 });
+  assert(!g.portals.canPlace);
+  step(g);
+  assert(g.clear);
+  g.openReward();
+  g.chooseMod(g.offers[0].id);
+  assert.equal(g.stage, 1);
+  assert(g.portals.equipped && g.portals.canPlace);
+  assert.deepEqual(g.portals.pair, [null, null]);
+  assert.equal(g.portals.next, 0);
+  assert(g.portals.place({ x: 100, y: 740 }));
+  assert.equal(g.portals.next, 1);
 });
 test('a single endpoint is solid, and deleting its supporting surface deactivates a pair', () => {
   const g = fixture();
@@ -129,6 +184,7 @@ test('standing on a floor exit cannot cause an endless teleport loop; leaving it
   Body.setPosition(g.player, { x: 600, y: 722 });
   physics(g, 100);
   assert.equal(g.portals.revision, 1);
+  assert(!g.portals.canPlace, 'Teleporting refunded placement');
   near(g.player.position.x, 1100);
   Body.setVelocity(g.player, { x: 0, y: -7 });
   physics(g, 100);
@@ -375,6 +431,7 @@ test('right-click requests survive hit stop once, clear on pause, and reset betw
   g.portals.place({ x: 1100, y: 740 });
   g.loadRoom();
   assert.deepEqual(g.portals.pair, [null, null]);
+  assert(g.portals.canPlace);
   g.mods = [];
   step(g, { portal: { x: 600, y: 740 } });
   assert.deepEqual(g.portals.pair, [null, null]);

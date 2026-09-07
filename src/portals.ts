@@ -67,6 +67,9 @@ export class PortalSystem {
   get equipped() {
     return this.game.mods.includes('fold');
   }
+  get canPlace() {
+    return this.equipped && this.next < 2;
+  }
   get linked() {
     return this.equipped && this.pair.every((p) => p && this.game.terrain.includes(p.body));
   }
@@ -87,7 +90,7 @@ export class PortalSystem {
     );
   }
   candidate(point: Vec): Portal | null {
-    if (!this.equipped || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
+    if (!this.canPlace || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
     const candidates: { portal: Portal; score: number }[] = [];
     for (const body of this.game.terrain) {
       const { min, max } = body.bounds;
@@ -144,7 +147,9 @@ export class PortalSystem {
     this.pair[this.next] = p;
     this.game.burst(p.pos, 8, PORTAL_COLORS[this.next], 1.7);
     this.game.onSound(this.next === 0 ? 'portal-blue' : 'portal-orange');
-    this.next = 1 - this.next;
+    // Each endpoint is committed once. Only restarting or leaving the room
+    // resets the pair; blocked exits and repeated travel never refund placement.
+    this.next++;
     this.rejected = null;
     return true;
   }

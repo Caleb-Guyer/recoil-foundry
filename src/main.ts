@@ -445,7 +445,9 @@ function showDialog(kind: string) {
       ' /></label></div>' +
       '<div class="controls-copy">' +
       (game.portals.equipped
-        ? '<p>Right-click or <kbd>E</kbd> on two surfaces to place portals.</p>'
+        ? game.portals.canPlace
+          ? '<p>Right-click or <kbd>E</kbd> on two surfaces. One portal pair per room.</p>'
+          : '<p>Portals are fixed until the next room.</p>'
         : '') +
       '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
       (game.practice
@@ -607,7 +609,7 @@ canvas.onpointercancel = (e) => {
 };
 canvas.oncontextmenu = (e) => e.preventDefault();
 $('portal-touch').onpointerdown = (e) => {
-  if (game.mode !== 'playing' || !game.portals.equipped) return;
+  if (game.mode !== 'playing' || !game.portals.canPlace) return;
   e.preventDefault();
   portalTouch = !portalTouch;
   $('portal-touch').setAttribute('aria-pressed', String(portalTouch));
@@ -669,7 +671,11 @@ function frame(now: number) {
   renderer.draw(now);
   if (now - hudAt > 80) {
     hudAt = now;
-    $('portal-touch').hidden = !game.portals.equipped;
+    $('portal-touch').hidden = !game.portals.canPlace;
+    if (!game.portals.canPlace && portalTouch) {
+      portalTouch = false;
+      $('portal-touch').setAttribute('aria-pressed', 'false');
+    }
     $<HTMLProgressElement>('health').value = game.hp;
     $('health').setAttribute('aria-valuetext', Math.ceil(game.hp) + ' health');
     $('health').classList.toggle('low', game.hp <= 30);
