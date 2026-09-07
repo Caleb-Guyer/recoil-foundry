@@ -138,14 +138,19 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
       game.start(restored.seed, restored);
       const expected = getLevel(seed, stage);
       assert.deepEqual(game.level, expected);
-      assert.deepEqual(
-        game.enemies.map((enemy) => ({
+      const roster = [
+        ...game.enemies.map((enemy) => ({
           kind: enemy.kind,
           elite: enemy.elite,
           x: enemy.body.position.x,
           y: enemy.body.position.y,
         })),
-        expected.spawns.map((spawn) => ({ ...spawn, elite: spawn.elite })),
+        ...game.waves.doors.map(({ spawn }) => ({ ...spawn, elite: spawn.elite })),
+      ];
+      const ordered = (spawns: typeof roster) => [...spawns].sort((a, b) => a.x - b.x || a.y - b.y);
+      assert.deepEqual(
+        ordered(roster),
+        ordered(expected.spawns.map((spawn) => ({ ...spawn, elite: spawn.elite }))),
       );
       assert.equal(game.hp, 71);
       assert.equal(game.elapsed, 65.25);

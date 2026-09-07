@@ -1,4 +1,5 @@
 import { drawBossSignal } from './boss-signals.ts';
+import { drawReinforcementDoors } from './reinforcement-art.ts';
 import { Game, WORLD, EXTRACTION_DURATION } from './game.ts';
 import type { Enemy } from './game.ts';
 import {
@@ -117,6 +118,7 @@ export class Renderer {
     c.scale(this.scale, this.scale);
     c.translate(-this.camera.x, -this.camera.y);
     this.drawBreachBackdrop();
+    drawReinforcementDoors(c, g, this.reduced);
     const palette = AREAS[g.level.area];
     for (const b of g.terrain) {
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < 0) continue;
@@ -156,9 +158,11 @@ export class Renderer {
       c.translate(p.x, p.y);
       if (e.spawn > 0) {
         c.globalAlpha = clamp(1 - e.spawn / 0.65, 0.15, 1);
-        c.strokeStyle = '#ed735d';
-        c.lineWidth = 1.5;
-        c.strokeRect(-size / 2 - 8, -size / 2 - 8, size + 16, size + 16);
+        if (!e.fromDoor) {
+          c.strokeStyle = '#ed735d';
+          c.lineWidth = 1.5;
+          c.strokeRect(-size / 2 - 8, -size / 2 - 8, size + 16, size + 16);
+        }
       }
       const color =
         e.flash > 0

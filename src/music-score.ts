@@ -40,7 +40,7 @@ export function musicScene(game: Game): MusicScene {
   }
   const alive = game.enemies.filter((enemy) => enemy.hp > 0);
   const boss = alive.some((enemy) => isBoss(enemy.kind));
-  const clear = game.clear || alive.length === 0;
+  const clear = game.clear || (alive.length === 0 && !game.waves.pending);
   let intensity = 0;
   if (game.mode === 'playing' && !clear) {
     let nearest = 0;
@@ -65,7 +65,8 @@ export function musicScene(game: Game): MusicScene {
         Math.min(0.28, crowd * 0.1) +
         Math.min(0.24, attacks * 0.12) +
         firing +
-        (boss ? 0.14 : 0),
+        (boss ? 0.14 : 0) +
+        (game.waves.phase === 'warning' ? 0.2 : 0),
     );
   }
   return {

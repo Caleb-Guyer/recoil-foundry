@@ -162,6 +162,7 @@ function fixture(seed: string, stage: number) {
   game.start(seed, { version: 3, seed, stage, hp: 100, mods: [], kills: 0, elapsed: 0 });
   for (const enemy of game.enemies) Matter.Composite.remove(game.engine.world, enemy.body);
   game.enemies = [];
+  game.waves.clear();
   for (const prop of [...game.props.items]) game.props.remove(prop);
   return game;
 }

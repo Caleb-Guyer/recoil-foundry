@@ -15,6 +15,7 @@ function fixture() {
   for (const prop of [...g.props.items]) g.props.remove(prop);
   for (const enemy of g.enemies) Composite.remove(g.engine.world, enemy.body);
   g.enemies = [];
+  g.waves.clear();
   for (const body of g.terrain.slice(4)) Composite.remove(g.engine.world, body);
   g.terrain = g.terrain.slice(0, 4);
   g.hazards.clear();

@@ -33,7 +33,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-06&dv=7`). Version 7 adds the tougher boss behavior and balance below; its best times are separate from earlier rulesets. Passage placement and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-06&dv=8`). Version 8 adds reinforcement waves to regular rooms; its best times are separate from earlier rulesets. Passage placement and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Gun builds
 
@@ -63,6 +63,16 @@ Each run has six different regular layouts and three boss arenas. Seeded mirrore
 Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
+
+## Reinforcements
+
+Regular rooms have two compact waves: a small opening group, then the tougher part of the room’s roster. The second group reserves elites and mixes flyers with mobile ground enemies when that roster supports it. The total enemy count and healing from kills stay the same.
+
+Service-door lights turn amber and a short mechanical cue warns of the next group for 0.75 seconds. Clearing the opening group starts the warning immediately; larger opening groups can call reinforcements while their last enemy remains. Each door opens as its enemy emerges. The exit unlocks only after both groups are defeated, with the usual single upgrade and 20-health recovery.
+
+Doors wait if you, another enemy, or a moved prop block the entry. When another suitable authored entrance is free, that door gets its own full warning before the delayed enemy arrives. Shots and explosions do not damage enemies still behind sealed doors. Boss rooms and the final escape keep their existing encounters.
+
+Wave composition and initial attack delays repeat from the seed, including Daily Runs. Continue and retry rebuild both groups at the room entrance. Pauses and impact pauses freeze arrivals. Door lights and sound carry the information without a wave counter or additional controls.
 
 ## Moving rooms
 
@@ -188,6 +198,8 @@ Prop checks cover sparse placement, baseline route clearance, real crate impacts
 Hidden-route checks cover panel collision and destruction, fast and close-muzzle shots, blast cover, physical passage after breaking, health collection and occlusion, harmless bounded debris, daily reproduction, and room-entrance restoration. Placement checks cover mirrored geometry, enemy and hazard clearances, baseline traversal, and actual recoil ascent through the hatch.
 
 Shot-trail checks cover real collision corners, bounded path history, persistent styling after bounces or piercing, fragment exclusions, pause/reset cleanup, and unchanged projectile physics and combat randomness.
+
+Reinforcement checks cover deterministic composition, full arrival warnings, blocked entries, room completion, one reward per room, pause and death, and fresh checkpoint reconstruction.
 
 Area boss checks cover locked attack warnings, airborne camping versus reactive dodging, corner pressure, shotgun knockback resistance, transition armor, and physical flanking across both rooftop arenas and their mirrors. They also cover wide-body crashes, platform-edge landings, returning from beneath shelves, safe recovery windows, recoil escapes, pause and death cleanup, and exactly one upgrade after each intermediate boss.
 

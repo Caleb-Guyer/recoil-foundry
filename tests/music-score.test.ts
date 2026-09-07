@@ -114,6 +114,7 @@ function sceneFixture() {
   const game = new Game();
   game.start('score-scene');
   game.enemies = [];
+  game.waves.clear();
   game.clear = false;
   game.time = 10;
   game.lastShot = -100;

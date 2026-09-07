@@ -39,6 +39,7 @@ import { BreachSystem } from './breaches.ts';
 import { updateLoader, updatePress } from './area-boss-ai.ts';
 import { huntBoss, bossHasLane } from './boss-hunt.ts';
 import type { BossHunt } from './boss-hunt.ts';
+import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
 import type { ShotTrace } from './shot-trails.ts';
 import { ESCAPE_WIDTH, ESCAPE_LAYOUT, ESCAPE_PLATFORMS, EXTRACTION } from './escape-layout.ts';
@@ -66,6 +67,7 @@ export interface Enemy {
   timer: number;
   flash: number;
   spawn: number;
+  fromDoor?: boolean;
   phase: number;
   aim: Vec;
   state: EnemyState;
@@ -117,6 +119,7 @@ export class Game {
   props = new PropSystem(this);
   hazards = new HazardSystem(this);
   breaches = new BreachSystem(this);
+  waves = new ReinforcementSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -274,7 +277,7 @@ export class Game {
       label: 'player',
     });
     Composite.add(this.engine.world, this.player);
-    for (const spawn of this.level.spawns)
+    for (const spawn of this.waves.reset(this.level))
       this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
     if (escapeRoom) {
       this.hazards.clear();
@@ -366,7 +369,7 @@ export class Game {
       this.onSound('win');
     }
   }
-  spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind) {
+  spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind, attackDelay?: number) {
     if (this.enemies.length >= 14) return;
     const { w, h } = ENEMY_STATS[kind];
     const hp = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
@@ -391,7 +394,7 @@ export class Game {
       shieldFlash: 0,
       hp,
       maxHp: hp,
-      timer: isBoss(kind) ? 0.55 : 1.1 + this.rng(),
+      timer: attackDelay ?? (isBoss(kind) ? 0.55 : 1.1 + this.rng()),
       flash: 0,
       spawn: 0.65,
       phase: 0,
@@ -538,7 +541,8 @@ export class Game {
       this.boardExtraction();
       return;
     }
-    if (!this.enemies.length && !this.clear) {
+    this.waves.update(dt);
+    if (!this.enemies.length && !this.waves.pending && !this.clear) {
       this.clear = true;
       this.clearAt = this.time;
       this.shots = this.shots.filter((s) => s.friendly);

@@ -133,6 +133,7 @@ export class Sound {
         'lock',
         'charge',
         'machine',
+        'reinforce',
         'strain',
         'arm',
         'hurt',
@@ -162,6 +163,9 @@ export class Sound {
     } else if (kind === 'machine') {
       this.tone(110, 180, 0.45, 0.05, 'sawtooth');
       this.tone(440, 440, 0.12, 0.025, 'sine', 0.12);
+    } else if (kind === 'reinforce') {
+      this.tone(240, 190, 0.11, 0.045, 'triangle');
+      this.tone(360, 280, 0.14, 0.035, 'triangle', 0.12);
     } else if (kind === 'strain') {
       this.crack(0.2, 0.055, 1700);
       this.tone(280, 110, 0.25, 0.035);

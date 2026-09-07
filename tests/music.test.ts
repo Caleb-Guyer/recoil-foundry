@@ -544,6 +544,7 @@ test('combat warning effects duck music, while muted audio cannot restart the mi
     'loader',
     'press',
     'slam',
+    'reinforce',
   ];
   for (const kind of warnings) {
     context.advance(1);

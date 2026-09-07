@@ -119,6 +119,7 @@ test('all layout orientations remain traversable with active hazards, ordinary j
     for (const prop of [...game.props.items]) game.props.remove(prop);
     for (const enemy of game.enemies) Composite.remove(game.engine.world, enemy.body);
     game.enemies = [];
+    game.waves.clear();
     const path = [...game.level.route, { x: 1900, y: 720 }];
     let waypoint = 0;
     let previousX = game.player.position.x;

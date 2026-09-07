@@ -22,6 +22,7 @@ function clean(g: Game, platforms = false) {
   for (const prop of [...g.props.items]) g.props.remove(prop);
   for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
   g.enemies = [];
+  g.waves.clear();
   if (platforms) {
     for (const b of g.terrain.slice(4)) Composite.remove(g.engine.world, b);
     g.terrain = g.terrain.slice(0, 4);
@@ -244,7 +245,11 @@ test('cleared exits advance automatically and choices modify the same gun', () =
     Body.setPosition(g.player, { x: 1910, y: 700 });
     tick(g);
     assert.equal(g.mode, 'playing');
-    for (const e of [...g.enemies]) g.hitEnemy(e, 9999);
+    for (let i = 0; i < 300 && !g.clear; i++) {
+      for (const e of [...g.enemies]) g.hitEnemy(e, 9999);
+      tick(g);
+    }
+    assert(g.clear, 'The room did not finish after defeating both groups');
     tick(g, 40);
     if (stage < STAGES - 1) {
       assert.equal(g.mode, 'upgrade');
@@ -349,7 +354,7 @@ for (const seed of ['A', 'E'])
       'split',
       'kick',
     ];
-    for (let i = 0; i < 60 * 240 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+    for (let i = 0; i < 60 * 360 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       if (g.escape?.phase === 'extracting') {
         tick(g);
         continue;
@@ -429,11 +434,35 @@ for (const seed of ['A', 'E'])
         jump = g.grounded && (blocked || stuck > 15);
       }
       if (way && p.y - way.y > 50 && g.grounded) jump = true;
+      if (e?.kind === 'boss' && e.state === 'windup' && e.attack !== 'ring' && e.timer <= 0.3) {
+        jump ||= g.grounded;
+        move = p.x < 160 ? 1 : p.x > 1840 ? -1 : Math.sign(e.aim.y) || move;
+      }
+      let firing = (!g.clear && !navigate) || (lift && !g.grounded);
+      const breach = g.breaches.placement,
+        hatch = breach?.panels.find((rect) => rect.w > rect.h);
+      if (
+        g.clear &&
+        breach &&
+        hatch &&
+        p.x > Math.min(...breach.solids.map((rect) => rect.x)) - 10 &&
+        p.x < Math.max(...breach.solids.map((rect) => rect.x + rect.w)) + 10 &&
+        p.y > hatch.y - 90 &&
+        p.y < hatch.y + 36
+      ) {
+        const center = hatch.x + hatch.w / 2;
+        move = Math.abs(center - p.x) > 6 ? Math.sign(center - p.x) : 0;
+        jump = false;
+        aim = { x: p.x, y: p.y + 300 };
+        firing =
+          Math.abs(center - p.x) < 35 &&
+          g.breaches.panels.some((panel) => panel.rect.w > panel.rect.h);
+      }
       tick(g, 1, {
         left: move < 0,
         right: move > 0,
         jump,
-        fire: (!g.clear && !navigate) || (lift && !g.grounded),
+        fire: firing,
         aim,
       });
     }
