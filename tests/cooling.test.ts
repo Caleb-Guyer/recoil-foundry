@@ -31,7 +31,7 @@ function step(g: Game, frames = 1, input: Partial<Input> = {}) {
 function fixture(kind: 'skimmer' | 'condenser' = 'condenser') {
   const g = new Game();
   g.start('cooling-test');
-  g.stage = 8;
+  g.stage = 11;
   g.loadRoom();
   for (const prop of [...g.props.items]) g.props.remove(prop);
   for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
@@ -194,9 +194,9 @@ test('cover cannot nullify Condenser damage even with a strong shared gun build'
   g.start(
     seed,
     {
-      version: 3,
+      version: 4,
       seed,
-      stage: 8,
+      stage: 11,
       hp: 100,
       mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'],
       kills: 0,
@@ -247,7 +247,7 @@ test('coolant carries ground momentum without damage and releases immediately on
   for (const wet of [false, true]) {
     const g = new Game();
     g.start('COOLING-0');
-    g.stage = 6;
+    g.stage = 8;
     g.loadRoom();
     for (const e of [...g.enemies]) g.hitEnemy(e, 99999);
     g.waves.clear();
@@ -269,47 +269,34 @@ test('coolant carries ground momentum without damage and releases immediately on
   assert(speeds[1] > speeds[0] * 3, 'Coolant should visibly preserve the glide');
 });
 
-test('the fourth area supplies twelve rooms, three Cooling Works layouts and a harder final roster', () => {
+test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a harder final roster', () => {
   const layouts = new Set<string>();
   for (let i = 0; i < 40; i++) {
     const seed = 'cooling-sequence-' + i;
     assert.deepEqual(
       Array.from({ length: STAGES }, (_, s) => getLevel(seed, s).area),
-      [
-        'docks',
-        'docks',
-        'docks',
-        'furnace',
-        'furnace',
-        'furnace',
-        'cooling',
-        'cooling',
-        'cooling',
-        'rooftops',
-        'rooftops',
-        'rooftops',
-      ],
+      ['docks', 'furnace', 'cooling', 'rooftops'].flatMap((area) => Array(4).fill(area)),
     );
-    for (const stage of [6, 7]) {
+    for (const stage of [8, 9]) {
       const level = getLevel(seed, stage);
       layouts.add(level.id);
       assert(level.coolant!.length >= 2);
       assert(level.spawns.some((e) => e.kind === 'skimmer'));
     }
-    for (const stage of [9, 10]) {
+    for (const stage of [12, 13]) {
       const level = getLevel(seed, stage);
       assert(level.spawns.filter((e) => e.kind === 'sniper').length >= 2);
       assert.equal(level.spawns.filter((e) => e.elite).length, 1);
     }
-    assert(['condenser', 'turbine'].includes(getLevel(seed, 8).spawns[0].kind));
+    assert(['condenser', 'turbine'].includes(getLevel(seed, 11).spawns[0].kind));
   }
   assert.equal(layouts.size, 3);
 });
 
 test('rooftop collapsing platforms leave room to launch over adjacent steps', () => {
   const seed = 'path-run-93',
-    level = getLevel(seed, 10),
-    h = hazardPlacement(level, seed, 10)!;
+    level = getLevel(seed, 13),
+    h = hazardPlacement(level, seed, 13)!;
   assert(h);
   const b = hazardBounds(h);
   if (h.kind === 'crumble')
@@ -319,7 +306,7 @@ test('rooftop collapsing platforms leave room to launch over adjacent steps', ()
     }
 });
 
-test('ordinary saves retain progress, old completed escapes migrate, and new escapes retain all eleven upgrades', () => {
+test('ordinary saves retain progress, old completed escapes migrate, and new escapes retain all fifteen upgrades', () => {
   const mods = ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'];
   const old = {
     version: 3 as const,
@@ -330,17 +317,23 @@ test('ordinary saves retain progress, old completed escapes migrate, and new esc
     kills: 40,
     elapsed: 123,
   };
-  assert.equal(loadCheckpoint(old), old);
+  assert.equal(loadCheckpoint(old)!.stage, 11);
+  assert.deepEqual(loadCheckpoint(old)!.mods, mods);
   const legacy = loadCheckpoint({ ...old, escape: true })!;
-  assert.equal(legacy.stage, 11);
+  assert.equal(legacy.stage, 15);
   assert.equal(legacy.mods.length, 8);
   const g = new Game();
   g.start(legacy.seed, legacy);
   assert.equal(g.escape?.phase, 'route');
   assert.equal(g.mods.length, 8);
-  const current = loadCheckpoint({ ...legacy, mods: [...mods, 'deadeye', 'execute', 'burst'] })!;
+  assert.equal(legacy.missedUpgrades, 7);
+  const current = loadCheckpoint({
+    ...legacy,
+    missedUpgrades: 0,
+    mods: [...mods, 'deadeye', 'execute', 'burst', 'light', 'leech', 'redline', 'backblast'],
+  })!;
   g.start(current.seed, current);
-  assert.equal(g.mods.length, 11);
+  assert.equal(g.mods.length, 15);
   assert.equal(g.hp, 65);
-  assert.equal(loadCheckpoint({ ...current, stage: 7 }), null);
+  assert.equal(loadCheckpoint({ ...current, stage: 9 }), null);
 });

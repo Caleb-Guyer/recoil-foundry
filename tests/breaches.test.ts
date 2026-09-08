@@ -71,7 +71,7 @@ function populatedDaily() {
   const g = new Game(),
     challenge = dailyForDate('2026-09-06')!;
   g.start(challenge.seed);
-  for (let stage = 0; stage < 8; stage++) {
+  for (let stage = 0; stage < 11; stage++) {
     if (g.breaches.placement) return g;
     g.openReward();
     g.chooseMod(g.offers[0].id);
@@ -323,7 +323,7 @@ test('checkpoint replay restores fresh breaches and pickup health, while bosses 
   assert(g.breaches.panels.every((p) => p.hp === PANEL_HP));
   assert.equal(g.breaches.debris.length, 0);
   const old = [...g.breaches.bodies];
-  g.stage = 8;
+  g.stage = 11;
   g.loadRoom();
   assert.equal(g.breaches.placement, null);
   assert.equal(g.breaches.bodies.length, 0);
@@ -339,7 +339,7 @@ test('daily breach placement and intact checkpoint replay are independent of com
   const first = populatedDaily(),
     second = new Game();
   const save: Checkpoint = {
-    version: 3,
+    version: 4,
     seed: first.seed,
     stage: first.stage,
     hp: 75,

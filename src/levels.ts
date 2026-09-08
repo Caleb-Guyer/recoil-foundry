@@ -1,5 +1,6 @@
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
 import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
+import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
@@ -32,6 +33,7 @@ export interface Spawn extends Vec {
   elite?: EliteKind;
 }
 export interface Layout {
+  added?: true;
   id: string;
   name: string;
   area: AreaId;
@@ -55,6 +57,7 @@ const route = (...points: number[][]): Vec[] => points.map(([x, y]) => ({ x, y }
 // Authored cover, spawn anchors and a generous baseline route belong to the same layout.
 // Ground remains safe beneath raised gaps; recoil creates optional shortcuts.
 export const LAYOUTS: Layout[] = [
+  ...ADDED_LAYOUTS,
   ...COOLING_LAYOUTS,
   {
     id: 'loading-bays',
@@ -593,7 +596,11 @@ function buildLevel(
   rooftopBoss?: 'boss' | 'interceptor',
 ): Level {
   const pick = seeded(seed + ':layouts');
-  const boss = stage % 3 === 2;
+  if (!Number.isInteger(stage) || stage < 0 || stage >= 16) throw new RangeError('Invalid stage');
+  const area = Math.floor(stage / 4),
+    slot = stage % 4;
+  const legacyStage = area * 3 + Math.min(slot, 2);
+  const boss = slot === 3;
   // Draw alternate area bosses independently so all other seeded rooms stay unchanged.
   const docksBosses = BOSS_LAYOUTS.filter((layout) => layout.area === 'docks');
   const docksBoss = docksBosses[Math.floor(seeded(seed + ':docks-boss')() * docksBosses.length)];
@@ -602,19 +609,19 @@ function buildLevel(
     furnaceBosses[Math.floor(seeded(seed + ':furnace-boss')() * furnaceBosses.length)];
   const order = [
     ...sample(
-      LAYOUTS.filter((layout) => layout.area === 'docks'),
+      LAYOUTS.filter((layout) => layout.area === 'docks' && !layout.added),
       2,
       pick,
     ),
     docksBoss,
     ...sample(
-      LAYOUTS.filter((layout) => layout.area === 'furnace'),
+      LAYOUTS.filter((layout) => layout.area === 'furnace' && !layout.added),
       2,
       pick,
     ),
     furnaceBoss,
     ...sample(
-      LAYOUTS.filter((layout) => layout.area === 'rooftops'),
+      LAYOUTS.filter((layout) => layout.area === 'rooftops' && !layout.added),
       2,
       pick,
     ),
@@ -633,18 +640,29 @@ function buildLevel(
       ? TURBINE_ARENA
       : COOLING_BOSS;
   const source =
-    stage === 11
-      ? roofBoss
-      : stage === 8
-        ? coolingArena
-        : stage >= 6 && stage < 8
-          ? cooling[stage - 6]
-          : order[stage >= 9 ? stage - 3 : stage];
+    slot === 2
+      ? ADDED_LAYOUTS[area]
+      : legacyStage === 11
+        ? roofBoss
+        : legacyStage === 8
+          ? coolingArena
+          : legacyStage >= 6 && legacyStage < 8
+            ? cooling[legacyStage - 6]
+            : order[legacyStage >= 9 ? legacyStage - 3 : legacyStage];
   if (!source) throw new RangeError('Invalid stage');
-  const rng = seeded(seed + ':layout-variant:' + (stage >= 9 ? stage - 3 : stage));
+  const rng = seeded(
+    seed +
+      (slot === 2
+        ? ':added-variant:' + area
+        : ':layout-variant:' + (legacyStage >= 9 ? legacyStage - 3 : legacyStage)),
+  );
   const mirrored = rng() > 0.5;
   const solids = source.solids.map((s) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x }));
-  const count = boss ? 1 : [3, 4, 1, 6, 7, 1, 8, 9, 1, 9, 10, 1][stage];
+  const count = boss
+    ? 1
+    : slot === 2
+      ? [6, 9, 11, 12][area]
+      : [3, 4, 1, 6, 7, 1, 8, 9, 1, 9, 10, 1][legacyStage];
   const anchors = source.spawns
     .map((s) => ({ ...s, x: mirrored ? 2000 - s.x : s.x }))
     .filter((s) => boss || s.x >= 380);
@@ -665,9 +683,9 @@ function buildLevel(
   };
   if (!boss && stage >= 1) introduce('charger', 'runner');
   if (!boss && stage >= 2) introduce('sniper', 'shooter');
-  if (!boss && stage >= 3) introduce('hopper', 'runner');
-  if (!boss && stage >= 6) introduce('skimmer', 'flyer');
-  if (!boss && stage >= 9) {
+  if (!boss && stage >= 4) introduce('hopper', 'runner');
+  if (!boss && stage >= 8) introduce('skimmer', 'flyer');
+  if (!boss && stage >= 12) {
     const secondSniper = spawns.find((s) => s.kind === 'shooter');
     if (secondSniper) secondSniper.kind = 'sniper';
     const secondCharger = spawns.find((s) => s.kind === 'runner');
@@ -725,15 +743,16 @@ export function getLevel(
   rooftopBoss?: 'boss' | 'interceptor',
 ): Level {
   const level = buildLevel(seed, stage, coolingBoss, rooftopBoss);
-  if (level.boss || stage < 3) return level;
-  // Reconstruct the four elite encounters independently of room, combat, and reward RNG.
+  if (level.boss || stage < 4) return level;
+  // Reconstruct elite encounters independently of room, combat, and reward RNG.
   const rng = seeded(seed + ':elites');
-  const furnaceStage = 3 + Math.floor(rng() * 2);
-  const coolingStage = 6 + Math.floor(rng() * 2);
-  if (stage !== furnaceStage && stage !== coolingStage && stage < 9) return level;
+  const furnaceStage = 4 + Math.floor(rng() * 2);
+  const coolingStage = 8 + Math.floor(rng() * 2);
+  if (stage !== furnaceStage && stage !== coolingStage && stage < 12 && stage % 4 !== 2)
+    return level;
   const furnace = stage === furnaceStage ? level : buildLevel(seed, furnaceStage);
   const first = assignElite(furnace, ['shielded', 'twin'], rng);
-  if (stage === coolingStage || stage >= 9) {
+  if (stage === coolingStage || stage >= 12 || stage % 4 === 2) {
     const different = ELITE_HOSTS.filter(
       (host) =>
         host.elite !== first && level.spawns.some((spawn) => host.from.includes(spawn.kind)),

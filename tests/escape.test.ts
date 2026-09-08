@@ -23,6 +23,10 @@ const mods = [
   'deadeye',
   'execute',
   'pierce',
+  'ricochet',
+  'light',
+  'split',
+  'redline',
 ];
 
 function step(g: Game, count = 1, input: Partial<Input> = {}) {
@@ -45,7 +49,7 @@ function until(g: Game, condition: () => boolean, limit = 240) {
 
 function checkpoint(escape = true): Checkpoint {
   return {
-    version: 3,
+    version: 4,
     seed: 'escape-test',
     stage: STAGES - 1,
     hp: 73,
@@ -150,7 +154,7 @@ test('passing the old room exit keeps the escape playable without a lethal count
   assert.equal(g.escape?.phase, 'route');
   assert(g.escape!.time > 29);
   assert.equal(g.hp, 73);
-  assert.equal(g.mods.length, 11);
+  assert.equal(g.mods.length, 15);
   assert(g.player.position.y <= WORLD.floor);
 });
 
@@ -327,7 +331,7 @@ test('escape checkpoints validate strictly and resume at the route entrance with
   const saved = checkpoint();
   assert.deepEqual(loadCheckpoint(saved), saved);
   for (const invalid of [
-    { ...saved, stage: 7 },
+    { ...saved, stage: 9 },
     { ...saved, mods: mods.slice(0, 7) },
     { ...saved, mods: [...mods, 'leech'] },
     { ...saved, escape: false },
@@ -335,7 +339,7 @@ test('escape checkpoints validate strictly and resume at the route entrance with
     { ...saved, escape: null },
   ])
     assert.equal(loadCheckpoint(invalid), null);
-  assert(loadCheckpoint({ ...checkpoint(false), stage: 3, mods: mods.slice(0, 3) }));
+  assert(loadCheckpoint({ ...checkpoint(false), stage: 4, mods: mods.slice(0, 3) }));
   const g = fixture();
   Body.setPosition(g.player, { x: 4000, y: 680 });
   step(g, 120);

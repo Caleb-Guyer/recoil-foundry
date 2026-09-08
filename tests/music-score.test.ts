@@ -172,9 +172,9 @@ test('scene identity maps room and mode correctly while menus, clear rooms and d
   game.enemies[0].hp = 0;
   assert.equal(musicScene(game).boss, false);
 
-  for (const stage of [0, 4, 7, 10]) {
+  for (const stage of [0, 5, 9, 13]) {
     game.start('continued-score', {
-      version: 3,
+      version: 4,
       seed: 'continued-score',
       stage,
       hp: 72,
@@ -184,7 +184,7 @@ test('scene identity maps room and mode correctly while menus, clear rooms and d
     });
     assert.equal(
       musicScene(game).area,
-      stage === 0 ? 'docks' : stage === 4 ? 'furnace' : stage === 7 ? 'cooling' : 'rooftops',
+      stage === 0 ? 'docks' : stage === 5 ? 'furnace' : stage === 9 ? 'cooling' : 'rooftops',
     );
     assert.equal(musicScene(game).room, 'continued-score:' + stage);
   }

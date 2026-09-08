@@ -53,18 +53,18 @@ function startOverheadTell(kind: 'loader' | 'press') {
   return { g, e };
 }
 
-function room(stage: 2 | 5 | 11, seed = 'boss-cheese-0') {
+function room(stage: 3 | 7 | 15, seed = 'boss-cheese-0') {
   const g = new Game();
   const mods =
-    stage === 2
+    stage === 3
       ? ['rapid', 'kick']
-      : stage === 5
+      : stage === 7
         ? ['rapid', 'kick', 'light', 'ricochet', 'pierce']
         : ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'];
   g.start(
     seed,
-    { version: 3, seed, stage, mods, hp: 100, kills: 0, elapsed: 0 },
-    stage === 11 ? { kind: 'boss', seed } : null,
+    { version: 4, seed, stage, mods, hp: 100, kills: 0, elapsed: 0 },
+    stage === 15 ? { kind: 'boss', seed } : null,
   );
   return { g, e: g.enemies[0] };
 }
@@ -106,12 +106,12 @@ test('both overhead counters track early, lock their aim, and fire only after th
 });
 
 test('an overhead player must react to the locked volley, and ordinary sideways movement can dodge it', () => {
-  for (const stage of [2, 5] as const) {
+  for (const stage of [3, 7] as const) {
     const results = [false, true].map((dodge) => {
-      const { g, e } = room(stage, stage === 2 ? 'crane-1' : 'kiln-layout-0'),
+      const { g, e } = room(stage, stage === 3 ? 'crane-1' : 'kiln-layout-0'),
         home = e.body.position.x;
-      assert.equal(e.kind, stage === 2 ? 'loader' : 'press');
-      Body.setPosition(g.player, { x: home, y: stage === 2 ? 620 : 160 });
+      assert.equal(e.kind, stage === 3 ? 'loader' : 'press');
+      Body.setPosition(g.player, { x: home, y: stage === 3 ? 620 : 160 });
       Body.setVelocity(g.player, { x: 0, y: 0 });
       let firedAt = -1,
         sawTell = false,
@@ -174,14 +174,14 @@ test('both rooftop arenas and their mirrors let the boss flank cover and threate
   const layouts = new Map<string, string>();
   for (let i = 0; i < 100 && layouts.size < 4; i++) {
     const seed = i === 0 ? 'boss-cheese-0' : `boss-flank-${i}`,
-      level = getLevel(seed, 11, undefined, 'boss');
+      level = getLevel(seed, 15, undefined, 'boss');
     layouts.set(`${level.id}:${level.mirrored}`, seed);
   }
   assert.equal(layouts.size, 4);
   let coveredCases = 0;
   for (const [layout, seed] of layouts) {
     for (const spot of ['left-corner', 'right-corner', 'box-edge', 'under-shelf']) {
-      const { g, e } = room(11, seed),
+      const { g, e } = room(15, seed),
         boxes = g.level.solids.filter((s) => s.h >= 80).sort((a, b) => a.x - b.x),
         shelf = g.level.solids.filter((s) => s.h < 80).sort((a, b) => a.x - b.x)[0],
         home =

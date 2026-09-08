@@ -25,12 +25,12 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
   for (let i = 0; i < 256; i++) {
     const seed = 'breach-' + i;
     let runPickups = 0;
-    for (let stage = 0; stage < 12; stage++) {
+    for (let stage = 0; stage < 16; stage++) {
       const level = getLevel(seed, stage);
       const before = JSON.stringify(level);
       const vent = breachPlacement(level, seed, stage);
       assert.equal(JSON.stringify(level), before);
-      if (![1, 4, 7, 10].includes(stage) || level.boss) {
+      if (![1, 5, 9, 13].includes(stage) || level.boss) {
         assert.equal(vent, null);
         continue;
       }
@@ -91,7 +91,7 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
     assert(runPickups <= 3, 'A run must not add more than three supply detours');
     pickups += runPickups;
   }
-  assert.equal(coverage.size, LAYOUTS.length * 2);
+  assert.equal(coverage.size, LAYOUTS.filter((layout) => !layout.added).length * 2);
   assert(count > 256 * 3 * 0.9, `Only ${count}/768 eligible rooms have a usable vent`);
   assert(pickups > 450);
   assert(attached > 0 && freestanding > 0);
@@ -100,7 +100,7 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
 test('vents mirror with actual room geometry and reconstruct independently from checkpoints', () => {
   for (let i = 0; i < 64; i++) {
     const seed = 'breach-mirror-' + i;
-    for (const stage of [7, 1, 4]) {
+    for (const stage of [9, 1, 5]) {
       const level = getLevel(seed, stage);
       const vent = breachPlacement(level, seed, stage);
       const mirrored: Level = {
@@ -128,7 +128,7 @@ test('vents mirror with actual room geometry and reconstruct independently from 
   }
   const seed = 'breach-checkpoint';
   const game = new Game();
-  game.start(seed, { version: 3, seed, stage: 4, hp: 67, mods: [], kills: 12, elapsed: 95 });
+  game.start(seed, { version: 4, seed, stage: 5, hp: 67, mods: [], kills: 12, elapsed: 95 });
   const expected = structuredClone(game.breaches.placement);
   game.breaches.clear();
   game.loadRoom();
@@ -145,21 +145,25 @@ test('ineligible and obstructed rooms safely omit the optional passage', () => {
 
 function cases() {
   const result = new Map<string, { seed: string; stage: number }>();
-  for (let i = 0; i < 256 && result.size < LAYOUTS.length * 2; i++) {
+  for (
+    let i = 0;
+    i < 256 && result.size < LAYOUTS.filter((layout) => !layout.added).length * 2;
+    i++
+  ) {
     const seed = 'breach-route-' + i;
-    for (const stage of [1, 4, 7, 10]) {
+    for (const stage of [1, 5, 9, 13]) {
       const level = getLevel(seed, stage);
       if (breachPlacement(level, seed, stage))
         result.set(level.id + ':' + level.mirrored, { seed, stage });
     }
   }
-  assert.equal(result.size, LAYOUTS.length * 2);
+  assert.equal(result.size, LAYOUTS.filter((layout) => !layout.added).length * 2);
   return result;
 }
 
 function fixture(seed: string, stage: number) {
   const game = new Game();
-  game.start(seed, { version: 3, seed, stage, hp: 100, mods: [], kills: 0, elapsed: 0 });
+  game.start(seed, { version: 4, seed, stage, hp: 100, mods: [], kills: 0, elapsed: 0 });
   for (const enemy of game.enemies) Matter.Composite.remove(game.engine.world, enemy.body);
   game.enemies = [];
   game.waves.clear();

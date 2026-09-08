@@ -36,7 +36,7 @@ function step(g: Game, n = 1, input: Partial<Input> = {}) {
 function seedFor(mirrored = false) {
   for (let i = 0; i < 100; i++) {
     const seed = 'turbine-fight-' + i,
-      level = getLevel(seed, 8);
+      level = getLevel(seed, 11);
     if (level.spawns[0].kind === 'turbine' && level.mirrored === mirrored) return seed;
   }
   throw Error('Missing arena');
@@ -44,7 +44,7 @@ function seedFor(mirrored = false) {
 function fixture() {
   const g = new Game();
   const seed = seedFor();
-  g.start(seed, { version: 3, seed, stage: 8, hp: 100, mods: [], elapsed: 0, kills: 0 });
+  g.start(seed, { version: 4, seed, stage: 11, hp: 100, mods: [], elapsed: 0, kills: 0 });
   for (const prop of [...g.props.items]) g.props.remove(prop);
   g.hazards.clear();
   g.breaches.clear();
@@ -68,19 +68,19 @@ test('Cooling Works independently selects both bosses and mirrors with identical
   const variants = new Set<string>();
   for (let i = 0; i < 80; i++) {
     const seed = 'turbine-choice-' + i,
-      level = getLevel(seed, 8);
+      level = getLevel(seed, 11);
     variants.add(level.spawns[0].kind + ':' + level.mirrored);
-    assert.deepEqual(level, getLevel(seed, 8));
-    for (const stage of [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11])
+    assert.deepEqual(level, getLevel(seed, 11));
+    for (const stage of [0, 1, 3, 4, 5, 7, 8, 9, 12, 13, 15])
       assert.deepEqual(getLevel(seed, stage, 'turbine'), getLevel(seed, stage, 'condenser'));
   }
   assert.equal(variants.size, 4);
   const day = dailyForDate('2026-09-07')!;
   const g = new Game();
   g.start(day.seed, {
-    version: 3,
+    version: 4,
     seed: day.seed,
-    stage: 8,
+    stage: 11,
     mods: [],
     hp: 63,
     elapsed: 40,
@@ -88,9 +88,9 @@ test('Cooling Works independently selects both bosses and mirrors with identical
   });
   const level = structuredClone(g.level);
   g.start(day.seed, {
-    version: 3,
+    version: 4,
     seed: day.seed,
-    stage: 8,
+    stage: 11,
     mods: [],
     hp: 63,
     elapsed: 40,
@@ -302,7 +302,7 @@ test('Turbine victories unlock only after defeat and old Condenser victories ret
     g = new Game(),
     victories: string[] = [];
   g.onBossDefeated = (kind) => victories.push(kind);
-  g.start(seed, { version: 3, seed, stage: 8, hp: 100, mods: [], elapsed: 0, kills: 0 });
+  g.start(seed, { version: 4, seed, stage: 11, hp: 100, mods: [], elapsed: 0, kills: 0 });
   const e = g.enemies[0];
   step(g, 45);
   g.hitEnemy(e, 100);
@@ -313,7 +313,7 @@ test('Turbine victories unlock only after defeat and old Condenser victories ret
   const entry = loadEncounters([{ kind: 'turbine', seed }])[0];
   assert(entry);
   const checkpoint = practiceCheckpoint(entry)!;
-  assert.equal(checkpoint.mods.length, 8);
+  assert.equal(checkpoint.mods.length, 11);
   assert(g.startPractice(entry));
   g.enemies[0].spawn = 0;
   g.hitEnemy(g.enemies[0], 999999);
@@ -325,11 +325,11 @@ test('Turbine victories unlock only after defeat and old Condenser victories ret
   assert(g.startPractice(old));
   assert.equal(g.level.id, 'condenser-hall');
   assert.equal(g.enemies[0].kind, 'condenser');
-  assert.deepEqual(g.level, getLevel(seed, 8, 'condenser'));
+  assert.deepEqual(g.level, getLevel(seed, 11, 'condenser'));
 });
 
 for (const mirror of [false, true])
-  test(`Turbine can be beaten with normal health and an eight-upgrade gun, mirror=${mirror}`, () => {
+  test(`Turbine can be beaten with normal health and an eleven-upgrade gun, mirror=${mirror}`, () => {
     const seed = seedFor(mirror),
       g = new Game();
     assert(g.startPractice({ kind: 'turbine', seed }));
@@ -341,7 +341,7 @@ for (const mirror of [false, true])
       `${g.hp} HP, ${Math.round(e.hp)} boss HP at ${JSON.stringify(g.player.position)}`,
     );
     assert(g.hp > 0);
-    assert.equal(g.mods.length, 8);
+    assert.equal(g.mods.length, 11);
     assert(g.shotCount > 20);
     assert.equal(g.enemies.length, 0);
     assert.equal(g.escape, null);
@@ -357,13 +357,25 @@ test('the rotor finds pressure against overhead, corner and cover camps in eithe
       const seed = seedFor(mirror),
         g = new Game();
       g.start(seed, {
-        version: 3,
+        version: 4,
         seed,
-        stage: 8,
+        stage: 11,
         hp: 100,
         kills: 0,
         elapsed: 0,
-        mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'],
+        mods: [
+          'magnum',
+          'rapid',
+          'kick',
+          'airshot',
+          'scatter',
+          'ricochet',
+          'pierce',
+          'split',
+          'light',
+          'deadeye',
+          'execute',
+        ],
       });
       const e = g.enemies[0],
         x = mirror ? 2000 - place.x : place.x;

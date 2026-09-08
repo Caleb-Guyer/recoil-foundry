@@ -40,8 +40,8 @@ test('the explicit Turbine test link selects its real boss and never overrides D
   const entry = testEncounterFromUrl(new URL('?test=turbine', base));
   assert(entry);
   assert.equal(entry.kind, 'turbine');
-  assert.equal(getLevel(entry.seed, 8).spawns[0].kind, 'turbine');
-  assert.equal(practiceCheckpoint(entry)!.mods.length, 8);
+  assert.equal(getLevel(entry.seed, 11).spawns[0].kind, 'turbine');
+  assert.equal(practiceCheckpoint(entry)!.mods.length, 11);
   for (const query of [
     '',
     '?test=',
@@ -65,9 +65,9 @@ test('a direct Turbine test can lose, retry and win without a victory record or 
   g.start('saved-before-test');
   const saved = structuredClone(writes[0])!;
   assert(g.startPractice(entry));
-  assert.equal(g.stage, 8);
+  assert.equal(g.stage, 11);
   assert.equal(g.hp, 100);
-  assert.equal(g.mods.length, 8);
+  assert.equal(g.mods.length, 11);
   g.die();
   assert.equal(g.mode, 'dead');
   assert(g.startPractice(g.practice!));
@@ -231,7 +231,7 @@ test('practice death, retry, save, and victory cannot write or erase the normal 
   g.openReward();
   g.chooseMod('split');
   g.startEscape();
-  assert.equal(g.stage, 5);
+  assert.equal(g.stage, 7);
   assert.deepEqual(g.mods, mods);
   assert.deepEqual(g.offers, []);
   assert.equal(g.escape, null);
@@ -245,7 +245,7 @@ test('rooftop practice ends at the boss instead of starting the escape route', (
   step(g, 20);
   assert.equal(g.mode, 'won');
   assert.equal(g.escape, null);
-  assert.equal(g.mods.length, 11);
+  assert.equal(g.mods.length, 15);
   g.startEscape();
   assert.equal(g.escape, null);
 });
@@ -254,9 +254,9 @@ test('a Daily encounter can be practised without touching its checkpoint, and Co
   const g = new Game(),
     day = dailyForDate('2026-09-07')!,
     dailySave: Checkpoint = {
-      version: 3,
+      version: 4,
       seed: day.seed,
-      stage: 5,
+      stage: 7,
       hp: 47,
       mods: ['rapid', 'scatter', 'magnum', 'kick', 'pierce'],
       elapsed: 129.25,

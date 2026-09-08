@@ -40,9 +40,9 @@ test('a swept round detects thin cover and misses outside its bounds', () => {
 });
 test('only valid current single-gun checkpoints resume', () => {
   const valid = {
-    version: 3,
+    version: 4,
     seed: 'run',
-    stage: 2,
+    stage: 3,
     hp: 72,
     mods: ['magnum', 'rapid'],
     kills: 12,
@@ -54,7 +54,7 @@ test('only valid current single-gun checkpoints resume', () => {
     {},
     { ...valid, version: 2 },
     { ...valid, hp: 0 },
-    { ...valid, stage: 12 },
+    { ...valid, stage: 16 },
     { ...valid, mods: ['unknown'] },
     { ...valid, mods: ['rapid', 'rapid'] },
     { ...valid, elapsed: Infinity },

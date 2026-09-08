@@ -19,6 +19,7 @@ import {
   getGun,
   availableMods,
   STAGES,
+  areaIndex,
   ROOM_HEAL,
   segmentBox,
   isDetourStage,
@@ -176,6 +177,8 @@ export class Game {
   practice: Encounter | null = null;
   seed = '';
   stage = 0;
+  missedUpgrades = 0;
+  testRun: Checkpoint | null = null;
   detour = false;
   detours: number[] = [];
   enteringDetour = false;
@@ -186,7 +189,7 @@ export class Game {
       !this.escape &&
       !this.detour &&
       isDetourStage(this.stage) &&
-      !this.detours.includes(Math.floor(this.stage / 3))
+      !this.detours.includes(areaIndex(this.stage))
     );
   }
   get roomSeed() {
@@ -252,10 +255,20 @@ export class Game {
     this.start(save.seed, save, { ...encounter });
     return true;
   }
-  start(seed: string, save?: Checkpoint, practice: Encounter | null = null) {
+  startTest(save: Checkpoint) {
+    this.start(save.seed, save, null, save);
+  }
+  start(
+    seed: string,
+    save?: Checkpoint,
+    practice: Encounter | null = null,
+    testRun: Checkpoint | null = null,
+  ) {
     this.practice = practice;
+    this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.stage = save?.stage ?? 0;
+    this.missedUpgrades = save?.missedUpgrades ?? 0;
     this.detour = !practice && save?.detour === true;
     this.detours = !practice ? [...(save?.detours ?? [])] : [];
     this.hp = save?.hp ?? 100;
@@ -274,15 +287,16 @@ export class Game {
     this.save();
   }
   save() {
-    if (this.practice) return;
+    if (this.practice || this.testRun) return;
     this.onCheckpoint({
-      version: 3,
+      version: 4,
       seed: this.seed,
       stage: this.stage,
       hp: this.hp,
       mods: [...this.mods],
       kills: this.kills,
       elapsed: this.elapsed,
+      ...(this.missedUpgrades ? { missedUpgrades: this.missedUpgrades } : {}),
       ...(this.escape ? { escape: true as const } : {}),
       ...(this.detour ? { detour: true as const } : {}),
       ...(this.detours.length ? { detours: [...this.detours] } : {}),
@@ -475,7 +489,7 @@ export class Game {
     this.kick.y *= 0.72;
     if (t >= 1) {
       this.setMode('won');
-      this.onCheckpoint(null);
+      if (!this.testRun) this.onCheckpoint(null);
       this.onSound('win');
     }
   }
@@ -962,7 +976,7 @@ export class Game {
         const base = Math.atan2(e.aim.y, e.aim.x);
         const count = e.kind === 'flyer' ? 3 : 1;
         for (let i = 0; i < count; i++) this.enemyShot(e, base + (i - (count - 1) / 2) * 0.18);
-        const area = Math.floor(this.stage / 3);
+        const area = areaIndex(this.stage);
         e.timer = e.kind === 'flyer' ? [1.9, 1.7, 1.5, 1.3][area] : [1.5, 1.35, 1.2, 1.05][area];
         this.onSound('enemy');
       } else if (e.timer <= 0) e.timer = 0.8;
@@ -1393,8 +1407,8 @@ export class Game {
   enemyShot(
     e: Enemy,
     a: number,
-    speed = [7.2, 8, 8.8, 9.6][Math.floor(this.stage / 3)],
-    damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20][Math.floor(this.stage / 3)],
+    speed = [7.2, 8, 8.8, 9.6][areaIndex(this.stage)],
+    damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20][areaIndex(this.stage)],
     origin: Vec = e.body.position,
     blade = false,
   ) {
@@ -1663,7 +1677,14 @@ export class Game {
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);
     clearKiln(e);
     this.enemies = this.enemies.filter((x) => x !== e);
-    if (isBoss(e.kind) && !this.practice && this.mode === 'playing' && this.hp > 0 && e.spawn <= 0)
+    if (
+      isBoss(e.kind) &&
+      !this.practice &&
+      !this.testRun &&
+      this.mode === 'playing' &&
+      this.hp > 0 &&
+      e.spawn <= 0
+    )
       this.onBossDefeated(e.kind);
     this.feedback(isBoss(e.kind) ? 10 : 4);
     this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);
@@ -1699,7 +1720,7 @@ export class Game {
   }
   die() {
     this.setMode('dead');
-    if (!this.practice) this.onCheckpoint(null);
+    if (!this.practice && !this.testRun) this.onCheckpoint(null);
     this.onSound('dead');
   }
   burst(pos: Vec, count: number, color: string, speed: number, dir?: Vec) {
@@ -1751,7 +1772,7 @@ export class Game {
     this.mods.push(id);
     this.gun = getGun(this.mods);
     if (this.detour) {
-      this.detours.push(Math.floor(this.stage / 3));
+      this.detours.push(areaIndex(this.stage));
       this.detour = false;
       this.stage++;
     } else {

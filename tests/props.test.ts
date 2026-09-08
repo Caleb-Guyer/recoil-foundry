@@ -48,7 +48,7 @@ function wall(g: Game, x: number, y = 400, w = 22, h = 500) {
 test('sparse props reproduce, avoid actor starts, and keep tall panels off the baseline route', () => {
   const seen = new Set<string>();
   for (let seed = 0; seed < 60; seed++)
-    for (let stage = 0; stage < 9; stage++) {
+    for (let stage = 0; stage < 12; stage++) {
       const level = getLevel('props-' + seed, stage),
         placements = propPlacements(level, 'props-' + seed);
       assert.deepEqual(placements, propPlacements(level, 'props-' + seed));
@@ -243,9 +243,9 @@ test('pause freezes armed props and continuing resets room props without saving 
   assert.deepEqual(fuel.body.position, p);
   assert.equal(g.time, time);
   const save = {
-    version: 3 as const,
+    version: 4 as const,
     seed: 'props-continue',
-    stage: 4,
+    stage: 5,
     hp: 70,
     mods: ['banker'],
     kills: 10,
@@ -253,9 +253,11 @@ test('pause freezes armed props and continuing resets room props without saving 
   };
   g.start(save.seed, save);
   assert.equal(g.hp, 70);
+  const fresh = new Game();
+  fresh.start(save.seed, save);
   assert.deepEqual(
     g.props.items.map((p) => ({ kind: p.kind, ...p.body.position })),
-    propPlacements(g.level, save.seed),
+    fresh.props.items.map((p) => ({ kind: p.kind, ...p.body.position })),
   );
   assert(g.props.items.every((p) => p.hp === p.maxHp && !Number.isFinite(p.armedAt)));
   assert(!Composite.allBodies(g.engine.world).includes(fuel.body));

@@ -40,9 +40,9 @@ test('entry and follow-up cards display only their path name', () => {
 
 test('checkpoints preserve commitments and reject incompatible or out-of-order paths', () => {
   const save = {
-    version: 3,
+    version: 4,
     seed: 'path-save',
-    stage: 4,
+    stage: 5,
     hp: 75,
     mods: ['crossfire', 'scatter', 'bloom', 'kick'],
     kills: 10,
@@ -100,7 +100,7 @@ test('random and forced daily rewards stay legal and plentiful throughout comple
       : 'path-' + i;
     const g = new Game();
     g.start(seed);
-    for (let stage = 0; stage < 11; stage++) {
+    for (let stage = 0; stage < 15; stage++) {
       g.openReward();
       assert.equal(g.offers.length, daily ? 1 : 3);
       assert(g.offers.every((mod) => availableMods(g.mods).some((m) => m.id === mod.id)));
@@ -145,9 +145,9 @@ test('retry clears commitment and a resumed run reproduces its next path-aware o
   const g = new Game();
   g.start('path-retry');
   const save = {
-    version: 3 as const,
+    version: 4 as const,
     seed: g.seed,
-    stage: 2,
+    stage: 3,
     hp: 80,
     mods: ['crossfire', 'backblast'],
     kills: 5,

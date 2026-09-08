@@ -11,7 +11,7 @@ import { dailyForDate } from '../src/daily.ts';
 
 const elites = (level: Level) => level.spawns.filter((spawn) => spawn.elite);
 
-test('every run gets four elites, one per eligible room and at most one per room', () => {
+test('every run gets seven elites, one per eligible room and at most one per room', () => {
   const seen = new Set<EliteKind>();
   const selectedStages = new Set<number>();
   for (let index = 0; index < 256; index++) {
@@ -19,17 +19,19 @@ test('every run gets four elites, one per eligible room and at most one per room
     const encounters = levels.flatMap((level, stage) => {
       const found = elites(level);
       assert(found.length <= 1, `elite-${index}, room ${stage + 1}`);
-      if (stage < 3 || level.boss) assert.equal(found.length, 0);
+      if (stage < 4 || level.boss) assert.equal(found.length, 0);
       return found.map((spawn) => ({ stage, elite: spawn.elite!, kind: spawn.kind }));
     });
-    assert.equal(encounters.length, 4);
-    assert([3, 4].includes(encounters[0].stage));
-    assert([6, 7].includes(encounters[1].stage));
+    assert.equal(encounters.length, 7);
+    assert([4, 5].includes(encounters[0].stage));
+    assert.equal(encounters[1].stage, 6);
+    assert([8, 9].includes(encounters[2].stage));
+    assert.equal(encounters[3].stage, 10);
     assert(['shielded', 'twin'].includes(encounters[0].elite));
-    assert.notEqual(encounters[0].elite, encounters[1].elite);
+    assert.notEqual(encounters[0].elite, encounters[2].elite);
     assert.deepEqual(
-      encounters.slice(2).map((e) => e.stage),
-      [9, 10],
+      encounters.slice(4).map((e) => e.stage),
+      [12, 13, 14],
     );
     for (const encounter of encounters) {
       seen.add(encounter.elite);
@@ -43,7 +45,7 @@ test('every run gets four elites, one per eligible room and at most one per room
   assert.deepEqual([...seen].sort(), ['shielded', 'twin', 'volatile']);
   assert.deepEqual(
     [...selectedStages].sort((a, b) => a - b),
-    [3, 4, 6, 7, 9, 10],
+    [4, 5, 6, 8, 9, 10, 12, 13, 14],
   );
 });
 
@@ -52,7 +54,7 @@ test('elite promotion keeps authored safe hull anchors, mirrored geometry, and u
   const before = JSON.stringify(sources);
   const variants = new Set<string>();
   for (let index = 0; index < 128; index++) {
-    for (const stage of [3, 4, 6, 7, 9, 10]) {
+    for (const stage of [4, 5, 6, 8, 9, 10, 12, 13, 14]) {
       const level = getLevel('elite-hull-' + index, stage);
       const source = sources.find((layout) => layout.id === level.id)!;
       assert.equal(new Set(level.spawns.map(({ x, y }) => `${x},${y}`)).size, level.spawns.length);
@@ -108,15 +110,15 @@ test('elite selection is repeatable even when rooms are requested out of order',
   for (let index = 0; index < 40; index++) {
     const seed = 'elite-order-' + index;
     const original = Array.from({ length: STAGES }, (_, stage) => getLevel(seed, stage));
-    for (const stage of [7, 3, 8, 0, 6, 1, 5, 4, 2]) {
+    for (const stage of [9, 4, 11, 0, 8, 1, 7, 5, 3]) {
       assert.deepEqual(getLevel(seed, stage), original[stage]);
     }
-    const edited = getLevel(seed, 6);
+    const edited = getLevel(seed, 8);
     edited.spawns[0].x = -1000;
     edited.spawns[0].elite = 'volatile';
     assert.deepEqual(
-      getLevel(seed, 6),
-      original[6],
+      getLevel(seed, 8),
+      original[8],
       'Returned rooms must not share mutable spawn state',
     );
   }
@@ -129,9 +131,9 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
     'elite-save-2',
     dailyForDate('2026-09-06')!.seed,
   ]) {
-    for (const stage of [3, 4, 6, 7, 9, 10]) {
+    for (const stage of [4, 5, 6, 8, 9, 10, 12, 13, 14]) {
       const checkpoint: Checkpoint = {
-        version: 3,
+        version: 4,
         seed,
         stage,
         hp: 71,

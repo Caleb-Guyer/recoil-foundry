@@ -240,7 +240,7 @@ function propSnapshot(game: Game) {
   }));
 }
 
-test('shared, continued, and retried dailies reproduce twelve rooms and eleven forced upgrades', () => {
+test('shared, continued, and retried dailies reproduce sixteen rooms and fifteen forced upgrades', () => {
   const first = new Game();
   let second = new Game();
   first.start(challenge.seed);
@@ -269,7 +269,7 @@ test('shared, continued, and retried dailies reproduce twelve rooms and eleven f
     first.chooseMod(chosen);
     second.chooseMod(chosen);
 
-    if (stage === 3) {
+    if (stage === 4) {
       const saves: Checkpoint[] = [];
       second.onCheckpoint = (save) => {
         if (save) saves.push(save);
@@ -282,7 +282,7 @@ test('shared, continued, and retried dailies reproduce twelve rooms and eleven f
     }
   }
   assert.equal(new Set(rooms).size, STAGES);
-  assert.deepEqual(bosses, [2, 5, 8, 11]);
+  assert.deepEqual(bosses, [3, 7, 11, 15]);
   assert.equal(first.mods.length, STAGES - 1);
   assert.equal(new Set(first.mods).size, STAGES - 1);
   assert.deepEqual(first.mods, sequence);
@@ -365,7 +365,7 @@ test('ordinary runs retain three distinct upgrade choices after every eligible r
       assert.equal(game.offers.length, 3, `${seed}, room ${stage + 1}`);
       assert.equal(new Set(game.offers.map((mod) => mod.id)).size, 3);
       assert(game.offers.every((mod) => !game.mods.includes(mod.id)));
-      const chosen = game.offers[stage % 3].id;
+      const chosen = game.offers[stage % game.offers.length].id;
       game.chooseMod(chosen);
       assert.equal(game.stage, stage + 1);
       assert.equal(game.mods.at(-1), chosen);
@@ -375,9 +375,9 @@ test('ordinary runs retain three distinct upgrade choices after every eligible r
 
 test('v3 checkpoints preserve daily identity and accumulated elapsed time across continue and retry', () => {
   const save: Checkpoint = {
-    version: 3,
+    version: 4,
     seed: challenge.seed,
-    stage: 5,
+    stage: 7,
     hp: 67,
     mods: ['magnum', 'rapid', 'airshot', 'burst', 'landing'],
     kills: 20,

@@ -464,12 +464,16 @@ export function getGun(mods: readonly string[]): Gun {
   if (mods.includes('deadeye')) g.spread *= 0.5;
   return g;
 }
-export const STAGES = 12;
+export const STAGES = 16;
+export const ROOMS_PER_AREA = 4;
+export const areaIndex = (stage: number) =>
+  Math.min(3, Math.max(0, Math.floor(stage / ROOMS_PER_AREA)));
+export const bossStage = (area: number) => area * ROOMS_PER_AREA + ROOMS_PER_AREA - 1;
 export const ROOM_HEAL = 12;
 export const isDetourStage = (stage: number) =>
-  Number.isInteger(stage) && stage >= 0 && stage < STAGES && stage % 3 === 1;
+  Number.isInteger(stage) && stage >= 0 && stage < STAGES && stage % ROOMS_PER_AREA === 2;
 export interface Checkpoint {
-  version: 3;
+  version: 4;
   seed: string;
   stage: number;
   hp: number;
@@ -479,19 +483,22 @@ export interface Checkpoint {
   escape?: true;
   detour?: true;
   detours?: number[];
+  missedUpgrades?: number;
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
-  let d = value as Checkpoint;
-  // A saved nine-room escape has already earned its ending. Keep it intact.
-  if (
-    d.version === 3 &&
+  const raw = value as Record<string, unknown>;
+  const legacy = raw.version === 3;
+  const d = value as Checkpoint;
+  const stages = legacy ? 12 : STAGES;
+  const rooms = legacy ? 3 : ROOMS_PER_AREA;
+  const missed = d.missedUpgrades ?? 0;
+  const oldEscape =
+    legacy &&
     d.escape === true &&
-    d.stage === 8 &&
+    [8, 11].includes(d.stage) &&
     Array.isArray(d.mods) &&
-    d.mods.length === 8
-  )
-    d = { ...d, stage: STAGES - 1 };
+    d.mods.length === 8;
   const completed = d.detours ?? [];
   const validDetours =
     Array.isArray(completed) &&
@@ -501,15 +508,20 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         Number.isInteger(area) &&
         area >= 0 &&
         area < 4 &&
-        area * 3 + 1 < d.stage &&
+        area * rooms + rooms - 2 < d.stage &&
         (index === 0 || completed[index - 1] < area),
     );
-  return d.version === 3 &&
+  const valid =
+    (d.version === 4 || legacy) &&
     typeof d.seed === 'string' &&
     d.seed.length <= 40 &&
     Number.isInteger(d.stage) &&
     d.stage >= 0 &&
-    d.stage < STAGES &&
+    d.stage < stages &&
+    Number.isInteger(missed) &&
+    missed >= 0 &&
+    missed <= 7 &&
+    (!legacy || missed === 0) &&
     Number.isFinite(d.hp) &&
     d.hp > 0 &&
     d.hp <= 100 &&
@@ -523,17 +535,23 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     d.elapsed >= 0 &&
     validDetours &&
     ((d.detour === undefined && d.detours === undefined) ||
-      d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length) &&
+      d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length - missed) &&
     (d.detour === undefined ||
-      (d.detour === true && isDetourStage(d.stage) && d.escape === undefined)) &&
+      (d.detour === true && d.stage % rooms === rooms - 2 && d.escape === undefined)) &&
     (d.detours === undefined || (d.detours !== null && Array.isArray(d.detours))) &&
     (d.escape === undefined ||
       (d.escape === true &&
-        d.stage === STAGES - 1 &&
-        (d.mods.length === STAGES - 1 + completed.length ||
-          (d.mods.length === 8 && completed.length === 0))))
-    ? d
-    : null;
+        (d.stage === stages - 1 || oldEscape) &&
+        (d.mods.length === stages - 1 + completed.length - missed ||
+          (oldEscape && completed.length === 0))));
+  if (!valid) return null;
+  if (!legacy) return d;
+  // Keep the same room, gun and health. Skipped new rooms are recorded so later
+  // detour and escape checkpoints remain valid without inventing upgrade picks.
+  const stage = d.escape
+    ? STAGES - 1
+    : Math.floor(d.stage / 3) * 4 + (d.detour ? 2 : d.stage % 3 === 2 ? 3 : d.stage % 3);
+  return { ...d, version: 4, stage, missedUpgrades: oldEscape ? 7 : stage - d.stage };
 }
 export function segmentBox(a: Vec, b: Vec, min: Vec, max: Vec): { t: number; normal: Vec } | null {
   let lo = 0,

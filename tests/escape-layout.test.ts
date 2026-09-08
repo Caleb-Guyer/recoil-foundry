@@ -96,9 +96,9 @@ const idle: Input = {
 function escapeFixture() {
   const game = new Game();
   game.start('escape-layout', {
-    version: 3,
+    version: 4,
     seed: 'escape-layout',
-    stage: 11,
+    stage: 15,
     hp: 100,
     mods: [],
     kills: 0,

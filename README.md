@@ -4,7 +4,7 @@
 
 [Play in your browser](https://caleb-guyer.github.io/recoil-foundry/)
 
-A physics roguelike about staying in motion. Clear twelve stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, cargo, or ability selection.
+A physics roguelike about staying in motion. Clear sixteen stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, cargo, or ability selection.
 
 ## Play
 
@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear twelve stages, take optional 
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Thirty-two possible modifications change its shots, recoil, handling, or healing. Choose one of three after each main room; these rewards also restore 12 health. The direct route gives eleven picks. Taking all four optional detours extends the run to sixteen fights and fifteen picks; bonus rewards give no healing.
+You always carry **one gun**. Thirty-two possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives fifteen picks. Taking all four optional detours extends the run to twenty fights and nineteen picks; bonus rewards give no healing.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -28,15 +28,21 @@ Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, S
 
 ## Daily run
 
-Choose **Daily run** on the title screen for a shared twelve-room challenge. A new challenge starts at midnight UTC. Players taking the same route get the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first eleven rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 12-health recovery. Optional detours also give exactly one predetermined bonus card, without healing. Choosing a detour can change later upgrades because your build changes. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.
+Choose **Daily run** on the title screen for a shared sixteen-room challenge. A new challenge starts at midnight UTC. Players taking the same route get the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first fifteen rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 12-health recovery. Optional detours also give exactly one predetermined bonus card, without healing. Choosing a detour can change later upgrades because your build changes. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.
 
-Finish all twelve rooms and reach the extraction lift to save your fastest successful time for that challenge in this browser. The timer counts active simulation time through the escape route, excluding pauses, upgrade screens, and the automatic lift departure. Continue keeps the elapsed time saved at the room or escape entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
+Finish all sixteen rooms and reach the extraction lift to save your fastest successful time for that challenge in this browser. The timer counts active simulation time through the escape route, excluding pauses, upgrade screens, and the automatic lift departure. Continue keeps the elapsed time saved at the room or escape entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
 
 The room counter marks active challenges with **DAILY**, and Pause shows the challenge date. Starting a daily updates its URL and keeps **Play daily** selected when returning to the menu; choose **Random run** to leave the daily. Saves from an unsupported daily ruleset cannot continue as an ordinary run. Their saved data stays untouched until you start another run.
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=23`). Version 23 adds the alternate rooftop boss and its arena; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=24`). Version 24 expands the main route to sixteen rooms and balances enemies for the additional upgrades; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+
+## Expanded-run test
+
+[Try the new rooms](https://caleb-guyer.github.io/recoil-foundry/?test=expanded). Click **Test new rooms** to begin in room 3 with full health and two upgrades, then play onward normally. Add `&area=furnace`, `&area=cooling`, or `&area=rooftops` to begin at that area's new third room with an appropriate preset build. **R** or **Restart test** in Pause returns to the test entrance. These links preserve ordinary saves, Daily records, and earned Practice victories.
+
+Ordinary saves from the twelve-room version migrate to the same area and encounter with their health, gun, optional rewards, and elapsed time intact. They skip any newly inserted rooms behind that checkpoint. The migration records those missed upgrade picks so later detours and escape checkpoints remain valid. New runs use all sixteen rooms. Daily ruleset 24 starts fresh because its route and balance changed.
 
 ## Build paths
 
@@ -120,12 +126,12 @@ Existing modifications remain: Heavy hitter, Scattershot, Hair trigger, Bank sho
 
 Escape through four areas, each with its own scenery, lighting, and layout pool:
 
-- **Loading docks, rooms 1–3:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Two layouts drawn from loading bays, overpasses, staggered cargo, and terraces, then either The Loader in its loading bay or The Crane among raised shelves and cargo stacks.
-- **Furnace halls, rooms 4–6:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then The Press in its machine hall or The Kiln among low stacks and raised shelves.
-- **Cooling Works, rooms 7–9:** teal tanks, overhead pipes, and shallow coolant channels. Two layouts drawn from settling tanks, a pump gallery, and a return channel, then either the Condenser hall or the Turbine gallery. Low stacks support ordinary jumping routes; higher shelves reward recoil movement. Coolant preserves sliding momentum without dealing damage or reducing steering. Lifts and crushers reuse their familiar warnings.
-- **Rooftops, rooms 10–12:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, followed by one of two rooftop boss arenas. Both regular rooms contain an elite and multiple snipers, alongside faster shooters and the new Skimmer.
+- **Loading docks, rooms 1–4:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Two layouts drawn from loading bays, overpasses, staggered cargo, and terraces, then the Cargo switchyard and either The Loader in its loading bay or The Crane among raised shelves and cargo stacks.
+- **Furnace halls, rooms 5–8:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then the Stamping line and The Press in its machine hall or The Kiln among low stacks and raised shelves.
+- **Cooling Works, rooms 9–12:** teal tanks, overhead pipes, and shallow coolant channels. Two layouts drawn from settling tanks, a pump gallery, and a return channel, then the Spillway and either the Condenser hall or the Turbine gallery. Low stacks support ordinary jumping routes; higher shelves reward recoil movement. Coolant preserves sliding momentum without dealing damage or reducing steering. Lifts and crushers reuse their familiar warnings.
+- **Rooftops, rooms 13–16:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, then Antenna crossing and one of two rooftop finales. All three regular rooms contain an elite and multiple snipers, alongside faster shooters and the new Skimmer.
 
-Each run has eight different regular layouts and four boss arenas. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
+Each run has twelve different regular layouts and four boss arenas. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
 
 Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
 
@@ -133,11 +139,11 @@ Touch controls provide left, right, and jump buttons. Hold the arena to aim and 
 
 ## The Interceptor
 
-Room 12 has an equal chance of ending with the original rooftop boss or **The Interceptor**, a rival gunner on the Relay roof. An independent seeded draw preserves the other rooms and reconstructs the same finale on retry or Continue. Its arena has low cover, separated high shelves, a mirrored variant, and a route traversable with ordinary jumps. Both finales lead into the existing escape sequence.
+Room 16 has an equal chance of ending with the original rooftop boss or **The Interceptor**, a rival gunner on the Relay roof. An independent seeded draw preserves the other rooms and reconstructs the same finale on retry or Continue. Its arena has low cover, separated high shelves, a mirrored variant, and a route traversable with ordinary jumps. Both finales lead into the existing escape sequence.
 
-The Interceptor fires opposite its travel direction to recoil between firing positions. A 0.56-second warning marks its launch volley and travel direction; physical walls, crates, fuel, and portals affect its hull normally. It flanks sheltered players instead of firing through cover. Aimed volleys lock for the final 0.36 seconds. Below two-thirds health they gain a separately warned follow-up, and below one-third they gain two. Seven-round heavy blasts warn for 1.1 seconds and kick the gunner backward, exposing its armor for 1.4, 1.3, or 1.2 seconds. Ordinary volleys recover for 1.1, 1.0, or 0.9 seconds. Open armor takes 130% damage; closed armor takes 35%. The boss has 3,000 health.
+The Interceptor fires opposite its travel direction to recoil between firing positions. A 0.56-second warning marks its launch volley and travel direction; physical walls, crates, fuel, and portals affect its hull normally. It flanks sheltered players instead of firing through cover. Aimed volleys lock for the final 0.36 seconds. Below two-thirds health they gain a separately warned follow-up, and below one-third they gain two. Seven-round heavy blasts warn for 1.1 seconds and kick the gunner backward, exposing its armor for 1.4, 1.3, or 1.2 seconds. Ordinary volleys recover for 1.1, 1.0, or 0.9 seconds. Open armor takes 130% damage; closed armor takes 35%. The boss has 4,800 health.
 
-The compact silhouette, amber aiming lines, split armor, muzzle flash, and distinct gun sounds communicate the fight without adding controls or HUD panels. Practice unlocks only after defeating it in an ordinary or Daily Run. Existing rooftop victories keep their original arena. An explicit [Interceptor test link](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor) starts an isolated fight with 100 health and eleven upgrades; it preserves saves and records and grants no Practice unlocks. Press **R** to retry.
+The compact silhouette, amber aiming lines, split armor, muzzle flash, and distinct gun sounds communicate the fight without adding controls or HUD panels. Practice unlocks only after defeating it in an ordinary or Daily Run. Existing rooftop victories keep their original arena. An explicit [Interceptor test link](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor) starts an isolated fight with 100 health and fifteen upgrades; it preserves saves and records and grants no Practice unlocks. Press **R** to retry.
 
 ## The Turbine
 
@@ -147,15 +153,15 @@ The rotor moves around cover to find an angle wide enough for its blades. Gusts 
 
 A committed gust lasts 1.8 seconds and sends two blade passes through the marked lanes, 0.95 seconds apart. Sweeps release a wider fan. Each blade deals 22 damage, collides with scenery and props across its full width, and can travel through Fold portals. Wind itself deals no damage. Later phases widen the fan from three lanes to five; the final phase reverses the release order. Phase changes cancel unreleased blades and active wind.
 
-After an attack, the center opens for 1.35, 1.25, or 1.15 seconds as the fight progresses. The exposed rotor takes 135% damage; closed armor takes 32%. The boss has 2,400 health. No new controls, meters, or encounter previews are added. Practice lists the Turbine only after a normal-run defeat. Previously earned Condenser victories retain their original practice arena even if their seed now selects the Turbine.
+After an attack, the center opens for 1.35, 1.25, or 1.15 seconds as the fight progresses. The exposed rotor takes 135% damage; closed armor takes 32%. The boss has 3,480 health. No new controls, meters, or encounter previews are added. Practice lists the Turbine only after a normal-run defeat. Previously earned Condenser victories retain their original practice arena even if their seed now selects the Turbine.
 
 ## Optional challenges
 
-After clearing room 2, 5, 8, or 11, take the ordinary ground exit to continue or climb the two suspended steps to the upper **CHALLENGE** door. Its amber warning frame and small +1 symbol identify the risk and reward without revealing the encounter. The steps extend after combat and keep the ground exit clear. Both doors work by walking through them; there is no route menu.
+After clearing room 3, 7, 11, or 15, take the ordinary ground exit to continue or climb the two suspended steps to the upper **CHALLENGE** door. Its amber warning frame and small +1 symbol identify the risk and reward without revealing the encounter. The steps extend after combat and keep the ground exit clear. Both doors work by walking through them; there is no route menu.
 
 The upper door gives the main room's earned upgrade and usual 12-health recovery, then enters an extra fight in the current area. Each area has its own authored challenge layout with mirrored variants, obstacles, active machinery, and larger coordinated waves. Regular enemies have 15% more health than at the same stage. Reinforcements arrive with two opening enemies still alive, keeping their full warning and emergence grace period.
 
-Survive and take one bonus upgrade, with **no reward healing**, before rejoining the main route at the area's boss. Bloodwork can still heal from kills. Each detour can be taken once; a full run therefore contains 12–16 fights and 11–15 upgrades. The main room counter and final escape remain unchanged.
+Survive and take one bonus upgrade, with **no reward healing**, before rejoining the main route at the area's boss. Bloodwork can still heal from kills. Each detour can be taken once; a full run therefore contains 16–20 fights and 15–19 upgrades. The main room counter and final escape remain unchanged.
 
 Continue remembers whether you entered a challenge, its starting health and gun, and completed detours. It restarts the saved fight without repaying the entrance reward. Fold gets its normal fresh placement allowance on entering and leaving a challenge. Daily Runs use the same doors and force one legal card at every reward, including bonuses. Practice has no detours.
 
@@ -163,7 +169,7 @@ Continue remembers whether you entered a challenge, its starting health and gun,
 
 Regular rooms have two compact waves: a small opening group, then the tougher part of the room’s roster. The second group reserves elites and mixes flyers with mobile ground enemies when that roster supports it. Both waves share the room’s fixed roster. Reinforcements do not add extra enemies or healing opportunities.
 
-Regular enemies gain 8% of their base health per room after the first, including elites. Shooters and flyers attack more often through each area, with faster, harder-hitting bolts in the furnace and on the rooftops. Their warning windows stay readable. Arriving reinforcements still get a full door warning and emergence grace period before attacking.
+Regular enemies gain 8.5% of their base health per room after the first, including elites. Shooters and flyers attack more often through each area, with faster, harder-hitting bolts in the furnace and on the rooftops. Their warning windows stay readable. Arriving reinforcements still get a full door warning and emergence grace period before attacking.
 
 Service-door lights turn amber and a short mechanical cue warns of the next group for 0.75 seconds. Clearing the opening group starts the warning immediately; from the furnace onward, opening groups of two or more call reinforcements while their last enemy remains. Each door opens as its enemy emerges. The exit unlocks only after both groups are defeated. Main-room rewards give the usual single upgrade and 12-health recovery; challenge bonuses give only the upgrade.
 
@@ -173,7 +179,7 @@ Wave composition and initial attack delays repeat from the seed, including Daily
 
 ## Moving rooms
 
-Regular rooms introduce one moving feature at a time. Room 2 introduces freight lifts, room 4 introduces crushers, and room 10 introduces collapsing platforms. Later regular rooms mix familiar features. The opening room and boss arenas stay clear of them. Placement follows the seed, including Daily Runs, with space around enemy entrances and safe ground underneath.
+Regular rooms introduce one moving feature at a time. Room 2 introduces freight lifts, room 5 introduces crushers, and room 13 introduces collapsing platforms. Later regular rooms mix familiar features. The opening room and boss arenas stay clear of them. Placement follows the seed, including Daily Runs, with space around enemy entrances and safe ground underneath.
 
 - **Freight lifts** travel smoothly between two heights. Ride them to reach ledges, or jump and fire downward to launch ahead. Crates can ride too; the deck blocks shots and provides moving cover.
 - **Factory crushers** mark their strike lane when you approach. A 1.1-second warning gives you time to move out before the slab drops. It rests briefly, then slowly rises. A hit deals 24 damage and knocks you clear; enemies and props can also be crushed. The top is safe to stand on.
@@ -211,7 +217,7 @@ New behaviors appear gradually as the run advances:
 
 ## Rare elites
 
-Each run contains four elites: one in a regular furnace room, one in Cooling Works, and one in each regular rooftop room. Later areas select a different elite type from the first furnace encounter when possible. An elite replaces one ordinary enemy at a safe existing spawn point. Early rooms and boss arenas contain none. The seed determines these encounters, including in Daily Runs and restored checkpoints.
+Each run contains seven elites: two across the furnace rooms, two in Cooling Works, and one in each regular rooftop room. The first elite in each middle area appears in one of its first two combat rooms; its third room adds another. Later areas select a different elite type from the first furnace encounter when possible. An elite replaces one ordinary enemy at a safe existing spawn point. Early rooms and boss arenas contain none. The seed determines these encounters, including in Daily Runs and restored checkpoints.
 
 - **Shielded runners** carry a visible front plate that absorbs 90% of direct shot damage. Blocked shots stop, including piercing rounds and fragments. Recoil overhead or behind them for full damage: they commit to a 0.65-second turn before moving the shield. Crates and explosions can crush through their guard.
 - **Twin-shot snipers** have paired barrels and fire twice. The second shot has its own 0.65-second warning; its aim locks for the last 0.4 seconds. Keep moving or get behind cover, then attack during the longer recovery.
@@ -221,14 +227,14 @@ Silhouettes, shields, aiming lines, and fuse rings carry the information in the 
 
 ## Area bosses
 
-- **Room 3 — The Loader:** a tracked ram that braces for 0.9 seconds before charging in a fixed direction. Jump over its charge or bait it into the low bumpers. A crash leaves it harmless to touch for 1.25 seconds and taking 25% extra damage. Its armor reduces incoming damage by 60% while active. It hops obstacles and uses an aimed turret volley against players hovering overhead or camping a corner.
-- **Room 3 — The Crane:** an overhead motor carries a suspended hammer. Its sweeps warn for 0.95 seconds and slams for 1.1 seconds; both lock their marked path for the final 0.45 seconds. Jump or recoil over a sweep and step out of a locked slam. The hammer stops on solid cover and smashes loose crates. A missed strike opens the motor shutters for 1.25 seconds, taking 40% extra damage. Closed shutters reduce incoming damage by 65%. Aim at the motor: the hammer blocks shots. A moving turret finds a clear firing lane when the hammer cannot reach you, including overhead hovering and protected corners.
-- **Room 6 — The Press:** an overhead machine that marks a landing column before dropping. The final 0.65 seconds of the warning are locked, giving you time to dodge or recoil upward beside it. Platforms stop the slam; its 0.8-second recovery takes 25% extra damage before it rises again. Active armor reduces incoming damage by 60%. Its turret pressures players above it, behind a protected slam column, or camping a corner; it moves into position before attacking.
-- **Room 6 — The Kiln:** a mobile boiler that lobs three molten shells over low cover, or four below half health. Curved warnings show their actual paths and landing surfaces for 1.1 seconds, locking for the final 0.5 seconds. Impacts leave short hot strips that glow for 0.4 seconds before burning for 1.8 seconds. Move out of the marked landing, then jump or recoil across the heat. Its cooling vents open for 1.5 seconds after each mortar volley, taking 35% extra damage; closed armor reduces incoming damage by 60%. It physically advances and hops stacks to find a turret firing lane against overhead or sheltered players. Cover blocks shells and turret shots.
-- **Room 9 — The Condenser:** a floating cooling machine with twin aimed jet volleys and rotating radial purges. The follow-up has its own 0.72-second warning, with aim locked for the last 0.34 seconds. Purges show four wider gaps and keep their orientation once warned. Later phases follow with a second ring after a fresh 0.95-second warning, filling the previous gaps. Its rotor opens for 1.15 seconds after the sequence, taking 30% extra damage; closed armor reduces damage by 75%. It physically routes around cover to find a firing lane. Phase changes widen the jets and pause attacks briefly.
-- **Room 12 — Rooftop boss:** physically flies around cover to find a clear firing lane. Its attacks change at two-thirds and one-third health: aimed volleys and wider fans, then radial patterns. Below two-thirds health, aimed attacks fire a second fully warned volley before recovery. Each pattern locks its aim for the final 0.3 seconds. Closed armor reduces damage by 70% during both warnings, then opens for 0.95, 0.85, or 0.75 seconds as the fight progresses. Phase changes reduce incoming damage by 65% for 0.75 seconds. Lights on its body show the phase.
+- **Room 4 — The Loader:** a tracked ram that braces for 0.9 seconds before charging in a fixed direction. Jump over its charge or bait it into the low bumpers. A crash leaves it harmless to touch for 1.25 seconds and taking 25% extra damage. Its armor reduces incoming damage by 60% while active. It hops obstacles and uses an aimed turret volley against players hovering overhead or camping a corner.
+- **Room 4 — The Crane:** an overhead motor carries a suspended hammer. Its sweeps warn for 0.95 seconds and slams for 1.1 seconds; both lock their marked path for the final 0.45 seconds. Jump or recoil over a sweep and step out of a locked slam. The hammer stops on solid cover and smashes loose crates. A missed strike opens the motor shutters for 1.25 seconds, taking 40% extra damage. Closed shutters reduce incoming damage by 65%. Aim at the motor: the hammer blocks shots. A moving turret finds a clear firing lane when the hammer cannot reach you, including overhead hovering and protected corners.
+- **Room 8 — The Press:** an overhead machine that marks a landing column before dropping. The final 0.65 seconds of the warning are locked, giving you time to dodge or recoil upward beside it. Platforms stop the slam; its 0.8-second recovery takes 25% extra damage before it rises again. Active armor reduces incoming damage by 60%. Its turret pressures players above it, behind a protected slam column, or camping a corner; it moves into position before attacking.
+- **Room 8 — The Kiln:** a mobile boiler that lobs three molten shells over low cover, or four below half health. Curved warnings show their actual paths and landing surfaces for 1.1 seconds, locking for the final 0.5 seconds. Impacts leave short hot strips that glow for 0.4 seconds before burning for 1.8 seconds. Move out of the marked landing, then jump or recoil across the heat. Its cooling vents open for 1.5 seconds after each mortar volley, taking 35% extra damage; closed armor reduces incoming damage by 60%. It physically advances and hops stacks to find a turret firing lane against overhead or sheltered players. Cover blocks shells and turret shots.
+- **Room 12 — The Condenser:** a floating cooling machine with twin aimed jet volleys and rotating radial purges. The follow-up has its own 0.72-second warning, with aim locked for the last 0.34 seconds. Purges show four wider gaps and keep their orientation once warned. Later phases follow with a second ring after a fresh 0.95-second warning, filling the previous gaps. Its rotor opens for 1.15 seconds after the sequence, taking 30% extra damage; closed armor reduces damage by 75%. It physically routes around cover to find a firing lane. Phase changes widen the jets and pause attacks briefly.
+- **Room 16 — Rooftop boss:** physically flies around cover to find a clear firing lane. Its attacks change at two-thirds and one-third health: aimed volleys and wider fans, then radial patterns. Below two-thirds health, aimed attacks fire a second fully warned volley before recovery. Each pattern locks its aim for the final 0.3 seconds. Closed armor reduces damage by 70% during both warnings, then opens for 0.95, 0.85, or 0.75 seconds as the fight progresses. Phase changes reduce incoming damage by 65% for 0.75 seconds. Lights on its body show the phase.
 
-Turret volleys warn for 0.85 seconds and lock their aim for the final 0.38 seconds. Dashed amber lines track you, then turn solid: move across the firing direction once they lock. Below half health, a new volley contains five bolts instead of three; the complete spread is shown before firing. Cover still blocks every projectile. Bosses resist bullet knockback. The Loader and Crane each have 800 health, the Press and Kiln each have 1,250, and the Condenser has 2,600, and the rooftop boss has 3,200.
+Turret volleys warn for 0.85 seconds and lock their aim for the final 0.38 seconds. Dashed amber lines track you, then turn solid: move across the firing direction once they lock. Below half health, a new volley contains five bolts instead of three; the complete spread is shown before firing. Cover still blocks every projectile. Bosses resist bullet knockback. The longer route gives the Loader and Crane 920 health, the Press and Kiln 1,625, the Condenser 3,770, the Turbine 3,480, the rooftop boss 5,120, and the Interceptor 4,800. Boss health grows to match the extra upgrades; their existing warning and dodge windows stay intact.
 
 Each boss has its own arena and silhouette. Separate seeded draws select the loading-docks, furnace, Cooling Works, and rooftop bosses, including in Daily Runs, and replaying or continuing that seed keeps the same selections. The docks, furnace, and Cooling Works bosses lead to the usual gun upgrade and 12-health recovery. Either final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
 
@@ -236,7 +242,7 @@ Each boss has its own arena and silhouette. Separate seeded draws select the loa
 
 Practice appears on the title screen after you defeat a boss in a normal or Daily Run. Its menu lists only bosses you have beaten, without locked entries, silhouettes, or a total count. Victories stay in this browser. Previous encounter-only unlocks do not carry over, because they did not record whether you won; defeat those bosses again to unlock them.
 
-Choose a defeated boss to replay its arena with 100 health and a preset gun containing two, five, eight, or eleven upgrades for that stage. Defeating the boss ends the practice fight. Retry from the result screen, or press **R** during a fight to restart immediately. Pause also offers Retry and Choose fight. The usual Your gun list shows the preset upgrades.
+Choose a defeated boss to replay its arena with 100 health and a preset gun containing three, seven, eleven, or fifteen upgrades for that stage. Defeating the boss ends the practice fight. Retry from the result screen, or press **R** during a fight to restart immediately. Pause also offers Retry and Choose fight. The usual Your gun list shows the preset upgrades.
 
 Practice preserves your normal checkpoint, Daily selection, and best times. Returning to the menu and choosing Continue restores your saved room with its original health and gun. Practice cannot unlock other encounters or advance into another room. Ordinary and Daily gameplay rules remain unchanged.
 
@@ -285,31 +291,32 @@ npm run build
 npm run preview
 ```
 
-| File                    | Responsibility                                                                         |
-| ----------------------- | -------------------------------------------------------------------------------------- |
-| `src/evolutions.ts`     | Per-discharge accuracy streaks, speed damage, and portal travel charges                |
-| `src/game.ts`           | Matter.js simulation, movement, recoil, combat, and room progression                   |
-| `src/enemies.ts`        | Enemy dimensions, health, attack timing, and boss patterns                             |
-| `src/kiln-ai.ts`        | Mortar planning, swept shell collisions, surface heat, and boiler movement             |
-| `src/kiln-art.ts`       | Boiler silhouette, cooling vents, arc warnings, and molten shell effects               |
-| `src/levels.ts`         | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
-| `src/areas.ts`          | Area palettes, parallax scenery, and surface details                                   |
-| `src/props.ts`          | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
-| `src/demolition.ts`     | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
-| `src/demolition-art.ts` | Restrained blast outlines, delayed warnings, and reduced-motion effects                |
-| `src/rules.ts`          | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
-| `src/daily.ts`          | UTC challenge identity, versioned links, and validated local best times                |
-| `src/practice.ts`       | Validated boss victory storage and stage-appropriate practice builds                   |
-| `src/render.ts`         | Canvas world, camera feedback, character animation, and effects                        |
-| `src/main.ts`           | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
-| `src/audio.ts`          | Shared Web Audio output, effects, and audio preferences                                |
-| `src/music.ts`          | Bounded music scheduling, synthesis, fades, and warning ducking                        |
-| `src/music-score.ts`    | Original area phrases and read-only combat intensity                                   |
-| `src/style.css`         | Game menus and compact HUD                                                             |
+| File                      | Responsibility                                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `src/evolutions.ts`       | Per-discharge accuracy streaks, speed damage, and portal travel charges                |
+| `src/game.ts`             | Matter.js simulation, movement, recoil, combat, and room progression                   |
+| `src/enemies.ts`          | Enemy dimensions, health, attack timing, and boss patterns                             |
+| `src/kiln-ai.ts`          | Mortar planning, swept shell collisions, surface heat, and boiler movement             |
+| `src/kiln-art.ts`         | Boiler silhouette, cooling vents, arc warnings, and molten shell effects               |
+| `src/expanded-layouts.ts` | Four additional third-room layouts, obstacles, spawn anchors, and traversal routes     |
+| `src/levels.ts`           | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
+| `src/areas.ts`            | Area palettes, parallax scenery, and surface details                                   |
+| `src/props.ts`            | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
+| `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
+| `src/demolition-art.ts`   | Restrained blast outlines, delayed warnings, and reduced-motion effects                |
+| `src/rules.ts`            | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
+| `src/daily.ts`            | UTC challenge identity, versioned links, and validated local best times                |
+| `src/practice.ts`         | Validated boss victory storage and stage-appropriate practice builds                   |
+| `src/render.ts`           | Canvas world, camera feedback, character animation, and effects                        |
+| `src/main.ts`             | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
+| `src/audio.ts`            | Shared Web Audio output, effects, and audio preferences                                |
+| `src/music.ts`            | Bounded music scheduling, synthesis, fades, and warning ducking                        |
+| `src/music-score.ts`      | Original area phrases and read-only combat intensity                                   |
+| `src/style.css`           | Game menus and compact HUD                                                             |
 
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
-The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, twelve-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
+The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, sixteen-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
 
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
 
@@ -353,12 +360,12 @@ GitHub Pages uses the included GitHub Actions workflow. Pushes to `main` run tes
 
 Physics: [Matter.js](https://brm.io/matter-js/) (MIT). Build: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/). Artwork and sound are generated by the game's rendering and audio code. Game source is MIT licensed; dependencies retain their own licenses.
 
-Cooling Works regression checks cover coolant momentum, locked jet volleys, separately warned follow-ups, rotating purge gaps, armor, physical cover navigation, pause and death cleanup, save migration, and final-area rosters. Full-run pilots use ordinary movement and firing inputs, with short trajectory prediction for the new ranged fights; they retain normal health and earn all eleven upgrades before extraction. A rooftop placement regression keeps collapsing platforms away from the launch space beside steps.
+Cooling Works regression checks cover coolant momentum, locked jet volleys, separately warned follow-ups, rotating purge gaps, armor, physical cover navigation, pause and death cleanup, save migration, and final-area rosters. Full-run pilots use ordinary movement and firing inputs, with short trajectory prediction for the new ranged fights; they retain normal health and earn all fifteen upgrades before extraction. A rooftop placement regression keeps collapsing platforms away from the launch space beside steps.
 
 Follow-up checks cover prerequisite rewards and saves, repeated portal replacement, capped travel and movement bonuses, defensive rear cones, wall fragment fans, converging lanes through cover and portals, firing-order accuracy streaks, enlarged echoes, and combined projectile/effect limits.
 
 Detour tests cover both exit routes with ordinary movement, four mirrored challenge layouts, warned reinforcement entrances, direct and extended run progression, bonus healing rules, deterministic Daily routes, and continued challenge/escape checkpoints.
 
-Turbine tests cover full warning and lock timing, both marked blade passes, airborne versus grounded wind, recoil preservation, solid cover and prop interactions, blade portals, pause and phase cancellation, saved entrances, earned Practice unlocks, and both mirrored fights. Reactive pilots win with normal health and eight upgrades; passive overhead, corner, and cover camps lose.
+Turbine tests cover full warning and lock timing, both marked blade passes, airborne versus grounded wind, recoil preservation, solid cover and prop interactions, blade portals, pause and phase cancellation, saved entrances, earned Practice unlocks, and both mirrored fights. Reactive pilots win with normal health and eleven upgrades; passive overhead, corner, and cover camps lose.
 
-Interceptor tests cover deterministic boss selection, full aiming locks and follow-up tells, physical recoil travel, cover and prop collisions, portal projectiles and hulls, cancellation after teleport or phase change, earned Practice unlocks, legacy rooftop victories, and the final escape. Reactive pilots win both mirrors with normal health and eleven upgrades; tested overhead, corner, and cover camps lose. Its direct test link preserves normal saves and grants no victories.
+Interceptor tests cover deterministic boss selection, full aiming locks and follow-up tells, physical recoil travel, cover and prop collisions, portal projectiles and hulls, cancellation after teleport or phase change, earned Practice unlocks, legacy rooftop victories, and the final escape. Reactive pilots win both mirrors with normal health and fifteen upgrades; tested overhead, corner, and cover camps lose. Its direct test link preserves normal saves and grants no victories.

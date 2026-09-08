@@ -282,16 +282,16 @@ test('cleared exits advance automatically and choices modify the same gun', () =
 test('checkpoint reconstructs the same modified gun and fresh room', () => {
   const g = new Game();
   g.start('saved', {
-    version: 3,
+    version: 4,
     seed: 'saved',
-    stage: 3,
+    stage: 4,
     hp: 56,
     mods: ['scatter', 'rapid', 'kick'],
     kills: 17,
     elapsed: 40,
   });
   assert.equal(g.hp, 56);
-  assert.equal(g.stage, 3);
+  assert.equal(g.stage, 4);
   assert.equal(g.gun.pellets, 5);
   assert(g.gun.interval < 0.22);
   assert.equal(g.shots.length, 0);
@@ -350,24 +350,32 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'kick',
       'scatter',
       'light',
+      'ricochet',
+      'split',
+      'landing',
+      'redline',
     ],
   },
   {
     seed: 'path-run-66',
-    pressSpacing: 320,
+    pressSpacing: 230,
     pathMods: ['crossfire', 'bloom'],
     rewards: [
       'magnum',
-      'banker',
-      'burst',
-      'ricochet',
       'rapid',
       'leech',
+      'ricochet',
+      'banker',
+      'burst',
       'airshot',
       'crossfire',
       'bloom',
       'scatter',
       'kick',
+      'pierce',
+      'light',
+      'split',
+      'landing',
     ],
   },
   {
@@ -386,6 +394,10 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'scatter',
       'burst',
       'kick',
+      'pierce',
+      'light',
+      'split',
+      'redline',
     ],
   },
   {
@@ -442,7 +454,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'execute',
       'fold',
     ];
-    for (let i = 0; i < 60 * 540 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+    for (let i = 0; i < 60 * 720 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       if (g.escape?.phase === 'extracting') {
         tick(g);
         continue;
@@ -479,7 +491,12 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         )[0];
       const exitX = g.escape ? EXTRACTION.x : 1910;
       const ep = e?.body.position ?? { x: exitX, y: 700 },
-        lead = distance(p, ep) / g.gun.projectileSpeed,
+        // Heavy shells should lead a short movement, not predict an entire
+        // long flight through the target's next landing or direction change.
+        lead = Math.min(
+          pathMods[0] === 'shellshock' ? 15 : Infinity,
+          distance(p, ep) / g.gun.projectileSpeed,
+        ),
         dx = ep.x - p.x,
         dy = p.y - ep.y;
       let aim = {
@@ -534,7 +551,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         jump = g.grounded && (blocked || stuck > 15 || !!(way && p.y - way.y > 50));
       }
       if (way && p.y - way.y > 50 && g.grounded) jump = true;
-      let firing = (!g.clear && !navigate) || (lift && !g.grounded);
+      let firing = !g.clear && (!navigate || (lift && !g.grounded));
       const breach = g.breaches.placement,
         hatch = breach?.panels.find((rect) => rect.w > rect.h);
       if (
@@ -648,7 +665,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         // These four runs verify the direct route. Land before the fork, then
         // walk below the steps instead of accidentally selecting the upper door.
         if (g.grounded && p.y > 690) directExitReady = true;
-        move = directExitReady ? 1 : Math.abs(p.x - 1755) > 8 ? Math.sign(1755 - p.x) : 0;
+        move = directExitReady ? 1 : Math.abs(p.x - 1760) > 8 ? Math.sign(1760 - p.x) : 0;
         jump = false;
         firing = false;
       }

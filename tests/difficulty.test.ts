@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
+import { enemyHealth } from '../src/enemies.ts';
 import { Game } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
 import { dailyForDate } from '../src/daily.ts';
@@ -21,9 +22,9 @@ const step = (g: Game, count = 1, override: Partial<Input> = {}) => {
     });
 };
 
-test('later regular enemies require more real base-gun hits while boss health remains authored', () => {
+test('later regular enemies require more real base-gun hits while bosses scale for the longer builds', () => {
   const hits: number[] = [];
-  for (const stage of [0, 7]) {
+  for (const stage of [0, 9]) {
     const g = new Game();
     g.start('pressure-scale');
     for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
@@ -58,13 +59,13 @@ test('later regular enemies require more real base-gun hits while boss health re
     assert(enemy.hp <= 0);
     hits.push(count);
     g.spawnEnemy('loader', 1200, 706);
-    assert.equal(g.enemies[0].maxHp, 800);
+    assert.equal(g.enemies[0].maxHp, enemyHealth('loader', stage));
   }
   assert.deepEqual(hits, [3, 4]);
 });
 
 test('later shooters apply faster pressure while retaining their full aim lock and dodge window', () => {
-  for (const stage of [0, 3, 6]) {
+  for (const stage of [0, 4, 8]) {
     const g = new Game();
     g.start('pressure-cadence');
     for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
@@ -107,7 +108,7 @@ test('later shooters apply faster pressure while retaining their full aim lock a
     assert.equal(g.hp, 100, 'The locked shot followed the player after their dodge');
     for (let i = 0; i < 120 && fired.length < 2; i++) step(g);
     assert.equal(fired.length, 2);
-    const area = stage / 3;
+    const area = stage / 4;
     assert(Math.abs(fired[1].time - fired[0].time - [1.5, 1.35, 1.2][area]) < 0.025);
     assert(Math.abs(fired[0].speed - [7.2, 8, 8.8][area]) < 1e-8);
     assert.equal(fired[0].damage, [14, 16, 18][area]);
@@ -118,9 +119,9 @@ test('Bloodwork and one room reward leave meaningful damage carried into the nex
   const g = new Game(),
     seed = 'A';
   g.start(seed, {
-    version: 3,
+    version: 4,
     seed,
-    stage: 3,
+    stage: 4,
     hp: 100,
     mods: ['leech', 'magnum', 'rapid'],
     kills: 0,
@@ -157,9 +158,9 @@ test('Bloodwork and one room reward leave meaningful damage carried into the nex
 test('daily continuation rebuilds the same scaled waves and gun regardless of combat random draws', () => {
   const daily = dailyForDate('2026-09-06')!,
     save: Checkpoint = {
-      version: 3,
+      version: 4,
       seed: daily.seed,
-      stage: 7,
+      stage: 9,
       hp: 53,
       mods: ['magnum', 'rapid', 'scatter', 'leech', 'airshot', 'ricochet', 'pierce'],
       kills: 37,
@@ -185,19 +186,19 @@ test('daily continuation rebuilds the same scaled waves and gun regardless of co
 
 test('sustained fire from the old overhead and cover camps cannot win the boss damage race', () => {
   const cases = [
-    { stage: 2, seed: 'crane-1', x: 1470, y: 620 },
-    { stage: 2, seed: 'crane-1', x: 13, y: 722 },
-    { stage: 5, seed: 'kiln-layout-0', x: 700, y: 160 },
-    { stage: 5, seed: 'kiln-layout-0', x: 235, y: 722 },
-    { stage: 8, seed: 'boss-cheese-0', x: 1490, y: 160 },
+    { stage: 3, seed: 'crane-1', x: 1470, y: 620 },
+    { stage: 3, seed: 'crane-1', x: 13, y: 722 },
+    { stage: 7, seed: 'kiln-layout-0', x: 700, y: 160 },
+    { stage: 7, seed: 'kiln-layout-0', x: 235, y: 722 },
     { stage: 11, seed: 'boss-cheese-0', x: 1490, y: 160 },
-    { stage: 11, seed: 'boss-cheese-0', x: 355, y: 722 },
+    { stage: 15, seed: 'boss-cheese-0', x: 1490, y: 160 },
+    { stage: 15, seed: 'boss-cheese-0', x: 355, y: 722 },
   ];
   for (const scenario of cases) {
     const g = new Game(),
       mods =
-        scenario.stage === 2
-          ? ['magnum', 'rapid']
+        scenario.stage === 3
+          ? ['magnum', 'rapid', 'kick']
           : [
               'magnum',
               'rapid',
@@ -210,9 +211,13 @@ test('sustained fire from the old overhead and cover camps cannot win the boss d
               'deadeye',
               'execute',
               'burst',
+              'light',
+              'leech',
+              'redline',
+              'backblast',
             ].slice(0, scenario.stage);
     g.start(scenario.seed, {
-      version: 3,
+      version: 4,
       seed: scenario.seed,
       stage: scenario.stage,
       hp: 100,
@@ -253,9 +258,9 @@ test('reacting to the Crane beats the same fight that kills passive sustained fi
     const g = new Game(),
       seed = 'crane-0';
     g.start(seed, {
-      version: 3,
+      version: 4,
       seed,
-      stage: 2,
+      stage: 3,
       hp: 100,
       mods: ['magnum', 'rapid'],
       kills: 7,
@@ -318,9 +323,9 @@ test('the Press cover trap remains winnable by reading its locks and moving betw
   const g = new Game(),
     seed = 'kiln-layout-0';
   g.start(seed, {
-    version: 3,
+    version: 4,
     seed,
-    stage: 5,
+    stage: 7,
     hp: 100,
     mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter'],
     kills: 0,

@@ -69,8 +69,8 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
       g.enemyShot(
         e,
         angle,
-        e.attack === 'ring' ? 7.8 : g.stage >= 9 ? 11.6 : 10.2,
-        boss ? 21 : g.stage >= 9 ? 20 : 18,
+        e.attack === 'ring' ? 7.8 : g.stage >= 12 ? 11.6 : 10.2,
+        boss ? 21 : g.stage >= 12 ? 20 : 18,
       );
     g.onSound(e.attack === 'ring' ? 'pulse' : 'cooling-shot');
     if (boss && !second && (e.attack !== 'ring' || e.phase >= 1)) {
@@ -85,7 +85,7 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
     } else {
       e.attacks++;
       e.state = 'recover';
-      e.timer = boss ? CONDENSER_RECOVER : g.stage >= 9 ? 1.05 : 1.4;
+      e.timer = boss ? CONDENSER_RECOVER : g.stage >= 12 ? 1.05 : 1.4;
     }
   } else if (e.timer <= 0 && bossHasLane(g, e)) {
     e.attack = boss && e.attacks % 2 === 1 ? 'ring' : 'aimed';

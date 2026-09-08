@@ -141,7 +141,7 @@ export class ReinforcementSystem {
     if (this.phase === 'opening') {
       if (
         g.enemies.length === 0 ||
-        ((g.stage >= 3 || g.detour) &&
+        ((g.stage >= 4 || g.detour) &&
           this.openingCount >= 2 &&
           g.enemies.length <= (g.detour ? 2 : 1))
       ) {

@@ -1,5 +1,6 @@
 import type { EnemyKind } from './levels.ts';
 import type { Vec } from './rules.ts';
+import { STAGES, areaIndex } from './rules.ts';
 
 export type EliteKind = 'shielded' | 'twin' | 'volatile';
 export const ELITE_HP: Record<EliteKind, number> = { shielded: 86, twin: 85, volatile: 60 };
@@ -56,7 +57,12 @@ export const isBoss = (kind: EnemyKind) =>
   kind === 'boss';
 export function enemyHealth(kind: EnemyKind, stage: number, elite?: EliteKind): number {
   const base = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
-  return Math.ceil(base * (isBoss(kind) ? 1 : 1 + Math.max(0, Math.min(11, stage)) * 0.08));
+  return Math.ceil(
+    base *
+      (isBoss(kind)
+        ? [1.15, 1.3, 1.45, 1.6][areaIndex(stage)]
+        : 1 + Math.max(0, Math.min(STAGES - 1, stage)) * 0.085),
+  );
 }
 export type Attack =
   | 'aimed'

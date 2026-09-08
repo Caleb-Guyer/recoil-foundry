@@ -137,8 +137,9 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     if (length > 8) {
       const d = direction(e.body.position, target),
         power = Math.min(12, length * 0.068);
-      rig.launch = { x: d.x * power, y: d.y * power };
-      e.aim = { x: -d.x, y: -d.y };
+      rig.launch = { x: d.x * power, y: d.y * power - 0.8 };
+      // Compensate for gravity on short hops so the hull can clear a nearby lip.
+      e.aim = direction(rig.launch, { x: 0, y: 0 });
       rig.origin = { ...e.body.position };
       e.attack = 'vault';
       e.state = 'windup';

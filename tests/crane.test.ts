@@ -42,7 +42,7 @@ function until(g: Game, predicate: () => boolean, limit = 300) {
 function seedFor(kind: 'loader' | 'crane', mirrored = false) {
   for (let i = 0; i < 100; i++) {
     const seed = `crane-${i}`,
-      level = getLevel(seed, 2);
+      level = getLevel(seed, 3);
     if (level.spawns[0].kind === kind && level.mirrored === mirrored) return seed;
   }
   assert.fail(`No ${kind} room with mirror=${mirrored}`);
@@ -51,9 +51,9 @@ function room(kind: 'loader' | 'crane' = 'crane', mirrored = false) {
   const g = new Game(),
     seed = seedFor(kind, mirrored);
   g.start(seed, {
-    version: 3,
+    version: 4,
     seed,
-    stage: 2,
+    stage: 3,
     hp: 100,
     mods: ['magnum', 'rapid'],
     kills: 7,
@@ -87,16 +87,16 @@ test('the docks choose Loader or Crane deterministically with both mirrored aren
   const variants = new Set<string>();
   for (let i = 0; i < 100; i++) {
     const seed = `crane-${i}`,
-      original = getLevel(seed, 2);
+      original = getLevel(seed, 3);
     assert(['loader', 'crane'].includes(original.spawns[0].kind));
     assert.equal(original.boss, true);
     assert.equal(original.spawns.length, 1);
     variants.add(`${original.spawns[0].kind}:${original.mirrored}`);
-    for (const stage of [8, 0, 4, 1, 7, 3, 6, 5]) getLevel(seed, stage);
-    assert.deepEqual(getLevel(seed, 2), original);
-    const changed = getLevel(seed, 2);
+    for (const stage of [11, 0, 5, 1, 9, 4, 8, 7]) getLevel(seed, stage);
+    assert.deepEqual(getLevel(seed, 3), original);
+    const changed = getLevel(seed, 3);
     changed.spawns[0].x = -1000;
-    assert.deepEqual(getLevel(seed, 2), original);
+    assert.deepEqual(getLevel(seed, 3), original);
   }
   assert.deepEqual([...variants].sort(), [
     'crane:false',
@@ -130,7 +130,7 @@ test('the independent docks boss draw preserves regular rooms and the rooftop en
   };
   for (const [seed, rooms] of Object.entries(expected)) {
     assert.deepEqual(
-      [0, 1, 3, 4, 9, 10, 11].map((stage) => {
+      [0, 1, 4, 5, 12, 13, 15].map((stage) => {
         const level = getLevel(seed, stage, undefined, 'boss');
         return `${level.id}:${level.mirrored}`;
       }),
@@ -143,14 +143,14 @@ test('Crane checkpoints and daily retries rebuild the same fresh rig without tra
   const daily = Array.from(
     { length: 28 },
     (_, i) => dailyForDate(`2026-09-${String(i + 1).padStart(2, '0')}`)!.seed,
-  ).find((seed) => getLevel(seed, 2).spawns[0].kind === 'crane');
+  ).find((seed) => getLevel(seed, 3).spawns[0].kind === 'crane');
   assert(daily);
   for (const seed of [seedFor('crane'), seedFor('crane', true), daily]) {
     const g = new Game(),
       save: Checkpoint = {
-        version: 3,
+        version: 4,
         seed,
-        stage: 2,
+        stage: 3,
         hp: 73,
         mods: ['magnum', 'rapid'],
         kills: 7,
@@ -213,7 +213,7 @@ test('destroying the motor cancels its rig and opens exactly one ordinary docks 
     const mod = g.offers[0].id;
     g.chooseMod(mod);
     g.chooseMod(mod);
-    assert.equal(g.stage, 3);
+    assert.equal(g.stage, 4);
     assert.equal(g.mods.length, 3);
     assert.equal(saves, 1);
   }
@@ -485,7 +485,7 @@ test('both docks bosses can be beaten in either mirror using two upgrades and no
 test('a falling crate contacting the resting hammer cannot permanently stall retraction', () => {
   const g = new Game(),
     seed = 'crane-layout-5';
-  g.start(seed, { version: 3, seed, stage: 2, hp: 100, mods: [], kills: 0, elapsed: 0 });
+  g.start(seed, { version: 4, seed, stage: 3, hp: 100, mods: [], kills: 0, elapsed: 0 });
   const e = g.enemies[0];
   assert.equal(e.kind, 'crane');
   for (const prop of [...g.props.items]) g.props.remove(prop);

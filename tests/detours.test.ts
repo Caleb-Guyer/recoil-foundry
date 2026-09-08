@@ -23,7 +23,7 @@ const overlap = (
   b: { x: number; y: number; w: number; h: number },
 ) =>
   a.x + a.w > b.x + 0.1 && a.x < b.x + b.w - 0.1 && a.y + a.h > b.y + 0.1 && a.y < b.y + b.h - 0.1;
-function entrance(seed = 'detour-test', stage = 1) {
+function entrance(seed = 'detour-test', stage = 2) {
   const g = new Game();
   g.start(seed);
   while (g.stage < stage) {
@@ -81,7 +81,7 @@ function snapshot(g: Game) {
 test('each area has a deterministic mirrored challenge with more enemies and no future boss preview', () => {
   const mirrors = new Set<boolean>();
   for (let i = 0; i < 32; i++)
-    for (const stage of [1, 4, 7, 10]) {
+    for (const stage of [2, 6, 10, 14]) {
       const seed = 'detour-layout-' + i,
         level = getDetour(seed, stage);
       mirrors.add(level.mirrored);
@@ -96,12 +96,12 @@ test('each area has a deterministic mirrored challenge with more enemies and no 
     }
   assert.equal(mirrors.size, 2);
   assert.equal(new Set(DETOUR_LAYOUTS.map((l) => l.id)).size, 4);
-  for (const stage of [-1, 0, 2, 3, 5, 6, 8, 9, 11, 12, 1.5])
+  for (const stage of [-1, 0, 1, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 1.5])
     assert.throws(() => getDetour('no', stage));
 });
 test('challenge geometry leaves spawns, machinery sweeps, entry and ground exit clear in both orientations', () => {
   for (let i = 0; i < 16; i++)
-    for (const stage of [1, 4, 7, 10]) {
+    for (const stage of [2, 6, 10, 14]) {
       const level = getDetour('detour-geometry-' + i, stage);
       const actors = [
         { x: 127, y: 662, w: 26, h: 36 },
@@ -127,17 +127,17 @@ test('challenge geometry leaves spawns, machinery sweeps, entry and ground exit 
       }
     }
 });
-test('normal rewards and direct exits skip every detour while preserving twelve stages and eleven picks', () => {
+test('normal rewards and direct exits skip every detour while preserving sixteen stages and fifteen picks', () => {
   const g = new Game();
   g.start('direct-route');
-  for (let stage = 0; stage < 11; stage++) {
-    assert.equal(g.canDetour, [1, 4, 7, 10].includes(stage));
+  for (let stage = 0; stage < 15; stage++) {
+    assert.equal(g.canDetour, [2, 6, 10, 14].includes(stage));
     g.openReward();
     g.chooseMod(g.offers[0].id);
     assert(!g.detour);
   }
-  assert.equal(g.stage, 11);
-  assert.equal(g.mods.length, 11);
+  assert.equal(g.stage, 15);
+  assert.equal(g.mods.length, 15);
   assert.deepEqual(g.detours, []);
   assert.equal(g.canDetour, false);
 });
@@ -146,7 +146,7 @@ test('entering pays only the regular room reward, bonus pays one upgrade without
   g.hp = 47;
   const baseMods = g.mods.length;
   enter(g);
-  assert.equal(g.stage, 1);
+  assert.equal(g.stage, 2);
   assert.equal(g.hp, 59);
   assert.equal(g.mods.length, baseMods + 1);
   assert(g.level.detour);
@@ -163,7 +163,7 @@ test('entering pays only the regular room reward, bonus pays one upgrade without
   g.chooseMod(choice);
   assert.equal(g.hp, 37);
   assert.equal(g.mods.length, baseMods + 2);
-  assert.equal(g.stage, 2);
+  assert.equal(g.stage, 3);
   assert(!g.detour);
   assert(g.level.boss);
   assert.deepEqual(g.detours, [0]);
@@ -175,7 +175,7 @@ test('entering pays only the regular room reward, bonus pays one upgrade without
 test('each challenge can be taken once and all four detours preserve the complete escape checkpoint', () => {
   const g = new Game();
   g.start('all-detours');
-  while (g.stage < 11) {
+  while (g.stage < 15) {
     if (g.canDetour) {
       enter(g);
       cleared(g);
@@ -186,7 +186,7 @@ test('each challenge can be taken once and all four detours preserve the complet
     assert(validBuild(g.mods));
   }
   assert.deepEqual(g.detours, [0, 1, 2, 3]);
-  assert.equal(g.mods.length, 15);
+  assert.equal(g.mods.length, 19);
   assert.equal(g.hp, 100);
   cleared(g);
   g.startEscape();
@@ -196,7 +196,7 @@ test('each challenge can be taken once and all four detours preserve the complet
   const resumed = new Game();
   resumed.start(save.seed, loadCheckpoint(save)!);
   assert(resumed.escape);
-  assert.equal(resumed.mods.length, 15);
+  assert.equal(resumed.mods.length, 19);
   assert.deepEqual(resumed.detours, [0, 1, 2, 3]);
 });
 test('challenge combat cannot pay a reward or leave while enemies or reinforcements remain', () => {
@@ -222,7 +222,8 @@ test('challenge combat cannot pay a reward or leave while enemies or reinforceme
   assert.equal(g.mode, 'playing', 'pending second wave was bypassed');
 });
 test('challenge entry saves the earned regular upgrade, health and route; continuing restarts the fight without repaying it', () => {
-  const g = entrance('detour-continue', 4);
+  const g = entrance('detour-continue', 6);
+  cleared(g);
   g.hp = 50;
   enter(g);
   const save = snapshot(g);
@@ -258,7 +259,7 @@ test('checkpoint validation rejects duplicate, future, unordered and inconsisten
   for (const bad of [
     { ...save, detour: false },
     { ...save, detour: 'true' },
-    { ...save, stage: 2 },
+    { ...save, stage: 3 },
     { ...save, escape: true },
     { ...save, detours: [0] },
     { ...save, detours: null },
@@ -282,7 +283,7 @@ test('Daily routes have one forced legal offer per reward and replay identically
     other = new Game();
   g.start(seed);
   other.start(seed);
-  while (g.stage < 11) {
+  while (g.stage < 15) {
     if (g.canDetour) {
       enter(g);
       enter(other);
@@ -301,7 +302,7 @@ test('Daily routes have one forced legal offer per reward and replay identically
     assert.equal(g.stage, other.stage);
     assert.deepEqual(g.mods, other.mods);
   }
-  assert.equal(g.mods.length, 15);
+  assert.equal(g.mods.length, 19);
   assert(loadCheckpoint(snapshot(g)));
 });
 test('detour layouts, waves and bonus rewards use independent streams from normal rooms', () => {
@@ -315,7 +316,7 @@ test('detour layouts, waves and bonus rewards use independent streams from norma
   a.chooseMod(a.offers[0].id);
   b.chooseMod(b.offers[0].id);
   assert(a.detour && !b.detour);
-  assert.equal(b.stage, 2);
+  assert.equal(b.stage, 3);
   assert.notEqual(musicScene(a).room, musicScene(b).room);
   const c = new Game();
   c.start(a.seed, snapshot(a));
@@ -328,7 +329,7 @@ test('detour layouts, waves and bonus rewards use independent streams from norma
   assert.deepEqual(a.offers, c.offers);
 });
 test('challenge waves start larger and overlap with two survivors while keeping the full warning', () => {
-  for (const stage of [1, 4, 7, 10]) {
+  for (const stage of [2, 6, 10, 14]) {
     const g = entrance('detour-pressure', stage);
     enter(g);
     const [opening, final] = splitWaves(g.level, g.roomSeed, g.stage);
@@ -396,7 +397,7 @@ function walk(g: Game, path: { x: number; y: number }[], limit = 2400, land = fa
   return waypoint === path.length || g.mode === 'upgrade';
 }
 test('every detour layout is traversable both ways with ordinary jumps and no upgrades', () => {
-  for (const stage of [1, 4, 7, 10])
+  for (const stage of [2, 6, 10, 14])
     for (let index = 0; index < 4; index++)
       for (const reverse of [false, true]) {
         const g = entrance('detour-walk-' + index, stage);
@@ -460,7 +461,7 @@ test('steps extend only after clearing and never materialize through the player'
 
 test('live machinery and props leave every warned challenge reinforcement able to emerge', () => {
   for (let index = 0; index < 8; index++)
-    for (const stage of [1, 4, 7, 10]) {
+    for (const stage of [2, 6, 10, 14]) {
       const g = entrance('detour-entrance-' + index, stage);
       enter(g);
       const opening = g.enemies.length;
@@ -507,7 +508,7 @@ test('Fold gets a fresh pair on challenge entry, continuation and returning to t
 test('practice cannot expose challenge doors or retain a challenge from the previous run', () => {
   const g = entrance();
   enter(g);
-  const level = getLevel('practice-detour', 2);
+  const level = getLevel('practice-detour', 3);
   const kind = level.spawns[0].kind;
   assert(kind === 'loader' || kind === 'crane');
   assert(g.startPractice({ kind, seed: 'practice-detour' }));

@@ -12,6 +12,7 @@ import {
   PRACTICE_BOSSES,
   loadEncounters,
   testEncounterFromUrl,
+  expandedTestFromUrl,
 } from './practice.ts';
 import type { Encounter } from './practice.ts';
 import {
@@ -43,7 +44,7 @@ function write(key: string, value: unknown) {
     return false;
   }
 }
-const storedCheckpoint = loadCheckpoint(read('rf-checkpoint-v3'));
+const storedCheckpoint = loadCheckpoint(read('rf-checkpoint-v4') ?? read('rf-checkpoint-v3'));
 let unavailableDailySave = !!storedCheckpoint && isUnsupportedDailySeed(storedCheckpoint.seed);
 let checkpoint = unavailableDailySave ? null : storedCheckpoint;
 const encounters = loadEncounters(read(VICTORIES_KEY));
@@ -100,6 +101,7 @@ const input: Input = {
 };
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
+let linkedRunTest = expandedTestFromUrl(entryUrl);
 let linkedDaily = dailyFromUrl(entryUrl);
 let invalidDailyLink = entryUrl.searchParams.has('daily') && !linkedDaily;
 let seedParam = entryUrl.searchParams.has('daily')
@@ -110,7 +112,7 @@ let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = nu
 
 function updateTitle() {
   $('play').innerHTML =
-    `${linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
+    `${linkedRunTest ? 'Test new rooms' : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
@@ -119,15 +121,17 @@ function updateTitle() {
   $('practice').hidden = encounters.length === 0;
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
-  $('title-hint').textContent = linkedTest
-    ? `Full health. ${PRACTICE_BOSSES[linkedTest.kind].stage} upgrades. R to retry.`
-    : linkedDaily
-      ? `Daily · ${linkedDaily.date}`
-      : invalidDailyLink
-        ? 'Challenge link unavailable. Start a fresh run.'
-        : unavailableDailySave
-          ? 'Saved daily unavailable. Start a new daily.'
-          : 'Shoot down. Go up.';
+  $('title-hint').textContent = linkedRunTest
+    ? 'Full health. Preset gun. R to restart test.'
+    : linkedTest
+      ? `Full health. ${PRACTICE_BOSSES[linkedTest.kind].stage} upgrades. R to retry.`
+      : linkedDaily
+        ? `Daily · ${linkedDaily.date}`
+        : invalidDailyLink
+          ? 'Challenge link unavailable. Start a fresh run.'
+          : unavailableDailySave
+            ? 'Saved daily unavailable. Start a new daily.'
+            : 'Shoot down. Go up.';
 }
 function clearInput() {
   keys.clear();
@@ -159,11 +163,16 @@ function newSeed() {
   return crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
 }
 function start(save?: Checkpoint, retry = false, seedOverride?: string) {
+  if (retry && game.testRun) {
+    startRunTest(game.testRun);
+    return;
+  }
   if (retry && game.practice) {
     startPractice(game.practice);
     return;
   }
   linkedTest = null;
+  linkedRunTest = null;
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -180,6 +189,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   } else {
     const url = new URL(location.href);
     url.searchParams.delete('test');
+    url.searchParams.delete('area');
     url.searchParams.delete('daily');
     url.searchParams.delete('dv');
     if (seedParam !== seed) {
@@ -213,6 +223,18 @@ function startPractice(encounter: Encounter) {
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
 }
+function startRunTest(save: Checkpoint) {
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  activeDaily = null;
+  dailyResult = null;
+  game.startTest(save);
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
+  canvas.focus();
+}
 function menu() {
   closeDialog();
   game.setMode('title');
@@ -223,9 +245,9 @@ function backFromPractice() {
   else resume();
 }
 game.onCheckpoint = (s) => {
-  if (game.practice) return;
+  if (game.practice || game.testRun) return;
   checkpoint = s;
-  write('rf-checkpoint-v3', s);
+  if (write('rf-checkpoint-v4', s)) write('rf-checkpoint-v3', null);
 };
 game.onSound = (kind) => sound.play(kind);
 game.onBossDefeated = (kind) => {
@@ -246,7 +268,7 @@ game.onChange = () => {
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent = game.practice
     ? 'PRACTICE'
-    : (activeDaily ? 'DAILY · ' : '') +
+    : (game.testRun ? 'TEST · ' : activeDaily ? 'DAILY · ' : '') +
       (game.escape
         ? 'ESCAPE'
         : game.detour
@@ -490,13 +512,15 @@ function showDialog(kind: string) {
       '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
       (game.practice
         ? 'Defeat the boss. Press R to retry.'
-        : game.escape
-          ? 'Reach the extraction lift.'
-          : game.detour
-            ? 'Survive for an extra upgrade, without a health refill.'
-            : game.canDetour
-              ? 'After clearing, the upper door offers an optional challenge.'
-              : 'Clear the room, then leave through the right door.') +
+        : game.testRun
+          ? 'Preset test. Press R to restart from the new room.'
+          : game.escape
+            ? 'Reach the extraction lift.'
+            : game.detour
+              ? 'Survive for an extra upgrade, without a health refill.'
+              : game.canDetour
+                ? 'After clearing, the upper door offers an optional challenge.'
+                : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun' +
@@ -512,7 +536,9 @@ function showDialog(kind: string) {
         ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet"' +
           (encounters.length ? '' : ' hidden') +
           '>Choose fight</button>'
-        : '') +
+        : paused && game.testRun
+          ? '<button id="retry" class="quiet">Restart test</button>'
+          : '') +
       (paused ? '<button id="menu" class="quiet">Menu</button>' : '') +
       '</div>';
     $<HTMLInputElement>('sound').onchange = (e) => {
@@ -532,9 +558,9 @@ function showDialog(kind: string) {
       persistSettings();
     };
     $('back').onclick = resume;
-    if (paused && game.practice) {
+    if (paused && (game.practice || game.testRun)) {
       $('retry').onclick = () => start(undefined, true);
-      $('choose-fight').onclick = () => showDialog('practice');
+      if (game.practice) $('choose-fight').onclick = () => showDialog('practice');
     }
     if (paused) $('menu').onclick = menu;
   }
@@ -555,7 +581,8 @@ function pause() {
 function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
-$('play').onclick = () => (linkedTest ? startPractice(linkedTest) : start());
+$('play').onclick = () =>
+  linkedRunTest ? startRunTest(linkedRunTest) : linkedTest ? startPractice(linkedTest) : start();
 $('daily').onclick = () => {
   if (linkedDaily) {
     linkedDaily = null;
@@ -581,14 +608,25 @@ modal.addEventListener('cancel', (e) => {
   resume();
 });
 window.addEventListener('keydown', (e) => {
-  if (e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLInputElement) return;
+  if (
+    e.ctrlKey ||
+    e.metaKey ||
+    e.altKey ||
+    (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox')
+  )
+    return;
   if (
     game.mode === 'playing' &&
     ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)
   )
     e.preventDefault();
   if (e.repeat) return;
-  if (e.code === 'KeyR' && game.practice && game.mode !== 'title' && dialogKind !== 'practice') {
+  if (
+    e.code === 'KeyR' &&
+    (game.practice || game.testRun) &&
+    game.mode !== 'title' &&
+    dialogKind !== 'practice'
+  ) {
     e.preventDefault();
     start(undefined, true);
     return;

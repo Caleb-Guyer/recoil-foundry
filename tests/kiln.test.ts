@@ -38,7 +38,7 @@ function until(g: Game, predicate: () => boolean, limit = 600) {
 function seedFor(kind: 'kiln' | 'press', mirrored = false) {
   for (let i = 0; i < 100; i++) {
     const seed = `kiln-${i}`,
-      level = getLevel(seed, 5);
+      level = getLevel(seed, 7);
     if (level.spawns[0].kind === kind && level.mirrored === mirrored) return seed;
   }
   assert.fail(`Missing ${kind} mirror=${mirrored}`);
@@ -47,9 +47,9 @@ function room(mirrored = false) {
   const g = new Game(),
     seed = seedFor('kiln', mirrored);
   g.start(seed, {
-    version: 3,
+    version: 4,
     seed,
-    stage: 5,
+    stage: 7,
     hp: 100,
     mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter'],
     kills: 20,
@@ -80,15 +80,15 @@ test('the furnace selects Press or Kiln deterministically and supports both mirr
   const variants = new Set<string>();
   for (let i = 0; i < 100; i++) {
     const seed = `kiln-${i}`,
-      level = getLevel(seed, 5);
+      level = getLevel(seed, 7);
     assert(level.boss && level.spawns.length === 1);
     assert(['press', 'kiln'].includes(level.spawns[0].kind));
     variants.add(`${level.spawns[0].kind}:${level.mirrored}`);
-    for (const stage of [8, 1, 7, 0, 2, 6, 3, 4]) getLevel(seed, stage);
-    assert.deepEqual(getLevel(seed, 5), level);
-    const edited = getLevel(seed, 5);
+    for (const stage of [11, 1, 9, 0, 3, 8, 4, 5]) getLevel(seed, stage);
+    assert.deepEqual(getLevel(seed, 7), level);
+    const edited = getLevel(seed, 7);
     edited.spawns[0].x = -1000;
-    assert.deepEqual(getLevel(seed, 5), level);
+    assert.deepEqual(getLevel(seed, 7), level);
   }
   assert.deepEqual([...variants].sort(), ['kiln:false', 'kiln:true', 'press:false', 'press:true']);
   assert(isBoss('kiln'));
@@ -119,7 +119,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
   };
   for (const [seed, rooms] of Object.entries(expected))
     assert.deepEqual(
-      [0, 1, 2, 3, 4, 9, 10, 11].map((stage) => {
+      [0, 1, 3, 4, 5, 12, 13, 15].map((stage) => {
         const level = getLevel(seed, stage, undefined, 'boss');
         return `${level.id}:${level.mirrored}`;
       }),
@@ -131,14 +131,14 @@ test('ordinary and daily checkpoints rebuild the selected Kiln without retaining
   const daily = Array.from(
     { length: 28 },
     (_, i) => dailyForDate(`2026-09-${String(i + 1).padStart(2, '0')}`)!.seed,
-  ).find((seed) => getLevel(seed, 5).spawns[0].kind === 'kiln');
+  ).find((seed) => getLevel(seed, 7).spawns[0].kind === 'kiln');
   assert(daily);
   for (const seed of [seedFor('kiln'), seedFor('kiln', true), daily]) {
     const g = new Game(),
       save: Checkpoint = {
-        version: 3,
+        version: 4,
         seed,
-        stage: 5,
+        stage: 7,
         hp: 83,
         mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter'],
         kills: 20,
@@ -401,7 +401,7 @@ test('pause and death freeze all Kiln hazards, while killing the boiler cancels 
   const mod = fresh.g.offers[0].id;
   fresh.g.chooseMod(mod);
   fresh.g.chooseMod(mod);
-  assert.equal(fresh.g.stage, 6);
+  assert.equal(fresh.g.stage, 8);
   assert.equal(fresh.g.mods.length, 6);
 });
 
@@ -410,9 +410,9 @@ test('both Kiln layouts punish passive corner firing while a reactive five-upgra
     for (const reactive of [false, true]) {
       const g = new Game();
       g.start(seed, {
-        version: 3,
+        version: 4,
         seed,
-        stage: 5,
+        stage: 7,
         hp: 100,
         mods: ['magnum', 'rapid', 'kick', 'airshot', 'scatter'],
         kills: 20,

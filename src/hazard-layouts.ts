@@ -81,15 +81,16 @@ export function hazardPlacement(
   seed: string,
   stage: number,
 ): HazardPlacement | undefined {
-  if (level.boss || ![1, 3, 4, 6, 7, 9, 10].includes(stage)) return;
-  const kinds: HazardKind[] =
-    stage === 1
+  if (level.boss || stage === 0) return;
+  const kinds: HazardKind[] = level.added
+    ? ([['lift'], ['crusher'], ['lift'], ['crumble']][Math.floor(stage / 4)] as HazardKind[])
+    : stage === 1
       ? ['lift']
-      : stage === 3
+      : stage === 4
         ? ['crusher']
-        : stage === 9
+        : stage === 12
           ? ['crumble']
-          : stage === 4 || stage === 6 || stage === 7
+          : stage === 5 || stage === 8 || stage === 9
             ? ['lift', 'crusher']
             : ['lift', 'crusher', 'crumble'];
   const rng = seeded(seed + ':hazards:' + stage);

@@ -1,17 +1,17 @@
 import { getLevel } from './levels.ts';
-import type { Checkpoint } from './rules.ts';
+import { bossStage, type Checkpoint } from './rules.ts';
 
 // Encounter-only records cannot prove a win; start a separate victory history.
 export const VICTORIES_KEY = 'rf-boss-victories-v1';
 export const PRACTICE_BOSSES = {
-  loader: { name: 'The Loader', stage: 2 },
-  crane: { name: 'The Crane', stage: 2 },
-  press: { name: 'The Press', stage: 5 },
-  kiln: { name: 'The Kiln', stage: 5 },
-  condenser: { name: 'The Condenser', stage: 8 },
-  turbine: { name: 'The Turbine', stage: 8 },
-  interceptor: { name: 'The Interceptor', stage: 11 },
-  boss: { name: 'Rooftop', stage: 11 },
+  loader: { name: 'The Loader', stage: bossStage(0) },
+  crane: { name: 'The Crane', stage: bossStage(0) },
+  press: { name: 'The Press', stage: bossStage(1) },
+  kiln: { name: 'The Kiln', stage: bossStage(1) },
+  condenser: { name: 'The Condenser', stage: bossStage(2) },
+  turbine: { name: 'The Turbine', stage: bossStage(2) },
+  interceptor: { name: 'The Interceptor', stage: bossStage(3) },
+  boss: { name: 'Rooftop', stage: bossStage(3) },
 } as const;
 export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
 export interface Encounter {
@@ -68,6 +68,9 @@ export function practiceCheckpoint(record: Encounter): Checkpoint | null {
   const encounter = loadEncounters([record])[0];
   if (!encounter) return null;
   const stage = PRACTICE_BOSSES[encounter.kind].stage;
+  return testCheckpoint(encounter.seed, stage);
+}
+export function testCheckpoint(seed: string, stage: number): Checkpoint {
   const build = [
     'magnum',
     'rapid',
@@ -80,14 +83,32 @@ export function practiceCheckpoint(record: Encounter): Checkpoint | null {
     'leech',
     'deadeye',
     'execute',
+    'split',
+    'landing',
+    'redline',
+    'backblast',
   ];
   return {
-    version: 3,
-    seed: encounter.seed,
+    version: 4,
+    seed,
     stage,
     hp: 100,
     mods: build.slice(0, stage),
     kills: 0,
     elapsed: 0,
   };
+}
+
+export function expandedTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'expanded' ||
+    ['daily', 'dv', 'seed'].some((k) => p.has(k))
+  )
+    return null;
+  const areas = ['docks', 'furnace', 'cooling', 'rooftops'];
+  if (p.getAll('area').length > 1) return null;
+  const area = areas.indexOf(p.get('area') ?? 'docks');
+  return area < 0 ? null : testCheckpoint('EXPANDED-16', area * 4 + 2);
 }

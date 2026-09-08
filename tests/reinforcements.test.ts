@@ -41,7 +41,7 @@ const pendingRoster = (g: Game) => g.waves.doors.map((door) => ({ ...door.spawn 
 function room(stage = 0, seed = 'reinforcements') {
   const g = new Game();
   g.start(seed, {
-    version: 3,
+    version: 4,
     seed,
     stage,
     hp: 100,
@@ -81,7 +81,7 @@ function defeatOpening(g: Game) {
 
 test('ordinary rooms split their exact authored roster into two groups without consuming placement randomness', () => {
   for (let i = 0; i < 25; i++)
-    for (const stage of [0, 1, 3, 4, 6, 7]) {
+    for (const stage of [0, 1, 4, 5, 8, 9]) {
       const g = room(stage, `wave-roster-${i}`),
         opening = activeRoster(g),
         final = pendingRoster(g),
@@ -112,7 +112,7 @@ test('ordinary rooms split their exact authored roster into two groups without c
 });
 
 test('later waves overlap the last opening enemy while the docks preserve their gentler introduction', () => {
-  for (const stage of [0, 3]) {
+  for (const stage of [0, 4]) {
     const g = fixture(6);
     g.stage = stage;
     assert.equal(g.enemies.length, 2);
@@ -370,7 +370,7 @@ test('pause, hit stop, death, and room reset cannot advance or retain a queued w
 
 test('checkpoint continuation and daily retries reconstruct the entrance groups rather than saving transient waves', () => {
   for (const seed of ['wave-continue', dailyForDate('2026-09-06')!.seed]) {
-    const g = room(4, seed),
+    const g = room(5, seed),
       initial = { opening: activeRoster(g).map(spawnKey), final: pendingRoster(g).map(spawnKey) };
     let saved: Checkpoint | null = null;
     g.onCheckpoint = (checkpoint) => {
@@ -399,7 +399,7 @@ test('checkpoint continuation and daily retries reconstruct the entrance groups 
 });
 
 test('bosses and the final escape remain single encounters without reinforcement doors', () => {
-  for (const stage of [2, 5, 8]) {
+  for (const stage of [3, 7, 11]) {
     const g = room(stage);
     assert.equal(g.enemies.length, 1);
     assert.equal(g.waves.doors.length, 0);
@@ -408,7 +408,7 @@ test('bosses and the final escape remain single encounters without reinforcement
     until(g, () => g.clear);
     assert.equal(g.enemies.length, 0);
     assert.equal(g.waves.doors.length, 0);
-    if (stage === 8) {
+    if (stage === 11) {
       g.startEscape();
       step(g, 180);
       assert.equal(g.waves.pending, false);

@@ -1,4 +1,4 @@
-import { seeded, isDetourStage } from './rules.ts';
+import { seeded, isDetourStage, areaIndex } from './rules.ts';
 import type { Level, Solid, Spawn, EnemyKind } from './levels.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 
@@ -205,7 +205,7 @@ export const DETOUR_LAYOUTS: Level[] = [
 
 export function getDetour(seed: string, stage: number): Level {
   if (!isDetourStage(stage)) throw new RangeError('No detour at this stage');
-  const source = DETOUR_LAYOUTS[Math.floor(stage / 3)];
+  const source = DETOUR_LAYOUTS[areaIndex(stage)];
   const mirrored = seeded(seed + ':detour-layout:' + stage)() > 0.5;
   const rect = (s: Solid) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x });
   const route = source.route.map((p) => ({ ...p, x: mirrored ? 2000 - p.x : p.x }));

@@ -44,7 +44,7 @@ function wall(g: Game, x: number, y: number, w: number, h: number) {
 test('enemy behaviors enter gradually and retain deterministic terrain-safe anchors', () => {
   const seen = new Set<string>();
   for (let i = 0; i < 50; i++)
-    for (let stage = 0; stage < 8; stage++) {
+    for (let stage = 0; stage < 16; stage++) {
       const level = getLevel('types-' + i, stage);
       assert.deepEqual(level, getLevel('types-' + i, stage));
       assert.equal(new Set(level.spawns.map((s) => `${s.x},${s.y}`)).size, level.spawns.length);
@@ -52,7 +52,7 @@ test('enemy behaviors enter gradually and retain deterministic terrain-safe anch
         seen.add(e.kind);
         if (stage === 0) assert(!['charger', 'sniper', 'hopper'].includes(e.kind));
         if (stage < 2) assert.notEqual(e.kind, 'sniper');
-        if (stage < 3) assert.notEqual(e.kind, 'hopper');
+        if (stage < 4) assert.notEqual(e.kind, 'hopper');
       }
     }
   for (const kind of ['charger', 'sniper', 'hopper']) assert(seen.has(kind));

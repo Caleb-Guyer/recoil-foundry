@@ -28,11 +28,11 @@ test('hazards introduce one type at a time and keep sweeps, headroom, spawns and
         continue;
       }
       assert(hazard, `${seed}, ${level.id}, room ${stage + 1}: missing safe feature`);
-      const introduced = ({ 1: 'lift', 3: 'crusher', 9: 'crumble' } as Record<number, string>)[
+      const introduced = ({ 1: 'lift', 4: 'crusher', 12: 'crumble' } as Record<number, string>)[
         stage
       ];
       if (introduced) assert.equal(hazard.kind, introduced);
-      if (stage === 4) assert.notEqual(hazard.kind, 'crumble');
+      if (stage === 5) assert.notEqual(hazard.kind, 'crumble');
       coverage.add(level.id + ':' + level.mirrored);
       kinds.add(hazard.kind);
       const bounds = hazardBounds(hazard);
@@ -73,7 +73,7 @@ test('hazards introduce one type at a time and keep sweeps, headroom, spawns and
 test('hazard selection mirrors with the actual geometry and does not depend on request order', () => {
   for (let index = 0; index < 64; index++) {
     const seed = 'hazard-mirror-' + index;
-    for (const stage of [7, 1, 4, 6, 3]) {
+    for (const stage of [9, 1, 5, 8, 4]) {
       const level = getLevel(seed, stage);
       const hazard = hazardPlacement(level, seed, stage)!;
       const mirrored: Level = {
@@ -84,7 +84,7 @@ test('hazard selection mirrors with the actual geometry and does not depend on r
         route: level.route.map((point) => ({ ...point, x: 2000 - point.x })).reverse(),
       };
       assert.deepEqual(hazardPlacement(mirrored, seed, stage), { ...hazard, x: 2000 - hazard.x });
-      hazardPlacement(getLevel('unrelated', 3), 'unrelated', 3);
+      hazardPlacement(getLevel('unrelated', 4), 'unrelated', 3);
       assert.deepEqual(hazardPlacement(level, seed, stage), hazard);
     }
   }
@@ -94,7 +94,7 @@ test('unsafe rooms omit their optional feature instead of overlapping cover or c
   const level = getLevel('hazard-blocked', 1);
   level.solids = [{ x: 180, y: 100, w: 1640, h: 640 }];
   const before = JSON.stringify(level);
-  for (const stage of [1, 3, 4, 6, 7, 9, 10])
+  for (const stage of [1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14])
     assert.equal(hazardPlacement(level, 'hazard-blocked', stage), undefined);
   assert.equal(JSON.stringify(level), before);
   assert.equal(hazardPlacement({ ...level, solids: [], boss: true }, 'boss', 3), undefined);
@@ -105,7 +105,7 @@ test('all layout orientations remain traversable with active hazards, ordinary j
   const cases = new Map<string, { seed: string; stage: number }>();
   for (let index = 0; index < 256 && cases.size < LAYOUTS.length * 2; index++) {
     const seed = 'hazard-route-' + index;
-    for (const stage of [1, 3, 4, 6, 7, 9, 10]) {
+    for (const stage of [1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]) {
       const level = getLevel(seed, stage);
       if (hazardPlacement(level, seed, stage))
         cases.set(level.id + ':' + level.mirrored, { seed, stage });
@@ -114,7 +114,7 @@ test('all layout orientations remain traversable with active hazards, ordinary j
   assert.equal(cases.size, LAYOUTS.length * 2);
   for (const [label, { seed, stage }] of cases) {
     const game = new Game();
-    game.start(seed, { version: 3, seed, stage, hp: 100, mods: [], kills: 0, elapsed: 0 });
+    game.start(seed, { version: 4, seed, stage, hp: 100, mods: [], kills: 0, elapsed: 0 });
     assert.equal(game.hazards.items.length, 1, label);
     for (const prop of [...game.props.items]) game.props.remove(prop);
     for (const enemy of game.enemies) Composite.remove(game.engine.world, enemy.body);
