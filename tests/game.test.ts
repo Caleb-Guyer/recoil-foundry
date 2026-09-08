@@ -542,7 +542,9 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         !!move && Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
       const lift =
         (!navigate && ((!g.clear && dy > 70 && Math.abs(dx) < 500) || (blocked && stuck > 20))) ||
-        !!(navigate && way && p.y - way.y > 75 && !g.grounded && stuck > 15);
+        // Keep climbing until the player's feet clear the ledge, rather than
+        // cutting recoil while still pressed against its vertical face.
+        !!(navigate && way && p.y > way.y - 12 && !g.grounded && stuck > 15);
       let jump = g.grounded && (i % 90 === 0 || blocked || stuck > 15 || lift);
       if (lift && !g.grounded) aim = { x: p.x, y: p.y + 500 };
       if (g.clear) {

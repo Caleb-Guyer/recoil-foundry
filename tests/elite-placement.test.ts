@@ -154,7 +154,12 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
           x: enemy.body.position.x,
           y: enemy.body.position.y,
         })),
-        ...game.waves.doors.map(({ spawn }) => ({ ...spawn, elite: spawn.elite })),
+        ...game.waves.doors.map(({ spawn }) => ({
+          kind: spawn.kind,
+          x: spawn.x,
+          y: spawn.y,
+          elite: spawn.elite,
+        })),
       ];
       const ordered = (spawns: typeof roster) => [...spawns].sort((a, b) => a.x - b.x || a.y - b.y);
       assert.deepEqual(

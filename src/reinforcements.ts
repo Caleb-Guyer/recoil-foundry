@@ -3,6 +3,7 @@ import type { Game } from './game.ts';
 import type { Level, Spawn } from './levels.ts';
 import { ENEMY_STATS } from './enemies.ts';
 import { distance, seeded } from './rules.ts';
+import { squadSpawns } from './squads.ts';
 
 export const REINFORCEMENT_TELL = 0.75;
 export const REINFORCEMENT_ENTRY = 0.65;
@@ -16,7 +17,8 @@ export interface ReinforcementDoor {
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
   if (level.boss || level.spawns.length < 3) return [level.spawns.map((s) => ({ ...s })), []];
-  const count = level.spawns.length;
+  const planned = squadSpawns(level.spawns, level, seed, stage);
+  const count = planned.length;
   const openingCount = level.detour
     ? Math.ceil(count / 2)
     : count === 4
@@ -24,7 +26,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
       : Math.max(1, Math.floor(count / 3));
   const finalCount = count - openingCount;
   const random = seeded(seed + ':waves:' + stage);
-  const ranked = level.spawns.map((spawn, index) => ({ spawn, index, tie: random() }));
+  const ranked = planned.map((spawn, index) => ({ spawn, index, tie: random() }));
   const strength = (spawn: Spawn) =>
     spawn.elite
       ? 20
@@ -54,13 +56,15 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
   reserve((s) => !!s.elite);
   reserve((s) => s.kind === 'flyer');
   reserve((s) => ['runner', 'charger', 'hopper'].includes(s.kind));
+  reserve((s) => s.squad?.role === 'lead');
+  reserve((s) => s.squad?.role === 'support');
   for (const entry of ranked) {
     if (final.size >= count - openingCount) break;
     final.add(entry.index);
   }
   return [
-    level.spawns.filter((_, i) => !final.has(i)).map((s) => ({ ...s })),
-    level.spawns.filter((_, i) => final.has(i)).map((s) => ({ ...s })),
+    planned.filter((_, i) => !final.has(i)).map((s) => ({ ...s })),
+    planned.filter((_, i) => final.has(i)).map((s) => ({ ...s })),
   ];
 }
 
@@ -163,7 +167,7 @@ export class ReinforcementSystem {
         if (door.timer > 0) continue;
         if (this.canEnter(door.spawn) && g.enemies.length < 14) {
           const s = door.spawn;
-          g.spawnEnemy(s.kind, s.x, s.y, s.elite, door.attackDelay);
+          g.spawnEnemy(s.kind, s.x, s.y, s.elite, door.attackDelay, s.squad);
           g.enemies[g.enemies.length - 1].fromDoor = true;
           door.state = 'open';
           door.timer = REINFORCEMENT_ENTRY;

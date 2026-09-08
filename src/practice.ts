@@ -123,3 +123,23 @@ export function cargoTestFromUrl(url: URL): Checkpoint | null {
     return null;
   return testCheckpoint('CARGO-DROP', 2);
 }
+
+export function squadsTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'squads' ||
+    p.getAll('formation').length > 1 ||
+    ['daily', 'dv', 'seed', 'area'].some((key) => p.has(key))
+  )
+    return null;
+  const presets = {
+    shield: { seed: 'SQUAD-SHIELD-11', stage: 4 },
+    flank: { seed: 'SQUAD-FLANK-1', stage: 6 },
+    ambush: { seed: 'SQUAD-AMBUSH-0', stage: 8 },
+  };
+  const formation = p.get('formation') ?? 'shield';
+  if (!Object.hasOwn(presets, formation)) return null;
+  const preset = presets[formation as keyof typeof presets];
+  return testCheckpoint(preset.seed, preset.stage);
+}

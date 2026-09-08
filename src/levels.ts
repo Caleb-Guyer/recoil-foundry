@@ -6,6 +6,7 @@ import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
 import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
+import type { SquadTag } from './squads.ts';
 export type EnemyKind =
   | 'runner'
   | 'shooter'
@@ -31,6 +32,7 @@ export interface Solid {
 export interface Spawn extends Vec {
   kind: EnemyKind;
   elite?: EliteKind;
+  squad?: SquadTag;
 }
 export interface Layout {
   added?: true;

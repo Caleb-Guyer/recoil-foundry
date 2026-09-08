@@ -29,6 +29,8 @@ import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
 import { drawCargoCables } from './cargo-art.ts';
+import { drawSquadTell } from './squad-art.ts';
+import { squadLineEnd } from './squads.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
 import { EXTRACTION } from './escape-layout.ts';
 import { drawWeapon } from './weapon-art.ts';
@@ -401,6 +403,11 @@ export class Renderer {
             : e.aim;
       if (['shooter', 'flyer', 'sniper', 'boss'].includes(e.kind) && e.elite !== 'volatile') {
         c.save();
+        if (e.squad?.kind === 'shield' && e.squad.role === 'support') {
+          this.line({ x: 0, y: -12 }, { x: 0, y: -34 }, '#a79b86', 4);
+          c.translate(0, -34);
+          this.circle({ x: 0, y: 0 }, 6, '#4c5351');
+        }
         c.rotate(Math.atan2(aim.y, aim.x));
         if (e.elite === 'twin') {
           c.fillStyle = e.state === 'followup' ? '#85624e' : color;
@@ -420,6 +427,12 @@ export class Renderer {
       }
       if (e.kind !== 'loader' && e.kind !== 'press' && e.elite !== 'volatile')
         this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
+      if (e.squad?.connected) {
+        c.fillStyle =
+          e.squad.kind === 'shield' ? '#c9b38a' : e.squad.kind === 'flank' ? '#b3c3ba' : '#d4a087';
+        c.fillRect(-7, 9, 4, 3);
+        c.fillRect(3, 9, 4, 3);
+      }
       if (e.hp < e.maxHp) {
         const w = isBoss(e.kind) ? ENEMY_STATS[e.kind].w : 30;
         const y = -ENEMY_STATS[e.kind].h / 2 - 13;
@@ -430,8 +443,10 @@ export class Renderer {
       }
       c.restore();
       this.drawTell(e);
+      drawSquadTell(c, g, e);
       if (
         (e.kind === 'shooter' || e.kind === 'flyer') &&
+        !(e.squad?.kind === 'shield' && e.squad.role === 'support') &&
         e.elite !== 'volatile' &&
         e.timer < 0.4 &&
         e.spawn === 0
@@ -440,7 +455,7 @@ export class Renderer {
         c.setLineDash([3, 10]);
         this.line(
           p,
-          g.lineEnd(p, { x: p.x + e.aim.x * length, y: p.y + e.aim.y * length }),
+          squadLineEnd(g, e, p, { x: p.x + e.aim.x * length, y: p.y + e.aim.y * length }),
           '#794239',
           1,
         );
@@ -1107,7 +1122,7 @@ export class Renderer {
         locked ? 3 : 2,
       );
     } else if (e.kind === 'sniper') {
-      const end = g.lineEnd(p, { x: p.x + e.aim.x * 1450, y: p.y + e.aim.y * 1450 });
+      const end = squadLineEnd(g, e, p, { x: p.x + e.aim.x * 1450, y: p.y + e.aim.y * 1450 });
       const second = e.state === 'followup',
         locked = e.timer <= (second ? TWIN_LOCK : 0.32);
       c.setLineDash(locked ? [] : [7, 7]);

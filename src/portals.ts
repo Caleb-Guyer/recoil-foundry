@@ -3,6 +3,7 @@ import type { Game } from './game.ts';
 import { firstSolid, sweepBox } from './collisions.ts';
 import { clamp, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
+import { breakSquad } from './squads.ts';
 
 export const PORTAL_RADIUS = 40;
 export const PORTAL_COLORS = ['#64ceff', '#ffa563'] as const;
@@ -277,6 +278,7 @@ export class PortalSystem {
       this.cooldown.set(body, { until: g.time + 0.14, exit });
       const enemy = g.enemies.find((e) => e.body === body);
       if (enemy) {
+        breakSquad(g, enemy);
         enemy.aim = portalVector(enemy.aim, entry, exit);
         if (velocity.x) enemy.facing = Math.sign(velocity.x);
         if (enemy.interceptor) {

@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=25`). Version 25 adds hanging cargo to selected rooms; its best times are separate from earlier rulesets. Boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=26`). Version 26 adds coordinated enemy squads; its best times are separate from earlier rulesets. Squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -225,6 +225,18 @@ New behaviors appear gradually as the run advances:
 
 - **Skimmers** first appear in Cooling Works. These compact flying rotors navigate around cover, warn for 0.82 seconds, and fire three narrow jets. Aim locks for the final 0.34 seconds. Rooftop Skimmers recover faster and fire stronger bolts.
 
+## Enemy squads
+
+Selected rooms pair two existing enemies in the second reinforcement wave. Squads add no enemies, health, or damage bonuses. Both members use the usual warned entrances. Small matching chassis marks identify an active pair without labels or connecting lines.
+
+- **Shield pushes**, available from room 5: a shield carrier advances while a mobile gunner follows behind. The gunner climbs low obstacles and steps off ledges to keep up. Its raised mount fires single rounds after a 0.85-second warning, locking direction for the final 0.35 seconds. It waits for a clear firing lane and cannot shoot through its carrier. The carrier retains its ordinary directional shield and slow turn.
+- **Flanking pairs**, available from room 7: a gunner or sniper pressures you while a flyer physically routes around cover to your other side. The flyer keeps its usual three-shot volley and attack interval, holding position during its final aiming lock.
+- **Sniper–hopper ambushes**, available from room 9: a hopper starts its full jump warning after the sniper locks aim. The sniper fires before the leap, then waits for the hopper to land before starting another warning. Landing targets and aiming lines keep their existing visual cues.
+
+At most one pair forms in a room, and only when its roster contains suitable partners. Killing or teleporting either member breaks the formation. Members separated by a large distance also disengage; survivors use their ordinary behavior. Fuel blasts and falling cargo can break a pair. Squad rounds stop on other enemies without damaging them, so positioning an enemy between you and its partner blocks fire. Terrain, crates, portals, and moving machinery retain their normal physical rules. Boss rooms, detours, and the escape contain no squads.
+
+Test each formation: [Shield push](https://caleb-guyer.github.io/recoil-foundry/?test=squads), [Flanking pair](https://caleb-guyer.github.io/recoil-foundry/?test=squads&formation=flank), or [Sniper–hopper](https://caleb-guyer.github.io/recoil-foundry/?test=squads&formation=ambush). Click **Test enemy squads** and clear the opening group to meet the pair in the second wave. **R** restarts the test entrance. These links preserve ordinary saves, Daily records, and earned Practice victories.
+
 ## Rare elites
 
 Each run contains seven elites: two across the furnace rooms, two in Cooling Works, and one in each regular rooftop room. The first elite in each middle area appears in one of its first two combat rooms; its third room adds another. Later areas select a different elite type from the first furnace encounter when possible. An elite replaces one ordinary enemy at a safe existing spawn point. Early rooms and boss arenas contain none. The seed determines these encounters, including in Daily Runs and restored checkpoints.
@@ -315,6 +327,8 @@ npm run preview
 | `src/cargo.ts`            | Shootable suspension cables, delayed drops, and heavy impact interactions              |
 | `src/cargo-layout.ts`     | Seeded cargo placement with clear cables and falling lanes                             |
 | `src/cargo-art.ts`        | Suspension cables and restrained drop warnings                                         |
+| `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup   |
+| `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane      |
 | `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
 | `src/demolition-art.ts`   | Restrained blast outlines, delayed warnings, and reduced-motion effects                |
 | `src/rules.ts`            | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
@@ -332,6 +346,8 @@ Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered fram
 The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, sixteen-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
 
 Cargo checks cover deterministic placement, clear cables and falling lanes, fast bullets, full warning timing, real enemy and player collisions, fuel chains, every boss's resistance, landed cover, portal interactions, pause and death cleanup, saved entrances, isolated test links, and ordinary traversal with hanging and landed loads in all four areas and both mirrors.
+
+Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links. The full combat playthroughs still use ordinary movement, normal health, and legal upgrades.
 
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
 

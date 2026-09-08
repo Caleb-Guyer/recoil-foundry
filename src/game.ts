@@ -48,6 +48,8 @@ import {
 import type { EnemyState, Attack, EliteKind } from './enemies.ts';
 import { PropSystem, traceProp } from './props.ts';
 import { CargoSystem } from './cargo.ts';
+import { updateSquad, squadGunOrigin, squadLineEnd, breakSquad } from './squads.ts';
+import type { SquadTag, SquadMember } from './squads.ts';
 import type { Prop } from './props.ts';
 import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
 import { BreachSystem } from './breaches.ts';
@@ -90,6 +92,7 @@ export interface Enemy {
   flash: number;
   spawn: number;
   fromDoor?: boolean;
+  squad?: SquadMember;
   phase: number;
   aim: Vec;
   state: EnemyState;
@@ -124,6 +127,7 @@ export interface Shot {
   discharge?: number;
   waypoints?: Vec[];
   blade?: true;
+  allyBlock?: number;
 }
 export interface Particle {
   pos: Vec;
@@ -496,7 +500,14 @@ export class Game {
       this.onSound('win');
     }
   }
-  spawnEnemy(kind: EnemyKind, x: number, y: number, elite?: EliteKind, attackDelay?: number) {
+  spawnEnemy(
+    kind: EnemyKind,
+    x: number,
+    y: number,
+    elite?: EliteKind,
+    attackDelay?: number,
+    squad?: SquadTag,
+  ) {
     if (this.enemies.length >= 14) return;
     const { w, h } = ENEMY_STATS[kind];
     const hp = Math.ceil(
@@ -513,12 +524,14 @@ export class Game {
             label: 'enemy',
           });
     if (kind === 'shooter' || kind === 'sniper' || kind === 'crane') Body.setStatic(body, true);
+    if (squad?.kind === 'shield' && squad.role === 'support') Body.setStatic(body, false);
     Composite.add(this.engine.world, body);
     const enemy: Enemy = {
       id: ++this.id,
       body,
       kind,
       elite,
+      ...(squad ? { squad: { ...squad, connected: false, side: 0, planAt: 0, jumpAt: 0 } } : {}),
       facing: Math.sign(this.player.position.x - x) || -1,
       shieldFlash: 0,
       hp,
@@ -952,29 +965,32 @@ export class Game {
       // A volatile flyer only harms the player through its warned explosion.
       return;
     }
-    if (e.kind === 'charger') this.updateCharger(e);
-    else if (e.kind === 'loader') this.updateLoader(e);
-    else if (e.kind === 'crane') updateCrane(this, e);
-    else if (e.kind === 'press') this.updatePress(e);
-    else if (e.kind === 'kiln') updateKiln(this, e, dt);
-    else if (e.kind === 'hopper') this.updateHopper(e);
-    else if (e.kind === 'sniper') this.updateSniper(e);
-    else if (e.kind === 'boss') this.updateBoss(e);
-    else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
-    else if (e.kind === 'turbine') updateTurbine(this, e, dt);
-    else if (e.kind === 'interceptor') updateInterceptor(this, e, dt);
-    else if (e.kind === 'runner') {
-      const turning = e.elite === 'shielded' && this.updateShield(e);
-      if (!turning) this.updateRunner(e, d, dist);
-    } else if (e.kind === 'flyer') {
-      Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
-      const height = clamp(this.player.position.y - 190, 220, 500);
-      Body.setVelocity(e.body, {
-        x: clamp((this.player.position.x - d.x * 350 - p.x) * 0.009, -2.4, 2.4),
-        y: clamp((height - p.y) * 0.04, -3, 3),
-      });
+    const coordinated = updateSquad(this, e);
+    if (!coordinated) {
+      if (e.kind === 'charger') this.updateCharger(e);
+      else if (e.kind === 'loader') this.updateLoader(e);
+      else if (e.kind === 'crane') updateCrane(this, e);
+      else if (e.kind === 'press') this.updatePress(e);
+      else if (e.kind === 'kiln') updateKiln(this, e, dt);
+      else if (e.kind === 'hopper') this.updateHopper(e);
+      else if (e.kind === 'sniper') this.updateSniper(e);
+      else if (e.kind === 'boss') this.updateBoss(e);
+      else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
+      else if (e.kind === 'turbine') updateTurbine(this, e, dt);
+      else if (e.kind === 'interceptor') updateInterceptor(this, e, dt);
+      else if (e.kind === 'runner') {
+        const turning = e.elite === 'shielded' && this.updateShield(e);
+        if (!turning) this.updateRunner(e, d, dist);
+      } else if (e.kind === 'flyer') {
+        Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
+        const height = clamp(this.player.position.y - 190, 220, 500);
+        Body.setVelocity(e.body, {
+          x: clamp((this.player.position.x - d.x * 350 - p.x) * 0.009, -2.4, 2.4),
+          y: clamp((height - p.y) * 0.04, -3, 3),
+        });
+      }
     }
-    if (e.kind === 'shooter' || e.kind === 'flyer') {
+    if ((e.kind === 'shooter' && !coordinated) || e.kind === 'flyer') {
       if (e.timer > 0.35) e.aim = d;
       if (e.timer <= 0 && dist < 1450) {
         const base = Math.atan2(e.aim.y, e.aim.x);
@@ -1413,9 +1429,15 @@ export class Game {
     a: number,
     speed = [7.2, 8, 8.8, 9.6][areaIndex(this.stage)],
     damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20][areaIndex(this.stage)],
-    origin: Vec = e.body.position,
+    origin: Vec = squadGunOrigin(e),
     blade = false,
   ) {
+    if (
+      e.squad?.kind === 'shield' &&
+      e.squad.role === 'support' &&
+      distance(this.lineEnd(e.body.position, origin, 4), origin) > 0.1
+    )
+      return;
     const d = { x: Math.cos(a), y: Math.sin(a) },
       radius =
         e.kind === 'turbine'
@@ -1428,8 +1450,10 @@ export class Game {
                 ? 38
                 : 26;
     const muzzle = { x: origin.x + d.x * radius, y: origin.y + d.y * radius };
-    const padding = blade ? 11 : e.kind === 'interceptor' ? 5 : 0;
-    const end = this.lineEnd(origin, muzzle, padding);
+    const padding = blade ? 11 : e.squad || e.kind === 'interceptor' ? 5 : 0;
+    const end = e.squad
+      ? squadLineEnd(this, e, origin, muzzle)
+      : this.lineEnd(origin, muzzle, padding);
     const portalMuzzle = this.portals.trace(origin, muzzle, {
       x: blade ? 11 : 5,
       y: blade ? 11 : 5,
@@ -1441,7 +1465,7 @@ export class Game {
         return hit && Math.abs(distance(origin, end) - distance(origin, muzzle) * hit.t) < 0.1;
       });
       if (prop) this.props.hit(prop, damage, d);
-      this.breaches.hitAlong(origin, muzzle, end, damage, d);
+      this.breaches.hitAlong(origin, muzzle, end, damage, d, padding);
       return;
     }
     this.addShot({
@@ -1450,6 +1474,7 @@ export class Game {
       damage,
       life: 4,
       friendly: false,
+      ...(e.squad ? { allyBlock: e.id } : {}),
       radius: blade ? 11 : 5,
       ...(blade ? { blade: true as const } : {}),
       bounces: 0,
@@ -1485,7 +1510,12 @@ export class Game {
         if (s.friendly) {
           for (const e of this.enemies)
             if (!s.hits.has(e.id) && e.spawn <= 0) targets.push([e.body, e]);
-        } else targets.push([this.player, undefined, true]);
+        } else {
+          targets.push([this.player, undefined, true]);
+          if (s.allyBlock !== undefined)
+            for (const e of this.enemies)
+              if (e.id !== s.allyBlock && e.spawn <= 0) targets.push([e.body]);
+        }
         for (const [body, enemy, player] of targets) {
           const h = segmentBox(
             s.pos,
@@ -1684,6 +1714,7 @@ export class Game {
       this.onSound('hit');
     }
     if (e.hp > 0) return blocked;
+    breakSquad(this, e);
     this.kills++;
     this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);

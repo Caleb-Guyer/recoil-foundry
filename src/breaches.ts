@@ -127,9 +127,15 @@ export class BreachSystem {
         distance(this.game.lineEnd(origin, body.position, 0, body), body.position) < 0.1,
     );
   }
-  hitAlong(start: Vec, end: Vec, impact: Vec, damage: number, velocity: Vec) {
+  hitAlong(start: Vec, end: Vec, impact: Vec, damage: number, velocity: Vec, padding = 0) {
     for (const panel of this.panels) {
-      const hit = segmentBox(start, end, panel.body.bounds.min, panel.body.bounds.max);
+      const { min, max } = panel.body.bounds;
+      const hit = segmentBox(
+        start,
+        end,
+        { x: min.x - padding, y: min.y - padding },
+        { x: max.x + padding, y: max.y + padding },
+      );
       if (hit && Math.abs(distance(start, impact) - distance(start, end) * hit.t) < 0.1) {
         this.hit(panel, damage, velocity);
         return;
