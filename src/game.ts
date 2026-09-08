@@ -52,6 +52,7 @@ import { updateSquad, squadGunOrigin, squadLineEnd, breakSquad } from './squads.
 import type { SquadTag, SquadMember } from './squads.ts';
 import type { Prop } from './props.ts';
 import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
+import { ConveyorSystem } from './conveyors.ts';
 import { BreachSystem } from './breaches.ts';
 import { updateLoader, updatePress } from './area-boss-ai.ts';
 import { huntBoss, bossHasLane } from './boss-hunt.ts';
@@ -153,6 +154,7 @@ export class Game {
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   hazards = new HazardSystem(this);
+  conveyors = new ConveyorSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
   portals = new PortalSystem(this);
@@ -312,6 +314,7 @@ export class Game {
     this.enteringDetour = false;
     this.detourStepsReady = false;
     this.evolutions.reset();
+    this.conveyors.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -403,6 +406,7 @@ export class Game {
       if (!this.detour) this.breaches.reset(this.level, this.seed, this.stage);
       this.props.reset(this.level);
       this.cargo.reset();
+      this.conveyors.reset();
     }
   }
   startEscape() {
@@ -616,6 +620,7 @@ export class Game {
     this.coyote = this.grounded ? 0.1 : Math.max(0, this.coyote - dt);
     this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
     this.fireBuffer = Math.max(0, this.fireBuffer - dt);
+    this.conveyors.beginStep();
     const move = Number(input.right) - Number(input.left),
       max = 7.3 * this.gun.speed;
     let vx = this.player.velocity.x;
@@ -668,9 +673,11 @@ export class Game {
     // Capture descent before Matter resolves the landing collision and zeros velocity.
     if (!this.grounded) this.landingSpeed = this.player.velocity.y;
     this.cargo.update(dt);
+    this.conveyors.beforeStep();
     this.props.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
+    this.conveyors.afterStep();
     this.props.afterStep(dt);
     if (this.mode !== 'playing') return;
     this.hazards.afterStep(dt);

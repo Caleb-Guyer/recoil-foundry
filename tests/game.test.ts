@@ -546,6 +546,18 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         // cutting recoil while still pressed against its vertical face.
         !!(navigate && way && p.y > way.y - 12 && !g.grounded && stuck > 15);
       let jump = g.grounded && (i % 90 === 0 || blocked || stuck > 15 || lift);
+      // Direct-fire builds hop off moving ground to hold a firing lane;
+      // shell builds keep their existing trajectory into nearby cover.
+      if (
+        !g.clear &&
+        !g.gun.shellshock &&
+        g.grounded &&
+        g.conveyors.items.some(
+          (belt) =>
+            Math.abs(g.player.bounds.max.y - belt.y) < 4 && p.x >= belt.x && p.x <= belt.x + belt.w,
+        )
+      )
+        jump = true;
       if (lift && !g.grounded) aim = { x: p.x, y: p.y + 500 };
       if (g.clear) {
         if (clearAt < 0) clearAt = g.time;

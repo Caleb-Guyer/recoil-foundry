@@ -29,6 +29,7 @@ import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
 import { drawCargoCables } from './cargo-art.ts';
+import { drawConveyors } from './conveyor-art.ts';
 import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
@@ -155,6 +156,7 @@ export class Renderer {
     this.drawExit();
     drawDetourDoor(c, g);
     this.drawHazards();
+    drawConveyors(c, g, this.reduced);
     drawCoolant(c, g, this.reduced);
     this.drawProps();
     this.drawBreaches();

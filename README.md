@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=26`). Version 26 adds coordinated enemy squads; its best times are separate from earlier rulesets. Squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-08&dv=27`). Version 27 adds conveyor belts; its best times are separate from earlier rulesets. Belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -215,6 +215,16 @@ Cargo appears sparsely in selected third-room layouts, with clear falling lanes 
 
 [Test hanging cargo](https://caleb-guyer.github.io/recoil-foundry/?test=cargo): click **Test hanging cargo** to enter a room with a suspended load, full health, and two upgrades. Shoot the cable; press **R** to restart the room. This isolated test preserves ordinary saves, Daily records, and earned Practice victories.
 
+## Conveyor belts
+
+Moving rollers and amber arrows mark belts set flush into selected floors and platforms. They start slowly in the furnace, with faster belts and occasional pairs in Cooling Works and the rooftops. Ordinary ground remains at both ends, and placement avoids coolant, fixed cover, and moving machinery. Boss arenas, detours, docks, and the final escape contain no belts.
+
+Belts carry grounded players, enemies, crates, unlit fuel canisters, and fallen cargo. Supported stacks move together, so a crate can become moving cover. Gun emplacements on belts become physical bodies after their entrance warning; their attack warnings and aim locks remain intact. Fixed panels and suspended cargo stay anchored.
+
+Walking against a belt overcomes its pull. Jumping carries your horizontal momentum into the air, where recoil works normally and the belt stops affecting you. Walls still stop every hull; belts cannot accelerate cargo into damaging impacts by themselves or ignite unlit fuel. Portals work with carried players, enemies, and small props. Pauses and hitstop freeze transport, and Continue restores the same room entrance.
+
+Try the [furnace belts](https://caleb-guyer.github.io/recoil-foundry/?test=conveyors) or [faster rooftop belts](https://caleb-guyer.github.io/recoil-foundry/?test=conveyors&area=rooftops). Click **Test conveyor belts**; **R** restarts the room. Both tests provide full health and a preset gun while preserving ordinary saves, Daily records, and earned Practice victories.
+
 ## Enemies
 
 New behaviors appear gradually as the run advances:
@@ -327,6 +337,9 @@ npm run preview
 | `src/cargo.ts`            | Shootable suspension cables, delayed drops, and heavy impact interactions              |
 | `src/cargo-layout.ts`     | Seeded cargo placement with clear cables and falling lanes                             |
 | `src/cargo-art.ts`        | Suspension cables and restrained drop warnings                                         |
+| `src/conveyors.ts`        | Ground transport, momentum, supported stacks, and physical enemy carriage              |
+| `src/conveyor-layout.ts`  | Sparse seeded belt inserts with clear approaches and mirrored directions               |
+| `src/conveyor-art.ts`     | Moving rollers, tread marks, and direction arrows                                      |
 | `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup   |
 | `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane      |
 | `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
@@ -347,7 +360,9 @@ The test suite covers actual movement, recoil flight, extreme builds, projectile
 
 Cargo checks cover deterministic placement, clear cables and falling lanes, fast bullets, full warning timing, real enemy and player collisions, fuel chains, every boss's resistance, landed cover, portal interactions, pause and death cleanup, saved entrances, isolated test links, and ordinary traversal with hanging and landed loads in all four areas and both mirrors.
 
-Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links. The full combat playthroughs still use ordinary movement, normal health, and legal upgrades.
+Conveyor checks cover mirrored placement, clear approaches and machinery spacing, both travel directions, running against the fastest belt, airborne momentum and recoil, stacked cover, harmless fuel transport, anchored and airborne exclusions, enemy entrances and aim locks, walls, ledges, restored friction, bounded cargo speed, actual portal travel, pause and hitstop, Continue, Daily, and isolated test links. Full combat playthroughs use ordinary movement, normal health, and legal upgrades, with direct-fire builds jumping off belts during combat.
+
+Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links.
 
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
 

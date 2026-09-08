@@ -143,3 +143,20 @@ export function squadsTestFromUrl(url: URL): Checkpoint | null {
   const preset = presets[formation as keyof typeof presets];
   return testCheckpoint(preset.seed, preset.stage);
 }
+
+export function conveyorsTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'conveyors' ||
+    p.getAll('area').length > 1 ||
+    ['daily', 'dv', 'seed', 'formation'].some((key) => p.has(key))
+  )
+    return null;
+  const area = p.get('area') ?? 'furnace';
+  if (area !== 'furnace' && area !== 'rooftops') return null;
+  return testCheckpoint(
+    area === 'furnace' ? 'BELT-FURNACE-7' : 'BELT-ROOFTOPS-3',
+    area === 'furnace' ? 4 : 12,
+  );
+}
