@@ -18,6 +18,18 @@ export interface Encounter {
   seed: string;
 }
 
+// Explicit playtest links are isolated fights, never earned Practice unlocks.
+export function testEncounterFromUrl(url: URL): Encounter | null {
+  const params = url.searchParams;
+  if (
+    params.getAll('test').length !== 1 ||
+    params.get('test') !== 'turbine' ||
+    ['daily', 'dv', 'seed'].some((key) => params.has(key))
+  )
+    return null;
+  return loadEncounters([{ kind: 'turbine', seed: 'turbine-fight-1' }])[0] ?? null;
+}
+
 export function loadEncounters(value: unknown): Encounter[] {
   if (!Array.isArray(value)) return [];
   const records: Encounter[] = [];

@@ -232,6 +232,8 @@ Choose a defeated boss to replay its arena with 100 health and a preset gun cont
 
 Practice preserves your normal checkpoint, Daily selection, and best times. Returning to the menu and choosing Continue restores your saved room with its original health and gun. Practice cannot unlock other encounters or advance into another room. Ordinary and Daily gameplay rules remain unchanged.
 
+[Test the Turbine directly](https://caleb-guyer.github.io/recoil-foundry/?test=turbine): select **Test the Turbine** to start its isolated fight with 100 health and eight upgrades. Press **R** to retry. This explicit playtest link works before earning the boss, preserves your saved run and Daily records, and grants no Practice unlocks. The regular Practice menu still lists only bosses you have beaten during a run.
+
 ## Final escape
 
 After defeating the last boss, leave through its exit to begin a continuous rooftop escape. Three clusters of failing machinery form a short traversal finale, with ordinary jumps along the lower route and faster recoil shortcuts above. Lights fade, debris falls in the background, and collapsing platforms crack before dropping away permanently. The ground stays safe, and there is no fatal countdown.

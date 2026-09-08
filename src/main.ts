@@ -7,7 +7,12 @@ import { musicScene } from './music-score.ts';
 import { AREAS } from './areas.ts';
 import { MODS, loadCheckpoint, STAGES, modPathLabel, buildPath, PATH_NAMES } from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
-import { VICTORIES_KEY, PRACTICE_BOSSES, loadEncounters } from './practice.ts';
+import {
+  VICTORIES_KEY,
+  PRACTICE_BOSSES,
+  loadEncounters,
+  testEncounterFromUrl,
+} from './practice.ts';
 import type { Encounter } from './practice.ts';
 import {
   DAILY_BESTS_KEY,
@@ -94,6 +99,7 @@ const input: Input = {
   aim: { x: 600, y: 550 },
 };
 const entryUrl = new URL(location.href);
+let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedDaily = dailyFromUrl(entryUrl);
 let invalidDailyLink = entryUrl.searchParams.has('daily') && !linkedDaily;
 let seedParam = entryUrl.searchParams.has('daily')
@@ -103,7 +109,8 @@ let activeDaily = dailyFromSeed(game.seed);
 let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = null;
 
 function updateTitle() {
-  $('play').innerHTML = `${linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
+  $('play').innerHTML =
+    `${linkedTest ? 'Test the Turbine' : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
@@ -112,13 +119,15 @@ function updateTitle() {
   $('practice').hidden = encounters.length === 0;
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
-  $('title-hint').textContent = linkedDaily
-    ? `Daily · ${linkedDaily.date}`
-    : invalidDailyLink
-      ? 'Challenge link unavailable. Start a fresh run.'
-      : unavailableDailySave
-        ? 'Saved daily unavailable. Start a new daily.'
-        : 'Shoot down. Go up.';
+  $('title-hint').textContent = linkedTest
+    ? 'Full health. Eight upgrades. R to retry.'
+    : linkedDaily
+      ? `Daily · ${linkedDaily.date}`
+      : invalidDailyLink
+        ? 'Challenge link unavailable. Start a fresh run.'
+        : unavailableDailySave
+          ? 'Saved daily unavailable. Start a new daily.'
+          : 'Shoot down. Go up.';
 }
 function clearInput() {
   keys.clear();
@@ -154,6 +163,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     startPractice(game.practice);
     return;
   }
+  linkedTest = null;
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -169,6 +179,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     history.replaceState(null, '', dailyLink(activeDaily, location.href));
   } else {
     const url = new URL(location.href);
+    url.searchParams.delete('test');
     url.searchParams.delete('daily');
     url.searchParams.delete('dv');
     if (seedParam !== seed) {
@@ -186,7 +197,9 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
 }
 function startPractice(encounter: Encounter) {
   if (
-    !encounters.some((record) => record.kind === encounter.kind && record.seed === encounter.seed)
+    ![...encounters, ...(linkedTest ? [linkedTest] : [])].some(
+      (record) => record.kind === encounter.kind && record.seed === encounter.seed,
+    )
   )
     return;
   sound.unlock();
@@ -367,7 +380,9 @@ function showDialog(kind: string) {
       (win ? 'Fight cleared.' : 'Try again.') +
       '</h2><p class="result-line">' +
       formatTime(game.elapsed) +
-      '</p><div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button><button id="choose-fight" class="quiet">Choose fight</button><button id="menu" class="quiet">Menu</button></div>';
+      '</p><div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button><button id="choose-fight" class="quiet"' +
+      (encounters.length ? '' : ' hidden') +
+      '>Choose fight</button><button id="menu" class="quiet">Menu</button></div>';
     $('retry').onclick = () => start(undefined, true);
     $('choose-fight').onclick = () => showDialog('practice');
     $('menu').onclick = menu;
@@ -494,7 +509,9 @@ function showDialog(kind: string) {
       (paused ? 'Resume' : 'Back') +
       '</button>' +
       (paused && game.practice
-        ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet">Choose fight</button>'
+        ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet"' +
+          (encounters.length ? '' : ' hidden') +
+          '>Choose fight</button>'
         : '') +
       (paused ? '<button id="menu" class="quiet">Menu</button>' : '') +
       '</div>';
@@ -538,7 +555,7 @@ function pause() {
 function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
-$('play').onclick = () => start();
+$('play').onclick = () => (linkedTest ? startPractice(linkedTest) : start());
 $('daily').onclick = () => {
   if (linkedDaily) {
     linkedDaily = null;

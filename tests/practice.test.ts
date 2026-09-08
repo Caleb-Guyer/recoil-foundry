@@ -11,6 +11,7 @@ import {
   loadEncounters,
   VICTORIES_KEY,
   practiceCheckpoint,
+  testEncounterFromUrl,
 } from '../src/practice.ts';
 import type { Encounter, PracticeBoss } from '../src/practice.ts';
 
@@ -33,6 +34,57 @@ function record(kind: PracticeBoss, mirrored = false): Encounter {
   }
   assert.fail('No fixture for ' + kind);
 }
+
+test('the explicit Turbine test link selects its real boss and never overrides Daily or seeded links', () => {
+  const base = 'https://caleb-guyer.github.io/recoil-foundry/';
+  const entry = testEncounterFromUrl(new URL('?test=turbine', base));
+  assert(entry);
+  assert.equal(entry.kind, 'turbine');
+  assert.equal(getLevel(entry.seed, 8).spawns[0].kind, 'turbine');
+  assert.equal(practiceCheckpoint(entry)!.mods.length, 8);
+  for (const query of [
+    '',
+    '?test=',
+    '?test=constructor',
+    '?test=loader',
+    '?test=turbine&test=turbine',
+    '?test=turbine&daily=2026-09-07',
+    '?test=turbine&dv=22',
+    '?test=turbine&seed=anything',
+  ])
+    assert.equal(testEncounterFromUrl(new URL(query, base)), null, query);
+});
+
+test('a direct Turbine test can lose, retry and win without a victory record or changing a saved run', () => {
+  const entry = testEncounterFromUrl(new URL('https://example.com/?test=turbine'))!;
+  const g = new Game(),
+    writes: (Checkpoint | null)[] = [],
+    victories: string[] = [];
+  g.onCheckpoint = (value) => writes.push(value);
+  g.onBossDefeated = (kind) => victories.push(kind);
+  g.start('saved-before-test');
+  const saved = structuredClone(writes[0])!;
+  assert(g.startPractice(entry));
+  assert.equal(g.stage, 8);
+  assert.equal(g.hp, 100);
+  assert.equal(g.mods.length, 8);
+  g.die();
+  assert.equal(g.mode, 'dead');
+  assert(g.startPractice(g.practice!));
+  assert.equal(g.hp, 100);
+  assert.equal(g.elapsed, 0);
+  g.enemies[0].spawn = 0;
+  g.hitEnemy(g.enemies[0], 999999);
+  step(g, 20);
+  assert.equal(g.mode, 'won');
+  g.save();
+  assert.deepEqual(writes, [saved]);
+  assert.deepEqual(victories, []);
+  g.start(saved.seed, saved);
+  assert.equal(g.practice, null);
+  assert.equal(g.stage, saved.stage);
+  assert.deepEqual(g.mods, saved.mods);
+});
 
 test('victory storage validates boss arenas and uses a separate key from old encounter-only unlocks', () => {
   assert.notEqual(VICTORIES_KEY, 'rf-encounters-v1');
