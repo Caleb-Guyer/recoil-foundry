@@ -147,6 +147,8 @@ export class Sound {
         'loader',
         'press',
         'slam',
+        'cargo-release',
+        'cargo-impact',
       ].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
@@ -155,6 +157,12 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'cargo-release') {
+      this.crack(0.13, 0.1, 2500);
+      this.tone(310, 170, 0.45, 0.07, 'triangle');
+    } else if (kind === 'cargo-impact') {
+      this.tone(75, 28, 0.23, 0.19);
+      this.crack(0.16, 0.16, 700);
     } else if (kind === 'interceptor-lock') {
       this.tone(290, 540, 0.22, 0.07, 'triangle');
       this.tone(540, 540, 0.09, 0.035, 'sine', 0.25);

@@ -28,6 +28,7 @@ import { clamp, direction, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
+import { drawCargoCables } from './cargo-art.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
 import { EXTRACTION } from './escape-layout.ts';
 import { drawWeapon } from './weapon-art.ts';
@@ -976,6 +977,7 @@ export class Renderer {
   drawProps() {
     const c = this.ctx,
       g = this.game;
+    drawCargoCables(c, g, this.reduced);
     for (const prop of g.props.items) {
       const { w, h } = PROP_STATS[prop.kind];
       c.save();
@@ -986,7 +988,20 @@ export class Renderer {
       c.strokeStyle = prop.flash > 0 ? '#f4ebcf' : prop.kind === 'canister' ? '#ba9b66' : '#91a4a7';
       c.lineWidth = 1.5;
       c.strokeRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2);
-      if (prop.kind === 'crate') {
+      if (prop.kind === 'cargo') {
+        c.fillStyle = '#222e34';
+        c.fillRect(-w / 2 + 8, -h / 2 + 8, w - 16, h - 16);
+        c.fillStyle = '#819093';
+        for (const x of [-30, 30]) c.fillRect(x - 3, -h / 2, 6, h);
+        c.fillStyle = '#b59d72';
+        for (let x = -w / 2 + 8; x < w / 2 - 8; x += 14) c.fillRect(x, h / 2 - 8, 8, 5);
+        c.strokeStyle = '#b3beb7';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(-w / 2 + 2, -h / 2 + 2);
+        c.lineTo(w / 2 - 2, -h / 2 + 2);
+        c.stroke();
+      } else if (prop.kind === 'crate') {
         this.line({ x: -16, y: -16 }, { x: 16, y: 16 }, '#71878c', 2);
         this.line({ x: 16, y: -16 }, { x: -16, y: 16 }, '#71878c', 2);
         c.fillStyle = '#c4c6ad';

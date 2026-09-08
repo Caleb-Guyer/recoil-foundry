@@ -431,7 +431,10 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       pressDirection = 1,
       pressReacted = false,
       craneDodgeUntil = 0,
-      craneDirection = 1;
+      craneDirection = 1,
+      loaderDodgeUntil = 0,
+      loaderDirection = 1,
+      loaderReacted = false;
     const priority = [
       ...pathMods,
       'leech',
@@ -632,6 +635,34 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         firing = e.state !== 'rush' && !(e.state === 'windup' && e.timer <= CRANE_LOCK);
         aim = { ...ep };
       }
+      // Single rounds keep distance and cross locked turret lanes; spread builds
+      // retain the close-range movement and projectile dodge behavior below.
+      if (e?.kind === 'loader' && g.gun.pellets === 1) {
+        move = dx > 320 ? 1 : dx < -320 ? -1 : 0;
+        if (distance(g.lineEnd(p, ep), ep) > 1) move = Math.sign(dx);
+        jump =
+          g.grounded &&
+          !!move &&
+          Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
+        aim = { ...ep };
+        firing = true;
+        if (e.state === 'windup' && e.timer <= 0.38 && !loaderReacted) {
+          loaderReacted = true;
+          loaderDodgeUntil = g.time + 0.9;
+          loaderDirection = p.x < 400 ? 1 : p.x > 1600 ? -1 : Math.sign(dx);
+          jump ||= g.grounded;
+        }
+        if (e.state !== 'windup') loaderReacted = false;
+        if (g.time < loaderDodgeUntil) {
+          move = loaderDirection;
+          firing = false;
+        }
+        if (e.state === 'rush' && Math.abs(dx) < 300) jump ||= g.grounded;
+        if (p.x < 160 || p.x > 1840) {
+          move = p.x < 160 ? 1 : -1;
+          firing = false;
+        }
+      }
       if (
         !g.clear &&
         e?.kind !== 'boss' &&
@@ -639,6 +670,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         e?.kind !== 'turbine' &&
         e?.kind !== 'interceptor' &&
         e?.kind !== 'press' &&
+        !(e?.kind === 'loader' && g.gun.pellets === 1) &&
         e?.kind !== 'crane'
       ) {
         const threat = g.shots.find((s) => {
@@ -666,6 +698,19 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         // walk below the steps instead of accidentally selecting the upper door.
         if (g.grounded && p.y > 690) directExitReady = true;
         move = directExitReady ? 1 : Math.abs(p.x - 1760) > 8 ? Math.sign(1760 - p.x) : 0;
+        jump = false;
+        firing = false;
+      }
+      // React to the visible drop lane just as to a locked projectile warning.
+      const fallingLoad = g.cargo.items.find(
+        (load) =>
+          (load.cargo!.state === 'warning' ||
+            (load.cargo!.state === 'loose' && load.body.velocity.y > 4)) &&
+          p.y > load.body.position.y &&
+          Math.abs(p.x - load.body.position.x) < 100,
+      );
+      if (fallingLoad) {
+        move = p.x < fallingLoad.body.position.x ? -1 : 1;
         jump = false;
         firing = false;
       }

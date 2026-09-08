@@ -47,6 +47,7 @@ import {
 } from './enemies.ts';
 import type { EnemyState, Attack, EliteKind } from './enemies.ts';
 import { PropSystem, traceProp } from './props.ts';
+import { CargoSystem } from './cargo.ts';
 import type { Prop } from './props.ts';
 import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
 import { BreachSystem } from './breaches.ts';
@@ -146,6 +147,7 @@ export class Game {
   level!: Level;
   terrain: Matter.Body[] = [];
   props = new PropSystem(this);
+  cargo = new CargoSystem(this);
   hazards = new HazardSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
@@ -396,6 +398,7 @@ export class Game {
       this.hazards.reset(this.level, this.roomSeed, this.stage);
       if (!this.detour) this.breaches.reset(this.level, this.seed, this.stage);
       this.props.reset(this.level);
+      this.cargo.reset();
     }
   }
   startEscape() {
@@ -651,6 +654,7 @@ export class Game {
     }
     // Capture descent before Matter resolves the landing collision and zeros velocity.
     if (!this.grounded) this.landingSpeed = this.player.velocity.y;
+    this.cargo.update(dt);
     this.props.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
@@ -1473,6 +1477,7 @@ export class Game {
           enemy?: Enemy;
           player?: boolean;
           prop?: Prop;
+          cable?: Prop;
           body?: Matter.Body;
         } | null = null;
         const targets: [Matter.Body, Enemy?, boolean?][] = this.terrainBodies.map((b) => [b]);
@@ -1494,6 +1499,9 @@ export class Game {
           const h = traceProp(prop, s.pos, end, s.radius);
           if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, prop };
         }
+        const cable = this.cargo.trace(s.pos, end, s.radius);
+        if (cable && (!nearest || cable.t < nearest.t))
+          nearest = { t: cable.t, normal: cable.normal, cable: cable.prop };
         const passage = this.portals.trace(s.pos, end, { x: s.radius, y: s.radius });
         if (passage && (!nearest || passage.t <= nearest.t + 1e-6)) {
           s.pos = { ...passage.pos };
@@ -1526,7 +1534,12 @@ export class Game {
         recordShotTrace(s.trace, s.pos);
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
-        if (nearest.enemy) {
+        if (nearest.cable) {
+          this.cargo.cut(nearest.cable, s.damage);
+          s.life = 0;
+          this.demolition.impact(s);
+          if (this.mode !== 'playing') return;
+        } else if (nearest.enemy) {
           const e = nearest.enemy;
           s.hits.add(e.id);
           // Use this segment's incoming direction, including after a bank, rather

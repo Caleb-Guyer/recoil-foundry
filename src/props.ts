@@ -3,13 +3,16 @@ import type { Game } from './game.ts';
 import type { Level } from './levels.ts';
 import { clamp, direction, distance, segmentBox, seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
+import type { CargoRig } from './cargo.ts';
+import { CARGO_SIZE } from './cargo-layout.ts';
 
 const { Bodies, Body, Composite, Events } = Matter;
-export type PropKind = 'crate' | 'canister' | 'cover';
+export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo';
 export const PROP_STATS = {
   crate: { w: 44, h: 44, hp: 120 },
   canister: { w: 24, h: 38, hp: Infinity },
   cover: { w: 24, h: 84, hp: 72 },
+  cargo: { ...CARGO_SIZE, hp: 400 },
 };
 export interface Prop {
   kind: PropKind;
@@ -21,6 +24,7 @@ export interface Prop {
   detonateAt: number;
   velocity: Vec;
   hits: Map<number, number>;
+  cargo?: CargoRig;
 }
 export interface PropPlacement extends Vec {
   kind: PropKind;
@@ -184,7 +188,8 @@ export class PropSystem {
       frictionStatic: 0.5,
       frictionAir: 0.008,
       restitution: kind === 'canister' ? 0.25 : 0.08,
-      density: kind === 'crate' ? 0.0012 : 0.001,
+      density: kind === 'cargo' ? 0.003 : kind === 'crate' ? 0.0012 : 0.001,
+      ...(kind === 'cargo' ? { inertia: Infinity } : {}),
       label: 'prop',
     });
     const prop: Prop = {
@@ -219,15 +224,20 @@ export class PropSystem {
       g.onSound('arm');
     }
     if (!prop.body.isStatic) {
-      const force = clamp(damage * (prop.kind === 'canister' ? 0.42 : 0.28), 0.4, 12);
+      const force = clamp(
+        damage * (prop.kind === 'cargo' ? 0.08 : prop.kind === 'canister' ? 0.42 : 0.28),
+        0.4,
+        prop.kind === 'cargo' ? 6 : 12,
+      );
       Body.setVelocity(prop.body, {
         x: clamp(prop.body.velocity.x + d.x * force, -18, 18),
         y: clamp(prop.body.velocity.y + d.y * force - Math.abs(d.x) * force * 0.25, -18, 18),
       });
-      Body.setAngularVelocity(
-        prop.body,
-        clamp(prop.body.angularVelocity + d.x * 0.05, -0.18, 0.18),
-      );
+      if (prop.kind !== 'cargo')
+        Body.setAngularVelocity(
+          prop.body,
+          clamp(prop.body.angularVelocity + d.x * 0.05, -0.18, 0.18),
+        );
     }
     if (prop.hp <= 0) this.break(prop);
   }
@@ -265,6 +275,10 @@ export class PropSystem {
     for (const prop of this.items) prop.flash = Math.max(0, prop.flash - dt);
     for (const { prop, other, speed, incomingSpeed } of this.impacts) {
       if (!this.items.includes(prop)) continue;
+      if (this.game.cargo.impact(prop, other, speed)) {
+        if (g.mode !== 'playing') return;
+        continue;
+      }
       const enemy = g.enemies.find((e) => e.body === other || e.crane?.body === other);
       const incoming = this.velocities.get(other);
       if (

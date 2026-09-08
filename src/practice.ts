@@ -112,3 +112,14 @@ export function expandedTestFromUrl(url: URL): Checkpoint | null {
   const area = areas.indexOf(p.get('area') ?? 'docks');
   return area < 0 ? null : testCheckpoint('EXPANDED-16', area * 4 + 2);
 }
+
+export function cargoTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'cargo' ||
+    ['daily', 'dv', 'seed', 'area'].some((key) => p.has(key))
+  )
+    return null;
+  return testCheckpoint('CARGO-DROP', 2);
+}

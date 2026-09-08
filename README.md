@@ -4,7 +4,7 @@
 
 [Play in your browser](https://caleb-guyer.github.io/recoil-foundry/)
 
-A physics roguelike about staying in motion. Clear sixteen stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, cargo, or ability selection.
+A physics roguelike about staying in motion. Clear sixteen stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
 ## Play
 
@@ -36,13 +36,13 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=24`). Version 24 expands the main route to sixteen rooms and balances enemies for the additional upgrades; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=25`). Version 25 adds hanging cargo to selected rooms; its best times are separate from earlier rulesets. Boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
 [Try the new rooms](https://caleb-guyer.github.io/recoil-foundry/?test=expanded). Click **Test new rooms** to begin in room 3 with full health and two upgrades, then play onward normally. Add `&area=furnace`, `&area=cooling`, or `&area=rooftops` to begin at that area's new third room with an appropriate preset build. **R** or **Restart test** in Pause returns to the test entrance. These links preserve ordinary saves, Daily records, and earned Practice victories.
 
-Ordinary saves from the twelve-room version migrate to the same area and encounter with their health, gun, optional rewards, and elapsed time intact. They skip any newly inserted rooms behind that checkpoint. The migration records those missed upgrade picks so later detours and escape checkpoints remain valid. New runs use all sixteen rooms. Daily ruleset 24 starts fresh because its route and balance changed.
+Ordinary saves from the twelve-room version migrate to the same area and encounter with their health, gun, optional rewards, and elapsed time intact. They skip any newly inserted rooms behind that checkpoint. The migration records those missed upgrade picks so later detours and escape checkpoints remain valid. New runs use all sixteen rooms. Daily rulesets start fresh when their route or gameplay changes.
 
 ## Build paths
 
@@ -197,13 +197,23 @@ Passages and pickups follow the run seed, including Daily Runs. Continuing resto
 
 ## Physics props
 
-Rooms contain up to three props, placed away from enemy entrances and the exit. Tall breakable panels stay off the main traversal route. Some furnace rooms contain a pair of canisters for a chain reaction.
+Rooms contain up to three small props, placed away from enemy entrances and the exit. Selected third rooms also contain one hanging load. Tall breakable panels stay off the main traversal route. Some furnace rooms contain a pair of canisters for a chain reaction.
 
 - **Loose crates** can be pushed, stood on, or launched with gunfire. A fast crate impact damages enemies; ordinary pushing is harmless. Repeated shots eventually break the crate. Hard enemy body impacts damage crates; committed charges and heavy slams smash them.
 - **Fuel canisters** launch and light up when shot. A hard impact detonates them, damaging nearby enemies and triggering nearby canisters. Hard enemy body impacts and direct charges or hammer slams detonate even unlit canisters. Charges stop in recovery on contact, including tipped props. Solid cover blocks the blast. Stay clear: close explosions can also hurt you.
 - **Breakable panels** stop bullets and aiming lines. Three ordinary rounds break one, opening a new firing lane. Cracks show damage without a health bar.
 
 Every enemy hull is solid against props, and the resting Crane hammer can support them. Swept charges and slams stop at the first solid object, respecting rotated prop surfaces and anything protected behind a wall. Props block enemy fire and rear blasts as well as ordinary shots. Banked rounds reflect from their actual rotated surfaces; gun modifications still combine on the same weapon. Surviving props do not prevent a room from clearing. Continuing a run restores its props at the room entrance, like enemies.
+
+## Hanging cargo
+
+Shoot the suspension cable to drop a heavy load. Two ordinary hits sever it; stronger rounds can cut it sooner. An amber outline, floor mark, and metal release sound give 0.65 seconds of warning before it falls. Enemy shots can cut cables too. No extra controls or HUD text are needed.
+
+Fast impacts crush enemies and detonate even unlit fuel canisters, allowing nearby fuel chains. A direct hit costs the player 24 health. Boss damage is capped at 90 before the boss's usual armor or recovery multiplier. Resting contact is harmless. The 400-health load stays upright after landing: push it, stand on it, or use it as cover. Sustained gunfire can break it. Its wide hull does not fit portals, although bullets fired through portals can cut its cable.
+
+Cargo appears sparsely in selected third-room layouts, with clear falling lanes away from exits and moving machinery. Placement follows the run seed and repeats on Continue and in Daily Runs. Pausing freezes the warning. Boss arenas, detours, and the final escape contain no hanging cargo.
+
+[Test hanging cargo](https://caleb-guyer.github.io/recoil-foundry/?test=cargo): click **Test hanging cargo** to enter a room with a suspended load, full health, and two upgrades. Shoot the cable; press **R** to restart the room. This isolated test preserves ordinary saves, Daily records, and earned Practice victories.
 
 ## Enemies
 
@@ -302,6 +312,9 @@ npm run preview
 | `src/levels.ts`           | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
 | `src/areas.ts`            | Area palettes, parallax scenery, and surface details                                   |
 | `src/props.ts`            | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
+| `src/cargo.ts`            | Shootable suspension cables, delayed drops, and heavy impact interactions              |
+| `src/cargo-layout.ts`     | Seeded cargo placement with clear cables and falling lanes                             |
+| `src/cargo-art.ts`        | Suspension cables and restrained drop warnings                                         |
 | `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
 | `src/demolition-art.ts`   | Restrained blast outlines, delayed warnings, and reduced-motion effects                |
 | `src/rules.ts`            | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
@@ -317,6 +330,8 @@ npm run preview
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
 The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, sixteen-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
+
+Cargo checks cover deterministic placement, clear cables and falling lanes, fast bullets, full warning timing, real enemy and player collisions, fuel chains, every boss's resistance, landed cover, portal interactions, pause and death cleanup, saved entrances, isolated test links, and ordinary traversal with hanging and landed loads in all four areas and both mirrors.
 
 Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
 

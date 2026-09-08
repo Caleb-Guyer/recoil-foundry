@@ -13,6 +13,7 @@ import {
   loadEncounters,
   testEncounterFromUrl,
   expandedTestFromUrl,
+  cargoTestFromUrl,
 } from './practice.ts';
 import type { Encounter } from './practice.ts';
 import {
@@ -101,7 +102,7 @@ const input: Input = {
 };
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
-let linkedRunTest = expandedTestFromUrl(entryUrl);
+let linkedRunTest = cargoTestFromUrl(entryUrl) ?? expandedTestFromUrl(entryUrl);
 let linkedDaily = dailyFromUrl(entryUrl);
 let invalidDailyLink = entryUrl.searchParams.has('daily') && !linkedDaily;
 let seedParam = entryUrl.searchParams.has('daily')
@@ -112,7 +113,7 @@ let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = nu
 
 function updateTitle() {
   $('play').innerHTML =
-    `${linkedRunTest ? 'Test new rooms' : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
+    `${linkedRunTest ? (linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
@@ -122,7 +123,9 @@ function updateTitle() {
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
   $('title-hint').textContent = linkedRunTest
-    ? 'Full health. Preset gun. R to restart test.'
+    ? linkedRunTest.seed === 'CARGO-DROP'
+      ? 'Shoot the cable. R to restart test.'
+      : 'Full health. Preset gun. R to restart test.'
     : linkedTest
       ? `Full health. ${PRACTICE_BOSSES[linkedTest.kind].stage} upgrades. R to retry.`
       : linkedDaily
