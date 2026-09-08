@@ -279,7 +279,16 @@ export class PortalSystem {
       if (enemy) {
         enemy.aim = portalVector(enemy.aim, entry, exit);
         if (velocity.x) enemy.facing = Math.sign(velocity.x);
-        if (enemy.state === 'rush') {
+        if (enemy.interceptor) {
+          // A teleported gun cannot release a warning drawn at its old position.
+          enemy.interceptor.origin = { ...body.position };
+          enemy.interceptor.launch = { x: 0, y: 0 };
+          enemy.interceptor.volley = 0;
+          enemy.interceptor.relocate = true;
+          enemy.hunt = undefined;
+          enemy.state = 'airborne';
+          enemy.timer = 0.3;
+        } else if (enemy.state === 'rush') {
           enemy.state = 'recover';
           enemy.timer = 0.3;
         }

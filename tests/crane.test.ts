@@ -131,7 +131,7 @@ test('the independent docks boss draw preserves regular rooms and the rooftop en
   for (const [seed, rooms] of Object.entries(expected)) {
     assert.deepEqual(
       [0, 1, 3, 4, 9, 10, 11].map((stage) => {
-        const level = getLevel(seed, stage);
+        const level = getLevel(seed, stage, undefined, 'boss');
         return `${level.id}:${level.mirrored}`;
       }),
       rooms,

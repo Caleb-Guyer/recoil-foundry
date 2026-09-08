@@ -225,7 +225,8 @@ test('sustained fire from the old overhead and cover camps cannot win the boss d
     Body.setVelocity(g.player, { x: 0, y: 0 });
     let warnings = 0;
     g.onSound = (sound) => {
-      if (['lock', 'charge', 'machine', 'turbine-wind'].includes(sound)) warnings++;
+      if (['lock', 'charge', 'machine', 'turbine-wind', 'interceptor-lock'].includes(sound))
+        warnings++;
     };
     for (let i = 0; i < 3600 && g.mode === 'playing' && boss.hp > 0; i++) {
       const correction = scenario.x - g.player.position.x - g.player.velocity.x * 5;

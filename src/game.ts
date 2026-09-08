@@ -1,4 +1,6 @@
 import Matter from 'matter-js';
+import { createInterceptor, updateInterceptor } from './interceptor.ts';
+import type { InterceptorRig } from './interceptor.ts';
 import { createTurbine, updateTurbine } from './turbine.ts';
 import type { TurbineRig } from './turbine.ts';
 import { EvolutionSystem } from './evolutions.ts';
@@ -96,6 +98,7 @@ export interface Enemy {
   crane?: CraneRig;
   kiln?: KilnRig;
   turbine?: TurbineRig;
+  interceptor?: InterceptorRig;
 }
 export interface Shot {
   id: number;
@@ -346,6 +349,7 @@ export class Game {
             this.seed,
             this.stage,
             this.practice?.kind === 'condenser' ? 'condenser' : undefined,
+            this.practice?.kind === 'boss' ? 'boss' : undefined,
           );
     for (const solid of this.level.solids)
       wall(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h);
@@ -516,6 +520,7 @@ export class Game {
     if (kind === 'crane') enemy.crane = createCrane(this, enemy);
     if (kind === 'kiln') enemy.kiln = createKiln();
     if (kind === 'turbine') enemy.turbine = createTurbine();
+    if (kind === 'interceptor') enemy.interceptor = createInterceptor();
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
     this.shake = Math.min(12, this.shake + amount);
@@ -939,6 +944,7 @@ export class Game {
     else if (e.kind === 'boss') this.updateBoss(e);
     else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
     else if (e.kind === 'turbine') updateTurbine(this, e, dt);
+    else if (e.kind === 'interceptor') updateInterceptor(this, e, dt);
     else if (e.kind === 'runner') {
       const turning = e.elite === 'shielded' && this.updateShield(e);
       if (!turning) this.updateRunner(e, d, dist);
@@ -1398,11 +1404,14 @@ export class Game {
           ? 62
           : e.kind === 'boss' || e.kind === 'condenser'
             ? 55
-            : e.kind === 'sniper'
-              ? 38
-              : 26;
+            : e.kind === 'interceptor'
+              ? 44
+              : e.kind === 'sniper'
+                ? 38
+                : 26;
     const muzzle = { x: origin.x + d.x * radius, y: origin.y + d.y * radius };
-    const end = this.lineEnd(origin, muzzle, blade ? 11 : 0);
+    const padding = blade ? 11 : e.kind === 'interceptor' ? 5 : 0;
+    const end = this.lineEnd(origin, muzzle, padding);
     const portalMuzzle = this.portals.trace(origin, muzzle, {
       x: blade ? 11 : 5,
       y: blade ? 11 : 5,
@@ -1410,7 +1419,7 @@ export class Game {
     if (distance(end, muzzle) > 0.01 && !portalMuzzle) {
       this.burst(end, 3, '#ef7264', 1.5);
       const prop = this.props.items.find((p) => {
-        const hit = traceProp(p, origin, muzzle, blade ? 11 : 0);
+        const hit = traceProp(p, origin, muzzle, padding);
         return hit && Math.abs(distance(origin, end) - distance(origin, muzzle) * hit.t) < 0.1;
       });
       if (prop) this.props.hit(prop, damage, d);
@@ -1637,6 +1646,7 @@ export class Game {
     if (e.kind === 'kiln') damage *= e.state === 'recover' ? 1.35 : 0.4;
     if (e.kind === 'condenser') damage *= e.state === 'recover' ? 1.3 : 0.25;
     if (e.kind === 'turbine') damage *= e.state === 'recover' ? 1.35 : 0.32;
+    if (e.kind === 'interceptor') damage *= e.state === 'recover' ? 1.3 : 0.35;
     if (e.kind === 'boss')
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;

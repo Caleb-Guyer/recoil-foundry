@@ -2,6 +2,7 @@ import type { Enemy, Game, Input } from '../src/game.ts';
 import { attackAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
 import { turbineRelease } from '../src/turbine.ts';
+import { interceptorAngles, interceptorSpeed } from '../src/interceptor.ts';
 import { clamp, distance, direction } from '../src/rules.ts';
 
 // Test-only player: compare short movement trajectories with visible bolts and
@@ -32,7 +33,23 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
         ) / Math.hypot(s.vel.x, s.vel.y),
       ),
     }));
-  if (e.kind === 'turbine' && e.turbine && (e.state === 'windup' || e.state === 'rush')) {
+  if (e.kind === 'interceptor' && (e.state === 'windup' || e.state === 'followup')) {
+    for (const a of interceptorAngles(e)) {
+      const origin = e.interceptor!.origin;
+      const start = { x: origin.x + Math.cos(a) * 44, y: origin.y + Math.sin(a) * 44 };
+      const speed = interceptorSpeed(e);
+      const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+      bolts.push({
+        p: start,
+        v,
+        radius: 5,
+        delay: e.timer * 60,
+        life:
+          distance(start, g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 }, 5)) /
+          speed,
+      });
+    }
+  } else if (e.kind === 'turbine' && e.turbine && (e.state === 'windup' || e.state === 'rush')) {
     const rig = e.turbine;
     for (
       let index = e.state === 'rush' ? rig.sent : 0;
@@ -82,7 +99,8 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
   for (const move of [-1, 0, 1])
     for (const jump of g.grounded ? [false, true] : [false])
       for (const fire of [true, false])
-        for (const lift of fire && (e.kind === 'boss' || e.kind === 'turbine')
+        for (const lift of fire &&
+        (e.kind === 'boss' || e.kind === 'turbine' || e.kind === 'interceptor')
           ? [false, true]
           : [false]) {
           let x = p.x,
@@ -94,7 +112,21 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
             shootAt = g.shootAt,
             burst = g.burstRemaining,
             burstAt = g.burstAt;
-          const aim = lift ? { x: p.x, y: p.y + 500 } : { ...target };
+          // Lead a visible recoil arc; aiming at its current position wastes
+          // slow shells while the gunner is coasting away from its last shot.
+          const flight = distance(p, target) / g.gun.projectileSpeed;
+          const travel =
+            e.kind === 'interceptor' && (e.state === 'airborne' || e.state === 'recover')
+              ? (1 -
+                  Math.pow(e.state === 'recover' ? 0.9118 : 0.97, Math.min(flight, e.timer * 60))) /
+                (e.state === 'recover' ? 0.0882 : 0.03)
+              : 0;
+          const aim = lift
+            ? { x: p.x, y: p.y + 500 }
+            : {
+                x: target.x + e.body.velocity.x * travel,
+                y: target.y + e.body.velocity.y * travel,
+              };
           for (let frame = 1; frame <= 40; frame++) {
             const time = g.time + frame / 60,
               ox = x,

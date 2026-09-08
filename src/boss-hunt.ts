@@ -31,7 +31,7 @@ export function bossHasLane(g: Game, e: Enemy) {
 
 // Navigate the hull around solid corners. Shots still use the ordinary swept
 // collision path; acquiring an angle never grants permission to fire through cover.
-function plan(g: Game, e: Enemy): Vec[] {
+function plan(g: Game, e: Enemy, relocate = false): Vec[] {
   const start = e.body.position,
     player = g.player.position;
   const halfW = ENEMY_STATS[e.kind].w / 2 - 0.5,
@@ -66,6 +66,8 @@ function plan(g: Game, e: Enemy): Vec[] {
   ].filter(
     (p) =>
       valid(p) &&
+      (!relocate || distance(p, start) >= 140) &&
+      (e.kind !== 'interceptor' || start.y - player.y < 140 || p.y <= player.y + 90) &&
       distance(p, player) >= 175 &&
       distance(p, player) <= 600 &&
       firingLane(g, p, e.kind === 'turbine' ? 16 : 9),
@@ -115,11 +117,17 @@ function plan(g: Game, e: Enemy): Vec[] {
   return route;
 }
 
-export function huntBoss(g: Game, e: Enemy) {
-  if (!e.hunt || e.hunt.nextPlan <= g.time) e.hunt = { route: plan(g, e), nextPlan: g.time + 0.45 };
+export function bossHuntTarget(g: Game, e: Enemy, relocate = false): Vec {
+  if (!e.hunt || e.hunt.nextPlan <= g.time)
+    e.hunt = { route: plan(g, e, relocate), nextPlan: g.time + 0.45 };
   const p = e.body.position;
   while (e.hunt.route.length > 1 && distance(p, e.hunt.route[0]) < 6) e.hunt.route.shift();
-  const target = e.hunt.route[0] ?? p;
+  return e.hunt.route[0] ?? p;
+}
+
+export function huntBoss(g: Game, e: Enemy) {
+  const target = bossHuntTarget(g, e),
+    p = e.body.position;
   Matter.Body.setVelocity(e.body, {
     x: clamp((target.x - p.x) * 0.12, -5.8, 5.8),
     y: clamp((target.y - p.y) * 0.12, -4.8, 4.8),

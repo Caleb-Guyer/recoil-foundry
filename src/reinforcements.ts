@@ -43,6 +43,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           skimmer: 7,
           condenser: 0,
           turbine: 0,
+          interceptor: 0,
         }[spawn.kind];
   ranked.sort((a, b) => strength(b.spawn) - strength(a.spawn) || a.tie - b.tie);
   const final = new Set<number>();

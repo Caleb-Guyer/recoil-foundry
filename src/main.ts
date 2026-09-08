@@ -110,7 +110,7 @@ let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = nu
 
 function updateTitle() {
   $('play').innerHTML =
-    `${linkedTest ? 'Test the Turbine' : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
+    `${linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
@@ -120,7 +120,7 @@ function updateTitle() {
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
   $('title-hint').textContent = linkedTest
-    ? 'Full health. Eight upgrades. R to retry.'
+    ? `Full health. ${PRACTICE_BOSSES[linkedTest.kind].stage} upgrades. R to retry.`
     : linkedDaily
       ? `Daily · ${linkedDaily.date}`
       : invalidDailyLink

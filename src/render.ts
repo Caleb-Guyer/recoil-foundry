@@ -1,5 +1,6 @@
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
 import { drawTurbine, drawBlade } from './turbine-art.ts';
+import { drawInterceptor } from './interceptor-art.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
@@ -165,6 +166,10 @@ export class Renderer {
       c.globalAlpha = 1;
     }
     for (const e of g.enemies) {
+      if (e.kind === 'interceptor') {
+        drawInterceptor(c, g, e, this.reduced);
+        continue;
+      }
       if (e.kind === 'turbine') {
         drawTurbine(c, g, e, this.reduced);
         continue;

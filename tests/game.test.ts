@@ -583,7 +583,12 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
           firing = false;
         }
       }
-      if (e?.kind === 'boss' || e?.kind === 'condenser' || e?.kind === 'turbine') {
+      if (
+        e?.kind === 'boss' ||
+        e?.kind === 'condenser' ||
+        e?.kind === 'turbine' ||
+        e?.kind === 'interceptor'
+      ) {
         const choice = dodgePilot(g, e);
         move = Number(choice.right) - Number(choice.left);
         jump = choice.jump!;
@@ -615,6 +620,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         e?.kind !== 'boss' &&
         e?.kind !== 'condenser' &&
         e?.kind !== 'turbine' &&
+        e?.kind !== 'interceptor' &&
         e?.kind !== 'press' &&
         e?.kind !== 'crane'
       ) {
@@ -657,7 +663,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     assert.equal(
       g.mode,
       'won',
-      `Run stopped in ${g.level.id} at (${Math.round(g.player.position.x)}, ${Math.round(g.player.position.y)}), stage ${g.stage}, ${Math.round(g.time)}s, ${g.enemies.length} enemies remaining`,
+      `Run stopped in ${g.level.id} at (${Math.round(g.player.position.x)}, ${Math.round(g.player.position.y)}), stage ${g.stage}, ${Math.round(g.time)}s, enemies: ${g.enemies.map((e) => e.kind + ':' + Math.round(e.hp)).join(', ')}, gun: ${g.mods.join(', ')}`,
     );
     assert(escapeSeen, 'The run bypassed the escape route');
     assert.equal(g.stage, STAGES - 1);

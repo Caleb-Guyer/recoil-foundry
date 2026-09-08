@@ -142,6 +142,8 @@ export class Sound {
         'arm',
         'hurt',
         'phase',
+        'interceptor-lock',
+        'interceptor-heavy',
         'loader',
         'press',
         'slam',
@@ -153,6 +155,20 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'interceptor-lock') {
+      this.tone(290, 540, 0.22, 0.07, 'triangle');
+      this.tone(540, 540, 0.09, 0.035, 'sine', 0.25);
+    } else if (kind === 'interceptor-vault') {
+      this.tone(160, 65, 0.13, 0.09);
+      this.crack(0.09, 0.09, 1500);
+    } else if (kind === 'interceptor-heavy') {
+      this.tone(95, 32, 0.22, 0.16);
+      this.crack(0.15, 0.15, 950);
+    } else if (kind === 'interceptor-shot') {
+      this.tone(220, 65, 0.11, 0.09);
+      this.crack(0.07, 0.085, 2100);
+    } else if (kind === 'interceptor-open') {
+      this.tone(310, 115, 0.2, 0.045, 'triangle');
     } else if (kind === 'turbine-wind') {
       this.tone(90, 260, 0.55, 0.065, 'sawtooth');
       this.tone(540, 620, 0.14, 0.025, 'sine', 0.22);

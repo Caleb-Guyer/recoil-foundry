@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-07&dv=22`). Version 22 adds the alternate Cooling Works boss and its arena; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-07&dv=23`). Version 23 adds the alternate rooftop boss and its arena; its best times are separate from earlier rulesets. Boss selection, passage placement, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Build paths
 
@@ -131,6 +131,14 @@ Climb stacks, fight from ledges, take lower routes, and use solid cover to break
 
 Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
 
+## The Interceptor
+
+Room 12 has an equal chance of ending with the original rooftop boss or **The Interceptor**, a rival gunner on the Relay roof. An independent seeded draw preserves the other rooms and reconstructs the same finale on retry or Continue. Its arena has low cover, separated high shelves, a mirrored variant, and a route traversable with ordinary jumps. Both finales lead into the existing escape sequence.
+
+The Interceptor fires opposite its travel direction to recoil between firing positions. A 0.56-second warning marks its launch volley and travel direction; physical walls, crates, fuel, and portals affect its hull normally. It flanks sheltered players instead of firing through cover. Aimed volleys lock for the final 0.36 seconds. Below two-thirds health they gain a separately warned follow-up, and below one-third they gain two. Seven-round heavy blasts warn for 1.1 seconds and kick the gunner backward, exposing its armor for 1.4, 1.3, or 1.2 seconds. Ordinary volleys recover for 1.1, 1.0, or 0.9 seconds. Open armor takes 130% damage; closed armor takes 35%. The boss has 3,000 health.
+
+The compact silhouette, amber aiming lines, split armor, muzzle flash, and distinct gun sounds communicate the fight without adding controls or HUD panels. Practice unlocks only after defeating it in an ordinary or Daily Run. Existing rooftop victories keep their original arena. An explicit [Interceptor test link](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor) starts an isolated fight with 100 health and eleven upgrades; it preserves saves and records and grants no Practice unlocks. Press **R** to retry.
+
 ## The Turbine
 
 Cooling Works ends with either the Condenser or **The Turbine**, selected independently from other rooms. The Turbine gallery has low stacks, separated shelves, and two coolant channels, with a mirrored variant and an ordinary jumping route.
@@ -222,7 +230,7 @@ Silhouettes, shields, aiming lines, and fuse rings carry the information in the 
 
 Turret volleys warn for 0.85 seconds and lock their aim for the final 0.38 seconds. Dashed amber lines track you, then turn solid: move across the firing direction once they lock. Below half health, a new volley contains five bolts instead of three; the complete spread is shown before firing. Cover still blocks every projectile. Bosses resist bullet knockback. The Loader and Crane each have 800 health, the Press and Kiln each have 1,250, and the Condenser has 2,600, and the rooftop boss has 3,200.
 
-Each boss has its own arena and silhouette. Separate seeded draws select the loading-docks, furnace, and Cooling Works bosses, including in Daily Runs, and replaying or continuing that seed keeps the same selections. The docks, furnace, and Cooling Works bosses lead to the usual gun upgrade and 12-health recovery. The final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
+Each boss has its own arena and silhouette. Separate seeded draws select the loading-docks, furnace, Cooling Works, and rooftop bosses, including in Daily Runs, and replaying or continuing that seed keeps the same selections. The docks, furnace, and Cooling Works bosses lead to the usual gun upgrade and 12-health recovery. Either final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
 
 ## Boss practice
 
@@ -352,3 +360,5 @@ Follow-up checks cover prerequisite rewards and saves, repeated portal replaceme
 Detour tests cover both exit routes with ordinary movement, four mirrored challenge layouts, warned reinforcement entrances, direct and extended run progression, bonus healing rules, deterministic Daily routes, and continued challenge/escape checkpoints.
 
 Turbine tests cover full warning and lock timing, both marked blade passes, airborne versus grounded wind, recoil preservation, solid cover and prop interactions, blade portals, pause and phase cancellation, saved entrances, earned Practice unlocks, and both mirrored fights. Reactive pilots win with normal health and eight upgrades; passive overhead, corner, and cover camps lose.
+
+Interceptor tests cover deterministic boss selection, full aiming locks and follow-up tells, physical recoil travel, cover and prop collisions, portal projectiles and hulls, cancellation after teleport or phase change, earned Practice unlocks, legacy rooftop victories, and the final escape. Reactive pilots win both mirrors with normal health and eleven upgrades; tested overhead, corner, and cover camps lose. Its direct test link preserves normal saves and grants no victories.

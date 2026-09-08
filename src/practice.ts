@@ -10,6 +10,7 @@ export const PRACTICE_BOSSES = {
   kiln: { name: 'The Kiln', stage: 5 },
   condenser: { name: 'The Condenser', stage: 8 },
   turbine: { name: 'The Turbine', stage: 8 },
+  interceptor: { name: 'The Interceptor', stage: 11 },
   boss: { name: 'Rooftop', stage: 11 },
 } as const;
 export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
@@ -21,13 +22,18 @@ export interface Encounter {
 // Explicit playtest links are isolated fights, never earned Practice unlocks.
 export function testEncounterFromUrl(url: URL): Encounter | null {
   const params = url.searchParams;
+  const kind = params.get('test');
   if (
     params.getAll('test').length !== 1 ||
-    params.get('test') !== 'turbine' ||
+    (kind !== 'turbine' && kind !== 'interceptor') ||
     ['daily', 'dv', 'seed'].some((key) => params.has(key))
   )
     return null;
-  return loadEncounters([{ kind: 'turbine', seed: 'turbine-fight-1' }])[0] ?? null;
+  return (
+    loadEncounters([
+      { kind, seed: kind === 'turbine' ? 'turbine-fight-1' : 'interceptor-fight-3' },
+    ])[0] ?? null
+  );
 }
 
 export function loadEncounters(value: unknown): Encounter[] {
@@ -46,10 +52,11 @@ export function loadEncounters(value: unknown): Encounter[] {
     )
       continue;
     const kind = item.kind as PracticeBoss;
-    // Every seed used the Condenser before the alternate boss existed. Retain
-    // those earned victories, reconstructing its original arena for practice.
+    // Existing victories predate alternate bosses. Keep their original arenas
+    // available for earned practice even if that seed now selects a new boss.
     if (
       kind === 'condenser' ||
+      kind === 'boss' ||
       getLevel(item.seed, PRACTICE_BOSSES[kind].stage).spawns[0]?.kind === kind
     )
       records.push({ kind, seed: item.seed });

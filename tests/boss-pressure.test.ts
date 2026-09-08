@@ -61,7 +61,11 @@ function room(stage: 2 | 5 | 11, seed = 'boss-cheese-0') {
       : stage === 5
         ? ['rapid', 'kick', 'light', 'ricochet', 'pierce']
         : ['magnum', 'rapid', 'kick', 'airshot', 'scatter', 'ricochet', 'pierce', 'split'];
-  g.start(seed, { version: 3, seed, stage, mods, hp: 100, kills: 0, elapsed: 0 });
+  g.start(
+    seed,
+    { version: 3, seed, stage, mods, hp: 100, kills: 0, elapsed: 0 },
+    stage === 11 ? { kind: 'boss', seed } : null,
+  );
   return { g, e: g.enemies[0] };
 }
 
@@ -170,7 +174,7 @@ test('both rooftop arenas and their mirrors let the boss flank cover and threate
   const layouts = new Map<string, string>();
   for (let i = 0; i < 100 && layouts.size < 4; i++) {
     const seed = i === 0 ? 'boss-cheese-0' : `boss-flank-${i}`,
-      level = getLevel(seed, 11);
+      level = getLevel(seed, 11, undefined, 'boss');
     layouts.set(`${level.id}:${level.mirrored}`, seed);
   }
   assert.equal(layouts.size, 4);

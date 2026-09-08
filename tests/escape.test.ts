@@ -368,7 +368,7 @@ test('retrying and normal room loads remove the extraction world and reset all e
   assert.equal(g.extractionLift, null);
   assert.equal(g.worldWidth, WORLD.width);
   assert(g.level.boss);
-  assert.equal(g.enemies[0].kind, 'boss');
+  assert(['boss', 'interceptor'].includes(g.enemies[0].kind));
   for (const body of old) assert(!Composite.allBodies(g.engine.world).includes(body));
   g.start('retry');
   assert.equal(g.stage, 0);
