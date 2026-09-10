@@ -4,6 +4,8 @@ import type { InterceptorRig } from './interceptor.ts';
 import { createTurbine, updateTurbine } from './turbine.ts';
 import type { TurbineRig } from './turbine.ts';
 import { EvolutionSystem } from './evolutions.ts';
+import { BallisticsSystem } from './ballistics.ts';
+import type { RecallFlight } from './ballistics.ts';
 import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
 import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
@@ -134,6 +136,12 @@ export interface Shot {
   waypoints?: Vec[];
   blade?: true;
   allyBlock?: number;
+  source?: Vec;
+  recall?: RecallFlight;
+  counter?: number;
+  reflected?: boolean;
+  reflectedAt?: number;
+  echo?: boolean;
 }
 export interface Particle {
   pos: Vec;
@@ -167,6 +175,7 @@ export class Game {
   portalRequest: Vec | null = null;
   demolition = new DemolitionSystem(this);
   evolutions = new EvolutionSystem(this);
+  ballistics = new BallisticsSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -263,6 +272,7 @@ export class Game {
       for (const e of this.enemies) releaseScrapper(this, e);
       this.demolition.clear();
       this.evolutions.reset();
+      this.ballistics.reset();
     }
     this.mode = mode;
     this.onChange();
@@ -324,6 +334,7 @@ export class Game {
     this.enteringDetour = false;
     this.detourStepsReady = false;
     this.evolutions.reset();
+    this.ballistics.reset();
     this.conveyors.clear();
     this.freight.clear();
     this.portals.reset();
@@ -484,6 +495,7 @@ export class Game {
       return;
     this.escape.phase = 'extracting';
     this.evolutions.reset();
+    this.ballistics.reset();
     this.demolition.clear();
     this.escape.depart = 0;
     this.shots = [];
@@ -598,6 +610,7 @@ export class Game {
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
+    this.ballistics.charge(dt, input.fire || !!input.firePressed || this.fireBuffer > 0);
     if (this.portalRequest) {
       this.portals.place(this.portalRequest);
       this.portalRequest = null;
@@ -697,6 +710,8 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.hazards.afterStep(dt);
     this.containPlayer();
+    this.ballistics.update();
+    if (this.mode !== 'playing') return;
     this.updateShots(dt);
     if (this.mode !== 'playing') return;
     this.breaches.update(dt);
@@ -785,8 +800,11 @@ export class Game {
   }
   fireRound() {
     const charged = this.gun.landing && this.landingReady;
+    const capacitor = this.ballistics.discharge();
+    const beforeVolley = this.id;
+    const origin = { x: this.player.position.x, y: this.player.position.y - 3 };
     this.landingReady = false;
-    this.chargedFlash = charged || this.evolutions.slingReady;
+    this.chargedFlash = charged || this.evolutions.slingReady || capacitor;
     this.lastShot = this.time;
     this.shotCount++;
     // Snapshot movement and earned charges before this discharge applies recoil.
@@ -815,10 +833,12 @@ export class Game {
       this.gun.damage *
       (this.grounded ? 1 : this.gun.airDamage) *
       (charged ? 2 : 1) *
+      (capacitor ? 2 : 1) *
       evolutionDamage;
     this.fireVolley(d, damage, this.chargedFlash);
     // Recoil belongs to the aimed shot; Backfire never cancels movement.
     if (this.gun.rearVolley) this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash);
+    this.ballistics.record(beforeVolley, origin, d);
     if (this.gun.backblast) this.fireBackblast(d, damage * this.gun.pellets * this.gun.lanes * 0.8);
     this.evolutions.settle();
     if (this.particles.length < 220)
@@ -962,7 +982,7 @@ export class Game {
     if (this.shots.length >= 180) return;
     const shell =
       data.friendly && !data.fragment ? this.demolition.payload(data.damage) : undefined;
-    this.shots.push({
+    const shot: Shot = {
       banks: 0,
       bankGrowth: 0,
       charged: false,
@@ -976,7 +996,9 @@ export class Game {
       id: ++this.id,
       prev: { ...data.pos },
       hits: new Set(),
-    });
+    };
+    this.ballistics.prepare(shot);
+    this.shots.push(shot);
   }
   updateEnemy(e: Enemy, dt: number) {
     if (e.hp <= 0 || !this.enemies.includes(e)) return;
@@ -984,6 +1006,7 @@ export class Game {
     e.shieldFlash = Math.max(0, e.shieldFlash - dt);
     e.spawn = Math.max(0, e.spawn - dt);
     if (e.spawn > 0) return;
+    if (this.ballistics.pinned(e)) return;
     e.timer -= dt;
     const p = e.body.position,
       d = direction(p, this.player.position),
@@ -1504,6 +1527,7 @@ export class Game {
       damage,
       life: 4,
       friendly: false,
+      source: { ...e.body.position },
       ...(e.squad ? { allyBlock: e.id } : {}),
       radius: blade ? 11 : 5,
       ...(blade ? { blade: true as const } : {}),
@@ -1514,7 +1538,10 @@ export class Game {
     });
   }
   updateShots(dt: number) {
+    for (const s of this.shots) this.ballistics.flight(s, dt);
+    this.ballistics.reflect(dt);
     for (const s of [...this.shots]) {
+      if (s.reflectedAt === this.time) continue;
       s.life -= dt;
       s.prev = { ...s.pos };
       let remaining = dt * 60;
@@ -1531,6 +1558,7 @@ export class Game {
           normal: Vec;
           enemy?: Enemy;
           player?: boolean;
+          caught?: boolean;
           prop?: Prop;
           cable?: Prop;
           body?: Matter.Body;
@@ -1539,7 +1567,8 @@ export class Game {
         for (const e of this.enemies) if (e.crane && e.spawn <= 0) targets.push([e.crane.body]);
         if (s.friendly) {
           for (const e of this.enemies)
-            if (!s.hits.has(e.id) && e.spawn <= 0) targets.push([e.body, e]);
+            if (!s.hits.has(e.id) && !s.recall?.skip.has(e.id) && e.spawn <= 0)
+              targets.push([e.body, e]);
         } else {
           targets.push([this.player, undefined, true]);
           if (s.allyBlock !== undefined)
@@ -1562,6 +1591,10 @@ export class Game {
         const cable = this.cargo.trace(s.pos, end, s.radius);
         if (cable && (!nearest || cable.t < nearest.t))
           nearest = { t: cable.t, normal: cable.normal, cable: cable.prop };
+        if (s.recall?.returning) {
+          const hit = segmentBox(s.pos, end, this.player.bounds.min, this.player.bounds.max);
+          if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, caught: true };
+        }
         const passage = this.portals.trace(s.pos, end, { x: s.radius, y: s.radius });
         if (passage && (!nearest || passage.t <= nearest.t + 1e-6)) {
           s.pos = { ...passage.pos };
@@ -1594,7 +1627,10 @@ export class Game {
         recordShotTrace(s.trace, s.pos);
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
-        if (nearest.cable) {
+        if (nearest.caught) {
+          s.life = 0;
+          s.shell = undefined;
+        } else if (nearest.cable) {
           this.cargo.cut(nearest.cable, s.damage);
           s.life = 0;
           this.demolition.impact(s);
@@ -1606,18 +1642,21 @@ export class Game {
           // than the player's current position or the shot's original origin.
           const damage =
             s.damage *
+            this.ballistics.fracture(e, s) *
             (this.gun.execute && s.friendly && !s.fragment && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
           const blocked = this.hitEnemy(e, damage, {
             x: e.body.position.x - s.vel.x,
             y: e.body.position.y - s.vel.y,
           });
           if (blocked) {
-            this.demolition.impact(s);
+            this.demolition.impact(s, e.body);
             if (this.mode !== 'playing') return;
             s.life = 0;
             continue;
           }
           this.evolutions.hit(s);
+          this.ballistics.consumeFracture(e, s);
+          this.ballistics.rivet(e, s);
           if (e.hp <= 0 && this.gun.deathBloom && !s.fragment) this.deathBloom(s, e.body.position);
           this.splitShot(s);
           if (!e.body.isStatic)
@@ -1627,14 +1666,19 @@ export class Game {
             });
           if (s.pierce > 0) {
             s.pierce--;
-            s.damage *= 0.8;
-            if (s.shell) s.shell.damage *= 0.8;
+            const falloff = s.recall?.returning && this.ballistics.has('homecoming') ? 1 : 0.8;
+            s.damage *= falloff;
+            if (s.shell) s.shell.damage *= falloff;
+            const d = direction({ x: 0, y: 0 }, s.vel);
+            s.pos.x += d.x;
+            s.pos.y += d.y;
+          } else if (this.ballistics.turn(s)) {
             const d = direction({ x: 0, y: 0 }, s.vel);
             s.pos.x += d.x;
             s.pos.y += d.y;
           } else {
             s.life = 0;
-            this.demolition.impact(s);
+            this.demolition.impact(s, e.body);
             if (this.mode !== 'playing') return;
           }
         } else if (nearest.player) {
@@ -1660,9 +1704,12 @@ export class Game {
             }
             s.pos.x += nearest.normal.x;
             s.pos.y += nearest.normal.y;
+          } else if (this.ballistics.turn(s, nearest.normal)) {
+            s.pos.x += nearest.normal.x;
+            s.pos.y += nearest.normal.y;
           } else {
             s.life = 0;
-            this.demolition.impact(s);
+            this.demolition.impact(s, nearest.prop?.body ?? nearest.body);
             if (this.mode !== 'playing') return;
           }
         }

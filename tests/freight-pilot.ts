@@ -30,6 +30,15 @@ export function freightPilot(g: Game): Input {
     // Stop upward recoil and settle back onto the moving deck.
     fire = false;
   }
+  // Knockback can leave a surviving enemy on a lower ledge. Walk around the
+  // deck edge to regain a real firing lane before climbing back aboard.
+  if (target && target.body.position.y > top + 30) {
+    const visible = distance(g.lineEnd(p, target.body.position), target.body.position) < 2;
+    goal = visible ? p.x : target.body.position.x < 1000 ? 595 : 1405;
+    aim = { ...target.body.position };
+    fire = visible;
+    jump = false;
+  }
   if (
     !g.clear &&
     g.shots.some((s) => {

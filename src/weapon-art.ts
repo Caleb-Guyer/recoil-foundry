@@ -1,5 +1,6 @@
 import type { Game } from './game.ts';
 import { clamp } from './rules.ts';
+import { drawCapacitor } from './ballistics-art.ts';
 
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
@@ -166,6 +167,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(9, -half - 1, 14, 2);
   }
 
+  drawCapacitor(c, g);
   if (flash > 0) {
     const tip = muzzle - barrelKick;
     c.globalAlpha *= flash * (reduced ? 0.28 : 0.9);

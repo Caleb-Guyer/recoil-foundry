@@ -188,3 +188,28 @@ export function scrapperTestFromUrl(url: URL): Checkpoint | null {
     area === 'cooling' ? 8 : 12,
   );
 }
+
+export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
+  recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
+  capacitor: ['capacitor', 'reserve-cell', 'magnum', 'kick', 'airshot', 'light'],
+  countershot: ['countershot', 'reprisal', 'magnum', 'kick', 'airshot', 'light'],
+  rivet: ['deadeye', 'rivet', 'fracture', 'magnum', 'kick', 'light'],
+  fuse: ['shellshock', 'fuse', 'linked-fuse', 'blast-surf', 'kick', 'light'],
+  afterimage: ['crossfire', 'afterimage', 'parallax', 'scatter', 'kick', 'light'],
+};
+export function upgradeTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'upgrades' ||
+    p.getAll('build').length > 1 ||
+    ['daily', 'dv', 'seed', 'area', 'formation'].some((k) => p.has(k))
+  )
+    return null;
+  const key = p.get('build') ?? 'recall';
+  if (!Object.hasOwn(UPGRADE_TEST_BUILDS, key)) return null;
+  return {
+    ...testCheckpoint('UPGRADES-' + key.toUpperCase(), 6),
+    mods: [...UPGRADE_TEST_BUILDS[key]],
+  };
+}

@@ -38,6 +38,7 @@ import { squadLineEnd } from './squads.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
 import { EXTRACTION } from './escape-layout.ts';
 import { drawWeapon } from './weapon-art.ts';
+import { drawBallistics } from './ballistics-art.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -501,12 +502,15 @@ export class Renderer {
       c.fill();
     }
     this.drawPlayer();
+    drawBallistics(c, g, this.reduced);
     for (const s of g.shots) {
       if (s.blade) {
         drawBlade(c, s, g.time, this.reduced);
         continue;
       }
       if (s.friendly) {
+        c.save();
+        if (s.echo) c.globalAlpha = 0.65;
         if (s.trace) {
           const { points, bank, pierce } = s.trace;
           c.save();
@@ -538,6 +542,9 @@ export class Renderer {
           );
           this.circle(s.pos, Math.max(1.5, s.radius * 0.6), '#ffe1a8');
         }
+        if (s.recall?.returning || s.reflected)
+          this.circle(s.pos, s.radius + 1, s.reflected ? '#b5ecd8' : '#a9ccd8', false, 1);
+        c.restore();
       } else {
         if (Math.hypot(s.vel.x, s.vel.y) > 12) this.line(s.prev, s.pos, '#ffd3a0', 2);
         this.circle(s.pos, 6, '#ee745f', false, 2);

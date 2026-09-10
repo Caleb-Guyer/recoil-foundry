@@ -80,7 +80,8 @@ export class DemolitionSystem {
       launch: gun.blastSurf ? 10 / (gun.pellets * gun.lanes * (gun.rearVolley ? 2 : 1)) : 0,
     };
   }
-  impact(shot: Shot) {
+  impact(shot: Shot, body?: Matter.Body) {
+    if (shot.friendly && !shot.fragment && this.game.ballistics.stick(shot, body)) return;
     const payload = shot.shell;
     shot.shell = undefined;
     if (!payload || !shot.friendly || shot.fragment) return;

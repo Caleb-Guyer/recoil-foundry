@@ -336,9 +336,9 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-// Keep the three established combat builds stable when the reward pool expands.
+// Keep the four established combat builds stable when the reward pool expands.
 // Only offers are scripted: every upgrade is earned through an actual room clear.
-// The Demolition run uses current weighted rewards. Pool/retry coverage lives in build-paths and daily.
+// New builds below exercise every new mechanic. Weighted pool/retry coverage lives in build-paths and daily.
 for (const { seed, pressSpacing, pathMods, rewards } of [
   {
     seed: 'path-run-65',
@@ -410,10 +410,100 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     seed: 'path-run-65',
     pressSpacing: 160,
     pathMods: ['shellshock', 'aftershock', 'blast-surf', 'chain-reaction'],
-    rewards: undefined,
+    rewards: [
+      'leech',
+      'airshot',
+      'scatter',
+      'shellshock',
+      'aftershock',
+      'blast-surf',
+      'chain-reaction',
+      'landing',
+      'backblast',
+      'magnum',
+      'ricochet',
+      'rapid',
+      'pierce',
+      'burst',
+      'banker',
+    ],
+  },
+  {
+    seed: 'path-run-65',
+    pressSpacing: 160,
+    pathMods: ['deadeye', 'execute', 'rivet', 'fracture', 'capacitor', 'reserve-cell'],
+    rewards: [
+      'magnum',
+      'airshot',
+      'leech',
+      'deadeye',
+      'rivet',
+      'fracture',
+      'rapid',
+      'capacitor',
+      'reserve-cell',
+      'execute',
+      'kick',
+      'scatter',
+      'burst',
+      'light',
+      'pierce',
+    ],
+  },
+  {
+    seed: 'path-run-66',
+    pressSpacing: 230,
+    pathMods: [
+      'crossfire',
+      'afterimage',
+      'parallax',
+      'recall',
+      'homecoming',
+      'countershot',
+      'reprisal',
+    ],
+    rewards: [
+      'magnum',
+      'rapid',
+      'leech',
+      'crossfire',
+      'afterimage',
+      'parallax',
+      'airshot',
+      'scatter',
+      'burst',
+      'countershot',
+      'reprisal',
+      'kick',
+      'pierce',
+      'recall',
+      'homecoming',
+    ],
+  },
+  {
+    seed: 'path-run-65',
+    pressSpacing: 220,
+    pathMods: ['shellshock', 'aftershock', 'blast-surf', 'chain-reaction', 'fuse', 'linked-fuse'],
+    rewards: [
+      'leech',
+      'airshot',
+      'scatter',
+      'shellshock',
+      'fuse',
+      'aftershock',
+      'rapid',
+      'magnum',
+      'light',
+      'linked-fuse',
+      'chain-reaction',
+      'burst',
+      'kick',
+      'pierce',
+      'blast-surf',
+    ],
   },
 ])
-  test(`combat reaches extraction: ${seed} ${pathMods[0]}`, () => {
+  test(`combat reaches extraction: ${seed} ${pathMods[0]}${pathMods.length > 4 ? ' expanded build' : ''}`, () => {
     const g = new Game();
     g.start(seed);
     if (rewards) {
@@ -718,7 +808,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         if (p.x + g.player.velocity.x * landingFrames > 1880) takingLowerRoute = true;
       }
       if (g.clear && g.canDetour && takingLowerRoute) {
-        // These four runs verify the direct route. Land before the fork, then
+        // These runs verify the direct route. Land before the fork, then
         // walk below the steps instead of accidentally selecting the upper door.
         if (g.grounded && p.y > 690) directExitReady = true;
         move = directExitReady ? 1 : Math.abs(p.x - 1760) > 8 ? Math.sign(1760 - p.x) : 0;
@@ -755,6 +845,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     assert.equal(g.stage, STAGES - 1);
     assert.equal(g.mods.length, STAGES - 1);
     assert(g.mods.includes(pathMods[0]));
+    for (const id of pathMods) assert(g.mods.includes(id), `Missing exercised upgrade: ${id}`);
     if (pathMods[0] === 'deadeye') assert(g.mods.includes('execute'));
     if (pathMods[0] === 'shellshock') {
       assert(g.mods.includes('aftershock'));

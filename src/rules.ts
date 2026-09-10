@@ -238,6 +238,78 @@ export const MODS = [
     description: 'Also fire rounds backward. 20% longer shot delay.',
     mark: 'backfire',
   },
+  {
+    id: 'recall',
+    name: 'Recall',
+    description: 'Rounds pierce once, then curve back to you. 25% lighter hits.',
+    mark: 'recall',
+  },
+  {
+    id: 'homecoming',
+    name: 'Homecoming',
+    description: 'Returning rounds pierce two more enemies without losing damage.',
+    mark: 'homecoming',
+  },
+  {
+    id: 'capacitor',
+    name: 'Capacitor',
+    description: 'Pause firing to charge a double-damage shot.',
+    mark: 'capacitor',
+  },
+  {
+    id: 'reserve-cell',
+    name: 'Reserve cell',
+    description: 'A longer pause stores a second charged shot.',
+    mark: 'reserve-cell',
+  },
+  {
+    id: 'countershot',
+    name: 'Countershot',
+    description: 'Each round can reflect one small enemy bullet back at its source.',
+    mark: 'countershot',
+  },
+  {
+    id: 'reprisal',
+    name: 'Reprisal',
+    description: 'Reflected bullets punch through two more enemies.',
+    mark: 'reprisal',
+  },
+  {
+    id: 'rivet',
+    name: 'Rivet',
+    description: 'Shove enemies into nearby walls to briefly pin them. Bosses resist.',
+    mark: 'rivet',
+  },
+  {
+    id: 'fracture',
+    name: 'Fracture',
+    description: 'Your next round against a pinned enemy hits 60% harder.',
+    mark: 'fracture',
+  },
+  {
+    id: 'fuse',
+    name: 'Fuse',
+    description: 'Shells stick before exploding. 40% stronger blasts.',
+    mark: 'fuse',
+  },
+  {
+    id: 'linked-fuse',
+    name: 'Linked fuse',
+    description: 'Exploding charges ignite nearby stuck shells through clear space.',
+    mark: 'linked-fuse',
+  },
+  {
+    id: 'afterimage',
+    name: 'Afterimage',
+    description: 'Every fourth discharge leaves a delayed volley at 60% damage.',
+    mark: 'afterimage',
+  },
+  {
+    id: 'parallax',
+    name: 'Parallax',
+    description: 'Afterimages turn toward your current aim when they fire.',
+    mark: 'parallax',
+  },
 ] as const;
 export type Mod = (typeof MODS)[number];
 export type BuildPath = 'bullet-hell' | 'precision' | 'demolition';
@@ -258,6 +330,12 @@ export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   deadlock: { path: 'precision' },
   convergence: { path: 'bullet-hell' },
   shockfront: { path: 'demolition' },
+  rivet: { path: 'precision' },
+  fracture: { path: 'precision' },
+  fuse: { path: 'demolition' },
+  'linked-fuse': { path: 'demolition' },
+  afterimage: { path: 'bullet-hell' },
+  parallax: { path: 'bullet-hell' },
 };
 export const MOD_REQUIRES: Record<string, string> = {
   'blast-surf': 'shellshock',
@@ -274,6 +352,15 @@ export const MOD_REQUIRES: Record<string, string> = {
   deadlock: 'deadeye',
   shockfront: 'aftershock',
   backfire: 'backblast',
+  homecoming: 'recall',
+  'reserve-cell': 'capacitor',
+  reprisal: 'countershot',
+  rivet: 'deadeye',
+  fracture: 'rivet',
+  fuse: 'shellshock',
+  'linked-fuse': 'fuse',
+  afterimage: 'crossfire',
+  parallax: 'afterimage',
 };
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
@@ -459,9 +546,15 @@ export function getGun(mods: readonly string[]): Gun {
       case 'execute':
         g.execute = true;
         break;
+      case 'recall':
+        g.damage *= 0.75;
+        g.pierce += 1;
+        break;
     }
   // Apply spread after Scattershot so acquisition order cannot change the build.
   if (mods.includes('deadeye')) g.spread *= 0.5;
+  // Recall's extra penetration must compose in either acquisition order.
+  if (mods.includes('recall') && mods.includes('pierce')) g.pierce = 3;
   return g;
 }
 export const STAGES = 16;

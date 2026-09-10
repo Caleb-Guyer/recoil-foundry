@@ -18,6 +18,8 @@ import {
   conveyorsTestFromUrl,
   freightTestFromUrl,
   scrapperTestFromUrl,
+  upgradeTestFromUrl,
+  UPGRADE_TEST_BUILDS,
 } from './practice.ts';
 import type { Encounter } from './practice.ts';
 import {
@@ -107,6 +109,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  upgradeTestFromUrl(entryUrl) ??
   scrapperTestFromUrl(entryUrl) ??
   freightTestFromUrl(entryUrl) ??
   conveyorsTestFromUrl(entryUrl) ??
@@ -125,6 +128,8 @@ function updateTitle() {
   $('play').innerHTML =
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
+  if (linkedRunTest?.seed.startsWith('UPGRADES-'))
+    $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -153,6 +158,8 @@ function updateTitle() {
           : unavailableDailySave
             ? 'Saved daily unavailable. Start a new daily.'
             : 'Shoot down. Go up.';
+  if (linkedRunTest?.seed.startsWith('UPGRADES-'))
+    $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
 }
 function clearInput() {
   keys.clear();
@@ -212,6 +219,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     url.searchParams.delete('test');
     url.searchParams.delete('area');
     url.searchParams.delete('formation');
+    url.searchParams.delete('build');
     url.searchParams.delete('daily');
     url.searchParams.delete('dv');
     if (seedParam !== seed) {
@@ -337,6 +345,18 @@ function modMark(mod: Mod) {
     deadlock: 'M16 12h24v24H16zM8 24h12M36 24h12M24 20h8v8h-8zM24 7h8M24 41h8',
     shockfront: 'M26 17a7 7 0 1 0 0 14M26 9a15 15 0 1 0 0 30M34 24h14M41 17l7 7-7 7',
     backfire: 'M6 24h44M16 14L6 24l10 10M40 14l10 10-10 10',
+    recall: 'M9 16h27a10 10 0 0 1 0 20H15m8-7-8 7 8 7',
+    homecoming: 'M9 13h28a11 11 0 0 1 0 22H9m8-7-8 7 8 7M24 28v14M32 28v14',
+    capacitor: 'M21 10v28M33 10v28M8 24h13M33 24h15',
+    'reserve-cell': 'M16 10v28M23 10v28M33 10v28M40 10v28M7 24h9M40 24h9',
+    countershot: 'M8 16h30l-8-7M38 16l-8 7M48 33H18l8-7M18 33l8 7',
+    reprisal: 'M44 15H15l8-7M15 15l8 7M9 34h37M27 28v12M36 28v12',
+    rivet: 'M8 24h32M32 17l8 7-8 7M44 8v32M48 8v32',
+    fracture: 'M8 24h24M32 15l-6 9 6 9M43 8l-5 11 7 9-5 12',
+    fuse: 'M10 32h14v10H10zM17 32V20q0-9 10-9h8M39 7v8M35 11h8',
+    'linked-fuse': 'M8 30h10v10H8zM34 12h10v10H34zM13 30V18h21M25 13v10',
+    afterimage: 'M7 13h25v8H7zM17 27h25v8H17zM32 17h10M42 31h7',
+    parallax: 'M7 10h19v6H7zM7 32h19v6H7zM26 13l20 11-20 11M40 24h10',
   };
   return (
     '<svg class="mod-mark" viewBox="0 0 56 48" aria-hidden="true"><path d="' +
@@ -352,7 +372,38 @@ function showDialog(kind: string) {
   modal.classList.toggle('single-upgrade', singleUpgrade);
   modal.classList.toggle('practice-dialog', kind === 'practice');
   const content = $('dialog-content');
-  if (kind === 'practice') {
+  if (kind === 'upgrade-test') {
+    content.innerHTML =
+      '<h2 id="dialog-title">Try a build</h2><div class="choices">' +
+      Object.keys(UPGRADE_TEST_BUILDS)
+        .map((id) => {
+          const mod = MODS.find((m) => m.id === id)!;
+          return (
+            '<button class="mod" data-build="' +
+            id +
+            '"><span class="mod-top">' +
+            modMark(mod) +
+            '</span><strong>' +
+            mod.name +
+            '</strong><span class="mod-copy">' +
+            mod.description +
+            '</span></button>'
+          );
+        })
+        .join('') +
+      '</div><div class="dialog-actions"><button id="back" class="quiet">Back</button></div>';
+    content.querySelectorAll<HTMLButtonElement>('[data-build]').forEach((button) => {
+      button.onclick = () => {
+        const url = new URL(location.href);
+        url.search = '?test=upgrades&build=' + button.dataset.build;
+        const save = upgradeTestFromUrl(url)!;
+        history.replaceState(null, '', url);
+        linkedRunTest = save;
+        startRunTest(save);
+      };
+    });
+    $('back').onclick = resume;
+  } else if (kind === 'practice') {
     content.innerHTML =
       '<h2 id="dialog-title">Practice.</h2><p class="practice-note">Full health. Preset gun.</p><div class="practice-list">' +
       encounters
@@ -535,7 +586,7 @@ function showDialog(kind: string) {
       (game.practice
         ? 'Defeat the boss. Press R to retry.'
         : game.testRun
-          ? 'Preset test. Press R to restart from the new room.'
+          ? 'Preset test. Press R to restart the room.'
           : game.escape
             ? 'Reach the extraction lift.'
             : game.detour
@@ -604,7 +655,13 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedRunTest ? startRunTest(linkedRunTest) : linkedTest ? startPractice(linkedTest) : start();
+  linkedRunTest?.seed.startsWith('UPGRADES-')
+    ? showDialog('upgrade-test')
+    : linkedRunTest
+      ? startRunTest(linkedRunTest)
+      : linkedTest
+        ? startPractice(linkedTest)
+        : start();
 $('daily').onclick = () => {
   if (linkedDaily) {
     linkedDaily = null;

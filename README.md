@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear sixteen stages, take optional
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Thirty-two possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives fifteen picks. Taking all four optional detours extends the run to twenty fights and nineteen picks; bonus rewards give no healing.
+You always carry **one gun**. Forty-four possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives fifteen picks. Taking all four optional detours extends the run to twenty fights and nineteen picks; bonus rewards give no healing.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -87,6 +87,23 @@ Walk or fall into either linked opening to emerge from the other. Momentum rotat
 Each opening needs 80 units of exposed permanent surface. Moving hazards, props, and destructible walls cannot host one. A single unlinked opening remains solid, and a blocked or undersized exit prevents travel. Portals reset at each room entrance, on retry, and when continuing a checkpoint; the Fold upgrade stays equipped. Opening the pause screen clears pending placement input. Portal travel cuts trails and snaps the camera to the destination instead of drawing or panning across the intervening map.
 
 Rewire removes the placement limit while retaining exactly two portals. Its preview and touch placement button remain available after the first pair. Slingshot rewards player travel; enemy and projectile speeds are unchanged.
+
+## New firing mechanics
+
+Six mechanics and six dedicated follow-ups expand the pool to 44 upgrades. All use the existing firing controls; charge lights, small fuse ticks, and faint gun silhouettes keep the HUD unchanged.
+
+| Upgrade                  | Behavior                                                                                                                                                                                                                                                                                                                      | Follow-up                                                                                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recall · Shared          | 25% lighter rounds gain one penetration, reverse after 0.24 seconds, and steer toward your current position. They can hit enemies again on the return and are caught harmlessly. A final wall hit starts the return early; solid cover still blocks it.                                                                       | **Homecoming:** two additional penetrations on the return, with no further damage attenuation on that leg.                                  |
+| Capacitor · Shared       | Releasing fire for 0.85 seconds stores one double-damage discharge. It applies to every pellet and rear round, with ordinary recoil. Burst fire spends a charge per discharge.                                                                                                                                                | **Reserve cell:** another 0.85-second pause stores a second discharge. Holding fire cannot replenish them.                                  |
+| Countershot · Shared     | Each primary round can reflect one small hostile bullet on direct contact. The reflected bullet travels toward its firing position at speed 24, with 150% of its original damage, capped at 65. Walls, nearer actors, cables, and portals take precedence; blades and other machinery cannot be reflected.                    | **Reprisal:** reflected bullets penetrate two additional enemies. They cannot generate more reflections, explosions, or fragments.          |
+| Rivet · Precision        | Requires Deadeye. A hit shoves a small enemy up to 64 units through clear space. Reaching static cover deals 30% round damage and pins it for 0.65 seconds. Pins have a two-second cooldown; bosses and frontal shields resist.                                                                                               | **Fracture:** the next unblocked primary hit during the pin deals 60% extra damage, once per pin.                                           |
+| Fuse · Demolition        | Requires Shellshock. Shells stick to their final impact surface or actor, then explode after 0.72 seconds with 40% more blast damage. Attachments follow movement, rotation, and portal travel; destroyed hosts leave their charges at the last position. Bank growth, penetration, Aftershock, and Blast surfing still work. | **Linked fuse:** a detonation ignites attached charges within 140 units through clear space, after 0.06 seconds. Each charge explodes once. |
+| Afterimage · Bullet hell | Requires Crossfire. Every fourth discharge leaves its entire volley at the old firing position. It fires once after 0.42 seconds at 60% damage, including rear rounds and lane geometry. Echoes apply no player recoil, spend no charges, and cannot create more echoes. New cover can obstruct them.                         | **Parallax:** the stored volley turns toward your current aim when it fires.                                                                |
+
+[Test all six builds](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades): click **Test new upgrades**, then choose a card. Each starts in room 7 with full health, the mechanic, its follow-up, and a legal six-upgrade build. **R** retries the entrance; **Menu → Test new upgrades** switches builds. Normal saves, Daily records, and earned Practice victories stay intact. The test menu is available only through the explicit test link.
+
+Transient charge, pin, fuse, and echo state freezes during pauses and impact pauses, and resets on room entry, retry, death, or extraction. Pending effects and projectile counts are bounded. The upgrade-pool change advances the Daily ruleset to 30; ordinary checkpoints retain their builds.
 
 ## Follow-up upgrades
 
@@ -347,42 +364,44 @@ npm run build
 npm run preview
 ```
 
-| File                      | Responsibility                                                                         |
-| ------------------------- | -------------------------------------------------------------------------------------- |
-| `src/evolutions.ts`       | Per-discharge accuracy streaks, speed damage, and portal travel charges                |
-| `src/game.ts`             | Matter.js simulation, movement, recoil, combat, and room progression                   |
-| `src/enemies.ts`          | Enemy dimensions, health, attack timing, and boss patterns                             |
-| `src/kiln-ai.ts`          | Mortar planning, swept shell collisions, surface heat, and boiler movement             |
-| `src/kiln-art.ts`         | Boiler silhouette, cooling vents, arc warnings, and molten shell effects               |
-| `src/expanded-layouts.ts` | Four additional third-room layouts, obstacles, spawn anchors, and traversal routes     |
-| `src/levels.ts`           | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection |
-| `src/areas.ts`            | Area palettes, parallax scenery, and surface details                                   |
-| `src/props.ts`            | Sparse prop placement, rotated hit detection, impact damage, and explosions            |
-| `src/cargo.ts`            | Shootable suspension cables, delayed drops, and heavy impact interactions              |
-| `src/cargo-layout.ts`     | Seeded cargo placement with clear cables and falling lanes                             |
-| `src/cargo-art.ts`        | Suspension cables and restrained drop warnings                                         |
-| `src/conveyors.ts`        | Ground transport, momentum, supported stacks, and physical enemy carriage              |
-| `src/conveyor-layout.ts`  | Sparse seeded belt inserts with clear approaches and mirrored directions               |
-| `src/conveyor-art.ts`     | Moving rollers, tread marks, and direction arrows                                      |
-| `src/freight.ts`          | Lift boarding, ascent, three warned waves, recovery stops, and docking                 |
-| `src/freight-layout.ts`   | Rare seeded room replacement and vertical maintenance ledges                           |
-| `src/freight-art.ts`      | Shaft rails, cables, lift structure, and integrated status lamps                       |
-| `src/scrapper.ts`         | Physical crate grabs, locked throws, counterfire interruption, and tether cleanup      |
-| `src/scrapper-layout.ts`  | Sparse enemy substitutions with a nearby crate and clear lifting space                 |
-| `src/scrapper-art.ts`     | Tracked chassis, articulated claw, and restrained throw warnings                       |
-| `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup   |
-| `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane      |
-| `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
-| `src/demolition-art.ts`   | Restrained blast outlines, delayed warnings, and reduced-motion effects                |
-| `src/rules.ts`            | Gun modifications, seeded choices, swept collisions, and checkpoint validation         |
-| `src/daily.ts`            | UTC challenge identity, versioned links, and validated local best times                |
-| `src/practice.ts`         | Validated boss victory storage and stage-appropriate practice builds                   |
-| `src/render.ts`           | Canvas world, camera feedback, character animation, and effects                        |
-| `src/main.ts`             | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                 |
-| `src/audio.ts`            | Shared Web Audio output, effects, and audio preferences                                |
-| `src/music.ts`            | Bounded music scheduling, synthesis, fades, and warning ducking                        |
-| `src/music-score.ts`      | Original area phrases and read-only combat intensity                                   |
-| `src/style.css`           | Game menus and compact HUD                                                             |
+| File                      | Responsibility                                                                            |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/evolutions.ts`       | Per-discharge accuracy streaks, speed damage, and portal travel charges                   |
+| `src/game.ts`             | Matter.js simulation, movement, recoil, combat, and room progression                      |
+| `src/enemies.ts`          | Enemy dimensions, health, attack timing, and boss patterns                                |
+| `src/kiln-ai.ts`          | Mortar planning, swept shell collisions, surface heat, and boiler movement                |
+| `src/kiln-art.ts`         | Boiler silhouette, cooling vents, arc warnings, and molten shell effects                  |
+| `src/expanded-layouts.ts` | Four additional third-room layouts, obstacles, spawn anchors, and traversal routes        |
+| `src/levels.ts`           | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection    |
+| `src/areas.ts`            | Area palettes, parallax scenery, and surface details                                      |
+| `src/props.ts`            | Sparse prop placement, rotated hit detection, impact damage, and explosions               |
+| `src/cargo.ts`            | Shootable suspension cables, delayed drops, and heavy impact interactions                 |
+| `src/cargo-layout.ts`     | Seeded cargo placement with clear cables and falling lanes                                |
+| `src/cargo-art.ts`        | Suspension cables and restrained drop warnings                                            |
+| `src/conveyors.ts`        | Ground transport, momentum, supported stacks, and physical enemy carriage                 |
+| `src/conveyor-layout.ts`  | Sparse seeded belt inserts with clear approaches and mirrored directions                  |
+| `src/conveyor-art.ts`     | Moving rollers, tread marks, and direction arrows                                         |
+| `src/freight.ts`          | Lift boarding, ascent, three warned waves, recovery stops, and docking                    |
+| `src/freight-layout.ts`   | Rare seeded room replacement and vertical maintenance ledges                              |
+| `src/freight-art.ts`      | Shaft rails, cables, lift structure, and integrated status lamps                          |
+| `src/scrapper.ts`         | Physical crate grabs, locked throws, counterfire interruption, and tether cleanup         |
+| `src/scrapper-layout.ts`  | Sparse enemy substitutions with a nearby crate and clear lifting space                    |
+| `src/scrapper-art.ts`     | Tracked chassis, articulated claw, and restrained throw warnings                          |
+| `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup      |
+| `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane         |
+| `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains         |
+| `src/demolition-art.ts`   | Restrained blast outlines, delayed warnings, and reduced-motion effects                   |
+| `src/rules.ts`            | Gun modifications, seeded choices, swept collisions, and checkpoint validation            |
+| `src/ballistics.ts`       | Returning rounds, stored charges, counterfire, wall pins, sticky shells, and echo volleys |
+| `src/ballistics-art.ts`   | Small charge lamps, attached fuse ticks, pins, and delayed gun silhouettes                |
+| `src/daily.ts`            | UTC challenge identity, versioned links, and validated local best times                   |
+| `src/practice.ts`         | Validated boss victory storage and stage-appropriate practice builds                      |
+| `src/render.ts`           | Canvas world, camera feedback, character animation, and effects                           |
+| `src/main.ts`             | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                    |
+| `src/audio.ts`            | Shared Web Audio output, effects, and audio preferences                                   |
+| `src/music.ts`            | Bounded music scheduling, synthesis, fades, and warning ducking                           |
+| `src/music-score.ts`      | Original area phrases and read-only combat intensity                                      |
+| `src/style.css`           | Game menus and compact HUD                                                                |
 
 Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
 
@@ -430,7 +449,7 @@ Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-
 
 Path tests cover entry and follow-up eligibility, concise path labels, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision, Bullet hell, and Demolition builds with normal health and earned upgrades.
 
-Portal checks cover grounded walking under normal gravity in both directions, raised supports, linking while already pressing against a wall, walking enemies, surface fitting, one fixed pair per room, all velocity orientations, swept high-speed travel, blocked exits, enemy rushes, close hostile muzzles, preserved projectile modifiers, props, pause/reset handling, and prevention of idle floor-to-floor loops. Path odds are checked over 40,000 deterministic draws. Three full combat runs retain fixed, legal earned-build offers to isolate combat from pool changes; a fourth reaches extraction with Demolition using the current weighted reward pool. Browser checks cover real right clicks, player travel, invalid placement, the desktop and phone-width upgrade card, and console errors.
+Portal checks cover grounded walking under normal gravity in both directions, raised supports, linking while already pressing against a wall, walking enemies, surface fitting, one fixed pair per room, all velocity orientations, swept high-speed travel, blocked exits, enemy rushes, close hostile muzzles, preserved projectile modifiers, props, pause/reset handling, and prevention of idle floor-to-floor loops. Path odds are checked over 40,000 deterministic draws. Seven full combat runs use fixed, legal earned-build offers to isolate combat from pool changes: four established builds and three incorporating all twelve new upgrades. Actual weighted normal and Daily offers retain separate progression, eligibility, replay, and save checks. Browser checks cover real right clicks, player travel, invalid placement, desktop and phone-width cards, the isolated upgrade picker, and console errors.
 
 Demolition checks cover direct and area damage, falloff, shield and boss armor, terrain and rotated-prop occlusion, real floor-shot launches, per-volley launch limits, bank and pierce payloads, air and landing bonuses, delayed and finite chains, escape boarding, checkpoint legality, deterministic path odds, portal travel, and sustained dense builds.
 
