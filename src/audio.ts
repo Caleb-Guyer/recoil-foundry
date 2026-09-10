@@ -149,6 +149,7 @@ export class Sound {
         'slam',
         'cargo-release',
         'cargo-impact',
+        'scrapper-lock',
       ].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
@@ -157,6 +158,18 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'scrapper-grab') {
+      this.tone(95, 180, 0.35, 0.045, 'sawtooth');
+      this.crack(0.07, 0.05, 1200);
+    } else if (kind === 'scrapper-lock') {
+      this.tone(320, 520, 0.16, 0.055, 'triangle');
+      this.tone(520, 520, 0.07, 0.03, 'sine', 0.19);
+    } else if (kind === 'scrapper-throw') {
+      this.tone(130, 50, 0.16, 0.09);
+      this.crack(0.12, 0.09, 1100);
+    } else if (kind === 'scrapper-break') {
+      this.tone(210, 65, 0.2, 0.07);
+      this.crack(0.08, 0.085, 2100);
     } else if (kind === 'cargo-release') {
       this.crack(0.13, 0.1, 2500);
       this.tone(310, 170, 0.45, 0.07, 'triangle');

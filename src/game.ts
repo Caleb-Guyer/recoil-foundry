@@ -54,6 +54,8 @@ import type { Prop } from './props.ts';
 import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
 import { ConveyorSystem } from './conveyors.ts';
 import { FreightSystem } from './freight.ts';
+import { createScrapper, updateScrapper, releaseScrapper } from './scrapper.ts';
+import type { ScrapperRig } from './scrapper.ts';
 import { FREIGHT } from './freight-layout.ts';
 import { BreachSystem } from './breaches.ts';
 import { updateLoader, updatePress } from './area-boss-ai.ts';
@@ -107,6 +109,7 @@ export interface Enemy {
   kiln?: KilnRig;
   turbine?: TurbineRig;
   interceptor?: InterceptorRig;
+  scrapper?: ScrapperRig;
 }
 export interface Shot {
   id: number;
@@ -257,6 +260,7 @@ export class Game {
       this.portalRequest = null;
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      for (const e of this.enemies) releaseScrapper(this, e);
       this.demolition.clear();
       this.evolutions.reset();
     }
@@ -564,6 +568,7 @@ export class Game {
     if (kind === 'kiln') enemy.kiln = createKiln();
     if (kind === 'turbine') enemy.turbine = createTurbine();
     if (kind === 'interceptor') enemy.interceptor = createInterceptor();
+    if (kind === 'scrapper') enemy.scrapper = createScrapper();
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
     this.shake = Math.min(12, this.shake + amount);
@@ -996,6 +1001,7 @@ export class Game {
       else if (e.kind === 'press') this.updatePress(e);
       else if (e.kind === 'kiln') updateKiln(this, e, dt);
       else if (e.kind === 'hopper') this.updateHopper(e);
+      else if (e.kind === 'scrapper') updateScrapper(this, e);
       else if (e.kind === 'sniper') this.updateSniper(e);
       else if (e.kind === 'boss') this.updateBoss(e);
       else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
@@ -1030,6 +1036,7 @@ export class Game {
         (e.kind === 'charger' || e.kind === 'loader' || e.kind === 'kiln') &&
         e.state === 'recover'
       ) &&
+      !(e.kind === 'scrapper' && e.state === 'recover') &&
       (e.kind !== 'press' || e.state === 'rush') &&
       e.kind !== 'crane' &&
       Query.collides(this.player, [e.body]).length
@@ -1743,6 +1750,7 @@ export class Game {
     }
     if (e.hp > 0) return blocked;
     breakSquad(this, e);
+    releaseScrapper(this, e);
     this.kills++;
     this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);

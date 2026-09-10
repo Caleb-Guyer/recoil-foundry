@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-09&dv=28`). Version 28 adds the freight-elevator encounter; its best times are separate from earlier rulesets. Freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-10&dv=29`). Version 29 adds the Scrapper; its best times are separate from earlier rulesets. Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -245,6 +245,20 @@ New behaviors appear gradually as the run advances:
 
 - **Skimmers** first appear in Cooling Works. These compact flying rotors navigate around cover, warn for 0.82 seconds, and fire three narrow jets. Aim locks for the final 0.34 seconds. Rooftop Skimmers recover faster and fire stronger bolts.
 
+- **Scrappers** use an articulated claw to lift a loose crate, lock a throw toward your position, and release it after a visible 0.8-second warning. Move after the lock, take cover, or shoot the held crate to break the grip and stun the machine.
+
+## The Scrapper
+
+Selected early Cooling Works and rooftop rooms can replace one ordinary enemy with a Scrapper. At most one appears in a room, with a nearby crate and clear lifting space. Rooftops select it more often. Existing enemy counts, elites, bosses, and upgrade rewards stay intact. The crate replaces the room's ordinary crate rather than creating an endless supply of ammunition.
+
+The 0.6-second grab uses a physical tether: the crate stays solid, lifts into the claw, and remains shootable. The throw then locks its target for the entire 0.8-second warning. A short mechanical cue, joint indicator, and thin arc show the attack without extra HUD text. The arc ends at solid cover. Throws obey gravity and collide with walls, props, enemies, and the player; a fast direct hit costs 18 health. A dangerous thrown crate has a warm outline. Slow contact and ordinary player-pushed crates remain harmless to the player.
+
+Any hit on a held crate breaks the grip, preserves the shot's push, and stuns the Scrapper for 1.15 seconds. It is harmless to touch during recovery. Crates can strike other enemies, damage cover, or ignite fuel through real contact. The Scrapper can retrieve an intact crate after it settles; without a usable crate it approaches on foot. It cannot lift cargo, fuel, fixed cover, occupied crates, or a crate held by another Scrapper, and it cannot pull one through a wall.
+
+Bullets and small bodies keep their existing portal behavior. Teleporting the Scrapper or its held crate immediately breaks the grip; an already thrown crate can travel through a portal with its velocity and impact danger preserved. Death and room changes remove the tether, while pause and hitstop freeze the grab and warning. Continue reconstructs the same fresh entrance, crate, and roster. Reduced-motion settings keep the attack warning readable.
+
+Try the [Cooling Works Scrapper](https://caleb-guyer.github.io/recoil-foundry/?test=scrapper) or its [rooftop encounter](https://caleb-guyer.github.io/recoil-foundry/?test=scrapper&area=rooftops). Click **Test the Scrapper** and clear the opening group to meet it in the second wave. **R** or **Restart test** returns to the entrance with full health and the preset gun. Both tests preserve ordinary saves, Daily records, and earned Practice victories.
+
 ## Enemy squads
 
 Selected rooms pair two existing enemies in the second reinforcement wave. Squads add no enemies, health, or damage bonuses. Both members use the usual warned entrances. Small matching chassis marks identify an active pair without labels or connecting lines.
@@ -353,6 +367,9 @@ npm run preview
 | `src/freight.ts`          | Lift boarding, ascent, three warned waves, recovery stops, and docking                 |
 | `src/freight-layout.ts`   | Rare seeded room replacement and vertical maintenance ledges                           |
 | `src/freight-art.ts`      | Shaft rails, cables, lift structure, and integrated status lamps                       |
+| `src/scrapper.ts`         | Physical crate grabs, locked throws, counterfire interruption, and tether cleanup      |
+| `src/scrapper-layout.ts`  | Sparse enemy substitutions with a nearby crate and clear lifting space                 |
+| `src/scrapper-art.ts`     | Tracked chassis, articulated claw, and restrained throw warnings                       |
 | `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup   |
 | `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane      |
 | `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
@@ -376,6 +393,8 @@ Cargo checks cover deterministic placement, clear cables and falling lanes, fast
 Conveyor checks cover mirrored placement, clear approaches and machinery spacing, both travel directions, running against the fastest belt, airborne momentum and recoil, stacked cover, harmless fuel transport, anchored and airborne exclusions, enemy entrances and aim locks, walls, ledges, restored friction, bounded cargo speed, actual portal travel, pause and hitstop, Continue, Daily, and isolated test links. Full combat playthroughs use ordinary movement, normal health, and legal upgrades, with direct-fire builds jumping off belts during combat.
 
 Freight checks cover rare deterministic selection, full departure and door warnings, physical enemy boarding, lift carriage and ceiling stops, jumping back from both side ledges, recoil recovery after a floor fall, cargo impacts, shots and portals above the old ceiling, pause and hitstop, saved entrances, isolated retries, docking, and exactly one reward. An ordinary-input pilot clears all three waves with normal health and the legal five-upgrade test build; complete combat runs also traverse the event.
+
+Scrapper checks cover sparse seeded placement, reserved crate clearance, real grabs in both directions and authored rooms, full aim locks, ordinary-input dodges, counterfire, recovery contact, death cleanup, physical crate impacts against cover, enemies, fuel and the player, blocked pulls, occupied crates, exclusive grips, actual portal travel, pause and hitstop, saved and Daily entrances, and isolated retries. Existing enemy-contact tests include its hull; full combat runs reach extraction through Scrapper rooms with normal health and earned upgrades.
 
 Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links.
 

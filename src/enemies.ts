@@ -17,6 +17,7 @@ export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }
   charger: { w: 30, h: 32, hp: 72 },
   sniper: { w: 36, h: 32, hp: 60 },
   hopper: { w: 30, h: 32, hp: 60 },
+  scrapper: { w: 30, h: 32, hp: 90 },
   loader: { w: 112, h: 68, hp: 800 },
   crane: { w: 90, h: 54, hp: 800 },
   press: { w: 120, h: 62, hp: 1250 },

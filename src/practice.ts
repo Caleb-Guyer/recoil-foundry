@@ -171,3 +171,20 @@ export function freightTestFromUrl(url: URL): Checkpoint | null {
     return null;
   return testCheckpoint('FREIGHT-RIDE-2', 5);
 }
+
+export function scrapperTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'scrapper' ||
+    p.getAll('area').length > 1 ||
+    ['daily', 'dv', 'seed', 'formation'].some((k) => p.has(k))
+  )
+    return null;
+  const area = p.get('area') ?? 'cooling';
+  if (area !== 'cooling' && area !== 'rooftops') return null;
+  return testCheckpoint(
+    area === 'cooling' ? 'SCRAPPER-8-10' : 'SCRAPPER-12-26',
+    area === 'cooling' ? 8 : 12,
+  );
+}

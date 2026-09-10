@@ -4,6 +4,7 @@ import { firstSolid, sweepBox } from './collisions.ts';
 import { clamp, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { breakSquad } from './squads.ts';
+import { disruptScrapperBody } from './scrapper.ts';
 
 export const PORTAL_RADIUS = 40;
 export const PORTAL_COLORS = ['#64ceff', '#ffa563'] as const;
@@ -280,6 +281,7 @@ export class PortalSystem {
       const solid = firstSolid(pos, end, half, blockers);
       const travel = solid ? Math.max(0, solid.t - 0.01) : 1;
       const velocity = portalVector(body.velocity, entry, exit);
+      disruptScrapperBody(g, body);
       Matter.Body.setPosition(body, { x: pos.x + rest.x * travel, y: pos.y + rest.y * travel });
       Matter.Body.setVelocity(body, velocity);
       // Old contact warm-start impulses belong to the entrance, not the exit.

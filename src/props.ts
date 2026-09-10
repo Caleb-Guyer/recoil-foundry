@@ -5,6 +5,7 @@ import { clamp, direction, distance, segmentBox, seeded, sample } from './rules.
 import type { Vec } from './rules.ts';
 import type { CargoRig } from './cargo.ts';
 import { CARGO_SIZE } from './cargo-layout.ts';
+import { disruptScrapperBody, SCRAPPER_DAMAGE } from './scrapper.ts';
 
 const { Bodies, Body, Composite, Events } = Matter;
 export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo';
@@ -25,6 +26,8 @@ export interface Prop {
   velocity: Vec;
   hits: Map<number, number>;
   cargo?: CargoRig;
+  throwUntil?: number;
+  throwHits?: Set<number>;
 }
 export interface PropPlacement extends Vec {
   kind: PropKind;
@@ -42,6 +45,10 @@ export function propPlacements(level: Level, seed: string): PropPlacement[] {
       ? ['crate', 'canister', 'canister']
       : ['crate', 'canister', 'cover'];
   for (const kind of kinds) {
+    if (kind === 'crate' && level.scrapperCrate) {
+      result.push({ kind, ...level.scrapperCrate });
+      continue;
+    }
     const paired = kind === 'canister' ? result.find((p) => p.kind === 'canister') : undefined;
     const { w, h } = PROP_STATS[kind];
     const candidates: Vec[] = [];
@@ -208,11 +215,13 @@ export class PropSystem {
     return prop;
   }
   remove(prop: Prop) {
+    disruptScrapperBody(this.game, prop.body);
     Composite.remove(this.game.engine.world, prop.body);
     this.items = this.items.filter((p) => p !== prop);
   }
   hit(prop: Prop, damage: number, velocity: Vec) {
     if (!this.items.includes(prop)) return;
+    disruptScrapperBody(this.game, prop.body);
     const g = this.game,
       d = direction({ x: 0, y: 0 }, velocity);
     prop.hp -= damage;
@@ -278,6 +287,28 @@ export class PropSystem {
       if (this.game.cargo.impact(prop, other, speed)) {
         if (g.mode !== 'playing') return;
         continue;
+      }
+      if (
+        prop.kind === 'crate' &&
+        (prop.throwUntil ?? 0) > g.time &&
+        speed >= 6 &&
+        Math.hypot(prop.velocity.x, prop.velocity.y) >= 6 &&
+        !prop.throwHits?.has(other.id)
+      ) {
+        if (other === g.player) {
+          prop.throwHits?.add(other.id);
+          prop.throwUntil = 0;
+          g.damagePlayer(SCRAPPER_DAMAGE, prop.body.position);
+        } else {
+          const target = this.items.find((p) => p.body === other);
+          if (target) {
+            prop.throwHits?.add(other.id);
+            if (target.kind === 'canister') this.explode(target);
+            else this.hit(target, clamp(speed * 6, 36, 90), prop.velocity);
+          }
+        }
+        if (g.mode !== 'playing') return;
+        if (!this.items.includes(prop)) continue;
       }
       const enemy = g.enemies.find((e) => e.body === other || e.crane?.body === other);
       const incoming = this.velocities.get(other);

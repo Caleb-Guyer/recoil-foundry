@@ -31,6 +31,7 @@ import { PROP_STATS } from './props.ts';
 import { drawCargoCables } from './cargo-art.ts';
 import { drawConveyors } from './conveyor-art.ts';
 import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
+import { drawScrapper } from './scrapper-art.ts';
 import { FREIGHT } from './freight-layout.ts';
 import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
@@ -180,6 +181,10 @@ export class Renderer {
       c.globalAlpha = 1;
     }
     for (const e of g.enemies) {
+      if (e.kind === 'scrapper') {
+        drawScrapper(c, g, e, this.reduced);
+        continue;
+      }
       if (e.kind === 'interceptor') {
         drawInterceptor(c, g, e, this.reduced);
         continue;
@@ -1029,6 +1034,14 @@ export class Renderer {
         c.lineTo(w / 2 - 2, -h / 2 + 2);
         c.stroke();
       } else if (prop.kind === 'crate') {
+        if (
+          (prop.throwUntil ?? 0) > g.time &&
+          Math.hypot(prop.body.velocity.x, prop.body.velocity.y) > 5
+        ) {
+          c.strokeStyle = '#eab27f';
+          c.lineWidth = 2;
+          c.strokeRect(-w / 2 - 2, -h / 2 - 2, w + 4, h + 4);
+        }
         this.line({ x: -16, y: -16 }, { x: 16, y: 16 }, '#71878c', 2);
         this.line({ x: 16, y: -16 }, { x: -16, y: 16 }, '#71878c', 2);
         c.fillStyle = '#c4c6ad';

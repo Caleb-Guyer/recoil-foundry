@@ -2,6 +2,7 @@ import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.
 import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
+import { addScrapper } from './scrapper-layout.ts';
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
@@ -15,6 +16,7 @@ export type EnemyKind =
   | 'charger'
   | 'sniper'
   | 'hopper'
+  | 'scrapper'
   | 'loader'
   | 'crane'
   | 'press'
@@ -47,6 +49,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  scrapperCrate?: Vec;
   mirrored: boolean;
   boss: boolean;
   detour?: true;
@@ -763,7 +766,7 @@ export function getLevel(
   const furnaceStage = 4 + Math.floor(rng() * 2);
   const coolingStage = 8 + Math.floor(rng() * 2);
   if (stage !== furnaceStage && stage !== coolingStage && stage < 12 && stage % 4 !== 2)
-    return level;
+    return addScrapper(level, seed, stage);
   const furnace = stage === furnaceStage ? level : buildLevel(seed, furnaceStage);
   const first = assignElite(furnace, ['shielded', 'twin'], rng);
   if (stage === coolingStage || stage >= 12 || stage % 4 === 2) {
@@ -773,5 +776,5 @@ export function getLevel(
     ).map((host) => host.elite);
     assignElite(level, different.length ? different : ELITE_HOSTS.map((host) => host.elite), rng);
   }
-  return level;
+  return addScrapper(level, seed, stage);
 }
