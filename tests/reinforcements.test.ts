@@ -86,7 +86,7 @@ test('ordinary rooms split their exact authored roster into two groups without c
         opening = activeRoster(g),
         final = pendingRoster(g),
         expected = g.level.spawns.map(spawnKey).sort();
-      assert(opening.length > 0 && final.length > 0);
+      assert((g.level.freight ? opening.length === 0 : opening.length > 0) && final.length > 0);
       assert(final.length >= opening.length);
       assert.equal(g.waves.phase, 'opening');
       assert(g.waves.pending);

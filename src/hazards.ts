@@ -130,6 +130,7 @@ export class HazardSystem {
     const g = this.game;
     if (g.mode !== 'playing') return;
     for (const h of this.items) {
+      if (h === g.freight.lift) continue;
       if (h.kind === 'lift') {
         const phase = (h.phase + dt) % LIFT_PERIOD;
         const top =

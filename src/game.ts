@@ -53,6 +53,8 @@ import type { SquadTag, SquadMember } from './squads.ts';
 import type { Prop } from './props.ts';
 import { HazardSystem, CRUMBLE_TELL } from './hazards.ts';
 import { ConveyorSystem } from './conveyors.ts';
+import { FreightSystem } from './freight.ts';
+import { FREIGHT } from './freight-layout.ts';
 import { BreachSystem } from './breaches.ts';
 import { updateLoader, updatePress } from './area-boss-ai.ts';
 import { huntBoss, bossHasLane } from './boss-hunt.ts';
@@ -155,6 +157,7 @@ export class Game {
   cargo = new CargoSystem(this);
   hazards = new HazardSystem(this);
   conveyors = new ConveyorSystem(this);
+  freight = new FreightSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
   portals = new PortalSystem(this);
@@ -165,6 +168,9 @@ export class Game {
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
     return this.escape ? ESCAPE_WIDTH : WORLD.width;
+  }
+  get worldTop() {
+    return this.level?.freight ? FREIGHT.top : 0;
   }
   get terrainBodies() {
     return [
@@ -315,6 +321,7 @@ export class Game {
     this.detourStepsReady = false;
     this.evolutions.reset();
     this.conveyors.clear();
+    this.freight.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -355,10 +362,6 @@ export class Game {
       this.terrain.push(b);
       Composite.add(this.engine.world, b);
     };
-    wall(this.worldWidth / 2, 790, this.worldWidth, 100);
-    wall(-30, 400, 60, 900);
-    wall(this.worldWidth + 30, 400, 60, 900);
-    wall(this.worldWidth / 2, -40, this.worldWidth, 80);
     this.level = escapeRoom
       ? {
           ...ESCAPE_LAYOUT,
@@ -374,6 +377,10 @@ export class Game {
             this.practice?.kind === 'condenser' ? 'condenser' : undefined,
             this.practice?.kind === 'boss' ? 'boss' : undefined,
           );
+    wall(this.worldWidth / 2, 790, this.worldWidth, 100);
+    wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
+    wall(this.worldWidth + 30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
+    wall(this.worldWidth / 2, this.worldTop - 40, this.worldWidth, 80);
     for (const solid of this.level.solids)
       wall(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h);
     this.player = Bodies.rectangle(140, 680, 26, 36, {
@@ -401,6 +408,8 @@ export class Game {
         label: 'extraction',
       });
       Composite.add(this.engine.world, this.extractionLift);
+    } else if (this.level.freight) {
+      this.freight.reset();
     } else {
       this.hazards.reset(this.level, this.roomSeed, this.stage);
       if (!this.detour) this.breaches.reset(this.level, this.seed, this.stage);
@@ -589,6 +598,7 @@ export class Game {
       this.portalRequest = null;
     }
     this.updateEscape(dt);
+    this.freight.beforeStep(dt);
     this.hazards.beforeStep(dt);
     this.demolition.update();
     if (this.mode !== 'playing') return;
@@ -704,7 +714,12 @@ export class Game {
       return;
     }
     this.waves.update(dt);
-    if (!this.enemies.length && !this.waves.pending && !this.clear) {
+    if (
+      !this.enemies.length &&
+      !this.waves.pending &&
+      !this.clear &&
+      (!this.freight.active || this.freight.arrived)
+    ) {
       this.clear = true;
       this.clearAt = this.time;
       this.shots = this.shots.filter((s) => s.friendly);
@@ -732,7 +747,8 @@ export class Game {
       this.clear &&
       this.time - this.clearAt > 0.4 &&
       this.player.position.x > 1870 &&
-      this.player.position.y > 590
+      this.player.position.y > (this.level.freight ? FREIGHT.dock - 70 : 590) &&
+      (!this.level.freight || this.player.position.y < FREIGHT.dock)
     ) {
       if (this.stage === STAGES - 1) {
         this.startEscape();
@@ -746,7 +762,7 @@ export class Game {
     const halfW = Math.max(...this.player.vertices.map((v) => Math.abs(v.x - p.x))),
       halfH = Math.max(...this.player.vertices.map((v) => Math.abs(v.y - p.y)));
     const x = clamp(p.x, halfW, this.worldWidth - halfW),
-      y = clamp(p.y, halfH, WORLD.floor - halfH);
+      y = clamp(p.y, this.worldTop + halfH, WORLD.floor - halfH);
     if (x === p.x && y === p.y) return;
     // Keep tangential momentum when a boosted shot hits an arena boundary.
     const vx = x !== p.x && ((p.x < x && v.x < 0) || (p.x > x && v.x > 0)) ? 0 : v.x;
@@ -990,7 +1006,7 @@ export class Game {
         if (!turning) this.updateRunner(e, d, dist);
       } else if (e.kind === 'flyer') {
         Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
-        const height = clamp(this.player.position.y - 190, 220, 500);
+        const height = clamp(this.player.position.y - 190, this.worldTop + 220, 500);
         Body.setVelocity(e.body, {
           x: clamp((this.player.position.x - d.x * 350 - p.x) * 0.009, -2.4, 2.4),
           y: clamp((height - p.y) * 0.04, -3, 3),
@@ -1281,7 +1297,7 @@ export class Game {
       const min = b.bounds.min,
         max = b.bounds.max;
       if (
-        min.y < 0 ||
+        min.y < this.worldTop ||
         min.y > WORLD.floor ||
         max.x <= 0 ||
         min.x >= this.worldWidth ||
@@ -1645,7 +1661,12 @@ export class Game {
         }
         recordShotTrace(s.trace, s.pos);
       }
-      if (s.pos.x < -50 || s.pos.x > this.worldWidth + 50 || s.pos.y < -100 || s.pos.y > 900)
+      if (
+        s.pos.x < -50 ||
+        s.pos.x > this.worldWidth + 50 ||
+        s.pos.y < this.worldTop - 100 ||
+        s.pos.y > 900
+      )
         s.life = 0;
     }
     this.shots = this.shots.filter((s) => s.life > 0);

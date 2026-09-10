@@ -23,7 +23,7 @@ test('hazards introduce one type at a time and keep sweeps, headroom, spawns and
       const before = JSON.stringify(level);
       const hazard = hazardPlacement(level, seed, stage);
       assert.equal(JSON.stringify(level), before, 'Hazards must not rewrite the room or route');
-      if (stage === 0 || level.boss) {
+      if (stage === 0 || level.boss || level.freight) {
         assert.equal(hazard, undefined);
         continue;
       }
@@ -76,6 +76,10 @@ test('hazard selection mirrors with the actual geometry and does not depend on r
     for (const stage of [9, 1, 5, 8, 4]) {
       const level = getLevel(seed, stage);
       const hazard = hazardPlacement(level, seed, stage)!;
+      if (level.freight) {
+        assert.equal(hazard, undefined);
+        continue;
+      }
       const mirrored: Level = {
         ...level,
         mirrored: !level.mirrored,

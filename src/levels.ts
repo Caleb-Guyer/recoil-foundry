@@ -1,6 +1,7 @@
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
 import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
+import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
 import { seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
@@ -35,6 +36,7 @@ export interface Spawn extends Vec {
   squad?: SquadTag;
 }
 export interface Layout {
+  freight?: true;
   added?: true;
   id: string;
   name: string;
@@ -58,6 +60,7 @@ const flyer = (x: number, y: number): Spawn => ({ kind: 'flyer', x, y });
 const route = (...points: number[][]): Vec[] => points.map(([x, y]) => ({ x, y }));
 // Authored cover, spawn anchors and a generous baseline route belong to the same layout.
 // Ground remains safe beneath raised gaps; recoil creates optional shortcuts.
+export const SPECIAL_LAYOUTS: Layout[] = [FREIGHT_LAYOUT];
 export const LAYOUTS: Layout[] = [
   ...ADDED_LAYOUTS,
   ...COOLING_LAYOUTS,
@@ -599,6 +602,15 @@ function buildLevel(
 ): Level {
   const pick = seeded(seed + ':layouts');
   if (!Number.isInteger(stage) || stage < 0 || stage >= 16) throw new RangeError('Invalid stage');
+  if (freightSelected(seed, stage))
+    return {
+      ...FREIGHT_LAYOUT,
+      mirrored: false,
+      boss: false,
+      solids: FREIGHT_LAYOUT.solids.map((s) => ({ ...s })),
+      spawns: FREIGHT_LAYOUT.spawns.map((s) => ({ ...s })),
+      route: FREIGHT_LAYOUT.route.map((p) => ({ ...p })),
+    };
   const area = Math.floor(stage / 4),
     slot = stage % 4;
   const legacyStage = area * 3 + Math.min(slot, 2);
@@ -617,7 +629,7 @@ function buildLevel(
     ),
     docksBoss,
     ...sample(
-      LAYOUTS.filter((layout) => layout.area === 'furnace' && !layout.added),
+      LAYOUTS.filter((layout) => layout.area === 'furnace' && !layout.added && !layout.freight),
       2,
       pick,
     ),

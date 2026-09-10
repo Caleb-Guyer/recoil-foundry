@@ -19,7 +19,7 @@ export function conveyorPlacements(
   machinery: Solid[] = [],
   fixtures: Solid[] = [],
 ): Conveyor[] {
-  if (level.boss || level.detour || stage < 4 || level.area === 'docks') return [];
+  if (level.boss || level.detour || level.freight || stage < 4 || level.area === 'docks') return [];
   const rng = seeded(seed + ':conveyors:' + stage);
   if (stage !== 4 && stage !== 6 && rng() > 0.6) return [];
   const canonical = (s: Solid) => ({ ...s, x: level.mirrored ? 2000 - s.x - s.w : s.x });

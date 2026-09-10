@@ -30,6 +30,8 @@ import { AREAS, drawScenery, drawSurfaceDetails } from './areas.ts';
 import { PROP_STATS } from './props.ts';
 import { drawCargoCables } from './cargo-art.ts';
 import { drawConveyors } from './conveyor-art.ts';
+import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
+import { FREIGHT } from './freight-layout.ts';
 import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
@@ -106,7 +108,11 @@ export class Renderer {
       0,
       Math.max(0, g.worldWidth - viewW),
     );
-    const desiredY = clamp(g.player.position.y - viewH * 0.58, 0, Math.max(0, 835 - viewH));
+    const desiredY = clamp(
+      g.player.position.y - viewH * 0.58,
+      g.worldTop,
+      Math.max(g.worldTop, 835 - viewH),
+    );
     const follow = this.portalRevision !== g.portals.revision ? 1 : 1 - Math.exp(-dt * 9);
     this.portalRevision = g.portals.revision;
     this.camera.x += (desiredX - this.camera.x) * follow;
@@ -117,7 +123,8 @@ export class Renderer {
     }
     c.save();
     c.scale(this.scale, this.scale);
-    if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
+    if (g.level.freight && g.mode !== 'title') drawFreightScenery(c, this.camera, viewW, viewH);
+    else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
     else drawScenery(c, g.level.area, this.camera, viewW, viewH);
     c.restore();
     c.save();
@@ -135,7 +142,8 @@ export class Renderer {
     drawReinforcementDoors(c, g, this.reduced);
     const palette = AREAS[g.level.area];
     for (const b of g.terrain) {
-      if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < 0) continue;
+      if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
+        continue;
       const x = b.bounds.min.x,
         y = b.bounds.min.y,
         w = b.bounds.max.x - x,
@@ -156,6 +164,7 @@ export class Renderer {
     this.drawExit();
     drawDetourDoor(c, g);
     this.drawHazards();
+    drawFreightLift(c, g);
     drawConveyors(c, g, this.reduced);
     drawCoolant(c, g, this.reduced);
     this.drawProps();
@@ -705,6 +714,7 @@ export class Renderer {
     const c = this.ctx,
       g = this.game;
     for (const hazard of g.hazards.items) {
+      if (hazard === g.freight.lift) continue;
       if (!hazard.visible && hazard.permanent) continue;
       const { x, y: restY, w, h, travel } = hazard.placement,
         left = x - w / 2,
@@ -1209,7 +1219,7 @@ export class Renderer {
     const c = this.ctx,
       g = this.game,
       x = 1930,
-      y = WORLD.floor;
+      y = g.level.freight ? FREIGHT.dock : WORLD.floor;
     c.fillStyle = g.clear ? '#213832' : '#1b2326';
     c.fillRect(x - 36, y - 111, 72, 111);
     c.fillStyle = g.clear ? '#9bd9c2' : '#414e51';

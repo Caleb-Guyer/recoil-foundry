@@ -16,6 +16,7 @@ import {
   cargoTestFromUrl,
   squadsTestFromUrl,
   conveyorsTestFromUrl,
+  freightTestFromUrl,
 } from './practice.ts';
 import type { Encounter } from './practice.ts';
 import {
@@ -105,6 +106,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  freightTestFromUrl(entryUrl) ??
   conveyorsTestFromUrl(entryUrl) ??
   squadsTestFromUrl(entryUrl) ??
   cargoTestFromUrl(entryUrl) ??
@@ -119,7 +121,7 @@ let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = nu
 
 function updateTitle() {
   $('play').innerHTML =
-    `${linkedRunTest ? (linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
+    `${linkedRunTest ? (linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
@@ -129,13 +131,15 @@ function updateTitle() {
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
   $('title-hint').textContent = linkedRunTest
-    ? linkedRunTest.seed.startsWith('BELT-')
-      ? 'Ride the rollers. R to restart test.'
-      : linkedRunTest.seed.startsWith('SQUAD-')
-        ? 'Squad in the second wave. R to restart test.'
-        : linkedRunTest.seed === 'CARGO-DROP'
-          ? 'Shoot the cable. R to restart test.'
-          : 'Full health. Preset gun. R to restart test.'
+    ? linkedRunTest.seed.startsWith('FREIGHT-')
+      ? 'Ride up. Watch the doors. R to restart test.'
+      : linkedRunTest.seed.startsWith('BELT-')
+        ? 'Ride the rollers. R to restart test.'
+        : linkedRunTest.seed.startsWith('SQUAD-')
+          ? 'Squad in the second wave. R to restart test.'
+          : linkedRunTest.seed === 'CARGO-DROP'
+            ? 'Shoot the cable. R to restart test.'
+            : 'Full health. Preset gun. R to restart test.'
     : linkedTest
       ? `Full health. ${PRACTICE_BOSSES[linkedTest.kind].stage} upgrades. R to retry.`
       : linkedDaily

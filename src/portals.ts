@@ -88,7 +88,7 @@ export class PortalSystem {
     return (
       pos.x - half.x >= -0.01 &&
       pos.x + half.x <= this.game.worldWidth + 0.01 &&
-      pos.y - half.y >= -0.01 &&
+      pos.y - half.y >= this.game.worldTop - 0.01 &&
       pos.y + half.y <= 740.01 &&
       !bodies.some((b) => overlaps(pos, half, b))
     );
@@ -99,8 +99,18 @@ export class PortalSystem {
     for (const body of this.game.terrain) {
       const { min, max } = body.bounds;
       const faces = [
-        { normal: { x: -1, y: 0 }, edge: min.x, lo: Math.max(0, min.y), hi: Math.min(740, max.y) },
-        { normal: { x: 1, y: 0 }, edge: max.x, lo: Math.max(0, min.y), hi: Math.min(740, max.y) },
+        {
+          normal: { x: -1, y: 0 },
+          edge: min.x,
+          lo: Math.max(this.game.worldTop, min.y),
+          hi: Math.min(740, max.y),
+        },
+        {
+          normal: { x: 1, y: 0 },
+          edge: max.x,
+          lo: Math.max(this.game.worldTop, min.y),
+          hi: Math.min(740, max.y),
+        },
         {
           normal: { x: 0, y: -1 },
           edge: min.y,

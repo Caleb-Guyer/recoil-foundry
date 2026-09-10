@@ -81,7 +81,7 @@ export function hazardPlacement(
   seed: string,
   stage: number,
 ): HazardPlacement | undefined {
-  if (level.boss || stage === 0) return;
+  if (level.boss || level.freight || stage === 0) return;
   const kinds: HazardKind[] = level.added
     ? ([['lift'], ['crusher'], ['lift'], ['crumble']][Math.floor(stage / 4)] as HazardKind[])
     : stage === 1

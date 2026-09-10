@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BOSS_LAYOUTS, getLevel, LAYOUTS } from '../src/levels.ts';
+import { BOSS_LAYOUTS, getLevel, LAYOUTS, SPECIAL_LAYOUTS } from '../src/levels.ts';
 import type { Level } from '../src/levels.ts';
 import { ENEMY_STATS } from '../src/enemies.ts';
 import type { EliteKind } from '../src/enemies.ts';
@@ -50,7 +50,7 @@ test('every run gets seven elites, one per eligible room and at most one per roo
 });
 
 test('elite promotion keeps authored safe hull anchors, mirrored geometry, and unique spawn positions', () => {
-  const sources = [...LAYOUTS, ...BOSS_LAYOUTS];
+  const sources = [...LAYOUTS, ...BOSS_LAYOUTS, ...SPECIAL_LAYOUTS];
   const before = JSON.stringify(sources);
   const variants = new Set<string>();
   for (let index = 0; index < 128; index++) {

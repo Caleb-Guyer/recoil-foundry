@@ -25,7 +25,7 @@ export const SQUAD_LOCK = 0.35;
 // health, and the combat/reward random stream remain unchanged.
 export function squadSpawns(spawns: Spawn[], level: Level, seed: string, stage: number): Spawn[] {
   const result = spawns.map(({ squad: _old, ...s }) => ({ ...s }) as Spawn);
-  if (level.boss || level.detour || stage < 4) return result;
+  if (level.boss || level.detour || level.freight || stage < 4) return result;
   const rng = seeded(seed + ':squads:' + stage);
   if (stage !== 4 && stage !== 6 && stage !== 8 && rng() > 0.7) return result;
   const pairs: { kind: SquadKind; lead: Spawn; support: Spawn }[] = [];

@@ -160,3 +160,14 @@ export function conveyorsTestFromUrl(url: URL): Checkpoint | null {
     area === 'furnace' ? 4 : 12,
   );
 }
+
+export function freightTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'freight' ||
+    ['daily', 'dv', 'seed', 'area', 'formation'].some((k) => p.has(k))
+  )
+    return null;
+  return testCheckpoint('FREIGHT-RIDE-2', 5);
+}

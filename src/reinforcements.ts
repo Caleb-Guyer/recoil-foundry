@@ -16,6 +16,7 @@ export interface ReinforcementDoor {
 }
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
+  if (level.freight) return [[], level.spawns.map((s) => ({ ...s }))];
   if (level.boss || level.spawns.length < 3) return [level.spawns.map((s) => ({ ...s })), []];
   const planned = squadSpawns(level.spawns, level, seed, stage);
   const count = planned.length;
@@ -122,6 +123,7 @@ export class ReinforcementSystem {
         (s) =>
           ['flyer', 'skimmer'].includes(s.kind) === ['flyer', 'skimmer'].includes(door.spawn.kind),
       )
+      .filter((s) => !g.level.freight || Math.abs(s.y - door.spawn.y) < 40)
       .map((anchor) => ({ ...door.spawn, x: anchor.x, y: anchor.y }))
       .filter(
         (s) =>
@@ -143,6 +145,7 @@ export class ReinforcementSystem {
     const g = this.game;
     if (g.mode !== 'playing' || g.escape || g.level.boss) return;
     if (this.phase === 'opening') {
+      if (g.level.freight) return;
       if (
         g.enemies.length === 0 ||
         ((g.stage >= 4 || g.detour) &&

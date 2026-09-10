@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getLevel, LAYOUTS, BOSS_LAYOUTS } from '../src/levels.ts';
+import { getLevel, LAYOUTS, BOSS_LAYOUTS, SPECIAL_LAYOUTS } from '../src/levels.ts';
+import { FREIGHT } from '../src/freight-layout.ts';
 import { STAGES } from '../src/rules.ts';
 import { Game } from '../src/game.ts';
 import Matter from 'matter-js';
@@ -45,7 +46,7 @@ test('sixteen-stage seeds produce twelve regular layouts and a boss at the end o
       assert(level.spawns.length > 0);
     }
   }
-  assert.equal(seen.size, LAYOUTS.length + BOSS_LAYOUTS.length);
+  assert.equal(seen.size, LAYOUTS.length + BOSS_LAYOUTS.length + SPECIAL_LAYOUTS.length);
   assert(mirrored > 100);
 });
 
@@ -87,8 +88,8 @@ test('all generated enemy hulls, player starts and exits are clear of solid obst
       ];
       for (const s of level.solids) {
         assert(s.w >= 80 && s.h >= 22);
-        assert(s.x >= 220 && s.x + s.w <= 1780);
-        assert(s.y >= 200 && s.y + s.h <= 740);
+        assert(s.x >= 220 && s.x + s.w <= (level.freight ? 2000 : 1780));
+        assert(s.y >= (level.freight ? FREIGHT.top : 200) && s.y + s.h <= 740);
         for (const a of actors) assert(!overlap(a, s), level.id + ' overlapping spawn');
         assert(!overlap(s, { x: 1840, y: 590, w: 160, h: 150 }), level.id + ' blocked exit');
       }
@@ -99,7 +100,7 @@ test('routes and spawn anchors stay aligned when a layout is mirrored', () => {
   for (let i = 0; i < 50; i++)
     for (let stage = 0; stage < STAGES; stage++) {
       const level = getLevel('mirror-' + i, stage),
-        source = [...LAYOUTS, ...BOSS_LAYOUTS].find((l) => l.id === level.id)!;
+        source = [...LAYOUTS, ...BOSS_LAYOUTS, ...SPECIAL_LAYOUTS].find((l) => l.id === level.id)!;
       const transformed = source.solids.map((s) => ({
         ...s,
         x: level.mirrored ? 2000 - s.x - s.w : s.x,

@@ -33,15 +33,16 @@ export function drawCargoCables(c: CanvasRenderingContext2D, g: Game, reduced: b
       c.stroke();
     }
     if (warning) {
+      const floor = g.lineEnd({ x, y: r.origin.y + CARGO_SIZE.h / 2 + 1 }, { x, y: 740 }, 0, p).y;
       const progress = 1 - Math.max(0, r.releaseAt - g.time) / CARGO_TELL;
       c.fillStyle = 'rgba(220,163,89,0.06)';
-      c.fillRect(x - CARGO_SIZE.w / 2, bottom, CARGO_SIZE.w, 740 - bottom);
+      c.fillRect(x - CARGO_SIZE.w / 2, bottom, CARGO_SIZE.w, floor - bottom);
       c.strokeStyle = '#e8b577';
       c.lineWidth = 2;
       c.setLineDash([6, 5]);
       c.beginPath();
-      c.moveTo(x - CARGO_SIZE.w / 2, 736);
-      c.lineTo(x + CARGO_SIZE.w / 2, 736);
+      c.moveTo(x - CARGO_SIZE.w / 2, floor - 4);
+      c.lineTo(x + CARGO_SIZE.w / 2, floor - 4);
       c.stroke();
       c.setLineDash([]);
       c.globalAlpha = reduced ? 1 : 0.6 + progress * 0.4;

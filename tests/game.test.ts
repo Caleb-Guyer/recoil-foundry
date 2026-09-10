@@ -1,4 +1,6 @@
 import { dodgePilot } from './combat-pilot.ts';
+import { freightPilot } from './freight-pilot.ts';
+import { FREIGHT } from '../src/freight-layout.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
@@ -244,14 +246,18 @@ test('cleared exits advance automatically and choices modify the same gun', () =
   };
   for (let stage = 0; stage < STAGES; stage++) {
     assert.equal(g.stage, stage);
-    Body.setPosition(g.player, { x: 1910, y: 700 });
+    Body.setPosition(g.player, g.freight.active ? { x: 1000, y: 682 } : { x: 1910, y: 700 });
     tick(g);
     assert.equal(g.mode, 'playing');
-    for (let i = 0; i < 300 && !g.clear; i++) {
+    for (let i = 0; i < (g.freight.active ? 3000 : 300) && !g.clear; i++) {
       for (const e of [...g.enemies]) g.hitEnemy(e, 9999);
       tick(g);
     }
     assert(g.clear, 'The room did not finish after defeating both groups');
+    if (g.freight.active) {
+      Body.setPosition(g.player, { x: 1910, y: FREIGHT.dock - 18 });
+      Body.setVelocity(g.player, { x: 0, y: 0 });
+    }
     tick(g, 40);
     if (stage < STAGES - 1) {
       assert.equal(g.mode, 'upgrade');
@@ -460,6 +466,10 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     for (let i = 0; i < 60 * 720 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       if (g.escape?.phase === 'extracting') {
         tick(g);
+        continue;
+      }
+      if (g.freight.active && g.mode === 'playing') {
+        g.tick(1 / 60, freightPilot(g));
         continue;
       }
       if (g.escape && !escapeSeen) {

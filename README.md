@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-08&dv=27`). Version 27 adds conveyor belts; its best times are separate from earlier rulesets. Belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-09&dv=28`). Version 28 adds the freight-elevator encounter; its best times are separate from earlier rulesets. Freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -211,7 +211,7 @@ Shoot the suspension cable to drop a heavy load. Two ordinary hits sever it; str
 
 Fast impacts crush enemies and detonate even unlit fuel canisters, allowing nearby fuel chains. A direct hit costs the player 24 health. Boss damage is capped at 90 before the boss's usual armor or recovery multiplier. Resting contact is harmless. The 400-health load stays upright after landing: push it, stand on it, or use it as cover. Sustained gunfire can break it. Its wide hull does not fit portals, although bullets fired through portals can cut its cable.
 
-Cargo appears sparsely in selected third-room layouts, with clear falling lanes away from exits and moving machinery. Placement follows the run seed and repeats on Continue and in Daily Runs. Pausing freezes the warning. Boss arenas, detours, and the final escape contain no hanging cargo.
+Cargo appears sparsely in selected third-room layouts and on freight-shaft maintenance ledges, with clear falling lanes away from exits and moving machinery. Placement follows the run seed and repeats on Continue and in Daily Runs. Pausing freezes the warning. Boss arenas, detours, and the final escape contain no hanging cargo.
 
 [Test hanging cargo](https://caleb-guyer.github.io/recoil-foundry/?test=cargo): click **Test hanging cargo** to enter a room with a suspended load, full health, and two upgrades. Shoot the cable; press **R** to restart the room. This isolated test preserves ordinary saves, Daily records, and earned Practice victories.
 
@@ -224,6 +224,16 @@ Belts carry grounded players, enemies, crates, unlit fuel canisters, and fallen 
 Walking against a belt overcomes its pull. Jumping carries your horizontal momentum into the air, where recoil works normally and the belt stops affecting you. Walls still stop every hull; belts cannot accelerate cargo into damaging impacts by themselves or ignite unlit fuel. Portals work with carried players, enemies, and small props. Pauses and hitstop freeze transport, and Continue restores the same room entrance.
 
 Try the [furnace belts](https://caleb-guyer.github.io/recoil-foundry/?test=conveyors) or [faster rooftop belts](https://caleb-guyer.github.io/recoil-foundry/?test=conveyors&area=rooftops). Click **Test conveyor belts**; **R** restarts the room. Both tests provide full health and a preset gun while preserving ordinary saves, Daily records, and earned Practice victories.
+
+## Freight elevator
+
+A rare furnace encounter replaces room 6 with a vertical freight shaft. Ride the broad lift past maintenance ledges while three small groups attack from opposite sides. Doors keep their full arrival warnings. Runners and hoppers can board the deck, and two hanging loads can be dropped onto the ledges below them.
+
+Jump onto a side ledge for a firing angle, then use recoil to catch the lift. It brakes if you fall behind and stops beside any unfinished fight, keeping enemies reachable. The deck carries crates and supported stacks; overhead cover stops its motion. Clear the final group and dock at the top to reach the exit and earn the room's usual single upgrade. No extra controls or HUD are added.
+
+The room has a 22% seeded chance to appear, with the same layout and waves on Continue and in Daily Runs. It leaves the sixteen-room route and boss schedule intact. Pauses and impact freezes stop the lift, doors, and cargo together. Portals work on permanent shaft surfaces, including above the ordinary room ceiling; the moving deck cannot host one.
+
+[Test the freight elevator](https://caleb-guyer.github.io/recoil-foundry/?test=freight). Click **Test freight elevator** to start with full health and five upgrades. **R** or **Restart test** returns to the entrance. The test preserves ordinary saves, Daily records, and earned Practice victories.
 
 ## Enemies
 
@@ -340,6 +350,9 @@ npm run preview
 | `src/conveyors.ts`        | Ground transport, momentum, supported stacks, and physical enemy carriage              |
 | `src/conveyor-layout.ts`  | Sparse seeded belt inserts with clear approaches and mirrored directions               |
 | `src/conveyor-art.ts`     | Moving rollers, tread marks, and direction arrows                                      |
+| `src/freight.ts`          | Lift boarding, ascent, three warned waves, recovery stops, and docking                 |
+| `src/freight-layout.ts`   | Rare seeded room replacement and vertical maintenance ledges                           |
+| `src/freight-art.ts`      | Shaft rails, cables, lift structure, and integrated status lamps                       |
 | `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup   |
 | `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane      |
 | `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains      |
@@ -361,6 +374,8 @@ The test suite covers actual movement, recoil flight, extreme builds, projectile
 Cargo checks cover deterministic placement, clear cables and falling lanes, fast bullets, full warning timing, real enemy and player collisions, fuel chains, every boss's resistance, landed cover, portal interactions, pause and death cleanup, saved entrances, isolated test links, and ordinary traversal with hanging and landed loads in all four areas and both mirrors.
 
 Conveyor checks cover mirrored placement, clear approaches and machinery spacing, both travel directions, running against the fastest belt, airborne momentum and recoil, stacked cover, harmless fuel transport, anchored and airborne exclusions, enemy entrances and aim locks, walls, ledges, restored friction, bounded cargo speed, actual portal travel, pause and hitstop, Continue, Daily, and isolated test links. Full combat playthroughs use ordinary movement, normal health, and legal upgrades, with direct-fire builds jumping off belts during combat.
+
+Freight checks cover rare deterministic selection, full departure and door warnings, physical enemy boarding, lift carriage and ceiling stops, jumping back from both side ledges, recoil recovery after a floor fall, cargo impacts, shots and portals above the old ceiling, pause and hitstop, saved entrances, isolated retries, docking, and exactly one reward. An ordinary-input pilot clears all three waves with normal health and the legal five-upgrade test build; complete combat runs also traverse the event.
 
 Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links.
 
