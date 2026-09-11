@@ -4,6 +4,8 @@ import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
 import { createInterceptor, updateInterceptor } from './interceptor.ts';
 import type { InterceptorRig } from './interceptor.ts';
+import { updateRivalAmmo, rivalImpact, clearArsenal } from './interceptor-weapons.ts';
+import type { EnemyAmmo } from './interceptor-weapons.ts';
 import { createTurbine, updateTurbine } from './turbine.ts';
 import type { TurbineRig } from './turbine.ts';
 import { EvolutionSystem } from './evolutions.ts';
@@ -146,6 +148,7 @@ export interface Shot {
   reflected?: boolean;
   reflectedAt?: number;
   echo?: boolean;
+  enemyAmmo?: EnemyAmmo;
 }
 export interface Particle {
   pos: Vec;
@@ -396,7 +399,9 @@ export class Game {
             this.seed,
             this.stage,
             this.practice?.kind === 'condenser' ? 'condenser' : undefined,
-            this.practice?.kind === 'boss' ? 'boss' : undefined,
+            this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
+              ? this.practice.kind
+              : undefined,
           );
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1480,7 +1485,7 @@ export class Game {
         } else {
           e.attacks++;
           e.state = 'recover';
-          e.timer = [0.8, 0.7, 0.6][e.phase];
+          e.timer = [1.1, 1, 0.9][e.phase];
         }
         this.onSound(e.attack === 'ring' ? 'pulse' : 'enemy');
       }
@@ -1553,6 +1558,7 @@ export class Game {
     });
   }
   updateShots(dt: number) {
+    for (const s of [...this.shots]) updateRivalAmmo(this, s, dt);
     for (const s of this.shots) this.ballistics.flight(s, dt);
     this.ballistics.reflect(dt);
     for (const s of [...this.shots]) {
@@ -1647,6 +1653,7 @@ export class Game {
           s.shell = undefined;
         } else if (nearest.cable) {
           this.cargo.cut(nearest.cable, s.damage);
+          rivalImpact(this, s);
           s.life = 0;
           this.demolition.impact(s);
           if (this.mode !== 'playing') return;
@@ -1697,11 +1704,30 @@ export class Game {
             if (this.mode !== 'playing') return;
           }
         } else if (nearest.player) {
+          rivalImpact(this, s);
           this.damagePlayer(s.damage, s.pos);
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
-          if (nearest.prop) this.props.hit(nearest.prop, s.damage, s.vel);
+          if (nearest.prop)
+            this.props.hit(
+              nearest.prop,
+              !s.friendly && s.enemyAmmo?.kind === 'precision' ? 90 : s.damage,
+              s.vel,
+            );
+          if (
+            !s.friendly &&
+            s.enemyAmmo?.kind === 'precision' &&
+            s.pierce > 0 &&
+            nearest.prop &&
+            !this.props.items.includes(nearest.prop)
+          ) {
+            s.pierce--;
+            const d = direction({ x: 0, y: 0 }, s.vel);
+            s.pos.x += d.x;
+            s.pos.y += d.y;
+            continue;
+          }
           this.breaches.hitBody(nearest.body, s.damage, s.vel);
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);
           this.splitShot(s, nearest.normal);
@@ -1724,6 +1750,7 @@ export class Game {
             s.pos.y += nearest.normal.y;
           } else {
             s.life = 0;
+            rivalImpact(this, s, nearest.prop?.body ?? nearest.body);
             this.demolition.impact(s, nearest.prop?.body ?? nearest.body);
             if (this.mode !== 'playing') return;
           }
@@ -1819,6 +1846,7 @@ export class Game {
     Composite.remove(this.engine.world, e.body);
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);
     clearKiln(e);
+    clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
     if (
       isBoss(e.kind) &&

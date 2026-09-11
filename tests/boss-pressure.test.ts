@@ -53,7 +53,7 @@ function startOverheadTell(kind: 'loader' | 'press') {
   return { g, e };
 }
 
-function room(stage: 3 | 7 | 19, seed = 'boss-cheese-0') {
+function room(stage: 3 | 7 | 15, seed = 'boss-cheese-0') {
   const g = new Game();
   const mods =
     stage === 3
@@ -64,7 +64,7 @@ function room(stage: 3 | 7 | 19, seed = 'boss-cheese-0') {
   g.start(
     seed,
     { version: 5, seed, stage, mods, hp: 100, kills: 0, elapsed: 0 },
-    stage === 19 ? { kind: 'boss', seed } : null,
+    stage === 15 ? { kind: 'boss', seed } : null,
   );
   return { g, e: g.enemies[0] };
 }
@@ -170,18 +170,18 @@ test('crossing half health during the aim lock never adds bolts that were absent
   }
 });
 
-test('both rooftop arenas and their mirrors let the boss flank cover and threaten either floor corner', () => {
+test('both Reclaimer arenas and their mirrors let the boss flank cover and threaten either floor corner', () => {
   const layouts = new Map<string, string>();
   for (let i = 0; i < 100 && layouts.size < 4; i++) {
     const seed = i === 0 ? 'boss-cheese-0' : `boss-flank-${i}`,
-      level = getLevel(seed, 19, undefined, 'boss');
+      level = getLevel(seed, 15, undefined, 'boss');
     layouts.set(`${level.id}:${level.mirrored}`, seed);
   }
   assert.equal(layouts.size, 4);
   let coveredCases = 0;
   for (const [layout, seed] of layouts) {
     for (const spot of ['left-corner', 'right-corner', 'box-edge', 'under-shelf']) {
-      const { g, e } = room(19, seed),
+      const { g, e } = room(15, seed),
         boxes = g.level.solids.filter((s) => s.h >= 80).sort((a, b) => a.x - b.x),
         shelf = g.level.solids.filter((s) => s.h < 80).sort((a, b) => a.x - b.x)[0],
         home =

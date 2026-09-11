@@ -162,9 +162,9 @@ export const SORTER_ARENA: Layout = {
   ),
 };
 
-export function reclamationLevel(seed: string, stage: number): Level {
+export function reclamationLevel(seed: string, stage: number, alternate?: Layout): Level {
   const slot = stage % 4;
-  const source = slot === 3 ? SORTER_ARENA : RECLAMATION_LAYOUTS[slot];
+  const source = slot === 3 ? (alternate ?? SORTER_ARENA) : RECLAMATION_LAYOUTS[slot];
   const mirrored = seeded(seed + ':reclamation:' + slot)() > 0.5;
   const route = source.route.map((p) => ({ ...p, x: mirrored ? 2000 - p.x : p.x }));
   const seen = new Set<string>();
@@ -184,7 +184,7 @@ export function reclamationLevel(seed: string, stage: number): Level {
     mirrored,
     solids: source.solids.map((s) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x })),
     spawns,
-    magnets: source.magnets!.map((m) => ({ ...m, x: mirrored ? 2000 - m.x : m.x })),
+    magnets: (source.magnets ?? []).map((m) => ({ ...m, x: mirrored ? 2000 - m.x : m.x })),
     route: mirrored ? route.reverse() : route,
   };
 }

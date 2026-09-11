@@ -48,20 +48,23 @@ function until(g: Game, done: () => boolean, limit = 600) {
   assert(done(), 'Expected transition never arrived');
 }
 
-test('rooftop boss selection preserves other rooms, seeded retries and Daily continuation', () => {
+test('the gunner is the only finale and alternate Reclamation bosses preserve every other room', () => {
   const seen = new Set<string>();
   for (let i = 0; i < 80; i++) {
     const seed = 'interceptor-selection-' + i;
     const level = getLevel(seed, 19);
     seen.add(level.spawns[0].kind + ':' + level.mirrored);
     assert.deepEqual(level, getLevel(seed, 19));
-    for (let stage = 0; stage < 19; stage++)
+    assert.equal(level.spawns[0].kind, 'interceptor');
+    for (let stage = 0; stage < 20; stage++) {
+      if (stage === 15) continue;
       assert.deepEqual(
         getLevel(seed, stage, undefined, 'boss'),
         getLevel(seed, stage, undefined, 'interceptor'),
       );
+    }
   }
-  assert.equal(seen.size, 4);
+  assert.equal(seen.size, 2);
   const g = new Game(),
     day = dailyForDate('2026-09-07')!;
   const save: Checkpoint = {
@@ -306,7 +309,8 @@ test('the direct test preserves saves and unlocks, while a real victory leads in
   const legacy = loadEncounters([{ kind: 'boss', seed: entry.seed }])[0];
   assert(g.startPractice(legacy));
   assert.equal(g.enemies[0].kind, 'boss');
-  assert.deepEqual(g.level, getLevel(entry.seed, 19, undefined, 'boss'));
+  assert.deepEqual(g.level, getLevel(entry.seed, 15, undefined, 'boss'));
+  assert.equal(g.mods.length, 15);
   const seed = entry.seed;
   g.start(seed, { version: 5, seed, stage: 19, hp: 100, mods: [], kills: 0, elapsed: 0 });
   g.enemies[0].spawn = 0;

@@ -5,6 +5,7 @@ import { clamp, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { breakSquad } from './squads.ts';
 import { disruptScrapperBody } from './scrapper.ts';
+import { clearArsenal } from './interceptor-weapons.ts';
 
 export const PORTAL_RADIUS = 40;
 export const PORTAL_COLORS = ['#64ceff', '#ffa563'] as const;
@@ -303,6 +304,7 @@ export class PortalSystem {
           enemy.state = 'recover';
           enemy.timer = 0.6;
         } else if (enemy.interceptor) {
+          clearArsenal(g, enemy);
           // A teleported gun cannot release a warning drawn at its old position.
           enemy.interceptor.origin = { ...body.position };
           enemy.interceptor.launch = { x: 0, y: 0 };

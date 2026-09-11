@@ -418,7 +418,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'aftershock',
       'blast-surf',
       'chain-reaction',
-      'landing',
+      'light', // Take steering before the moving Reclaimer; earn Landing gear afterward.
       'backblast',
       'scatter',
       'ricochet',
@@ -426,6 +426,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'pierce',
       'burst',
       'banker',
+      'landing',
     ],
   },
   {

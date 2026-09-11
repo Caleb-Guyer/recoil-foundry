@@ -1,6 +1,8 @@
 import type { Enemy, Game } from './game.ts';
-import { interceptorAngles, interceptorLock } from './interceptor.ts';
-import { clamp, distance } from './rules.ts';
+import { interceptorLock } from './interceptor.ts';
+import { clamp } from './rules.ts';
+import { INTERCEPTOR_WEAPONS } from './interceptor-weapons.ts';
+import { drawRivalEffects, rivalWarningLanes } from './interceptor-effects.ts';
 
 export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
   const rig = e.interceptor!,
@@ -9,19 +11,16 @@ export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, 
   const locked = e.timer <= interceptorLock(e),
     open = e.state === 'recover';
   c.save();
+  drawRivalEffects(c, g, e);
   if (warning) {
-    c.strokeStyle = '#f5b583';
-    c.lineWidth = locked ? 1.5 : 1;
+    c.strokeStyle = e.attack === 'vault' ? '#f5b583' : INTERCEPTOR_WEAPONS[rig.move].color;
+    c.lineWidth = locked ? (rig.move === 'capacitor' || rig.move === 'precision' ? 2.5 : 1.5) : 1;
     c.globalAlpha = locked ? 0.6 : 0.27;
     c.setLineDash(locked ? [] : [5, 9]);
-    for (const angle of interceptorAngles(e)) {
-      const d = { x: Math.cos(angle), y: Math.sin(angle) };
-      const from = rig.origin;
-      const end = g.lineEnd(from, { x: from.x + d.x * 1000, y: from.y + d.y * 1000 }, 5);
-      if (distance(from, end) < 44) continue;
+    for (const lane of rivalWarningLanes(g, e)) {
       c.beginPath();
-      c.moveTo(from.x + d.x * 44, from.y + d.y * 44);
-      c.lineTo(end.x, end.y);
+      c.moveTo(lane.from.x, lane.from.y);
+      c.lineTo(lane.to.x, lane.to.y);
       c.stroke();
     }
     c.setLineDash([]);
@@ -87,10 +86,32 @@ export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, 
   c.fillRect(11, -7, 26, 4);
   c.fillStyle = '#797e73';
   c.fillRect(18, 4, 18, 4);
-  c.fillStyle = warning && locked ? '#fbd1a0' : '#cfad83';
+  c.fillStyle = warning ? INTERCEPTOR_WEAPONS[rig.move].color : '#cfad83';
   c.fillRect(38, -10, 6, 20);
   c.fillStyle = '#18282e';
   c.fillRect(40, -5, 5, 10);
+  if (rig.move === 'precision' || rig.move === 'capacitor') {
+    c.fillStyle = '#9ca79c';
+    c.fillRect(43, -4, 14, 8);
+    if (warning) {
+      c.strokeStyle = INTERCEPTOR_WEAPONS[rig.move].color;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(
+        28,
+        0,
+        14,
+        -Math.PI / 2,
+        -Math.PI / 2 + clamp(1 - e.timer / INTERCEPTOR_WEAPONS[rig.move].tell, 0, 1) * Math.PI * 2,
+      );
+      c.stroke();
+    }
+  }
+  if (rig.move === 'scatter' || rig.move === 'crossfire') {
+    c.fillStyle = '#bdab91';
+    c.fillRect(29, -12, 12, 3);
+    c.fillRect(29, 9, 12, 3);
+  }
   if (rig.muzzle > 0) {
     c.globalAlpha *= rig.muzzle / 0.16;
     c.fillStyle = '#ffdfaa';

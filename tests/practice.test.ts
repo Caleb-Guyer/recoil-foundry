@@ -237,7 +237,7 @@ test('practice death, retry, save, and victory cannot write or erase the normal 
   assert.equal(g.escape, null);
 });
 
-test('rooftop practice ends at the boss instead of starting the escape route', () => {
+test('earned Reclaimer practice moves to Reclamation and ends without an escape route', () => {
   const g = new Game();
   g.startPractice(record('boss'));
   g.enemies[0].spawn = 0;
@@ -245,7 +245,9 @@ test('rooftop practice ends at the boss instead of starting the escape route', (
   step(g, 20);
   assert.equal(g.mode, 'won');
   assert.equal(g.escape, null);
-  assert.equal(g.mods.length, 19);
+  assert.equal(g.mods.length, 15);
+  assert.equal(g.stage, 15);
+  assert.equal(g.level.area, 'reclamation');
   g.startEscape();
   assert.equal(g.escape, null);
 });

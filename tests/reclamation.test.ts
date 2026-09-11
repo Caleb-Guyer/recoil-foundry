@@ -27,6 +27,11 @@ function room(stage = 12, seed = 'RECLAMATION-20') {
   g.startTest(testCheckpoint(seed, stage));
   return g;
 }
+function sorterRoom(seed = 'RECLAMATION-20') {
+  const g = new Game();
+  assert(g.startPractice({ kind: 'sorter', seed }));
+  return g;
+}
 function empty(g: Game) {
   for (const e of [...g.enemies]) Composite.remove(g.engine.world, e.body);
   g.enemies = [];
@@ -44,7 +49,8 @@ test('Reclamation occupies three distinct rooms and a boss before the retuned ro
       assert.equal(level.area, 'reclamation');
       assert.deepEqual(level, getLevel(seed, stage));
       assert.equal(level.boss, stage === 15);
-      assert(level.magnets!.length >= 2 && level.magnets!.length <= 3);
+      if (level.spawns[0].kind !== 'boss')
+        assert(level.magnets!.length >= 2 && level.magnets!.length <= 3);
       if (stage < 15) {
         assert.equal(level.id, RECLAMATION_LAYOUTS[stage - 12].id);
         assert(level.spawns.some((s) => s.kind === 'borer'));
@@ -66,13 +72,13 @@ test('Reclamation occupies three distinct rooms and a boss before the retuned ro
 
 test('all new layouts and mirrors remain walkable with ordinary jumps and loose cover', () => {
   const cases = new Map<string, { seed: string; stage: number }>();
-  for (let i = 0; i < 30; i++)
+  for (let i = 0; i < 100; i++)
     for (let stage = 12; stage < 16; stage++) {
       const seed = 'reclaim-walk-' + i,
         level = getLevel(seed, stage);
       cases.set(level.id + ':' + level.mirrored, { seed, stage });
     }
-  assert.equal(cases.size, 8);
+  assert.equal(cases.size, 12);
   for (const [label, { seed, stage }] of cases) {
     const g = room(stage, seed);
     empty(g);
@@ -273,7 +279,7 @@ test('the isolated area test has twelve legal upgrades and preserves saves and e
 
 test('the new boss locks every induction lane before release and a walking dodge avoids it', () => {
   for (const dodge of [false, true]) {
-    const g = room(15),
+    const g = sorterRoom(),
       e = g.enemies[0];
     e.spawn = 0;
     e.timer = 0;
@@ -296,7 +302,7 @@ test('the new boss locks every induction lane before release and a walking dodge
 
 for (const seed of ['RECLAMATION-20', 'reclaim-boss-2'])
   test('new boss can be defeated with normal health and earned-stage gun: ' + seed, () => {
-    const g = room(15, seed),
+    const g = sorterRoom(seed),
       e = g.enemies[0];
     for (let i = 0; i < 10800 && e.hp > 0 && g.mode === 'playing'; i++)
       step(g, 1, dodgePilot(g, e));
@@ -310,14 +316,14 @@ test('new boss pressures corner and overhead camps and clears warnings on phase 
     { x: 1987, y: 722 },
     { x: 1000, y: 80 },
   ]) {
-    const g = room(15),
+    const g = sorterRoom(),
       e = g.enemies[0];
     Body.setPosition(g.player, spot);
     Body.setStatic(g.player, true);
     step(g, 1800);
     assert.equal(g.mode, 'dead');
   }
-  const g = room(15),
+  const g = sorterRoom(),
     e = g.enemies[0];
   e.spawn = 0;
   e.timer = 0;

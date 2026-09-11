@@ -36,7 +36,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-10&dv=31`). Version 31 adds Reclamation Works and extends the main route to twenty rooms; its best times are separate from earlier rulesets. Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The final escape route is the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-10&dv=33`). Version 33 moves the former rooftop boss into Reclamation and expands the Interceptor's arsenal; its best times are separate from earlier rulesets. Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -146,8 +146,8 @@ Escape through five areas, each with its own scenery, lighting, and layout pool:
 - **Loading docks, rooms 1–4:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Two layouts drawn from loading bays, overpasses, staggered cargo, and terraces, then the Cargo switchyard and either The Loader in its loading bay or The Crane among raised shelves and cargo stacks.
 - **Furnace halls, rooms 5–8:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then the Stamping line and The Press in its machine hall or The Kiln among low stacks and raised shelves.
 - **Cooling Works, rooms 9–12:** teal tanks, overhead pipes, and shallow coolant channels. Two layouts drawn from settling tanks, a pump gallery, and a return channel, then the Spillway and either the Condenser hall or the Turbine gallery. Low stacks support ordinary jumping routes; higher shelves reward recoil movement. Coolant preserves sliding momentum without dealing damage or reducing steering. Lifts and crushers reuse their familiar warnings.
-- **Reclamation Works, rooms 13–16:** three new layouts built around overhead magnets, moving crates, and two new enemy behaviors. A new encounter ends the area; its Practice entry stays hidden until you defeat it.
-- **Rooftops, rooms 17–20:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, then Antenna crossing and one of two rooftop finales. All three regular rooms contain two distinct elites and multiple snipers, with Borers and Sifters joining the roster. Rooftop shooters fire faster bolts more often, and both finales chain fully warned volleys from the start.
+- **Reclamation Works, rooms 13–16:** three layouts built around overhead magnets, moving crates, and two new enemy behaviors. The area ends with either the Sorter or the Reclaimer, the former rooftop boss. Each Practice entry stays hidden until you defeat that boss.
+- **Rooftops, rooms 17–20:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, then Antenna crossing and the Interceptor on the Relay roof. All three regular rooms contain two distinct elites and multiple snipers, with Borers and Sifters joining the roster. Rooftop shooters fire faster bolts more often; the finale uses a broad arsenal based on the player's weapon upgrades.
 
 Each run has fifteen regular rooms and five boss arenas. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
 
@@ -157,11 +157,25 @@ Touch controls provide left, right, and jump buttons. Hold the arena to aim and 
 
 ## The Interceptor
 
-Room 20 has an equal chance of ending with the original rooftop boss or **The Interceptor**, a rival gunner on the Relay roof. An independent seeded draw preserves the other rooms and reconstructs the same finale on retry or Continue. Its arena has low cover, separated high shelves, a mirrored variant, and a route traversable with ordinary jumps. Both finales lead into the existing escape sequence.
+Room 20 always ends with **The Interceptor**, a rival gunner on the Relay roof. Its arena has low cover, separated high shelves, a mirrored variant, and a route traversable with ordinary jumps. Defeating it leads into the existing escape sequence.
 
-The Interceptor fires opposite its travel direction to recoil between firing positions. A 0.56-second warning marks its launch volley and travel direction; physical walls, crates, fuel, and portals affect its hull normally. It flanks sheltered players instead of firing through cover. Aimed volleys lock for the final 0.36 seconds and always gain a separately warned follow-up; below one-third health they gain two. Seven-round heavy blasts warn for 1.1 seconds and kick the gunner backward, exposing its armor for 1.4, 1.3, or 1.2 seconds. Ordinary volleys recover for 0.9, 0.8, or 0.7 seconds. Open armor takes 130% damage; closed armor takes 35%. The boss has 5,850 health.
+The Interceptor fires opposite its travel direction to recoil between firing positions. A 0.56-second warning marks its launch volley and travel direction; physical walls, crates, fuel, and player portals affect its hull normally. It flanks sheltered players instead of firing through cover. Its first two gun attacks establish aimed volleys and a heavy blast, then independently seeded phase decks introduce fifteen distinct weapon moves alongside the recoil vault:
 
-The compact silhouette, amber aiming lines, split armor, muzzle flash, and distinct gun sounds communicate the fight without adding controls or HUD panels. Practice unlocks only after defeating it in an ordinary or Daily Run. Existing rooftop victories keep their original arena. An explicit [Interceptor test link](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor) starts an isolated fight with 100 health and nineteen upgrades; it preserves saves and records and grants no Practice unlocks. Press **R** to retry.
+- Aimed follow-up volleys, heavy blasts, four-round bursts, wide Scattershot, and front-and-rear Crossfire.
+- Bank shots with the rebound marked, fast precision rounds that can break loose cover, and Shatter rounds with one delayed split.
+- Sticky Fuse charges, a warned Aftershock, a charged Capacitor round, and a physical landing attack followed by a warned shockwave.
+- Recall rounds that pause before reversing, Afterimage guns at previous firing positions, and a Countershot guard that catches up to three rounds before locking its return fan.
+- A Fold blink with both ends marked before the gunner moves. It cancels if a crate or the player blocks the destination and leaves the player's own portal pair intact.
+
+Each gun move has a 0.92–1.5-second tell, a final aim lock, and an exposed recovery window of 1.05–1.75 seconds. Echo guns and planted charges carry their own warnings. Later phases add more complex combinations; a phase change, defeat, or player-portal teleport cancels pending attacks and the gunner's remaining hostile rounds. Open armor takes 130% damage; closed armor takes 35%. The boss retains 5,850 health.
+
+The compact silhouette, colored aiming lines, split armor, muzzle flash, and distinct gun sounds communicate the fight without adding controls or HUD panels. Practice unlocks only after defeating it in an ordinary or Daily Run. An explicit [Interceptor test link](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor) starts an isolated fight with 100 health and nineteen upgrades; it preserves saves and records and grants no Practice unlocks. Press **R** to retry.
+
+## The Reclaimer
+
+The original final boss now appears as a Reclamation variant in room 16, with an equal seeded chance against the Sorter. Its two arenas and their mirrors use Reclamation's setting and ordinary jumping routes. It retains its cover-seeking movement, locked follow-up fans, and rotated rings. Its 4,480 health and 1.1, 1.0, or 0.9-second recovery windows account for meeting a fifteen-upgrade gun four rooms earlier. Clearing either Reclamation boss awards the normal upgrade and continues to the rooftops.
+
+Previously earned victories against the original boss remain unlocked under **The Reclaimer**; earned Sorter victories remain available regardless of the new seeded variant. The [Reclaimer test link](https://caleb-guyer.github.io/recoil-foundry/?test=reclaimer) starts its isolated fifteen-upgrade fight without changing saves, records, or Practice unlocks.
 
 ## The Turbine
 

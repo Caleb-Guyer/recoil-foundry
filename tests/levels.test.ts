@@ -42,8 +42,8 @@ test('twenty-stage seeds produce fifteen regular layouts and a boss at the end o
         if (stage === 3) assert(['loader', 'crane'].includes(level.spawns[0].kind));
         else if (stage === 7) assert(['press', 'kiln'].includes(level.spawns[0].kind));
         else if (stage === 11) assert(['condenser', 'turbine'].includes(level.spawns[0].kind));
-        else if (stage === 15) assert.equal(level.spawns[0].kind, 'sorter');
-        else assert(['boss', 'interceptor'].includes(level.spawns[0].kind));
+        else if (stage === 15) assert(['sorter', 'boss'].includes(level.spawns[0].kind));
+        else assert.equal(level.spawns[0].kind, 'interceptor');
       }
       assert(level.solids.length >= 5);
       assert(level.spawns.length > 0);

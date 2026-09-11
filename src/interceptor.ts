@@ -4,6 +4,21 @@ import type { Vec } from './rules.ts';
 import { clamp, direction, distance } from './rules.ts';
 import { bossPhase } from './enemies.ts';
 import { bossHasLane, bossHuntTarget } from './boss-hunt.ts';
+import {
+  INTERCEPTOR_WEAPONS,
+  weaponAngles,
+  interceptorMove,
+  fireWeapon,
+  updateArsenal,
+  clearArsenal,
+  rivalCharge,
+} from './interceptor-weapons.ts';
+import type {
+  InterceptorMove,
+  RivalCharge,
+  RivalEcho,
+  RivalVolley,
+} from './interceptor-weapons.ts';
 
 export const INTERCEPTOR_LOCK = 0.36;
 export const INTERCEPTOR_VAULT_LOCK = 0.24;
@@ -16,6 +31,13 @@ export interface InterceptorRig {
   relocate: boolean;
   volley: number;
   muzzle: number;
+  move: InterceptorMove;
+  caught: number;
+  history: Vec[];
+  charges: RivalCharge[];
+  echoes: RivalEcho[];
+  queue: RivalVolley[];
+  gate?: { entry: Vec; exit: Vec; flash: number };
 }
 export const createInterceptor = (): InterceptorRig => ({
   origin: { x: 0, y: 0 },
@@ -23,20 +45,32 @@ export const createInterceptor = (): InterceptorRig => ({
   relocate: false,
   volley: 0,
   muzzle: 0,
+  move: 'aimed',
+  caught: 0,
+  history: [],
+  charges: [],
+  echoes: [],
+  queue: [],
 });
 export const interceptorLock = (e: Enemy) =>
-  e.attack === 'vault' ? INTERCEPTOR_VAULT_LOCK : INTERCEPTOR_LOCK;
+  e.attack === 'vault' ? INTERCEPTOR_VAULT_LOCK : INTERCEPTOR_WEAPONS[e.interceptor!.move].lock;
 export const interceptorSpeed = (e: Enemy) =>
-  e.attack === 'heavy' ? 16 : e.attack === 'vault' ? 8 : 11.5;
+  e.attack === 'vault' ? 8 : INTERCEPTOR_WEAPONS[e.interceptor!.move].speed;
 export function interceptorAngles(e: Enemy): number[] {
-  const count = e.attack === 'heavy' ? 7 : e.attack === 'vault' || e.phase === 0 ? 3 : 5;
-  const spacing = e.attack === 'heavy' ? 0.1 : 0.14;
-  const angle = Math.atan2(e.aim.y, e.aim.x);
-  return Array.from({ length: count }, (_, i) => angle + (i - (count - 1) / 2) * spacing);
+  return e.attack === 'vault'
+    ? weaponAngles('aimed', e.aim, 0)
+    : weaponAngles(e.interceptor!.move, e.aim, e.phase, e.interceptor!.caught);
 }
+export const interceptorOrigin = (e: Enemy): Vec =>
+  e.interceptor!.move === 'fold' && e.attack !== 'vault' && e.interceptor!.gate
+    ? e.interceptor!.gate.exit
+    : e.interceptor!.origin;
 function aim(g: Game, e: Enemy) {
-  e.aim = direction(e.body.position, g.player.position);
   e.interceptor!.origin = { ...e.body.position };
+  e.aim =
+    e.interceptor!.move === 'shockwave' && e.attack !== 'vault'
+      ? { x: 0, y: -1 }
+      : direction(interceptorOrigin(e), g.player.position);
 }
 function recoil(e: Enemy, impulse: Vec) {
   Matter.Body.setVelocity(e.body, {
@@ -44,9 +78,80 @@ function recoil(e: Enemy, impulse: Vec) {
     y: clamp(e.body.velocity.y + impulse.y, -14, 14),
   });
 }
+export function clearRivalHull(g: Game, pos: Vec) {
+  return (
+    pos.x >= 40 &&
+    pos.x <= g.worldWidth - 40 &&
+    pos.y >= 45 &&
+    pos.y <= 700 &&
+    !g.solidBodies.some(
+      (b) =>
+        pos.x + 32 > b.bounds.min.x &&
+        pos.x - 32 < b.bounds.max.x &&
+        pos.y + 36 > b.bounds.min.y &&
+        pos.y - 36 < b.bounds.max.y,
+    ) &&
+    distance(pos, g.player.position) >= 180
+  );
+}
+function foldExit(g: Game, e: Enemy): Vec | undefined {
+  const p = g.player.position,
+    side = Math.sign(e.body.position.x - p.x) || 1;
+  return [-side * 340, side * 340, -side * 480, side * 480]
+    .flatMap((dx) =>
+      [-140, -260, -60].map((dy) => ({
+        x: clamp(p.x + dx, 70, 1930),
+        y: clamp(p.y + dy, 80, 650),
+      })),
+    )
+    .find(
+      (pos) =>
+        clearRivalHull(g, pos) &&
+        distance(pos, e.body.position) > 180 &&
+        distance(g.lineEnd(pos, p, 9), p) < 1,
+    );
+}
+export function beginInterceptorAttack(g: Game, e: Enemy, move: InterceptorMove) {
+  const rig = e.interceptor!;
+  rig.move = move;
+  rig.caught = 0;
+  rig.volley = 0;
+  rig.gate = undefined;
+  e.attack = move === 'heavy' ? 'heavy' : move === 'shockwave' ? 'slam' : 'aimed';
+  if (move === 'fold') {
+    const exit = foldExit(g, e);
+    if (!exit) {
+      rig.move = 'ricochet';
+      e.attack = 'aimed';
+    } else rig.gate = { entry: { ...e.body.position }, exit, flash: 0 };
+  }
+  if (move === 'shockwave')
+    e.target = {
+      x: e.body.position.x,
+      y: g.pressSurface(e.body.position.x, e.body.position.y + 32),
+    };
+  aim(g, e);
+  e.state = 'windup';
+  e.timer = INTERCEPTOR_WEAPONS[rig.move].tell;
+  g.onSound('interceptor-lock');
+}
+function recover(g: Game, e: Enemy) {
+  const rig = e.interceptor!;
+  e.state = 'recover';
+  e.timer = INTERCEPTOR_WEAPONS[rig.move].recover - (rig.move === 'heavy' ? e.phase * 0.1 : 0);
+  e.attacks++;
+  rig.relocate = true;
+  rig.history.push({ ...rig.origin });
+  rig.history = rig.history.slice(-3);
+  g.onSound('interceptor-open');
+}
 export function updateInterceptor(g: Game, e: Enemy, dt: number) {
   const rig = e.interceptor!;
   rig.muzzle = Math.max(0, rig.muzzle - dt);
+  if (rig.gate?.flash) {
+    rig.gate.flash = Math.max(0, rig.gate.flash - dt);
+    if (!rig.gate.flash) rig.gate = undefined;
+  }
   // Stabilizers hold an aimed shot; the short travel arc retains gravity and
   // recoil momentum. Every movement impulse still goes through Matter contacts.
   Matter.Body.applyForce(e.body, e.body.position, {
@@ -55,6 +160,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
   });
   const phase = bossPhase(e.hp, e.maxHp);
   if (phase > e.phase) {
+    clearArsenal(g, e);
     e.phase = phase;
     e.state = 'transition';
     e.timer = 0.75;
@@ -65,10 +171,39 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     g.feedback(3);
     g.onSound('phase');
   }
+  updateArsenal(g, e, dt);
+  if (g.mode !== 'playing' || e.hp <= 0) return;
   if (['windup', 'followup', 'transition', 'idle'].includes(e.state))
     Matter.Body.setVelocity(e.body, { x: 0, y: 0 });
   else if (e.state === 'recover')
-    Matter.Body.setVelocity(e.body, { x: e.body.velocity.x * 0.94, y: e.body.velocity.y * 0.94 });
+    Matter.Body.setVelocity(
+      e.body,
+      rig.queue.length
+        ? { x: 0, y: 0 }
+        : { x: e.body.velocity.x * 0.94, y: e.body.velocity.y * 0.94 },
+    );
+
+  if (e.state === 'rush' && rig.move === 'shockwave') {
+    const foot = Math.max(...e.body.vertices.map((v) => v.y));
+    const landed =
+      Matter.Query.ray(
+        g.solidBodies,
+        { x: e.body.position.x, y: foot - 1 },
+        { x: e.body.position.x, y: foot + 2 },
+        48,
+      ).length > 0;
+    if (landed) {
+      // Damage originates at the actual landing, with a second warning on the
+      // ground. A shelf or crate can intercept the dive normally.
+      rivalCharge(g, e, e.body.position, 145, 22, 0.65, true);
+      e.aim = { x: 0, y: -1 };
+      fireWeapon(g, e, 'shockwave', e.body.position, interceptorAngles(e));
+      Matter.Body.setVelocity(e.body, { x: 0, y: -8 });
+      recover(g, e);
+    } else if (e.timer <= 0) recover(g, e);
+    else Matter.Body.setVelocity(e.body, { x: 0, y: 14 });
+    return;
+  }
 
   if (e.state === 'transition' || e.state === 'recover' || e.state === 'airborne') {
     if (e.timer <= 0) {
@@ -88,19 +223,41 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       e.state = 'idle';
       e.timer = 0.2;
       rig.volley = 0;
+      rig.gate = undefined;
       e.hunt = undefined;
       return;
     }
     if (e.timer > interceptorLock(e) && e.attack !== 'vault') aim(g, e);
     if (e.timer > 0) return;
-    for (const a of interceptorAngles(e))
-      g.enemyShot(
-        e,
-        a,
-        interceptorSpeed(e),
-        e.attack === 'vault' ? 12 : e.attack === 'heavy' ? 26 : 22,
-        rig.origin,
-      );
+    if (e.attack !== 'vault' && rig.move === 'fold' && rig.gate) {
+      if (!clearRivalHull(g, rig.gate.exit)) {
+        rig.gate = undefined;
+        e.state = 'idle';
+        e.timer = 0.3;
+        rig.relocate = true;
+        return;
+      }
+      Matter.Body.setPosition(e.body, rig.gate.exit);
+      Matter.Body.setVelocity(e.body, { x: 0, y: 0 });
+      rig.origin = { ...rig.gate.exit };
+      rig.gate.flash = 0.35;
+      e.hunt = undefined;
+    }
+    if (e.attack !== 'vault' && rig.move === 'shockwave') {
+      e.state = 'rush';
+      e.timer = 1.2;
+      Matter.Body.setVelocity(e.body, { x: 0, y: 14 });
+      return;
+    }
+    const angles = interceptorAngles(e);
+    if (e.attack === 'vault') {
+      for (const a of angles) {
+        const before = g.shots.at(-1)?.id;
+        g.enemyShot(e, a, 8, 12, rig.origin);
+        const s = g.shots.at(-1);
+        if (s && s.id !== before) s.enemyAmmo = { owner: e.id, kind: 'aimed', age: 0 };
+      }
+    } else fireWeapon(g, e, rig.move, rig.origin, angles);
     rig.muzzle = 0.16;
     if (e.attack === 'vault') {
       recoil(e, rig.launch);
@@ -109,22 +266,36 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       rig.relocate = false;
       g.onSound('interceptor-vault');
     } else {
-      const kick = e.attack === 'heavy' ? 12 : 4;
+      const kick = rig.move === 'capacitor' ? 14 : e.attack === 'heavy' ? 12 : 4;
       recoil(e, { x: -e.aim.x * kick, y: -e.aim.y * kick });
       g.onSound(e.attack === 'heavy' ? 'interceptor-heavy' : 'interceptor-shot');
-      if (e.attack !== 'heavy' && rig.volley < Math.max(1, e.phase)) {
+      if (rig.move === 'aimed' && rig.volley < Math.max(1, e.phase)) {
         rig.volley++;
         e.state = 'followup';
         e.timer = 0.78 - e.phase * 0.04;
         aim(g, e);
         g.onSound('interceptor-lock');
       } else {
-        e.state = 'recover';
-        // The heavy blast leaves enough time for a slow shell and its fuse.
-        e.timer = (e.attack === 'heavy' ? 1.4 : 0.9) - e.phase * 0.1;
-        e.attacks++;
-        rig.relocate = true;
-        g.onSound('interceptor-open');
+        if (rig.move === 'burst') {
+          for (let n = 1; n < 4; n++)
+            rig.queue.push({
+              origin: { ...rig.origin },
+              angles: [...angles],
+              left: n * 0.14,
+              move: 'burst',
+            });
+        }
+        if (rig.move === 'afterimage') {
+          const origins = rig.history.filter((p) => distance(p, rig.origin) > 120).slice(-2);
+          if (!origins.length) origins.push({ ...rig.origin });
+          for (const [i, origin] of origins.entries())
+            rig.echoes.push({
+              origin: { ...origin },
+              aim: direction(origin, g.player.position),
+              left: 0.95 + i * 0.3,
+            });
+        }
+        recover(g, e);
       }
     }
     return;
@@ -150,10 +321,5 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     }
   }
   if (!hasLane) return;
-  e.attack = e.attacks % 2 === 0 ? 'aimed' : 'heavy';
-  rig.volley = 0;
-  aim(g, e);
-  e.state = 'windup';
-  e.timer = e.attack === 'heavy' ? INTERCEPTOR_HEAVY_TELL : 0.92 - e.phase * 0.04;
-  g.onSound('interceptor-lock');
+  beginInterceptorAttack(g, e, interceptorMove(e, g.seed));
 }

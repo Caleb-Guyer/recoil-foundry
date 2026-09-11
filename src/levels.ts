@@ -558,8 +558,8 @@ export const BOSS_LAYOUTS: Layout[] = [
   },
   {
     id: 'twin-towers',
-    area: 'rooftops',
-    name: 'Twin towers',
+    area: 'reclamation',
+    name: 'Reclaimer towers',
     solids: [
       box(390, 650, 150, 90),
       box(540, 540, 190, 200),
@@ -584,8 +584,8 @@ export const BOSS_LAYOUTS: Layout[] = [
   },
   {
     id: 'last-crossing',
-    area: 'rooftops',
-    name: 'Last crossing',
+    area: 'reclamation',
+    name: 'Reclaimer crossing',
     solids: [
       box(410, 650, 150, 90),
       shelf(560, 525, 260),
@@ -609,12 +609,25 @@ function buildLevel(
   seed: string,
   stage: number,
   coolingBoss?: 'condenser' | 'turbine',
-  rooftopBoss?: 'boss' | 'interceptor',
+  bossVariant?: 'boss' | 'interceptor' | 'sorter',
 ): Level {
   const pick = seeded(seed + ':layouts');
   if (!Number.isInteger(stage) || stage < 0 || stage >= STAGES)
     throw new RangeError('Invalid stage');
-  if (stage >= 12 && stage < 16) return reclamationLevel(seed, stage);
+  if (stage >= 12 && stage < 16) {
+    const selected =
+      bossVariant === 'boss' || bossVariant === 'sorter'
+        ? bossVariant
+        : seeded(seed + ':reclamation-boss')() < 0.5
+          ? 'sorter'
+          : 'boss';
+    const arenas = BOSS_LAYOUTS.filter((layout) => layout.spawns[0].kind === 'boss');
+    const alternate =
+      selected === 'boss'
+        ? arenas[Math.floor(seeded(seed + ':reclaimer-arena')() * arenas.length)]
+        : undefined;
+    return reclamationLevel(seed, stage, alternate);
+  }
   if (freightSelected(seed, stage))
     return {
       ...FREIGHT_LAYOUT,
@@ -653,13 +666,7 @@ function buildLevel(
       pick,
     ),
   ];
-  const roofBosses = BOSS_LAYOUTS.filter((layout) => layout.spawns[0].kind === 'boss');
-  const originalRoof = roofBosses[Math.floor(pick() * roofBosses.length)];
-  const roofBoss =
-    (rooftopBoss ?? (seeded(seed + ':rooftop-boss')() < 0.5 ? 'boss' : 'interceptor')) ===
-    'interceptor'
-      ? INTERCEPTOR_ARENA
-      : originalRoof;
+  const roofBoss = INTERCEPTOR_ARENA;
   const cooling = sample(COOLING_LAYOUTS, 2, seeded(seed + ':cooling-layouts'));
   const coolingArena =
     (coolingBoss ?? (seeded(seed + ':cooling-boss')() < 0.5 ? 'condenser' : 'turbine')) ===
@@ -768,9 +775,9 @@ export function getLevel(
   seed: string,
   stage: number,
   coolingBoss?: 'condenser' | 'turbine',
-  rooftopBoss?: 'boss' | 'interceptor',
+  bossVariant?: 'boss' | 'interceptor' | 'sorter',
 ): Level {
-  const level = buildLevel(seed, stage, coolingBoss, rooftopBoss);
+  const level = buildLevel(seed, stage, coolingBoss, bossVariant);
   if (level.boss || stage < 4) return level;
   // Reconstruct elite encounters independently of room, combat, and reward RNG.
   const rng = seeded(seed + ':elites');

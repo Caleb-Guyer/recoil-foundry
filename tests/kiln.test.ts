@@ -104,7 +104,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
       'pillars:true',
       'split-deck:false',
       'gantry:false',
-      'twin-towers:false',
+      'relay-roof:false',
     ],
     E: [
       'staggered:false',
@@ -114,7 +114,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
       'fortress:false',
       'split-deck:true',
       'broken-bridge:true',
-      'last-crossing:false',
+      'relay-roof:false',
     ],
   };
   for (const [seed, rooms] of Object.entries(expected))

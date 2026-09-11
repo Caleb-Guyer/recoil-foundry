@@ -2,6 +2,7 @@ import { drawMagnets, drawReclamationEnemy } from './reclamation-art.ts';
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
 import { drawTurbine, drawBlade } from './turbine-art.ts';
 import { drawInterceptor } from './interceptor-art.ts';
+import { drawRivalShot } from './interceptor-effects.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
@@ -552,6 +553,10 @@ export class Renderer {
           this.circle(s.pos, s.radius + 1, s.reflected ? '#b5ecd8' : '#a9ccd8', false, 1);
         c.restore();
       } else {
+        if (s.enemyAmmo) {
+          drawRivalShot(c, s);
+          continue;
+        }
         if (Math.hypot(s.vel.x, s.vel.y) > 12) this.line(s.prev, s.pos, '#ffd3a0', 2);
         this.circle(s.pos, 6, '#ee745f', false, 2);
         this.circle(s.pos, 2, '#ffcdb4');

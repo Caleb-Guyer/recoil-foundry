@@ -2,7 +2,8 @@ import type { Enemy, Game, Input } from '../src/game.ts';
 import { attackAngles, bossMuzzle, flakAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
 import { turbineRelease } from '../src/turbine.ts';
-import { interceptorAngles, interceptorSpeed } from '../src/interceptor.ts';
+import { interceptorAngles, interceptorSpeed, interceptorOrigin } from '../src/interceptor.ts';
+import { weaponAngles } from '../src/interceptor-weapons.ts';
 import { sorterFan } from '../src/reclamation.ts';
 import { areaIndex, clamp, distance, direction } from '../src/rules.ts';
 
@@ -91,7 +92,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
     }
   } else if (e.kind === 'interceptor' && (e.state === 'windup' || e.state === 'followup')) {
     for (const a of interceptorAngles(e)) {
-      const origin = e.interceptor!.origin;
+      const origin = interceptorOrigin(e);
       const start = { x: origin.x + Math.cos(a) * 44, y: origin.y + Math.sin(a) * 44 };
       const speed = interceptorSpeed(e);
       const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
@@ -154,6 +155,24 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
       });
     }
   }
+  // Ghost guns and planted charges have their own visible commitments, even
+  // while the real gunner is recovering or moving to a new firing position.
+  for (const echo of e.interceptor?.echoes ?? []) {
+    if (echo.left > 0.45) continue;
+    for (const a of weaponAngles('afterimage', echo.aim, e.phase)) {
+      const start = { x: echo.origin.x + Math.cos(a) * 44, y: echo.origin.y + Math.sin(a) * 44 };
+      const v = { x: Math.cos(a) * 11, y: Math.sin(a) * 11 };
+      bolts.push({
+        p: start,
+        v,
+        radius: 5,
+        delay: echo.left * 60,
+        life:
+          distance(start, g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 }, 5)) /
+          11,
+      });
+    }
+  }
   let best = Infinity,
     result: Partial<Input> = {};
   for (const move of [-1, 0, 1])
@@ -174,23 +193,29 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
           let score = 0,
             shootAt = g.shootAt,
             burst = g.burstRemaining,
-            burstAt = g.burstAt;
-          // Lead a visible recoil arc; aiming at its current position wastes
-          // slow shells while the gunner is coasting away from its last shot.
+            burstAt = g.burstAt,
+            charged = g.gun.landing && g.landingReady;
+          // Lead visible motion; aiming at the current position wastes slow
+          // shells while a floating boss or recoil gunner is moving away.
           const flight = distance(p, target) / g.gun.projectileSpeed;
           const travel =
             e.kind === 'interceptor' && (e.state === 'airborne' || e.state === 'recover')
               ? (1 -
                   Math.pow(e.state === 'recover' ? 0.9118 : 0.97, Math.min(flight, e.timer * 60))) /
                 (e.state === 'recover' ? 0.0882 : 0.03)
-              : 0;
+              : e.kind === 'boss' && e.state !== 'windup' && e.state !== 'followup'
+                ? Math.min(12, flight)
+                : 0;
           const aim = lift
             ? { x: p.x, y: p.y + 500 }
             : {
                 x: target.x + e.body.velocity.x * travel,
                 y: target.y + e.body.velocity.y * travel,
               };
-          for (let frame = 1; frame <= 40; frame++) {
+          // Slow explosive volleys need enough look-ahead to include their
+          // recoil landing, rather than choosing a safe first half of a jump.
+          const horizon = e.kind === 'boss' && g.gun.shellshock ? 60 : 40;
+          for (let frame = 1; frame <= horizon; frame++) {
             const time = g.time + frame / 60,
               ox = x,
               oy = y;
@@ -216,7 +241,8 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
             }
             if (shot) {
               const d = direction({ x, y }, aim),
-                force = g.gun.recoil * (ground ? 0.21 : 1);
+                force = g.gun.recoil * (ground ? 0.21 : 1) * (charged ? 1.25 : 1);
+              charged = false;
               vx = clamp(vx - d.x * force, -23, 23);
               vy = clamp(vy - d.y * force, -21, 20);
             }
@@ -258,6 +284,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
               if (x + 12 > b.left && x - 12 < b.right && y + 18 > b.top && y - 18 < b.bottom) {
                 if (oy + 18 <= b.top + 0.2) {
                   y = b.top - 18;
+                  if (g.gun.landing && vy >= 7) charged = true;
                   vy = 0;
                   ground = true;
                 } else if (oy - 18 >= b.bottom - 0.2) {
@@ -273,6 +300,13 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
               if (dx < 20 + b.radius && dy < 26 + b.radius) score += 1000 / (frame + 8);
               else if (dx < 42 && dy < 45) score += 8 / (frame + 8);
             }
+            for (const charge of e.interceptor?.charges ?? [])
+              if (
+                Math.abs(frame / 60 - charge.left) < 0.06 &&
+                distance({ x, y }, charge.pos) < charge.radius + 25 &&
+                distance(g.lineEnd(charge.pos, { x, y }), { x, y }) < 1
+              )
+                score += 8000 / (frame + 8);
             if (e.sorter && e.state === 'windup' && e.attack === 'slam' && e.timer <= 0.75) {
               if (
                 Math.abs(frame / 60 - e.timer) < 0.08 &&
@@ -296,7 +330,12 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
           // Prefer a useful firing lane and modest spacing when trajectories are safe.
           score += Math.abs(distance({ x, y }, target) - 340) * 0.008;
           if (distance(g.lineEnd({ x, y }, target), target) > 10) score += 9;
-          if (fire) score += lift ? 2 : -6;
+          if (fire)
+            score += lift
+              ? 2
+              : e.kind === 'boss' && g.gun.shellshock && distance(p, target) > 550
+                ? 4
+                : -6;
           if (jump) score += 0.2;
           if (score < best) {
             best = score;

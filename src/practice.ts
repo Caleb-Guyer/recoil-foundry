@@ -12,7 +12,7 @@ export const PRACTICE_BOSSES = {
   turbine: { name: 'The Turbine', stage: bossStage(2) },
   sorter: { name: 'The Sorter', stage: bossStage(3) },
   interceptor: { name: 'The Interceptor', stage: bossStage(4) },
-  boss: { name: 'Rooftop', stage: bossStage(4) },
+  boss: { name: 'The Reclaimer', stage: bossStage(3) },
 } as const;
 export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
 export interface Encounter {
@@ -23,16 +23,25 @@ export interface Encounter {
 // Explicit playtest links are isolated fights, never earned Practice unlocks.
 export function testEncounterFromUrl(url: URL): Encounter | null {
   const params = url.searchParams;
-  const kind = params.get('test');
+  const requested = params.get('test');
+  const kind = requested === 'reclaimer' ? 'boss' : requested;
   if (
     params.getAll('test').length !== 1 ||
-    (kind !== 'turbine' && kind !== 'interceptor') ||
+    (kind !== 'turbine' && kind !== 'interceptor' && requested !== 'reclaimer') ||
     ['daily', 'dv', 'seed'].some((key) => params.has(key))
   )
     return null;
   return (
     loadEncounters([
-      { kind, seed: kind === 'turbine' ? 'turbine-fight-1' : 'interceptor-fight-3' },
+      {
+        kind,
+        seed:
+          kind === 'turbine'
+            ? 'turbine-fight-1'
+            : kind === 'boss'
+              ? 'reclaimer-fight-0'
+              : 'interceptor-fight-3',
+      },
     ])[0] ?? null
   );
 }
@@ -58,6 +67,7 @@ export function loadEncounters(value: unknown): Encounter[] {
     if (
       kind === 'condenser' ||
       kind === 'boss' ||
+      kind === 'sorter' ||
       getLevel(item.seed, PRACTICE_BOSSES[kind].stage).spawns[0]?.kind === kind
     )
       records.push({ kind, seed: item.seed });

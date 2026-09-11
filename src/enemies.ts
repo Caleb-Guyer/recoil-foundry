@@ -29,7 +29,7 @@ export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }
   condenser: { w: 90, h: 76, hp: 2600 },
   turbine: { w: 90, h: 90, hp: 2400 },
   interceptor: { w: 56, h: 64, hp: 3000 },
-  boss: { w: 90, h: 76, hp: 3200 },
+  boss: { w: 90, h: 76, hp: 2800 },
 };
 export const CHARGE_TELL = 0.7;
 export const SNIPER_TELL = 0.95;
