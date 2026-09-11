@@ -11,27 +11,25 @@ import { dailyForDate } from '../src/daily.ts';
 
 const elites = (level: Level) => level.spawns.filter((spawn) => spawn.elite);
 
-test('every run gets ten elites, one per eligible room and at most one per room', () => {
+test('every regular room after the docks has an elite, with distinct pairs on the rooftops', () => {
   const seen = new Set<EliteKind>();
   const selectedStages = new Set<number>();
   for (let index = 0; index < 256; index++) {
     const levels = Array.from({ length: STAGES }, (_, stage) => getLevel('elite-' + index, stage));
     const encounters = levels.flatMap((level, stage) => {
       const found = elites(level);
-      assert(found.length <= 1, `elite-${index}, room ${stage + 1}`);
-      if (stage < 4 || level.boss) assert.equal(found.length, 0);
+      assert.equal(
+        found.length,
+        stage < 4 || level.boss ? 0 : stage >= 16 ? 2 : 1,
+        `elite-${index}, room ${stage + 1}`,
+      );
+      assert.equal(new Set(found.map((s) => s.elite)).size, found.length);
       return found.map((spawn) => ({ stage, elite: spawn.elite!, kind: spawn.kind }));
     });
-    assert.equal(encounters.length, 10);
-    assert([4, 5].includes(encounters[0].stage));
-    assert.equal(encounters[1].stage, 6);
-    assert([8, 9].includes(encounters[2].stage));
-    assert.equal(encounters[3].stage, 10);
-    assert(['shielded', 'twin'].includes(encounters[0].elite));
-    assert.notEqual(encounters[0].elite, encounters[2].elite);
+    assert.equal(encounters.length, 15);
     assert.deepEqual(
-      encounters.slice(4).map((e) => e.stage),
-      [12, 13, 14, 16, 17, 18],
+      encounters.map((e) => e.stage),
+      [4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 16, 17, 17, 18, 18],
     );
     for (const encounter of encounters) {
       seen.add(encounter.elite);

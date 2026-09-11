@@ -208,7 +208,7 @@ test('mortar paths track early, lock for half a second, and release only the ful
     e.kiln!.shells.map((shell) => shell.arc),
     locked,
   );
-  assert.equal(e.timer, 1.5);
+  assert.equal(e.timer, 1.15);
   until(g, () => e.state === 'windup');
   assert.equal(
     e.kiln!.plans.length,

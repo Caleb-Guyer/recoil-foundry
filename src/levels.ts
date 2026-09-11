@@ -748,14 +748,15 @@ const ELITE_HOSTS: { elite: EliteKind; kind: EnemyKind; from: EnemyKind[] }[] = 
 function assignElite(level: Level, allowed: EliteKind[], rng: () => number): EliteKind | undefined {
   const choices = ELITE_HOSTS.filter(
     (host) =>
-      allowed.includes(host.elite) && level.spawns.some((spawn) => host.from.includes(spawn.kind)),
+      allowed.includes(host.elite) &&
+      level.spawns.some((spawn) => !spawn.elite && host.from.includes(spawn.kind)),
   );
   if (!choices.length) return;
   const host = choices[Math.floor(rng() * choices.length)];
-  const matching = level.spawns.filter((spawn) => spawn.kind === host.kind);
+  const matching = level.spawns.filter((spawn) => !spawn.elite && spawn.kind === host.kind);
   const candidates = matching.length
     ? matching
-    : level.spawns.filter((spawn) => host.from.includes(spawn.kind));
+    : level.spawns.filter((spawn) => !spawn.elite && host.from.includes(spawn.kind));
   const spawn = candidates[Math.floor(rng() * candidates.length)];
   // Promote in place: runner variants and shooter variants share their hull dimensions.
   spawn.kind = host.kind;
@@ -774,17 +775,23 @@ export function getLevel(
   // Reconstruct elite encounters independently of room, combat, and reward RNG.
   const rng = seeded(seed + ':elites');
   const furnaceStage = 4 + Math.floor(rng() * 2);
-  const coolingStage = 8 + Math.floor(rng() * 2);
-  if (stage !== furnaceStage && stage !== coolingStage && stage < 12 && stage % 4 !== 2)
-    return addScrapper(level, seed, stage);
+  rng(); // Preserve the established elite draw stream after the old cooling-room selection.
   const furnace = stage === furnaceStage ? level : buildLevel(seed, furnaceStage);
   const first = assignElite(furnace, ['shielded', 'twin'], rng);
-  if (stage === coolingStage || stage >= 12 || stage % 4 === 2) {
+  if (stage !== furnaceStage) {
     const different = ELITE_HOSTS.filter(
       (host) =>
         host.elite !== first && level.spawns.some((spawn) => host.from.includes(spawn.kind)),
     ).map((host) => host.elite);
     assignElite(level, different.length ? different : ELITE_HOSTS.map((host) => host.elite), rng);
+  }
+  if (stage >= 16) {
+    const firstElite = level.spawns.find((s) => s.elite)?.elite;
+    assignElite(
+      level,
+      ELITE_HOSTS.map((host) => host.elite).filter((elite) => elite !== firstElite),
+      seeded(seed + ':rooftop-pair:' + stage),
+    );
   }
   const result = addScrapper(level, seed, stage);
   if (stage >= 16) {

@@ -343,7 +343,11 @@ test('Scrapper test links retry safely and normal and Daily entrances reconstruc
     g.onCheckpoint = () => writes++;
     g.startTest(save);
     assert(g.level.spawns.some((s) => s.kind === 'scrapper'));
-    assert(g.waves.doors.some((d) => d.spawn.kind === 'scrapper'));
+    assert.equal(
+      g.enemies.filter((e) => e.kind === 'scrapper').length +
+        g.waves.doors.filter((d) => d.spawn.kind === 'scrapper').length,
+      1,
+    );
     const crate = g.props.items.find((p) => p.kind === 'crate')!;
     g.props.hit(crate, 90, { x: 1, y: 0 });
     step(g, 30);

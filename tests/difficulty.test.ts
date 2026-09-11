@@ -65,7 +65,7 @@ test('later regular enemies require more real base-gun hits while bosses scale f
 });
 
 test('later shooters apply faster pressure while retaining their full aim lock and dodge window', () => {
-  for (const stage of [0, 4, 8]) {
+  for (const stage of [0, 4, 8, 12, 16]) {
     const g = new Game();
     g.start('pressure-cadence');
     for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
@@ -109,9 +109,9 @@ test('later shooters apply faster pressure while retaining their full aim lock a
     for (let i = 0; i < 120 && fired.length < 2; i++) step(g);
     assert.equal(fired.length, 2);
     const area = stage / 4;
-    assert(Math.abs(fired[1].time - fired[0].time - [1.5, 1.35, 1.2][area]) < 0.025);
-    assert(Math.abs(fired[0].speed - [7.2, 8, 8.8][area]) < 1e-8);
-    assert.equal(fired[0].damage, [14, 16, 18][area]);
+    assert(Math.abs(fired[1].time - fired[0].time - [1.2, 1.08, 0.96, 1.05, 0.78][area]) < 0.025);
+    assert(Math.abs(fired[0].speed - [8, 8.9, 9.7, 9.6, 11.2][area]) < 1e-8);
+    assert.equal(fired[0].damage, [14, 16, 18, 20, 22][area]);
   }
 });
 

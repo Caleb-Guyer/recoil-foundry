@@ -217,7 +217,7 @@ function moveMotor(g: Game, e: Enemy, seekShot: boolean) {
 function recover(g: Game, e: Enemy, impact: boolean) {
   const rig = e.crane!;
   e.state = 'recover';
-  e.timer = rig.hit ? 0.55 : 1.25;
+  e.timer = rig.hit ? 0.45 : 1.05;
   rig.route = [];
   if (impact) {
     g.burst(rig.head, 18, '#ffd19a', 4);

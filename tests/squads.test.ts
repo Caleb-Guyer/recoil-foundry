@@ -226,10 +226,13 @@ test('the escort physically jumps a low crate and steps off a shelf to rejoin it
       g.terrain.push(shelf);
       Composite.add(g.engine.world, shelf);
     } else g.props.spawn('crate', 985, 717);
-    let climbed = false;
+    let climbed = false,
+      landed = false;
     for (let n = 0; n < 280 && g.mode === 'playing'; n++) {
       step(g);
       climbed ||= support.body.position.y < 670;
+      landed ||=
+        support.body.position.x < 950 && support.body.position.y > 680 && g.enemyGrounded(support);
       for (const p of g.props.items)
         assert(!Query.collides(support.body, [p.body]).some((c) => c.depth > 3));
     }
@@ -237,7 +240,7 @@ test('the escort physically jumps a low crate and steps off a shelf to rejoin it
       support.body.position.x < (raised ? 950 : 940),
       JSON.stringify({ raised, pos: support.body.position }),
     );
-    if (raised) assert(support.body.position.y > 680);
+    if (raised) assert(landed, 'The escort never landed after leaving the shelf');
     else assert(climbed);
   }
 });

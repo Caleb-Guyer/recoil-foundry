@@ -47,7 +47,7 @@ function seedFor(kind: 'loader' | 'crane', mirrored = false) {
   }
   assert.fail(`No ${kind} room with mirror=${mirrored}`);
 }
-function room(kind: 'loader' | 'crane' = 'crane', mirrored = false) {
+function room(kind: 'loader' | 'crane' = 'crane', mirrored = false, mods = ['magnum', 'rapid']) {
   const g = new Game(),
     seed = seedFor(kind, mirrored);
   g.start(seed, {
@@ -55,7 +55,7 @@ function room(kind: 'loader' | 'crane' = 'crane', mirrored = false) {
     seed,
     stage: 3,
     hp: 100,
-    mods: ['magnum', 'rapid'],
+    mods,
     kills: 7,
     elapsed: 20,
   });
@@ -265,7 +265,7 @@ test('a stationary player takes one head strike, while a jump or side step after
       assert.equal(e.state, 'recover');
       assert.equal(g.hp, dodge ? 100 : 76, `${attack} dodge=${dodge}`);
       assert.equal(e.crane!.hit, !dodge);
-      assert(Math.abs(e.timer - (dodge ? 1.25 : 0.55)) < 1e-8);
+      assert(Math.abs(e.timer - (dodge ? 1.05 : 0.45)) < 1e-8);
       const hp = e.hp;
       g.hitEnemy(e, 20);
       assert.equal(hp - e.hp, dodge ? 28 : 7);
@@ -285,7 +285,7 @@ test('new cover intercepts the swept head and protects its player even when the 
   assert.equal(e.crane!.hit, false);
   assert(!g.props.items.includes(cover));
   assert(e.crane!.head.x < 840);
-  assert.equal(e.timer, 1.25);
+  assert.equal(e.timer, 1.05);
   step(g, 45);
   assert.equal(g.hp, 100);
 });
@@ -439,10 +439,10 @@ test('both Crane arenas threaten floor corners and platforms without moving the 
     }
 });
 
-test('both docks bosses can be beaten in either mirror using two upgrades and normal movement', () => {
+test('both docks bosses can be beaten in either mirror with the three earned upgrades and normal movement', () => {
   for (const kind of ['loader', 'crane'] as const)
     for (const mirrored of [false, true]) {
-      const { g, e } = room(kind, mirrored);
+      const { g, e } = room(kind, mirrored, ['magnum', 'rapid', 'kick']);
       Body.setPosition(g.player, { x: 1000, y: 722 });
       Body.setVelocity(g.player, { x: 0, y: 0 });
       let dodgeUntil = 0,
@@ -476,7 +476,7 @@ test('both docks bosses can be beaten in either mirror using two upgrades and no
       assert(e.hp <= 0, `${kind}, mirror=${mirrored}: ${e.hp} boss HP, ${g.hp} player HP`);
       assert(g.hp > 0 && g.mode === 'playing');
       assert(g.shotCount > 0);
-      assert.equal(g.mods.length, 2);
+      assert.equal(g.mods.length, 3);
       assert.equal(g.kills, 8);
       assert(!g.waves.pending);
     }

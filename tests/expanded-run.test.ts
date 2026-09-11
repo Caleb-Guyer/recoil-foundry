@@ -37,7 +37,7 @@ test('every added room combines familiar threats before the area boss, with one 
       assert.equal(level.area, areas[area]);
       assert.equal(level.spawns.length, [6, 9, 11, 12][area]);
       assert(new Set(level.spawns.map((s) => s.kind)).size >= 4);
-      assert.equal(level.spawns.filter((s) => s.elite).length, area ? 1 : 0);
+      assert.equal(level.spawns.filter((s) => s.elite).length, area === 3 ? 2 : area ? 1 : 0);
       assert(isDetourStage(stage));
       assert(!isDetourStage(stage - 1));
       assert.equal(bossStage(area === 3 ? 4 : area), stage + 1);

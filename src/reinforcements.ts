@@ -2,11 +2,13 @@ import type Matter from 'matter-js';
 import type { Game } from './game.ts';
 import type { Level, Spawn } from './levels.ts';
 import { ENEMY_STATS } from './enemies.ts';
-import { distance, seeded } from './rules.ts';
+import { areaIndex, distance, seeded } from './rules.ts';
 import { squadSpawns } from './squads.ts';
 
 export const REINFORCEMENT_TELL = 0.75;
 export const REINFORCEMENT_ENTRY = 0.65;
+export const reinforcementDeadline = (stage: number) =>
+  stage === 0 ? 12 : [9, 7, 6, 8, 5][areaIndex(stage)];
 export interface ReinforcementDoor {
   spawn: Spawn;
   state: 'sealed' | 'warning' | 'open' | 'spent';
@@ -22,9 +24,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
   const count = planned.length;
   const openingCount = level.detour
     ? Math.ceil(count / 2)
-    : count === 4
-      ? 2
-      : Math.max(1, Math.floor(count / 3));
+    : Math.max(1, Math.floor(count / (stage === 0 || (stage >= 12 && stage < 16) ? 3 : 2)));
   const finalCount = count - openingCount;
   const random = seeded(seed + ':waves:' + stage);
   const ranked = planned.map((spawn, index) => ({ spawn, index, tie: random() }));
@@ -58,11 +58,11 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
     const match = ranked.find((entry) => test(entry.spawn));
     if (match && final.size < finalCount) final.add(match.index);
   };
+  reserve((s) => s.squad?.role === 'lead');
+  reserve((s) => s.squad?.role === 'support');
   reserve((s) => !!s.elite);
   reserve((s) => s.kind === 'flyer');
   reserve((s) => ['runner', 'charger', 'hopper'].includes(s.kind));
-  reserve((s) => s.squad?.role === 'lead');
-  reserve((s) => s.squad?.role === 'support');
   for (const entry of ranked) {
     if (final.size >= count - openingCount) break;
     final.add(entry.index);
@@ -78,6 +78,7 @@ export class ReinforcementSystem {
   doors: ReinforcementDoor[] = [];
   phase: 'opening' | 'warning' | 'final' | 'done' = 'done';
   openingCount = 0;
+  openingTime = 0;
   constructor(game: Game) {
     this.game = game;
   }
@@ -88,6 +89,7 @@ export class ReinforcementSystem {
     this.doors = [];
     this.phase = 'done';
     this.openingCount = 0;
+    this.openingTime = 0;
   }
   reset(level: Level) {
     this.clear();
@@ -151,11 +153,16 @@ export class ReinforcementSystem {
     if (g.mode !== 'playing' || g.escape || g.level.boss) return;
     if (this.phase === 'opening') {
       if (g.level.freight) return;
+      this.openingTime += dt;
+      const overlap = g.detour
+        ? 2
+        : g.stage >= 12 && g.stage < 16
+          ? 1
+          : Math.ceil(this.openingCount / 2);
       if (
         g.enemies.length === 0 ||
-        ((g.stage >= 4 || g.detour) &&
-          this.openingCount >= 2 &&
-          g.enemies.length <= (g.detour ? 2 : 1))
+        this.openingTime >= reinforcementDeadline(g.stage) ||
+        ((g.stage >= 1 || g.detour) && this.openingCount >= 2 && g.enemies.length <= overlap)
       ) {
         this.phase = 'warning';
         for (const door of this.doors) {

@@ -4,7 +4,7 @@ import Matter from 'matter-js';
 import { Game } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
 import type { Spawn } from '../src/levels.ts';
-import { REINFORCEMENT_TELL } from '../src/reinforcements.ts';
+import { REINFORCEMENT_TELL, reinforcementDeadline } from '../src/reinforcements.ts';
 import { dailyForDate } from '../src/daily.ts';
 import { loadCheckpoint, MODS } from '../src/rules.ts';
 import type { Checkpoint } from '../src/rules.ts';
@@ -51,8 +51,9 @@ function room(stage = 0, seed = 'reinforcements') {
   });
   return g;
 }
-function fixture(count = 3) {
+function fixture(count = 3, stage = 0) {
   const g = room();
+  g.stage = stage;
   for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
   g.enemies = [];
   g.waves.clear();
@@ -111,11 +112,10 @@ test('ordinary rooms split their exact authored roster into two groups without c
     }
 });
 
-test('later waves overlap the last opening enemy while the docks preserve their gentler introduction', () => {
+test('larger opening groups overlap while the first room preserves its small introduction', () => {
   for (const stage of [0, 4]) {
-    const g = fixture(6);
-    g.stage = stage;
-    assert.equal(g.enemies.length, 2);
+    const g = fixture(6, stage);
+    assert.equal(g.enemies.length, stage === 0 ? 2 : 3);
     step(g, 10);
     assert.equal(g.waves.phase, 'opening');
     g.hitEnemy(g.enemies[0], 99999);
@@ -125,11 +125,51 @@ test('later waves overlap the last opening enemy while the docks preserve their 
       g.hitEnemy(g.enemies[0], 99999);
     }
     until(g, () => g.waves.phase === 'warning');
-    assert.equal(g.enemies.length, stage === 0 ? 0 : 1);
+    assert.equal(g.enemies.length, stage === 0 ? 0 : 2);
     assert(
       g.waves.doors.every((door) => door.state === 'warning' && door.timer === REINFORCEMENT_TELL),
     );
   }
+});
+
+test('stalling an intact opening calls one finite wave after an area-specific deadline and full warning', () => {
+  for (const stage of [0, 1, 4, 8, 12, 16]) {
+    const g = fixture(6, stage),
+      opening = g.enemies.length;
+    const deadline = reinforcementDeadline(stage);
+    for (let n = 0; n < Math.round(deadline * 60) - 1; n++) g.waves.update(DT);
+    assert.equal(g.waves.phase, 'opening');
+    assert.equal(g.enemies.length, opening);
+    for (let n = 0; n < 2 && g.waves.phase === 'opening'; n++) g.waves.update(DT);
+    assert.equal(g.waves.phase, 'warning');
+    assert(g.waves.doors.every((d) => d.timer === REINFORCEMENT_TELL));
+    for (let n = 0; n < 44; n++) g.waves.update(DT);
+    assert.equal(g.enemies.length, opening);
+    for (let n = 0; n < 120; n++) g.waves.update(DT);
+    assert.equal(g.enemies.length, 6);
+    assert.equal(g.waves.phase, 'final');
+    g.waves.reset(g.level);
+    assert.equal(g.waves.openingTime, 0);
+    assert(g.waves.doors.every((d) => d.state === 'sealed'));
+  }
+});
+
+test('the stall deadline uses combat time and freezes on pause and hit stop', () => {
+  const g = fixture(6, 16);
+  g.waves.update(2);
+  g.setMode('paused');
+  step(g, 600);
+  assert.equal(g.waves.openingTime, 2);
+  assert.equal(g.waves.phase, 'opening');
+  g.setMode('playing');
+  g.hitStop = 0.1;
+  step(g, 4);
+  assert.equal(g.waves.openingTime, 2);
+  g.hitStop = 0;
+  step(g);
+  assert(g.waves.openingTime > 2);
+  g.waves.clear();
+  assert.equal(g.waves.openingTime, 0);
 });
 
 test('a fast opening clear gives the full warning and cannot clear, heal, or open the exit before the final group', () => {

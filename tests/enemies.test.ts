@@ -211,8 +211,7 @@ test('boss attacks cycle from aimed volleys to fans and radial volleys with full
         assert(g.time - warningAt >= attackTell(e.attack) - 0.001);
         assert.equal(
           g.shots.length,
-          (e.attack === 'ring' ? 12 : e.attack === 'fan' ? 7 : 5) *
-            (phase > 0 && e.attack !== 'ring' ? 2 : 1),
+          (e.attack === 'ring' ? 12 : e.attack === 'fan' ? 7 : 5) * (e.attack !== 'ring' ? 2 : 1),
         );
         fired.push(e.attack);
         g.shots = [];

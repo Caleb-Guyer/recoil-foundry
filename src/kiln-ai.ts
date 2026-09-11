@@ -345,7 +345,7 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
       if (rig.next >= rig.plans.length) {
         e.attacks++;
         e.state = 'recover';
-        e.timer = 1.5;
+        e.timer = 1.15;
         rig.plans = [];
       }
     }

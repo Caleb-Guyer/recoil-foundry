@@ -1062,8 +1062,8 @@ export class Game {
         const area = areaIndex(this.stage);
         e.timer =
           e.kind === 'flyer'
-            ? [1.9, 1.7, 1.5, 1.3, 1.12][area]
-            : [1.5, 1.35, 1.2, 1.05, 0.92][area];
+            ? [1.55, 1.35, 1.2, 1.3, 0.96][area]
+            : [1.2, 1.08, 0.96, 1.05, 0.78][area];
         this.onSound('enemy');
       } else if (e.timer <= 0) e.timer = 0.8;
     }
@@ -1092,8 +1092,9 @@ export class Game {
   }
   updateRunner(e: Enemy, d: Vec, dist: number) {
     const p = e.body.position;
+    const speed = [3.1, 3.35, 3.6, 2.5, 3.9][areaIndex(this.stage)];
     Body.setVelocity(e.body, {
-      x: e.body.velocity.x + (d.x * 2.5 - e.body.velocity.x) * 0.08,
+      x: e.body.velocity.x + (d.x * speed - e.body.velocity.x) * 0.08,
       y: e.body.velocity.y,
     });
     const grounded =
@@ -1471,7 +1472,7 @@ export class Game {
       if (e.timer <= 0) {
         for (const angle of attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)))
           this.enemyShot(e, angle, e.attack === 'ring' ? 7.8 : 11.2, 23);
-        if (e.phase > 0 && !second && e.attack !== 'ring') {
+        if (!second && e.attack !== 'ring') {
           e.state = 'followup';
           e.timer = 0.7;
           e.aim = d;
@@ -1479,7 +1480,7 @@ export class Game {
         } else {
           e.attacks++;
           e.state = 'recover';
-          e.timer = [0.95, 0.85, 0.75][e.phase];
+          e.timer = [0.8, 0.7, 0.6][e.phase];
         }
         this.onSound(e.attack === 'ring' ? 'pulse' : 'enemy');
       }
@@ -1494,7 +1495,7 @@ export class Game {
   enemyShot(
     e: Enemy,
     a: number,
-    speed = [7.2, 8, 8.8, 9.6, 10.3][areaIndex(this.stage)],
+    speed = [8, 8.9, 9.7, 9.6, 11.2][areaIndex(this.stage)],
     damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20, 22][areaIndex(this.stage)],
     origin: Vec = squadGunOrigin(e),
     blade = false,

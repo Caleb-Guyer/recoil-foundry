@@ -103,23 +103,31 @@ test('aimed volleys and heavy blasts track early, lock every lane and finish the
     g.enemyShot = (_e, a) => fired.push(a);
     while (e.state === 'windup') {
       step(g);
-      assert.deepEqual(e.aim, aim);
-      assert.deepEqual(e.interceptor!.origin, origin);
+      if (e.state === 'windup') {
+        assert.deepEqual(e.aim, aim);
+        assert.deepEqual(e.interceptor!.origin, origin);
+      }
       if (g.time - started < tell - 1e-8) assert.equal(fired.length, 0);
     }
     assert.deepEqual(fired, angles);
-    assert.equal(e.state, 'recover');
+    assert.equal(e.state, heavy ? 'recover' : 'followup');
+    if (!heavy) {
+      const followupAt = g.time;
+      until(g, () => e.state === 'recover');
+      assert(g.time - followupAt >= 0.78 - 1 / 60);
+      assert.equal(fired.length, angles.length * 2);
+    }
     const before = e.hp;
     g.hitEnemy(e, 100);
     near(before - e.hp, 130);
   }
 });
 
-test('late phases add separate fully warned volleys with recovery after the whole combination', () => {
-  for (const phase of [1, 2]) {
+test('every phase has separately warned volleys with recovery after the whole combination', () => {
+  for (const phase of [0, 1, 2]) {
     const { g, e } = fixture();
     e.phase = phase;
-    e.hp = e.maxHp * (phase === 1 ? 0.6 : 0.3);
+    e.hp = e.maxHp * [1, 0.6, 0.3][phase];
     const volleys: number[] = [];
     g.enemyShot = () => {
       if (volleys.at(-1) !== g.time) volleys.push(g.time);
@@ -135,8 +143,8 @@ test('late phases add separate fully warned volleys with recovery after the whol
       }
       previous = e.state;
     }
-    assert.equal(volleys.length, phase + 1);
-    assert.equal(tells, phase + 1);
+    assert.equal(volleys.length, Math.max(1, phase) + 1);
+    assert.equal(tells, Math.max(1, phase) + 1);
     assert.equal(e.state, 'recover');
     for (let i = 1; i < volleys.length; i++) assert(volleys[i] - volleys[i - 1] >= 0.69);
   }

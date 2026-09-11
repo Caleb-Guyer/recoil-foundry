@@ -10,7 +10,7 @@ export const TURBINE_LOCK = 0.45;
 export const TURBINE_GUST_TELL = 1.15;
 export const TURBINE_SWEEP_TELL = 1.05;
 export const TURBINE_GUST_TIME = 1.8;
-export const TURBINE_RECOVER = 1.35;
+export const TURBINE_RECOVER = 1.1;
 export const TURBINE_RANGE = 850;
 export interface TurbineRig {
   origin: Vec;

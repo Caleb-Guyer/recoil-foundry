@@ -7,7 +7,7 @@ import { clamp, direction } from './rules.ts';
 export const SKIMMER_TELL = 0.82;
 export const COOLING_LOCK = 0.34;
 export const CONDENSER_FOLLOWUP = 0.72;
-export const CONDENSER_RECOVER = 1.15;
+export const CONDENSER_RECOVER = 0.9;
 export const CONDENSER_PURGE_FOLLOWUP = 0.95;
 
 export function onCoolant(g: Game) {
@@ -73,7 +73,7 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
         boss ? 21 : g.stage >= 12 ? 20 : 18,
       );
     g.onSound(e.attack === 'ring' ? 'pulse' : 'cooling-shot');
-    if (boss && !second && (e.attack !== 'ring' || e.phase >= 1)) {
+    if (boss && !second) {
       e.state = 'followup';
       e.timer = e.attack === 'ring' ? CONDENSER_PURGE_FOLLOWUP : CONDENSER_FOLLOWUP;
       if (e.attack === 'ring') {

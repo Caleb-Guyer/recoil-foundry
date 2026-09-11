@@ -58,7 +58,7 @@ function updateFlak(g: Game, e: Enemy) {
   e.attacks++;
   // This is a firing cooldown, not the exposed crash/slam recovery state.
   e.state = 'idle';
-  e.timer = 0.3;
+  e.timer = 0.18;
   g.onSound('enemy');
 }
 
@@ -99,7 +99,7 @@ export function updateLoader(g: Game, e: Enemy) {
       e.timer > 0 && (prop ? contact!.t * 24 <= 15 : Math.abs(end.x - p.x) < nose - 1);
     if (crashed || e.timer <= 0) {
       e.state = 'recover';
-      e.timer = crashed ? 1.25 : 0.5;
+      e.timer = crashed ? 1.25 : 0.4;
       Body.setVelocity(e.body, { x: 0, y: v.y });
       if (crashed) {
         if (prop && contact)

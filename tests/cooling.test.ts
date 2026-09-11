@@ -8,6 +8,7 @@ import {
   SKIMMER_TELL,
   CONDENSER_FOLLOWUP,
   CONDENSER_RECOVER,
+  CONDENSER_PURGE_FOLLOWUP,
   coolingAngles,
   onCoolant,
 } from '../src/cooling.ts';
@@ -126,6 +127,16 @@ test('purge has four real gaps, rotates between attacks, and never follows the p
   assert.deepEqual(coolingAngles(e), first);
   while (e.state === 'windup') step(g);
   assert.equal(g.shots.length, 12);
+  assert.equal(e.state, 'followup');
+  const followupAt = g.time,
+    second = coolingAngles(e);
+  assert.notDeepEqual(second, first);
+  Body.setPosition(g.player, { x: 900, y: 200 });
+  while (e.state === 'followup') {
+    step(g);
+    assert.deepEqual(coolingAngles(e), second);
+  }
+  assert(g.time - followupAt >= CONDENSER_PURGE_FOLLOWUP - 1 / 60);
   assert.equal(e.state, 'recover');
   g.shots = [];
   e.state = 'idle';
@@ -288,7 +299,7 @@ test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a 
     for (const stage of [16, 17]) {
       const level = getLevel(seed, stage);
       assert(level.spawns.filter((e) => e.kind === 'sniper').length >= 2);
-      assert.equal(level.spawns.filter((e) => e.elite).length, 1);
+      assert.equal(level.spawns.filter((e) => e.elite).length, 2);
     }
     assert(['condenser', 'turbine'].includes(getLevel(seed, 11).spawns[0].kind));
   }

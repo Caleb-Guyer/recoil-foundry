@@ -1,10 +1,10 @@
 import type { Enemy, Game, Input } from '../src/game.ts';
-import { attackAngles } from '../src/enemies.ts';
+import { attackAngles, bossMuzzle, flakAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
 import { turbineRelease } from '../src/turbine.ts';
 import { interceptorAngles, interceptorSpeed } from '../src/interceptor.ts';
 import { sorterFan } from '../src/reclamation.ts';
-import { clamp, distance, direction } from '../src/rules.ts';
+import { areaIndex, clamp, distance, direction } from '../src/rules.ts';
 
 // Test-only player: compare short movement trajectories with visible bolts and
 // locked warnings. It sends ordinary inputs; it never changes health, enemies,
@@ -34,6 +34,39 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
         ) / Math.hypot(s.vel.x, s.vel.y),
       ),
     }));
+  // Multiple enemies can commit together. Read all ordinary locked warnings,
+  // including the Loader's marked anti-air fan, before choosing a trajectory.
+  for (const enemy of g.enemies) {
+    if (enemy.spawn > 0 || enemy.squad || enemy.elite === 'volatile') continue;
+    const flak = enemy.attack === 'flak' && enemy.state === 'windup' && enemy.timer <= 0.38;
+    const ordinary = ['shooter', 'flyer'].includes(enemy.kind) && enemy.timer <= 0.35;
+    const sniper =
+      enemy.kind === 'sniper' && !enemy.elite && enemy.state === 'windup' && enemy.timer <= 0.35;
+    if (!flak && !ordinary && !sniper) continue;
+    const origin = flak ? bossMuzzle(enemy) : enemy.body.position;
+    const base = Math.atan2(enemy.aim.y, enemy.aim.x);
+    const angles = flak
+      ? flakAngles(base, enemy.phase === 1)
+      : enemy.kind === 'flyer'
+        ? [-1, 0, 1].map((i) => base + i * 0.18)
+        : [base];
+    const speed = flak ? 10 : sniper ? 18 : [8, 8.9, 9.7, 9.6, 11.2][areaIndex(g.stage)];
+    for (const a of angles) {
+      const muzzle = sniper ? 38 : 26;
+      const start = { x: origin.x + Math.cos(a) * muzzle, y: origin.y + Math.sin(a) * muzzle };
+      if (distance(g.lineEnd(origin, start), start) > 0.1) continue;
+      const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+      bolts.push({
+        p: start,
+        v,
+        delay: Math.max(0, enemy.timer) * 60,
+        radius: 5,
+        life:
+          distance(start, g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 })) /
+          speed,
+      });
+    }
+  }
   if (
     ['sorter', 'borer', 'sifter'].includes(e.kind) &&
     e.state === 'windup' &&

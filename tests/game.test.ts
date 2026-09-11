@@ -413,14 +413,14 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     rewards: [
       'leech',
       'airshot',
-      'scatter',
+      'magnum',
       'shellshock',
       'aftershock',
       'blast-surf',
       'chain-reaction',
       'landing',
       'backblast',
-      'magnum',
+      'scatter',
       'ricochet',
       'rapid',
       'pierce',
@@ -483,16 +483,24 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
   {
     seed: 'path-run-65',
     pressSpacing: 220,
-    pathMods: ['shellshock', 'aftershock', 'blast-surf', 'chain-reaction', 'fuse', 'linked-fuse'],
+    pathMods: [
+      'shellshock',
+      'aftershock',
+      'blast-surf',
+      'chain-reaction',
+      'fuse',
+      'linked-fuse',
+      'shockfront',
+    ],
     rewards: [
       'leech',
       'airshot',
-      'scatter',
+      'magnum',
       'shellshock',
       'fuse',
       'aftershock',
       'rapid',
-      'magnum',
+      'scatter',
       'light',
       'linked-fuse',
       'chain-reaction',
@@ -500,6 +508,10 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'kick',
       'pierce',
       'blast-surf',
+      'backblast',
+      'redline',
+      'shockfront',
+      'capacitor',
     ],
   },
 ])
@@ -549,6 +561,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       loaderDodgeUntil = 0,
       loaderDirection = 1,
       loaderReacted = false;
+    let retreatWaypoint: { x: number; y: number } | undefined;
     const priority = [
       ...pathMods,
       'leech',
@@ -585,6 +598,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         clearAt = -1;
         stuck = 0;
         previousX = g.player.position.x;
+        retreatWaypoint = undefined;
       }
       if (g.mode === 'upgrade') {
         g.chooseMod(
@@ -650,11 +664,19 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       // If cover blocks a distant target, stop recoil and take the next terrain waypoint.
       const navigate = g.clear || (g.time - lastProgress > 8 && distance(p, ep) > 500);
       const path = [...g.level.route, { x: exitX, y: 720 }];
-      const way = navigate
+      let way = navigate
         ? dx > 0
           ? path.find((q) => q.x > p.x + 35)
           : [...path].reverse().find((q) => q.x < p.x - 35)
         : undefined;
+      // A fight can leave us below a tall step. Return to its approach ledge
+      // instead of repeating floor jumps against the vertical face forever.
+      if (g.clear && stuck > 60 && !retreatWaypoint)
+        retreatWaypoint = [...path].reverse().find((q) => q.x < p.x - 60);
+      if (retreatWaypoint) {
+        way = retreatWaypoint;
+        if (Math.abs(p.x - way.x) < 30 && p.y <= way.y + 25) retreatWaypoint = undefined;
+      }
       if (way) move = way.x > p.x ? 1 : -1;
       const blocked =
         !!move && Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
@@ -769,10 +791,11 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         firing = e.state !== 'rush' && !(e.state === 'windup' && e.timer <= CRANE_LOCK);
         aim = { ...ep };
       }
-      // Single rounds keep distance and cross locked turret lanes; spread builds
-      // retain the close-range movement and projectile dodge behavior below.
-      if (e?.kind === 'loader' && g.gun.pellets === 1) {
-        move = dx > 320 ? 1 : dx < -320 ? -1 : 0;
+      // Read the Loader's warning with every build; spread guns close the gap
+      // between attacks instead of treating its hull as an ordinary runner.
+      if (e?.kind === 'loader') {
+        const spacing = g.gun.pellets === 1 ? 320 : 220;
+        move = dx > spacing ? 1 : dx < -spacing ? -1 : 0;
         if (distance(g.lineEnd(p, ep), ep) > 1) move = Math.sign(dx);
         jump =
           g.grounded &&
@@ -807,7 +830,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         e?.kind !== 'turbine' &&
         e?.kind !== 'interceptor' &&
         e?.kind !== 'press' &&
-        !(e?.kind === 'loader' && g.gun.pellets === 1) &&
+        e?.kind !== 'loader' &&
         e?.kind !== 'crane'
       ) {
         const threat = g.shots.find((s) => {
@@ -819,7 +842,24 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
           const t = Math.max(0, Math.min(12, -(rx * vx + ry * vy) / (vx * vx + vy * vy || 1)));
           return Math.hypot(rx + vx * t, ry + vy * t) < 38;
         });
-        if (threat) {
+        const warning =
+          !g.level.boss &&
+          g.enemies.some(
+            (enemy) =>
+              ['shooter', 'flyer', 'sniper'].includes(enemy.kind) &&
+              enemy.timer <= 0.35 &&
+              distance(enemy.body.position, p) < 650 &&
+              distance(g.lineEnd(enemy.body.position, p), p) < 1,
+          );
+        if ((threat || warning) && e && !g.level.boss) {
+          // Pick a safe trajectory across all visible shots. A reflexive jump
+          // away from one shot can now land in a second overlapping volley.
+          const choice = dodgePilot(g, e);
+          jump = choice.jump!;
+          firing = choice.fire!;
+          move = Number(choice.right) - Number(choice.left);
+          aim = choice.aim!;
+        } else if (threat) {
           jump = g.grounded;
           firing = false;
           move = threat.pos.x < p.x ? 1 : -1;

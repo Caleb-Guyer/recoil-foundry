@@ -112,7 +112,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       const kick = e.attack === 'heavy' ? 12 : 4;
       recoil(e, { x: -e.aim.x * kick, y: -e.aim.y * kick });
       g.onSound(e.attack === 'heavy' ? 'interceptor-heavy' : 'interceptor-shot');
-      if (e.attack !== 'heavy' && rig.volley < e.phase) {
+      if (e.attack !== 'heavy' && rig.volley < Math.max(1, e.phase)) {
         rig.volley++;
         e.state = 'followup';
         e.timer = 0.78 - e.phase * 0.04;
@@ -120,7 +120,8 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
         g.onSound('interceptor-lock');
       } else {
         e.state = 'recover';
-        e.timer = (e.attack === 'heavy' ? 1.4 : 1.1) - e.phase * 0.1;
+        // The heavy blast leaves enough time for a slow shell and its fuse.
+        e.timer = (e.attack === 'heavy' ? 1.4 : 0.9) - e.phase * 0.1;
         e.attacks++;
         rig.relocate = true;
         g.onSound('interceptor-open');

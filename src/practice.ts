@@ -139,9 +139,9 @@ export function squadsTestFromUrl(url: URL): Checkpoint | null {
   )
     return null;
   const presets = {
-    shield: { seed: 'SQUAD-SHIELD-11', stage: 4 },
+    shield: { seed: 'SQUAD-SHIELD-1', stage: 4 },
     flank: { seed: 'SQUAD-FLANK-1', stage: 6 },
-    ambush: { seed: 'SQUAD-AMBUSH-0', stage: 8 },
+    ambush: { seed: 'SQUAD-AMBUSH-1', stage: 8 },
   };
   const formation = p.get('formation') ?? 'shield';
   if (!Object.hasOwn(presets, formation)) return null;
