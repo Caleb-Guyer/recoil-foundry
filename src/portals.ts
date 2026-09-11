@@ -282,6 +282,7 @@ export class PortalSystem {
       const travel = solid ? Math.max(0, solid.t - 0.01) : 1;
       const velocity = portalVector(body.velocity, entry, exit);
       disruptScrapperBody(g, body);
+      g.magnets.release(body);
       Matter.Body.setPosition(body, { x: pos.x + rest.x * travel, y: pos.y + rest.y * travel });
       Matter.Body.setVelocity(body, velocity);
       // Old contact warm-start impulses belong to the entrance, not the exit.
@@ -293,7 +294,15 @@ export class PortalSystem {
         breakSquad(g, enemy);
         enemy.aim = portalVector(enemy.aim, entry, exit);
         if (velocity.x) enemy.facing = Math.sign(velocity.x);
-        if (enemy.interceptor) {
+        if (enemy.sorter || enemy.kind === 'borer' || enemy.kind === 'sifter') {
+          if (enemy.sorter) {
+            enemy.sorter.lanes = [];
+            enemy.sorter.pulse = 0;
+          }
+          enemy.hunt = undefined;
+          enemy.state = 'recover';
+          enemy.timer = 0.6;
+        } else if (enemy.interceptor) {
           // A teleported gun cannot release a warning drawn at its old position.
           enemy.interceptor.origin = { ...body.position };
           enemy.interceptor.launch = { x: 0, y: 0 };

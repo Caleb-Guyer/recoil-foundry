@@ -62,7 +62,7 @@ function enemy(g: Game, kind: EnemyKind, x = 900, y = 724) {
 test('belts are sparse flush inserts with clear approaches, safe machinery spacing and deterministic entrances', () => {
   const coverage = new Set<string>();
   for (let i = 0; i < 40; i++)
-    for (let stage = 0; stage < 16; stage++) {
+    for (let stage = 0; stage < 20; stage++) {
       const seed = 'belt-layout-' + i,
         g = new Game();
       g.start(seed, testCheckpoint(seed, stage));

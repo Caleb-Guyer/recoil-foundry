@@ -288,7 +288,7 @@ test('cleared exits advance automatically and choices modify the same gun', () =
 test('checkpoint reconstructs the same modified gun and fresh room', () => {
   const g = new Game();
   g.start('saved', {
-    version: 4,
+    version: 5,
     seed: 'saved',
     stage: 4,
     hp: 56,
@@ -336,7 +336,7 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
       assert(Number.isFinite(b.position.x) && Number.isFinite(b.position.y));
   }
 });
-// Keep the four established combat builds stable when the reward pool expands.
+// Keep representative builds covering each path as the route expands.
 // Only offers are scripted: every upgrade is earned through an actual room clear.
 // New builds below exercise every new mechanic. Weighted pool/retry coverage lives in build-paths and daily.
 for (const { seed, pressSpacing, pathMods, rewards } of [
@@ -506,11 +506,29 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
   test(`combat reaches extraction: ${seed} ${pathMods[0]}${pathMods.length > 4 ? ' expanded build' : ''}`, () => {
     const g = new Game();
     g.start(seed);
-    if (rewards) {
+    const extendedRewards = rewards && [...rewards];
+    if (extendedRewards) {
+      for (const id of [
+        'light',
+        'burst',
+        'kick',
+        'backblast',
+        'redline',
+        'backfire',
+        'capacitor',
+        'reserve-cell',
+        'landing',
+        'banker',
+        'breach',
+        'shatter',
+      ]) {
+        if (extendedRewards.length >= STAGES - 1) break;
+        if (availableMods(extendedRewards).some((m) => m.id === id)) extendedRewards.push(id);
+      }
       const openReward = g.openReward.bind(g);
       g.openReward = (enterDetour = false) => {
         openReward(enterDetour);
-        const preferred = MODS.find((m) => m.id === rewards[g.stage])!;
+        const preferred = MODS.find((m) => m.id === extendedRewards[g.stage])!;
         assert(availableMods(g.mods).includes(preferred), 'Scripted offer is not legal');
         g.offers = [preferred, ...g.offers.filter((m) => m !== preferred)].slice(0, 3);
       };
@@ -553,7 +571,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       'execute',
       'fold',
     ];
-    for (let i = 0; i < 60 * 720 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+    for (let i = 0; i < 60 * 900 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       if (g.escape?.phase === 'extracting') {
         tick(g);
         continue;
@@ -570,7 +588,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       }
       if (g.mode === 'upgrade') {
         g.chooseMod(
-          rewards?.[g.stage] ??
+          extendedRewards?.[g.stage] ??
             [...g.offers].sort(
               (a, b) =>
                 (priority.includes(a.id) ? priority.indexOf(a.id) : Infinity) -
@@ -718,6 +736,8 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         }
       }
       if (
+        (e && ['borer', 'sifter'].includes(e.kind) && distance(g.lineEnd(p, ep), ep) < 1) ||
+        e?.kind === 'sorter' ||
         e?.kind === 'boss' ||
         e?.kind === 'condenser' ||
         e?.kind === 'turbine' ||
@@ -779,6 +799,9 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
       }
       if (
         !g.clear &&
+        e?.kind !== 'sorter' &&
+        e?.kind !== 'borer' &&
+        e?.kind !== 'sifter' &&
         e?.kind !== 'boss' &&
         e?.kind !== 'condenser' &&
         e?.kind !== 'turbine' &&
@@ -827,6 +850,16 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         move = p.x < fallingLoad.body.position.x ? -1 : 1;
         jump = false;
         firing = false;
+      }
+      // Large shell builds coast between volleys near the edge. Continuing to
+      // shoot from a corner repeatedly propels the player back into that corner.
+      if (g.stage >= 12 && g.gun.shellshock && !g.clear && !g.level.boss) {
+        if (distance(p, ep) > 550 && !lift) firing = false;
+        if (p.x < 180 || p.x > 1820) {
+          move = p.x < 1000 ? 1 : -1;
+          firing = false;
+        }
+        if (p.y < 200) firing = false;
       }
       tick(g, 1, {
         left: move < 0,

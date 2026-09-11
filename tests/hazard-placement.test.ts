@@ -23,12 +23,12 @@ test('hazards introduce one type at a time and keep sweeps, headroom, spawns and
       const before = JSON.stringify(level);
       const hazard = hazardPlacement(level, seed, stage);
       assert.equal(JSON.stringify(level), before, 'Hazards must not rewrite the room or route');
-      if (stage === 0 || level.boss || level.freight) {
+      if (stage === 0 || level.boss || level.freight || level.magnets) {
         assert.equal(hazard, undefined);
         continue;
       }
       assert(hazard, `${seed}, ${level.id}, room ${stage + 1}: missing safe feature`);
-      const introduced = ({ 1: 'lift', 4: 'crusher', 12: 'crumble' } as Record<number, string>)[
+      const introduced = ({ 1: 'lift', 4: 'crusher', 16: 'crumble' } as Record<number, string>)[
         stage
       ];
       if (introduced) assert.equal(hazard.kind, introduced);
@@ -65,7 +65,7 @@ test('hazards introduce one type at a time and keep sweeps, headroom, spawns and
       assert.deepEqual(hazardPlacement(level, seed, stage), hazard);
     }
   }
-  assert.equal(coverage.size, LAYOUTS.length * 2);
+  assert.equal(coverage.size, LAYOUTS.filter((l) => !l.magnets).length * 2);
   assert.equal(kinds.size, 3);
   assert(lowCrusher > 0, 'Low overhead cover should exercise the safe lower crusher rest');
 });
@@ -98,7 +98,7 @@ test('unsafe rooms omit their optional feature instead of overlapping cover or c
   const level = getLevel('hazard-blocked', 1);
   level.solids = [{ x: 180, y: 100, w: 1640, h: 640 }];
   const before = JSON.stringify(level);
-  for (const stage of [1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14])
+  for (const stage of [1, 2, 4, 5, 6, 8, 9, 10, 16, 17, 18])
     assert.equal(hazardPlacement(level, 'hazard-blocked', stage), undefined);
   assert.equal(JSON.stringify(level), before);
   assert.equal(hazardPlacement({ ...level, solids: [], boss: true }, 'boss', 3), undefined);
@@ -107,18 +107,22 @@ test('unsafe rooms omit their optional feature instead of overlapping cover or c
 test('all layout orientations remain traversable with active hazards, ordinary jumps and normal health', () => {
   const { Composite, Query } = Matter;
   const cases = new Map<string, { seed: string; stage: number }>();
-  for (let index = 0; index < 256 && cases.size < LAYOUTS.length * 2; index++) {
+  for (
+    let index = 0;
+    index < 256 && cases.size < LAYOUTS.filter((l) => !l.magnets).length * 2;
+    index++
+  ) {
     const seed = 'hazard-route-' + index;
-    for (const stage of [1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]) {
+    for (const stage of [1, 2, 4, 5, 6, 8, 9, 10, 16, 17, 18]) {
       const level = getLevel(seed, stage);
       if (hazardPlacement(level, seed, stage))
         cases.set(level.id + ':' + level.mirrored, { seed, stage });
     }
   }
-  assert.equal(cases.size, LAYOUTS.length * 2);
+  assert.equal(cases.size, LAYOUTS.filter((l) => !l.magnets).length * 2);
   for (const [label, { seed, stage }] of cases) {
     const game = new Game();
-    game.start(seed, { version: 4, seed, stage, hp: 100, mods: [], kills: 0, elapsed: 0 });
+    game.start(seed, { version: 5, seed, stage, hp: 100, mods: [], kills: 0, elapsed: 0 });
     assert.equal(game.hazards.items.length, 1, label);
     for (const prop of [...game.props.items]) game.props.remove(prop);
     for (const enemy of game.enemies) Composite.remove(game.engine.world, enemy.body);

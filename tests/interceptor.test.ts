@@ -52,10 +52,10 @@ test('rooftop boss selection preserves other rooms, seeded retries and Daily con
   const seen = new Set<string>();
   for (let i = 0; i < 80; i++) {
     const seed = 'interceptor-selection-' + i;
-    const level = getLevel(seed, 15);
+    const level = getLevel(seed, 19);
     seen.add(level.spawns[0].kind + ':' + level.mirrored);
-    assert.deepEqual(level, getLevel(seed, 15));
-    for (let stage = 0; stage < 15; stage++)
+    assert.deepEqual(level, getLevel(seed, 19));
+    for (let stage = 0; stage < 19; stage++)
       assert.deepEqual(
         getLevel(seed, stage, undefined, 'boss'),
         getLevel(seed, stage, undefined, 'interceptor'),
@@ -65,9 +65,9 @@ test('rooftop boss selection preserves other rooms, seeded retries and Daily con
   const g = new Game(),
     day = dailyForDate('2026-09-07')!;
   const save: Checkpoint = {
-    version: 4,
+    version: 5,
     seed: day.seed,
-    stage: 15,
+    stage: 19,
     hp: 63,
     mods: ['magnum'],
     kills: 45,
@@ -75,7 +75,7 @@ test('rooftop boss selection preserves other rooms, seeded retries and Daily con
   };
   assert(loadCheckpoint(save));
   g.start(day.seed, save);
-  assert.deepEqual(g.level, getLevel(day.seed, 15));
+  assert.deepEqual(g.level, getLevel(day.seed, 19));
   assert.equal(g.hp, 63);
 });
 
@@ -284,7 +284,7 @@ test('the direct test preserves saves and unlocks, while a real victory leads in
   g.start('normal-before-interceptor');
   const saved = structuredClone(writes[0]);
   assert(g.startPractice(entry));
-  assert.equal(g.mods.length, 15);
+  assert.equal(g.mods.length, 19);
   assert.equal(g.hp, 100);
   g.die();
   assert(g.startPractice(entry));
@@ -298,9 +298,9 @@ test('the direct test preserves saves and unlocks, while a real victory leads in
   const legacy = loadEncounters([{ kind: 'boss', seed: entry.seed }])[0];
   assert(g.startPractice(legacy));
   assert.equal(g.enemies[0].kind, 'boss');
-  assert.deepEqual(g.level, getLevel(entry.seed, 15, undefined, 'boss'));
+  assert.deepEqual(g.level, getLevel(entry.seed, 19, undefined, 'boss'));
   const seed = entry.seed;
-  g.start(seed, { version: 4, seed, stage: 15, hp: 100, mods: [], kills: 0, elapsed: 0 });
+  g.start(seed, { version: 5, seed, stage: 19, hp: 100, mods: [], kills: 0, elapsed: 0 });
   g.enemies[0].spawn = 0;
   g.hitEnemy(g.enemies[0], 999999);
   step(g, 20);
@@ -311,7 +311,7 @@ test('the direct test preserves saves and unlocks, while a real victory leads in
 });
 
 for (const mirror of [false, true]) {
-  test(`Interceptor is beatable with a fifteen-upgrade gun and normal health, mirror=${mirror}`, () => {
+  test(`Interceptor is beatable with a nineteen-upgrade gun and normal health, mirror=${mirror}`, () => {
     const g = new Game();
     assert(g.startPractice({ kind: 'interceptor', seed: seedFor(mirror) }));
     const e = g.enemies[0];
@@ -322,7 +322,7 @@ for (const mirror of [false, true]) {
       `${g.hp} player HP, ${Math.round(e.hp)} boss HP at ${JSON.stringify(e.body.position)}, ${e.state}, ${e.attacks} attacks`,
     );
     assert(g.hp > 0 && g.shotCount > 20);
-    assert.equal(g.mods.length, 15);
+    assert.equal(g.mods.length, 19);
   });
   test(`Interceptor pressures overhead, corner and cover camping, mirror=${mirror}`, () => {
     const outcomes: string[] = [];
@@ -337,9 +337,9 @@ for (const mirror of [false, true]) {
       const g = new Game(),
         seed = seedFor(mirror);
       g.start(seed, {
-        version: 4,
+        version: 5,
         seed,
-        stage: 15,
+        stage: 19,
         hp: 100,
         kills: 0,
         elapsed: 0,

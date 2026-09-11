@@ -7,7 +7,7 @@ import type { AreaId } from '../src/areas.ts';
 import { MUSIC_PROFILES, musicNotes, musicScene } from '../src/music-score.ts';
 import type { MusicNote } from '../src/music-score.ts';
 
-const areas: AreaId[] = ['docks', 'furnace', 'cooling', 'rooftops'];
+const areas: AreaId[] = ['docks', 'furnace', 'cooling', 'reclamation', 'rooftops'];
 const phrase = (area: AreaId, intensity = 0, boss = false, clear = false) =>
   Array.from({ length: 64 }, (_, step) => musicNotes(area, step, intensity, boss, clear));
 const percussion = (notes: MusicNote[][]) =>
@@ -16,13 +16,13 @@ const percussion = (notes: MusicNote[][]) =>
 test('area scores have distinct tempos, harmony and restrained phrases with deliberate rests', () => {
   assert.deepEqual(
     areas.map((area) => MUSIC_PROFILES[area].bpm),
-    [88, 104, 98, 118],
+    [88, 104, 98, 110, 118],
   );
   const scores = areas.map((area) => phrase(area));
   assert.notDeepEqual(scores[0], scores[1]);
   assert.notDeepEqual(scores[1], scores[2]);
   assert(percussion(scores[1]).length > percussion(scores[0]).length);
-  assert(percussion(scores[3]).length < percussion(scores[1]).length);
+  assert(percussion(scores[4]).length < percussion(scores[1]).length);
   for (const [index, score] of scores.entries()) {
     assert(
       score.filter((notes) => notes.length === 0).length >= 20,
@@ -172,9 +172,9 @@ test('scene identity maps room and mode correctly while menus, clear rooms and d
   game.enemies[0].hp = 0;
   assert.equal(musicScene(game).boss, false);
 
-  for (const stage of [0, 5, 9, 13]) {
+  for (const stage of [0, 5, 9, 13, 17]) {
     game.start('continued-score', {
-      version: 4,
+      version: 5,
       seed: 'continued-score',
       stage,
       hp: 72,
@@ -184,7 +184,15 @@ test('scene identity maps room and mode correctly while menus, clear rooms and d
     });
     assert.equal(
       musicScene(game).area,
-      stage === 0 ? 'docks' : stage === 5 ? 'furnace' : stage === 9 ? 'cooling' : 'rooftops',
+      stage === 0
+        ? 'docks'
+        : stage === 5
+          ? 'furnace'
+          : stage === 9
+            ? 'cooling'
+            : stage === 13
+              ? 'reclamation'
+              : 'rooftops',
     );
     assert.equal(musicScene(game).room, 'continued-score:' + stage);
   }

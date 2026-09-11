@@ -10,8 +10,9 @@ export const PRACTICE_BOSSES = {
   kiln: { name: 'The Kiln', stage: bossStage(1) },
   condenser: { name: 'The Condenser', stage: bossStage(2) },
   turbine: { name: 'The Turbine', stage: bossStage(2) },
-  interceptor: { name: 'The Interceptor', stage: bossStage(3) },
-  boss: { name: 'Rooftop', stage: bossStage(3) },
+  sorter: { name: 'The Sorter', stage: bossStage(3) },
+  interceptor: { name: 'The Interceptor', stage: bossStage(4) },
+  boss: { name: 'Rooftop', stage: bossStage(4) },
 } as const;
 export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
 export interface Encounter {
@@ -87,9 +88,13 @@ export function testCheckpoint(seed: string, stage: number): Checkpoint {
     'landing',
     'redline',
     'backblast',
+    'rivet',
+    'fracture',
+    'capacitor',
+    'reserve-cell',
   ];
   return {
-    version: 4,
+    version: 5,
     seed,
     stage,
     hp: 100,
@@ -107,7 +112,7 @@ export function expandedTestFromUrl(url: URL): Checkpoint | null {
     ['daily', 'dv', 'seed'].some((k) => p.has(k))
   )
     return null;
-  const areas = ['docks', 'furnace', 'cooling', 'rooftops'];
+  const areas = ['docks', 'furnace', 'cooling', 'reclamation', 'rooftops'];
   if (p.getAll('area').length > 1) return null;
   const area = areas.indexOf(p.get('area') ?? 'docks');
   return area < 0 ? null : testCheckpoint('EXPANDED-16', area * 4 + 2);
@@ -157,7 +162,7 @@ export function conveyorsTestFromUrl(url: URL): Checkpoint | null {
   if (area !== 'furnace' && area !== 'rooftops') return null;
   return testCheckpoint(
     area === 'furnace' ? 'BELT-FURNACE-7' : 'BELT-ROOFTOPS-3',
-    area === 'furnace' ? 4 : 12,
+    area === 'furnace' ? 4 : 16,
   );
 }
 
@@ -185,7 +190,7 @@ export function scrapperTestFromUrl(url: URL): Checkpoint | null {
   if (area !== 'cooling' && area !== 'rooftops') return null;
   return testCheckpoint(
     area === 'cooling' ? 'SCRAPPER-8-10' : 'SCRAPPER-12-26',
-    area === 'cooling' ? 8 : 12,
+    area === 'cooling' ? 8 : 16,
   );
 }
 
@@ -212,4 +217,15 @@ export function upgradeTestFromUrl(url: URL): Checkpoint | null {
     ...testCheckpoint('UPGRADES-' + key.toUpperCase(), 6),
     mods: [...UPGRADE_TEST_BUILDS[key]],
   };
+}
+
+export function reclamationTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'reclamation' ||
+    ['daily', 'dv', 'seed', 'area', 'formation'].some((k) => p.has(k))
+  )
+    return null;
+  return testCheckpoint('RECLAMATION-20', 12);
 }

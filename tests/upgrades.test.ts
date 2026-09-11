@@ -346,7 +346,7 @@ test('Landing shot empowers all pellets of the next discharge, then the burst re
 });
 test('new gun builds survive checkpoints without saving transient burst or landing state', () => {
   const save = {
-    version: 4 as const,
+    version: 5 as const,
     seed: 'mods',
     stage: 5,
     hp: 75,

@@ -1,3 +1,4 @@
+import { formerStage } from './rules.ts';
 import type { Level, Solid } from './levels.ts';
 import type { Vec } from './rules.ts';
 import { seeded, segmentBox } from './rules.ts';
@@ -30,6 +31,8 @@ const playerHull = (position: Vec): Solid => ({
 });
 
 export function breachPlacement(level: Level, seed: string, stage: number): BreachPlacement | null {
+  if (level.area === 'reclamation') return null;
+  stage = formerStage(stage);
   if (level.boss || level.freight || level.id === 'last-flight' || ![1, 5, 9, 13].includes(stage))
     return null;
   const canonical = (rect: Solid): Solid => ({

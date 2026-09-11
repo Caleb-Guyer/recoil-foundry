@@ -27,6 +27,10 @@ const mods = [
   'light',
   'split',
   'redline',
+  'rivet',
+  'fracture',
+  'capacitor',
+  'reserve-cell',
 ];
 
 function step(g: Game, count = 1, input: Partial<Input> = {}) {
@@ -49,7 +53,7 @@ function until(g: Game, condition: () => boolean, limit = 240) {
 
 function checkpoint(escape = true): Checkpoint {
   return {
-    version: 4,
+    version: 5,
     seed: 'escape-test',
     stage: STAGES - 1,
     hp: 73,
@@ -154,7 +158,7 @@ test('passing the old room exit keeps the escape playable without a lethal count
   assert.equal(g.escape?.phase, 'route');
   assert(g.escape!.time > 29);
   assert.equal(g.hp, 73);
-  assert.equal(g.mods.length, 15);
+  assert.equal(g.mods.length, 19);
   assert(g.player.position.y <= WORLD.floor);
 });
 

@@ -376,7 +376,7 @@ test('a lethal crusher sweep stops later hazards and room reload replaces all tr
   assert.equal(later.phase, phase);
   const oldBodies = g.hazards.items.map((item) => item.body);
   const save = {
-    version: 4 as const,
+    version: 5 as const,
     seed: 'hazard-continue',
     stage: 5,
     hp: 80,

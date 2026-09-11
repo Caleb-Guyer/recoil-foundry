@@ -240,7 +240,7 @@ function propSnapshot(game: Game) {
   }));
 }
 
-test('shared, continued, and retried dailies reproduce sixteen rooms and fifteen forced upgrades', () => {
+test('shared, continued, and retried dailies reproduce twenty rooms and nineteen forced upgrades', () => {
   const first = new Game();
   let second = new Game();
   first.start(challenge.seed);
@@ -282,7 +282,7 @@ test('shared, continued, and retried dailies reproduce sixteen rooms and fifteen
     }
   }
   assert.equal(new Set(rooms).size, STAGES);
-  assert.deepEqual(bosses, [3, 7, 11, 15]);
+  assert.deepEqual(bosses, [3, 7, 11, 15, 19]);
   assert.equal(first.mods.length, STAGES - 1);
   assert.equal(new Set(first.mods).size, STAGES - 1);
   assert.deepEqual(first.mods, sequence);
@@ -375,7 +375,7 @@ test('ordinary runs retain three distinct upgrade choices after every eligible r
 
 test('v3 checkpoints preserve daily identity and accumulated elapsed time across continue and retry', () => {
   const save: Checkpoint = {
-    version: 4,
+    version: 5,
     seed: challenge.seed,
     stage: 7,
     hp: 67,

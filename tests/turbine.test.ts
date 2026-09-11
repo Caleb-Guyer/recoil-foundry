@@ -44,7 +44,7 @@ function seedFor(mirrored = false) {
 function fixture() {
   const g = new Game();
   const seed = seedFor();
-  g.start(seed, { version: 4, seed, stage: 11, hp: 100, mods: [], elapsed: 0, kills: 0 });
+  g.start(seed, { version: 5, seed, stage: 11, hp: 100, mods: [], elapsed: 0, kills: 0 });
   for (const prop of [...g.props.items]) g.props.remove(prop);
   g.hazards.clear();
   g.breaches.clear();
@@ -78,7 +78,7 @@ test('Cooling Works independently selects both bosses and mirrors with identical
   const day = dailyForDate('2026-09-07')!;
   const g = new Game();
   g.start(day.seed, {
-    version: 4,
+    version: 5,
     seed: day.seed,
     stage: 11,
     mods: [],
@@ -88,7 +88,7 @@ test('Cooling Works independently selects both bosses and mirrors with identical
   });
   const level = structuredClone(g.level);
   g.start(day.seed, {
-    version: 4,
+    version: 5,
     seed: day.seed,
     stage: 11,
     mods: [],
@@ -302,7 +302,7 @@ test('Turbine victories unlock only after defeat and old Condenser victories ret
     g = new Game(),
     victories: string[] = [];
   g.onBossDefeated = (kind) => victories.push(kind);
-  g.start(seed, { version: 4, seed, stage: 11, hp: 100, mods: [], elapsed: 0, kills: 0 });
+  g.start(seed, { version: 5, seed, stage: 11, hp: 100, mods: [], elapsed: 0, kills: 0 });
   const e = g.enemies[0];
   step(g, 45);
   g.hitEnemy(e, 100);
@@ -357,7 +357,7 @@ test('the rotor finds pressure against overhead, corner and cover camps in eithe
       const seed = seedFor(mirror),
         g = new Game();
       g.start(seed, {
-        version: 4,
+        version: 5,
         seed,
         stage: 11,
         hp: 100,

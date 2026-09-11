@@ -70,7 +70,7 @@ function fixture(kind: SquadKind) {
 test('squad plans preserve each roster, reserve both members together, introduce roles gradually, and repeat without combat RNG', () => {
   const counts = { shield: 0, flank: 0, ambush: 0 };
   for (let i = 0; i < 50; i++)
-    for (let stage = 0; stage < 16; stage++) {
+    for (let stage = 0; stage < 20; stage++) {
       const seed = 'squads-plan-' + i,
         level = getLevel(seed, stage),
         before = structuredClone(level);

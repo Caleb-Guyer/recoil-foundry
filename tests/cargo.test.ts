@@ -73,7 +73,7 @@ test('cargo is sparse, deterministic, mirrored, and clear of machinery, entrance
   for (let i = 0; i < 80; i++)
     for (let area = 0; area < 4; area++) {
       const seed = 'cargo-place-' + i,
-        stage = area * 4 + 2,
+        stage = (area === 3 ? 4 : area) * 4 + 2,
         g = new Game();
       g.start(seed, testCheckpoint(seed, stage));
       assert(g.cargo.items.length <= 1);
@@ -114,7 +114,7 @@ test('cargo is sparse, deterministic, mirrored, and clear of machinery, entrance
     }
   assert.equal(coverage.size, 8);
   assert(count > 120 && count < 300);
-  for (let stage = 0; stage < 16; stage++)
+  for (let stage = 0; stage < 20; stage++)
     if (stage % 4 !== 2)
       assert.equal(cargoPlacement(getLevel('cargo-none', stage), 'cargo-none', stage), null);
   const level = getLevel('cargo-blocked', 2);
@@ -346,7 +346,7 @@ test('pause, hitstop, death, destruction, Continue and escape cannot leak a dela
   assert.equal(g.cargo.items[0].cargo!.state, 'hanging');
   assert.equal(g.cargo.items[0].cargo!.cableHp, 48);
   assert(!Composite.allBodies(g.engine.world).includes(original.body));
-  g.startTest(testCheckpoint('cargo-exit', 15));
+  g.startTest(testCheckpoint('cargo-exit', 19));
   g.cargo.spawn({ x: 800, y: 400, anchorY: 100 });
   g.clear = true;
   g.startEscape();
@@ -358,7 +358,7 @@ test('new layouts remain traversable in both orientations with hanging and lande
   for (let i = 0; i < 120 && cases.size < 8; i++)
     for (let area = 0; area < 4; area++) {
       const seed = 'cargo-walk-' + i,
-        stage = area * 4 + 2,
+        stage = (area === 3 ? 4 : area) * 4 + 2,
         g = new Game();
       g.start(seed, testCheckpoint(seed, stage));
       if (g.cargo.items.length) cases.set(g.level.area + ':' + g.level.mirrored, { seed, stage });

@@ -47,7 +47,7 @@ function room(mirrored = false) {
   const g = new Game(),
     seed = seedFor('kiln', mirrored);
   g.start(seed, {
-    version: 4,
+    version: 5,
     seed,
     stage: 7,
     hp: 100,
@@ -119,7 +119,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
   };
   for (const [seed, rooms] of Object.entries(expected))
     assert.deepEqual(
-      [0, 1, 3, 4, 5, 12, 13, 15].map((stage) => {
+      [0, 1, 3, 4, 5, 16, 17, 19].map((stage) => {
         const level = getLevel(seed, stage, undefined, 'boss');
         return `${level.id}:${level.mirrored}`;
       }),
@@ -136,7 +136,7 @@ test('ordinary and daily checkpoints rebuild the selected Kiln without retaining
   for (const seed of [seedFor('kiln'), seedFor('kiln', true), daily]) {
     const g = new Game(),
       save: Checkpoint = {
-        version: 4,
+        version: 5,
         seed,
         stage: 7,
         hp: 83,
@@ -410,7 +410,7 @@ test('both Kiln layouts punish passive corner firing while a reactive five-upgra
     for (const reactive of [false, true]) {
       const g = new Game();
       g.start(seed, {
-        version: 4,
+        version: 5,
         seed,
         stage: 7,
         hp: 100,

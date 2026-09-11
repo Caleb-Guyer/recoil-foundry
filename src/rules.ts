@@ -557,16 +557,23 @@ export function getGun(mods: readonly string[]): Gun {
   if (mods.includes('recall') && mods.includes('pierce')) g.pierce = 3;
   return g;
 }
-export const STAGES = 16;
+export const STAGES = 20;
 export const ROOMS_PER_AREA = 4;
+// Environmental seed streams from the original route remain stable after the
+// inserted area. Use the real stage for combat scaling and reward generation.
+export const formerStage = (stage: number) => (stage >= 16 ? stage - 4 : stage);
 export const areaIndex = (stage: number) =>
-  Math.min(3, Math.max(0, Math.floor(stage / ROOMS_PER_AREA)));
+  Math.min(4, Math.max(0, Math.floor(stage / ROOMS_PER_AREA)));
 export const bossStage = (area: number) => area * ROOMS_PER_AREA + ROOMS_PER_AREA - 1;
 export const ROOM_HEAL = 12;
 export const isDetourStage = (stage: number) =>
-  Number.isInteger(stage) && stage >= 0 && stage < STAGES && stage % ROOMS_PER_AREA === 2;
+  Number.isInteger(stage) &&
+  stage >= 0 &&
+  stage < STAGES &&
+  stage !== 14 &&
+  stage % ROOMS_PER_AREA === 2;
 export interface Checkpoint {
-  version: 4;
+  version: 5;
   seed: string;
   stage: number;
   hp: number;
@@ -582,8 +589,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
   const raw = value as Record<string, unknown>;
   const legacy = raw.version === 3;
+  const previous = raw.version === 4;
   const d = value as Checkpoint;
-  const stages = legacy ? 12 : STAGES;
+  const stages = legacy ? 12 : previous ? 16 : STAGES;
   const rooms = legacy ? 3 : ROOMS_PER_AREA;
   const missed = d.missedUpgrades ?? 0;
   const oldEscape =
@@ -600,12 +608,13 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       (area, index) =>
         Number.isInteger(area) &&
         area >= 0 &&
-        area < 4 &&
+        area < (legacy || previous ? 4 : 5) &&
+        (legacy || previous || area !== 3) &&
         area * rooms + rooms - 2 < d.stage &&
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
-    (d.version === 4 || legacy) &&
+    (d.version === 5 || previous || legacy) &&
     typeof d.seed === 'string' &&
     d.seed.length <= 40 &&
     Number.isInteger(d.stage) &&
@@ -613,7 +622,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     d.stage < stages &&
     Number.isInteger(missed) &&
     missed >= 0 &&
-    missed <= 7 &&
+    missed <= (previous ? 7 : 11) &&
     (!legacy || missed === 0) &&
     Number.isFinite(d.hp) &&
     d.hp > 0 &&
@@ -630,7 +639,10 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     ((d.detour === undefined && d.detours === undefined) ||
       d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length - missed) &&
     (d.detour === undefined ||
-      (d.detour === true && d.stage % rooms === rooms - 2 && d.escape === undefined)) &&
+      (d.detour === true &&
+        d.stage % rooms === rooms - 2 &&
+        (legacy || previous || isDetourStage(d.stage)) &&
+        d.escape === undefined)) &&
     (d.detours === undefined || (d.detours !== null && Array.isArray(d.detours))) &&
     (d.escape === undefined ||
       (d.escape === true &&
@@ -638,13 +650,23 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (d.mods.length === stages - 1 + completed.length - missed ||
           (oldEscape && completed.length === 0))));
   if (!valid) return null;
-  if (!legacy) return d;
+  if (!legacy && !previous) return d;
   // Keep the same room, gun and health. Skipped new rooms are recorded so later
   // detour and escape checkpoints remain valid without inventing upgrade picks.
-  const stage = d.escape
-    ? STAGES - 1
-    : Math.floor(d.stage / 3) * 4 + (d.detour ? 2 : d.stage % 3 === 2 ? 3 : d.stage % 3);
-  return { ...d, version: 4, stage, missedUpgrades: oldEscape ? 7 : stage - d.stage };
+  const oldStage = legacy
+    ? d.escape
+      ? 15
+      : Math.floor(d.stage / 3) * 4 + (d.detour ? 2 : d.stage % 3 === 2 ? 3 : d.stage % 3)
+    : d.stage;
+  const stage = oldStage >= 12 ? oldStage + 4 : oldStage;
+  return {
+    ...d,
+    version: 5,
+    stage,
+    ...(d.detours ? { detours: d.detours.map((area) => (area === 3 ? 4 : area)) } : {}),
+    missedUpgrades:
+      (legacy ? (oldEscape ? 7 : oldStage - d.stage) : missed) + (oldStage >= 12 ? 4 : 0),
+  };
 }
 export function segmentBox(a: Vec, b: Vec, min: Vec, max: Vec): { t: number; normal: Vec } | null {
   let lo = 0,

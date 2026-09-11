@@ -3,6 +3,7 @@ import { attackAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
 import { turbineRelease } from '../src/turbine.ts';
 import { interceptorAngles, interceptorSpeed } from '../src/interceptor.ts';
+import { sorterFan } from '../src/reclamation.ts';
 import { clamp, distance, direction } from '../src/rules.ts';
 
 // Test-only player: compare short movement trajectories with visible bolts and
@@ -33,7 +34,29 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
         ) / Math.hypot(s.vel.x, s.vel.y),
       ),
     }));
-  if (e.kind === 'interceptor' && (e.state === 'windup' || e.state === 'followup')) {
+  if (
+    ['sorter', 'borer', 'sifter'].includes(e.kind) &&
+    e.state === 'windup' &&
+    e.attack !== 'slam' &&
+    e.timer <= 0.5
+  ) {
+    const base = Math.atan2(e.aim.y, e.aim.x);
+    const spread = e.kind === 'sifter' ? 0.22 : 0.045;
+    const speed = e.kind === 'sorter' ? 10.8 : e.kind === 'sifter' ? 9 : 13;
+    for (const a of e.kind === 'sorter' ? sorterFan(e) : [-1, 0, 1].map((i) => base + i * spread)) {
+      const start = { x: target.x + Math.cos(a) * 26, y: target.y + Math.sin(a) * 26 };
+      const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+      bolts.push({
+        p: start,
+        v,
+        radius: 5,
+        delay: e.timer * 60,
+        life:
+          distance(start, g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 })) /
+          speed,
+      });
+    }
+  } else if (e.kind === 'interceptor' && (e.state === 'windup' || e.state === 'followup')) {
     for (const a of interceptorAngles(e)) {
       const origin = e.interceptor!.origin;
       const start = { x: origin.x + Math.cos(a) * 44, y: origin.y + Math.sin(a) * 44 };
@@ -76,7 +99,11 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
           ) / speed,
       });
     }
-  } else if ((e.state === 'windup' || e.state === 'followup') && e.timer <= 0.35) {
+  } else if (
+    e.kind !== 'sorter' &&
+    (e.state === 'windup' || e.state === 'followup') &&
+    e.timer <= 0.35
+  ) {
     const angles =
       e.kind === 'boss' ? attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)) : coolingAngles(e);
     for (const a of angles) {
@@ -100,7 +127,10 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
     for (const jump of g.grounded ? [false, true] : [false])
       for (const fire of [true, false])
         for (const lift of fire &&
-        (e.kind === 'boss' || e.kind === 'turbine' || e.kind === 'interceptor')
+        (e.kind === 'sorter' ||
+          e.kind === 'boss' ||
+          e.kind === 'turbine' ||
+          e.kind === 'interceptor')
           ? [false, true]
           : [false]) {
           let x = p.x,
@@ -210,6 +240,21 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
               if (dx < 20 + b.radius && dy < 26 + b.radius) score += 1000 / (frame + 8);
               else if (dx < 42 && dy < 45) score += 8 / (frame + 8);
             }
+            if (e.sorter && e.state === 'windup' && e.attack === 'slam' && e.timer <= 0.75) {
+              if (
+                Math.abs(frame / 60 - e.timer) < 0.08 &&
+                e.sorter.lanes.some((lane) => Math.abs(lane - x) < 66)
+              )
+                score += 8000 / (frame + 8);
+            }
+            for (const m of g.magnets.items)
+              if (
+                m.held &&
+                ['hold', 'drop'].includes(m.phase) &&
+                y > m.held.body.position.y &&
+                Math.abs(x - m.x) < 55
+              )
+                score += 50 / (frame + 8);
             const ex = target.x + e.body.velocity.x * Math.min(frame, 8),
               ey = target.y + e.body.velocity.y * Math.min(frame, 8);
             if (Math.abs(x - ex) < 72 && Math.abs(y - ey) < 73) score += 2000 / (frame + 8);

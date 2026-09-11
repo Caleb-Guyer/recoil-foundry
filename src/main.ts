@@ -18,6 +18,7 @@ import {
   conveyorsTestFromUrl,
   freightTestFromUrl,
   scrapperTestFromUrl,
+  reclamationTestFromUrl,
   upgradeTestFromUrl,
   UPGRADE_TEST_BUILDS,
 } from './practice.ts';
@@ -51,7 +52,9 @@ function write(key: string, value: unknown) {
     return false;
   }
 }
-const storedCheckpoint = loadCheckpoint(read('rf-checkpoint-v4') ?? read('rf-checkpoint-v3'));
+const storedCheckpoint = loadCheckpoint(
+  read('rf-checkpoint-v5') ?? read('rf-checkpoint-v4') ?? read('rf-checkpoint-v3'),
+);
 let unavailableDailySave = !!storedCheckpoint && isUnsupportedDailySeed(storedCheckpoint.seed);
 let checkpoint = unavailableDailySave ? null : storedCheckpoint;
 const encounters = loadEncounters(read(VICTORIES_KEY));
@@ -110,6 +113,7 @@ const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
   upgradeTestFromUrl(entryUrl) ??
+  reclamationTestFromUrl(entryUrl) ??
   scrapperTestFromUrl(entryUrl) ??
   freightTestFromUrl(entryUrl) ??
   conveyorsTestFromUrl(entryUrl) ??
@@ -128,6 +132,8 @@ function updateTitle() {
   $('play').innerHTML =
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
+  if (linkedRunTest?.seed === 'RECLAMATION-20')
+    $('play').innerHTML = 'Test Reclamation Works <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
@@ -277,7 +283,10 @@ function backFromPractice() {
 game.onCheckpoint = (s) => {
   if (game.practice || game.testRun) return;
   checkpoint = s;
-  if (write('rf-checkpoint-v4', s)) write('rf-checkpoint-v3', null);
+  if (write('rf-checkpoint-v5', s)) {
+    write('rf-checkpoint-v4', null);
+    write('rf-checkpoint-v3', null);
+  }
 };
 game.onSound = (kind) => sound.play(kind);
 game.onBossDefeated = (kind) => {
@@ -586,7 +595,7 @@ function showDialog(kind: string) {
       (game.practice
         ? 'Defeat the boss. Press R to retry.'
         : game.testRun
-          ? 'Preset test. Press R to restart the room.'
+          ? 'Preset test. Press R to restart the test.'
           : game.escape
             ? 'Reach the extraction lift.'
             : game.detour

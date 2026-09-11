@@ -1,6 +1,6 @@
 import type { Vec } from './rules.ts';
 
-export type AreaId = 'docks' | 'furnace' | 'cooling' | 'rooftops';
+export type AreaId = 'docks' | 'furnace' | 'cooling' | 'reclamation' | 'rooftops';
 
 export const AREAS = {
   docks: {
@@ -29,6 +29,15 @@ export const AREAS = {
     face: '#1f363b',
     edge: '#45696b',
     detail: '#315356',
+  },
+  reclamation: {
+    name: 'Reclamation Works',
+    sky: ['#141e19', '#2b3c2e'],
+    surface: '#a6b49a',
+    body: '#38483c',
+    face: '#28382e',
+    edge: '#5e715b',
+    detail: '#405441',
   },
   rooftops: {
     name: 'Rooftops',
@@ -138,6 +147,25 @@ export function drawScenery(
       c.fillStyle = '#392c25';
       c.fillRect(x + 55, 480, 150, 5);
       c.fillRect(x + 55, 558, 150, 5);
+    }
+  } else if (area === 'reclamation') {
+    c.translate(-camera.x * 0.18, -camera.y * 0.14);
+    for (let i = 0; i < 7; i++) {
+      const x = 55 + i * 390;
+      c.fillStyle = '#24342a';
+      c.fillRect(x, 150, 22, 620);
+      c.fillRect(x, 150, 360, 15);
+      c.strokeStyle = '#354738';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(x + 20, 175);
+      c.lineTo(x + 175, 320);
+      c.lineTo(x + 335, 175);
+      c.stroke();
+      c.fillStyle = '#203027';
+      for (let j = 0; j < 4; j++) c.fillRect(x + 50 + j * 63, 600 - (j % 2) * 33, 58, 150);
+      c.fillStyle = '#6f795531';
+      c.fillRect(x + 144, 168, 56, 3);
     }
   } else if (area === 'cooling') {
     c.translate(-camera.x * 0.18, -camera.y * 0.14);

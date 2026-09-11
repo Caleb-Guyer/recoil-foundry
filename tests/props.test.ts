@@ -243,7 +243,7 @@ test('pause freezes armed props and continuing resets room props without saving 
   assert.deepEqual(fuel.body.position, p);
   assert.equal(g.time, time);
   const save = {
-    version: 4 as const,
+    version: 5 as const,
     seed: 'props-continue',
     stage: 5,
     hp: 70,

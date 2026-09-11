@@ -28,10 +28,10 @@ function capture(g: Game) {
 }
 
 test('every added room combines familiar threats before the area boss, with one reward at each transition', () => {
-  assert.equal(STAGES, 16);
+  assert.equal(STAGES, 20);
   for (let index = 0; index < 120; index++) {
     for (let area = 0; area < 4; area++) {
-      const stage = area * 4 + 2,
+      const stage = (area === 3 ? 4 : area) * 4 + 2,
         level = getLevel('expanded-' + index, stage);
       assert.equal(level.id, ADDED_LAYOUTS[area].id);
       assert.equal(level.area, areas[area]);
@@ -40,18 +40,18 @@ test('every added room combines familiar threats before the area boss, with one 
       assert.equal(level.spawns.filter((s) => s.elite).length, area ? 1 : 0);
       assert(isDetourStage(stage));
       assert(!isDetourStage(stage - 1));
-      assert.equal(bossStage(area), stage + 1);
+      assert.equal(bossStage(area === 3 ? 4 : area), stage + 1);
       assert(getLevel('expanded-' + index, stage + 1).boss);
     }
   }
 });
 
-test('every path retains three legal choices through nineteen earned upgrades', () => {
+test('every path retains three legal choices through twenty-three earned upgrades', () => {
   for (const root of ['deadeye', 'crossfire', 'shellshock']) {
     for (let seed = 0; seed < 120; seed++) {
       const mods = [root],
         rng = seeded(root + ':expanded:' + seed);
-      while (mods.length < 19) {
+      while (mods.length < 23) {
         const offers = rewardMods(mods, 3, rng);
         assert.equal(offers.length, 3, `${root}: pick ${mods.length + 1}`);
         mods.push(offers[Math.floor(rng() * offers.length)].id);
@@ -65,8 +65,8 @@ test('boss durability scales with each area’s additional upgrade while ordinar
   assert.equal(enemyHealth('runner', 0), ENEMY_STATS.runner.hp);
   for (const [area, kind] of (['loader', 'press', 'turbine', 'interceptor'] as const).entries()) {
     assert.equal(
-      enemyHealth(kind, bossStage(area)),
-      Math.ceil(ENEMY_STATS[kind].hp * [1.15, 1.3, 1.45, 1.6][area]),
+      enemyHealth(kind, bossStage(area === 3 ? 4 : area)),
+      Math.ceil(ENEMY_STATS[kind].hp * [1.15, 1.3, 1.45, 1.95][area]),
     );
   }
   assert(enemyHealth('runner', 14) > enemyHealth('runner', 12));
@@ -80,8 +80,11 @@ test('all twelve legacy entrances preserve the same arena, health and gun throug
     old.kills = 29;
     const migrated = loadCheckpoint(old)!;
     assert(migrated);
-    assert.equal(migrated.version, 4);
-    assert.equal(migrated.stage, Math.floor(stage / 3) * 4 + (stage % 3 === 2 ? 3 : stage % 3));
+    assert.equal(migrated.version, 5);
+    assert.equal(
+      migrated.stage,
+      Math.floor(stage / 3) * 4 + (stage % 3 === 2 ? 3 : stage % 3) + (stage >= 9 ? 4 : 0),
+    );
     assert.equal(migrated.missedUpgrades, migrated.stage - stage);
     assert.deepEqual(migrated.mods, old.mods);
     assert.equal(migrated.hp, old.hp);
@@ -98,7 +101,7 @@ test('all twelve legacy entrances preserve the same arena, health and gun throug
     g.startEscape();
     const escape = capture(g);
     assert(escape?.escape);
-    assert.equal(escape.mods.length, 15 - migrated.missedUpgrades!);
+    assert.equal(escape.mods.length, 19 - migrated.missedUpgrades!);
     const resumed = new Game();
     resumed.start(escape.seed, escape);
     assert(resumed.escape);
@@ -112,7 +115,7 @@ test('legacy detours retain their already-paid upgrade and rejoin the correct bo
     const old = { ...testCheckpoint('old-detour', stage + 1), version: 3, stage, detour: true };
     const migrated = loadCheckpoint(old)!;
     assert(migrated);
-    assert.equal(migrated.stage, area * 4 + 2);
+    assert.equal(migrated.stage, (area === 3 ? 4 : area) * 4 + 2);
     const g = new Game();
     g.start(migrated.seed, migrated);
     assert(g.detour);
@@ -122,8 +125,8 @@ test('legacy detours retain their already-paid upgrade and rejoin the correct bo
     g.clear = true;
     g.openReward();
     g.chooseMod(g.offers[0].id);
-    assert.equal(g.stage, bossStage(area));
-    assert.deepEqual(g.detours, [area]);
+    assert.equal(g.stage, bossStage(area === 3 ? 4 : area));
+    assert.deepEqual(g.detours, [area === 3 ? 4 : area]);
     assert.equal(g.mods.length, stage + 2);
     assert(capture(g));
   }
@@ -147,8 +150,8 @@ test('complete legacy escapes with optional rewards retain every earned upgrade'
     };
     const migrated = loadCheckpoint(old)!;
     assert(migrated);
-    assert.equal(migrated.stage, 15);
-    assert.equal(migrated.missedUpgrades, 4);
+    assert.equal(migrated.stage, 19);
+    assert.equal(migrated.missedUpgrades, 8);
     assert.deepEqual(migrated.mods, mods);
     assert.deepEqual(loadCheckpoint(JSON.parse(JSON.stringify(migrated))), migrated);
   }
@@ -158,7 +161,7 @@ test('new-room links start in each added layout with a complete legal preset and
   for (const [area, name] of areas.entries()) {
     const save = expandedTestFromUrl(new URL(`?test=expanded&area=${name}`, base))!;
     assert(save);
-    assert.equal(save.stage, area * 4 + 2);
+    assert.equal(save.stage, (area === 3 ? 4 : area) * 4 + 2);
     assert.equal(save.mods.length, save.stage);
     assert.equal(save.hp, 100);
     assert(validBuild(save.mods));
@@ -206,7 +209,7 @@ test('a new-room test can advance, die and retry without overwriting a run or ea
   g.startTest(g.testRun!);
   assert.equal(g.hp, 100);
   assert.equal(g.stage, 2);
-  const final = testCheckpoint('test-escape', 15);
+  const final = testCheckpoint('test-escape', 19);
   g.startTest(final);
   g.clear = true;
   g.startEscape();

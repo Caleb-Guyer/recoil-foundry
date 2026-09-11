@@ -1,3 +1,6 @@
+import { MagnetSystem } from './magnets.ts';
+import { createSorter, updateReclamationEnemy } from './reclamation.ts';
+import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
 import { createInterceptor, updateInterceptor } from './interceptor.ts';
 import type { InterceptorRig } from './interceptor.ts';
@@ -112,6 +115,7 @@ export interface Enemy {
   turbine?: TurbineRig;
   interceptor?: InterceptorRig;
   scrapper?: ScrapperRig;
+  sorter?: SorterRig;
 }
 export interface Shot {
   id: number;
@@ -166,6 +170,7 @@ export class Game {
   terrain: Matter.Body[] = [];
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
+  magnets = new MagnetSystem(this);
   hazards = new HazardSystem(this);
   conveyors = new ConveyorSystem(this);
   freight = new FreightSystem(this);
@@ -317,7 +322,7 @@ export class Game {
   save() {
     if (this.practice || this.testRun) return;
     this.onCheckpoint({
-      version: 4,
+      version: 5,
       seed: this.seed,
       stage: this.stage,
       hp: this.hp,
@@ -335,6 +340,7 @@ export class Game {
     this.detourStepsReady = false;
     this.evolutions.reset();
     this.ballistics.reset();
+    this.magnets.items = [];
     this.conveyors.clear();
     this.freight.clear();
     this.portals.reset();
@@ -431,6 +437,7 @@ export class Game {
       this.props.reset(this.level);
       this.cargo.reset();
       this.conveyors.reset();
+      this.magnets.reset();
     }
   }
   startEscape() {
@@ -580,6 +587,7 @@ export class Game {
     if (kind === 'kiln') enemy.kiln = createKiln();
     if (kind === 'turbine') enemy.turbine = createTurbine();
     if (kind === 'interceptor') enemy.interceptor = createInterceptor();
+    if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
@@ -702,6 +710,7 @@ export class Game {
     if (!this.grounded) this.landingSpeed = this.player.velocity.y;
     this.cargo.update(dt);
     this.conveyors.beforeStep();
+    this.magnets.update();
     this.props.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
@@ -1018,7 +1027,9 @@ export class Game {
     }
     const coordinated = updateSquad(this, e);
     if (!coordinated) {
-      if (e.kind === 'charger') this.updateCharger(e);
+      if (e.kind === 'sorter' || e.kind === 'borer' || e.kind === 'sifter')
+        updateReclamationEnemy(this, e, dt);
+      else if (e.kind === 'charger') this.updateCharger(e);
       else if (e.kind === 'loader') this.updateLoader(e);
       else if (e.kind === 'crane') updateCrane(this, e);
       else if (e.kind === 'press') this.updatePress(e);
@@ -1049,7 +1060,10 @@ export class Game {
         const count = e.kind === 'flyer' ? 3 : 1;
         for (let i = 0; i < count; i++) this.enemyShot(e, base + (i - (count - 1) / 2) * 0.18);
         const area = areaIndex(this.stage);
-        e.timer = e.kind === 'flyer' ? [1.9, 1.7, 1.5, 1.3][area] : [1.5, 1.35, 1.2, 1.05][area];
+        e.timer =
+          e.kind === 'flyer'
+            ? [1.9, 1.7, 1.5, 1.3, 1.12][area]
+            : [1.5, 1.35, 1.2, 1.05, 0.92][area];
         this.onSound('enemy');
       } else if (e.timer <= 0) e.timer = 0.8;
     }
@@ -1480,8 +1494,8 @@ export class Game {
   enemyShot(
     e: Enemy,
     a: number,
-    speed = [7.2, 8, 8.8, 9.6][areaIndex(this.stage)],
-    damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20][areaIndex(this.stage)],
+    speed = [7.2, 8, 8.8, 9.6, 10.3][areaIndex(this.stage)],
+    damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20, 22][areaIndex(this.stage)],
     origin: Vec = squadGunOrigin(e),
     blade = false,
   ) {
@@ -1783,6 +1797,7 @@ export class Game {
     if (e.kind === 'crane') damage *= e.state === 'recover' && e.crane && !e.crane.hit ? 1.4 : 0.35;
     if (e.kind === 'press') damage *= e.state === 'recover' ? 1.25 : 0.4;
     if (e.kind === 'kiln') damage *= e.state === 'recover' ? 1.35 : 0.4;
+    if (e.kind === 'sorter') damage *= e.state === 'recover' ? 1.35 : 0.32;
     if (e.kind === 'condenser') damage *= e.state === 'recover' ? 1.3 : 0.25;
     if (e.kind === 'turbine') damage *= e.state === 'recover' ? 1.35 : 0.32;
     if (e.kind === 'interceptor') damage *= e.state === 'recover' ? 1.3 : 0.35;

@@ -1,3 +1,4 @@
+import { drawMagnets, drawReclamationEnemy } from './reclamation-art.ts';
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
 import { drawTurbine, drawBlade } from './turbine-art.ts';
 import { drawInterceptor } from './interceptor-art.ts';
@@ -169,6 +170,7 @@ export class Renderer {
     drawFreightLift(c, g);
     drawConveyors(c, g, this.reduced);
     drawCoolant(c, g, this.reduced);
+    drawMagnets(c, g, this.reduced);
     this.drawProps();
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced);
@@ -182,6 +184,10 @@ export class Renderer {
       c.globalAlpha = 1;
     }
     for (const e of g.enemies) {
+      if (e.kind === 'borer' || e.kind === 'sifter' || e.kind === 'sorter') {
+        drawReclamationEnemy(c, g, e, this.reduced);
+        continue;
+      }
       if (e.kind === 'scrapper') {
         drawScrapper(c, g, e, this.reduced);
         continue;

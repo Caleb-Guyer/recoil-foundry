@@ -119,7 +119,7 @@ test('Bloodwork and one room reward leave meaningful damage carried into the nex
   const g = new Game(),
     seed = 'A';
   g.start(seed, {
-    version: 4,
+    version: 5,
     seed,
     stage: 4,
     hp: 100,
@@ -158,7 +158,7 @@ test('Bloodwork and one room reward leave meaningful damage carried into the nex
 test('daily continuation rebuilds the same scaled waves and gun regardless of combat random draws', () => {
   const daily = dailyForDate('2026-09-06')!,
     save: Checkpoint = {
-      version: 4,
+      version: 5,
       seed: daily.seed,
       stage: 9,
       hp: 53,
@@ -191,8 +191,8 @@ test('sustained fire from the old overhead and cover camps cannot win the boss d
     { stage: 7, seed: 'kiln-layout-0', x: 700, y: 160 },
     { stage: 7, seed: 'kiln-layout-0', x: 235, y: 722 },
     { stage: 11, seed: 'boss-cheese-0', x: 1490, y: 160 },
-    { stage: 15, seed: 'boss-cheese-0', x: 1490, y: 160 },
-    { stage: 15, seed: 'boss-cheese-0', x: 355, y: 722 },
+    { stage: 19, seed: 'boss-cheese-0', x: 1490, y: 160 },
+    { stage: 19, seed: 'boss-cheese-0', x: 355, y: 722 },
   ];
   for (const scenario of cases) {
     const g = new Game(),
@@ -217,7 +217,7 @@ test('sustained fire from the old overhead and cover camps cannot win the boss d
               'backblast',
             ].slice(0, scenario.stage);
     g.start(scenario.seed, {
-      version: 4,
+      version: 5,
       seed: scenario.seed,
       stage: scenario.stage,
       hp: 100,
@@ -258,7 +258,7 @@ test('reacting to the Crane beats the same fight that kills passive sustained fi
     const g = new Game(),
       seed = 'crane-0';
     g.start(seed, {
-      version: 4,
+      version: 5,
       seed,
       stage: 3,
       hp: 100,
@@ -323,7 +323,7 @@ test('the Press cover trap remains winnable by reading its locks and moving betw
   const g = new Game(),
     seed = 'kiln-layout-0';
   g.start(seed, {
-    version: 4,
+    version: 5,
     seed,
     stage: 7,
     hp: 100,

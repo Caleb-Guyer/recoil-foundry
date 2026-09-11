@@ -44,7 +44,7 @@ function wall(g: Game, x: number, y: number, w: number, h: number) {
 test('enemy behaviors enter gradually and retain deterministic terrain-safe anchors', () => {
   const seen = new Set<string>();
   for (let i = 0; i < 50; i++)
-    for (let stage = 0; stage < 16; stage++) {
+    for (let stage = 0; stage < 20; stage++) {
       const level = getLevel('types-' + i, stage);
       assert.deepEqual(level, getLevel('types-' + i, stage));
       assert.equal(new Set(level.spawns.map((s) => `${s.x},${s.y}`)).size, level.spawns.length);

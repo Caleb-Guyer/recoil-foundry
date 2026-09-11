@@ -36,6 +36,7 @@ export interface PropPlacement extends Vec {
 // Three small objects per room. Only wide, clear support surfaces are eligible.
 // Geometry and spawn anchors remain authoritative; scenery never creates a prop.
 export function propPlacements(level: Level, seed: string): PropPlacement[] {
+  if (level.magnets) return level.magnets.map((m) => ({ kind: 'crate', x: m.x, y: m.floor - 23 }));
   const result: PropPlacement[] = [];
   const rng = seeded(seed + ':props:' + level.id);
   const supports = [{ x: 260, y: 740, w: 1500, h: 100 }, ...level.solids];
@@ -215,11 +216,13 @@ export class PropSystem {
     return prop;
   }
   remove(prop: Prop) {
+    this.game.magnets.release(prop.body);
     disruptScrapperBody(this.game, prop.body);
     Composite.remove(this.game.engine.world, prop.body);
     this.items = this.items.filter((p) => p !== prop);
   }
   hit(prop: Prop, damage: number, velocity: Vec) {
+    this.game.magnets.release(prop.body);
     if (!this.items.includes(prop)) return;
     disruptScrapperBody(this.game, prop.body);
     const g = this.game,

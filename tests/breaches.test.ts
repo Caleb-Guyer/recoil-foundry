@@ -339,7 +339,7 @@ test('daily breach placement and intact checkpoint replay are independent of com
   const first = populatedDaily(),
     second = new Game();
   const save: Checkpoint = {
-    version: 4,
+    version: 5,
     seed: first.seed,
     stage: first.stage,
     hp: 75,

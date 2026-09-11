@@ -11,6 +11,9 @@ export const VOLATILE_TELL = 0.9;
 export const VOLATILE_RADIUS = 135;
 
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
+  borer: { w: 30, h: 32, hp: 96 },
+  sifter: { w: 38, h: 38, hp: 82 },
+  sorter: { w: 96, h: 76, hp: 2900 },
   runner: { w: 30, h: 32, hp: 52 },
   shooter: { w: 36, h: 32, hp: 70 },
   flyer: { w: 38, h: 38, hp: 48 },
@@ -48,6 +51,7 @@ export function flakAngles(aim: number, enraged: boolean): number[] {
   );
 }
 export const isBoss = (kind: EnemyKind) =>
+  kind === 'sorter' ||
   kind === 'loader' ||
   kind === 'crane' ||
   kind === 'press' ||
@@ -61,7 +65,7 @@ export function enemyHealth(kind: EnemyKind, stage: number, elite?: EliteKind): 
   return Math.ceil(
     base *
       (isBoss(kind)
-        ? [1.15, 1.3, 1.45, 1.6][areaIndex(stage)]
+        ? [1.15, 1.3, 1.45, 1.6, 1.95][areaIndex(stage)]
         : 1 + Math.max(0, Math.min(STAGES - 1, stage)) * 0.085),
   );
 }

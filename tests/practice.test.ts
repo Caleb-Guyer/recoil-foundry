@@ -245,7 +245,7 @@ test('rooftop practice ends at the boss instead of starting the escape route', (
   step(g, 20);
   assert.equal(g.mode, 'won');
   assert.equal(g.escape, null);
-  assert.equal(g.mods.length, 15);
+  assert.equal(g.mods.length, 19);
   g.startEscape();
   assert.equal(g.escape, null);
 });
@@ -254,7 +254,7 @@ test('a Daily encounter can be practised without touching its checkpoint, and Co
   const g = new Game(),
     day = dailyForDate('2026-09-07')!,
     dailySave: Checkpoint = {
-      version: 4,
+      version: 5,
       seed: day.seed,
       stage: 7,
       hp: 47,

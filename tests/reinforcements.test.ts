@@ -41,7 +41,7 @@ const pendingRoster = (g: Game) => g.waves.doors.map((door) => ({ ...door.spawn 
 function room(stage = 0, seed = 'reinforcements') {
   const g = new Game();
   g.start(seed, {
-    version: 4,
+    version: 5,
     seed,
     stage,
     hp: 100,

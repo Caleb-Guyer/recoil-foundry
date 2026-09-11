@@ -114,7 +114,7 @@ test('twelve upgrades have legal prerequisite chains, path locks, saves and reac
     if (parents.length) assert(!availableMods([]).some((m) => m.id === id));
     assert(
       loadCheckpoint({
-        version: 4,
+        version: 5,
         seed: 'new-mod',
         stage: 6,
         hp: 80,

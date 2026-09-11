@@ -13,7 +13,7 @@ export function drawReinforcementDoors(
   c.save();
   for (const door of g.waves.doors) {
     const hull = ENEMY_STATS[door.spawn.kind],
-      vent = door.spawn.kind === 'flyer',
+      vent = ['flyer', 'skimmer', 'sifter'].includes(door.spawn.kind),
       w = hull.w + (vent ? 20 : 16),
       h = hull.h + (vent ? 12 : 16),
       left = -w / 2,

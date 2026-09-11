@@ -46,7 +46,7 @@ test('freight replaces only the second furnace room sparsely and preserves its s
   let selected = 0;
   const before = JSON.stringify(FREIGHT_LAYOUT);
   for (let i = 0; i < 300; i++)
-    for (let stage = 0; stage < 16; stage++) {
+    for (let stage = 0; stage < 20; stage++) {
       const seed = 'freight-select-' + i,
         l = getLevel(seed, stage);
       assert.equal(!!l.freight, freightSelected(seed, stage));

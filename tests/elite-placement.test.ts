@@ -11,7 +11,7 @@ import { dailyForDate } from '../src/daily.ts';
 
 const elites = (level: Level) => level.spawns.filter((spawn) => spawn.elite);
 
-test('every run gets seven elites, one per eligible room and at most one per room', () => {
+test('every run gets ten elites, one per eligible room and at most one per room', () => {
   const seen = new Set<EliteKind>();
   const selectedStages = new Set<number>();
   for (let index = 0; index < 256; index++) {
@@ -22,7 +22,7 @@ test('every run gets seven elites, one per eligible room and at most one per roo
       if (stage < 4 || level.boss) assert.equal(found.length, 0);
       return found.map((spawn) => ({ stage, elite: spawn.elite!, kind: spawn.kind }));
     });
-    assert.equal(encounters.length, 7);
+    assert.equal(encounters.length, 10);
     assert([4, 5].includes(encounters[0].stage));
     assert.equal(encounters[1].stage, 6);
     assert([8, 9].includes(encounters[2].stage));
@@ -31,7 +31,7 @@ test('every run gets seven elites, one per eligible room and at most one per roo
     assert.notEqual(encounters[0].elite, encounters[2].elite);
     assert.deepEqual(
       encounters.slice(4).map((e) => e.stage),
-      [12, 13, 14],
+      [12, 13, 14, 16, 17, 18],
     );
     for (const encounter of encounters) {
       seen.add(encounter.elite);
@@ -45,7 +45,7 @@ test('every run gets seven elites, one per eligible room and at most one per roo
   assert.deepEqual([...seen].sort(), ['shielded', 'twin', 'volatile']);
   assert.deepEqual(
     [...selectedStages].sort((a, b) => a - b),
-    [4, 5, 6, 8, 9, 10, 12, 13, 14],
+    [4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18],
   );
 });
 
@@ -54,7 +54,7 @@ test('elite promotion keeps authored safe hull anchors, mirrored geometry, and u
   const before = JSON.stringify(sources);
   const variants = new Set<string>();
   for (let index = 0; index < 128; index++) {
-    for (const stage of [4, 5, 6, 8, 9, 10, 12, 13, 14]) {
+    for (const stage of [4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18]) {
       const level = getLevel('elite-hull-' + index, stage);
       const source = sources.find((layout) => layout.id === level.id)!;
       assert.equal(new Set(level.spawns.map(({ x, y }) => `${x},${y}`)).size, level.spawns.length);
@@ -69,7 +69,12 @@ test('elite promotion keeps authored safe hull anchors, mirrored geometry, and u
         variants.add(spawn.elite + ':' + level.mirrored);
         const anchorKind = { shielded: 'runner', twin: 'shooter', volatile: 'flyer' }[spawn.elite!];
         const anchors = source.spawns
-          .filter((anchor) => anchor.kind === anchorKind)
+          .filter(
+            (anchor) =>
+              anchor.kind === anchorKind ||
+              (anchorKind === 'runner' && ['hopper', 'charger'].includes(anchor.kind)) ||
+              (anchorKind === 'shooter' && anchor.kind === 'sniper'),
+          )
           .map((anchor) => ({ ...anchor, x: level.mirrored ? 2000 - anchor.x : anchor.x }));
         assert(
           anchors.some((anchor) => {
@@ -131,9 +136,9 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
     'elite-save-2',
     dailyForDate('2026-09-06')!.seed,
   ]) {
-    for (const stage of [4, 5, 6, 8, 9, 10, 12, 13, 14]) {
+    for (const stage of [4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18]) {
       const checkpoint: Checkpoint = {
-        version: 4,
+        version: 5,
         seed,
         stage,
         hp: 71,

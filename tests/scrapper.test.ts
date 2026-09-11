@@ -67,7 +67,7 @@ function fixture(side = -1) {
 test('Scrapper placement is sparse, deterministic, keeps elites and roster counts, and reserves one usable crate', () => {
   let count = 0;
   for (let i = 0; i < 160; i++)
-    for (let stage = 0; stage < 16; stage++) {
+    for (let stage = 0; stage < 20; stage++) {
       const seed = 'scrap-placement-' + i,
         level = getLevel(seed, stage);
       const scrap = level.spawns.filter((s) => s.kind === 'scrapper');
@@ -77,7 +77,7 @@ test('Scrapper placement is sparse, deterministic, keeps elites and roster count
         continue;
       }
       count++;
-      assert([8, 9, 12, 13].includes(stage));
+      assert([8, 9, 16, 17].includes(stage));
       assert(!scrap[0].elite && !level.boss);
       assert.deepEqual(level, getLevel(seed, stage));
       const placed = propPlacements(level, seed).filter((p) => p.kind === 'crate');
@@ -387,7 +387,7 @@ test('authored Cooling Works and rooftop rooms support real grabs and throws aft
   for (const [seed, stage] of [
     ['SCRAPPER-8-10', 8],
     ['SCRAPPER-8-5', 8],
-    ['SCRAPPER-12-26', 12],
+    ['SCRAPPER-12-26', 16],
   ] as const) {
     const g = new Game();
     g.startTest(testCheckpoint(seed, stage));

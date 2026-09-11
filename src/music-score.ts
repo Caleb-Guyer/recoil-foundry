@@ -22,6 +22,7 @@ export const MUSIC_PROFILES: Record<AreaId, { bpm: number }> = {
   docks: { bpm: 88 },
   furnace: { bpm: 104 },
   cooling: { bpm: 98 },
+  reclamation: { bpm: 110 },
   rooftops: { bpm: 118 },
 };
 
@@ -137,6 +138,23 @@ const PHRASES: Record<AreaId, Phrase> = {
       [35, 73, 1],
       [46, 68, 0.5],
       [59, 75, 1.25],
+    ],
+  },
+  reclamation: {
+    roots: [35, 38, 31, 33],
+    chords: [
+      [59, 62, 66],
+      [62, 66, 69],
+      [55, 59, 62],
+      [57, 61, 64],
+    ],
+    motif: [
+      [4, 71, 0.5],
+      [15, 66, 0.75],
+      [25, 69, 0.5],
+      [34, 62, 1],
+      [45, 67, 0.75],
+      [58, 64, 1],
     ],
   },
   rooftops: {

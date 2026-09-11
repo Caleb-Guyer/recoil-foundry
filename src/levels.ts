@@ -1,15 +1,20 @@
+import { RECLAMATION_LAYOUTS, SORTER_ARENA, reclamationLevel } from './reclamation-layouts.ts';
+import type { MagnetPlacement } from './reclamation-layouts.ts';
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
 import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
 import { addScrapper } from './scrapper-layout.ts';
-import { seeded, sample } from './rules.ts';
+import { seeded, sample, STAGES, formerStage } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
 import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'borer'
+  | 'sifter'
+  | 'sorter'
   | 'runner'
   | 'shooter'
   | 'flyer'
@@ -38,6 +43,7 @@ export interface Spawn extends Vec {
   squad?: SquadTag;
 }
 export interface Layout {
+  magnets?: MagnetPlacement[];
   freight?: true;
   added?: true;
   id: string;
@@ -65,6 +71,7 @@ const route = (...points: number[][]): Vec[] => points.map(([x, y]) => ({ x, y }
 // Ground remains safe beneath raised gaps; recoil creates optional shortcuts.
 export const SPECIAL_LAYOUTS: Layout[] = [FREIGHT_LAYOUT];
 export const LAYOUTS: Layout[] = [
+  ...RECLAMATION_LAYOUTS,
   ...ADDED_LAYOUTS,
   ...COOLING_LAYOUTS,
   {
@@ -481,6 +488,7 @@ export const LAYOUTS: Layout[] = [
   },
 ];
 export const BOSS_LAYOUTS: Layout[] = [
+  SORTER_ARENA,
   COOLING_BOSS,
   TURBINE_ARENA,
   INTERCEPTOR_ARENA,
@@ -604,7 +612,9 @@ function buildLevel(
   rooftopBoss?: 'boss' | 'interceptor',
 ): Level {
   const pick = seeded(seed + ':layouts');
-  if (!Number.isInteger(stage) || stage < 0 || stage >= 16) throw new RangeError('Invalid stage');
+  if (!Number.isInteger(stage) || stage < 0 || stage >= STAGES)
+    throw new RangeError('Invalid stage');
+  if (stage >= 12 && stage < 16) return reclamationLevel(seed, stage);
   if (freightSelected(seed, stage))
     return {
       ...FREIGHT_LAYOUT,
@@ -614,7 +624,7 @@ function buildLevel(
       spawns: FREIGHT_LAYOUT.spawns.map((s) => ({ ...s })),
       route: FREIGHT_LAYOUT.route.map((p) => ({ ...p })),
     };
-  const area = Math.floor(stage / 4),
+  const area = Math.floor(formerStage(stage) / 4),
     slot = stage % 4;
   const legacyStage = area * 3 + Math.min(slot, 2);
   const boss = slot === 3;
@@ -702,7 +712,7 @@ function buildLevel(
   if (!boss && stage >= 2) introduce('sniper', 'shooter');
   if (!boss && stage >= 4) introduce('hopper', 'runner');
   if (!boss && stage >= 8) introduce('skimmer', 'flyer');
-  if (!boss && stage >= 12) {
+  if (!boss && stage >= 16) {
     const secondSniper = spawns.find((s) => s.kind === 'shooter');
     if (secondSniper) secondSniper.kind = 'sniper';
     const secondCharger = spawns.find((s) => s.kind === 'runner');
@@ -776,5 +786,12 @@ export function getLevel(
     ).map((host) => host.elite);
     assignElite(level, different.length ? different : ELITE_HOSTS.map((host) => host.elite), rng);
   }
-  return addScrapper(level, seed, stage);
+  const result = addScrapper(level, seed, stage);
+  if (stage >= 16) {
+    const flyer = result.spawns.find((s) => s.kind === 'flyer' && !s.elite);
+    if (flyer) flyer.kind = 'sifter';
+    const charger = result.spawns.find((s) => s.kind === 'charger' && !s.elite);
+    if (charger) charger.kind = 'borer';
+  }
+  return result;
 }

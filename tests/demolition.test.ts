@@ -423,7 +423,7 @@ test('death, room changes, retries, and extraction clear delayed blasts without 
     } else if (end === 'room') g.loadRoom();
     else if (end === 'retry') g.start(g.seed);
     else {
-      g.stage = 15;
+      g.stage = 19;
       g.clear = true;
       g.startEscape();
     }
@@ -471,7 +471,7 @@ test('shooting the floor launches a grounded player through a real shell collisi
 
 test('boarding extraction discards a pending aftershock and its warning', () => {
   const g = fixture(ids);
-  g.stage = 15;
+  g.stage = 19;
   g.clear = true;
   g.startEscape();
   blast(g, { x: EXTRACTION.x, y: EXTRACTION.y - 5 });

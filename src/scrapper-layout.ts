@@ -1,3 +1,4 @@
+import { formerStage } from './rules.ts';
 import type { Level, Solid } from './levels.ts';
 import { seeded, sample } from './rules.ts';
 import { hazardBounds, hazardPlacement } from './hazard-layouts.ts';
@@ -7,6 +8,8 @@ const overlaps = (a: Solid, b: Solid) =>
   a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
 export function addScrapper(level: Level, seed: string, stage: number): Level {
+  if (level.area === 'reclamation') return level;
+  stage = formerStage(stage);
   if (level.boss || level.detour || ![8, 9, 12, 13].includes(stage)) return level;
   const rng = seeded(seed + ':scrapper:' + stage);
   if (rng() > (stage < 12 ? 0.45 : 0.75)) return level;

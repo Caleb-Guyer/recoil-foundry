@@ -1,3 +1,4 @@
+import { formerStage } from './rules.ts';
 import type { Level, Solid } from './levels.ts';
 import { seeded, sample } from './rules.ts';
 
@@ -19,6 +20,8 @@ export function conveyorPlacements(
   machinery: Solid[] = [],
   fixtures: Solid[] = [],
 ): Conveyor[] {
+  if (level.area === 'reclamation') return [];
+  stage = formerStage(stage);
   if (level.boss || level.detour || level.freight || stage < 4 || level.area === 'docks') return [];
   const rng = seeded(seed + ':conveyors:' + stage);
   if (stage !== 4 && stage !== 6 && rng() > 0.6) return [];

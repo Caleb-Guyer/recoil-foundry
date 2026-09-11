@@ -32,6 +32,9 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
     spawn.elite
       ? 20
       : {
+          borer: 8,
+          sifter: 8,
+          sorter: 0,
           runner: 1,
           shooter: 2,
           flyer: 3,
@@ -122,7 +125,8 @@ export class ReinforcementSystem {
     const alternatives = g.level.spawns
       .filter(
         (s) =>
-          ['flyer', 'skimmer'].includes(s.kind) === ['flyer', 'skimmer'].includes(door.spawn.kind),
+          ['flyer', 'skimmer', 'sifter'].includes(s.kind) ===
+          ['flyer', 'skimmer', 'sifter'].includes(door.spawn.kind),
       )
       .filter((s) => !g.level.freight || Math.abs(s.y - door.spawn.y) < 40)
       .map((anchor) => ({ ...door.spawn, x: anchor.x, y: anchor.y }))

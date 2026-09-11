@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game } from '../src/game.ts';
+import { testCheckpoint } from '../src/practice.ts';
 import type { Input } from '../src/game.ts';
 import { FLAK_TELL, LOADER_TELL, PRESS_LOCK, PRESS_TELL } from '../src/enemies.ts';
 import { MODS, loadCheckpoint } from '../src/rules.ts';
@@ -334,13 +335,13 @@ test('new boss telegraphs freeze through pause and hitstop; death removes the ma
 });
 
 test('area boss exits award one ordinary upgrade and the rooftop boss opens the escape route', () => {
-  for (const stage of [3, 7, 11, 15]) {
+  for (const stage of [3, 7, 11, 15, 19]) {
     const save: Checkpoint = {
-      version: 4,
+      version: 5,
       seed: 'boss-progress',
       stage,
       hp: 60,
-      mods: MODS.slice(0, stage).map((m) => m.id),
+      mods: testCheckpoint('boss-progress', stage).mods,
       kills: 10,
       elapsed: 50,
     };
@@ -355,11 +356,11 @@ test('area boss exits award one ordinary upgrade and the rooftop boss opens the 
     g.hitEnemy(g.enemies[0], 99999);
     Body.setPosition(g.player, { x: 1910, y: 722 });
     step(g, 50);
-    assert.equal(g.mode, stage === 15 ? 'playing' : 'upgrade');
-    if (stage === 15) {
+    assert.equal(g.mode, stage === 19 ? 'playing' : 'upgrade');
+    if (stage === 19) {
       assert.equal(g.escape?.phase, 'route');
       assert.equal(loadCheckpoint(checkpoint)?.escape, true);
-      assert.equal(g.mods.length, 15);
+      assert.equal(g.mods.length, 19);
       continue;
     }
     const hp = g.hp,

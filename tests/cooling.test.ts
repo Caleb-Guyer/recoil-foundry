@@ -194,7 +194,7 @@ test('cover cannot nullify Condenser damage even with a strong shared gun build'
   g.start(
     seed,
     {
-      version: 4,
+      version: 5,
       seed,
       stage: 11,
       hp: 100,
@@ -275,7 +275,9 @@ test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a 
     const seed = 'cooling-sequence-' + i;
     assert.deepEqual(
       Array.from({ length: STAGES }, (_, s) => getLevel(seed, s).area),
-      ['docks', 'furnace', 'cooling', 'rooftops'].flatMap((area) => Array(4).fill(area)),
+      ['docks', 'furnace', 'cooling', 'reclamation', 'rooftops'].flatMap((area) =>
+        Array(4).fill(area),
+      ),
     );
     for (const stage of [8, 9]) {
       const level = getLevel(seed, stage);
@@ -283,7 +285,7 @@ test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a 
       assert(level.coolant!.length >= 2);
       assert(level.spawns.some((e) => e.kind === 'skimmer'));
     }
-    for (const stage of [12, 13]) {
+    for (const stage of [16, 17]) {
       const level = getLevel(seed, stage);
       assert(level.spawns.filter((e) => e.kind === 'sniper').length >= 2);
       assert.equal(level.spawns.filter((e) => e.elite).length, 1);
@@ -295,7 +297,7 @@ test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a 
 
 test('rooftop collapsing platforms leave room to launch over adjacent steps', () => {
   const seed = 'path-run-93',
-    level = getLevel(seed, 13),
+    level = getLevel(seed, 17),
     h = hazardPlacement(level, seed, 13)!;
   assert(h);
   const b = hazardBounds(h);
@@ -320,20 +322,33 @@ test('ordinary saves retain progress, old completed escapes migrate, and new esc
   assert.equal(loadCheckpoint(old)!.stage, 11);
   assert.deepEqual(loadCheckpoint(old)!.mods, mods);
   const legacy = loadCheckpoint({ ...old, escape: true })!;
-  assert.equal(legacy.stage, 15);
+  assert.equal(legacy.stage, 19);
   assert.equal(legacy.mods.length, 8);
   const g = new Game();
   g.start(legacy.seed, legacy);
   assert.equal(g.escape?.phase, 'route');
   assert.equal(g.mods.length, 8);
-  assert.equal(legacy.missedUpgrades, 7);
+  assert.equal(legacy.missedUpgrades, 11);
   const current = loadCheckpoint({
     ...legacy,
     missedUpgrades: 0,
-    mods: [...mods, 'deadeye', 'execute', 'burst', 'light', 'leech', 'redline', 'backblast'],
+    mods: [
+      ...mods,
+      'deadeye',
+      'execute',
+      'burst',
+      'light',
+      'leech',
+      'redline',
+      'backblast',
+      'rivet',
+      'fracture',
+      'capacitor',
+      'reserve-cell',
+    ],
   })!;
   g.start(current.seed, current);
-  assert.equal(g.mods.length, 15);
+  assert.equal(g.mods.length, 19);
   assert.equal(g.hp, 65);
   assert.equal(loadCheckpoint({ ...current, stage: 9 }), null);
 });

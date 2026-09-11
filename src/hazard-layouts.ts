@@ -1,3 +1,4 @@
+import { formerStage } from './rules.ts';
 import type { Level, Solid } from './levels.ts';
 import { ENEMY_STATS } from './enemies.ts';
 import { sample, seeded } from './rules.ts';
@@ -81,6 +82,8 @@ export function hazardPlacement(
   seed: string,
   stage: number,
 ): HazardPlacement | undefined {
+  if (level.area === 'reclamation') return;
+  stage = formerStage(stage);
   if (level.boss || level.freight || stage === 0) return;
   const kinds: HazardKind[] = level.added
     ? ([['lift'], ['crusher'], ['lift'], ['crumble']][Math.floor(stage / 4)] as HazardKind[])
