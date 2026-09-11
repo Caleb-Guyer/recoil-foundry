@@ -26,6 +26,20 @@ Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, s
 
 Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, Scattershot widens the muzzle, and Burst fire cycles a bolt and three recessed chambers. These parts combine on the same weapon. Banked rounds leave short mint trails along their actual bounce paths; piercing rounds leave thin pale-blue streaks. Combined rounds keep both cues. Screen-shake settings also reduce the weapon animation and muzzle flash. These visual changes preserve the gun’s stats.
 
+## Overtime
+
+After clearing the Interceptor's arena in an ordinary run, two exits open. The ground door, **EXTRACT**, leads into the usual escape. Jump up the two suspended steps to **OVERTIME** to keep your exact gun, health, kills, and elapsed time for a second twenty-room lap. There is no entry heal. This is one optional second lap; its final boss leads to extraction.
+
+Overtime uses its own repeatable layout and roster seed. Ground attackers mix Chargers, Hoppers and Borers; aerial threats mix Flyers, Skimmers and Sifters. Rooms have more elites and extra reinforcements, with a 4.5-second deadline before the second wave. Occupied entrances wait or relocate and keep their full warning. Ordinary gunfire becomes faster and more damaging as the lap progresses.
+
+Bosses have health appropriate for an assembled build, start with later-phase attacks, and have shorter downtime between attacks. At nine seconds or 65% health, a separate wave of three flying supports receives the normal entrance warning. Three-phase bosses reach their final phase at half health. The Interceptor starts using its expanded arsenal immediately. Aim locks, attack tells, and spawn grace retain their usual duration.
+
+Each of the first nineteen rooms gives another legal upgrade pick and the usual 12 health. Paths and prerequisites still apply. Once every legal upgrade has been taken, the reward becomes **Field repair**: 24 health and passage to the next room. Repairs never add duplicate upgrades or change the gun. Optional challenge detours belong to the first lap. Continue preserves the Overtime room, build, repairs, and total run time; its HUD uses a compact **OT** prefix and the result counts both laps.
+
+Daily challenges retain a fixed twenty-room finish and do not offer Overtime. Their current ruleset and records are unaffected.
+
+[Test Overtime](https://caleb-guyer.github.io/recoil-foundry/?test=overtime) starts the second lap with full health and a nineteen-upgrade gun. Add `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` to test a later area with its earned upgrade count. These tests preserve saves, Daily records, and Practice unlocks. Press **R** to restart the test.
+
 ## Daily run
 
 Choose **Daily run** on the title screen for a shared twenty-room challenge. A new challenge starts at midnight UTC. Players taking the same route get the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first nineteen rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 12-health recovery. Optional detours also give exactly one predetermined bonus card, without healing. Choosing a detour can change later upgrades because your build changes. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.

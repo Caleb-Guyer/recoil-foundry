@@ -41,7 +41,7 @@ function visible(g: Game, from: Vec, target = g.player.position) {
 
 function beginFlak(g: Game, e: Enemy) {
   e.attack = 'flak';
-  e.phase = e.hp < e.maxHp * 0.5 ? 1 : 0;
+  e.phase = g.overtime || e.hp < e.maxHp * 0.5 ? 1 : 0;
   e.state = 'windup';
   e.timer = FLAK_TELL;
   e.aim = direction(bossMuzzle(e), g.player.position);

@@ -89,8 +89,8 @@ export type EnemyState =
   | 'transition'
   | 'followup'
   | 'return';
-export const bossPhase = (hp: number, max: number) =>
-  hp > (max * 2) / 3 ? 0 : hp > max / 3 ? 1 : 2;
+export const bossPhase = (hp: number, max: number, overtime = false) =>
+  overtime ? (hp > max / 2 ? 1 : 2) : hp > (max * 2) / 3 ? 0 : hp > max / 3 ? 1 : 2;
 export function bossAttack(phase: number, count: number): Attack {
   const cycle: Attack[] =
     phase === 0

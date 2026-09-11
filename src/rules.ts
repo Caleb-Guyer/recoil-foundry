@@ -311,7 +311,13 @@ export const MODS = [
     mark: 'parallax',
   },
 ] as const;
-export type Mod = (typeof MODS)[number];
+export const REPAIR_REWARD = {
+  id: 'repair',
+  name: 'Field repair',
+  description: 'Build complete. Restore 24 health and keep going.',
+  mark: 'heal',
+} as const;
+export type Mod = (typeof MODS)[number] | typeof REPAIR_REWARD;
 export type BuildPath = 'bullet-hell' | 'precision' | 'demolition';
 export const PATH_NAMES: Record<BuildPath, string> = {
   'bullet-hell': 'Bullet hell',
@@ -584,6 +590,7 @@ export interface Checkpoint {
   detour?: true;
   detours?: number[];
   missedUpgrades?: number;
+  overtime?: { baseMods: number; repairs: number };
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
@@ -601,6 +608,24 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     Array.isArray(d.mods) &&
     d.mods.length === 8;
   const completed = d.detours ?? [];
+  const overtime = d.overtime;
+  const validOvertime =
+    overtime === undefined ||
+    (d.version === 5 &&
+      !!overtime &&
+      typeof overtime === 'object' &&
+      Array.isArray(completed) &&
+      Number.isInteger(overtime.baseMods) &&
+      overtime.baseMods === STAGES - 1 + completed.length - missed &&
+      Number.isInteger(overtime.repairs) &&
+      overtime.repairs >= 0 &&
+      overtime.repairs <= d.stage &&
+      Array.isArray(d.mods) &&
+      d.mods.length + overtime.repairs === overtime.baseMods + d.stage &&
+      d.detour === undefined &&
+      typeof d.seed === 'string' &&
+      !/^RF-D\d+-/.test(d.seed) &&
+      (overtime.repairs === 0 || (validBuild(d.mods) && availableMods(d.mods).length === 0)));
   const validDetours =
     Array.isArray(completed) &&
     completed.length <= 4 &&
@@ -610,7 +635,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         area >= 0 &&
         area < (legacy || previous ? 4 : 5) &&
         (legacy || previous || area !== 3) &&
-        area * rooms + rooms - 2 < d.stage &&
+        (!!overtime || area * rooms + rooms - 2 < d.stage) &&
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
@@ -636,7 +661,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     Number.isFinite(d.elapsed) &&
     d.elapsed >= 0 &&
     validDetours &&
-    ((d.detour === undefined && d.detours === undefined) ||
+    validOvertime &&
+    (!!overtime ||
+      (d.detour === undefined && d.detours === undefined) ||
       d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length - missed) &&
     (d.detour === undefined ||
       (d.detour === true &&
@@ -647,7 +674,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     (d.escape === undefined ||
       (d.escape === true &&
         (d.stage === stages - 1 || oldEscape) &&
-        (d.mods.length === stages - 1 + completed.length - missed ||
+        (!!overtime ||
+          d.mods.length === stages - 1 + completed.length - missed ||
           (oldEscape && completed.length === 0))));
   if (!valid) return null;
   if (!legacy && !previous) return d;

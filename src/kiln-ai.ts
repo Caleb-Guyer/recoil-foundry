@@ -362,7 +362,7 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
   const above = g.player.position.y < e.body.position.y - 155;
   let plans: KilnArc[] = [];
   if (!above && e.timer <= 0 && grounded(g, e)) {
-    e.phase = e.hp < e.maxHp / 2 ? 1 : 0;
+    e.phase = g.overtime || e.hp < e.maxHp / 2 ? 1 : 0;
     plans = planVolley(g, e);
   }
   const sheltered =
@@ -371,7 +371,7 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
         Math.abs(plans[0].impact.x - plans[0].to.x) > 65),
     counter = above || sheltered;
   if (e.timer <= 0 && grounded(g, e) && counter && lane(g, kilnMuzzle(e))) {
-    e.phase = e.hp < e.maxHp / 2 ? 1 : 0;
+    e.phase = g.overtime || e.hp < e.maxHp / 2 ? 1 : 0;
     e.attack = 'flak';
     e.aim = direction(kilnMuzzle(e), g.player.position);
     e.state = 'windup';

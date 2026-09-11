@@ -20,6 +20,7 @@ import {
   scrapperTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
+  overtimeTestFromUrl,
   UPGRADE_TEST_BUILDS,
 } from './practice.ts';
 import type { Encounter } from './practice.ts';
@@ -112,6 +113,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  overtimeTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??
   scrapperTestFromUrl(entryUrl) ??
@@ -136,6 +138,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test Reclamation Works <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.overtime)
+    $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -290,7 +294,7 @@ game.onCheckpoint = (s) => {
 };
 game.onSound = (kind) => sound.play(kind);
 game.onBossDefeated = (kind) => {
-  const victory = loadEncounters([{ kind, seed: game.seed }])[0];
+  const victory = loadEncounters([{ kind, seed: game.layoutSeed }])[0];
   if (!victory || encounters.some((record) => record.kind === kind)) return;
   encounters.push(victory);
   write(VICTORIES_KEY, encounters);
@@ -298,7 +302,7 @@ game.onBossDefeated = (kind) => {
 };
 game.onChange = () => {
   updateMusic();
-  const room = game.seed + ':' + game.stage + ':' + game.level.id;
+  const room = game.layoutSeed + ':' + game.stage + ':' + game.level.id;
   if (room !== shownRoom) {
     renderer.reset();
     shownRoom = room;
@@ -308,6 +312,7 @@ game.onChange = () => {
   $('stage').textContent = game.practice
     ? 'PRACTICE'
     : (game.testRun ? 'TEST · ' : activeDaily ? 'DAILY · ' : '') +
+      (game.overtime ? 'OT · ' : '') +
       (game.escape
         ? 'ESCAPE'
         : game.detour
@@ -437,13 +442,18 @@ function showDialog(kind: string) {
     content.innerHTML =
       '<p class="eyebrow">' +
       (activeDaily ? 'DAILY · ' : '') +
+      (game.overtime ? 'OVERTIME · ' : '') +
       (game.detour
         ? 'BONUS UPGRADE · NO HEALING'
         : game.enteringDetour
           ? 'ROOM CLEAR · CHALLENGE NEXT'
           : 'ROOM CLEAR') +
       '</p><h2 id="dialog-title">' +
-      (singleUpgrade ? 'Next upgrade.' : 'Make it kick.') +
+      (game.offers[0]?.id === 'repair'
+        ? 'Keep going.'
+        : singleUpgrade
+          ? 'Next upgrade.'
+          : 'Make it kick.') +
       '</h2><div class="choices">' +
       game.offers
         .map(
@@ -509,14 +519,16 @@ function showDialog(kind: string) {
         ? 'DAILY · ' + activeDaily.date
         : win
           ? 'ALL ' +
-            STAGES +
+            (game.overtime ? STAGES * 2 : STAGES) +
             ' ROOMS' +
             (game.detours.length ? ' · ' + game.detours.length + ' CHALLENGES' : '')
           : game.detour
             ? 'CHALLENGE'
-            : 'ROOM ' + String(game.stage + 1).padStart(2, '0')) +
+            : (game.overtime ? 'OVERTIME · ' : '') +
+              'ROOM ' +
+              String(game.stage + 1).padStart(2, '0')) +
       '</p><h2 id="dialog-title">' +
-      (win ? 'Clean escape.' : 'One more run?') +
+      (win ? (game.overtime ? 'Overtime complete.' : 'Clean escape.') : 'One more run?') +
       '</h2><p class="result-line">' +
       (activeDaily ? formatDailyTime(game.elapsed * 100) : formatTime(game.elapsed)) +
       ' <span>·</span> ' +
@@ -600,9 +612,13 @@ function showDialog(kind: string) {
             ? 'Reach the extraction lift.'
             : game.detour
               ? 'Survive for an extra upgrade, without a health refill.'
-              : game.canDetour
-                ? 'After clearing, the upper door offers an optional challenge.'
-                : 'Clear the room, then leave through the right door.') +
+              : game.canOvertime
+                ? 'Upper door: Overtime with your build. Ground door: extract.'
+                : game.overtime
+                  ? 'Second lap. Clear all twenty rooms, then extract.'
+                  : game.canDetour
+                    ? 'After clearing, the upper door offers an optional challenge.'
+                    : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun' +

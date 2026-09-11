@@ -93,7 +93,18 @@ export class ReinforcementSystem {
   }
   reset(level: Level) {
     this.clear();
-    const [opening, final] = splitWaves(level, this.game.roomSeed, this.game.stage);
+    const g = this.game;
+    const [opening, final] =
+      g.overtime && level.boss
+        ? [level.spawns.slice(0, 1), level.spawns.slice(1)]
+        : splitWaves(level, g.roomSeed, g.overtime ? Math.max(8, g.stage) : g.stage);
+    if (g.overtime && !level.boss && !level.freight) {
+      // Reuse a few opening anchors in the later wave. The normal occupancy
+      // checks wait or relocate before opening a door through a living body.
+      final.push(
+        ...opening.slice(0, 3).map(({ elite: _elite, squad: _squad, ...s }) => ({ ...s })),
+      );
+    }
     this.openingCount = opening.length;
     const random = seeded(this.game.roomSeed + ':reinforcement-timers:' + this.game.stage);
     this.doors = final.map((spawn) => ({
@@ -150,7 +161,7 @@ export class ReinforcementSystem {
   }
   update(dt: number) {
     const g = this.game;
-    if (g.mode !== 'playing' || g.escape || g.level.boss) return;
+    if (g.mode !== 'playing' || g.escape || (g.level.boss && !g.overtime)) return;
     if (this.phase === 'opening') {
       if (g.level.freight) return;
       this.openingTime += dt;
@@ -161,7 +172,9 @@ export class ReinforcementSystem {
           : Math.ceil(this.openingCount / 2);
       if (
         g.enemies.length === 0 ||
-        this.openingTime >= reinforcementDeadline(g.stage) ||
+        this.openingTime >=
+          (g.overtime ? (g.level.boss ? 9 : 4.5) : reinforcementDeadline(g.stage)) ||
+        (g.overtime && g.level.boss && g.enemies.some((e) => e.hp < e.maxHp * 0.65)) ||
         ((g.stage >= 1 || g.detour) && this.openingCount >= 2 && g.enemies.length <= overlap)
       ) {
         this.phase = 'warning';

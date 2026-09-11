@@ -1256,6 +1256,11 @@ export class Renderer {
     c.fillStyle = g.clear ? '#9bd9c2' : '#414e51';
     c.fillRect(x - 36, y - 111, 3, 111);
     c.fillRect(x + 33, y - 111, 3, 111);
+    if (g.stage === 19 && !g.practice) {
+      c.font = '9px monospace';
+      c.textAlign = 'center';
+      c.fillText('EXTRACT', x, y - 124);
+    }
     if (g.clear) {
       c.globalAlpha = 0.7 + Math.sin(this.clock * 3) * 0.2;
       this.line({ x: x - 10, y: y - 63 }, { x: x + 7, y: y - 52 }, '#b8f0d6', 2);

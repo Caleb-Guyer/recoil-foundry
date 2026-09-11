@@ -42,8 +42,8 @@ export function coolingAngles(e: Enemy): number[] {
 export function updateCoolingEnemy(g: Game, e: Enemy) {
   const boss = e.kind === 'condenser';
   Matter.Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
-  if (boss && bossPhase(e.hp, e.maxHp) > e.phase) {
-    e.phase = bossPhase(e.hp, e.maxHp);
+  if (boss && bossPhase(e.hp, e.maxHp, !!g.overtime) > e.phase) {
+    e.phase = bossPhase(e.hp, e.maxHp, !!g.overtime);
     e.state = 'transition';
     e.timer = 0.75;
     e.attacks = 0;

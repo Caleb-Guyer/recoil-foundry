@@ -1,4 +1,5 @@
 import { dodgePilot } from './combat-pilot.ts';
+import { overtimeTestFromUrl } from '../src/practice.ts';
 import { freightPilot } from './freight-pilot.ts';
 import { FREIGHT } from '../src/freight-layout.ts';
 import test from 'node:test';
@@ -339,7 +340,8 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
 // Keep representative builds covering each path as the route expands.
 // Only offers are scripted: every upgrade is earned through an actual room clear.
 // New builds below exercise every new mechanic. Weighted pool/retry coverage lives in build-paths and daily.
-for (const { seed, pressSpacing, pathMods, rewards } of [
+for (const { seed, pressSpacing, pathMods, rewards, overtimeRun } of [
+  { seed: 'OVERTIME-40', pressSpacing: 240, pathMods: ['deadeye', 'execute'], overtimeRun: true },
   {
     seed: 'path-run-65',
     pressSpacing: 160,
@@ -519,6 +521,8 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
   test(`combat reaches extraction: ${seed} ${pathMods[0]}${pathMods.length > 4 ? ' expanded build' : ''}`, () => {
     const g = new Game();
     g.start(seed);
+    if (overtimeRun)
+      g.startTest(overtimeTestFromUrl(new URL('https://example.com/?test=overtime'))!);
     const extendedRewards = rewards && [...rewards];
     if (extendedRewards) {
       for (const id of [
@@ -759,6 +763,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         }
       }
       if (
+        (e && g.overtime && g.enemies.some((enemy) => enemy.kind === 'kiln')) ||
         (e && ['borer', 'sifter'].includes(e.kind) && distance(g.lineEnd(p, ep), ep) < 1) ||
         e?.kind === 'sorter' ||
         e?.kind === 'boss' ||
@@ -832,7 +837,8 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
         e?.kind !== 'interceptor' &&
         e?.kind !== 'press' &&
         e?.kind !== 'loader' &&
-        e?.kind !== 'crane'
+        e?.kind !== 'crane' &&
+        !(g.overtime && g.enemies.some((enemy) => enemy.kind === 'kiln'))
       ) {
         const threat = g.shots.find((s) => {
           if (s.friendly) return false;
@@ -866,12 +872,12 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
           move = threat.pos.x < p.x ? 1 : -1;
         }
       }
-      if (g.clear && g.canDetour && p.x > 1700 && p.y < 442) {
+      if (g.clear && g.canBranch && p.x > 1700 && p.y < 442) {
         const vy = g.player.velocity.y;
         const landingFrames = (-vy + Math.sqrt(vy * vy + 2 * 0.278 * (442 - p.y))) / 0.278;
         if (p.x + g.player.velocity.x * landingFrames > 1880) takingLowerRoute = true;
       }
-      if (g.clear && g.canDetour && takingLowerRoute) {
+      if (g.clear && g.canBranch && takingLowerRoute) {
         // These runs verify the direct route. Land before the fork, then
         // walk below the steps instead of accidentally selecting the upper door.
         if (g.grounded && p.y > 690) directExitReady = true;
@@ -917,7 +923,7 @@ for (const { seed, pressSpacing, pathMods, rewards } of [
     );
     assert(escapeSeen, 'The run bypassed the escape route');
     assert.equal(g.stage, STAGES - 1);
-    assert.equal(g.mods.length, STAGES - 1);
+    assert.equal(g.mods.length + (g.overtime?.repairs ?? 0), STAGES - 1 + (overtimeRun ? 19 : 0));
     assert(g.mods.includes(pathMods[0]));
     for (const id of pathMods) assert(g.mods.includes(id), `Missing exercised upgrade: ${id}`);
     if (pathMods[0] === 'deadeye') assert(g.mods.includes('execute'));

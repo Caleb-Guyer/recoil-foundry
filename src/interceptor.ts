@@ -158,7 +158,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     x: 0,
     y: -e.body.mass * (e.state === 'airborne' ? 0.00075 : 0.001),
   });
-  const phase = bossPhase(e.hp, e.maxHp);
+  const phase = bossPhase(e.hp, e.maxHp, !!g.overtime);
   if (phase > e.phase) {
     clearArsenal(g, e);
     e.phase = phase;

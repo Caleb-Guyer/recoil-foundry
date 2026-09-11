@@ -91,7 +91,7 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
     p = e.body.position;
   Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
   rig.pulse = Math.max(0, rig.pulse - dt);
-  const phase = bossPhase(e.hp, e.maxHp);
+  const phase = bossPhase(e.hp, e.maxHp, !!g.overtime);
   if (phase > e.phase) {
     e.phase = phase;
     e.state = 'transition';

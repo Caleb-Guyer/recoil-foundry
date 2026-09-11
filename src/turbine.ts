@@ -76,7 +76,7 @@ function recover(g: Game, e: Enemy) {
 export function updateTurbine(g: Game, e: Enemy, dt: number) {
   const rig = e.turbine!;
   Matter.Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
-  const phase = bossPhase(e.hp, e.maxHp);
+  const phase = bossPhase(e.hp, e.maxHp, !!g.overtime);
   if (phase > e.phase) {
     e.phase = phase;
     e.state = 'transition';

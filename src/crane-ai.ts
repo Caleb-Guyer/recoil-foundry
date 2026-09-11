@@ -336,7 +336,7 @@ export function updateCrane(g: Game, e: Enemy) {
       e.attack = 'flak';
       e.state = 'windup';
       e.timer = FLAK_TELL;
-      e.phase = e.hp < e.maxHp / 2 ? 1 : 0;
+      e.phase = g.overtime || e.hp < e.maxHp / 2 ? 1 : 0;
       e.aim = direction(bossMuzzle(e), g.player.position);
       g.onSound('lock');
     }

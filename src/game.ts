@@ -1,4 +1,5 @@
 import { MagnetSystem } from './magnets.ts';
+import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
@@ -28,6 +29,7 @@ import {
   STAGES,
   areaIndex,
   ROOM_HEAL,
+  REPAIR_REWARD,
   segmentBox,
   isDetourStage,
 } from './rules.ts';
@@ -211,6 +213,7 @@ export class Game {
   practice: Encounter | null = null;
   seed = '';
   stage = 0;
+  overtime: Checkpoint['overtime'] | null = null;
   missedUpgrades = 0;
   testRun: Checkpoint | null = null;
   detour = false;
@@ -220,6 +223,7 @@ export class Game {
   get canDetour() {
     return (
       !this.practice &&
+      !this.overtime &&
       !this.escape &&
       !this.detour &&
       isDetourStage(this.stage) &&
@@ -227,7 +231,23 @@ export class Game {
     );
   }
   get roomSeed() {
-    return this.seed + (this.detour ? ':detour:' + this.stage : '');
+    return this.layoutSeed + (this.detour ? ':detour:' + this.stage : '');
+  }
+  get layoutSeed() {
+    return this.overtime ? overtimeSeed(this.seed) : this.seed;
+  }
+  get canOvertime() {
+    return (
+      !this.practice &&
+      !this.overtime &&
+      !this.escape &&
+      !this.detour &&
+      this.stage === STAGES - 1 &&
+      !dailyFromSeed(this.seed)
+    );
+  }
+  get canBranch() {
+    return this.canDetour || this.canOvertime;
   }
   hp = 100;
   mods: string[] = [];
@@ -304,6 +324,7 @@ export class Game {
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.stage = save?.stage ?? 0;
+    this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
     this.missedUpgrades = save?.missedUpgrades ?? 0;
     this.detour = !practice && save?.detour === true;
     this.detours = !practice ? [...(save?.detours ?? [])] : [];
@@ -336,6 +357,7 @@ export class Game {
       ...(this.escape ? { escape: true as const } : {}),
       ...(this.detour ? { detour: true as const } : {}),
       ...(this.detours.length ? { detours: [...this.detours] } : {}),
+      ...(this.overtime ? { overtime: { ...this.overtime } } : {}),
     });
   }
   loadRoom(escapeRoom = false) {
@@ -395,14 +417,16 @@ export class Game {
         }
       : this.detour
         ? getDetour(this.seed, this.stage)
-        : getLevel(
-            this.seed,
-            this.stage,
-            this.practice?.kind === 'condenser' ? 'condenser' : undefined,
-            this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
-              ? this.practice.kind
-              : undefined,
-          );
+        : this.overtime
+          ? getOvertimeLevel(this.seed, this.stage)
+          : getLevel(
+              this.seed,
+              this.stage,
+              this.practice?.kind === 'condenser' ? 'condenser' : undefined,
+              this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
+                ? this.practice.kind
+                : undefined,
+            );
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
     wall(this.worldWidth + 30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -438,7 +462,7 @@ export class Game {
       this.freight.reset();
     } else {
       this.hazards.reset(this.level, this.roomSeed, this.stage);
-      if (!this.detour) this.breaches.reset(this.level, this.seed, this.stage);
+      if (!this.detour) this.breaches.reset(this.level, this.layoutSeed, this.stage);
       this.props.reset(this.level);
       this.cargo.reset();
       this.conveyors.reset();
@@ -453,8 +477,25 @@ export class Game {
     this.onSound('evacuate');
     this.onChange();
   }
+  startOvertime() {
+    if (
+      !this.canOvertime ||
+      !this.clear ||
+      this.enemies.length ||
+      this.waves.pending ||
+      this.mode !== 'playing'
+    )
+      return false;
+    this.overtime = { baseMods: this.mods.length, repairs: 0 };
+    this.stage = 0;
+    this.loadRoom();
+    this.save();
+    this.onSound('evacuate');
+    this.onChange();
+    return true;
+  }
   extendDetourSteps() {
-    if (!this.clear || !this.canDetour || this.detourStepsReady) return;
+    if (!this.clear || !this.canBranch || this.detourStepsReady) return;
     // Never materialize a step through the player or a loose prop.
     for (const s of DETOUR_STEPS)
       if (
@@ -552,7 +593,10 @@ export class Game {
     if (this.enemies.length >= 14) return;
     const { w, h } = ENEMY_STATS[kind];
     const hp = Math.ceil(
-      enemyHealth(kind, this.stage, elite) * (this.detour && !isBoss(kind) ? DETOUR_HEALTH : 1),
+      (this.overtime
+        ? overtimeHealth(kind, this.stage, elite)
+        : enemyHealth(kind, this.stage, elite)) *
+        (this.detour && !isBoss(kind) ? DETOUR_HEALTH : 1),
     );
     const body =
       kind === 'flyer'
@@ -580,7 +624,7 @@ export class Game {
       timer: attackDelay ?? (isBoss(kind) ? 0.55 : 1.1 + this.rng()),
       flash: 0,
       spawn: 0.65,
-      phase: 0,
+      phase: this.overtime && isBoss(kind) ? 1 : 0,
       aim: { x: -1, y: 0 },
       state: 'idle',
       target: { x, y },
@@ -592,6 +636,7 @@ export class Game {
     if (kind === 'kiln') enemy.kiln = createKiln();
     if (kind === 'turbine') enemy.turbine = createTurbine();
     if (kind === 'interceptor') enemy.interceptor = createInterceptor();
+    if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
     if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
   }
@@ -767,14 +812,15 @@ export class Game {
     this.extendDetourSteps();
     if (
       this.clear &&
-      this.canDetour &&
+      this.canBranch &&
       this.time - this.clearAt > 0.4 &&
       this.grounded &&
       this.player.position.x > DETOUR_DOOR.x - 24 &&
       this.player.position.x < DETOUR_DOOR.x + 40 &&
       Math.abs(this.player.position.y - (DETOUR_DOOR.floor - 18)) < 8
     ) {
-      this.openReward(true);
+      if (this.canOvertime) this.startOvertime();
+      else this.openReward(true);
       return;
     }
     if (
@@ -1021,7 +1067,12 @@ export class Game {
     e.spawn = Math.max(0, e.spawn - dt);
     if (e.spawn > 0) return;
     if (this.ballistics.pinned(e)) return;
-    e.timer -= dt;
+    // Shorten downtime only. Every marked attack and spawn keeps its full tell.
+    e.timer -=
+      dt *
+      (this.overtime && ((e.state === 'idle' && e.timer > 0.5) || e.state === 'recover')
+        ? 1.12
+        : 1);
     const p = e.body.position,
       d = direction(p, this.player.position),
       dist = distance(p, this.player.position);
@@ -1453,7 +1504,7 @@ export class Game {
     const p = e.body.position,
       d = direction(p, this.player.position);
     Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
-    const phase = bossPhase(e.hp, e.maxHp);
+    const phase = bossPhase(e.hp, e.maxHp, !!this.overtime);
     if (phase > e.phase) {
       e.phase = phase;
       e.state = 'transition';
@@ -1500,8 +1551,14 @@ export class Game {
   enemyShot(
     e: Enemy,
     a: number,
-    speed = [8, 8.9, 9.7, 9.6, 11.2][areaIndex(this.stage)],
-    damage = e.kind === 'boss' ? 22 : [14, 16, 18, 20, 22][areaIndex(this.stage)],
+    speed = (this.overtime ? [10.5, 11, 11.5, 12, 12.5] : [8, 8.9, 9.7, 9.6, 11.2])[
+      areaIndex(this.stage)
+    ],
+    damage = this.overtime
+      ? 22 + areaIndex(this.stage)
+      : e.kind === 'boss'
+        ? 22
+        : [14, 16, 18, 20, 22][areaIndex(this.stage)],
     origin: Vec = squadGunOrigin(e),
     blade = false,
   ) {
@@ -1924,8 +1981,9 @@ export class Game {
     this.offers = rewardMods(
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
-      seeded(this.seed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage),
+      seeded(this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage),
     );
+    if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
     this.rewardTaken = false;
     this.setMode('upgrade');
   }
@@ -1935,19 +1993,21 @@ export class Game {
       this.mode !== 'upgrade' ||
       this.rewardTaken ||
       !this.offers.some((m) => m.id === id) ||
-      !availableMods(this.mods).some((m) => m.id === id)
+      (!(id === 'repair' && this.overtime && availableMods(this.mods).length === 0) &&
+        !availableMods(this.mods).some((m) => m.id === id))
     )
       return;
     if (this.enteringDetour && !this.canDetour) return;
     this.rewardTaken = true;
-    this.mods.push(id);
+    if (id === 'repair' && this.overtime) this.overtime.repairs++;
+    else this.mods.push(id);
     this.gun = getGun(this.mods);
     if (this.detour) {
       this.detours.push(areaIndex(this.stage));
       this.detour = false;
       this.stage++;
     } else {
-      this.hp = Math.min(100, this.hp + ROOM_HEAL);
+      this.hp = Math.min(100, this.hp + (id === 'repair' ? 24 : ROOM_HEAL));
       if (this.enteringDetour) this.detour = true;
       else this.stage++;
     }

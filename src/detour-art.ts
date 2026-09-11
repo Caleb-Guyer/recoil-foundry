@@ -2,7 +2,7 @@ import type { Game } from './game.ts';
 import { DETOUR_DOOR } from './detours.ts';
 
 export function drawDetourDoor(c: CanvasRenderingContext2D, g: Game) {
-  if (!g.canDetour) return;
+  if (!g.canBranch) return;
   const { x, floor } = DETOUR_DOOR;
   const color = g.clear ? '#e5b577' : '#73644f';
   c.save();
@@ -33,10 +33,10 @@ export function drawDetourDoor(c: CanvasRenderingContext2D, g: Game) {
   c.fillRect(x - 1, floor - 68, 2, 2);
   c.font = '9px monospace';
   c.textAlign = 'center';
-  c.fillText('CHALLENGE', x, floor - 124);
+  c.fillText(g.canOvertime ? 'OVERTIME' : 'CHALLENGE', x, floor - 124);
   if (g.clear) {
     c.font = '12px monospace';
-    c.fillText('+1', x - 7, floor - 25);
+    c.fillText(g.canOvertime ? 'II' : '+1', x - 7, floor - 25);
     c.beginPath();
     c.moveTo(x + 13, floor - 36);
     c.lineTo(x + 20, floor - 29);

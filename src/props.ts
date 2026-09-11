@@ -166,7 +166,7 @@ export class PropSystem {
     this.items = [];
     this.impacts = [];
     this.velocities.clear();
-    for (const p of propPlacements(level, this.game.seed)) {
+    for (const p of propPlacements(level, this.game.layoutSeed)) {
       const { w, h } = PROP_STATS[p.kind];
       const blocked = this.game.hazards.items.some(({ placement: hazard }) => {
         const top = hazard.y - (hazard.kind === 'lift' ? hazard.travel : 0);

@@ -4,6 +4,7 @@ import { coolingAngles } from '../src/cooling.ts';
 import { turbineRelease } from '../src/turbine.ts';
 import { interceptorAngles, interceptorSpeed, interceptorOrigin } from '../src/interceptor.ts';
 import { weaponAngles } from '../src/interceptor-weapons.ts';
+import { kilnMuzzle, kilnPoint } from '../src/kiln-ai.ts';
 import { sorterFan } from '../src/reclamation.ts';
 import { areaIndex, clamp, distance, direction } from '../src/rules.ts';
 
@@ -44,14 +45,22 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
     const sniper =
       enemy.kind === 'sniper' && !enemy.elite && enemy.state === 'windup' && enemy.timer <= 0.35;
     if (!flak && !ordinary && !sniper) continue;
-    const origin = flak ? bossMuzzle(enemy) : enemy.body.position;
+    const origin = flak
+      ? enemy.kiln
+        ? kilnMuzzle(enemy)
+        : bossMuzzle(enemy)
+      : enemy.body.position;
     const base = Math.atan2(enemy.aim.y, enemy.aim.x);
     const angles = flak
       ? flakAngles(base, enemy.phase === 1)
       : enemy.kind === 'flyer'
         ? [-1, 0, 1].map((i) => base + i * 0.18)
         : [base];
-    const speed = flak ? 10 : sniper ? 18 : [8, 8.9, 9.7, 9.6, 11.2][areaIndex(g.stage)];
+    const speed = flak
+      ? 10
+      : sniper
+        ? 18
+        : (g.overtime ? [10.5, 11, 11.5, 12, 12.5] : [8, 8.9, 9.7, 9.6, 11.2])[areaIndex(g.stage)];
     for (const a of angles) {
       const muzzle = sniper ? 38 : 26;
       const start = { x: origin.x + Math.cos(a) * muzzle, y: origin.y + Math.sin(a) * muzzle };
@@ -135,6 +144,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
     }
   } else if (
     e.kind !== 'sorter' &&
+    !e.kiln &&
     (e.state === 'windup' || e.state === 'followup') &&
     e.timer <= 0.35
   ) {
@@ -175,6 +185,13 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
   }
   let best = Infinity,
     result: Partial<Input> = {};
+  const kilns = g.enemies.filter((enemy) => enemy.kiln);
+  const arcs = kilns.flatMap((enemy) => [
+    ...enemy.kiln!.shells.map((shell) => ({ arc: shell.arc, start: shell.t, delay: 0 })),
+    ...(enemy.state === 'windup' && enemy.attack === 'mortar' && enemy.timer <= 0.5
+      ? enemy.kiln!.plans.map((arc, i) => ({ arc, start: 0, delay: enemy.timer + i * 0.18 }))
+      : []),
+  ]);
   for (const move of [-1, 0, 1])
     for (const jump of g.grounded ? [false, true] : [false])
       for (const fire of [true, false])
@@ -307,6 +324,23 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
                 distance(g.lineEnd(charge.pos, { x, y }), { x, y }) < 1
               )
                 score += 8000 / (frame + 8);
+            // Read the visible mortar curves and hot floor strips as well as
+            // straight bullets when the boiler has supporting enemies.
+            for (const flight of arcs) {
+              const t = flight.start + (frame / 60 - flight.delay) / flight.arc.duration;
+              if (t < 0 || t > flight.arc.fraction) continue;
+              const q = kilnPoint(flight.arc, t);
+              if (Math.abs(q.x - x) < 28 && Math.abs(q.y - y) < 34) score += 2500 / (frame + 8);
+            }
+            for (const kiln of kilns)
+              for (const patch of kiln.kiln!.patches)
+                if (
+                  frame / 60 >= patch.warn &&
+                  frame / 60 < patch.warn + patch.life &&
+                  Math.abs(x - patch.x) < patch.w / 2 + 20 &&
+                  Math.abs(y - (patch.y - 18)) < 22
+                )
+                  score += 2500 / (frame + 8);
             if (e.sorter && e.state === 'windup' && e.attack === 'slam' && e.timer <= 0.75) {
               if (
                 Math.abs(frame / 60 - e.timer) < 0.08 &&

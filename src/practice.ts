@@ -1,5 +1,5 @@
 import { getLevel } from './levels.ts';
-import { bossStage, type Checkpoint } from './rules.ts';
+import { bossStage, availableMods, type Checkpoint } from './rules.ts';
 
 // Encounter-only records cannot prove a win; start a separate victory history.
 export const VICTORIES_KEY = 'rf-boss-victories-v1';
@@ -126,6 +126,30 @@ export function expandedTestFromUrl(url: URL): Checkpoint | null {
   if (p.getAll('area').length > 1) return null;
   const area = areas.indexOf(p.get('area') ?? 'docks');
   return area < 0 ? null : testCheckpoint('EXPANDED-16', area * 4 + 2);
+}
+
+export function overtimeTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'overtime' ||
+    p.getAll('area').length > 1 ||
+    ['daily', 'dv', 'seed'].some((k) => p.has(k))
+  )
+    return null;
+  const area = ['docks', 'furnace', 'cooling', 'reclamation', 'rooftops'].indexOf(
+    p.get('area') ?? 'docks',
+  );
+  if (area < 0) return null;
+  const save = testCheckpoint('OVERTIME-40', 19);
+  save.stage = area * 4;
+  save.overtime = { baseMods: save.mods.length, repairs: 0 };
+  for (let i = 0; i < save.stage; i++) {
+    const mod = availableMods(save.mods)[0];
+    if (mod) save.mods.push(mod.id);
+    else save.overtime.repairs++;
+  }
+  return save;
 }
 
 export function cargoTestFromUrl(url: URL): Checkpoint | null {
