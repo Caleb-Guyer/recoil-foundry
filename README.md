@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear twenty stages, take optional 
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Forty-nine possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
+You always carry **one gun**. Fifty-one possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -82,7 +82,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=40`). Version 40 adds Cable Yard, Demolition Lane and Suspension Hall; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=41`). Version 41 adds Arc Coil and Daisy Chain; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -147,9 +147,19 @@ Six mechanics and six dedicated follow-ups use the existing firing controls; cha
 | Fuse · Demolition        | Requires Shellshock. Shells stick to their final impact surface or actor, then explode after 0.72 seconds with 40% more blast damage. Attachments follow movement, rotation, and portal travel; destroyed hosts leave their charges at the last position. Bank growth, penetration, Aftershock, and Blast surfing still work. | **Linked fuse:** a detonation ignites attached charges within 140 units through clear space, after 0.06 seconds. Each charge explodes once. |
 | Afterimage · Bullet hell | Requires Crossfire. Every fourth discharge leaves its entire volley at the old firing position. It fires once after 0.42 seconds at 60% damage, including rear rounds and lane geometry. Echoes apply no player recoil, spend no charges, and cannot create more echoes. New cover can obstruct them.                         | **Parallax:** the stored volley turns toward your current aim when it fires.                                                                |
 
-[Test all six builds](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades): click **Test new upgrades**, then choose a card. Each starts in room 7 with full health, the mechanic, its follow-up, and a legal six-upgrade build. **R** retries the entrance; **Menu → Test new upgrades** switches builds. Normal saves, Daily records, and earned Practice victories stay intact. The test menu is available only through the explicit test link.
+[Test upgrade builds](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades): click **Test new upgrades**, then choose a card. Each starts in room 7 with full health, the mechanic, its follow-up, and a legal six-upgrade build. **R** retries the entrance; **Menu → Test new upgrades** switches builds. Normal saves, Daily records, and earned Practice victories stay intact. The test menu is available only through the explicit test link.
 
 Transient charge, pin, fuse, and echo state freezes during pauses and impact pauses, and resets on room entry, retry, death, or extraction. Pending effects and projectile counts are bounded. Ordinary checkpoints retain their builds when the upgrade pool changes.
+
+## Arc Coil
+
+**Arc Coil** is a shared upgrade with 10% lighter rounds. Each unblocked primary hit charges that enemy for four seconds; the third hit releases an arc to the nearest visible enemy or metal prop within 240 units, including when that hit kills the charged enemy. The first arc deals 40% of the three rounds' combined damage. Brief sparks mark the hits without another meter or control.
+
+**Daisy Chain** requires Arc Coil and adds two more jumps. Each jump retains 70% of the previous arc's damage, and a discharge visits each target at most once. Crates, cover, hanging cargo and fuel can conduct. Fuel gains a short ignition fuse; its usual physical explosion remains dangerous. Electricity damages cargo without cutting its cable. Terrain, machinery and intervening props block the path; a conducting prop can relay from its own body. Directional shields stop the chain and boss armor retains its normal protection.
+
+Fragments, echoes, reflected bullets and secondary electrical damage cannot charge enemies or generate recursive arcs. Electrical kills still grant Bloodwork healing. Pause and hitstop preserve charges; room changes and retries clear them. Enemy portal travel carries the charge to its new position, where the next discharge checks nearby targets again.
+
+[Test Arc Coil](https://caleb-guyer.github.io/recoil-foundry/?test=arc): click **Test Arc Coil** to enter Cable Yard with both upgrades and full health. Hit an enemy three times while another enemy or metal prop is nearby. **R** retries the same room. Add `&build=base` to try Arc Coil without Daisy Chain. These links preserve ordinary saves, Daily records and earned Practice victories.
 
 ## Tether rounds
 

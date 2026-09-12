@@ -23,6 +23,7 @@ import {
   destructionTestFromUrl,
   sapperTestFromUrl,
   tetherTestFromUrl,
+  arcTestFromUrl,
   layoutTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
@@ -122,6 +123,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  arcTestFromUrl(entryUrl) ??
   layoutTestFromUrl(entryUrl) ??
   tetherTestFromUrl(entryUrl) ??
   sapperTestFromUrl(entryUrl) ??
@@ -170,6 +172,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test Tether rounds <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('ROOM47-'))
     $('play').innerHTML = 'Test new layouts <span aria-hidden="true">↗</span>';
+  if (linkedRunTest && entryUrl.searchParams.get('test') === 'arc')
+    $('play').innerHTML = 'Test Arc Coil <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -216,6 +220,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Hit two enemies. Stretch the cable. R to retry.';
   if (linkedRunTest?.seed.startsWith('ROOM47-'))
     $('title-hint').textContent = 'Choose a room. Full health. R to retry.';
+  if (linkedRunTest && entryUrl.searchParams.get('test') === 'arc')
+    $('title-hint').textContent = 'Three hits. Follow the spark. R to retry.';
 }
 function clearInput() {
   keys.clear();
@@ -418,6 +424,8 @@ function modMark(mod: Mod) {
     afterimage: 'M7 13h25v8H7zM17 27h25v8H17zM32 17h10M42 31h7',
     parallax: 'M7 10h19v6H7zM7 32h19v6H7zM26 13l20 11-20 11M40 24h10',
     tether: 'M7 13h10v10H7zM39 26h10v10H39zM17 18q10 20 22 13',
+    'arc-coil': 'M8 24h10l9-15-3 13h9l-9 17 3-13H8M40 17h8v14h-8z',
+    'daisy-chain': 'M5 12h8v8H5zM25 29h8v8h-8zM43 10h8v8h-8zM13 16l8 3-3 5 7 9M33 33l8-7-4-5 6-7',
     snapback: 'M7 13h10v10H7zM39 26h10v10H39zM17 18l7 3M32 27l7 4M24 12l8 6-8 5 8 5-8 7',
     'rail-spike': 'M7 12l14 9M7 36l14-9M7 24h42M23 19h17l9 5-9 5H23M33 9v7M33 32v7',
     orbit: 'M38 13a16 16 0 1 0 5 19M39 9l5 7-8 2M23 20h8v8h-8zM6 18h4M17 38h4',
@@ -767,7 +775,7 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedRunTest?.seed.startsWith('ROOM47-')
+  linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
     ? showDialog('layout-test')
     : linkedRunTest?.seed.startsWith('UPGRADES-') || linkedRunTest?.seed.startsWith('FUSIONS-')
       ? showDialog('upgrade-test')

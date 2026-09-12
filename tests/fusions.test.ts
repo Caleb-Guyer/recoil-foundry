@@ -179,8 +179,9 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   const save: Checkpoint = {
     ...testCheckpoint('OLD-REPAIR', 0),
     mods,
-    stage: mods.length - 19 + 1,
-    overtime: { baseMods: 19, repairs: 1 },
+    stage: mods.length - 23 + 1,
+    detours: [0, 1, 2, 4],
+    overtime: { baseMods: 23, repairs: 1 },
   };
   assert(loadCheckpoint(save));
   const g = new Game();

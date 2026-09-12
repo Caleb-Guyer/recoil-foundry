@@ -344,6 +344,32 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
   {
     seed: 'path-run-65',
     pressSpacing: 220,
+    pathMods: ['arc-coil', 'daisy-chain', 'crossfire'],
+    rewards: [
+      'leech',
+      'airshot',
+      'arc-coil',
+      'crossfire',
+      'rapid',
+      'daisy-chain',
+      'magnum',
+      'scatter',
+      'light',
+      'kick',
+      'burst',
+      'pierce',
+      'backblast',
+      'bloom',
+      'convergence',
+      'redline',
+      'capacitor',
+      'countershot',
+      'reprisal',
+    ],
+  },
+  {
+    seed: 'path-run-65',
+    pressSpacing: 220,
     pathMods: ['tether', 'snapback', 'crossfire'],
     rewards: [
       'leech',
@@ -448,7 +474,33 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       'shockfront',
     ],
   },
-  { seed: 'OVERTIME-40', pressSpacing: 240, pathMods: ['deadeye', 'execute'], overtimeRun: true },
+  {
+    seed: 'OVERTIME-40',
+    pressSpacing: 240,
+    pathMods: ['deadeye', 'execute'],
+    overtimeRun: true,
+    rewards: [
+      'burst',
+      'rail-spike',
+      'deadlock',
+      'countershot',
+      'reprisal',
+      'banker',
+      'backfire',
+      'shatter',
+      'breach',
+      'tether',
+      'snapback',
+      'fold',
+      'rewire',
+      'slingshot',
+      'recall',
+      'homecoming',
+      'arc-coil',
+      'daisy-chain',
+      'repair',
+    ],
+  },
   {
     seed: 'path-run-65',
     pressSpacing: 160,
@@ -655,6 +707,13 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       const openReward = g.openReward.bind(g);
       g.openReward = (enterDetour = false) => {
         openReward(enterDetour);
+        if (extendedRewards[g.stage] === 'repair') {
+          assert.deepEqual(
+            g.offers.map((m) => m.id),
+            ['repair'],
+          );
+          return;
+        }
         const preferred = MODS.find((m) => m.id === extendedRewards[g.stage])!;
         assert(availableMods(g.mods).includes(preferred), 'Scripted offer is not legal');
         g.offers = [preferred, ...g.offers.filter((m) => m !== preferred)].slice(0, 3);
@@ -680,8 +739,10 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     let retreatWaypoint: { x: number; y: number } | undefined;
     let fusionUsed = false;
     let tetherUsed = false;
+    let arcUsed = false;
     g.onSound = (kind) => {
       if (kind === 'tether-link') tetherUsed = true;
+      if (kind === 'arc') arcUsed = true;
     };
     const priority = [
       ...pathMods,
@@ -1103,4 +1164,5 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     assert(g.hp > 0);
     if (fusion) assert(fusionUsed, `The run never used ${fusion}`);
     if (pathMods[0] === 'tether') assert(tetherUsed, 'The run never formed a tether');
+    if (pathMods[0] === 'arc-coil') assert(arcUsed, 'The run never discharged Arc Coil');
   });

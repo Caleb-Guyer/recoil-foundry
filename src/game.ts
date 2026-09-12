@@ -1,5 +1,6 @@
 import { MagnetSystem } from './magnets.ts';
 import { TetherSystem } from './tethers.ts';
+import { ArcCoilSystem } from './arc-coil.ts';
 import { DestructionSystem } from './destruction.ts';
 import { SapperSystem, createSapper } from './sapper.ts';
 import type { SapperRig } from './sapper.ts';
@@ -207,6 +208,7 @@ export class Game {
   destruction = new DestructionSystem(this);
   sappers = new SapperSystem(this);
   tethers = new TetherSystem(this);
+  arcs = new ArcCoilSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -345,6 +347,7 @@ export class Game {
       this.portalRequest = null;
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.arcs.reset();
       this.tethers.reset();
       this.sappers.clear();
       for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
@@ -421,6 +424,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false) {
+    this.arcs.reset();
     this.tethers.reset();
     this.sappers.clear();
     this.destruction.clear();
@@ -619,6 +623,7 @@ export class Game {
     )
       return;
     this.escape.phase = 'extracting';
+    this.arcs.reset();
     this.tethers.reset();
     this.evolutions.reset();
     this.ballistics.reset();
@@ -866,6 +871,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.updateShots(dt);
     if (this.mode !== 'playing') return;
+    this.arcs.update();
     this.breaches.update(dt);
     this.particles = this.particles.filter((p) => {
       p.life -= dt;
@@ -894,6 +900,7 @@ export class Game {
     ) {
       this.clear = true;
       this.clearAt = this.time;
+      this.arcs.reset();
       this.tethers.reset();
       this.sappers.clear();
       this.shots = this.shots.filter((s) => s.friendly);
@@ -1878,6 +1885,8 @@ export class Game {
           this.tethers.hit(e, s);
           if (e.hp <= 0 && this.gun.deathBloom && !s.fragment) this.deathBloom(s, e.body.position);
           this.splitShot(s);
+          this.arcs.hit(e, s);
+          if (this.mode !== 'playing') return;
           if (!e.body.isStatic)
             Body.setVelocity(e.body, {
               x: e.body.velocity.x + s.vel.x * 0.12 * (isBoss(e.kind) ? 0.08 : 1),

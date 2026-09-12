@@ -337,6 +337,18 @@ export const MODS = [
     mark: 'orbit',
   },
   {
+    id: 'arc-coil',
+    name: 'Arc Coil',
+    description: 'Every third hit arcs to a nearby enemy or metal prop. 10% lighter rounds.',
+    mark: 'arc-coil',
+  },
+  {
+    id: 'daisy-chain',
+    name: 'Daisy Chain',
+    description: 'Arcs jump through two more targets. Each jump is 30% weaker.',
+    mark: 'daisy-chain',
+  },
+  {
     id: 'implosion',
     name: 'Implosion',
     description: 'Stuck shells pull nearby enemies and loose debris inward before exploding.',
@@ -390,6 +402,7 @@ export interface RewardContext {
 }
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  'daisy-chain': 'arc-coil',
   snapback: 'tether',
   'blast-surf': 'shellshock',
   aftershock: 'shellshock',
@@ -612,6 +625,9 @@ export function getGun(mods: readonly string[]): Gun {
         g.damage *= 0.75;
         g.pierce += 1;
         break;
+      case 'arc-coil':
+        g.damage *= 0.9;
+        break;
     }
   // Apply spread after Scattershot so acquisition order cannot change the build.
   if (mods.includes('deadeye')) g.spread *= 0.5;
@@ -687,9 +703,13 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       d.detour === undefined &&
       typeof d.seed === 'string' &&
       !/^RF-D\d+-/.test(d.seed) &&
-      // v2.40 saves may already contain repairs before fusions existed.
+      // Older exhausted builds can contain repairs earned before later mods
+      // existed. They may resume and earn those additions on their next clear.
       (overtime.repairs === 0 ||
-        (validBuild(d.mods) && availableMods(d.mods).every((m) => isFusion(m.id)))));
+        (validBuild(d.mods) &&
+          availableMods(d.mods).every(
+            (m) => isFusion(m.id) || m.id === 'arc-coil' || m.id === 'daisy-chain',
+          ))));
   const validDetours =
     Array.isArray(completed) &&
     completed.length <= 4 &&

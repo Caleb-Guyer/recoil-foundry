@@ -311,6 +311,7 @@ export function sapperTestFromUrl(url: URL): Checkpoint | null {
 }
 
 export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
+  'arc-coil': ['arc-coil', 'daisy-chain', 'rapid', 'pierce', 'light', 'leech'],
   tether: ['tether', 'snapback', 'rapid', 'pierce', 'light', 'leech'],
   recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
   capacitor: ['capacitor', 'reserve-cell', 'magnum', 'kick', 'airshot', 'light'],
@@ -351,6 +352,42 @@ export function tetherTestFromUrl(url: URL): Checkpoint | null {
   )
     return null;
   return { ...testCheckpoint('TETHER-46', 6), mods: [...UPGRADE_TEST_BUILDS.tether] };
+}
+
+export function arcTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'arc' ||
+    [
+      'daily',
+      'dv',
+      'seed',
+      'area',
+      'formation',
+      'route',
+      'mode',
+      'layout',
+      'variant',
+      'mirror',
+    ].some((k) => p.has(k)) ||
+    p.getAll('build').length > 1 ||
+    (p.has('build') && !['base', 'chain'].includes(p.get('build')!))
+  )
+    return null;
+  const save = layoutTestFromUrl(new URL('https://test/?test=layouts&layout=cable-yard'))!;
+  save.mods = [
+    'arc-coil',
+    'rapid',
+    'pierce',
+    'light',
+    'leech',
+    'kick',
+    'airshot',
+    'ricochet',
+    p.get('build') === 'base' ? 'countershot' : 'daisy-chain',
+  ];
+  return save;
 }
 
 export function layoutTestFromUrl(url: URL): Checkpoint | null {
