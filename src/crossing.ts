@@ -130,6 +130,16 @@ export class CrossingSystem {
       return;
     }
     if (pinned) {
+      if (actor === g.player) {
+        // Compression is fatal even during the first bumper hit's damage grace.
+        // Otherwise an invulnerable hull can hold the train at the arena wall.
+        g.hp = 0;
+        g.feedback(10, d);
+        g.burst(actor.position, 16, '#f5eee1', 4);
+        g.onSound('train-impact');
+        g.die();
+        return;
+      }
       if (g.time < (car.crushAt.get(actor.id) ?? 0)) return;
       car.crushAt.set(actor.id, g.time + 0.5);
       if (prop) g.props.strike(prop, 180, d);
@@ -206,7 +216,10 @@ export class CrossingSystem {
           near = this.direction > 0 ? a.left : a.right;
         const gap = (near - edge) * this.direction;
         if (
-          a.bottom <= c.top + 0.5 ||
+          // Resting slop at the roof is not a side crush. Matter integrates
+          // this frame's jump after the car moves, so allow a jump clearing it.
+          a.bottom <= c.top + 2 ||
+          a.bottom + actor.velocity.y + 0.3 <= c.top ||
           a.top >= c.bottom - 0.5 ||
           gap > Math.abs(dx) ||
           (actor.position.x - car.body.position.x) * this.direction < 0

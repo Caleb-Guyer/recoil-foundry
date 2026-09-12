@@ -196,27 +196,59 @@ for (const d of [1, -1]) {
     tick(g, 1);
     assert.equal(behind.hp, behind.maxHp);
   });
-  test(`the leading car brakes at a trapped player instead of forcing them through a wall (${d})`, () => {
+  test(`wedging against the arena edge is a lethal crush, including during damage grace (${d})`, () => {
+    for (const invulnerable of [false, true]) {
+      const g = room();
+      quiet(g);
+      pass(g, d === 1 ? 1968 : 32, d);
+      Body.setPosition(g.player, { x: d === 1 ? 1987 : 13, y: 722 });
+      Body.setVelocity(g.player, { x: 0, y: 0 });
+      if (invulnerable) g.hurtAt = g.time;
+      tick(g, 10);
+      assert.equal(g.mode, 'dead');
+      assert.equal(g.hp, 0);
+      assert(g.player.position.x >= 12.7 && g.player.position.x <= 1987.3);
+      assert(
+        Query.collides(g.player, g.crossing.bodies).every((c) => c.depth < 1),
+        'crush must not embed the player',
+      );
+    }
+  });
+  test(`clearing the roof on the next physics step is not a side crush (${d})`, () => {
+    for (const [bottom, vy] of [
+      [637, -2],
+      [642, -8],
+    ]) {
+      const g = room();
+      quiet(g);
+      pass(g, d === 1 ? 1973 : 27, d);
+      Body.setPosition(g.player, { x: d === 1 ? 1987 : 13, y: bottom - 18 });
+      Body.setVelocity(g.player, { x: 0, y: vy });
+      tick(g, 1);
+      assert.equal(g.hp, 100);
+      assert.equal(g.mode, 'playing');
+      assert(g.player.position.y + 18 < CROSSING.top + 1);
+    }
+  });
+  test(`an early jump escapes the closing edge and a clear room stays harmless (${d})`, () => {
     const g = room();
     quiet(g);
-    pass(g, d === 1 ? 1968 : 32, d);
+    pass(g, d === 1 ? 1890 : 110, d);
     Body.setPosition(g.player, { x: d === 1 ? 1987 : 13, y: 722 });
     Body.setVelocity(g.player, { x: 0, y: 0 });
-    tick(g, 100);
-    assert(g.player.position.x >= 12.7 && g.player.position.x <= 1987.3);
-    assert(g.hp >= 76, `continuous crush damage ${g.hp}`);
-    assert(g.crossing.blocked);
-    assert(
-      Query.collides(g.player, g.crossing.bodies).every((c) => c.depth < 1),
-      'player embedded in train ' +
-        JSON.stringify({
-          p: g.player.position,
-          car: g.crossing.cars[0].body.position,
-          hits: Query.collides(g.player, g.crossing.bodies).map((c) => c.depth),
-        }),
-    );
-    tick(g, 50, { jump: true });
-    assert(g.player.position.y < CROSSING.top, 'jump did not release the brake');
+    tick(g, 30, { jump: true });
+    assert.equal(g.hp, 100);
+    assert.equal(g.mode, 'playing');
+    assert(g.player.position.y < CROSSING.top);
+    assert(!g.crossing.blocked);
+    g.startTest(g.testRun!);
+    quiet(g);
+    pass(g, d === 1 ? 1968 : 32, d);
+    g.clear = true;
+    Body.setPosition(g.player, { x: d === 1 ? 1987 : 13, y: 722 });
+    tick(g, 10);
+    assert.notEqual(g.mode, 'dead');
+    assert.equal(g.hp, 100);
   });
 }
 test('cars are real projectile cover and block a portal exit while passing', () => {

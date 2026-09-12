@@ -12,7 +12,8 @@ export function drawCrossing(c: CanvasRenderingContext2D, g: Game, reduced: bool
   for (let x = 20; x < 2000; x += 48) c.fillRect(x, 748, 22, 3);
   for (const x of [50, 420, 820, 1220, 1620, 1950]) {
     c.fillStyle = '#344449';
-    c.fillRect(x - 2, 608, 4, 112);
+    c.fillRect(x - 2, 608, 4, 132);
+    c.fillRect(x - 7, 736, 14, 4);
     c.fillStyle = '#15262c';
     c.fillRect(x - 10, 604, 20, 32);
     const lit = warning && (reduced || Math.floor(g.time * (train.timer < 1 ? 5 : 3)) % 2 === 0);

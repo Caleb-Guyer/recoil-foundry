@@ -791,6 +791,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       loaderDirection = 1,
       loaderReacted = false;
     let retreatWaypoint: { x: number; y: number } | undefined;
+    let settlingGun = false;
     let fusionUsed = false;
     let tetherUsed = false;
     let arcUsed = false;
@@ -876,6 +877,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         takingLowerRoute = false;
         routeStep = 0;
         retreatWaypoint = undefined;
+        settlingGun = false;
         stuck = 0;
         previousX = g.player.position.x;
       }
@@ -1213,6 +1215,20 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
           firing = false;
         }
         if (p.y < 200) firing = false;
+      }
+      // Sustained recoil can keep a rapid build above a covered target forever.
+      // Release until landing before trying the next firing angle.
+      if (
+        g.mods.includes('orbit') &&
+        !g.clear &&
+        !g.level.boss &&
+        g.time - lastProgress > 12 &&
+        p.y < 200
+      )
+        settlingGun = true;
+      if (settlingGun) {
+        firing = false;
+        if (g.grounded || g.clear) settlingGun = false;
       }
       // A charged build must release the trigger long enough to load its rail.
       if (fusion === 'rail-spike' && g.mods.includes('rail-spike') && !lift && !g.clear)

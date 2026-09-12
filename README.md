@@ -46,7 +46,7 @@ Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, S
 
 ## Freight Crossing
 
-At most once per lap, passing cargo cars occasionally cut through the second room of Docks or Reclamation Works. A horn, rising rumble and amber track signals give 2.4 seconds of warning. The two solid cars block shots, carry riders and stacked crates, shove loose props, ignite fuel, and slam enemies at their leading bumpers. Jumping off preserves the train's momentum. Cars brake at a trapped player; escaping never requires a special upgrade.
+At most once per lap, passing cargo cars occasionally cut through the second room of Docks or Reclamation Works. A horn, rising rumble and amber track signals give 2.4 seconds of warning. The two solid cars block shots, carry riders and stacked crates, shove loose props, ignite fuel, and slam enemies at their leading bumpers. Jumping off preserves the train's momentum. Being pinned against solid cover during combat is a lethal crush, including during damage grace from a previous hit. Jump clear before the bumper closes the gap; no special upgrade is needed.
 
 The floor lane, car roofs, and permanent upper catwalk provide different fighting positions. Ordinary jumps reach the upper route from either end. Reclamation uses a larger, tougher roster; selection, rosters and direction repeat in Daily and Overtime. No new trains arrive after the room clears.
 
@@ -108,7 +108,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=44`). Version 44 adds Freight Crossing; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=45`). Version 45 fixes Freight Crossing edge pinning; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
