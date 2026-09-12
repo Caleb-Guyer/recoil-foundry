@@ -70,7 +70,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-11&dv=37`). Version 37 adds destructible terrain; its best times are separate from earlier rulesets. Weak terrain, route, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=38`). Version 38 adds the Sapper; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -333,6 +333,16 @@ New behaviors appear gradually as the run advances:
 
 - **Scrappers** use an articulated claw to lift a loose crate, lock a throw toward your position, and release it after a visible 0.8-second warning. Move after the lock, take cover, or shoot the held crate to break the grip and stun the machine.
 
+## The Sapper
+
+The first Furnace room opens with a lone Sapper; defeat it to bring in the remaining enemies with their usual entrance warning. Later rooms can mix one into the roster, more often on the rooftops, and Overtime can use it throughout the second lap. It replaces an ordinary enemy while preserving elites, coordinated pairs, and rooftop sniper pressure. Boss arenas, freight elevators, detours, and the Harpooner's introduction keep their existing encounters.
+
+Its small mortar arm traces a lob for 0.95 seconds and locks for the final 0.45 seconds. Charges stick to walls, ledges, and movable cover. A shrinking fuse ring, accelerating beeps, and a final flash warn of the blast. At most two charges can exist at once. Shoot a charge to knock it loose and bat it toward enemies; it keeps its remaining fuse and stays dangerous to everyone. Wall-mounted charges bounce outward when hit, so a shot cannot push them through cover.
+
+Explosions damage enemies, ignite fuel, and break weakened terrain within 132 units. Solid cover blocks the blast even when that explosion destroys it. Charges travel through portals with their fuse intact. Destroying or teleporting their host drops them; loose charges obey normal physics. Pauses and hitstop freeze the fuse, while room changes, retries, and death clear it. All warnings appear in the world, with no new controls or combat HUD.
+
+[Test the Sapper](https://caleb-guyer.github.io/recoil-foundry/?test=sapper): click **Test the Sapper** to start its Furnace introduction with full health and four upgrades. Shoot the charges back; **R** restarts the test. Ordinary saves, Daily records, and earned Practice victories stay intact.
+
 ## The Scrapper
 
 Selected early Cooling Works and rooftop rooms can replace one ordinary enemy with a Scrapper. At most one appears in a room, with a nearby crate and clear lifting space. Rooftops select it more often. Existing enemy counts, elites, bosses, and upgrade rewards stay intact. The crate replaces the room's ordinary crate rather than creating an endless supply of ammunition.
@@ -502,6 +512,8 @@ Freight checks cover rare deterministic selection, full departure and door warni
 Scrapper checks cover sparse seeded placement, reserved crate clearance, real grabs in both directions and authored rooms, full aim locks, ordinary-input dodges, counterfire, recovery contact, death cleanup, physical crate impacts against cover, enemies, fuel and the player, blocked pulls, occupied crates, exclusive grips, actual portal travel, pause and hitstop, saved and Daily entrances, and isolated retries. Existing enemy-contact tests include its hull; full combat runs reach extraction through Scrapper rooms with normal health and earned upgrades.
 
 Harpooner checks cover seeded introductions and Overtime rosters, full warnings, movement-only dodges, one active tether, rotated crate catches, fuel arming, cover, shootable winches, blasts, real portal crossings, recoil pulling a machine off a ledge, equal momentum, finite duration, pause, death, and isolated retries. Shared enemy-contact checks also exercise its physical hull against crates and fuel.
+
+Sapper checks cover the solo introduction, seeded mixed rosters, locked ballistic throws, blocked launches, thin-wall catches, shooting charges off walls and floors, rotating and destroyed hosts, actual portal travel, blast occlusion, terrain destruction, enemy friendly fire, spawn grace, bounded charge count, frozen fuses, cleanup, isolated saves, and clearing the introduction with normal controls. A physical return-shot test knocks a charge across the room and kills its owner with the original fuse.
 
 Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links.
 

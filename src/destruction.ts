@@ -128,6 +128,7 @@ export class DestructionSystem {
     if (g.mode !== 'playing' || !this.pieces.includes(piece)) return;
     const rect = piece.rect;
     Composite.remove(g.engine.world, piece.body);
+    g.sappers.disrupt(piece.body);
     g.terrain = g.terrain.filter((b) => b !== piece.body);
     this.pieces = this.pieces.filter((p) => p !== piece);
     this.broken.push(rect);

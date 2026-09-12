@@ -4,12 +4,14 @@ import type { Level } from './levels.ts';
 import { clamp, direction, distance, segmentBox, seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { CargoRig } from './cargo.ts';
+import type { SapperCharge } from './sapper.ts';
 import { CARGO_SIZE } from './cargo-layout.ts';
 import { disruptScrapperBody, SCRAPPER_DAMAGE } from './scrapper.ts';
 
 const { Bodies, Body, Composite, Events } = Matter;
-export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo' | 'rubble';
+export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo' | 'rubble' | 'charge';
 export const PROP_STATS = {
+  charge: { w: 18, h: 18, hp: Infinity },
   crate: { w: 44, h: 44, hp: 120 },
   canister: { w: 24, h: 38, hp: Infinity },
   cover: { w: 24, h: 84, hp: 72 },
@@ -27,6 +29,7 @@ export interface Prop {
   velocity: Vec;
   hits: Map<number, number>;
   cargo?: CargoRig;
+  charge?: SapperCharge;
   throwUntil?: number;
   throwHits?: Set<number>;
   expires?: number;
@@ -188,7 +191,7 @@ export class PropSystem {
     Events.on(game.engine, 'collisionActive', collisions);
   }
   get bodies() {
-    return this.items.map((p) => p.body);
+    return this.items.filter((p) => !p.charge?.host).map((p) => p.body);
   }
   reset(level: Level) {
     for (const prop of this.items) Composite.remove(this.game.engine.world, prop.body);
@@ -223,7 +226,7 @@ export class PropSystem {
       friction: 0.35,
       frictionStatic: 0.5,
       frictionAir: 0.008,
-      restitution: kind === 'canister' ? 0.25 : 0.08,
+      restitution: kind === 'charge' ? 0.45 : kind === 'canister' ? 0.25 : 0.08,
       density: kind === 'cargo' ? 0.003 : kind === 'crate' ? 0.0012 : 0.001,
       ...(kind === 'cargo' ? { inertia: Infinity } : {}),
       label: 'prop',
@@ -247,6 +250,7 @@ export class PropSystem {
     return prop;
   }
   remove(prop: Prop) {
+    this.game.sappers.disrupt(prop.body);
     this.game.harpoons.disrupt(prop.body);
     this.game.magnets.release(prop.body);
     disruptScrapperBody(this.game, prop.body);
@@ -254,6 +258,10 @@ export class PropSystem {
     this.items = this.items.filter((p) => p !== prop);
   }
   hit(prop: Prop, damage: number, velocity: Vec) {
+    if (prop.charge) {
+      this.game.sappers.knock(prop, damage, velocity);
+      return;
+    }
     this.game.magnets.release(prop.body);
     if (!this.items.includes(prop)) return;
     disruptScrapperBody(this.game, prop.body);
@@ -293,6 +301,7 @@ export class PropSystem {
   break(prop: Prop) {
     if (!this.items.includes(prop)) return;
     this.remove(prop);
+    if (prop.charge) return;
     if (prop.kind === 'rubble') {
       this.game.burst(prop.body.position, 3, '#a9b5b3', 1.5);
       return;

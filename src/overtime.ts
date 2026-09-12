@@ -5,6 +5,7 @@ import { enemyHealth, isBoss } from './enemies.ts';
 import type { EnemyKind } from './levels.ts';
 import type { EliteKind } from './enemies.ts';
 import { addHarpooner } from './harpooner-layout.ts';
+import { addSapper } from './sapper-layout.ts';
 
 // A separate, short seed keeps the first lap stable and lets an earned boss
 // victory reconstruct its ordinary Practice arena from this same seed.
@@ -37,7 +38,8 @@ export function getOvertimeLevel(seed: string, stage: number): Level {
     return { ...level, spawns: [...level.spawns, ...supports] };
   }
   const spawns: Spawn[] = level.spawns.map((s) => {
-    if (s.elite || s.kind === 'scrapper' || s.kind === 'harpooner') return { ...s };
+    if (s.elite || s.kind === 'scrapper' || s.kind === 'harpooner' || s.kind === 'sapper')
+      return { ...s };
     const pool: EnemyKind[] = ['runner', 'charger', 'hopper', 'borer'].includes(s.kind)
       ? ['charger', 'hopper', 'borer']
       : ['flyer', 'skimmer', 'sifter'].includes(s.kind)
@@ -48,7 +50,7 @@ export function getOvertimeLevel(seed: string, stage: number): Level {
   const target = stage >= 12 ? 3 : 2;
   const present = new Set(spawns.flatMap((s) => (s.elite ? [s.elite] : [])));
   for (const s of sample(
-    spawns.filter((s) => !s.elite && s.kind !== 'scrapper' && s.kind !== 'harpooner'),
+    spawns.filter((s) => !s.elite && !['scrapper', 'harpooner', 'sapper'].includes(s.kind)),
     spawns.length,
     rng,
   )) {
@@ -64,5 +66,10 @@ export function getOvertimeLevel(seed: string, stage: number): Level {
     s.elite = elite;
     present.add(elite);
   }
-  return addHarpooner({ ...level, spawns, harpoonIntro: false }, seed, stage, true);
+  return addSapper(
+    addHarpooner({ ...level, spawns, harpoonIntro: false, sapperIntro: false }, seed, stage, true),
+    seed,
+    stage,
+    true,
+  );
 }

@@ -1,5 +1,7 @@
 import { MagnetSystem } from './magnets.ts';
 import { DestructionSystem } from './destruction.ts';
+import { SapperSystem, createSapper } from './sapper.ts';
+import type { SapperRig } from './sapper.ts';
 import { getRouteLevel, reinforceRoute } from './route-layouts.ts';
 import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
@@ -129,6 +131,7 @@ export interface Enemy {
   interceptor?: InterceptorRig;
   scrapper?: ScrapperRig;
   harpoon?: HarpoonRig;
+  sapper?: SapperRig;
   sorter?: SorterRig;
 }
 export interface Shot {
@@ -201,6 +204,7 @@ export class Game {
   fusions = new FusionSystem(this);
   harpoons = new HarpoonSystem(this);
   destruction = new DestructionSystem(this);
+  sappers = new SapperSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -327,7 +331,10 @@ export class Game {
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
   onBossDefeated: (kind: EnemyKind) => void = () => {};
   constructor() {
-    Matter.Events.on(this.engine, 'beforeSolve', () => this.portals.afterIntegrate());
+    Matter.Events.on(this.engine, 'beforeSolve', () => {
+      this.portals.afterIntegrate();
+      this.sappers.afterIntegrate();
+    });
     this.loadRoom();
   }
   setMode(mode: Mode) {
@@ -336,6 +343,7 @@ export class Game {
       this.portalRequest = null;
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.sappers.clear();
       for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
       for (const e of this.enemies) releaseScrapper(this, e);
       this.demolition.clear();
@@ -410,6 +418,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false) {
+    this.sappers.clear();
     this.destruction.clear();
     this.enteringDetour = false;
     this.enteringRoute = null;
@@ -700,6 +709,7 @@ export class Game {
     if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
     if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
+    if (kind === 'sapper') enemy.sapper = createSapper();
     if (kind === 'harpooner') {
       enemy.harpoon = createHarpooner();
       Body.setMass(body, this.player.mass * 1.6);
@@ -830,6 +840,7 @@ export class Game {
     this.fusions.beforeStep(dt);
     this.harpoons.beforeStep(dt);
     this.props.beforeStep();
+    this.sappers.beforeStep();
     this.destruction.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
@@ -837,6 +848,8 @@ export class Game {
     this.props.afterStep(dt);
     if (this.mode !== 'playing') return;
     this.destruction.afterStep(dt);
+    this.sappers.afterStep();
+    if (this.mode !== 'playing') return;
     this.hazards.afterStep(dt);
     this.containPlayer();
     this.harpoons.afterStep(dt);
@@ -873,6 +886,7 @@ export class Game {
     ) {
       this.clear = true;
       this.clearAt = this.time;
+      this.sappers.clear();
       this.shots = this.shots.filter((s) => s.friendly);
       this.onSound('clear');
       this.onChange();
@@ -1184,6 +1198,7 @@ export class Game {
       else if (e.kind === 'hopper') this.updateHopper(e);
       else if (e.kind === 'scrapper') updateScrapper(this, e);
       else if (e.kind === 'harpooner') this.harpoons.updateEnemy(e);
+      else if (e.kind === 'sapper') this.sappers.updateEnemy(e);
       else if (e.kind === 'sniper') this.updateSniper(e);
       else if (e.kind === 'boss') this.updateBoss(e);
       else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
@@ -1221,7 +1236,10 @@ export class Game {
         (e.kind === 'charger' || e.kind === 'loader' || e.kind === 'kiln') &&
         e.state === 'recover'
       ) &&
-      !((e.kind === 'scrapper' || e.kind === 'harpooner') && e.state === 'recover') &&
+      !(
+        (e.kind === 'scrapper' || e.kind === 'harpooner' || e.kind === 'sapper') &&
+        e.state === 'recover'
+      ) &&
       (e.kind !== 'press' || e.state === 'rush') &&
       e.kind !== 'crane' &&
       Query.collides(this.player, [e.body]).length

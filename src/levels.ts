@@ -6,6 +6,7 @@ import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
 import { addScrapper } from './scrapper-layout.ts';
 import { addHarpooner } from './harpooner-layout.ts';
+import { addSapper } from './sapper-layout.ts';
 import { seeded, sample, STAGES, formerStage } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
@@ -13,6 +14,7 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'sapper'
   | 'borer'
   | 'sifter'
   | 'sorter'
@@ -59,6 +61,7 @@ export interface Layout {
 export interface Level extends Layout {
   routeChoice?: import('./rules.ts').RouteChoice;
   harpoonIntro?: boolean;
+  sapperIntro?: boolean;
   scrapperCrate?: Vec;
   mirrored: boolean;
   boss: boolean;
@@ -811,5 +814,5 @@ export function getLevel(
     const charger = result.spawns.find((s) => s.kind === 'charger' && !s.elite);
     if (charger) charger.kind = 'borer';
   }
-  return addHarpooner(result, seed, stage);
+  return addSapper(addHarpooner(result, seed, stage), seed, stage);
 }

@@ -283,6 +283,7 @@ export class PortalSystem {
       const travel = solid ? Math.max(0, solid.t - 0.01) : 1;
       const velocity = portalVector(body.velocity, entry, exit);
       disruptScrapperBody(g, body);
+      g.sappers.disrupt(body);
       g.harpoons.disrupt(body);
       g.magnets.release(body);
       Matter.Body.setPosition(body, { x: pos.x + rest.x * travel, y: pos.y + rest.y * travel });

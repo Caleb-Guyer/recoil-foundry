@@ -37,6 +37,7 @@ import { drawConveyors } from './conveyor-art.ts';
 import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
 import { drawHarpooner } from './harpooner-art.ts';
+import { drawSapper, drawCharge, drawSapperBlasts } from './sapper-art.ts';
 import { FREIGHT } from './freight-layout.ts';
 import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
@@ -183,6 +184,7 @@ export class Renderer {
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced);
     drawDemolition(c, g, this.reduced);
+    drawSapperBlasts(c, g, this.reduced);
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
       g.trail.forEach((p, i) => {
         c.globalAlpha = (1 - i / 9) * 0.1;
@@ -202,6 +204,10 @@ export class Renderer {
       }
       if (e.kind === 'harpooner') {
         drawHarpooner(c, g, e, this.reduced);
+        continue;
+      }
+      if (e.kind === 'sapper') {
+        drawSapper(c, g, e, this.reduced);
         continue;
       }
       if (e.kind === 'interceptor') {
@@ -1046,6 +1052,10 @@ export class Renderer {
       g = this.game;
     drawCargoCables(c, g, this.reduced);
     for (const prop of g.props.items) {
+      if (prop.charge) {
+        drawCharge(c, g, prop, this.reduced);
+        continue;
+      }
       const { w, h } = PROP_STATS[prop.kind];
       c.save();
       if (prop.expires !== undefined) c.globalAlpha = clamp((prop.expires - g.time) / 0.6, 0, 1);

@@ -159,6 +159,21 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'sapper-lock') {
+      this.tone(250, 430, 0.18, 0.04, 'triangle');
+      this.tone(430, 430, 0.06, 0.035, 'sine', 0.32);
+    } else if (kind === 'sapper-throw') {
+      this.tone(170, 65, 0.12, 0.07);
+      this.crack(0.06, 0.055, 1100);
+    } else if (kind === 'sapper-stick') {
+      this.crack(0.035, 0.07, 2400);
+    } else if (kind === 'sapper-bat') {
+      this.tone(740, 380, 0.09, 0.07, 'triangle');
+    } else if (kind === 'sapper-tick') {
+      this.tone(880, 880, 0.025, 0.025, 'sine');
+    } else if (kind === 'sapper-blast') {
+      this.tone(95, 32, 0.23, 0.16);
+      this.crack(0.14, 0.15, 850);
     } else if (kind === 'harpoon-lock') {
       this.tone(190, 480, 0.32, 0.05, 'sawtooth');
       this.tone(620, 620, 0.06, 0.045, 'sine', 0.4);

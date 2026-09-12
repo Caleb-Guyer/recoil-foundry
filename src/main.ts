@@ -21,6 +21,7 @@ import {
   harpoonerTestFromUrl,
   routesTestFromUrl,
   destructionTestFromUrl,
+  sapperTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
   overtimeTestFromUrl,
@@ -118,6 +119,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  sapperTestFromUrl(entryUrl) ??
   destructionTestFromUrl(entryUrl) ??
   routesTestFromUrl(entryUrl) ??
   harpoonerTestFromUrl(entryUrl) ??
@@ -157,6 +159,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test branching routes <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'DESTRUCTION-44')
     $('play').innerHTML = 'Test destructible terrain <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'SAPPER-45')
+    $('play').innerHTML = 'Test the Sapper <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -197,6 +201,8 @@ function updateTitle() {
       : 'Clear the room. Below: cover. Above: platforms. R to retry.';
   if (linkedRunTest?.seed === 'DESTRUCTION-44')
     $('title-hint').textContent = 'Shoot cracked cover. Drop the ledges. R to retry.';
+  if (linkedRunTest?.seed === 'SAPPER-45')
+    $('title-hint').textContent = 'Watch the fuse. Shoot charges back. R to retry.';
 }
 function clearInput() {
   keys.clear();

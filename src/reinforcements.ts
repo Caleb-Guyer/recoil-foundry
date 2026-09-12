@@ -26,6 +26,11 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
       level.spawns.filter((s) => s.kind !== 'harpooner').map((s) => ({ ...s })),
     ];
   const planned = squadSpawns(level.spawns, level, seed, stage);
+  if (level.sapperIntro)
+    return [
+      planned.filter((s) => s.kind === 'sapper').map((s) => ({ ...s })),
+      planned.filter((s) => s.kind !== 'sapper').map((s) => ({ ...s })),
+    ];
   const count = planned.length;
   const openingCount = level.detour
     ? Math.ceil(count / 2)
@@ -54,6 +59,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           skimmer: 7,
           scrapper: 8,
           harpooner: 9,
+          sapper: 8,
           condenser: 0,
           turbine: 0,
           interceptor: 0,
@@ -109,7 +115,7 @@ export class ReinforcementSystem {
       // checks wait or relocate before opening a door through a living body.
       final.push(
         ...opening
-          .filter((s) => s.kind !== 'harpooner')
+          .filter((s) => s.kind !== 'harpooner' && s.kind !== 'sapper')
           .slice(0, 3)
           .map(({ elite: _elite, squad: _squad, ...s }) => ({ ...s })),
       );
@@ -173,7 +179,7 @@ export class ReinforcementSystem {
     if (g.mode !== 'playing' || g.escape || (g.level.boss && !g.overtime)) return;
     if (this.phase === 'opening') {
       if (g.level.freight) return;
-      if (g.level.harpoonIntro && g.enemies.length > 0) return;
+      if ((g.level.harpoonIntro || g.level.sapperIntro) && g.enemies.length > 0) return;
       this.openingTime += dt;
       const overlap = g.detour
         ? 2

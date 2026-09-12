@@ -675,6 +675,13 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       'execute',
       'fold',
     ];
+    // A rail can hit nearby cover and expire in the same fixed step. Observe
+    // its actual emission as well as rounds that survive until the next tick.
+    const emitShot = g.addShot.bind(g);
+    g.addShot = (data) => {
+      emitShot(data);
+      if (fusion === 'rail-spike' && g.shots.at(-1)?.rail) fusionUsed = true;
+    };
     for (let i = 0; i < 60 * 900 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
       fusionUsed ||=
         fusion === 'rail-spike'
@@ -1023,6 +1030,22 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
           firing = false;
         }
         if (p.y < 200) firing = false;
+      }
+      // A charged build must release the trigger long enough to load its rail.
+      if (fusion === 'rail-spike' && g.mods.includes('rail-spike') && !lift && !g.clear)
+        firing &&= g.ballistics.charges > 0 || g.burstRemaining > 0;
+      // Use the charge's visible countdown and position: leave its blast area
+      // and bat it away with the normal gun when a firing lane is available.
+      const bomb = g.sappers.items.find(
+        (b) => b.charge!.at - g.time < 1.2 && distance(p, b.body.position) < 180,
+      );
+      if (bomb) {
+        move = Math.sign(p.x - bomb.body.position.x) || 1;
+        jump ||= g.grounded;
+        if (distance(g.lineEnd(p, bomb.body.position, 0, bomb), bomb.body.position) < 0.1) {
+          aim = { ...bomb.body.position };
+          firing = true;
+        }
       }
       tick(g, 1, {
         left: move < 0,

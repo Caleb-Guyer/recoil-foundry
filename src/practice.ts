@@ -298,6 +298,17 @@ export function destructionTestFromUrl(url: URL): Checkpoint | null {
   return area < 0 ? null : { ...testCheckpoint('DESTRUCTION-44', area * 4 + 2), route: 'low' };
 }
 
+export function sapperTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'sapper' ||
+    ['daily', 'dv', 'seed', 'area', 'formation', 'build', 'route', 'mode'].some((k) => p.has(k))
+  )
+    return null;
+  return testCheckpoint('SAPPER-45', 4);
+}
+
 export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
   recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
   capacitor: ['capacitor', 'reserve-cell', 'magnum', 'kick', 'airshot', 'light'],
