@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Counterweight platforms
+
+Balance House in Cooling Works introduces a steel deck on a fixed bearing. Counterweight Roof adds two decks at different heights, crossfire and the rooftop elite pair. Each room has three seeded rosters and mirrored arrangements, and can appear in the second room of its area. Existing physics rooms keep their own selection. Daily and Overtime reconstruct the same machinery from their seeds.
+
+Players, enemies and loose props supply real weight and impact forces. Shoot a crate across the axle to reverse the loaded side; hard landings tip the deck faster. Jumping from a rising end preserves its upward momentum, and airborne shots keep their ordinary recoil. Gunners and cover on the deck can slide or fall. Tilting a Wallcrawler's perch releases its grip and interrupts its burst.
+
+The bearing limits tilt to about 18 degrees, damps violent rotation, and gently recenters an empty platform. Shots, ricochets and warning lines follow the visible tilted surface. Grindshot follows the moving deck; Fold uses the existing fixed surfaces. The floor stays open below the machinery, and permanent side ledges remain crossable with ordinary jumps at either tilt. No controls or HUD are added.
+
+[Test counterweights in Cooling Works](https://caleb-guyer.github.io/recoil-foundry/?test=counterweights) or [try the rooftop layout](https://caleb-guyer.github.io/recoil-foundry/?test=counterweights&area=rooftops). Add `&variant=2` or `&variant=3` for another roster and `&mirror=1` for the opposite orientation. **R** restarts with full health and the preset gun. These isolated tests preserve saves, Daily records and earned Practice victories.
+
 ## Wallcrawler
 
 A maintenance robot clings to floors, walls and ceilings, walking around exposed corners with four gripping legs. It stops before firing three rounds. The 0.95-second warning tracks early, then locks all three lanes for the last half second; the burst never follows you after that commitment. It uses ordinary hostile bullets, so cover, reflection and portals work normally.
@@ -136,7 +146,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=48`). Version 48 adds Wallcrawler encounters; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=49`). Version 49 adds counterweight layouts; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

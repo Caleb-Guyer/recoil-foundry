@@ -1,4 +1,5 @@
 import { wallcrawlerTestFromUrl } from './practice.ts';
+import { counterweightTestFromUrl } from './practice.ts';
 import { grindshotTestFromUrl, interceptorGrindTestFromUrl } from './practice.ts';
 import './style.css';
 import { Game } from './game.ts';
@@ -127,6 +128,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  counterweightTestFromUrl(entryUrl) ??
   wallcrawlerTestFromUrl(entryUrl) ??
   interceptorGrindTestFromUrl(entryUrl) ??
   grindshotTestFromUrl(entryUrl) ??
@@ -190,6 +192,8 @@ function updateTitle() {
         : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('CRAWLER-54-'))
     $('play').innerHTML = 'Test the Wallcrawler <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('BALANCE-55-'))
+    $('play').innerHTML = 'Test counterweights <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('SAW-BOSS-53-'))
     $('play').innerHTML = 'Test Interceptor saws <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'GRIND-52')

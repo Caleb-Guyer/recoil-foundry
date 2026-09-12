@@ -103,7 +103,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
       'fortress:false',
       'demolition-lane:true',
       'split-deck:false',
-      'gantry:false',
+      'counterweight-roof:false',
       'relay-roof:false',
     ],
     E: [

@@ -658,3 +658,31 @@ export function wallcrawlerTestFromUrl(url: URL): Checkpoint | null {
   }
   return null;
 }
+
+export function counterweightTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'counterweights' ||
+    ['area', 'mirror', 'variant'].some((k) => p.getAll(k).length > 1) ||
+    ['daily', 'dv', 'seed', 'formation', 'build', 'route', 'mode', 'layout', 'phase'].some((k) =>
+      p.has(k),
+    ) ||
+    (p.has('area') && !['cooling', 'rooftops'].includes(p.get('area')!)) ||
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!)) ||
+    (p.has('variant') && !['1', '2', '3'].includes(p.get('variant')!))
+  )
+    return null;
+  const stage = p.get('area') === 'rooftops' ? 17 : 9;
+  for (let i = 0; i < 512; i++) {
+    const seed = 'BALANCE-55-' + i,
+      level = getLevel(seed, stage);
+    if (
+      level.counterweights &&
+      level.mirrored === (p.get('mirror') === '1') &&
+      physicsVariant(seed, level.id) === Number(p.get('variant') ?? 1) - 1
+    )
+      return testCheckpoint(seed, stage);
+  }
+  return null;
+}

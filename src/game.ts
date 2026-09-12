@@ -15,6 +15,7 @@ import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
+import { CounterweightSystem } from './counterweights.ts';
 import { createInterceptor, updateInterceptor } from './interceptor.ts';
 import type { InterceptorRig } from './interceptor.ts';
 import { updateRivalAmmo, rivalImpact, clearArsenal } from './interceptor-weapons.ts';
@@ -32,7 +33,7 @@ import { onCoolant, updateCoolingEnemy } from './cooling.ts';
 import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
 import type { ShellPayload } from './demolition.ts';
 import { PortalSystem, portalVector } from './portals.ts';
-import { firstSolid } from './collisions.ts';
+import { firstSolid, sweepBox } from './collisions.ts';
 import {
   clamp,
   direction,
@@ -206,6 +207,7 @@ export class Game {
   conveyors = new ConveyorSystem(this);
   freight = new FreightSystem(this);
   crossing = new CrossingSystem(this);
+  counterweights = new CounterweightSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
   portals = new PortalSystem(this);
@@ -236,6 +238,7 @@ export class Game {
       ...this.terrain,
       ...this.hazards.bodies,
       ...this.crossing.bodies,
+      ...this.counterweights.bodies,
       ...this.breaches.bodies,
       ...this.salvageEvolutions.bodies,
       ...(this.extractionLift ? [this.extractionLift] : []),
@@ -352,6 +355,7 @@ export class Game {
   onBossDefeated: (kind: EnemyKind) => void = () => {};
   constructor() {
     Matter.Events.on(this.engine, 'beforeSolve', () => {
+      this.counterweights.afterIntegrate();
       this.portals.afterIntegrate();
       this.sappers.afterIntegrate();
     });
@@ -471,6 +475,7 @@ export class Game {
     this.conveyors.clear();
     this.freight.clear();
     this.crossing.clear();
+    this.counterweights.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -549,6 +554,7 @@ export class Game {
       label: 'player',
     });
     Composite.add(this.engine.world, this.player);
+    this.counterweights.reset();
     for (const spawn of this.waves.reset(this.level))
       this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
     if (escapeRoom) {
@@ -729,7 +735,11 @@ export class Game {
             chamfer: { radius: 3 },
             label: 'enemy',
           });
-    if (kind === 'shooter' || kind === 'sniper' || kind === 'crane') Body.setStatic(body, true);
+    if (
+      (kind === 'shooter' || kind === 'sniper' || kind === 'crane') &&
+      !this.counterweights.movingPerch(body)
+    )
+      Body.setStatic(body, true);
     if (squad?.kind === 'shield' && squad.role === 'support') Body.setStatic(body, false);
     Composite.add(this.engine.world, body);
     const enemy: Enemy = {
@@ -809,14 +819,16 @@ export class Game {
     if (this.mode !== 'playing') return;
     const wasGrounded = this.grounded,
       vy = this.player.velocity.y;
+    const counterweightSupport = this.counterweights.supporting(this.player);
     this.grounded =
-      vy >= -1 &&
-      Query.ray(
-        this.solidBodies,
-        { x: this.player.position.x, y: this.player.bounds.max.y - 2 },
-        { x: this.player.position.x, y: this.player.bounds.max.y + 5 },
-        18,
-      ).length > 0;
+      !!counterweightSupport ||
+      (vy >= -1 &&
+        Query.ray(
+          this.solidBodies,
+          { x: this.player.position.x, y: this.player.bounds.max.y - 2 },
+          { x: this.player.position.x, y: this.player.bounds.max.y + 5 },
+          18,
+        ).length > 0);
     if (this.grounded && !wasGrounded) {
       const impact = Math.max(vy, this.landingSpeed);
       if (impact > 2) {
@@ -845,7 +857,10 @@ export class Game {
     if (this.grounded && !move) vx *= onCoolant(this) ? 0.965 : 0.72;
     Body.setVelocity(this.player, { x: clamp(vx, -23, 23), y: clamp(vy, -21, 20) });
     if (this.jumpBuffer > 0 && this.coyote > 0) {
-      Body.setVelocity(this.player, { x: this.player.velocity.x, y: -11.6 });
+      Body.setVelocity(this.player, {
+        x: this.player.velocity.x,
+        y: -11.6 + Math.min(0, counterweightSupport?.velocity.y ?? 0),
+      });
       this.jumpBuffer = 0;
       this.coyote = 0;
       this.grounded = false;
@@ -902,7 +917,9 @@ export class Game {
     this.sappers.beforeStep();
     this.destruction.beforeStep();
     this.portals.beforeStep();
+    this.counterweights.beforeStep();
     Engine.update(this.engine, 1000 / 60);
+    this.counterweights.afterStep();
     this.salvage.afterStep();
     this.salvageEvolutions.afterStep();
     if (this.mode !== 'playing') return;
@@ -1481,12 +1498,14 @@ export class Game {
     let t = 1;
     for (const b of this.terrainBodies) {
       if (b === ignore) continue;
-      const hit = segmentBox(
-        start,
-        end,
-        { x: b.bounds.min.x - padding, y: b.bounds.min.y - padding },
-        { x: b.bounds.max.x + padding, y: b.bounds.max.y + padding },
-      );
+      const hit = this.counterweights.owns(b)
+        ? sweepBox(start, end, { x: padding, y: padding }, b)
+        : segmentBox(
+            start,
+            end,
+            { x: b.bounds.min.x - padding, y: b.bounds.min.y - padding },
+            { x: b.bounds.max.x + padding, y: b.bounds.max.y + padding },
+          );
       if (hit) t = Math.min(t, hit.t);
     }
     for (const prop of this.props.items) {
@@ -1860,12 +1879,14 @@ export class Game {
               if (e.id !== s.allyBlock && e.spawn <= 0) targets.push([e.body]);
         }
         for (const [body, enemy, player] of targets) {
-          const h = segmentBox(
-            s.pos,
-            end,
-            { x: body.bounds.min.x - s.radius, y: body.bounds.min.y - s.radius },
-            { x: body.bounds.max.x + s.radius, y: body.bounds.max.y + s.radius },
-          );
+          const h = this.counterweights.owns(body)
+            ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, body)
+            : segmentBox(
+                s.pos,
+                end,
+                { x: body.bounds.min.x - s.radius, y: body.bounds.min.y - s.radius },
+                { x: body.bounds.max.x + s.radius, y: body.bounds.max.y + s.radius },
+              );
           if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, enemy, player, body };
         }
         for (const prop of this.props.items) {
@@ -1990,6 +2011,7 @@ export class Game {
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
+          this.counterweights.hit(nearest.body, s.pos, s.vel, s.damage);
           this.salvage.impact(s, nearest.prop?.body ?? nearest.body, nearest.normal);
           if (nearest.prop)
             this.props.hit(

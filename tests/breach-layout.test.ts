@@ -20,6 +20,7 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
   const coverage = new Set<string>();
   let count = 0;
   let crossingRooms = 0;
+  let eligibleRooms = 0;
   let pickups = 0;
   let attached = 0;
   let freestanding = 0;
@@ -36,6 +37,7 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
         continue;
       }
       if (level.crossing) crossingRooms++;
+      if (!level.setpiece && !level.freight && level.id !== 'last-flight') eligibleRooms++;
       if (!vent) continue;
       count++;
       runPickups += Number(!!vent.pickup);
@@ -97,11 +99,9 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
     coverage.size,
     LAYOUTS.filter((layout) => !layout.added && !layout.magnets).length * 2,
   );
-  assert(
-    count > (256 * 3 - crossingRooms) * 0.9,
-    `Only ${count} eligible rooms have a usable vent`,
-  );
-  assert(pickups > 450);
+  assert(count > eligibleRooms * 0.9, `Only ${count} eligible rooms have a usable vent`);
+  assert(crossingRooms > 0);
+  assert(pickups > count * 0.7);
   assert(attached > 0 && freestanding > 0);
 });
 

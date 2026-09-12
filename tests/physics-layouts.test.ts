@@ -136,8 +136,9 @@ test('new rooms occur naturally in Daily and Overtime without replacing introduc
     for (const stage of [5, 9, 17]) {
       const level = getLevel(seed, stage),
         ot = getOvertimeLevel(seed, stage);
-      if (level.setpiece) dailySeen.add(level.id + ':' + level.mirrored);
-      if (ot.setpiece) {
+      if (PHYSICS_LAYOUTS.some((l) => l.id === level.id))
+        dailySeen.add(level.id + ':' + level.mirrored);
+      if (PHYSICS_LAYOUTS.some((l) => l.id === ot.id)) {
         overtimeSeen.add(ot.id + ':' + ot.mirrored);
         assert.deepEqual(ot.setpiece, getLevel(overtimeSeed(seed), stage).setpiece);
       }

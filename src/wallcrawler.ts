@@ -26,11 +26,11 @@ export const crawlerSpeed = (g: Game) => (g.stage >= 16 ? 11 : 9.5);
 function supported(g: Game, body: Matter.Body) {
   // Structural map faces provide the route. Loose crates and moving machinery
   // remain physical obstacles, never an invisible rail through the room.
-  return g.terrain.includes(body) && Math.abs(body.angle) < 0.001;
+  return (g.terrain.includes(body) || g.counterweights.owns(body)) && Math.abs(body.angle) < 0.001;
 }
 function footing(g: Game, e: Enemy, only?: Matter.Body, range = 7) {
   let best: { body: Matter.Body; edge: number; point: Vec; normal: Vec; error: number } | undefined;
-  for (const body of only ? [only] : g.terrain) {
+  for (const body of only ? [only] : [...g.terrain, ...g.counterweights.bodies]) {
     if (!supported(g, body)) continue;
     const rail = grindRail(body, CRAWLER.offset);
     for (let edge = 0; edge < rail.length; edge++) {

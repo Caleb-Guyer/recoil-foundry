@@ -177,6 +177,9 @@ export class Sound {
       this.tone(120, 40, 0.1, 0.07, 'triangle');
     } else if (kind === 'crawler-lock') {
       this.tone(650, 870, 0.13, 0.025, 'triangle');
+    } else if (kind === 'counterweight-stop') {
+      this.tone(95, 45, 0.17, 0.028, 'triangle');
+      this.crack(0.05, 0.015, 950);
     } else if (kind === 'crawler-drop') {
       this.tone(290, 85, 0.2, 0.04, 'triangle');
       this.crack(0.07, 0.025, 1500);

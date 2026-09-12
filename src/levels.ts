@@ -1,4 +1,9 @@
 import { CROSSING_LAYOUT, crossingLevel } from './crossing-layout.ts';
+import {
+  COUNTERWEIGHT_LAYOUTS,
+  counterweightLayout,
+  type CounterweightPlacement,
+} from './counterweight-layouts.ts';
 import { RECLAMATION_LAYOUTS, SORTER_ARENA, reclamationLevel } from './reclamation-layouts.ts';
 import type { MagnetPlacement } from './reclamation-layouts.ts';
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
@@ -51,6 +56,7 @@ export interface Spawn extends Vec {
   squad?: SquadTag;
 }
 export interface Layout {
+  counterweights?: CounterweightPlacement[];
   setpiece?: {
     rosters: number[][];
     props: { kind: 'crate' | 'canister' | 'cover'; x: number; y: number }[];
@@ -88,7 +94,12 @@ const flyer = (x: number, y: number): Spawn => ({ kind: 'flyer', x, y });
 const route = (...points: number[][]): Vec[] => points.map(([x, y]) => ({ x, y }));
 // Authored cover, spawn anchors and a generous baseline route belong to the same layout.
 // Ground remains safe beneath raised gaps; recoil creates optional shortcuts.
-export const SPECIAL_LAYOUTS: Layout[] = [FREIGHT_LAYOUT, CROSSING_LAYOUT, ...PHYSICS_LAYOUTS];
+export const SPECIAL_LAYOUTS: Layout[] = [
+  FREIGHT_LAYOUT,
+  CROSSING_LAYOUT,
+  ...PHYSICS_LAYOUTS,
+  ...COUNTERWEIGHT_LAYOUTS,
+];
 export const LAYOUTS: Layout[] = [
   ...RECLAMATION_LAYOUTS,
   ...ADDED_LAYOUTS,
@@ -696,6 +707,7 @@ function buildLevel(
       : COOLING_BOSS;
   const source =
     physicsLayout(seed, stage) ??
+    counterweightLayout(seed, stage) ??
     (slot === 2
       ? ADDED_LAYOUTS[area]
       : legacyStage === 11
@@ -777,6 +789,14 @@ function buildLevel(
         }
       : {}),
     solids,
+    ...(source.counterweights
+      ? {
+          counterweights: source.counterweights.map((p) => ({
+            ...p,
+            x: mirrored ? 2000 - p.x : p.x,
+          })),
+        }
+      : {}),
     ...(source.coolant
       ? { coolant: source.coolant.map((s) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x })) }
       : {}),

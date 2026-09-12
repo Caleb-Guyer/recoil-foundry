@@ -1,4 +1,5 @@
 import { drawGrindshot } from './grindshot-art.ts';
+import { drawCounterweights, drawCounterweightMounts } from './counterweight-art.ts';
 import { drawCrossing } from './crossing-art.ts';
 import { drawMagnets, drawReclamationEnemy } from './reclamation-art.ts';
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
@@ -155,6 +156,7 @@ export class Renderer {
     c.translate(-this.camera.x, -this.camera.y);
     this.drawBreachBackdrop();
     drawReinforcementDoors(c, g, this.reduced);
+    drawCounterweightMounts(c, g);
     const palette = AREAS[g.level.area];
     for (const b of g.terrain) {
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
@@ -184,6 +186,7 @@ export class Renderer {
     this.drawHazards();
     drawFreightLift(c, g);
     drawCrossing(c, g, this.reduced);
+    drawCounterweights(c, g);
     drawConveyors(c, g, this.reduced);
     drawCoolant(c, g, this.reduced);
     drawMagnets(c, g, this.reduced);
