@@ -1,4 +1,10 @@
 import Matter from 'matter-js';
+import {
+  fireRivalGrind,
+  rivalGrindImpact,
+  updateRivalGrind,
+  type RivalGrindPlan,
+} from './interceptor-grindshot.ts';
 import type { Enemy, Game, Shot } from './game.ts';
 import type { Vec } from './rules.ts';
 import { direction, distance, seeded, sample } from './rules.ts';
@@ -18,7 +24,8 @@ export type InterceptorMove =
   | 'capacitor'
   | 'shatter'
   | 'fold'
-  | 'shockwave';
+  | 'shockwave'
+  | 'grindshot';
 export interface Weapon {
   tell: number;
   lock: number;
@@ -28,6 +35,7 @@ export interface Weapon {
   color: string;
 }
 export const INTERCEPTOR_WEAPONS: Record<InterceptorMove, Weapon> = {
+  grindshot: { tell: 1.35, lock: 1.35, speed: 18, damage: 8, recover: 1.7, color: '#ef7264' },
   aimed: { tell: 0.92, lock: 0.36, speed: 11.5, damage: 20, recover: 1.05, color: '#f5b583' },
   heavy: { tell: 1.1, lock: 0.36, speed: 16, damage: 24, recover: 1.5, color: '#f5b583' },
   ricochet: { tell: 1.1, lock: 0.5, speed: 9, damage: 18, recover: 1.3, color: '#aacfa7' },
@@ -66,6 +74,8 @@ export function interceptorMove(e: Enemy, seed: string): InterceptorMove {
   // are independent of combat randomness and cannot repeat within a deck.
   if (e.attacks < 2) return e.attacks === 0 ? 'aimed' : 'heavy';
   const deck = sample(DECKS[e.phase], DECKS[e.phase].length, seeded(seed + ':arsenal:' + e.phase));
+  // Preserve the existing weapon order while introducing the surface attack.
+  deck.splice(2, 0, 'grindshot');
   return deck[(e.attacks - 2) % deck.length];
 }
 export function weaponAngles(move: InterceptorMove, aim: Vec, phase: number, caught = 0): number[] {
@@ -88,6 +98,7 @@ export interface EnemyAmmo {
   age: number;
   returning?: boolean;
   reverse?: Vec;
+  grind?: RivalGrindPlan;
 }
 export interface RivalCharge {
   pos: Vec;
@@ -118,6 +129,10 @@ export function fireWeapon(
   origin: Vec,
   angles: number[],
 ) {
+  if (move === 'grindshot') {
+    fireRivalGrind(g, e);
+    return;
+  }
   const spec = INTERCEPTOR_WEAPONS[move];
   for (const a of angles) {
     if (g.shots.filter((s) => !s.friendly && s.enemyAmmo?.owner === e.id).length >= 64) break;
@@ -167,6 +182,7 @@ export function rivalImpact(g: Game, s: Shot, body?: Matter.Body) {
   if (s.friendly || !s.enemyAmmo) return;
   const e = g.enemies.find((enemy) => enemy.id === s.enemyAmmo!.owner);
   if (!e?.interceptor || e.hp <= 0) return;
+  if (s.enemyAmmo.kind === 'grindshot') rivalGrindImpact(g, e, s, body);
   if (s.enemyAmmo.kind === 'fuse') rivalCharge(g, e, s.pos, 105, 20, 0.9, true, body);
   if (s.enemyAmmo.kind === 'capacitor') rivalCharge(g, e, s.pos, 125, 18, 0.8, false, body);
 }
@@ -221,6 +237,9 @@ export function updateRivalAmmo(g: Game, s: Shot, dt: number) {
 export function clearArsenal(g: Game, e: Enemy) {
   const rig = e.interceptor;
   if (!rig) return;
+  rig.grindPlans = [];
+  rig.grindBullets = [];
+  rig.saws = [];
   rig.charges = [];
   rig.echoes = [];
   rig.queue = [];
@@ -229,6 +248,8 @@ export function clearArsenal(g: Game, e: Enemy) {
 }
 export function updateArsenal(g: Game, e: Enemy, dt: number) {
   const rig = e.interceptor!;
+  updateRivalGrind(g, e, dt);
+  if (g.mode !== 'playing' || e.hp <= 0) return;
   for (const shot of g.shots) {
     if (rig.move !== 'countershot' || e.state !== 'windup' || e.timer <= 0.5 || rig.caught >= 3)
       break;

@@ -20,7 +20,7 @@ export interface GrindSaw {
 
 // Offset the actual convex hull, keeping even rotated surfaces and their corners
 // outside the material. Moving supports supply fresh world vertices each step.
-function rail(body: Matter.Body): Vec[] {
+export function grindRail(body: Matter.Body): Vec[] {
   const v = body.vertices;
   const normals = v.map((a, i) => {
     const t = direction(a, v[(i + 1) % v.length]);
@@ -61,7 +61,7 @@ export class GrindshotSystem {
       !(shot.damage > 0)
     )
       return;
-    const points = rail(body);
+    const points = grindRail(body);
     let best = Infinity,
       edge = -1,
       along = 0;
@@ -164,7 +164,7 @@ export class GrindshotSystem {
         saw.life = 0;
         continue;
       }
-      const points = rail(saw.body);
+      const points = grindRail(saw.body);
       let budget = GRIND.speed * dt;
       let a = points[saw.edge],
         b = points[(saw.edge + 1) % points.length],

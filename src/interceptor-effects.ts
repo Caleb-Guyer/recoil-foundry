@@ -1,3 +1,4 @@
+import { grindPlanValid } from './interceptor-grindshot.ts';
 import type { Enemy, Game, Shot } from './game.ts';
 import { firstSolid } from './collisions.ts';
 import { distance, clamp } from './rules.ts';
@@ -12,7 +13,14 @@ export function rivalWarningLanes(g: Game, e: Enemy): { from: Vec; to: Vec; bank
     rig.move === 'shockwave' && e.attack !== 'vault'
       ? { x: e.target.x, y: e.target.y - 32 }
       : interceptorOrigin(e);
-  for (const a of interceptorAngles(e)) {
+  const angles =
+    rig.move === 'grindshot' && e.attack !== 'vault'
+      ? [
+          ...rig.grindPlans.filter((p) => grindPlanValid(g, p)).map((p) => p.heading),
+          ...rig.grindBullets,
+        ]
+      : interceptorAngles(e);
+  for (const a of angles) {
     let d = { x: Math.cos(a), y: Math.sin(a) },
       from = { x: origin.x + d.x * 44, y: origin.y + d.y * 44 };
     if (distance(g.lineEnd(origin, from, 5), from) > 0.1) continue;

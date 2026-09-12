@@ -57,7 +57,7 @@ function shots(g: Game, n = 1) {
   }
 }
 
-test('fifteen distinct gun moves have repeatable phase decks independent of combat RNG', () => {
+test('sixteen distinct gun moves have repeatable phase decks independent of combat RNG', () => {
   const { g, e } = fixture(),
     seen = new Set<string>();
   for (let phase = 0; phase < 3; phase++) {
@@ -77,6 +77,7 @@ for (const move of Object.keys(INTERCEPTOR_WEAPONS) as InterceptorMove[]) {
   if (move === 'shockwave') continue;
   test(move + ' keeps its full tell, freezes the marked aim and fires the advertised lanes', () => {
     const { g, e } = fixture();
+    if (move === 'grindshot') Body.setPosition(g.player, { x: 1000, y: 722 });
     beginInterceptorAttack(g, e, move);
     const started = g.time,
       spec = INTERCEPTOR_WEAPONS[move];

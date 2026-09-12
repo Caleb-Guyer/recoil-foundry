@@ -54,6 +54,14 @@ Banker damage and piercing attenuation carry into the saw. Shells still detonate
 
 [Test Grindshot](https://caleb-guyer.github.io/recoil-foundry/?test=grindshot) equips the pair in Furnace's low road. Add `&build=base` to test ordinary edges, `&build=bank` for ricochets, or `&build=shell` for sticky explosives. **R** retries. The pair also appears in the upgrade test picker. These isolated tests preserve normal saves, Daily records, and earned Practice victories.
 
+## Interceptor surface saws
+
+The Interceptor can now fire Grindshot into a nearby floor or wall. Red lines and directional arrows mark the complete surface route for 1.35 seconds before firing. The entry rounds must actually reach that surface. The first phase sends one saw that ends at exposed edges; later phases can send two corner-wrapping saws and three separately marked bullets. Each saw deals 18 damage once, lasts at most 1.35 seconds, and can be cleared with an ordinary jump. The attack leaves a 1.7-second recovery with the boss's usual exposed armor.
+
+Routes stay fixed after the warning begins. Crates intercept entry rounds and travelling blades; moving or destroying a marked support cancels its saw. Reflected or redirected entry rounds cannot create an unmarked blade elsewhere. Phase changes, death, and retries clear the attack. Enemy saws are red; player saws keep their pale color. No control or HUD is added.
+
+[Test the Interceptor's saws](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor-grindshot&phase=3) starts an isolated final-phase fight with a full-health boss and a preset gun and repeats the new attack between recoil moves. Use `&phase=1` for the single-saw introduction, `&phase=2` for the middle phase, or `&mirror=1` for the mirrored arena. **R** retries. These tests preserve normal saves, Daily records and earned Practice victories. The ordinary final boss uses the full arsenal.
+
 ## Freight Crossing
 
 At most once per lap, passing cargo cars occasionally cut through the second room of Docks or Reclamation Works. A horn, rising rumble and amber track signals give 2.4 seconds of warning. The two solid cars block shots, carry riders and stacked crates, shove loose props, ignite fuel, and slam enemies at their leading bumpers. Jumping off preserves the train's momentum. Being pinned against solid cover during combat is a lethal crush, including during damage grace from a previous hit. Jump clear before the bumper closes the gap; no special upgrade is needed.
@@ -118,7 +126,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=46`). Version 46 adds Grindshot and Corner Cutter; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=47`). Version 47 adds the Interceptor's surface-saw attack; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

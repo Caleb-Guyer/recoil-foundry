@@ -367,7 +367,10 @@ export class Game {
       this.tethers.reset();
       this.sappers.clear();
       for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
-      for (const e of this.enemies) releaseScrapper(this, e);
+      for (const e of this.enemies) {
+        releaseScrapper(this, e);
+        clearArsenal(this, e);
+      }
       this.demolition.clear();
       this.evolutions.reset();
       this.ballistics.reset();
@@ -385,6 +388,12 @@ export class Game {
   }
   startTest(save: Checkpoint) {
     this.start(save.seed, save, null, save);
+    const match = /^SAW-BOSS-53-([123])-/.exec(save.seed);
+    const boss = this.enemies.find((e) => e.kind === 'interceptor');
+    if (match && boss) {
+      boss.phase = Number(match[1]) - 1;
+      // Keep full health so the focused test has time to demonstrate its attack.
+    }
   }
   start(
     seed: string,

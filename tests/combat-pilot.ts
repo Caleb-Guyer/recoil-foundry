@@ -1,3 +1,4 @@
+import { RIVAL_GRIND, grindPlanValid } from '../src/interceptor-grindshot.ts';
 import type { Enemy, Game, Input } from '../src/game.ts';
 import { attackAngles, bossMuzzle, flakAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
@@ -124,10 +125,15 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
       });
     }
   } else if (e.kind === 'interceptor' && (e.state === 'windup' || e.state === 'followup')) {
-    for (const a of interceptorAngles(e)) {
+    for (const [index, a] of interceptorAngles(e).entries()) {
       const origin = interceptorOrigin(e);
       const start = { x: origin.x + Math.cos(a) * 44, y: origin.y + Math.sin(a) * 44 };
-      const speed = interceptorSpeed(e);
+      const speed =
+        e.interceptor!.move === 'grindshot' &&
+        e.attack !== 'vault' &&
+        index >= e.interceptor!.grindPlans.length
+          ? 11.5
+          : interceptorSpeed(e);
       const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
       bolts.push({
         p: start,
@@ -208,6 +214,41 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
       });
     }
   }
+  // Surface arrows are visible from commitment. Follow their marked vertices,
+  // including entry flight time, instead of treating the blade as a straight bolt.
+  const rig = e.interceptor;
+  const surfaces = [
+    ...(rig?.saws ?? []).map((s) => ({ plan: s.plan, travel: s.travel, delay: 0 })),
+    ...g.shots
+      .filter((s) => !s.friendly && s.enemyAmmo?.grind)
+      .map((s) => ({
+        plan: s.enemyAmmo!.grind!,
+        travel: 0,
+        delay: distance(s.pos, s.enemyAmmo!.grind!.impact) / (18 * 60),
+      })),
+    ...(rig?.move === 'grindshot' && e.attack !== 'vault' && e.state === 'windup'
+      ? rig.grindPlans.map((plan) => ({
+          plan,
+          travel: 0,
+          delay: e.timer + (distance(plan.origin, plan.impact) - 44) / (18 * 60),
+        }))
+      : []),
+  ].filter((s) => grindPlanValid(g, s.plan));
+  const surfacePoints = Array.from({ length: 61 }, (_, frame) =>
+    surfaces.flatMap((s) => {
+      let travel = s.travel + (frame / 60 - s.delay) * RIVAL_GRIND.speed;
+      if (frame / 60 < s.delay || travel > RIVAL_GRIND.speed * RIVAL_GRIND.life) return [];
+      for (let i = 1; i < s.plan.path.length; i++) {
+        const a = s.plan.path[i - 1],
+          b = s.plan.path[i],
+          len = distance(a, b);
+        if (travel <= len)
+          return [{ x: a.x + ((b.x - a.x) * travel) / len, y: a.y + ((b.y - a.y) * travel) / len }];
+        travel -= len;
+      }
+      return [];
+    }),
+  );
   let best = Infinity,
     result: Partial<Input> = {};
   const kilns = g.enemies.filter((enemy) => enemy.kiln);
@@ -342,6 +383,8 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
               if (dx < 20 + b.radius && dy < 26 + b.radius) score += 1000 / (frame + 8);
               else if (dx < 42 && dy < 45) score += 8 / (frame + 8);
             }
+            for (const saw of surfacePoints[frame] ?? [])
+              if (Math.abs(saw.x - x) < 27 && Math.abs(saw.y - y) < 33) score += 1200 / (frame + 8);
             for (const charge of e.interceptor?.charges ?? [])
               if (
                 Math.abs(frame / 60 - charge.left) < 0.06 &&

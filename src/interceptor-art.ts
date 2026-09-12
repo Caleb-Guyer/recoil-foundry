@@ -3,6 +3,7 @@ import { interceptorLock } from './interceptor.ts';
 import { clamp } from './rules.ts';
 import { INTERCEPTOR_WEAPONS } from './interceptor-weapons.ts';
 import { drawRivalEffects, rivalWarningLanes } from './interceptor-effects.ts';
+import { drawRivalGrind } from './interceptor-grindshot-art.ts';
 
 export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
   const rig = e.interceptor!,
@@ -12,6 +13,7 @@ export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, 
     open = e.state === 'recover';
   c.save();
   drawRivalEffects(c, g, e);
+  drawRivalGrind(c, g, e, reduced);
   if (warning) {
     c.strokeStyle = e.attack === 'vault' ? '#f5b583' : INTERCEPTOR_WEAPONS[rig.move].color;
     c.lineWidth = locked ? (rig.move === 'capacitor' || rig.move === 'precision' ? 2.5 : 1.5) : 1;

@@ -1,4 +1,10 @@
 import Matter from 'matter-js';
+import {
+  planRivalGrind,
+  rivalGrindAngles,
+  type RivalGrindPlan,
+  type RivalSaw,
+} from './interceptor-grindshot.ts';
 import type { Enemy, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, direction, distance } from './rules.ts';
@@ -34,6 +40,9 @@ export interface InterceptorRig {
   move: InterceptorMove;
   caught: number;
   history: Vec[];
+  grindPlans: RivalGrindPlan[];
+  grindBullets: number[];
+  saws: RivalSaw[];
   charges: RivalCharge[];
   echoes: RivalEcho[];
   queue: RivalVolley[];
@@ -48,6 +57,9 @@ export const createInterceptor = (): InterceptorRig => ({
   move: 'aimed',
   caught: 0,
   history: [],
+  grindPlans: [],
+  grindBullets: [],
+  saws: [],
   charges: [],
   echoes: [],
   queue: [],
@@ -57,6 +69,7 @@ export const interceptorLock = (e: Enemy) =>
 export const interceptorSpeed = (e: Enemy) =>
   e.attack === 'vault' ? 8 : INTERCEPTOR_WEAPONS[e.interceptor!.move].speed;
 export function interceptorAngles(e: Enemy): number[] {
+  if (e.attack !== 'vault' && e.interceptor!.move === 'grindshot') return rivalGrindAngles(e);
   return e.attack === 'vault'
     ? weaponAngles('aimed', e.aim, 0)
     : weaponAngles(e.interceptor!.move, e.aim, e.phase, e.interceptor!.caught);
@@ -66,6 +79,11 @@ export const interceptorOrigin = (e: Enemy): Vec =>
     ? e.interceptor!.gate.exit
     : e.interceptor!.origin;
 function aim(g: Game, e: Enemy) {
+  const plan = e.interceptor!.grindPlans[0];
+  if (e.attack !== 'vault' && e.interceptor!.move === 'grindshot' && plan) {
+    e.aim = direction(plan.origin, plan.impact);
+    return;
+  }
   e.interceptor!.origin = { ...e.body.position };
   e.aim =
     e.interceptor!.move === 'shockwave' && e.attack !== 'vault'
@@ -117,6 +135,15 @@ export function beginInterceptorAttack(g: Game, e: Enemy, move: InterceptorMove)
   rig.caught = 0;
   rig.volley = 0;
   rig.gate = undefined;
+  rig.grindPlans = [];
+  rig.grindBullets = [];
+  rig.origin = { ...e.body.position };
+  if (move === 'grindshot') {
+    rig.grindPlans = planRivalGrind(g, e);
+    if (!rig.grindPlans.length) rig.move = 'aimed';
+    else if (e.phase > 0)
+      rig.grindBullets = weaponAngles('aimed', direction(rig.origin, g.player.position), 0);
+  }
   e.attack = move === 'heavy' ? 'heavy' : move === 'shockwave' ? 'slam' : 'aimed';
   if (move === 'fold') {
     const exit = foldExit(g, e);
@@ -224,6 +251,8 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       e.timer = 0.2;
       rig.volley = 0;
       rig.gate = undefined;
+      rig.grindPlans = [];
+      rig.grindBullets = [];
       e.hunt = undefined;
       return;
     }
@@ -321,5 +350,9 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     }
   }
   if (!hasLane) return;
-  beginInterceptorAttack(g, e, interceptorMove(e, g.seed));
+  beginInterceptorAttack(
+    g,
+    e,
+    g.testRun?.seed.startsWith('SAW-BOSS-53-') ? 'grindshot' : interceptorMove(e, g.seed),
+  );
 }

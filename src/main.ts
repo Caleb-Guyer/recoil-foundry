@@ -1,4 +1,4 @@
-import { grindshotTestFromUrl } from './practice.ts';
+import { grindshotTestFromUrl, interceptorGrindTestFromUrl } from './practice.ts';
 import './style.css';
 import { Game } from './game.ts';
 import type { Input } from './game.ts';
@@ -126,6 +126,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  interceptorGrindTestFromUrl(entryUrl) ??
   grindshotTestFromUrl(entryUrl) ??
   crossingTestFromUrl(entryUrl) ??
   salvageTestFromUrl(entryUrl) ??
@@ -185,6 +186,8 @@ function updateTitle() {
       (entryUrl.searchParams.get('evolved') === '1'
         ? 'Test salvage evolutions'
         : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('SAW-BOSS-53-'))
+    $('play').innerHTML = 'Test Interceptor saws <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'GRIND-52')
     $('play').innerHTML = 'Test Grindshot <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('CROSSING-51-'))
