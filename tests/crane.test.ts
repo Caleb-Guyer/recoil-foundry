@@ -111,7 +111,7 @@ test('the independent docks boss draw preserves regular rooms and the rooftop en
   const expected = {
     A: [
       'loading-bays:false',
-      'overpass:false',
+      'freight-crossing:false',
       'fortress:false',
       'demolition-lane:true',
       'split-deck:false',

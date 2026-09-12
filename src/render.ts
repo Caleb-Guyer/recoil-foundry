@@ -1,3 +1,4 @@
+import { drawCrossing } from './crossing-art.ts';
 import { drawMagnets, drawReclamationEnemy } from './reclamation-art.ts';
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
 import { drawTurbine, drawBlade } from './turbine-art.ts';
@@ -180,6 +181,7 @@ export class Renderer {
     drawRouteExits(c, g);
     this.drawHazards();
     drawFreightLift(c, g);
+    drawCrossing(c, g, this.reduced);
     drawConveyors(c, g, this.reduced);
     drawCoolant(c, g, this.reduced);
     drawMagnets(c, g, this.reduced);

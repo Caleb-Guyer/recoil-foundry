@@ -19,6 +19,7 @@ const mirrorPoint = <T extends { x: number; y: number }>(p: T): T => ({ ...p, x:
 test('sparse vents preserve authored geometry, actors, route, hazard sweep and safe room ends', () => {
   const coverage = new Set<string>();
   let count = 0;
+  let crossingRooms = 0;
   let pickups = 0;
   let attached = 0;
   let freestanding = 0;
@@ -34,6 +35,7 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
         assert.equal(vent, null);
         continue;
       }
+      if (level.crossing) crossingRooms++;
       if (!vent) continue;
       count++;
       runPickups += Number(!!vent.pickup);
@@ -95,7 +97,10 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
     coverage.size,
     LAYOUTS.filter((layout) => !layout.added && !layout.magnets).length * 2,
   );
-  assert(count > 256 * 3 * 0.9, `Only ${count}/768 eligible rooms have a usable vent`);
+  assert(
+    count > (256 * 3 - crossingRooms) * 0.9,
+    `Only ${count} eligible rooms have a usable vent`,
+  );
   assert(pickups > 450);
   assert(attached > 0 && freestanding > 0);
 });

@@ -474,7 +474,7 @@ test('every authored room and both roads remain crossable in both directions aft
         g.hitStop = 0;
         Body.setPosition(g.player, { x: reverse ? 1860 : 140, y: 680 });
         walk(g, [
-          ...(reverse ? [...g.level.route].reverse() : g.level.route),
+          ...(g.level.crossing ? [] : reverse ? [...g.level.route].reverse() : g.level.route),
           { x: reverse ? 100 : 1900, y: 720 },
         ]);
       }

@@ -1,3 +1,4 @@
+import { CrossingSystem } from './crossing.ts';
 import { MagnetSystem } from './magnets.ts';
 import { TetherSystem } from './tethers.ts';
 import { SalvageEvolutionSystem } from './salvage-evolutions.ts';
@@ -200,6 +201,7 @@ export class Game {
   hazards = new HazardSystem(this);
   conveyors = new ConveyorSystem(this);
   freight = new FreightSystem(this);
+  crossing = new CrossingSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
   portals = new PortalSystem(this);
@@ -228,6 +230,7 @@ export class Game {
     return [
       ...this.terrain,
       ...this.hazards.bodies,
+      ...this.crossing.bodies,
       ...this.breaches.bodies,
       ...this.salvageEvolutions.bodies,
       ...(this.extractionLift ? [this.extractionLift] : []),
@@ -451,6 +454,7 @@ export class Game {
     this.magnets.items = [];
     this.conveyors.clear();
     this.freight.clear();
+    this.crossing.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -555,6 +559,7 @@ export class Game {
       this.conveyors.reset();
       this.magnets.reset();
     }
+    this.crossing.reset();
     this.destruction.reset();
   }
   startEscape() {
@@ -776,6 +781,7 @@ export class Game {
     }
     this.updateEscape(dt);
     this.freight.beforeStep(dt);
+    this.crossing.beginStep(dt);
     this.hazards.beforeStep(dt);
     this.demolition.update();
     if (this.mode !== 'playing') return;
@@ -868,6 +874,8 @@ export class Game {
     this.salvage.beforeStep(dt);
     if (this.mode !== 'playing') return;
     this.salvageEvolutions.beforeStep();
+    this.crossing.beforeStep(dt);
+    if (this.mode !== 'playing') return;
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();

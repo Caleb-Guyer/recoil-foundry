@@ -49,14 +49,17 @@ test('Reclamation occupies three distinct rooms and a boss before the retuned ro
       assert.equal(level.area, 'reclamation');
       assert.deepEqual(level, getLevel(seed, stage));
       assert.equal(level.boss, stage === 15);
-      if (level.spawns[0].kind !== 'boss')
+      if (level.spawns[0].kind !== 'boss' && !level.crossing)
         assert(level.magnets!.length >= 2 && level.magnets!.length <= 3);
       if (stage < 15) {
-        assert.equal(level.id, RECLAMATION_LAYOUTS[stage - 12].id);
+        assert.equal(
+          level.id,
+          level.crossing ? 'freight-crossing' : RECLAMATION_LAYOUTS[stage - 12].id,
+        );
         assert(level.spawns.some((s) => s.kind === 'borer'));
         assert(level.spawns.some((s) => s.kind === 'sifter'));
       }
-      for (const m of level.magnets!)
+      for (const m of level.magnets ?? [])
         for (const s of level.solids)
           assert(
             !(m.x + 26 > s.x && m.x - 26 < s.x + s.w && m.y + 30 < s.y + s.h && m.floor > s.y),
@@ -78,12 +81,12 @@ test('all new layouts and mirrors remain walkable with ordinary jumps and loose 
         level = getLevel(seed, stage);
       cases.set(level.id + ':' + level.mirrored, { seed, stage });
     }
-  assert.equal(cases.size, 12);
+  assert.equal(cases.size, 14);
   for (const [label, { seed, stage }] of cases) {
     const g = room(stage, seed);
     empty(g);
     g.mods = [];
-    const path = [...g.level.route, { x: 1900, y: 720 }];
+    const path = [...(g.level.crossing ? [] : g.level.route), { x: 1900, y: 720 }];
     let index = 0,
       stuck = 0,
       last = 140;

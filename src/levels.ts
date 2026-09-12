@@ -1,3 +1,4 @@
+import { CROSSING_LAYOUT, crossingLevel } from './crossing-layout.ts';
 import { RECLAMATION_LAYOUTS, SORTER_ARENA, reclamationLevel } from './reclamation-layouts.ts';
 import type { MagnetPlacement } from './reclamation-layouts.ts';
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
@@ -56,6 +57,7 @@ export interface Layout {
   };
   magnets?: MagnetPlacement[];
   freight?: true;
+  crossing?: true;
   added?: true;
   id: string;
   name: string;
@@ -83,7 +85,7 @@ const flyer = (x: number, y: number): Spawn => ({ kind: 'flyer', x, y });
 const route = (...points: number[][]): Vec[] => points.map(([x, y]) => ({ x, y }));
 // Authored cover, spawn anchors and a generous baseline route belong to the same layout.
 // Ground remains safe beneath raised gaps; recoil creates optional shortcuts.
-export const SPECIAL_LAYOUTS: Layout[] = [FREIGHT_LAYOUT, ...PHYSICS_LAYOUTS];
+export const SPECIAL_LAYOUTS: Layout[] = [FREIGHT_LAYOUT, CROSSING_LAYOUT, ...PHYSICS_LAYOUTS];
 export const LAYOUTS: Layout[] = [
   ...RECLAMATION_LAYOUTS,
   ...ADDED_LAYOUTS,
@@ -628,6 +630,8 @@ function buildLevel(
   const pick = seeded(seed + ':layouts');
   if (!Number.isInteger(stage) || stage < 0 || stage >= STAGES)
     throw new RangeError('Invalid stage');
+  const crossing = crossingLevel(seed, stage);
+  if (crossing) return crossing;
   if (stage >= 12 && stage < 16) {
     const selected =
       bossVariant === 'boss' || bossVariant === 'sorter'

@@ -875,6 +875,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         directExitReady = false;
         takingLowerRoute = false;
         routeStep = 0;
+        retreatWaypoint = undefined;
         stuck = 0;
         previousX = g.player.position.x;
       }
@@ -965,7 +966,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         if (clearAt < 0) clearAt = g.time;
         assert(
           g.time - clearAt < 35,
-          `Exit unreachable in ${g.level.id}, stage ${g.stage}, at (${Math.round(p.x)}, ${Math.round(p.y)}), props ${JSON.stringify(g.props.items.map((p) => ({ kind: p.kind, pos: p.body.position })))}`,
+          `Exit unreachable in ${g.level.id}, stage ${g.stage}, at (${Math.round(p.x)}, ${Math.round(p.y)}), way ${JSON.stringify(way)}, retreat ${JSON.stringify(retreatWaypoint)}, props ${JSON.stringify(g.props.items.map((p) => ({ kind: p.kind, pos: p.body.position })))}`,
         );
         jump = g.grounded && (blocked || stuck > 15 || !!(way && p.y - way.y > 50));
       }
@@ -989,6 +990,19 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         firing =
           Math.abs(center - p.x) < 35 &&
           g.breaches.panels.some((panel) => panel.rect.w > panel.rect.h);
+        // Entering from an outboard lip can put the vertical panel between
+        // the player and the hatch. Shoot that visible barrier before centering.
+        const sidePanel = g.breaches.panels.find(
+          (panel) =>
+            panel.rect.h > panel.rect.w &&
+            (panel.body.position.x - p.x) * (center - p.x) > 0 &&
+            Math.abs(panel.body.position.x - p.x) < Math.abs(center - p.x),
+        );
+        if (sidePanel) {
+          move = 0;
+          aim = { ...sidePanel.body.position };
+          firing = true;
+        }
       }
       if (e?.kind === 'press') {
         move = dx > pressSpacing ? 1 : dx < -pressSpacing ? -1 : 0;
@@ -1170,6 +1184,18 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       if (fallingLoad) {
         move = p.x < fallingLoad.body.position.x ? -1 : 1;
         jump = false;
+        firing = false;
+      }
+      // Jump ahead of a visible moving bumper; continuing to fire can recoil
+      // the pilot back into its path. This uses the same ordinary movement inputs.
+      const train = g.crossing.cars.find((c) => {
+        const d = g.crossing.direction;
+        const gap = (p.x - c.body.position.x - d * 130) * d;
+        return p.y > 600 && gap > -20 && gap < 160;
+      });
+      if (train && !g.crossing.blocked) {
+        move = g.crossing.direction;
+        jump ||= g.grounded;
         firing = false;
       }
       // Read the Harpooner's locked line and exposed winch using normal inputs.

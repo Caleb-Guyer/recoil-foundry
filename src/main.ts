@@ -25,6 +25,7 @@ import {
   tetherTestFromUrl,
   arcTestFromUrl,
   salvageTestFromUrl,
+  crossingTestFromUrl,
   layoutTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
@@ -124,6 +125,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  crossingTestFromUrl(entryUrl) ??
   salvageTestFromUrl(entryUrl) ??
   arcTestFromUrl(entryUrl) ??
   layoutTestFromUrl(entryUrl) ??
@@ -181,6 +183,8 @@ function updateTitle() {
       (entryUrl.searchParams.get('evolved') === '1'
         ? 'Test salvage evolutions'
         : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('CROSSING-51-'))
+    $('play').innerHTML = 'Test Freight Crossing <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";

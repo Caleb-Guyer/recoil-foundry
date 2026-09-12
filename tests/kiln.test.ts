@@ -98,7 +98,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
   const expected = {
     A: [
       'loading-bays:false',
-      'overpass:false',
+      'freight-crossing:false',
       'loader-bay:false',
       'fortress:false',
       'demolition-lane:true',

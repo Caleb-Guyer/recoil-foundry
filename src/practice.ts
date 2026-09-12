@@ -536,3 +536,26 @@ export function salvageTestFromUrl(url: URL): Checkpoint | null {
       }
   return { ...testCheckpoint('SALVAGE-49', 13), mods };
 }
+
+export function crossingTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'crossing' ||
+    ['daily', 'dv', 'seed', 'formation', 'build', 'route', 'mode', 'layout', 'variant'].some((k) =>
+      p.has(k),
+    ) ||
+    ['area', 'mirror'].some((k) => p.getAll(k).length > 1) ||
+    (p.has('area') && !['docks', 'reclamation'].includes(p.get('area')!)) ||
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))
+  )
+    return null;
+  const stage = p.get('area') === 'reclamation' ? 13 : 1;
+  for (let i = 0; i < 128; i++) {
+    const seed = 'CROSSING-51-' + i;
+    const level = getLevel(seed, stage);
+    if (level.crossing && level.mirrored === (p.get('mirror') === '1'))
+      return testCheckpoint(seed, stage);
+  }
+  return null;
+}

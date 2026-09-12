@@ -144,7 +144,7 @@ test('new rooms occur naturally in Daily and Overtime without replacing introduc
       assert.deepEqual(getLevel(seed, stage), level);
       assert.deepEqual(getOvertimeLevel(seed, stage), ot);
     }
-    for (const stage of [0, 1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 18, 19])
+    for (const stage of [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 18, 19])
       assert(!getLevel(seed, stage).setpiece, `Unexpected replacement at ${stage}`);
   }
   assert.equal(dailySeen.size, 6);

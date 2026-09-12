@@ -159,6 +159,18 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'train-horn') {
+      this.tone(146, 139, 0.65, 0.07, 'sawtooth');
+      this.tone(196, 185, 0.65, 0.04, 'triangle');
+    } else if (kind === 'train-warn' || kind === 'train-near') {
+      this.tone(kind === 'train-near' ? 85 : 55, 35, 0.3, kind === 'train-near' ? 0.085 : 0.04);
+      this.tone(710, 710, 0.055, 0.025, 'sine');
+    } else if (kind === 'train-roll') {
+      this.tone(60, 35, 0.3, 0.04);
+      this.crack(0.045, 0.03, 650);
+    } else if (kind === 'train-impact') {
+      this.tone(105, 30, 0.18, 0.1);
+      this.crack(0.07, 0.07, 1100);
     } else if (kind === 'flashpoint') {
       this.tone(260, 55, 0.14, 0.065, 'triangle');
     } else if (kind === 'ram') {
