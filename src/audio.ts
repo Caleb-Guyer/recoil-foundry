@@ -159,6 +159,13 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'tether-mark') {
+      this.tone(600, 430, 0.045, 0.025, 'triangle');
+    } else if (kind === 'tether-link') {
+      this.tone(350, 680, 0.09, 0.045, 'triangle');
+    } else if (kind === 'tether-snap') {
+      this.tone(520, 120, 0.12, 0.07, 'triangle');
+      this.crack(0.045, 0.045, 1800);
     } else if (kind === 'sapper-lock') {
       this.tone(250, 430, 0.18, 0.04, 'triangle');
       this.tone(430, 430, 0.06, 0.035, 'sine', 0.32);

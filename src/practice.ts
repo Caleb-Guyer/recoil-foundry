@@ -310,6 +310,7 @@ export function sapperTestFromUrl(url: URL): Checkpoint | null {
 }
 
 export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
+  tether: ['tether', 'snapback', 'rapid', 'pierce', 'light', 'leech'],
   recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
   capacitor: ['capacitor', 'reserve-cell', 'magnum', 'kick', 'airshot', 'light'],
   countershot: ['countershot', 'reprisal', 'magnum', 'kick', 'airshot', 'light'],
@@ -340,6 +341,16 @@ export const FUSION_TEST_BUILDS: Record<string, string[]> = {
     'implosion',
   ],
 };
+export function tetherTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'tether' ||
+    ['daily', 'dv', 'seed', 'area', 'formation', 'build', 'route', 'mode'].some((k) => p.has(k))
+  )
+    return null;
+  return { ...testCheckpoint('TETHER-46', 6), mods: [...UPGRADE_TEST_BUILDS.tether] };
+}
 export function fusionTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

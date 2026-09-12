@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear twenty stages, take optional 
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Forty-seven possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
+You always carry **one gun**. Forty-nine possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -70,7 +70,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=38`). Version 38 adds the Sapper; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=39`). Version 39 adds Tether rounds and Snapback; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -138,6 +138,18 @@ Six mechanics and six dedicated follow-ups use the existing firing controls; cha
 [Test all six builds](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades): click **Test new upgrades**, then choose a card. Each starts in room 7 with full health, the mechanic, its follow-up, and a legal six-upgrade build. **R** retries the entrance; **Menu → Test new upgrades** switches builds. Normal saves, Daily records, and earned Practice victories stay intact. The test menu is available only through the explicit test link.
 
 Transient charge, pin, fuse, and echo state freezes during pauses and impact pauses, and resets on room entry, retry, death, or extraction. Pending effects and projectile counts are bounded. Ordinary checkpoints retain their builds when the upgrade pool changes.
+
+## Tether rounds
+
+**Tether rounds** is a shared upgrade. A direct bullet hit hooks a surviving enemy for three seconds; hitting another within 400 units connects them for four seconds. Their movement pulls against the cable, with momentum divided by mass. A rushing enemy can drag a flyer away from its firing position. Bosses, fixed gunners, and pinned enemies act as anchors. Shots keep their usual damage, firing rate, and recoil.
+
+Only one cable exists at a time. Repeated hits cannot refresh or replace it. Walls and moving cover break it, and hitting a target too far away or behind cover moves the waiting hook to that target. Killing or teleporting either endpoint releases the cable. Piercing and returning primary rounds can create a link; fragments, reflected bullets, echoes, explosions, and blocked shield hits cannot.
+
+**Snapback** requires Tether rounds. Stretching the cable by 25% of its original length, with a minimum of 48 units, snaps it and yanks mobile endpoints inward. The pull does not move bosses or fixed machines. A brief stagger preserves the launched enemies' momentum; their first hard collision with terrain or another enemy within 0.8 seconds deals 28–64 base damage, respecting shields, boss armor, and recovery vulnerabilities. Each launched enemy can trigger only one such collision, and a mutual impact hits each target once. Loose props retain their existing impact damage and fuel ignition. A new cable can begin after 0.8 seconds. A cable cut by cover, death, expiry, or portal travel produces no yank.
+
+A small hook mark and one thin cable show the mechanic; tension straightens the cable and warms its color before Snapback. No extra input or combat HUD is added. Pause and hitstop freeze its timers. Death, retries, room changes, and extraction clear all temporary hooks and collision effects. Ordinary saves retain the upgrades, and Daily Runs still provide one predetermined reward.
+
+[Test Tether rounds](https://caleb-guyer.github.io/recoil-foundry/?test=tether): click **Test Tether rounds** to start in Furnace with both upgrades and a six-upgrade gun. Hit two different enemies, then let their movement stretch the cable. **R** retries without changing ordinary saves, Daily records, or earned Practice victories. The pair is also available in the existing [upgrade test picker](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades&build=tether).
 
 ## Rare fusions
 
@@ -514,6 +526,8 @@ Scrapper checks cover sparse seeded placement, reserved crate clearance, real gr
 Harpooner checks cover seeded introductions and Overtime rosters, full warnings, movement-only dodges, one active tether, rotated crate catches, fuel arming, cover, shootable winches, blasts, real portal crossings, recoil pulling a machine off a ledge, equal momentum, finite duration, pause, death, and isolated retries. Shared enemy-contact checks also exercise its physical hull against crates and fuel.
 
 Sapper checks cover the solo introduction, seeded mixed rosters, locked ballistic throws, blocked launches, thin-wall catches, shooting charges off walls and floors, rotating and destroyed hosts, actual portal travel, blast occlusion, terrain destruction, enemy friendly fire, spawn grace, bounded charge count, frozen fuses, cleanup, isolated saves, and clearing the introduction with normal controls. A physical return-shot test knocks a charge across the room and kills its owner with the original fuse.
+
+Tether checks cover actual bullet hooks, shared reward prerequisites, boss and pinned anchors, equal momentum, cover breaks, real portal travel, pause and cleanup, projectile exclusions, dense builds, a charger dragging a flyer under normal AI, naturally triggered Snapback, and physical collisions with armor and no duplicate damage. A complete twenty-room combat run earns both upgrades, uses the cable, and reaches extraction with ordinary health and controls.
 
 Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links.
 

@@ -284,6 +284,7 @@ export class PortalSystem {
       const velocity = portalVector(body.velocity, entry, exit);
       disruptScrapperBody(g, body);
       g.sappers.disrupt(body);
+      g.tethers.disrupt(body);
       g.harpoons.disrupt(body);
       g.magnets.release(body);
       Matter.Body.setPosition(body, { x: pos.x + rest.x * travel, y: pos.y + rest.y * travel });

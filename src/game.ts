@@ -1,4 +1,5 @@
 import { MagnetSystem } from './magnets.ts';
+import { TetherSystem } from './tethers.ts';
 import { DestructionSystem } from './destruction.ts';
 import { SapperSystem, createSapper } from './sapper.ts';
 import type { SapperRig } from './sapper.ts';
@@ -205,6 +206,7 @@ export class Game {
   harpoons = new HarpoonSystem(this);
   destruction = new DestructionSystem(this);
   sappers = new SapperSystem(this);
+  tethers = new TetherSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -343,6 +345,7 @@ export class Game {
       this.portalRequest = null;
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.tethers.reset();
       this.sappers.clear();
       for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
       for (const e of this.enemies) releaseScrapper(this, e);
@@ -418,6 +421,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false) {
+    this.tethers.reset();
     this.sappers.clear();
     this.destruction.clear();
     this.enteringDetour = false;
@@ -615,6 +619,7 @@ export class Game {
     )
       return;
     this.escape.phase = 'extracting';
+    this.tethers.reset();
     this.evolutions.reset();
     this.ballistics.reset();
     this.fusions.reset();
@@ -839,6 +844,7 @@ export class Game {
     this.magnets.update();
     this.fusions.beforeStep(dt);
     this.harpoons.beforeStep(dt);
+    this.tethers.beforeStep(dt);
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();
@@ -849,6 +855,8 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.destruction.afterStep(dt);
     this.sappers.afterStep();
+    if (this.mode !== 'playing') return;
+    this.tethers.afterStep();
     if (this.mode !== 'playing') return;
     this.hazards.afterStep(dt);
     this.containPlayer();
@@ -886,6 +894,7 @@ export class Game {
     ) {
       this.clear = true;
       this.clearAt = this.time;
+      this.tethers.reset();
       this.sappers.clear();
       this.shots = this.shots.filter((s) => s.friendly);
       this.onSound('clear');
@@ -1172,6 +1181,7 @@ export class Game {
     e.spawn = Math.max(0, e.spawn - dt);
     if (e.spawn > 0) return;
     if (this.ballistics.pinned(e)) return;
+    if (this.tethers.staggered(e)) return;
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *
@@ -1865,6 +1875,7 @@ export class Game {
           this.evolutions.hit(s);
           this.ballistics.consumeFracture(e, s);
           this.ballistics.rivet(e, s);
+          this.tethers.hit(e, s);
           if (e.hp <= 0 && this.gun.deathBloom && !s.fragment) this.deathBloom(s, e.body.position);
           this.splitShot(s);
           if (!e.body.isStatic)
@@ -2035,6 +2046,7 @@ export class Game {
     releaseScrapper(this, e);
     this.harpoons.disrupt(e.body);
     this.kills++;
+    this.tethers.disrupt(e.body);
     this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);

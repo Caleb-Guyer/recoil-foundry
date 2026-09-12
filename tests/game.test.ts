@@ -343,6 +343,32 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
 for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoads } of [
   {
     seed: 'path-run-65',
+    pressSpacing: 220,
+    pathMods: ['tether', 'snapback', 'crossfire'],
+    rewards: [
+      'leech',
+      'airshot',
+      'tether',
+      'crossfire',
+      'rapid',
+      'snapback',
+      'magnum',
+      'scatter',
+      'light',
+      'kick',
+      'burst',
+      'pierce',
+      'backblast',
+      'bloom',
+      'convergence',
+      'redline',
+      'capacitor',
+      'countershot',
+      'reprisal',
+    ],
+  },
+  {
+    seed: 'path-run-65',
     pressSpacing: 160,
     fusion: 'rail-spike',
     pathMods: ['deadeye', 'execute', 'rail-spike'],
@@ -653,6 +679,10 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       loaderReacted = false;
     let retreatWaypoint: { x: number; y: number } | undefined;
     let fusionUsed = false;
+    let tetherUsed = false;
+    g.onSound = (kind) => {
+      if (kind === 'tether-link') tetherUsed = true;
+    };
     const priority = [
       ...pathMods,
       'leech',
@@ -1072,4 +1102,5 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     }
     assert(g.hp > 0);
     if (fusion) assert(fusionUsed, `The run never used ${fusion}`);
+    if (pathMods[0] === 'tether') assert(tetherUsed, 'The run never formed a tether');
   });

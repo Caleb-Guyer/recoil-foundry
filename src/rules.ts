@@ -317,6 +317,20 @@ export const MODS = [
     mark: 'rail-spike',
   },
   {
+    id: 'tether',
+    name: 'Tether rounds',
+    description:
+      'Hit two enemies to link them with a short cable. Their movement pulls against each other.',
+    mark: 'tether',
+  },
+  {
+    id: 'snapback',
+    name: 'Snapback',
+    description:
+      'Overstretched cables snap, yanking enemies inward. Hard collisions deal bonus damage.',
+    mark: 'snapback',
+  },
+  {
     id: 'orbit',
     name: 'Orbit',
     description: 'Caught rounds orbit briefly. Your next shot launches them toward your aim.',
@@ -376,6 +390,7 @@ export interface RewardContext {
 }
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  snapback: 'tether',
   'blast-surf': 'shellshock',
   aftershock: 'shellshock',
   'chain-reaction': 'shellshock',

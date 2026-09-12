@@ -22,6 +22,7 @@ import {
   routesTestFromUrl,
   destructionTestFromUrl,
   sapperTestFromUrl,
+  tetherTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
   overtimeTestFromUrl,
@@ -119,6 +120,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  tetherTestFromUrl(entryUrl) ??
   sapperTestFromUrl(entryUrl) ??
   destructionTestFromUrl(entryUrl) ??
   routesTestFromUrl(entryUrl) ??
@@ -161,6 +163,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test destructible terrain <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'SAPPER-45')
     $('play').innerHTML = 'Test the Sapper <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'TETHER-46')
+    $('play').innerHTML = 'Test Tether rounds <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -203,6 +207,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Shoot cracked cover. Drop the ledges. R to retry.';
   if (linkedRunTest?.seed === 'SAPPER-45')
     $('title-hint').textContent = 'Watch the fuse. Shoot charges back. R to retry.';
+  if (linkedRunTest?.seed === 'TETHER-46')
+    $('title-hint').textContent = 'Hit two enemies. Stretch the cable. R to retry.';
 }
 function clearInput() {
   keys.clear();
@@ -404,6 +410,8 @@ function modMark(mod: Mod) {
     'linked-fuse': 'M8 30h10v10H8zM34 12h10v10H34zM13 30V18h21M25 13v10',
     afterimage: 'M7 13h25v8H7zM17 27h25v8H17zM32 17h10M42 31h7',
     parallax: 'M7 10h19v6H7zM7 32h19v6H7zM26 13l20 11-20 11M40 24h10',
+    tether: 'M7 13h10v10H7zM39 26h10v10H39zM17 18q10 20 22 13',
+    snapback: 'M7 13h10v10H7zM39 26h10v10H39zM17 18l7 3M32 27l7 4M24 12l8 6-8 5 8 5-8 7',
     'rail-spike': 'M7 12l14 9M7 36l14-9M7 24h42M23 19h17l9 5-9 5H23M33 9v7M33 32v7',
     orbit: 'M38 13a16 16 0 1 0 5 19M39 9l5 7-8 2M23 20h8v8h-8zM6 18h4M17 38h4',
     implosion:

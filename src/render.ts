@@ -38,6 +38,7 @@ import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
 import { drawHarpooner } from './harpooner-art.ts';
 import { drawSapper, drawCharge, drawSapperBlasts } from './sapper-art.ts';
+import { drawTethers } from './tether-art.ts';
 import { FREIGHT } from './freight-layout.ts';
 import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
@@ -526,6 +527,7 @@ export class Renderer {
       c.fill();
     }
     this.drawPlayer();
+    drawTethers(c, g, this.reduced);
     drawBallistics(c, g, this.reduced);
     drawFusions(c, g, this.reduced);
     for (const s of g.shots) {
