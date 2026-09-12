@@ -11,6 +11,7 @@ import { createTurbine, updateTurbine } from './turbine.ts';
 import type { TurbineRig } from './turbine.ts';
 import { EvolutionSystem } from './evolutions.ts';
 import { BallisticsSystem } from './ballistics.ts';
+import { FusionSystem, RAIL_RECOIL } from './fusions.ts';
 import type { RecallFlight } from './ballistics.ts';
 import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
@@ -32,6 +33,8 @@ import {
   REPAIR_REWARD,
   segmentBox,
   isDetourStage,
+  isFusion,
+  fusionUnlocked,
 } from './rules.ts';
 import type { Vec, Gun, Mod, Checkpoint } from './rules.ts';
 import { dailyFromSeed } from './daily.ts';
@@ -151,6 +154,8 @@ export interface Shot {
   reflectedAt?: number;
   echo?: boolean;
   enemyAmmo?: EnemyAmmo;
+  rail?: boolean;
+  orbitReleased?: boolean;
 }
 export interface Particle {
   pos: Vec;
@@ -186,6 +191,7 @@ export class Game {
   demolition = new DemolitionSystem(this);
   evolutions = new EvolutionSystem(this);
   ballistics = new BallisticsSystem(this);
+  fusions = new FusionSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -301,6 +307,7 @@ export class Game {
       this.demolition.clear();
       this.evolutions.reset();
       this.ballistics.reset();
+      this.fusions.reset();
     }
     this.mode = mode;
     this.onChange();
@@ -365,6 +372,7 @@ export class Game {
     this.detourStepsReady = false;
     this.evolutions.reset();
     this.ballistics.reset();
+    this.fusions.reset();
     this.magnets.items = [];
     this.conveyors.clear();
     this.freight.clear();
@@ -549,6 +557,7 @@ export class Game {
     this.escape.phase = 'extracting';
     this.evolutions.reset();
     this.ballistics.reset();
+    this.fusions.reset();
     this.demolition.clear();
     this.escape.depart = 0;
     this.shots = [];
@@ -761,6 +770,7 @@ export class Game {
     this.cargo.update(dt);
     this.conveyors.beforeStep();
     this.magnets.update();
+    this.fusions.beforeStep(dt);
     this.props.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
@@ -861,6 +871,7 @@ export class Game {
   fireRound() {
     const charged = this.gun.landing && this.landingReady;
     const capacitor = this.ballistics.discharge();
+    const rail = capacitor && this.fusions.has('rail-spike');
     const beforeVolley = this.id;
     const origin = { x: this.player.position.x, y: this.player.position.y - 3 };
     this.landingReady = false;
@@ -872,12 +883,16 @@ export class Game {
     this.muzzle = 0.065;
     const d = direction(this.player.position, this.aim);
     if (d.x === 0 && d.y === 0) d.x = 1;
-    const impulse = this.gun.recoil * (this.grounded ? 0.21 : 1) * (charged ? 1.25 : 1);
+    const impulse =
+      this.gun.recoil *
+      (this.grounded ? 0.21 : 1) *
+      (charged ? 1.25 : 1) *
+      (rail ? RAIL_RECOIL : 1);
     Body.setVelocity(this.player, {
       x: clamp(this.player.velocity.x - d.x * impulse, -23, 23),
       y: clamp(this.player.velocity.y - d.y * impulse, -21, 20),
     });
-    this.feedback((this.grounded ? 2.2 : 3.8) * (charged ? 1.3 : 1), d);
+    this.feedback((this.grounded ? 2.2 : 3.8) * (charged ? 1.3 : 1) * (rail ? 1.5 : 1), d);
     this.onSound(
       this.chargedFlash
         ? 'charged'
@@ -895,10 +910,14 @@ export class Game {
       (charged ? 2 : 1) *
       (capacitor ? 2 : 1) *
       evolutionDamage;
-    this.fireVolley(d, damage, this.chargedFlash);
-    // Recoil belongs to the aimed shot; Backfire never cancels movement.
-    if (this.gun.rearVolley) this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash);
+    if (rail) this.fusions.fireRail(d, damage);
+    else {
+      this.fireVolley(d, damage, this.chargedFlash);
+      // Recoil belongs to the aimed shot; Backfire never cancels movement.
+      if (this.gun.rearVolley) this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash);
+    }
     this.ballistics.record(beforeVolley, origin, d);
+    this.fusions.release(d);
     if (this.gun.backblast) this.fireBackblast(d, damage * this.gun.pellets * this.gun.lanes * 0.8);
     this.evolutions.settle();
     if (this.particles.length < 220)
@@ -1706,6 +1725,7 @@ export class Game {
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
         if (nearest.caught) {
+          this.fusions.catch(s);
           s.life = 0;
           s.shell = undefined;
         } else if (nearest.cable) {
@@ -1745,7 +1765,8 @@ export class Game {
             });
           if (s.pierce > 0) {
             s.pierce--;
-            const falloff = s.recall?.returning && this.ballistics.has('homecoming') ? 1 : 0.8;
+            const falloff =
+              s.rail || (s.recall?.returning && this.ballistics.has('homecoming')) ? 1 : 0.8;
             s.damage *= falloff;
             if (s.shell) s.shell.damage *= falloff;
             const d = direction({ x: 0, y: 0 }, s.vel);
@@ -1982,6 +2003,7 @@ export class Game {
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
       seeded(this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage),
+      { stage: this.stage, overtime: !!this.overtime },
     );
     if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
     this.rewardTaken = false;
@@ -1993,6 +2015,7 @@ export class Game {
       this.mode !== 'upgrade' ||
       this.rewardTaken ||
       !this.offers.some((m) => m.id === id) ||
+      (isFusion(id) && !fusionUnlocked({ stage: this.stage, overtime: !!this.overtime })) ||
       (!(id === 'repair' && this.overtime && availableMods(this.mods).length === 0) &&
         !availableMods(this.mods).some((m) => m.id === id))
     )

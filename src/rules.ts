@@ -310,6 +310,24 @@ export const MODS = [
     description: 'Afterimages turn toward your current aim when they fire.',
     mark: 'parallax',
   },
+  {
+    id: 'rail-spike',
+    name: 'Rail spike',
+    description: 'Charged volleys merge into one heavy, piercing round. A much bigger kick.',
+    mark: 'rail-spike',
+  },
+  {
+    id: 'orbit',
+    name: 'Orbit',
+    description: 'Caught rounds orbit briefly. Your next shot launches them toward your aim.',
+    mark: 'orbit',
+  },
+  {
+    id: 'implosion',
+    name: 'Implosion',
+    description: 'Stuck shells pull nearby enemies and loose debris inward before exploding.',
+    mark: 'implosion',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -342,7 +360,21 @@ export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   'linked-fuse': { path: 'demolition' },
   afterimage: { path: 'bullet-hell' },
   parallax: { path: 'bullet-hell' },
+  'rail-spike': { path: 'precision' },
+  orbit: { path: 'bullet-hell' },
+  implosion: { path: 'demolition' },
 };
+export const FUSION_REQUIRES: Record<string, readonly string[]> = {
+  'rail-spike': ['deadeye', 'capacitor'],
+  orbit: ['crossfire', 'recall'],
+  implosion: ['shellshock', 'fuse'],
+};
+export const isFusion = (id: string) => Object.hasOwn(FUSION_REQUIRES, id);
+export interface RewardContext {
+  stage: number;
+  overtime?: boolean;
+}
+export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
   'blast-surf': 'shellshock',
   aftershock: 'shellshock',
@@ -378,16 +410,25 @@ export function availableMods(mods: readonly string[]): Mod[] {
     return (
       !mods.includes(mod.id) &&
       (!MOD_REQUIRES[mod.id] || mods.includes(MOD_REQUIRES[mod.id])) &&
+      (!isFusion(mod.id) ||
+        (!mods.some(isFusion) && FUSION_REQUIRES[mod.id].every((id) => mods.includes(id)))) &&
       (!branch || !chosen || branch.path === chosen)
     );
   });
 }
 // A small preference for the chosen path, sampled without replacement.
-export function rewardMods(mods: readonly string[], count: number, rng: () => number): Mod[] {
+export function rewardMods(
+  mods: readonly string[],
+  count: number,
+  rng: () => number,
+  context: RewardContext = { stage: 0 },
+): Mod[] {
   const path = buildPath(mods),
-    pool = availableMods(mods),
+    pool = availableMods(mods).filter((mod) => !isFusion(mod.id) || fusionUnlocked(context)),
     offers: Mod[] = [];
-  const weight = (mod: Mod) => (path && MOD_PATHS[mod.id]?.path === path ? 1.5 : 1);
+  const weight = (mod: Mod) =>
+    (path && MOD_PATHS[mod.id]?.path === path ? 1.5 : 1) *
+    (isFusion(mod.id) ? (context.overtime ? 0.65 : 0.18) : 1);
   while (pool.length && offers.length < count) {
     let roll = rng() * pool.reduce((sum, mod) => sum + weight(mod), 0);
     let index = 0;
@@ -406,7 +447,7 @@ export function validBuild(mods: readonly string[]) {
 }
 export function modPathLabel(id: string): string {
   const branch = MOD_PATHS[id];
-  return branch ? PATH_NAMES[branch.path] : '';
+  return branch ? PATH_NAMES[branch.path] + (isFusion(id) ? ' · Fusion' : '') : '';
 }
 export function getGun(mods: readonly string[]): Gun {
   const g: Gun = {
@@ -625,7 +666,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       d.detour === undefined &&
       typeof d.seed === 'string' &&
       !/^RF-D\d+-/.test(d.seed) &&
-      (overtime.repairs === 0 || (validBuild(d.mods) && availableMods(d.mods).length === 0)));
+      // v2.40 saves may already contain repairs before fusions existed.
+      (overtime.repairs === 0 ||
+        (validBuild(d.mods) && availableMods(d.mods).every((m) => isFusion(m.id)))));
   const validDetours =
     Array.isArray(completed) &&
     completed.length <= 4 &&
@@ -656,6 +699,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     new Set(d.mods).size === d.mods.length &&
     d.mods.length <= MODS.length &&
     validBuild(d.mods) &&
+    (!d.mods.some(isFusion) || (d.version === 5 && (!!overtime || d.stage >= 8))) &&
     Number.isInteger(d.kills) &&
     d.kills >= 0 &&
     Number.isFinite(d.elapsed) &&

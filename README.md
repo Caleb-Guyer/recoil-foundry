@@ -20,7 +20,7 @@ A physics roguelike about staying in motion. Clear twenty stages, take optional 
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Forty-four possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
+You always carry **one gun**. Forty-seven possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
@@ -36,7 +36,7 @@ Bosses have health appropriate for an assembled build, start with later-phase at
 
 Each of the first nineteen rooms gives another legal upgrade pick and the usual 12 health. Paths and prerequisites still apply. Once every legal upgrade has been taken, the reward becomes **Field repair**: 24 health and passage to the next room. Repairs never add duplicate upgrades or change the gun. Optional challenge detours belong to the first lap. Continue preserves the Overtime room, build, repairs, and total run time; its HUD uses a compact **OT** prefix and the result counts both laps.
 
-Daily challenges retain a fixed twenty-room finish and do not offer Overtime. Their current ruleset and records are unaffected.
+Daily challenges retain a fixed twenty-room finish and do not offer Overtime.
 
 [Test Overtime](https://caleb-guyer.github.io/recoil-foundry/?test=overtime) starts the second lap with full health and a nineteen-upgrade gun. Add `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` to test a later area with its earned upgrade count. These tests preserve saves, Daily records, and Practice unlocks. Press **R** to restart the test.
 
@@ -50,7 +50,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-10&dv=33`). Version 33 moves the former rooftop boss into Reclamation and expands the Interceptor's arsenal; its best times are separate from earlier rulesets. Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-11&dv=34`). Version 34 adds rare fusion upgrades; its best times are separate from earlier rulesets. Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -104,7 +104,7 @@ Rewire removes the placement limit while retaining exactly two portals. Its prev
 
 ## New firing mechanics
 
-Six mechanics and six dedicated follow-ups expand the pool to 44 upgrades. All use the existing firing controls; charge lights, small fuse ticks, and faint gun silhouettes keep the HUD unchanged.
+Six mechanics and six dedicated follow-ups use the existing firing controls; charge lights, small fuse ticks, and faint gun silhouettes keep the HUD unchanged.
 
 | Upgrade                  | Behavior                                                                                                                                                                                                                                                                                                                      | Follow-up                                                                                                                                   |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -118,6 +118,26 @@ Six mechanics and six dedicated follow-ups expand the pool to 44 upgrades. All u
 [Test all six builds](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades): click **Test new upgrades**, then choose a card. Each starts in room 7 with full health, the mechanic, its follow-up, and a legal six-upgrade build. **R** retries the entrance; **Menu → Test new upgrades** switches builds. Normal saves, Daily records, and earned Practice victories stay intact. The test menu is available only through the explicit test link.
 
 Transient charge, pin, fuse, and echo state freezes during pauses and impact pauses, and resets on room entry, retry, death, or extraction. Pending effects and projectile counts are bounded. Ordinary checkpoints retain their builds when the upgrade pool changes.
+
+## Rare fusions
+
+Fusions combine two owned upgrades. A run can carry **one fusion**, including its Overtime lap. Eligible fusions can appear in the reward after the second boss and later rewards. They use 0.18 times an ordinary upgrade's selection weight on the first lap and 0.65 times in Overtime, with the existing path preference applied to both. Daily Runs use the same legal pool and still give exactly one predetermined card. Cards add only **Fusion** beside the existing path label.
+
+| Fusion     | Requires            | Behavior                                                                                                                                                                                                                                                      |
+| ---------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rail spike | Deadeye + Capacitor | A charged discharge merges all forward and backward pellets into one fast round with their combined damage, four extra penetrations, and 65% more recoil. Penetration does not reduce its damage. Uncharged discharges keep their normal pattern.             |
+| Orbit      | Crossfire + Recall  | Caught primary rounds orbit harmlessly for up to 1.25 seconds. The next discharge launches the stored rounds toward the current aim with a narrow fan. Up to 24 rounds can wait; each gets exactly one additional flight.                                     |
+| Implosion  | Shellshock + Fuse   | Attached shells pull nearby mobile enemies and loose props inward through clear space before their existing explosion. The pull reaches 170 units and grows toward detonation. Bosses and anchored machines resist it, but a pulled crate can still hit them. |
+
+Rail spike keeps bank growth, Recall, Countershot, Splinter, and existing damage bonuses. Reserve cell spends one charge per burst discharge; Backblast still creates its rear cone. Armor and solid cover retain their collision and damage rules. Its pale trail follows actual bounces and portals, and the charge lamp changes color.
+
+Orbit preserves the caught damage and remaining bank and counterfire charges. Homecoming contributes its additional return penetrations. Released rounds can pierce, bank, split, and trigger Death bloom, but cannot return again or create an Afterimage. Echoes and fragments cannot be stored. The release adds no recoil or charge cost. Storage expires in active game time and follows player portal travel without drawing trails across the map. Cover clips storage positions, and releases respect the shared 180-projectile cap.
+
+Implosion uses physical velocity, so walls and other actors still collide with pulled bodies. Only the strongest visible charge pulls a body; stacked pellets cannot multiply the force. Suspended cargo, held crates, the player, and a shell's own host are not pulled. Rotating and teleported hosts carry their attached charges. Linked fuse shortens the remaining pull, and Aftershock preserves its existing outward blast.
+
+Continue preserves the fusion with the gun. Room changes, retries, death, and extraction clear temporary orbiting rounds and attached charges; pauses and hitstop freeze them. Older Overtime saves with Field repairs remain valid and can receive their newly eligible fusion before returning to repairs.
+
+[Test the fusions](https://caleb-guyer.github.io/recoil-foundry/?test=fusions) opens a three-build picker. Choose Rail spike, Orbit, or Implosion to start in Cooling Works with full health and eight legal upgrades. Links also accept `&build=rail-spike`, `&build=orbit`, or `&build=implosion`. **R** restarts the selected test. Saves, Daily records, and earned Practice victories stay untouched.
 
 ## Follow-up upgrades
 
@@ -423,6 +443,8 @@ npm run preview
 | `src/rules.ts`            | Gun modifications, seeded choices, swept collisions, and checkpoint validation            |
 | `src/ballistics.ts`       | Returning rounds, stored charges, counterfire, wall pins, sticky shells, and echo volleys |
 | `src/ballistics-art.ts`   | Small charge lamps, attached fuse ticks, pins, and delayed gun silhouettes                |
+| `src/fusions.ts`          | Charged rail volleys, bounded orbit storage, and physical implosion pulls                 |
+| `src/fusions-art.ts`      | Orbit rounds and grouped inward charge ticks                                              |
 | `src/daily.ts`            | UTC challenge identity, versioned links, and validated local best times                   |
 | `src/practice.ts`         | Validated boss victory storage and stage-appropriate practice builds                      |
 | `src/render.ts`           | Canvas world, camera feedback, character animation, and effects                           |
@@ -483,6 +505,8 @@ Portal checks cover grounded walking under normal gravity in both directions, ra
 Demolition checks cover direct and area damage, falloff, shield and boss armor, terrain and rotated-prop occlusion, real floor-shot launches, per-volley launch limits, bank and pierce payloads, air and landing bonuses, delayed and finite chains, escape boarding, checkpoint legality, deterministic path odds, portal travel, and sustained dense builds.
 
 ## Publish
+
+Fusion checks cover both prerequisites, rarity across seeded rewards, one-per-run selection, saved repairs, charged volley consolidation, burst costs, cover, finite orbit releases, portals, physical crate impacts, bounded pulls, pause, cleanup, and isolated test links. Three additional full combat runs earn and use Rail spike, Orbit, and Implosion with normal health before reaching extraction.
 
 GitHub Pages uses the included GitHub Actions workflow. Pushes to `main` run tests and a production build before deploying the static `dist/` directory. Relative assets also support other static hosts. No server or external game service is needed.
 

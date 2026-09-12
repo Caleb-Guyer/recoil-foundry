@@ -340,7 +340,88 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
 // Keep representative builds covering each path as the route expands.
 // Only offers are scripted: every upgrade is earned through an actual room clear.
 // New builds below exercise every new mechanic. Weighted pool/retry coverage lives in build-paths and daily.
-for (const { seed, pressSpacing, pathMods, rewards, overtimeRun } of [
+for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
+  {
+    seed: 'path-run-65',
+    pressSpacing: 160,
+    fusion: 'rail-spike',
+    pathMods: ['deadeye', 'execute', 'rail-spike'],
+    rewards: [
+      'pierce',
+      'airshot',
+      'leech',
+      'deadeye',
+      'burst',
+      'execute',
+      'magnum',
+      'capacitor',
+      'rail-spike',
+      'rapid',
+      'kick',
+      'scatter',
+      'light',
+      'ricochet',
+      'split',
+      'landing',
+      'redline',
+      'reserve-cell',
+      'backblast',
+    ],
+  },
+  {
+    seed: 'path-run-66',
+    pressSpacing: 230,
+    fusion: 'orbit',
+    pathMods: ['crossfire', 'bloom', 'orbit'],
+    rewards: [
+      'magnum',
+      'rapid',
+      'leech',
+      'ricochet',
+      'banker',
+      'burst',
+      'airshot',
+      'crossfire',
+      'recall',
+      'orbit',
+      'bloom',
+      'scatter',
+      'kick',
+      'pierce',
+      'light',
+      'split',
+      'homecoming',
+      'afterimage',
+      'parallax',
+    ],
+  },
+  {
+    seed: 'path-run-65',
+    pressSpacing: 160,
+    fusion: 'implosion',
+    pathMods: ['shellshock', 'aftershock', 'blast-surf', 'chain-reaction', 'implosion'],
+    rewards: [
+      'leech',
+      'airshot',
+      'magnum',
+      'shellshock',
+      'aftershock',
+      'blast-surf',
+      'chain-reaction',
+      'fuse',
+      'implosion',
+      'light',
+      'backblast',
+      'scatter',
+      'ricochet',
+      'rapid',
+      'pierce',
+      'burst',
+      'banker',
+      'linked-fuse',
+      'shockfront',
+    ],
+  },
   { seed: 'OVERTIME-40', pressSpacing: 240, pathMods: ['deadeye', 'execute'], overtimeRun: true },
   {
     seed: 'path-run-65',
@@ -518,7 +599,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun } of [
     ],
   },
 ])
-  test(`combat reaches extraction: ${seed} ${pathMods[0]}${pathMods.length > 4 ? ' expanded build' : ''}`, () => {
+  test(`combat reaches extraction: ${seed} ${pathMods[0]}${fusion ? ' fusion ' + fusion : pathMods.length > 4 ? ' expanded build' : ''}`, () => {
     const g = new Game();
     g.start(seed);
     if (overtimeRun)
@@ -567,6 +648,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun } of [
       loaderDirection = 1,
       loaderReacted = false;
     let retreatWaypoint: { x: number; y: number } | undefined;
+    let fusionUsed = false;
     const priority = [
       ...pathMods,
       'leech',
@@ -590,6 +672,12 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun } of [
       'fold',
     ];
     for (let i = 0; i < 60 * 900 && g.mode !== 'dead' && g.mode !== 'won'; i++) {
+      fusionUsed ||=
+        fusion === 'rail-spike'
+          ? g.shots.some((s) => s.rail)
+          : fusion === 'orbit'
+            ? g.shots.some((s) => s.orbitReleased)
+            : fusion === 'implosion' && g.mods.includes(fusion) && g.ballistics.shells.length > 0;
       if (g.escape?.phase === 'extracting') {
         tick(g);
         continue;
@@ -932,4 +1020,5 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun } of [
       assert(g.mods.includes('chain-reaction'));
     }
     assert(g.hp > 0);
+    if (fusion) assert(fusionUsed, `The run never used ${fusion}`);
   });

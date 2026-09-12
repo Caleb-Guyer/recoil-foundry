@@ -22,6 +22,8 @@ import {
   upgradeTestFromUrl,
   overtimeTestFromUrl,
   UPGRADE_TEST_BUILDS,
+  FUSION_TEST_BUILDS,
+  fusionTestFromUrl,
 } from './practice.ts';
 import type { Encounter } from './practice.ts';
 import {
@@ -113,6 +115,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  fusionTestFromUrl(entryUrl) ??
   overtimeTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??
@@ -140,6 +143,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.overtime)
     $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('FUSIONS-'))
+    $('play').innerHTML = 'Test fusions <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -170,6 +175,8 @@ function updateTitle() {
             : 'Shoot down. Go up.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
+  if (linkedRunTest?.seed.startsWith('FUSIONS-'))
+    $('title-hint').textContent = 'Choose a fusion. Full health. R to retry.';
 }
 function clearInput() {
   keys.clear();
@@ -371,6 +378,10 @@ function modMark(mod: Mod) {
     'linked-fuse': 'M8 30h10v10H8zM34 12h10v10H34zM13 30V18h21M25 13v10',
     afterimage: 'M7 13h25v8H7zM17 27h25v8H17zM32 17h10M42 31h7',
     parallax: 'M7 10h19v6H7zM7 32h19v6H7zM26 13l20 11-20 11M40 24h10',
+    'rail-spike': 'M7 12l14 9M7 36l14-9M7 24h42M23 19h17l9 5-9 5H23M33 9v7M33 32v7',
+    orbit: 'M38 13a16 16 0 1 0 5 19M39 9l5 7-8 2M23 20h8v8h-8zM6 18h4M17 38h4',
+    implosion:
+      'M7 8l13 12M36 28l13 12M7 40l13-12M36 20L49 8M13 20h7v-7M36 35v-7h7M13 28h7v7M36 13v7h7',
   };
   return (
     '<svg class="mod-mark" viewBox="0 0 56 48" aria-hidden="true"><path d="' +
@@ -387,9 +398,12 @@ function showDialog(kind: string) {
   modal.classList.toggle('practice-dialog', kind === 'practice');
   const content = $('dialog-content');
   if (kind === 'upgrade-test') {
+    const fusions = linkedRunTest?.seed.startsWith('FUSIONS-');
     content.innerHTML =
-      '<h2 id="dialog-title">Try a build</h2><div class="choices">' +
-      Object.keys(UPGRADE_TEST_BUILDS)
+      '<h2 id="dialog-title">' +
+      (fusions ? 'Try a fusion' : 'Try a build') +
+      '</h2><div class="choices">' +
+      Object.keys(fusions ? FUSION_TEST_BUILDS : UPGRADE_TEST_BUILDS)
         .map((id) => {
           const mod = MODS.find((m) => m.id === id)!;
           return (
@@ -409,8 +423,9 @@ function showDialog(kind: string) {
     content.querySelectorAll<HTMLButtonElement>('[data-build]').forEach((button) => {
       button.onclick = () => {
         const url = new URL(location.href);
-        url.search = '?test=upgrades&build=' + button.dataset.build;
-        const save = upgradeTestFromUrl(url)!;
+        url.search =
+          '?test=' + (fusions ? 'fusions' : 'upgrades') + '&build=' + button.dataset.build;
+        const save = (fusions ? fusionTestFromUrl(url) : upgradeTestFromUrl(url))!;
         history.replaceState(null, '', url);
         linkedRunTest = save;
         startRunTest(save);
@@ -680,7 +695,7 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedRunTest?.seed.startsWith('UPGRADES-')
+  linkedRunTest?.seed.startsWith('UPGRADES-') || linkedRunTest?.seed.startsWith('FUSIONS-')
     ? showDialog('upgrade-test')
     : linkedRunTest
       ? startRunTest(linkedRunTest)

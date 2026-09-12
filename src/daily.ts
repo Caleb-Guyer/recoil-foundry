@@ -1,6 +1,6 @@
 // Bump when layouts, upgrade pools, or gameplay balance change. Old links must
 // not silently become a different challenge under the same identity.
-export const DAILY_RULESET = 33;
+export const DAILY_RULESET = 34;
 export const DAILY_BESTS_KEY = 'rf-daily-bests-v1';
 export interface DailyChallenge {
   date: string;

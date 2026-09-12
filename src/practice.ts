@@ -236,6 +236,45 @@ export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
   fuse: ['shellshock', 'fuse', 'linked-fuse', 'blast-surf', 'kick', 'light'],
   afterimage: ['crossfire', 'afterimage', 'parallax', 'scatter', 'kick', 'light'],
 };
+export const FUSION_TEST_BUILDS: Record<string, string[]> = {
+  'rail-spike': [
+    'deadeye',
+    'capacitor',
+    'scatter',
+    'magnum',
+    'kick',
+    'pierce',
+    'light',
+    'rail-spike',
+  ],
+  orbit: ['crossfire', 'recall', 'homecoming', 'scatter', 'kick', 'light', 'magnum', 'orbit'],
+  implosion: [
+    'shellshock',
+    'fuse',
+    'linked-fuse',
+    'blast-surf',
+    'kick',
+    'light',
+    'magnum',
+    'implosion',
+  ],
+};
+export function fusionTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'fusions' ||
+    p.getAll('build').length > 1 ||
+    ['daily', 'dv', 'seed', 'area', 'formation'].some((k) => p.has(k))
+  )
+    return null;
+  const key = p.get('build') ?? 'rail-spike';
+  if (!Object.hasOwn(FUSION_TEST_BUILDS, key)) return null;
+  return {
+    ...testCheckpoint('FUSIONS-' + key.toUpperCase(), 8),
+    mods: [...FUSION_TEST_BUILDS[key]],
+  };
+}
 export function upgradeTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

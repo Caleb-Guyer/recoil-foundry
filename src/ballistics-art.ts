@@ -59,7 +59,7 @@ export function drawCapacitor(c: CanvasRenderingContext2D, g: Game) {
   for (let i = 0; i < n; i++) {
     c.fillStyle = '#304c42';
     c.fillRect(10 + i * 7, -8, 5, 2.5);
-    c.fillStyle = '#cbe6ad';
+    c.fillStyle = g.fusions.has('rail-spike') ? '#b7e4ef' : '#cbe6ad';
     const charge =
       i < g.ballistics.charges
         ? 1

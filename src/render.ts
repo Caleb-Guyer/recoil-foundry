@@ -41,6 +41,7 @@ import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazard
 import { EXTRACTION } from './escape-layout.ts';
 import { drawWeapon } from './weapon-art.ts';
 import { drawBallistics } from './ballistics-art.ts';
+import { drawFusions } from './fusions-art.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -510,6 +511,7 @@ export class Renderer {
     }
     this.drawPlayer();
     drawBallistics(c, g, this.reduced);
+    drawFusions(c, g, this.reduced);
     for (const s of g.shots) {
       if (s.blade) {
         drawBlade(c, s, g.time, this.reduced);
@@ -524,8 +526,13 @@ export class Renderer {
           c.lineCap = 'round';
           for (let i = 1; i < points.length; i++) {
             c.globalAlpha = (this.reduced ? 0.32 : 0.48) * (0.3 + (0.7 * i) / (points.length - 1));
-            const color = s.charged ? '#e2edaf' : bank ? '#9dccb5' : '#bedde9';
-            this.line(points[i - 1], points[i], color, bank && pierce ? 2.6 : pierce ? 1.25 : 1.8);
+            const color = s.rail ? '#b7e4ef' : s.charged ? '#e2edaf' : bank ? '#9dccb5' : '#bedde9';
+            this.line(
+              points[i - 1],
+              points[i],
+              color,
+              s.rail ? 4 : bank && pierce ? 2.6 : pierce ? 1.25 : 1.8,
+            );
             if (bank && pierce) this.line(points[i - 1], points[i], '#d5ebf2', 0.8);
           }
           c.restore();

@@ -189,17 +189,7 @@ export class BallisticsSystem {
   update() {
     const g = this.game;
     if (g.mode !== 'playing') return;
-    const bodies = new Set(this.shells.length ? Matter.Composite.allBodies(g.engine.world) : []);
-    for (const s of this.shells) {
-      if (s.body && !bodies.has(s.body)) s.body = undefined;
-      if (!s.body) continue;
-      const a = s.body.angle,
-        p = s.body.position;
-      s.pos = {
-        x: p.x + s.local.x * Math.cos(a) - s.local.y * Math.sin(a),
-        y: p.y + s.local.x * Math.sin(a) + s.local.y * Math.cos(a),
-      };
-    }
+    this.positionShells();
     // Removing a charge before detonation makes linked chains finite, even if
     // its explosion destroys the host or ignites several canisters at once.
     for (let i = 0; i < FUSE_LIMIT; i++) {
@@ -262,6 +252,21 @@ export class BallisticsSystem {
     for (const id of this.pins.keys()) if (!living.has(id)) this.pins.delete(id);
     for (const [id, at] of this.rivetAt)
       if (!living.has(id) || at < g.time - 1) this.rivetAt.delete(id);
+  }
+  positionShells() {
+    const bodies = new Set(
+      this.shells.length ? Matter.Composite.allBodies(this.game.engine.world) : [],
+    );
+    for (const s of this.shells) {
+      if (s.body && !bodies.has(s.body)) s.body = undefined;
+      if (!s.body) continue;
+      const a = s.body.angle,
+        p = s.body.position;
+      s.pos = {
+        x: p.x + s.local.x * Math.cos(a) - s.local.y * Math.sin(a),
+        y: p.y + s.local.x * Math.sin(a) + s.local.y * Math.cos(a),
+      };
+    }
   }
   pinned(e: Enemy) {
     const pin = this.pins.get(e.id),
