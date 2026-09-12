@@ -16,6 +16,14 @@ Boss victories can offer a modification recovered from their machinery. One card
 
 [Test boss salvage](https://caleb-guyer.github.io/recoil-foundry/?test=salvage) starts Reclamation Works with all three equipped. Shoot away from enemies while airborne to launch into them. Add `&build=ramjet`, `&build=cinder`, or `&build=crosswind` to isolate one. **R** retries. Tests preserve normal saves, Daily records and earned Practice unlocks.
 
+The three salvage upgrades now have evolutions in later reward pools. Each requires its parent and works with any gun path:
+
+- **Wrecking Ball** upgrades Ramjet. Small enemies become physical projectiles for up to 0.75 seconds, including when the ram kills them. Their first hard collision deals speed-based damage. Bosses, chargers, scrappers, harpooners and borers resist the throw; directional shields still block rams. Wrecks can hit cover, ignite fuel, and pass through Fold portals.
+- **Flashpoint** upgrades Cinder rounds. Killing an enemy touching your fire triggers a small fireburst. It consumes visible nearby flames and respects cover, boss armor and shields. Burst kills cannot create another burst.
+- **Slipstream** upgrades Crosswind. Gusts last 0.7 seconds and carry you when you enter their path. One gust affects you at a time, acceleration is bounded, and fresh muzzle gusts leave recoil intact. Faint arrows show each current's direction.
+
+[Test salvage evolutions](https://caleb-guyer.github.io/recoil-foundry/?test=salvage&evolved=1) equips all three parents and evolutions. Add `&build=ramjet`, `&build=cinder`, or `&build=crosswind` to isolate one pair. Press **R** to retry. Normal saves, Daily records and Practice unlocks remain untouched by test runs.
+
 ## Play
 
 | Input                  | Action                     |
@@ -92,7 +100,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=42`). Version 42 adds boss salvage rewards and their three upgrades; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=43`). Version 43 adds Wrecking Ball, Flashpoint, and Slipstream; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

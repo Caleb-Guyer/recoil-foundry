@@ -496,6 +496,8 @@ export function salvageTestFromUrl(url: URL): Checkpoint | null {
       'mirror',
     ].some((k) => p.has(k)) ||
     p.getAll('build').length > 1 ||
+    p.getAll('evolved').length > 1 ||
+    (p.has('evolved') && !['0', '1'].includes(p.get('evolved')!)) ||
     (p.has('build') && !['ramjet', 'cinder', 'crosswind', 'all'].includes(p.get('build')!))
   )
     return null;
@@ -522,5 +524,15 @@ export function salvageTestFromUrl(url: URL): Checkpoint | null {
             ? 'split'
             : 'landing',
     );
+  if (p.get('evolved') === '1')
+    for (const [replacement, parent, child] of [
+      ['ricochet', 'ramjet', 'wrecking-ball'],
+      ['burst', 'cinder', 'flashpoint'],
+      ['countershot', 'crosswind', 'slipstream'],
+    ] as const)
+      if (mods.includes(parent)) {
+        mods.splice(mods.indexOf(replacement), 1);
+        mods.push(child);
+      }
   return { ...testCheckpoint('SALVAGE-49', 13), mods };
 }

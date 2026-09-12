@@ -159,6 +159,8 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'flashpoint') {
+      this.tone(260, 55, 0.14, 0.065, 'triangle');
     } else if (kind === 'ram') {
       this.tone(120, 40, 0.1, 0.07, 'triangle');
     } else if (kind === 'arc') {

@@ -1,5 +1,6 @@
 import { MagnetSystem } from './magnets.ts';
 import { TetherSystem } from './tethers.ts';
+import { SalvageEvolutionSystem } from './salvage-evolutions.ts';
 import { BossSalvageSystem } from './boss-salvage.ts';
 import { ArcCoilSystem } from './arc-coil.ts';
 import { DestructionSystem } from './destruction.ts';
@@ -213,6 +214,7 @@ export class Game {
   tethers = new TetherSystem(this);
   arcs = new ArcCoilSystem(this);
   salvage = new BossSalvageSystem(this);
+  salvageEvolutions = new SalvageEvolutionSystem(this);
   earnedSalvage: string | null = null;
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
@@ -227,6 +229,7 @@ export class Game {
       ...this.terrain,
       ...this.hazards.bodies,
       ...this.breaches.bodies,
+      ...this.salvageEvolutions.bodies,
       ...(this.extractionLift ? [this.extractionLift] : []),
     ];
   }
@@ -354,6 +357,7 @@ export class Game {
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
       this.arcs.reset();
       this.salvage.reset();
+      this.salvageEvolutions.reset();
       this.tethers.reset();
       this.sappers.clear();
       for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
@@ -433,6 +437,7 @@ export class Game {
     this.earnedSalvage = null;
     this.arcs.reset();
     this.salvage.reset();
+    this.salvageEvolutions.reset();
     this.tethers.reset();
     this.sappers.clear();
     this.destruction.clear();
@@ -633,6 +638,7 @@ export class Game {
     this.escape.phase = 'extracting';
     this.arcs.reset();
     this.salvage.reset();
+    this.salvageEvolutions.reset();
     this.tethers.reset();
     this.evolutions.reset();
     this.ballistics.reset();
@@ -861,12 +867,14 @@ export class Game {
     this.tethers.beforeStep(dt);
     this.salvage.beforeStep(dt);
     if (this.mode !== 'playing') return;
+    this.salvageEvolutions.beforeStep();
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
     this.salvage.afterStep();
+    this.salvageEvolutions.afterStep();
     if (this.mode !== 'playing') return;
     this.conveyors.afterStep();
     this.props.afterStep(dt);
@@ -915,6 +923,7 @@ export class Game {
       this.clearAt = this.time;
       this.arcs.reset();
       this.salvage.reset();
+      this.salvageEvolutions.reset();
       this.tethers.reset();
       this.sappers.clear();
       this.shots = this.shots.filter((s) => s.friendly);
@@ -1202,6 +1211,7 @@ export class Game {
     e.shieldFlash = Math.max(0, e.shieldFlash - dt);
     e.spawn = Math.max(0, e.spawn - dt);
     if (e.spawn > 0) return;
+    if (this.salvageEvolutions.carried(e)) return;
     if (this.ballistics.pinned(e)) return;
     if (this.tethers.staggered(e)) return;
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
@@ -2085,6 +2095,7 @@ export class Game {
     clearKiln(e);
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
+    this.salvageEvolutions.killed(e);
     if (
       isBoss(e.kind) &&
       !this.practice &&

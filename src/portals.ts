@@ -239,6 +239,7 @@ export class PortalSystem {
       g.player,
       ...g.enemies.filter((e) => e.spawn <= 0).map((e) => e.body),
       ...g.props.bodies,
+      ...g.salvageEvolutions.bodies,
     ];
     for (const b of bodies) {
       if (b.isStatic) continue;
@@ -321,6 +322,7 @@ export class PortalSystem {
           enemy.timer = 0.3;
         }
       }
+      g.salvageEvolutions.teleported(body, velocity);
       g.props.velocities.set(body, { ...velocity });
       const prop = g.props.items.find((p) => p.body === body);
       if (prop) prop.velocity = { ...velocity };

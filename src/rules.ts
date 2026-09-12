@@ -374,6 +374,26 @@ export const MODS = [
     description:
       'Shots leave a brief gust that pushes loose props and bends ordinary enemy bullets.',
   },
+  {
+    id: 'wrecking-ball',
+    name: 'Wrecking Ball',
+    mark: 'wrecking-ball',
+    description:
+      'Rammed enemies become projectiles that hurt others on impact. Heavy enemies resist the throw.',
+  },
+  {
+    id: 'flashpoint',
+    name: 'Flashpoint',
+    mark: 'flashpoint',
+    description:
+      'Killing a burning enemy triggers a fireburst, consuming nearby flames. Burst kills cannot chain.',
+  },
+  {
+    id: 'slipstream',
+    name: 'Slipstream',
+    mark: 'slipstream',
+    description: 'Gusts linger longer. Enter one to ride it through the air.',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -434,6 +454,9 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
 export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  'wrecking-ball': 'ramjet',
+  flashpoint: 'cinder',
+  slipstream: 'crosswind',
   'daisy-chain': 'arc-coil',
   snapback: 'tether',
   'blast-surf': 'shellshock',
@@ -511,7 +534,7 @@ export function validBuild(mods: readonly string[]) {
   return true;
 }
 export function modPathLabel(id: string): string {
-  if (isSalvage(id)) return 'Salvage';
+  if (isSalvage(id) || isSalvage(MOD_REQUIRES[id])) return 'Salvage';
   const branch = MOD_PATHS[id];
   return branch ? PATH_NAMES[branch.path] + (isFusion(id) ? ' · Fusion' : '') : '';
 }
@@ -746,7 +769,11 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       (overtime.repairs === 0 ||
         (validBuild(d.mods) &&
           availableMods(d.mods).every(
-            (m) => isFusion(m.id) || m.id === 'arc-coil' || m.id === 'daisy-chain',
+            (m) =>
+              isFusion(m.id) ||
+              m.id === 'arc-coil' ||
+              m.id === 'daisy-chain' ||
+              isSalvage(MOD_REQUIRES[m.id]),
           ))));
   const validDetours =
     Array.isArray(completed) &&

@@ -344,6 +344,32 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
   {
     seed: 'path-run-65',
     pressSpacing: 220,
+    pathMods: ['wrecking-ball', 'flashpoint', 'slipstream'],
+    rewards: [
+      'leech',
+      'airshot',
+      'magnum',
+      'ramjet',
+      'crossfire',
+      'rapid',
+      'scatter',
+      'cinder',
+      'light',
+      'kick',
+      'burst',
+      'crosswind',
+      'wrecking-ball',
+      'flashpoint',
+      'slipstream',
+      'backblast',
+      'bloom',
+      'convergence',
+      'redline',
+    ],
+  },
+  {
+    seed: 'path-run-65',
+    pressSpacing: 220,
     pathMods: ['ramjet', 'cinder', 'crosswind'],
     rewards: [
       'leech',
@@ -768,6 +794,8 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     let fusionUsed = false;
     let tetherUsed = false;
     let arcUsed = false;
+    let flashUsed = false,
+      slipUsed = false;
     let cinderUsed = false,
       windUsed = false;
     const salvageStep = g.salvage.beforeStep.bind(g.salvage);
@@ -775,10 +803,12 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       cinderUsed ||= g.salvage.cinders.length > 0;
       windUsed ||= g.salvage.gusts.length > 0;
       salvageStep(dt);
+      slipUsed ||= !!g.salvage.riding;
     };
     g.onSound = (kind) => {
       if (kind === 'tether-link') tetherUsed = true;
       if (kind === 'arc') arcUsed = true;
+      if (kind === 'flashpoint') flashUsed = true;
     };
     const priority = [
       ...pathMods,
@@ -1200,6 +1230,8 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     assert(g.hp > 0);
     if (fusion) assert(fusionUsed, `The run never used ${fusion}`);
     if (pathMods[0] === 'tether') assert(tetherUsed, 'The run never formed a tether');
+    if (pathMods[0] === 'wrecking-ball')
+      assert(flashUsed && slipUsed, 'The full run must trigger firebursts and ride gusts');
     if (pathMods[0] === 'ramjet')
       assert(cinderUsed && windUsed, 'The full run must use both surface burns and wind');
     if (pathMods[0] === 'arc-coil') assert(arcUsed, 'The run never discharged Arc Coil');

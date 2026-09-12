@@ -177,7 +177,10 @@ function updateTitle() {
   if (linkedRunTest && entryUrl.searchParams.get('test') === 'arc')
     $('play').innerHTML = 'Test Arc Coil <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'SALVAGE-49')
-    $('play').innerHTML = 'Test boss salvage <span aria-hidden="true">↗</span>';
+    $('play').innerHTML =
+      (entryUrl.searchParams.get('evolved') === '1'
+        ? 'Test salvage evolutions'
+        : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -228,6 +231,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Three hits. Follow the spark. R to retry.';
   if (linkedRunTest?.seed === 'SALVAGE-49')
     $('title-hint').textContent = 'Salvage equipped. Shoot backward to ram. R to retry.';
+  if (linkedRunTest?.seed === 'SALVAGE-49' && entryUrl.searchParams.get('evolved') === '1')
+    $('title-hint').textContent = 'Salvage evolutions equipped. R to retry.';
 }
 function clearInput() {
   keys.clear();
@@ -430,6 +435,9 @@ function modMark(mod: Mod) {
     afterimage: 'M7 13h25v8H7zM17 27h25v8H17zM32 17h10M42 31h7',
     parallax: 'M7 10h19v6H7zM7 32h19v6H7zM26 13l20 11-20 11M40 24h10',
     tether: 'M7 13h10v10H7zM39 26h10v10H39zM17 18q10 20 22 13',
+    'wrecking-ball': 'M7 12l16 12M14 8l13 12M37 19a11 11 0 1 0 0 22 11 11 0 0 0 0-22M23 24l6 6',
+    flashpoint: 'M25 6l4 12 13-4-7 11 11 8-14 1-4 13-6-12-14 4 8-12-9-9 14 2z',
+    slipstream: 'M6 16h28q12 0 8-7M6 25h29M25 19l10 6-10 6M6 36h26q11 0 8 7',
     ramjet: 'M9 15h20l12 9-12 9H9l7-9zM5 20h7M5 28h7M35 14l10 10-10 10',
     cinder: 'M18 34c-9-10 4-14 5-24 12 9 6 15 11 12 8 15-12 21-16 12M12 40h28',
     crosswind: 'M7 17h28q12 0 8-7M7 25h34M7 33h23q13 0 9 8',

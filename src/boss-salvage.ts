@@ -8,6 +8,7 @@ const { Body, Query, Composite } = Matter;
 export const CINDER_LIFE = 1.3;
 export const CINDER_LIMIT = 20;
 export const WIND_LIFE = 0.18;
+export const SLIPSTREAM_LIFE = 0.7;
 export const WIND_LIMIT = 40;
 export interface Cinder {
   body: Matter.Body;
@@ -41,6 +42,10 @@ export class BossSalvageSystem {
   gusts: Gust[] = [];
   ramUntil = -1;
   ramDirection: Vec = { x: 0, y: 0 };
+  riding: Vec | null = null;
+  get windLife() {
+    return this.game.mods.includes('slipstream') ? SLIPSTREAM_LIFE : WIND_LIFE;
+  }
   private ramHits = new Map<number, number>();
   private ramSeparation = new Map<number, number>();
   private bends = new Map<number, number>();
@@ -50,6 +55,7 @@ export class BossSalvageSystem {
     this.game = game;
   }
   reset() {
+    this.riding = null;
     this.cinders = [];
     this.gusts = [];
     this.ramUntil = -1;
@@ -113,7 +119,7 @@ export class BossSalvageSystem {
         x: velocity.x - d.x * (closing + 4),
         y: velocity.y - d.y * (closing + 4),
       });
-      if (e.hp > 0 && !e.body.isStatic)
+      if (!g.salvageEvolutions.throwEnemy(e, d, closing) && e.hp > 0 && !e.body.isStatic)
         Body.setVelocity(e.body, { x: d.x * 7, y: Math.min(-2, d.y * 7) });
     }
     g.feedback(3, d);
@@ -124,7 +130,7 @@ export class BossSalvageSystem {
     const g = this.game;
     if (!g.mods.some((id) => ['ramjet', 'cinder', 'crosswind'].includes(id))) return;
     this.before = { pos: { ...g.player.position }, velocity: { ...g.player.velocity } };
-    this.gusts = this.gusts.filter((f) => g.time - f.at < WIND_LIFE);
+    this.gusts = this.gusts.filter((f) => g.time - f.at < this.windLife);
     const bodies = new Set(Composite.allBodies(g.engine.world));
     this.cinders = this.cinders.filter((f) => f.until > g.time && bodies.has(f.body));
     for (const f of this.cinders) {
@@ -213,6 +219,9 @@ export class BossSalvageSystem {
       if (this.gusts.length > WIND_LIMIT) this.gusts.shift();
     }
   }
+  burning(e: Enemy) {
+    return this.cinders.some((f) => f.until > this.game.time && this.touches(f, e.body));
+  }
   private touches(f: Cinder, body: Matter.Body) {
     const p = Query.point([body], f.pos).length
       ? f.pos
@@ -232,6 +241,7 @@ export class BossSalvageSystem {
   }
   private wind(dt: number) {
     const g = this.game;
+    this.riding = null;
     if (!this.gusts.length) return;
     const field = (pos: Vec, ignore?: Matter.Body) =>
       this.gusts.find((f) => {
@@ -246,6 +256,29 @@ export class BossSalvageSystem {
           )
         );
       });
+    if (g.mods.includes('slipstream')) {
+      const p = g.player.position;
+      const ride = [...this.gusts].reverse().find((f) => {
+        const d = direction(f.a, f.b),
+          point = closest(f.a, f.b, p);
+        const along = (p.x - f.a.x) * d.x + (p.y - f.a.y) * d.y;
+        // Leave the muzzle before catching the current: firing cannot cancel
+        // its own recoil, and overlapping pellets never multiply the force.
+        return (
+          along >= 12 &&
+          along <= distance(f.a, f.b) + 5 &&
+          distance(point, p) < 42 &&
+          !firstSolid(point, p, { x: 0, y: 0 }, g.solidBodies)
+        );
+      });
+      if (ride) {
+        const d = direction(ride.a, ride.b),
+          v = g.player.velocity;
+        const push = Math.min(dt * 60 * 0.38, Math.max(0, 14 - v.x * d.x - v.y * d.y));
+        Body.setVelocity(g.player, { x: v.x + d.x * push, y: v.y + d.y * push });
+        this.riding = d;
+      }
+    }
     for (const s of g.shots) {
       if (s.friendly || s.life <= 0 || s.enemyAmmo || s.radius > 5) continue;
       const used = this.bends.get(s.id) ?? 0;
