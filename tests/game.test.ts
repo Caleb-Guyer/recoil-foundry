@@ -1,4 +1,5 @@
 import { dodgePilot } from './combat-pilot.ts';
+import { CRAWLER } from '../src/wallcrawler.ts';
 import { overtimeTestFromUrl } from '../src/practice.ts';
 import { freightPilot } from './freight-pilot.ts';
 import { FREIGHT } from '../src/freight-layout.ts';
@@ -793,6 +794,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       clearAt = -1,
       directExitReady = false,
       takingLowerRoute = false,
+      lowerDropX = 1760,
       routeStep = 0,
       escapeSeen = false,
       pressDodgeUntil = 0,
@@ -888,6 +890,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         lastProgress = g.time;
         directExitReady = false;
         takingLowerRoute = false;
+        lowerDropX = 1760;
         routeStep = 0;
         retreatWaypoint = undefined;
         settlingGun = false;
@@ -1139,9 +1142,11 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
           !g.level.boss &&
           g.enemies.some(
             (enemy) =>
-              ['shooter', 'flyer', 'sniper'].includes(enemy.kind) &&
-              enemy.timer <= 0.35 &&
-              distance(enemy.body.position, p) < 650 &&
+              ((['shooter', 'flyer', 'sniper'].includes(enemy.kind) && enemy.timer <= 0.35) ||
+                (enemy.crawler?.support &&
+                  (enemy.state === 'followup' ||
+                    (enemy.state === 'windup' && enemy.timer <= CRAWLER.lock)))) &&
+              distance(enemy.body.position, p) < (enemy.crawler ? 900 : 650) &&
               distance(g.lineEnd(enemy.body.position, p), p) < 1,
           );
         if ((threat || warning) && e && !g.level.boss) {
@@ -1167,7 +1172,22 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         // These runs verify the direct route. Land before the fork, then
         // walk below the steps instead of accidentally selecting the upper door.
         if (p.y > 630) directExitReady = true;
-        move = directExitReady ? 1 : Math.abs(p.x - 1760) > 8 ? Math.sign(1760 - p.x) : 0;
+        // An authored shelf can extend through x=1760. Walk off its left edge
+        // before dropping; waiting directly above it cannot reach the low exit.
+        const shelf = g.terrain.find(
+          (body) =>
+            body.bounds.min.y < 630 &&
+            body.bounds.max.y > g.player.bounds.max.y - 5 &&
+            Math.abs(body.bounds.min.y - g.player.bounds.max.y) < 5 &&
+            p.x > body.bounds.min.x - 14 &&
+            p.x < body.bounds.max.x + 14,
+        );
+        if (shelf) lowerDropX = Math.min(lowerDropX, shelf.bounds.min.x - 30);
+        move = directExitReady
+          ? 1
+          : Math.abs(p.x - lowerDropX) > 8
+            ? Math.sign(lowerDropX - p.x)
+            : 0;
         jump = false;
         firing = false;
       }

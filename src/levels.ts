@@ -5,6 +5,7 @@ import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.
 import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
+import { addWallcrawler } from './wallcrawler-layout.ts';
 import { addScrapper } from './scrapper-layout.ts';
 import { addHarpooner } from './harpooner-layout.ts';
 import { addSapper } from './sapper-layout.ts';
@@ -16,6 +17,7 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'wallcrawler'
   | 'sapper'
   | 'borer'
   | 'sifter'
@@ -69,6 +71,7 @@ export interface Layout {
 }
 export interface Level extends Layout {
   routeChoice?: import('./rules.ts').RouteChoice;
+  crawlerIntro?: boolean;
   harpoonIntro?: boolean;
   sapperIntro?: boolean;
   scrapperCrate?: Vec;
@@ -845,5 +848,5 @@ export function getLevel(
     const charger = result.spawns.find((s) => s.kind === 'charger' && !s.elite);
     if (charger) charger.kind = 'borer';
   }
-  return addSapper(addHarpooner(result, seed, stage), seed, stage);
+  return addWallcrawler(addSapper(addHarpooner(result, seed, stage), seed, stage), seed, stage);
 }

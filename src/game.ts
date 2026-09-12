@@ -6,6 +6,8 @@ import { SalvageEvolutionSystem } from './salvage-evolutions.ts';
 import { BossSalvageSystem } from './boss-salvage.ts';
 import { ArcCoilSystem } from './arc-coil.ts';
 import { DestructionSystem } from './destruction.ts';
+import { createWallcrawler, updateWallcrawler } from './wallcrawler.ts';
+import type { CrawlerRig } from './wallcrawler.ts';
 import { SapperSystem, createSapper } from './sapper.ts';
 import type { SapperRig } from './sapper.ts';
 import { getRouteLevel, reinforceRoute } from './route-layouts.ts';
@@ -140,6 +142,7 @@ export interface Enemy {
   scrapper?: ScrapperRig;
   harpoon?: HarpoonRig;
   sapper?: SapperRig;
+  crawler?: CrawlerRig;
   sorter?: SorterRig;
 }
 export interface Shot {
@@ -713,8 +716,12 @@ export class Game {
         (this.detour && !isBoss(kind) ? DETOUR_HEALTH : 1),
     );
     const body =
-      kind === 'flyer'
-        ? Bodies.circle(x, y, 19, { frictionAir: 0.035, inertia: Infinity, label: 'enemy' })
+      kind === 'flyer' || kind === 'wallcrawler'
+        ? Bodies.circle(x, y, kind === 'wallcrawler' ? 14 : 19, {
+            frictionAir: 0.035,
+            inertia: Infinity,
+            label: 'enemy',
+          })
         : Bodies.rectangle(x, y, w, h, {
             friction: 0.05,
             frictionAir: kind === 'hopper' ? 0.008 : 0.03,
@@ -754,6 +761,7 @@ export class Game {
     if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
     if (kind === 'sapper') enemy.sapper = createSapper();
+    if (kind === 'wallcrawler') enemy.crawler = createWallcrawler(this, enemy);
     if (kind === 'harpooner') {
       enemy.harpoon = createHarpooner();
       Body.setMass(body, this.player.mass * 1.6);
@@ -1235,7 +1243,10 @@ export class Game {
     e.flash = Math.max(0, e.flash - dt);
     e.shieldFlash = Math.max(0, e.shieldFlash - dt);
     e.spawn = Math.max(0, e.spawn - dt);
-    if (e.spawn > 0) return;
+    if (e.spawn > 0) {
+      if (e.crawler) updateWallcrawler(this, e, dt);
+      return;
+    }
     if (this.salvageEvolutions.carried(e)) return;
     if (this.ballistics.pinned(e)) return;
     if (this.tethers.staggered(e)) return;
@@ -1266,6 +1277,7 @@ export class Game {
       else if (e.kind === 'scrapper') updateScrapper(this, e);
       else if (e.kind === 'harpooner') this.harpoons.updateEnemy(e);
       else if (e.kind === 'sapper') this.sappers.updateEnemy(e);
+      else if (e.kind === 'wallcrawler') updateWallcrawler(this, e, dt);
       else if (e.kind === 'sniper') this.updateSniper(e);
       else if (e.kind === 'boss') this.updateBoss(e);
       else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
@@ -1304,7 +1316,10 @@ export class Game {
         e.state === 'recover'
       ) &&
       !(
-        (e.kind === 'scrapper' || e.kind === 'harpooner' || e.kind === 'sapper') &&
+        (e.kind === 'scrapper' ||
+          e.kind === 'harpooner' ||
+          e.kind === 'sapper' ||
+          e.kind === 'wallcrawler') &&
         e.state === 'recover'
       ) &&
       (e.kind !== 'press' || e.state === 'rush') &&
@@ -1765,7 +1780,11 @@ export class Game {
                 ? 38
                 : 26;
     const muzzle = { x: origin.x + d.x * radius, y: origin.y + d.y * radius };
-    const padding = blade ? 11 : e.squad || e.kind === 'interceptor' ? 5 : 0;
+    const padding = blade
+      ? 11
+      : e.squad || e.kind === 'interceptor' || e.kind === 'wallcrawler'
+        ? 5
+        : 0;
     const end = e.squad
       ? squadLineEnd(this, e, origin, muzzle)
       : this.lineEnd(origin, muzzle, padding);
@@ -2089,6 +2108,7 @@ export class Game {
       this.burst({ x: e.body.position.x + e.facing * 19, y: e.body.position.y }, 4, '#e7d6ac', 2);
       this.onSound('bank');
     }
+    if (e.crawler && e.crawler.vulnerable > 0) damage *= 1.5;
     if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
     if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.25 : 0.4;
     if (e.kind === 'crane') damage *= e.state === 'recover' && e.crane && !e.crane.hit ? 1.4 : 0.35;

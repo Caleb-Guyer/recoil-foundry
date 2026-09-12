@@ -1,3 +1,4 @@
+import { breakableSolids } from './destruction-layout.ts';
 import { getLevel } from './levels.ts';
 import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
 import { bossStage, availableMods, type Checkpoint } from './rules.ts';
@@ -614,6 +615,46 @@ export function interceptorGrindTestFromUrl(url: URL): Checkpoint | null {
   for (let i = 0; i < 128; i++) {
     const seed = `SAW-BOSS-53-${p.get('phase') ?? '1'}-${i}`;
     if (getLevel(seed, 19).mirrored === (p.get('mirror') === '1')) return testCheckpoint(seed, 19);
+  }
+  return null;
+}
+
+export function wallcrawlerTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'wallcrawler' ||
+    ['area', 'mirror'].some((k) => p.getAll(k).length > 1) ||
+    [
+      'daily',
+      'dv',
+      'seed',
+      'formation',
+      'build',
+      'route',
+      'mode',
+      'layout',
+      'variant',
+      'phase',
+    ].some((k) => p.has(k)) ||
+    (p.has('area') && !['cooling', 'rooftops'].includes(p.get('area')!)) ||
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))
+  )
+    return null;
+  const stage = p.get('area') === 'rooftops' ? 16 : 8;
+  for (let i = 0; i < 512; i++) {
+    const seed = 'CRAWLER-54-' + i,
+      level = getLevel(seed, stage),
+      spawn = level.spawns.find((s) => s.kind === 'wallcrawler');
+    if (!spawn || level.mirrored !== (p.get('mirror') === '1')) continue;
+    const weak = breakableSolids(level, seed, stage).some(
+      (s) =>
+        spawn.x >= s.x - 18 &&
+        spawn.x <= s.x + s.w + 18 &&
+        spawn.y >= s.y - 18 &&
+        spawn.y <= s.y + s.h + 18,
+    );
+    if (weak) return testCheckpoint(seed, stage);
   }
   return null;
 }

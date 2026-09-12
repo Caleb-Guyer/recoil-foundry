@@ -1,3 +1,4 @@
+import { addWallcrawler } from './wallcrawler-layout.ts';
 import type { Level, Solid, Spawn } from './levels.ts';
 import type { RouteChoice } from './rules.ts';
 import { areaIndex, isRouteStage, seeded, sample } from './rules.ts';
@@ -162,18 +163,22 @@ export function getRouteLevel(seed: string, stage: number, choice: RouteChoice):
     route.push({ x: s.x + s.w / 2, y: s.y - 20 });
   }
   route.push({ x: 1730, y: 720 });
-  return addSapper(
-    {
-      id: areas[area] + '-' + choice + '-road',
-      name: names[area][high ? 1 : 0],
-      area: areas[area],
-      routeChoice: choice,
-      boss: false,
-      mirrored,
-      solids: solids.map((s) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x })),
-      spawns: spawns.map(point),
-      route: (mirrored ? route.reverse() : route).map(point),
-    },
+  return addWallcrawler(
+    addSapper(
+      {
+        id: areas[area] + '-' + choice + '-road',
+        name: names[area][high ? 1 : 0],
+        area: areas[area],
+        routeChoice: choice,
+        boss: false,
+        mirrored,
+        solids: solids.map((s) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x })),
+        spawns: spawns.map(point),
+        route: (mirrored ? route.reverse() : route).map(point),
+      },
+      seed,
+      stage,
+    ),
     seed,
     stage,
   );
@@ -192,7 +197,7 @@ export function reinforceRoute(level: Level, seed: string, stage: number): Level
   });
   const eliteCount = stage >= 12 ? 3 : 2;
   for (const s of sample(
-    spawns.filter((s) => !s.elite && s.kind !== 'sapper'),
+    spawns.filter((s) => !s.elite && s.kind !== 'sapper' && s.kind !== 'wallcrawler'),
     spawns.length,
     seeded(seed + ':route-elites:' + stage),
   )) {
@@ -207,5 +212,10 @@ export function reinforceRoute(level: Level, seed: string, stage: number): Level
       s.elite = 'shielded';
     }
   }
-  return addSapper(addHarpooner({ ...level, spawns }, seed, stage, true), seed, stage, true);
+  return addWallcrawler(
+    addSapper(addHarpooner({ ...level, spawns }, seed, stage, true), seed, stage, true),
+    seed,
+    stage,
+    true,
+  );
 }

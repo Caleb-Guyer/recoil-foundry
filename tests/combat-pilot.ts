@@ -1,3 +1,4 @@
+import { CRAWLER, crawlerSpeed } from '../src/wallcrawler.ts';
 import { RIVAL_GRIND, grindPlanValid } from '../src/interceptor-grindshot.ts';
 import type { Enemy, Game, Input } from '../src/game.ts';
 import { attackAngles, bossMuzzle, flakAngles } from '../src/enemies.ts';
@@ -42,6 +43,33 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
   // including the Loader's marked anti-air fan, before choosing a trajectory.
   for (const enemy of g.enemies) {
     if (enemy.spawn > 0 || enemy.squad || enemy.elite === 'volatile') continue;
+    const crawler = enemy.crawler;
+    if (
+      crawler &&
+      crawler.support &&
+      (enemy.state === 'followup' || (enemy.state === 'windup' && enemy.timer <= CRAWLER.lock))
+    ) {
+      for (let i = crawler.fired; i < crawler.angles.length; i++) {
+        const a = crawler.angles[i],
+          speed = crawlerSpeed(g),
+          origin = crawler.origin;
+        const start = { x: origin.x + Math.cos(a) * 26, y: origin.y + Math.sin(a) * 26 };
+        if (distance(g.lineEnd(origin, start, 5), start) > 0.1) continue;
+        const v = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+        bolts.push({
+          p: start,
+          v,
+          radius: 5,
+          delay: (enemy.timer + (i - crawler.fired) * CRAWLER.burst) * 60,
+          life:
+            distance(
+              start,
+              g.lineEnd(start, { x: start.x + v.x * 120, y: start.y + v.y * 120 }, 5),
+            ) / speed,
+        });
+      }
+      continue;
+    }
     const hook = enemy.harpoon;
     if (
       hook &&

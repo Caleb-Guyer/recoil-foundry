@@ -108,7 +108,16 @@ test('ten route rooms repeat independently, keep safe anchors and distinguish gr
               !level.solids.some((s) => overlap(s, hull)),
               level.id + ' spawn ' + JSON.stringify(spawn),
             );
-            if (!['flyer', 'skimmer', 'sifter'].includes(spawn.kind))
+            if (spawn.kind === 'wallcrawler') {
+              assert(
+                level.solids.some((s) => {
+                  const x = Math.max(s.x, Math.min(spawn.x, s.x + s.w)),
+                    y = Math.max(s.y, Math.min(spawn.y, s.y + s.h));
+                  return Math.abs(Math.hypot(spawn.x - x, spawn.y - y) - 17) < 0.01;
+                }),
+                'crawler needs a real adjoining surface',
+              );
+            } else if (!['flyer', 'skimmer', 'sifter'].includes(spawn.kind))
               assert(
                 Math.abs(spawn.y + h / 2 - 740) < 2 ||
                   level.solids.some(

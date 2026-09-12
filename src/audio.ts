@@ -175,6 +175,11 @@ export class Sound {
       this.tone(260, 55, 0.14, 0.065, 'triangle');
     } else if (kind === 'ram') {
       this.tone(120, 40, 0.1, 0.07, 'triangle');
+    } else if (kind === 'crawler-lock') {
+      this.tone(650, 870, 0.13, 0.025, 'triangle');
+    } else if (kind === 'crawler-drop') {
+      this.tone(290, 85, 0.2, 0.04, 'triangle');
+      this.crack(0.07, 0.025, 1500);
     } else if (kind === 'rival-grind') {
       this.tone(190, 95, 0.1, 0.035, 'sawtooth');
     } else if (kind === 'grind') {

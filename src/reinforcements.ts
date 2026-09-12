@@ -26,6 +26,11 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
       level.spawns.filter((s) => s.kind !== 'harpooner').map((s) => ({ ...s })),
     ];
   const planned = squadSpawns(level.spawns, level, seed, stage);
+  if (level.crawlerIntro)
+    return [
+      planned.filter((s) => s.kind === 'wallcrawler').map((s) => ({ ...s })),
+      planned.filter((s) => s.kind !== 'wallcrawler').map((s) => ({ ...s })),
+    ];
   if (level.sapperIntro)
     return [
       planned.filter((s) => s.kind === 'sapper').map((s) => ({ ...s })),
@@ -60,6 +65,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           scrapper: 8,
           harpooner: 9,
           sapper: 8,
+          wallcrawler: 8,
           condenser: 0,
           turbine: 0,
           interceptor: 0,
@@ -115,7 +121,7 @@ export class ReinforcementSystem {
       // checks wait or relocate before opening a door through a living body.
       final.push(
         ...opening
-          .filter((s) => s.kind !== 'harpooner' && s.kind !== 'sapper')
+          .filter((s) => s.kind !== 'harpooner' && s.kind !== 'sapper' && s.kind !== 'wallcrawler')
           .slice(0, 3)
           .map(({ elite: _elite, squad: _squad, ...s }) => ({ ...s })),
       );
@@ -151,6 +157,7 @@ export class ReinforcementSystem {
     // Use only reserved authored anchors. Props, moving hazards, and vents
     // already keep these anchors clear across the whole room's layout.
     const alternatives = g.level.spawns
+      .filter((s) => door.spawn.kind === 'wallcrawler' || s.kind !== 'wallcrawler')
       .filter(
         (s) =>
           ['flyer', 'skimmer', 'sifter'].includes(s.kind) ===
@@ -179,7 +186,11 @@ export class ReinforcementSystem {
     if (g.mode !== 'playing' || g.escape || (g.level.boss && !g.overtime)) return;
     if (this.phase === 'opening') {
       if (g.level.freight) return;
-      if ((g.level.harpoonIntro || g.level.sapperIntro) && g.enemies.length > 0) return;
+      if (
+        (g.level.harpoonIntro || g.level.sapperIntro || g.level.crawlerIntro) &&
+        g.enemies.length > 0
+      )
+        return;
       this.openingTime += dt;
       const overlap = g.detour
         ? 2

@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Wallcrawler
+
+A maintenance robot clings to floors, walls and ceilings, walking around exposed corners with four gripping legs. It stops before firing three rounds. The 0.95-second warning tracks early, then locks all three lanes for the last half second; the burst never follows you after that commitment. It uses ordinary hostile bullets, so cover, reflection and portals work normally.
+
+Shoot its cracked perch loose to interrupt the burst and make it fall. Its exposed hull takes 50% extra damage for 1.5 seconds, then it can grip terrain again. Crates block its path, hard impacts can dislodge it, and moving or losing its support cancels the old firing position. Its body remains solid throughout.
+
+Sparse encounters begin in Cooling Works, where the first room introduces it before the other enemies enter. Later rooms can replace one ordinary enemy with a crawler while preserving elites and squads. Rooftop crawlers prefer upper undersides, move faster and fire harder rounds. Normal runs, route branches, Daily and Overtime use seeded placements. No controls or HUD are added.
+
+[Test the Wallcrawler](https://caleb-guyer.github.io/recoil-foundry/?test=wallcrawler) starts a real Cooling Works encounter with a cracked perch and a preset gun. Use [the rooftop version](https://caleb-guyer.github.io/recoil-foundry/?test=wallcrawler&area=rooftops) for a tougher room, or add `&mirror=1` for the other orientation. **R** retries. These isolated tests preserve ordinary saves, Daily records and earned Practice victories.
+
 ## Boss salvage
 
 Boss victories can offer a modification recovered from their machinery. One card is salvage and the other two are ordinary upgrades. Daily Runs take the single fixed salvage card. Owned salvage is replaced by ordinary choices; it never appears in random upgrade draws before a victory. The final encounter keeps its extraction ending.
@@ -126,7 +136,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=47`). Version 47 adds the Interceptor's surface-saw attack; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=48`). Version 48 adds Wallcrawler encounters; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

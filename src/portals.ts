@@ -1,3 +1,4 @@
+import { dropWallcrawler } from './wallcrawler.ts';
 import Matter from 'matter-js';
 import type { Game } from './game.ts';
 import { firstSolid, sweepBox } from './collisions.ts';
@@ -299,6 +300,7 @@ export class PortalSystem {
         breakSquad(g, enemy);
         enemy.aim = portalVector(enemy.aim, entry, exit);
         if (velocity.x) enemy.facing = Math.sign(velocity.x);
+        if (enemy.crawler) dropWallcrawler(g, enemy);
         if (enemy.sorter || enemy.kind === 'borer' || enemy.kind === 'sifter') {
           if (enemy.sorter) {
             enemy.sorter.lanes = [];

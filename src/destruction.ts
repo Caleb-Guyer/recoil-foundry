@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { dropWallcrawler } from './wallcrawler.ts';
 import type { Game } from './game.ts';
 import type { Solid } from './levels.ts';
 import type { Vec } from './rules.ts';
@@ -130,6 +131,7 @@ export class DestructionSystem {
     Composite.remove(g.engine.world, piece.body);
     g.sappers.disrupt(piece.body);
     g.terrain = g.terrain.filter((b) => b !== piece.body);
+    for (const e of g.enemies) if (e.crawler?.support === piece.body) dropWallcrawler(g, e);
     this.pieces = this.pieces.filter((p) => p !== piece);
     this.broken.push(rect);
     g.level.solids = g.level.solids.filter(

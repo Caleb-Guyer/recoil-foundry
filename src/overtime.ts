@@ -38,7 +38,13 @@ export function getOvertimeLevel(seed: string, stage: number): Level {
     return { ...level, spawns: [...level.spawns, ...supports] };
   }
   const spawns: Spawn[] = level.spawns.map((s) => {
-    if (s.elite || s.kind === 'scrapper' || s.kind === 'harpooner' || s.kind === 'sapper')
+    if (
+      s.elite ||
+      s.kind === 'scrapper' ||
+      s.kind === 'harpooner' ||
+      s.kind === 'sapper' ||
+      s.kind === 'wallcrawler'
+    )
       return { ...s };
     const pool: EnemyKind[] = ['runner', 'charger', 'hopper', 'borer'].includes(s.kind)
       ? ['charger', 'hopper', 'borer']
@@ -50,7 +56,9 @@ export function getOvertimeLevel(seed: string, stage: number): Level {
   const target = stage >= 12 ? 3 : 2;
   const present = new Set(spawns.flatMap((s) => (s.elite ? [s.elite] : [])));
   for (const s of sample(
-    spawns.filter((s) => !s.elite && !['scrapper', 'harpooner', 'sapper'].includes(s.kind)),
+    spawns.filter(
+      (s) => !s.elite && !['scrapper', 'harpooner', 'sapper', 'wallcrawler'].includes(s.kind),
+    ),
     spawns.length,
     rng,
   )) {
@@ -67,7 +75,12 @@ export function getOvertimeLevel(seed: string, stage: number): Level {
     present.add(elite);
   }
   return addSapper(
-    addHarpooner({ ...level, spawns, harpoonIntro: false, sapperIntro: false }, seed, stage, true),
+    addHarpooner(
+      { ...level, spawns, harpoonIntro: false, sapperIntro: false, crawlerIntro: false },
+      seed,
+      stage,
+      true,
+    ),
     seed,
     stage,
     true,
