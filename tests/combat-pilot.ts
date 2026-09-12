@@ -256,7 +256,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
               };
           // Slow explosive volleys need enough look-ahead to include their
           // recoil landing, rather than choosing a safe first half of a jump.
-          const horizon = e.kind === 'boss' && g.gun.shellshock ? 60 : 40;
+          const horizon = g.gun.shellshock ? 60 : 40;
           for (let frame = 1; frame <= horizon; frame++) {
             const time = g.time + frame / 60,
               ox = x,

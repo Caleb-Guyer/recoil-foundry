@@ -9,7 +9,7 @@ import { Game, WORLD, EXTRACTION_DURATION } from '../src/game.ts';
 import { EXTRACTION } from '../src/escape-layout.ts';
 import { CRANE_LOCK } from '../src/crane-ai.ts';
 import type { Input } from '../src/game.ts';
-import { getGun, MODS, distance, STAGES, availableMods, isSalvage } from '../src/rules.ts';
+import { getGun, MODS, distance, STAGES, availableMods, isSalvage, seeded } from '../src/rules.ts';
 const { Body, Composite, Query } = Matter;
 const input = (p: Partial<Input> = {}): Input => ({
   left: false,
@@ -732,7 +732,17 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     ],
   },
 ])
-  test(`combat reaches extraction: ${seed} ${pathMods[0]}${fusion ? ' fusion ' + fusion : pathMods.length > 4 ? ' expanded build' : ''}`, () => {
+  test(`combat reaches extraction: ${seed} ${pathMods[0]}${fusion ? ' fusion ' + fusion : pathMods.length > 4 ? ' expanded build' : ''}`, (t) => {
+    const random = Math.random;
+    Math.random = seeded(seed + ':particles');
+    t.after(() => {
+      Math.random = random;
+    });
+    // Start from fresh-page Matter IDs: pair ordering must not depend on how
+    // many bodies an earlier test created, or whether this test runs alone.
+    const common = Matter.Common as typeof Matter.Common & { _nextId: number; _seed: number };
+    common._nextId = 0;
+    common._seed = 0;
     const g = new Game();
     g.start(seed);
     if (overtimeRun)
@@ -757,8 +767,8 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         if (availableMods(extendedRewards).some((m) => m.id === id)) extendedRewards.push(id);
       }
       const openReward = g.openReward.bind(g);
-      g.openReward = (enterDetour = false) => {
-        openReward(enterDetour);
+      g.openReward = (enterDetour = false, route) => {
+        openReward(enterDetour, route);
         if (extendedRewards[g.stage] === 'repair') {
           assert.deepEqual(
             g.offers.map((m) => m.id),
@@ -769,7 +779,10 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         const preferred = MODS.find((m) => m.id === extendedRewards[g.stage])!;
         if (isSalvage(preferred.id))
           assert(g.offers.includes(preferred), 'Salvage must be earned from the actual boss');
-        assert(availableMods(g.mods, true).includes(preferred), 'Scripted offer is not legal');
+        assert(
+          availableMods(g.mods, true).includes(preferred),
+          `Scripted offer ${preferred?.id} is not legal at stage ${g.stage}, detour ${g.detour}, owned ${g.mods.join(',')}`,
+        );
         g.offers = [preferred, ...g.offers.filter((m) => m !== preferred)].slice(0, 3);
       };
     }
@@ -1146,15 +1159,14 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         }
       }
       const takeHighRoad = g.canChooseRoute && highRoads?.includes(g.stage);
-      if (g.clear && g.canBranch && !takeHighRoad && p.x > 1700 && p.y < 442) {
-        const vy = g.player.velocity.y;
-        const landingFrames = (-vy + Math.sqrt(vy * vy + 2 * 0.278 * (442 - p.y))) / 0.278;
-        if (p.x + g.player.velocity.x * landingFrames > 1880) takingLowerRoute = true;
-      }
+      // Catch landings on either approach step too, not only flight above the
+      // upper door. A low arrival must not accidentally select a bonus room.
+      if (g.clear && g.canBranch && !takeHighRoad && p.x > 1700 && p.y < 600)
+        takingLowerRoute = true;
       if (g.clear && g.canBranch && !takeHighRoad && takingLowerRoute) {
         // These runs verify the direct route. Land before the fork, then
         // walk below the steps instead of accidentally selecting the upper door.
-        if (g.grounded && p.y > 690) directExitReady = true;
+        if (p.y > 630) directExitReady = true;
         move = directExitReady ? 1 : Math.abs(p.x - 1760) > 8 ? Math.sign(1760 - p.x) : 0;
         jump = false;
         firing = false;
@@ -1245,6 +1257,13 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
           aim = { ...bomb.body.position };
           firing = true;
         }
+      }
+      // An imminent crush takes precedence over conserving a shell volley.
+      if (train && !g.crossing.blocked && !g.clear && (p.x < 100 || p.x > 1900)) {
+        move = p.x < 1000 ? 1 : -1;
+        jump ||= g.grounded;
+        firing = !g.grounded && g.player.velocity.y > -4;
+        if (firing) aim = { x: p.x, y: p.y + 500 };
       }
       tick(g, 1, {
         left: move < 0,
