@@ -36,6 +36,16 @@ Daily Runs use a single exit with a terrain symbol for that day's fixed route. T
 
 [Test branching routes](https://caleb-guyer.github.io/recoil-foundry/?test=routes) starts just before the first fork. Clear the room, then choose an exit. Add `&route=low` or `&route=high` to start directly inside that road, and `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` for a later area. `&mode=overtime` tests the second lap. Press **R** to retry the same test. These links preserve ordinary saves, Daily records, and Practice unlocks.
 
+## Destructible terrain
+
+Cracked low walls and optional ledges can break under gunfire, explosions, fast crates, and heavy enemy attacks. Cracks spread as the material weakens; there are no terrain health bars or extra controls. Walls open new firing angles, while destroyed ledges drop perched gunners and cover. The base gun breaks a wall in five direct hits or a ledge in three. Boss charges and slams can smash either at the point of contact, then enter their normal recovery.
+
+Each destroyed piece releases up to three small physical chunks. Gunfire pushes them, they collide with the world, and they fade away after 2.4 seconds of active play. At most twelve chunks exist at once. Rubble cannot produce additional Chain reaction explosions. Essential floors, stairs, high-route recovery steps, machinery supports, the freight elevator, and extraction remain intact. Explosions respect the cover present when they begin.
+
+Portals on destroyed surfaces disappear without refunding their placements. Attached fuses keep their last position and timer; rivet pins release. Continue and retries rebuild the same intact room from its entrance, preserving the saved route and build. Weak-material selection repeats in Daily Runs and uses the separate Overtime layout seed on the second lap.
+
+[Test destructible terrain](https://caleb-guyer.github.io/recoil-foundry/?test=destruction): click **Test destructible terrain** to start inside the Docks low road with full health and two upgrades. Shoot the cracked obstacles and ledges; **R** restarts the test. Add `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` to try a later area. These tests preserve ordinary saves, Daily records, and earned Practice victories.
+
 ## Overtime
 
 After clearing the Interceptor's arena in an ordinary run, two exits open. The ground door, **EXTRACT**, leads into the usual escape. Jump up the two suspended steps to **OVERTIME** to keep your exact gun, health, kills, and elapsed time for a second twenty-room lap. There is no entry heal. This is one optional second lap; its final boss leads to extraction.
@@ -60,7 +70,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-11&dv=36`). Version 36 adds fixed terrain routes; its best times are separate from earlier rulesets. Route, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-11&dv=37`). Version 37 adds destructible terrain; its best times are separate from earlier rulesets. Weak terrain, route, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

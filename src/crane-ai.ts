@@ -213,6 +213,7 @@ function moveMotor(g: Game, e: Enemy, seekShot: boolean) {
   );
   const prop = contact && g.props.items.find((prop) => prop.body === contact.body);
   if (prop) g.props.strike(prop, 160, direction(from, to));
+  if (contact) g.destruction.hitBody(contact.body, 160, direction(from, to));
 }
 function recover(g: Game, e: Enemy, impact: boolean) {
   const rig = e.crane!;
@@ -261,6 +262,7 @@ export function updateCrane(g: Game, e: Enemy) {
     if (impact) {
       const prop = g.props.items.find((p) => p.body === impact.body);
       if (prop) g.props.strike(prop, 160, d);
+      g.destruction.hitBody(impact.body, 160, d);
       if (e.hp <= 0 || g.mode !== 'playing') return;
     }
     if (obstruction || finished || e.timer <= 0) recover(g, e, !!impact || e.attack === 'slam');

@@ -283,6 +283,21 @@ export function routesTestFromUrl(url: URL): Checkpoint | null {
   return { ...save, ...(route ? { route } : {}) };
 }
 
+export function destructionTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'destruction' ||
+    p.getAll('area').length > 1 ||
+    ['daily', 'dv', 'seed', 'formation', 'build', 'route', 'mode'].some((k) => p.has(k))
+  )
+    return null;
+  const area = ['docks', 'furnace', 'cooling', 'reclamation', 'rooftops'].indexOf(
+    p.get('area') ?? 'docks',
+  );
+  return area < 0 ? null : { ...testCheckpoint('DESTRUCTION-44', area * 4 + 2), route: 'low' };
+}
+
 export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
   recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
   capacitor: ['capacitor', 'reserve-cell', 'magnum', 'kick', 'airshot', 'light'],

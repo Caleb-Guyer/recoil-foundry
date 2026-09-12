@@ -8,12 +8,13 @@ import { CARGO_SIZE } from './cargo-layout.ts';
 import { disruptScrapperBody, SCRAPPER_DAMAGE } from './scrapper.ts';
 
 const { Bodies, Body, Composite, Events } = Matter;
-export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo';
+export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo' | 'rubble';
 export const PROP_STATS = {
   crate: { w: 44, h: 44, hp: 120 },
   canister: { w: 24, h: 38, hp: Infinity },
   cover: { w: 24, h: 84, hp: 72 },
   cargo: { ...CARGO_SIZE, hp: 400 },
+  rubble: { w: 26, h: 18, hp: 24 },
 };
 export interface Prop {
   kind: PropKind;
@@ -28,6 +29,7 @@ export interface Prop {
   cargo?: CargoRig;
   throwUntil?: number;
   throwHits?: Set<number>;
+  expires?: number;
 }
 export interface PropPlacement extends Vec {
   kind: PropKind;
@@ -218,7 +220,6 @@ export class PropSystem {
   spawn(kind: PropKind, x: number, y: number): Prop {
     const { w, h, hp } = PROP_STATS[kind];
     const body = Bodies.rectangle(x, y, w, h, {
-      isStatic: kind === 'cover',
       friction: 0.35,
       frictionStatic: 0.5,
       frictionAir: 0.008,
@@ -227,6 +228,9 @@ export class PropSystem {
       ...(kind === 'cargo' ? { inertia: Infinity } : {}),
       label: 'prop',
     });
+    // Store finite mass and inertia before anchoring cover, so it can become
+    // an ordinary falling body if its supporting ledge breaks.
+    if (kind === 'cover') Body.setStatic(body, true);
     const prop: Prop = {
       kind,
       body,
@@ -289,6 +293,10 @@ export class PropSystem {
   break(prop: Prop) {
     if (!this.items.includes(prop)) return;
     this.remove(prop);
+    if (prop.kind === 'rubble') {
+      this.game.burst(prop.body.position, 3, '#a9b5b3', 1.5);
+      return;
+    }
     this.game.burst(prop.body.position, 16, '#a9b5b3', 4);
     this.game.feedback(2);
     this.game.onSound('break');
@@ -371,6 +379,10 @@ export class PropSystem {
     }
     this.impacts = [];
     for (const prop of [...this.items]) {
+      if (prop.expires !== undefined && g.time >= prop.expires) {
+        this.remove(prop);
+        continue;
+      }
       if (g.time >= prop.detonateAt) this.explode(prop);
       if (g.mode !== 'playing') return;
     }
@@ -405,6 +417,7 @@ export class PropSystem {
     );
     const hurtsPlayer = distance(p, g.player.position) < 140 && visible(g.player.position);
     const panels = g.breaches.targets(p, 160);
+    const terrain = g.destruction.targets(p, 160);
     g.harpoons.blast(p, 105, 160);
     g.burst(p, 30, '#ffd28a', 7);
     if (g.particles.length < 220)
@@ -438,5 +451,7 @@ export class PropSystem {
     if (hurtsPlayer) g.damagePlayer(Math.ceil(20 * (1 - distance(p, g.player.position) / 180)), p);
     if (g.mode !== 'playing') return;
     for (const panel of panels) g.breaches.hit(panel, 80, direction(p, panel.body.position));
+    for (const piece of terrain)
+      g.destruction.hitBody(piece.body, 80, direction(p, piece.body.position));
   }
 }

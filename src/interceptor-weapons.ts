@@ -278,6 +278,7 @@ export function updateArsenal(g: Game, e: Enemy, dt: number) {
     charge.left -= dt;
     if (charge.left > 0) continue;
     rig.charges.splice(rig.charges.indexOf(charge), 1);
+    const terrain = g.destruction.targets(charge.pos, charge.radius);
     const visible = (p: Vec) => distance(g.lineEnd(charge.pos, p), p) < 1;
     if (distance(charge.pos, g.player.position) < charge.radius + 12 && visible(g.player.position))
       g.damagePlayer(charge.damage, charge.pos);
@@ -289,6 +290,8 @@ export function updateArsenal(g: Game, e: Enemy, dt: number) {
         )
       )
         g.props.strike(prop, 45, direction(charge.pos, prop.body.position));
+    for (const piece of terrain)
+      g.destruction.hitBody(piece.body, 90, direction(charge.pos, piece.body.position));
     g.burst(charge.pos, 18, '#e8c16c', 4);
     g.onSound('slam');
     g.feedback(3);

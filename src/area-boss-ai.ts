@@ -93,16 +93,17 @@ export function updateLoader(g: Game, e: Enemy) {
           )
         : undefined;
     const prop = contact && g.props.items.find((prop) => prop.body === contact.body);
+    const weak = contact && g.destruction.pieces.some((piece) => piece.body === contact.body);
     const end = g.lineEnd(p, { x: p.x + e.aim.x * nose, y: p.y });
     // Keep the wall braking distance; destructible props need actual contact.
     const crashed =
-      e.timer > 0 && (prop ? contact!.t * 24 <= 15 : Math.abs(end.x - p.x) < nose - 1);
+      e.timer > 0 && (prop || weak ? contact!.t * 24 <= 15 : Math.abs(end.x - p.x) < nose - 1);
     if (crashed || e.timer <= 0) {
       e.state = 'recover';
       e.timer = crashed ? 1.25 : 0.4;
       Body.setVelocity(e.body, { x: 0, y: v.y });
       if (crashed) {
-        if (prop && contact)
+        if ((prop || weak) && contact)
           Body.setPosition(e.body, {
             x: p.x + e.aim.x * Math.max(0, contact.t * 24 - 0.05),
             y: p.y,
@@ -116,6 +117,7 @@ export function updateLoader(g: Game, e: Enemy) {
         g.feedback(5);
         g.onSound('crash');
         if (prop) g.props.strike(prop, 160, e.aim);
+        if (weak) g.destruction.hitBody(contact!.body, 160, e.aim);
       }
     } else Body.setVelocity(e.body, { x: e.aim.x * 15, y: v.y });
   } else if (e.state === 'windup') {
@@ -241,6 +243,7 @@ export function updatePress(g: Game, e: Enemy) {
       g.onSound('slam');
       const prop = contact && g.props.items.find((prop) => prop.body === contact.body);
       if (prop) g.props.strike(prop, 144, { x: 0, y: 1 });
+      if (contact) g.destruction.hitBody(contact.body, 144, { x: 0, y: 1 });
     } else Body.setVelocity(e.body, { x: 0, y: 20 });
   } else if (e.state === 'recover') {
     Body.setVelocity(e.body, { x: 0, y: 0 });

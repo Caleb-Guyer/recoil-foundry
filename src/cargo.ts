@@ -132,7 +132,10 @@ export class CargoSystem {
       const target = g.props.items.find((p) => p.body === other);
       if (target?.kind === 'canister') g.props.explode(target);
       else if (target) g.props.hit(target, clamp(speed * 9, 45, 120), prop.velocity);
-      else g.breaches.hitBody(other, clamp(speed * 9, 45, 120), prop.velocity);
+      else {
+        g.breaches.hitBody(other, clamp(speed * 9, 45, 120), prop.velocity);
+        g.destruction.hitBody(other, clamp(speed * 9, 45, 120), prop.velocity);
+      }
     }
     if (g.mode !== 'playing') return true;
     if (g.time - rig.impactAt > 0.3) {

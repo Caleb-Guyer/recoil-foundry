@@ -20,6 +20,7 @@ import {
   scrapperTestFromUrl,
   harpoonerTestFromUrl,
   routesTestFromUrl,
+  destructionTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
   overtimeTestFromUrl,
@@ -117,6 +118,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  destructionTestFromUrl(entryUrl) ??
   routesTestFromUrl(entryUrl) ??
   harpoonerTestFromUrl(entryUrl) ??
   fusionTestFromUrl(entryUrl) ??
@@ -153,6 +155,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test the Harpooner <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('ROUTES-'))
     $('play').innerHTML = 'Test branching routes <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'DESTRUCTION-44')
+    $('play').innerHTML = 'Test destructible terrain <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -191,6 +195,8 @@ function updateTitle() {
     $('title-hint').textContent = linkedRunTest.route
       ? (linkedRunTest.route === 'high' ? 'High road. ' : 'Low road. ') + 'R to retry.'
       : 'Clear the room. Below: cover. Above: platforms. R to retry.';
+  if (linkedRunTest?.seed === 'DESTRUCTION-44')
+    $('title-hint').textContent = 'Shoot cracked cover. Drop the ledges. R to retry.';
 }
 function clearInput() {
   keys.clear();

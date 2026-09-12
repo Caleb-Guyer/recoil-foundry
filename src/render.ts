@@ -7,6 +7,7 @@ import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
 import { drawRouteExits } from './route-art.ts';
+import { drawCracks } from './destruction-art.ts';
 import { drawCrane } from './crane-art.ts';
 import { drawKiln } from './kiln-art.ts';
 import { drawBossSignal } from './boss-signals.ts';
@@ -166,6 +167,8 @@ export class Renderer {
         if (y + h < WORLD.floor) this.line({ x, y: y + h }, { x: x + w, y: y + h }, palette.edge);
       }
       drawSurfaceDetails(c, g.level.area, x, y, w, h);
+      const weak = g.destruction.pieces.find((piece) => piece.body === b);
+      if (weak) drawCracks(c, weak, this.reduced);
     }
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
     this.drawExit();
@@ -1045,6 +1048,7 @@ export class Renderer {
     for (const prop of g.props.items) {
       const { w, h } = PROP_STATS[prop.kind];
       c.save();
+      if (prop.expires !== undefined) c.globalAlpha = clamp((prop.expires - g.time) / 0.6, 0, 1);
       c.translate(prop.body.position.x, prop.body.position.y);
       c.rotate(prop.body.angle);
       c.fillStyle = prop.flash > 0 ? '#c7d2cb' : prop.kind === 'canister' ? '#514536' : '#37434a';
@@ -1092,6 +1096,8 @@ export class Renderer {
           c.strokeRect(-15, -22, 30, 44);
           c.globalAlpha = 1;
         }
+      } else if (prop.kind === 'rubble') {
+        this.line({ x: -8, y: -5 }, { x: 3, y: 4 }, '#697978');
       } else {
         c.fillStyle = '#798b8e';
         for (const y of [-30, 30]) {

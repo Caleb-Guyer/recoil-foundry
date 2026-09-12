@@ -1,4 +1,5 @@
 import { MagnetSystem } from './magnets.ts';
+import { DestructionSystem } from './destruction.ts';
 import { getRouteLevel, reinforceRoute } from './route-layouts.ts';
 import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
@@ -199,6 +200,7 @@ export class Game {
   ballistics = new BallisticsSystem(this);
   fusions = new FusionSystem(this);
   harpoons = new HarpoonSystem(this);
+  destruction = new DestructionSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -334,6 +336,7 @@ export class Game {
       this.portalRequest = null;
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
       for (const e of this.enemies) releaseScrapper(this, e);
       this.demolition.clear();
       this.evolutions.reset();
@@ -407,6 +410,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false) {
+    this.destruction.clear();
     this.enteringDetour = false;
     this.enteringRoute = null;
     this.detourStepsReady = false;
@@ -521,6 +525,7 @@ export class Game {
       this.conveyors.reset();
       this.magnets.reset();
     }
+    this.destruction.reset();
   }
   startEscape() {
     if (this.practice || this.detour) return;
@@ -699,6 +704,7 @@ export class Game {
       enemy.harpoon = createHarpooner();
       Body.setMass(body, this.player.mass * 1.6);
     }
+    this.destruction.releaseUnsupported();
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
     this.shake = Math.min(12, this.shake + amount);
@@ -824,11 +830,13 @@ export class Game {
     this.fusions.beforeStep(dt);
     this.harpoons.beforeStep(dt);
     this.props.beforeStep();
+    this.destruction.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
     this.conveyors.afterStep();
     this.props.afterStep(dt);
     if (this.mode !== 'playing') return;
+    this.destruction.afterStep(dt);
     this.hazards.afterStep(dt);
     this.containPlayer();
     this.harpoons.afterStep(dt);
@@ -1107,8 +1115,13 @@ export class Game {
       const d = direction(p, target);
       return rear.x * d.x + rear.y * d.y >= Math.SQRT1_2;
     });
+    const terrain = this.destruction.targets(p, 130, (target) => {
+      const d = direction(p, target);
+      return rear.x * d.x + rear.y * d.y >= Math.SQRT1_2;
+    });
     for (const prop of targets) this.props.hit(prop, damage, rear);
     for (const panel of panels) this.breaches.hit(panel, damage, rear);
+    for (const piece of terrain) this.destruction.hitBody(piece.body, damage, rear);
   }
   addShot(
     data: Omit<
@@ -1320,6 +1333,7 @@ export class Game {
     );
     const props = this.props.items.filter((prop) => visible(prop.body.position, prop));
     const panels = this.breaches.targets(p, VOLATILE_RADIUS);
+    const terrain = this.destruction.targets(p, VOLATILE_RADIUS);
     this.burst(p, 26, '#ffd28a', 6);
     if (this.particles.length < 220)
       this.particles.push({
@@ -1347,6 +1361,8 @@ export class Game {
       if (this.mode !== 'playing') return;
     }
     for (const panel of panels) this.breaches.hit(panel, 65, direction(p, panel.body.position));
+    for (const piece of terrain)
+      this.destruction.hitBody(piece.body, 65, direction(p, piece.body.position));
   }
   enemyGrounded(e: Enemy) {
     const p = e.body.position;
@@ -1397,15 +1413,18 @@ export class Game {
             )
           : undefined;
       const prop = contact && this.props.items.find((prop) => prop.body === contact.body);
+      const weak = contact && this.destruction.pieces.some((piece) => piece.body === contact.body);
       const portalAhead = this.portals.traceBody(p, { x: p.x + e.aim.x * 35, y: p.y }, e.body);
       const crashed =
-        e.timer > 0 && !portalAhead && (prop ? contact!.t * 20 <= 14 : Math.abs(end.x - p.x) < 34);
+        e.timer > 0 &&
+        !portalAhead &&
+        (prop || weak ? contact!.t * 20 <= 14 : Math.abs(end.x - p.x) < 34);
       if (crashed || e.timer <= 0) {
         e.state = 'recover';
         e.timer = crashed ? 1.1 : 0.6;
         Body.setVelocity(e.body, { x: 0, y: v.y });
         if (crashed) {
-          if (prop && contact)
+          if ((prop || weak) && contact)
             Body.setPosition(e.body, {
               x: p.x + e.aim.x * Math.max(0, contact.t * 20 - 0.05),
               y: p.y,
@@ -1414,6 +1433,7 @@ export class Game {
           this.feedback(2);
           this.onSound('crash');
           if (prop) this.props.strike(prop, 140, e.aim);
+          if (weak) this.destruction.hitBody(contact!.body, 140, e.aim);
         }
       } else Body.setVelocity(e.body, { x: e.aim.x * 14, y: v.y });
     } else if (e.state === 'windup') {
@@ -1675,6 +1695,7 @@ export class Game {
       });
       if (prop) this.props.hit(prop, damage, d);
       this.breaches.hitAlong(origin, muzzle, end, damage, d, padding);
+      this.destruction.hitAlong(origin, muzzle, end, damage, d, padding);
       return;
     }
     this.addShot({
@@ -1877,6 +1898,11 @@ export class Game {
             continue;
           }
           this.breaches.hitBody(nearest.body, s.damage, s.vel);
+          this.destruction.hitBody(
+            nearest.body,
+            !s.friendly && s.enemyAmmo?.kind === 'precision' ? 90 : s.damage,
+            s.vel,
+          );
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);
           this.splitShot(s, nearest.normal);
           if (s.bounces > 0) {

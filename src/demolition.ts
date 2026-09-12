@@ -138,6 +138,9 @@ export class DemolitionSystem {
       .map((panel) => ({ panel, amount: strength(panel.body, panel.body) }))
       .filter((hit) => hit.amount > 0);
     const launch = blast.launch * strength(g.player);
+    const terrain = g.destruction.pieces
+      .map((piece) => ({ piece, amount: strength(piece.body, piece.body) }))
+      .filter((hit) => hit.amount > 0);
     g.harpoons.blast(pos, damage, radius);
     const showEffect = !this.effects.some(
       (e) => e.kind === blast.kind && g.time - e.at < 0.055 && distance(e.pos, pos) < 14,
@@ -191,6 +194,8 @@ export class DemolitionSystem {
     }
     for (const { panel, amount } of panels)
       g.breaches.hit(panel, damage * amount, direction(pos, panel.body.position));
+    for (const { piece, amount } of terrain)
+      g.destruction.hitBody(piece.body, damage * amount, direction(pos, piece.body.position));
     if (launch > 0 && g.mode === 'playing') {
       const d = direction(pos, g.player.position);
       if (!d.x && !d.y) d.y = -1;
