@@ -3,6 +3,7 @@ import { sample, seeded } from './rules.ts';
 import { squadSpawns } from './squads.ts';
 
 export function addSapper(level: Level, seed: string, stage: number, overtime = false): Level {
+  if (level.setpiece) return level;
   if (level.boss || level.detour || level.freight || (!overtime && (stage < 4 || stage === 12)))
     return level;
   if (level.spawns.some((s) => s.kind === 'sapper'))

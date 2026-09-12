@@ -261,9 +261,19 @@ function usePassage(game: Game, vent: BreachPlacement) {
     const onRim = (p.x - vent.approach.x) * sign > 64;
     let input = { ...idle };
     if (hatch) input = { ...input, fire: true, aim: hatch.body.position };
-    else if (!inside && !onRim)
-      input = { ...input, jump: game.grounded, fire: true, aim: { x: p.x, y: p.y + 500 } };
-    else {
+    else if (!inside && (!onRim || p.y > vent.approach.y + 36)) {
+      // A moving platform can carry the approach sideways while the hatch
+      // opens. Steer back under it before attempting another recoil ascent.
+      const dx = vent.approach.x - p.x;
+      input = {
+        ...input,
+        left: dx < -12,
+        right: dx > 12,
+        jump: game.grounded,
+        fire: Math.abs(dx) < 42,
+        aim: { x: p.x, y: p.y + 500 },
+      };
+    } else {
       const dx = vent.destination.x - p.x;
       input = {
         ...input,

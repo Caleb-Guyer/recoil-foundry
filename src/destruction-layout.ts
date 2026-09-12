@@ -4,6 +4,7 @@ import { sample, seeded } from './rules.ts';
 // Only optional shelves and isolated, low obstacles can fail. Stairs, tall
 // towers, arena boundaries, machinery and extraction remain structural.
 export function breakableSolids(level: Level, seed: string, stage: number): Solid[] {
+  if (level.setpiece) return level.setpiece.weak.map((i) => level.solids[i]);
   if (level.freight || level.detour || level.id === 'last-flight') return [];
   const optional = level.solids.filter((s) => {
     if (s.x < 280 || s.x + s.w > 1740 || s.y < 350 || s.w > 330) return false;

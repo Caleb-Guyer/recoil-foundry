@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getLevel, LAYOUTS, BOSS_LAYOUTS, SPECIAL_LAYOUTS } from '../src/levels.ts';
 import { FREIGHT } from '../src/freight-layout.ts';
+import { PHYSICS_LAYOUTS } from '../src/physics-layouts.ts';
 import { STAGES } from '../src/rules.ts';
 import { Game } from '../src/game.ts';
 import Matter from 'matter-js';
@@ -122,7 +123,7 @@ test('routes and spawn anchors stay aligned when a layout is mirrored', () => {
 });
 test('every authored route traverses both ways with ordinary jumps and no upgrades', () => {
   const { Body, Bodies, Composite, Query } = Matter;
-  for (const source of [...LAYOUTS, ...BOSS_LAYOUTS])
+  for (const source of [...LAYOUTS, ...BOSS_LAYOUTS, ...PHYSICS_LAYOUTS])
     for (const reverse of [false, true]) {
       const g = new Game();
       g.start('route-check');

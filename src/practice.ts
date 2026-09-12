@@ -1,4 +1,5 @@
 import { getLevel } from './levels.ts';
+import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
 import { bossStage, availableMods, type Checkpoint } from './rules.ts';
 
 // Encounter-only records cannot prove a win; start a separate victory history.
@@ -350,6 +351,51 @@ export function tetherTestFromUrl(url: URL): Checkpoint | null {
   )
     return null;
   return { ...testCheckpoint('TETHER-46', 6), mods: [...UPGRADE_TEST_BUILDS.tether] };
+}
+
+export function layoutTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'layouts' ||
+    ['daily', 'dv', 'seed', 'area', 'formation', 'build', 'route', 'mode'].some((k) => p.has(k)) ||
+    ['layout', 'variant', 'mirror'].some((k) => p.getAll(k).length > 1)
+  )
+    return null;
+  const id = p.get('layout') ?? 'cable-yard';
+  const variant = p.get('variant') ?? '1';
+  const mirror = p.get('mirror') ?? '0';
+  if (
+    !PHYSICS_LAYOUTS.some((l) => l.id === id) ||
+    !['1', '2', '3'].includes(variant) ||
+    !['0', '1'].includes(mirror)
+  )
+    return null;
+  const stage = PHYSICS_STAGES[id];
+  // Select a real seeded room. Playtests exercise the same generator as a run.
+  for (let i = 0; i < 1024; i++) {
+    const seed = `ROOM47-${id[0].toUpperCase()}-${i}`;
+    if (physicsVariant(seed, id) !== Number(variant) - 1) continue;
+    const level = getLevel(seed, stage);
+    if (level.id !== id || level.mirrored !== (mirror === '1')) continue;
+    const save = testCheckpoint(seed, stage);
+    if (id === 'cable-yard')
+      save.mods = [
+        'tether',
+        'snapback',
+        'leech',
+        'light',
+        'kick',
+        'airshot',
+        'rapid',
+        'pierce',
+        'ricochet',
+      ];
+    if (id === 'demolition-lane')
+      save.mods = ['shellshock', 'blast-surf', 'leech', 'kick', 'light'];
+    return save;
+  }
+  return null;
 }
 export function fusionTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;

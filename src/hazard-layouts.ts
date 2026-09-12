@@ -84,6 +84,7 @@ export function hazardPlacement(
   seed: string,
   stage: number,
 ): HazardPlacement | undefined {
+  if (level.setpiece) return;
   if (level.area === 'reclamation') return;
   stage = formerStage(stage);
   if (level.boss || level.freight || stage === 0) return;

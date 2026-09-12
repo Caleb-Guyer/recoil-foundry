@@ -280,7 +280,7 @@ test('coolant carries ground momentum without damage and releases immediately on
   assert(speeds[1] > speeds[0] * 3, 'Coolant should visibly preserve the glide');
 });
 
-test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a harder final roster', () => {
+test('the five-area run includes Cooling Works and Cable Yard with a harder rooftop roster', () => {
   const layouts = new Set<string>();
   for (let i = 0; i < 40; i++) {
     const seed = 'cooling-sequence-' + i;
@@ -293,7 +293,8 @@ test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a 
     for (const stage of [8, 9]) {
       const level = getLevel(seed, stage);
       layouts.add(level.id);
-      assert(level.coolant!.length >= 2);
+      if (level.setpiece) assert.equal(level.id, 'cable-yard');
+      else assert(level.coolant!.length >= 2);
       assert(level.spawns.some((e) => e.kind === 'skimmer'));
     }
     for (const stage of [16, 17]) {
@@ -303,13 +304,17 @@ test('the fourth area supplies sixteen rooms, three Cooling Works layouts and a 
     }
     assert(['condenser', 'turbine'].includes(getLevel(seed, 11).spawns[0].kind));
   }
-  assert.equal(layouts.size, 3);
+  assert.equal(layouts.size, 4);
 });
 
 test('rooftop collapsing platforms leave room to launch over adjacent steps', () => {
-  const seed = 'path-run-93',
-    level = getLevel(seed, 17),
-    h = hazardPlacement(level, seed, 13)!;
+  const candidate = Array.from({ length: 64 }, (_, i) => {
+    const seed = 'roof-crumble-' + i,
+      level = getLevel(seed, 17);
+    return { level, h: hazardPlacement(level, seed, 17) };
+  }).find((c) => c.h?.kind === 'crumble');
+  assert(candidate);
+  const { level, h } = candidate;
   assert(h);
   const b = hazardBounds(h);
   if (h.kind === 'crumble')

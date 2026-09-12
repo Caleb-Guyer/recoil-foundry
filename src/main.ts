@@ -23,6 +23,7 @@ import {
   destructionTestFromUrl,
   sapperTestFromUrl,
   tetherTestFromUrl,
+  layoutTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
   overtimeTestFromUrl,
@@ -31,6 +32,7 @@ import {
   fusionTestFromUrl,
 } from './practice.ts';
 import type { Encounter } from './practice.ts';
+import { PHYSICS_LAYOUTS } from './physics-layouts.ts';
 import {
   DAILY_BESTS_KEY,
   dailyFromSeed,
@@ -120,6 +122,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  layoutTestFromUrl(entryUrl) ??
   tetherTestFromUrl(entryUrl) ??
   sapperTestFromUrl(entryUrl) ??
   destructionTestFromUrl(entryUrl) ??
@@ -165,6 +168,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test the Sapper <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'TETHER-46')
     $('play').innerHTML = 'Test Tether rounds <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('ROOM47-'))
+    $('play').innerHTML = 'Test new layouts <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -209,6 +214,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Watch the fuse. Shoot charges back. R to retry.';
   if (linkedRunTest?.seed === 'TETHER-46')
     $('title-hint').textContent = 'Hit two enemies. Stretch the cable. R to retry.';
+  if (linkedRunTest?.seed.startsWith('ROOM47-'))
+    $('title-hint').textContent = 'Choose a room. Full health. R to retry.';
 }
 function clearInput() {
   keys.clear();
@@ -431,7 +438,38 @@ function showDialog(kind: string) {
   modal.classList.toggle('single-upgrade', singleUpgrade);
   modal.classList.toggle('practice-dialog', kind === 'practice');
   const content = $('dialog-content');
-  if (kind === 'upgrade-test') {
+  if (kind === 'layout-test') {
+    const descriptions = [
+      'Staggered platforms. Stretch a tether.',
+      'Cracked barriers. Shoot the fuel.',
+      'Hanging loads. Cut the cables.',
+    ];
+    content.innerHTML =
+      '<h2 id="dialog-title">Try a room</h2><div class="choices">' +
+      PHYSICS_LAYOUTS.map(
+        (layout, i) =>
+          '<button class="mod" data-layout="' +
+          layout.id +
+          '"><strong>' +
+          layout.name +
+          '</strong><span class="mod-copy">' +
+          descriptions[i] +
+          '</span></button>',
+      ).join('') +
+      '</div><div class="dialog-actions"><button id="back" class="quiet">Back</button></div>';
+    content.querySelectorAll<HTMLButtonElement>('[data-layout]').forEach((button) => {
+      button.onclick = () => {
+        const url = new URL(location.href);
+        url.searchParams.set('layout', button.dataset.layout!);
+        const save = layoutTestFromUrl(url);
+        if (!save) return;
+        history.replaceState(null, '', url);
+        linkedRunTest = save;
+        startRunTest(save);
+      };
+    });
+    $('back').onclick = resume;
+  } else if (kind === 'upgrade-test') {
     const fusions = linkedRunTest?.seed.startsWith('FUSIONS-');
     content.innerHTML =
       '<h2 id="dialog-title">' +
@@ -729,13 +767,15 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedRunTest?.seed.startsWith('UPGRADES-') || linkedRunTest?.seed.startsWith('FUSIONS-')
-    ? showDialog('upgrade-test')
-    : linkedRunTest
-      ? startRunTest(linkedRunTest)
-      : linkedTest
-        ? startPractice(linkedTest)
-        : start();
+  linkedRunTest?.seed.startsWith('ROOM47-')
+    ? showDialog('layout-test')
+    : linkedRunTest?.seed.startsWith('UPGRADES-') || linkedRunTest?.seed.startsWith('FUSIONS-')
+      ? showDialog('upgrade-test')
+      : linkedRunTest
+        ? startRunTest(linkedRunTest)
+        : linkedTest
+          ? startPractice(linkedTest)
+          : start();
 $('daily').onclick = () => {
   if (linkedDaily) {
     linkedDaily = null;

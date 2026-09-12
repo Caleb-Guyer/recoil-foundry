@@ -2,6 +2,7 @@ import type { Level } from './levels.ts';
 import { seeded, sample } from './rules.ts';
 
 export function addHarpooner(level: Level, seed: string, stage: number, overtime = false): Level {
+  if (level.setpiece) return level;
   if (level.boss || level.detour || level.freight || (!overtime && stage !== 12)) return level;
   if (level.spawns.some((s) => s.kind === 'harpooner'))
     return { ...level, harpoonIntro: !overtime };

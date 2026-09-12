@@ -26,6 +26,18 @@ Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, s
 
 Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, Scattershot widens the muzzle, and Burst fire cycles a bolt and three recessed chambers. These parts combine on the same weapon. Banked rounds leave short mint trails along their actual bounce paths; piercing rounds leave thin pale-blue streaks. Combined rounds keep both cues. Screen-shake settings also reduce the weapon animation and muzzle flash. These visual changes preserve the gun’s stats.
 
+## Physics rooms
+
+Three occasional layouts appear in the second room of their area, each with three enemy arrangements and a mirrored version:
+
+- **Demolition Lane — Furnace:** low cracked barriers, fuel beside cover, and a Sapper. Explosions weaken the barriers; follow-up shots open new firing lanes.
+- **Cable Yard — Cooling Works:** staggered platforms with ground and flying enemies in connecting lanes. Tether builds can pull enemies together; ordinary guns can use the same open angles.
+- **Suspension Hall — Rooftops:** two hanging loads above enemy positions, with stepped perches and exposed upper platforms. Shoot the cables to drop cargo, then use the fallen loads as cover.
+
+Every room remains crossable with ordinary jumps, including after its cover breaks or cargo falls. Recoil gives access to higher positions. Room selection, arrangements, props and mirrors repeat by seed in ordinary runs, Daily Runs and Overtime. The existing freight elevator retains its chance to appear in Furnace.
+
+[Test the three layouts](https://caleb-guyer.github.io/recoil-foundry/?test=layouts): click **Test new layouts**, then choose a room. Each starts with full health and an appropriate preset gun; Cable Yard includes Tether rounds and Snapback. **R** retries the same room. Add `&variant=2` or `&variant=3` for another arrangement and `&mirror=1` to flip it. These tests preserve ordinary saves, Daily records and earned Practice victories.
+
 ## Branching routes
 
 After the second room of each area, two physical exits open. The ground exit leads to the **Low road**: close quarters, more ground attackers, and extra breakable cover. Climb the two steps to the **High road** for exposed platforms and more aerial enemies. Small passage and platform symbols above the doors identify the terrain without revealing encounters. No extra menu or input is needed.
@@ -70,7 +82,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=39`). Version 39 adds Tether rounds and Snapback; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=40`). Version 40 adds Cable Yard, Demolition Lane and Suspension Hall; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

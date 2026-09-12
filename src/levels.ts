@@ -7,6 +7,7 @@ import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
 import { addScrapper } from './scrapper-layout.ts';
 import { addHarpooner } from './harpooner-layout.ts';
 import { addSapper } from './sapper-layout.ts';
+import { PHYSICS_LAYOUTS, physicsLayout, physicsVariant } from './physics-layouts.ts';
 import { seeded, sample, STAGES, formerStage } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
@@ -47,6 +48,12 @@ export interface Spawn extends Vec {
   squad?: SquadTag;
 }
 export interface Layout {
+  setpiece?: {
+    rosters: number[][];
+    props: { kind: 'crate' | 'canister' | 'cover'; x: number; y: number }[];
+    cargo?: { x: number; y: number; anchorY: number }[];
+    weak: number[];
+  };
   magnets?: MagnetPlacement[];
   freight?: true;
   added?: true;
@@ -76,7 +83,7 @@ const flyer = (x: number, y: number): Spawn => ({ kind: 'flyer', x, y });
 const route = (...points: number[][]): Vec[] => points.map(([x, y]) => ({ x, y }));
 // Authored cover, spawn anchors and a generous baseline route belong to the same layout.
 // Ground remains safe beneath raised gaps; recoil creates optional shortcuts.
-export const SPECIAL_LAYOUTS: Layout[] = [FREIGHT_LAYOUT];
+export const SPECIAL_LAYOUTS: Layout[] = [FREIGHT_LAYOUT, ...PHYSICS_LAYOUTS];
 export const LAYOUTS: Layout[] = [
   ...RECLAMATION_LAYOUTS,
   ...ADDED_LAYOUTS,
@@ -681,7 +688,8 @@ function buildLevel(
       ? TURBINE_ARENA
       : COOLING_BOSS;
   const source =
-    slot === 2
+    physicsLayout(seed, stage) ??
+    (slot === 2
       ? ADDED_LAYOUTS[area]
       : legacyStage === 11
         ? roofBoss
@@ -689,7 +697,7 @@ function buildLevel(
           ? coolingArena
           : legacyStage >= 6 && legacyStage < 8
             ? cooling[legacyStage - 6]
-            : order[legacyStage >= 9 ? legacyStage - 3 : legacyStage];
+            : order[legacyStage >= 9 ? legacyStage - 3 : legacyStage]);
   if (!source) throw new RangeError('Invalid stage');
   const rng = seeded(
     seed +
@@ -704,10 +712,11 @@ function buildLevel(
     : slot === 2
       ? [6, 9, 11, 12][area]
       : [3, 4, 1, 6, 7, 1, 8, 9, 1, 9, 10, 1][legacyStage];
-  const anchors = source.spawns
-    .map((s) => ({ ...s, x: mirrored ? 2000 - s.x : s.x }))
-    .filter((s) => boss || s.x >= 380);
-  const spawns = sample(anchors, count, rng);
+  const allAnchors = source.spawns.map((s) => ({ ...s, x: mirrored ? 2000 - s.x : s.x }));
+  const anchors = allAnchors.filter((s) => boss || s.x >= 380);
+  const spawns = source.setpiece
+    ? source.setpiece.rosters[physicsVariant(seed, source.id)].map((i) => ({ ...allAnchors[i] }))
+    : sample(anchors, count, rng);
   // Introduce one new behavior at a time, using the same terrain-safe hull anchors.
   const introduce = (kind: EnemyKind, from: EnemyKind) => {
     let index = spawns.findIndex((s) => s.kind === from);
@@ -742,6 +751,24 @@ function buildLevel(
   const path = source.route.map((p) => ({ ...p, x: mirrored ? 2000 - p.x : p.x }));
   return {
     ...source,
+    ...(source.setpiece
+      ? {
+          setpiece: {
+            ...source.setpiece,
+            rosters: source.setpiece.rosters.map((r) => [...r]),
+            weak: [...source.setpiece.weak],
+            props: source.setpiece.props.map((p) => ({ ...p, x: mirrored ? 2000 - p.x : p.x })),
+            ...(source.setpiece.cargo
+              ? {
+                  cargo: source.setpiece.cargo.map((p) => ({
+                    ...p,
+                    x: mirrored ? 2000 - p.x : p.x,
+                  })),
+                }
+              : {}),
+          },
+        }
+      : {}),
     solids,
     ...(source.coolant
       ? { coolant: source.coolant.map((s) => ({ ...s, x: mirrored ? 2000 - s.x - s.w : s.x })) }

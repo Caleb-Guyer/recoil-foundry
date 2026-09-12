@@ -33,6 +33,10 @@ export class CargoSystem {
   reset() {
     const g = this.game;
     for (const p of this.items) g.props.remove(p);
+    if (g.level.setpiece) {
+      for (const placement of g.level.setpiece.cargo ?? []) this.spawn(placement);
+      return;
+    }
     const placement = cargoPlacement(
       g.level,
       g.roomSeed,

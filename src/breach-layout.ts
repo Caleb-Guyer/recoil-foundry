@@ -31,6 +31,7 @@ const playerHull = (position: Vec): Solid => ({
 });
 
 export function breachPlacement(level: Level, seed: string, stage: number): BreachPlacement | null {
+  if (level.setpiece) return null;
   if (level.area === 'reclamation') return null;
   stage = formerStage(stage);
   if (level.boss || level.freight || level.id === 'last-flight' || ![1, 5, 9, 13].includes(stage))

@@ -113,7 +113,7 @@ test('the independent docks boss draw preserves regular rooms and the rooftop en
       'loading-bays:false',
       'overpass:false',
       'fortress:false',
-      'pillars:true',
+      'demolition-lane:true',
       'split-deck:false',
       'gantry:false',
       'relay-roof:false',

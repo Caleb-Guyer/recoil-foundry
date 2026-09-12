@@ -41,6 +41,7 @@ export interface PropPlacement extends Vec {
 // Three small objects per room. Only wide, clear support surfaces are eligible.
 // Geometry and spawn anchors remain authoritative; scenery never creates a prop.
 export function propPlacements(level: Level, seed: string): PropPlacement[] {
+  if (level.setpiece) return level.setpiece.props.map((p) => ({ ...p }));
   if (level.magnets) return level.magnets.map((m) => ({ kind: 'crate', x: m.x, y: m.floor - 23 }));
   const result: PropPlacement[] = [];
   const rng = seeded(seed + ':props:' + level.id);

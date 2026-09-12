@@ -20,6 +20,7 @@ export function conveyorPlacements(
   machinery: Solid[] = [],
   fixtures: Solid[] = [],
 ): Conveyor[] {
+  if (level.setpiece) return [];
   if (level.area === 'reclamation') return [];
   stage = formerStage(stage);
   if (level.boss || level.detour || level.freight || stage < 4 || level.area === 'docks') return [];
