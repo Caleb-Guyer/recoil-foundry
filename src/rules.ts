@@ -613,6 +613,11 @@ export const areaIndex = (stage: number) =>
   Math.min(4, Math.max(0, Math.floor(stage / ROOMS_PER_AREA)));
 export const bossStage = (area: number) => area * ROOMS_PER_AREA + ROOMS_PER_AREA - 1;
 export const ROOM_HEAL = 12;
+export type RouteChoice = 'low' | 'high';
+export const isRouteStage = (stage: number) =>
+  Number.isInteger(stage) && stage >= 0 && stage < STAGES && stage % ROOMS_PER_AREA === 2;
+export const dailyRoute = (seed: string, stage: number): RouteChoice =>
+  seeded(seed + ':route:' + stage)() < 0.5 ? 'low' : 'high';
 export const isDetourStage = (stage: number) =>
   Number.isInteger(stage) &&
   stage >= 0 &&
@@ -632,6 +637,7 @@ export interface Checkpoint {
   detours?: number[];
   missedUpgrades?: number;
   overtime?: { baseMods: number; repairs: number };
+  route?: RouteChoice;
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
@@ -706,6 +712,13 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     d.elapsed >= 0 &&
     validDetours &&
     validOvertime &&
+    (d.route === undefined ||
+      (d.version === 5 &&
+        (d.route === 'low' || d.route === 'high') &&
+        isRouteStage(d.stage) &&
+        !d.detour &&
+        !d.escape &&
+        (!/^RF-D\d+-/.test(d.seed) || d.route === dailyRoute(d.seed, d.stage)))) &&
     (!!overtime ||
       (d.detour === undefined && d.detours === undefined) ||
       d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length - missed) &&

@@ -6,6 +6,7 @@ import { drawRivalShot } from './interceptor-effects.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
+import { drawRouteExits } from './route-art.ts';
 import { drawCrane } from './crane-art.ts';
 import { drawKiln } from './kiln-art.ts';
 import { drawBossSignal } from './boss-signals.ts';
@@ -169,6 +170,7 @@ export class Renderer {
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
     this.drawExit();
     drawDetourDoor(c, g);
+    drawRouteExits(c, g);
     this.drawHazards();
     drawFreightLift(c, g);
     drawConveyors(c, g, this.reduced);
@@ -1255,6 +1257,7 @@ export class Renderer {
     c.restore();
   }
   drawExit() {
+    if (this.game.canChooseRoute) return;
     if (this.game.escape) {
       this.drawExtraction();
       return;

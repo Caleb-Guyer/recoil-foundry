@@ -1,4 +1,5 @@
 import { MagnetSystem } from './magnets.ts';
+import { getRouteLevel, reinforceRoute } from './route-layouts.ts';
 import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
@@ -37,8 +38,10 @@ import {
   isDetourStage,
   isFusion,
   fusionUnlocked,
+  isRouteStage,
+  dailyRoute,
 } from './rules.ts';
-import type { Vec, Gun, Mod, Checkpoint } from './rules.ts';
+import type { Vec, Gun, Mod, Checkpoint, RouteChoice } from './rules.ts';
 import { dailyFromSeed } from './daily.ts';
 import { getLevel } from './levels.ts';
 import type { Level, EnemyKind } from './levels.ts';
@@ -229,6 +232,18 @@ export class Game {
   detour = false;
   detours: number[] = [];
   enteringDetour = false;
+  route: RouteChoice | null = null;
+  enteringRoute: RouteChoice | null = null;
+  get canChooseRoute() {
+    return !this.practice && !this.escape && !this.detour && isRouteStage(this.stage + 1);
+  }
+  get routeChoices(): RouteChoice[] {
+    return !this.canChooseRoute
+      ? []
+      : dailyFromSeed(this.seed)
+        ? [dailyRoute(this.seed, this.stage + 1)]
+        : ['low', 'high'];
+  }
   detourStepsReady = false;
   get canDetour() {
     return (
@@ -257,7 +272,19 @@ export class Game {
     );
   }
   get canBranch() {
-    return this.canDetour || this.canOvertime;
+    return this.canDetour || this.canOvertime || this.routeChoices.length === 2;
+  }
+  get branchDoor() {
+    return {
+      ...DETOUR_DOOR,
+      floor: this.level.freight ? FREIGHT.dock - 180 : DETOUR_DOOR.floor,
+    };
+  }
+  get branchSteps() {
+    return DETOUR_STEPS.map((s, i) => ({
+      ...s,
+      y: this.level.freight ? FREIGHT.dock - (i + 1) * 90 : s.y,
+    }));
   }
   hp = 100;
   mods: string[] = [];
@@ -340,6 +367,12 @@ export class Game {
     this.missedUpgrades = save?.missedUpgrades ?? 0;
     this.detour = !practice && save?.detour === true;
     this.detours = !practice ? [...(save?.detours ?? [])] : [];
+    this.route =
+      !practice && !this.detour && !save?.escape && isRouteStage(this.stage)
+        ? dailyFromSeed(this.seed)
+          ? dailyRoute(this.seed, this.stage)
+          : (save?.route ?? null)
+        : null;
     this.hp = save?.hp ?? 100;
     this.mods = save ? [...save.mods] : [];
     this.gun = getGun(this.mods);
@@ -370,10 +403,12 @@ export class Game {
       ...(this.detour ? { detour: true as const } : {}),
       ...(this.detours.length ? { detours: [...this.detours] } : {}),
       ...(this.overtime ? { overtime: { ...this.overtime } } : {}),
+      ...(this.route ? { route: this.route } : {}),
     });
   }
   loadRoom(escapeRoom = false) {
     this.enteringDetour = false;
+    this.enteringRoute = null;
     this.detourStepsReady = false;
     this.evolutions.reset();
     this.ballistics.reset();
@@ -441,6 +476,10 @@ export class Game {
                 ? this.practice.kind
                 : undefined,
             );
+    if (this.route && !escapeRoom && !this.detour) {
+      this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
+      if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
+    }
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
     wall(this.worldWidth + 30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -502,6 +541,7 @@ export class Game {
       return false;
     this.overtime = { baseMods: this.mods.length, repairs: 0 };
     this.stage = 0;
+    this.route = null;
     this.loadRoom();
     this.save();
     this.onSound('evacuate');
@@ -511,7 +551,7 @@ export class Game {
   extendDetourSteps() {
     if (!this.clear || !this.canBranch || this.detourStepsReady) return;
     // Never materialize a step through the player or a loose prop.
-    for (const s of DETOUR_STEPS)
+    for (const s of this.branchSteps)
       if (
         Query.region([this.player, ...this.props.bodies], {
           min: { x: s.x - 1, y: s.y - 1 },
@@ -519,7 +559,7 @@ export class Game {
         }).length
       )
         return;
-    for (const s of DETOUR_STEPS) {
+    for (const s of this.branchSteps) {
       const body = Bodies.rectangle(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h, {
         isStatic: true,
         friction: 0,
@@ -839,11 +879,12 @@ export class Game {
       this.canBranch &&
       this.time - this.clearAt > 0.4 &&
       this.grounded &&
-      this.player.position.x > DETOUR_DOOR.x - 24 &&
-      this.player.position.x < DETOUR_DOOR.x + 40 &&
-      Math.abs(this.player.position.y - (DETOUR_DOOR.floor - 18)) < 8
+      this.player.position.x > this.branchDoor.x - 24 &&
+      this.player.position.x < this.branchDoor.x + 40 &&
+      Math.abs(this.player.position.y - (this.branchDoor.floor - 18)) < 8
     ) {
       if (this.canOvertime) this.startOvertime();
+      else if (this.canChooseRoute) this.openReward(false, 'high');
       else this.openReward(true);
       return;
     }
@@ -2020,8 +2061,17 @@ export class Game {
       });
     }
   }
-  openReward(enterDetour = false) {
+  openReward(enterDetour = false, route?: RouteChoice) {
     if (this.practice || this.escape || this.mode !== 'playing') return;
+    if (
+      route &&
+      (enterDetour ||
+        !this.routeChoices.includes(route) ||
+        !this.clear ||
+        this.enemies.length ||
+        this.waves.pending)
+    )
+      return;
     if (
       enterDetour &&
       (!this.canDetour || !this.clear || this.enemies.length || this.waves.pending)
@@ -2029,6 +2079,7 @@ export class Game {
       return;
     if (this.detour && (!this.clear || this.enemies.length || this.waves.pending)) return;
     this.enteringDetour = enterDetour;
+    this.enteringRoute = this.canChooseRoute ? (route ?? this.routeChoices[0]) : null;
     this.offers = rewardMods(
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
@@ -2055,6 +2106,7 @@ export class Game {
     if (id === 'repair' && this.overtime) this.overtime.repairs++;
     else this.mods.push(id);
     this.gun = getGun(this.mods);
+    this.route = this.enteringRoute;
     if (this.detour) {
       this.detours.push(areaIndex(this.stage));
       this.detour = false;

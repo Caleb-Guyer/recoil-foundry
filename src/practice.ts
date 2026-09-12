@@ -244,6 +244,45 @@ export function harpoonerTestFromUrl(url: URL): Checkpoint | null {
   return { ...save, seed: 'HARPOONER-OT' };
 }
 
+export function routesTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'routes' ||
+    ['area', 'route', 'mode'].some((k) => p.getAll(k).length > 1) ||
+    ['daily', 'dv', 'seed', 'formation', 'build'].some((k) => p.has(k))
+  )
+    return null;
+  const area = ['docks', 'furnace', 'cooling', 'reclamation', 'rooftops'].indexOf(
+    p.get('area') ?? 'docks',
+  );
+  const route = p.get('route'),
+    mode = p.get('mode') ?? 'normal';
+  if (
+    area < 0 ||
+    (route !== null && route !== 'low' && route !== 'high') ||
+    (mode !== 'normal' && mode !== 'overtime')
+  )
+    return null;
+  const stage = area * 4 + (route ? 2 : 1);
+  const save = testCheckpoint('ROUTES-43', stage);
+  if (mode === 'overtime') {
+    const base = overtimeTestFromUrl(
+      new URL(
+        '?test=overtime&area=' + ['docks', 'furnace', 'cooling', 'reclamation', 'rooftops'][area],
+        url,
+      ),
+    )!;
+    Object.assign(save, base, { seed: 'ROUTES-OT', stage });
+    for (let i = base.stage; i < stage; i++) {
+      const next = availableMods(save.mods)[0];
+      if (next) save.mods.push(next.id);
+      else save.overtime!.repairs++;
+    }
+  }
+  return { ...save, ...(route ? { route } : {}) };
+}
+
 export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
   recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
   capacitor: ['capacitor', 'reserve-cell', 'magnum', 'kick', 'airshot', 'light'],

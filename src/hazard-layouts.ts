@@ -40,6 +40,8 @@ function candidates(level: Level, kind: HazardKind): HazardPlacement[] {
     kind === 'crusher' ? [SHAPES[kind], { ...SHAPES[kind], y: 470, travel: 238 }] : [SHAPES[kind]];
   for (const shape of shapes) {
     for (let canonicalX = 280; canonicalX <= 1720; canonicalX += 20) {
+      // Low roads reserve the end bays for their guaranteed breakable cover.
+      if (level.routeChoice === 'low' && (canonicalX < 420 || canonicalX > 1580)) continue;
       const placement = { kind, x: level.mirrored ? 2000 - canonicalX : canonicalX, ...shape };
       const swept = hazardBounds(placement, 44);
       const clearance = { x: swept.x - 12, y: swept.y, w: swept.w + 24, h: swept.h };

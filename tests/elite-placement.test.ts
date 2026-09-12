@@ -5,7 +5,8 @@ import type { Level } from '../src/levels.ts';
 import { ENEMY_STATS } from '../src/enemies.ts';
 import type { EliteKind } from '../src/enemies.ts';
 import { Game } from '../src/game.ts';
-import { loadCheckpoint, STAGES } from '../src/rules.ts';
+import { loadCheckpoint, STAGES, dailyRoute, isRouteStage } from '../src/rules.ts';
+import { getRouteLevel } from '../src/route-layouts.ts';
 import type { Checkpoint } from '../src/rules.ts';
 import { dailyForDate } from '../src/daily.ts';
 
@@ -148,7 +149,10 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
       assert(restored);
       const game = new Game();
       game.start(restored.seed, restored);
-      const expected = getLevel(seed, stage);
+      const expected =
+        seed.startsWith('RF-D') && isRouteStage(stage)
+          ? getRouteLevel(seed, stage, dailyRoute(seed, stage))
+          : getLevel(seed, stage);
       assert.deepEqual(game.level, expected);
       const roster = [
         ...game.enemies.map((enemy) => ({

@@ -26,6 +26,16 @@ Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, s
 
 Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, Scattershot widens the muzzle, and Burst fire cycles a bolt and three recessed chambers. These parts combine on the same weapon. Banked rounds leave short mint trails along their actual bounce paths; piercing rounds leave thin pale-blue streaks. Combined rounds keep both cues. Screen-shake settings also reduce the weapon animation and muzzle flash. These visual changes preserve the gun’s stats.
 
+## Branching routes
+
+After the second room of each area, two physical exits open. The ground exit leads to the **Low road**: close quarters, more ground attackers, and extra breakable cover. Climb the two steps to the **High road** for exposed platforms and more aerial enemies. Small passage and platform symbols above the doors identify the terrain without revealing encounters. No extra menu or input is needed.
+
+Five pairs of layouts give every area its own choice. Both roads advance one room and give the same normal upgrade reward, with 12 health. They rejoin before the boss; the existing optional challenge door can still appear after the chosen room. High routes have recovery steps and a safe floor beneath them. Recoil opens faster routes across the upper platforms. The freight elevator's fork sits at its upper dock.
+
+Daily Runs use a single exit with a terrain symbol for that day's fixed route. They still give one predetermined upgrade. Overtime keeps both exits and strengthens the chosen room with extra elites and reinforcements. Continue reconstructs the selected road, gun and health; existing ordinary saves without a route choice keep their saved layout.
+
+[Test branching routes](https://caleb-guyer.github.io/recoil-foundry/?test=routes) starts just before the first fork. Clear the room, then choose an exit. Add `&route=low` or `&route=high` to start directly inside that road, and `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` for a later area. `&mode=overtime` tests the second lap. Press **R** to retry the same test. These links preserve ordinary saves, Daily records, and Practice unlocks.
+
 ## Overtime
 
 After clearing the Interceptor's arena in an ordinary run, two exits open. The ground door, **EXTRACT**, leads into the usual escape. Jump up the two suspended steps to **OVERTIME** to keep your exact gun, health, kills, and elapsed time for a second twenty-room lap. There is no entry heal. This is one optional second lap; its final boss leads to extraction.
@@ -50,7 +60,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-11&dv=35`). Version 35 introduces the Harpooner; its best times are separate from earlier rulesets. Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-11&dv=36`). Version 36 adds fixed terrain routes; its best times are separate from earlier rulesets. Route, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

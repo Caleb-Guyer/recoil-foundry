@@ -57,6 +57,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  routeChoice?: import('./rules.ts').RouteChoice;
   harpoonIntro?: boolean;
   scrapperCrate?: Vec;
   mirrored: boolean;

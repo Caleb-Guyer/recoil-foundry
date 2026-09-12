@@ -340,7 +340,7 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
 // Keep representative builds covering each path as the route expands.
 // Only offers are scripted: every upgrade is earned through an actual room clear.
 // New builds below exercise every new mechanic. Weighted pool/retry coverage lives in build-paths and daily.
-for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
+for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoads } of [
   {
     seed: 'path-run-65',
     pressSpacing: 160,
@@ -469,16 +469,17 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
   },
   {
     seed: 'path-run-93',
+    highRoads: [1, 5, 9, 13, 17],
     pressSpacing: 160,
     pathMods: ['deadeye', 'execute'],
     rewards: [
       'magnum',
-      'deadeye',
+      'rapid', // Aerial rooms reward frequent corrections before committing to Precision.
       'leech',
+      'deadeye',
       'execute',
-      'ricochet',
       'airshot',
-      'rapid',
+      'ricochet',
       'banker',
       'scatter',
       'burst',
@@ -493,6 +494,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
     seed: 'path-run-65',
     pressSpacing: 160,
     pathMods: ['shellshock', 'aftershock', 'blast-surf', 'chain-reaction'],
+    highRoads: [13],
     rewards: [
       'leech',
       'airshot',
@@ -504,18 +506,19 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
       'light', // Take steering before the moving Reclaimer; earn Landing gear afterward.
       'countershot',
       'scatter',
-      'ricochet',
+      'reprisal', // Cover the slow shell volley between dense late-room attacks.
       'rapid',
       'pierce',
       'burst',
+      'ricochet',
       'banker',
-      'landing',
     ],
   },
   {
     seed: 'path-run-65',
     pressSpacing: 160,
     pathMods: ['deadeye', 'execute', 'rivet', 'fracture', 'capacitor', 'reserve-cell'],
+    highRoads: [1, 5, 9, 13, 17],
     rewards: [
       'magnum',
       'airshot',
@@ -638,6 +641,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
       clearAt = -1,
       directExitReady = false,
       takingLowerRoute = false,
+      routeStep = 0,
       escapeSeen = false,
       pressDodgeUntil = 0,
       pressDirection = 1,
@@ -706,6 +710,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
         lastProgress = g.time;
         directExitReady = false;
         takingLowerRoute = false;
+        routeStep = 0;
         stuck = 0;
         previousX = g.player.position.x;
       }
@@ -960,17 +965,34 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
           move = threat.pos.x < p.x ? 1 : -1;
         }
       }
-      if (g.clear && g.canBranch && p.x > 1700 && p.y < 442) {
+      const takeHighRoad = g.canChooseRoute && highRoads?.includes(g.stage);
+      if (g.clear && g.canBranch && !takeHighRoad && p.x > 1700 && p.y < 442) {
         const vy = g.player.velocity.y;
         const landingFrames = (-vy + Math.sqrt(vy * vy + 2 * 0.278 * (442 - p.y))) / 0.278;
         if (p.x + g.player.velocity.x * landingFrames > 1880) takingLowerRoute = true;
       }
-      if (g.clear && g.canBranch && takingLowerRoute) {
+      if (g.clear && g.canBranch && !takeHighRoad && takingLowerRoute) {
         // These runs verify the direct route. Land before the fork, then
         // walk below the steps instead of accidentally selecting the upper door.
         if (g.grounded && p.y > 690) directExitReady = true;
         move = directExitReady ? 1 : Math.abs(p.x - 1760) > 8 ? Math.sign(1760 - p.x) : 0;
         jump = false;
+        firing = false;
+      }
+      if (g.clear && takeHighRoad && p.x > 1600) {
+        // Select terrain with normal movement. Precision gets open firing lanes;
+        // one shell run takes the aerial Reclamation road to cover mixed routes.
+        if (routeStep === 0 && Math.abs(p.x - 1725) < 22 && g.grounded) routeStep = 1;
+        if (routeStep === 1 && Math.abs(p.x - 1828) < 22 && Math.abs(p.y - 572) < 8 && g.grounded)
+          routeStep = 2;
+        const target =
+          routeStep === 0
+            ? { x: 1725, y: 722 }
+            : routeStep === 1
+              ? { x: 1828, y: 572 }
+              : { x: 1930, y: 442 };
+        move = Math.abs(target.x - p.x) > 8 ? Math.sign(target.x - p.x) : 0;
+        jump = g.grounded && p.y - target.y > 45;
         firing = false;
       }
       // React to the visible drop lane just as to a locked projectile warning.

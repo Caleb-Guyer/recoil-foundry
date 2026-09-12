@@ -39,12 +39,23 @@ export function propPlacements(level: Level, seed: string): PropPlacement[] {
   if (level.magnets) return level.magnets.map((m) => ({ kind: 'crate', x: m.x, y: m.floor - 23 }));
   const result: PropPlacement[] = [];
   const rng = seeded(seed + ':props:' + level.id);
-  const supports = [{ x: 260, y: 740, w: 1500, h: 100 }, ...level.solids];
-  const kinds: PropKind[] = level.boss
-    ? ['crate', 'canister']
-    : level.area === 'furnace' && rng() < 0.4
-      ? ['crate', 'canister', 'canister']
-      : ['crate', 'canister', 'cover'];
+  const supports = [
+    {
+      x: level.routeChoice === 'low' ? 240 : 260,
+      y: 740,
+      w: level.routeChoice === 'low' ? 1520 : 1500,
+      h: 100,
+    },
+    ...level.solids,
+  ];
+  const kinds: PropKind[] =
+    level.routeChoice === 'low'
+      ? ['crate', 'cover', 'crate', 'canister', 'cover']
+      : level.boss
+        ? ['crate', 'canister']
+        : level.area === 'furnace' && rng() < 0.4
+          ? ['crate', 'canister', 'canister']
+          : ['crate', 'canister', 'cover'];
   for (const kind of kinds) {
     if (kind === 'crate' && level.scrapperCrate) {
       result.push({ kind, ...level.scrapperCrate });
@@ -55,9 +66,13 @@ export function propPlacements(level: Level, seed: string): PropPlacement[] {
     const candidates: Vec[] = [];
     for (const support of supports) {
       if (support.y < 240 || support.w < w + 60) continue;
-      for (let x = support.x + 35 + w / 2; x < support.x + support.w - 35 - w / 2; x += 80) {
+      for (
+        let x = support.x + 35 + w / 2;
+        x < support.x + support.w - 35 - w / 2;
+        x += level.routeChoice === 'low' ? 40 : 80
+      ) {
         const y = support.y - h / 2 - 1;
-        if (x < 320 || x > 1740) continue;
+        if (x < (level.routeChoice === 'low' ? 280 : 320) || x > 1740) continue;
         if (kind === 'cover') {
           const path = [{ x: 140, y: 680 }, ...level.route, { x: 1910, y: 720 }];
           if (
@@ -88,7 +103,13 @@ export function propPlacements(level: Level, seed: string): PropPlacement[] {
           level.spawns.some((s) => Math.abs(x - s.x) < w / 2 + 65 && Math.abs(y - s.y) < h / 2 + 65)
         )
           continue;
-        if (result.some((p) => distance(p, { x, y }) < (p === paired ? 75 : 280))) continue;
+        if (
+          result.some(
+            (p) =>
+              distance(p, { x, y }) < (p === paired ? 75 : level.routeChoice === 'low' ? 180 : 280),
+          )
+        )
+          continue;
         candidates.push({ x, y });
       }
     }
@@ -96,7 +117,13 @@ export function propPlacements(level: Level, seed: string): PropPlacement[] {
     const preferred = paired
       ? candidates.filter((p) => distance(p, paired) < 145)
       : kind === 'crate'
-        ? candidates.filter((p) => p.x < 850 && p.y > 600)
+        ? candidates.filter(
+            (p) =>
+              p.y > 600 &&
+              (level.routeChoice === 'low' && result.some((r) => r.kind === 'crate')
+                ? p.x > 1600
+                : p.x < 850),
+          )
         : candidates;
     const point = sample(preferred.length ? preferred : candidates, 1, rng)[0];
     if (point) result.push({ kind, ...point });

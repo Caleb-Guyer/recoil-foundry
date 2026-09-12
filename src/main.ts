@@ -19,6 +19,7 @@ import {
   freightTestFromUrl,
   scrapperTestFromUrl,
   harpoonerTestFromUrl,
+  routesTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
   overtimeTestFromUrl,
@@ -116,6 +117,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  routesTestFromUrl(entryUrl) ??
   harpoonerTestFromUrl(entryUrl) ??
   fusionTestFromUrl(entryUrl) ??
   overtimeTestFromUrl(entryUrl) ??
@@ -149,6 +151,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test fusions <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('HARPOONER-'))
     $('play').innerHTML = 'Test the Harpooner <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('ROUTES-'))
+    $('play').innerHTML = 'Test branching routes <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
@@ -183,6 +187,10 @@ function updateTitle() {
     $('title-hint').textContent = 'Choose a fusion. Full health. R to retry.';
   if (linkedRunTest?.seed.startsWith('HARPOONER-'))
     $('title-hint').textContent = 'Dodge the hook. Shoot the winch. R to retry.';
+  if (linkedRunTest?.seed.startsWith('ROUTES-'))
+    $('title-hint').textContent = linkedRunTest.route
+      ? (linkedRunTest.route === 'high' ? 'High road. ' : 'Low road. ') + 'R to retry.'
+      : 'Clear the room. Below: cover. Above: platforms. R to retry.';
 }
 function clearInput() {
   keys.clear();
