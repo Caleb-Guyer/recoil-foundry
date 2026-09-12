@@ -65,6 +65,7 @@ export class FusionSystem {
     const shot = structuredClone(s);
     shot.pierce = s.recall.pierce + (g.ballistics.has('homecoming') ? 2 : 0);
     shot.recall = undefined;
+    shot.vector = undefined;
     shot.waypoints = undefined;
     shot.discharge = undefined;
     shot.hits.clear();

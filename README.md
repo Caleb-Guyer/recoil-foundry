@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Vector rounds
+
+**Vector rounds** lets your mouse aim bend primary rounds in flight. Rounds travel 25% slower and keep their muzzle direction for 0.05 seconds, then can steer for 0.7 seconds through a total of 135 degrees. The cursor guides the shot; enemies do not attract it. Aim around a wall, or fire downward while airborne and curve those rounds toward an enemy. Cover, props, enemies and moving machinery still stop the actual flight path.
+
+**Afterburner** requires Vector rounds. Bend a round at least about 10 degrees, then hold it on a steady line for 0.1 seconds: it commits to that direction with 35% more speed and 30% more damage. The boost applies once, including to its shell payload. Straight shots do not earn it. A short amber trail marks the boosted round; neither upgrade adds a control or HUD element.
+
+Both upgrades are shared by all paths. Scattershot, Crossfire, Burst fire and Backfire keep their firing patterns. Convergence finishes its shape before guidance begins, and Recall takes control on the return. Banks and portals preserve their exit direction briefly without refilling steering or Afterburner. Rail spikes, fragments, reflected bullets, echoes and Orbit releases keep their own behavior. Piercing, armor, ricochets, Fuse and Grindshot retain their normal rules.
+
+[Test Vector rounds and Afterburner](https://caleb-guyer.github.io/recoil-foundry/?test=vector) in Furnace's low route. Use `&build=base` for guidance alone, `&build=volley` for Crossfire and Scattershot, `&build=shell` for sticky shells, or `&build=portal` for reusable portals. **R** retries with full health. Test links preserve saves, Daily records and earned Practice victories.
+
 ## Counterweight platforms
 
 Balance House in Cooling Works introduces a steel deck on a fixed bearing. Counterweight Roof adds two decks at different heights, crossfire and the rooftop elite pair. Each room has three seeded rosters and mirrored arrangements, and can appear in the second room of its area. Existing physics rooms keep their own selection. Daily and Overtime reconstruct the same machinery from their seeds.
@@ -84,6 +94,9 @@ Routes stay fixed after the warning begins. Crates intercept entry rounds and tr
 
 ## Freight Crossing
 
+Edge compression now breaks pinned props immediately, detonates trapped Sapper charges through their own blast system, and removes crushed wrecks. The train rebuilds its movement sweep after a break or explosion, so a removed hull cannot keep it blocked. Loose cargo is still pushed, roof riders are carried, and jumping onto the roof remains safe.
+
+
 At most once per lap, passing cargo cars occasionally cut through the second room of Docks or Reclamation Works. A horn, rising rumble and amber track signals give 2.4 seconds of warning. The two solid cars block shots, carry riders and stacked crates, shove loose props, ignite fuel, and slam enemies at their leading bumpers. Jumping off preserves the train's momentum. Being pinned against solid cover during combat is a lethal crush, including during damage grace from a previous hit. Jump clear before the bumper closes the gap; no special upgrade is needed.
 
 The floor lane, car roofs, and permanent upper catwalk provide different fighting positions. Ordinary jumps reach the upper route from either end. Reclamation uses a larger, tougher roster; selection, rosters and direction repeat in Daily and Overtime. No new trains arrive after the room clears.
@@ -146,7 +159,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=49`). Version 49 adds counterweight layouts; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=50`). Version 50 adds Vector rounds and Afterburner and fixes train compression; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

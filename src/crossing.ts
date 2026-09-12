@@ -122,9 +122,24 @@ export class CrossingSystem {
   private impact(car: FreightCar, actor: Matter.Body, pinned = false) {
     const g = this.game,
       d = { x: this.direction, y: 0 };
-    if (g.clear || g.mode !== 'playing') return;
+    if (g.mode !== 'playing') return;
     const prop = g.props.items.find((p) => p.body === actor);
     const enemy = g.enemies.find((e) => e.body === actor);
+    // Compression consumes the physical obstacle, independent of HP or the
+    // first bumper hit's cooldown. Charges have infinite HP and must detonate
+    // through their own system; breaking them as ordinary crates cannot work.
+    if (pinned && prop) {
+      if (g.clear) g.props.break(prop);
+      else if (prop.charge) g.sappers.detonate(prop);
+      else if (prop.kind === 'canister') g.props.explode(prop);
+      else g.props.break(prop);
+      return;
+    }
+    if (pinned && g.salvageEvolutions.bodies.includes(actor)) {
+      g.salvageEvolutions.crush(actor);
+      return;
+    }
+    if (g.clear) return;
     if (enemy && enemy.spawn > 0) {
       if (actor.isStatic) Body.setStatic(actor, false);
       return;
@@ -142,8 +157,7 @@ export class CrossingSystem {
       }
       if (g.time < (car.crushAt.get(actor.id) ?? 0)) return;
       car.crushAt.set(actor.id, g.time + 0.5);
-      if (prop) g.props.strike(prop, 180, d);
-      else if (enemy) g.hitEnemy(enemy, 32, d);
+      if (enemy) g.hitEnemy(enemy, 32, d);
       return;
     }
     if (car.hits.has(actor.id)) return;
@@ -181,30 +195,8 @@ export class CrossingSystem {
     );
     return hit ? Math.max(0, hit.t - 0.01) : 1;
   }
-  beforeStep(dt: number) {
+  private pushPlan(actors: Matter.Body[], riders: Set<Matter.Body>, dx: number) {
     const g = this.game;
-    if (!this.active || this.phase !== 'passing' || g.mode !== 'playing') return;
-    const dx = this.direction * CROSSING.speed * dt;
-    let actors = this.actors();
-    const riders = new Set(actors.filter((a) => this.cars.some((c) => this.supported(a, c.body))));
-    for (const support of riders)
-      for (const actor of actors)
-        if (!riders.has(actor) && this.supported(actor, support)) riders.add(actor);
-    for (const actor of riders)
-      if (actor.isStatic && g.enemies.some((e) => e.body === actor)) Body.setStatic(actor, false);
-    // A jump inherits one frame-speed of the car; firing and portal travel keep their own momentum.
-    for (const [actor, last] of this.riders) {
-      if (
-        !riders.has(actor) &&
-        actors.includes(actor) &&
-        actor.velocity.y < -0.1 &&
-        Math.hypot(actor.position.x - last.x, actor.position.y - last.y) < 50
-      )
-        Body.setVelocity(actor, {
-          x: clamp(actor.velocity.x + (this.blocked ? 0 : dx), -23, 23),
-          y: actor.velocity.y,
-        });
-    }
     const pushes = new Map<Matter.Body, number>();
     const contacts = new Map<Matter.Body, FreightCar>();
     for (const car of this.cars) {
@@ -258,15 +250,67 @@ export class CrossingSystem {
       }
       if (!changed) break;
     }
+    return { actors, pushes, contacts };
+  }
+  beforeStep(dt: number) {
+    const g = this.game;
+    if (!this.active || this.phase !== 'passing' || g.mode !== 'playing') return;
+    const dx = this.direction * CROSSING.speed * dt;
+    let actors = this.actors();
+    const riders = new Set(actors.filter((a) => this.cars.some((c) => this.supported(a, c.body))));
+    for (const support of riders)
+      for (const actor of actors)
+        if (!riders.has(actor) && this.supported(actor, support)) riders.add(actor);
+    for (const actor of riders)
+      if (actor.isStatic && g.enemies.some((e) => e.body === actor)) Body.setStatic(actor, false);
+    // A jump inherits one frame-speed of the car; firing and portal travel keep their own momentum.
+    for (const [actor, last] of this.riders) {
+      if (
+        !riders.has(actor) &&
+        actors.includes(actor) &&
+        actor.velocity.y < -0.1 &&
+        Math.hypot(actor.position.x - last.x, actor.position.y - last.y) < 50
+      )
+        Body.setVelocity(actor, {
+          x: clamp(actor.velocity.x + (this.blocked ? 0 : dx), -23, 23),
+          y: actor.velocity.y,
+        });
+    }
     let fraction = 1;
-    const moving = new Set(pushes.keys());
-    for (const [actor, amount] of pushes) {
-      const safe = actor.isStatic
-        ? 0
-        : this.safeMove(actor, amount * this.direction, moving, actors);
-      if (safe < 1) this.impact(contacts.get(actor)!, actor, true);
-      if (g.mode !== 'playing') return;
-      fraction = Math.min(fraction, safe);
+    let pushes = new Map<Matter.Body, number>();
+    // Each retry consumes at least one obstacle. No removed explosive or wreck
+    // is allowed to leave a stale zero-distance sweep in the movement plan.
+    const attempts = actors.length * 2 + 8;
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const plan = this.pushPlan(this.actors(), riders, dx);
+      if (!plan || g.mode !== 'playing') return;
+      actors = plan.actors;
+      pushes = plan.pushes;
+      const moving = new Set(pushes.keys());
+      let removed = false;
+      fraction = 1;
+      // Clear destructible obstructions first, before judging a player deeper
+      // in that chain. Blasts can remove several hulls at once.
+      const order = [...pushes].sort(
+        ([a], [b]) =>
+          Number(b !== g.player) - Number(a !== g.player) ||
+          (b.position.x - a.position.x) * this.direction,
+      );
+      for (const [actor, amount] of order) {
+        const safe = actor.isStatic
+          ? 0
+          : this.safeMove(actor, amount * this.direction, moving, actors);
+        if (safe < 1) {
+          this.impact(plan.contacts.get(actor)!, actor, true);
+          if (g.mode !== 'playing') return;
+          if (!this.actors().includes(actor)) {
+            removed = true;
+            break;
+          }
+        }
+        fraction = Math.min(fraction, safe);
+      }
+      if (!removed) break;
     }
     this.blocked = fraction < 0.99;
     for (const [actor, amount] of pushes)

@@ -116,6 +116,16 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillStyle = '#c0ab7c';
     c.fillRect(23, heavy ? 6 : 3, heavy ? 9 : 5, 1.5);
   }
+  if (g.mods.includes('vector')) {
+    c.strokeStyle = g.mods.includes('afterburner') ? '#d4b586' : '#a5cad0';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    for (const side of [-1, 1]) {
+      c.moveTo(muzzle - 10, side * (muzzleHalf + 1));
+      c.lineTo(muzzle - 5, side * (muzzleHalf + 3));
+    }
+    c.stroke();
+  }
   if (g.gun.shellshock) {
     c.fillStyle = '#ba8b56';
     c.fillRect(muzzle - 7, -muzzleHalf - 1.5, 3, muzzleHalf * 2 + 3);

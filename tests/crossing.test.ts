@@ -408,3 +408,84 @@ test('anchored enemies can ride a car and tall cargo stops safely beneath catwal
     'a blocked rider incorrectly stopped the whole train',
   );
 });
+
+for (const d of [1, -1]) {
+  for (const kind of ['crate', 'cargo', 'cover', 'rubble', 'canister', 'charge'] as const)
+    test(`edge compression clears ${kind} without stopping the train (${d})`, () => {
+      const g = room('reclamation');
+      quiet(g);
+      Body.setPosition(g.player, { x: 1000, y: 250 });
+      Body.setStatic(g.player, true);
+      let prop;
+      if (kind === 'charge') {
+        g.spawnEnemy('sapper', 1000, 580);
+        const e = g.enemies.at(-1)!;
+        e.spawn = 0;
+        prop = g.sappers.launch(e, { x: 1050, y: 560 }, { x: 0, y: 0 })!;
+        assert(prop?.charge);
+        // Prove compression handles the bomb; waiting for its fuse would hide a jam.
+        prop.charge.at = 1000;
+      } else prop = g.props.spawn(kind, 1000, 500);
+      Body.setAngle(prop.body, kind === 'cargo' ? 0 : 0.3);
+      const halfX = Math.max(
+          ...prop.body.vertices.map((v) => Math.abs(v.x - prop.body.position.x)),
+        ),
+        halfY = Math.max(...prop.body.vertices.map((v) => Math.abs(v.y - prop.body.position.y)));
+      Body.setPosition(prop.body, { x: d === 1 ? 2000 - halfX : halfX, y: 740 - halfY });
+      pass(g, d === 1 ? 2000 - 2 * halfX : 2 * halfX, d);
+      const cars = [...g.crossing.bodies],
+        start = cars[0].position.x;
+      tick(g);
+      assert(!g.props.items.includes(prop), 'compressed hull survived');
+      assert(!Composite.allBodies(g.engine.world).includes(prop.body));
+      assert.equal(g.sappers.items.length, 0);
+      assert(!g.crossing.blocked);
+      assert(Math.abs(cars[0].position.x - start - 4 * d) < 1e-6);
+      assert.equal(g.hp, 100);
+      tick(g, 200);
+      assert.equal(g.crossing.cars.length, 0, 'train never left the room');
+    });
+  test(`stacked obstacles and chain explosions do not retain a stale blocked sweep (${d})`, () => {
+    const g = room();
+    quiet(g);
+    Body.setPosition(g.player, { x: 1000, y: 250 });
+    Body.setStatic(g.player, true);
+    const edge = d === 1 ? 1868 : 132;
+    const props = [0, 1, 2].map((i) => g.props.spawn('crate', edge + d * (22 + 44 * i), 718));
+    // An explosion can remove several members of a push chain during planning.
+    g.props.spawn('canister', edge + d * 54, 670);
+    pass(g, edge, d);
+    const car = g.crossing.cars[0].body,
+      start = car.position.x;
+    for (let i = 0; i < 40; i++) {
+      tick(g);
+      assert(!g.crossing.blocked, 'destroyed chain kept its old collision');
+      assert(Math.abs(car.position.x - start - (i + 1) * 4 * d) < 1e-5);
+    }
+    assert(props.every((p) => !g.props.items.includes(p)));
+  });
+  test(`compressed wrecks are consumed without waiting for their lifetime (${d})`, () => {
+    const g = room();
+    quiet(g);
+    g.mods = ['ramjet', 'wrecking-ball'];
+    g.gun = getGun(g.mods);
+    Body.setPosition(g.player, { x: 1000, y: 250 });
+    Body.setStatic(g.player, true);
+    g.spawnEnemy('runner', d === 1 ? 1983 : 17, 723);
+    const enemy = g.enemies.at(-1)!;
+    enemy.spawn = 0;
+    g.hitEnemy(enemy, 99999);
+    assert(g.salvageEvolutions.throwEnemy(enemy, { x: d, y: 0 }, 15));
+    const wreck = g.salvageEvolutions.wrecks[0];
+    wreck.until = 1000;
+    Body.setVelocity(wreck.body, { x: 0, y: 0 });
+    pass(g, d === 1 ? 1966 : 34, d);
+    const car = g.crossing.cars[0].body,
+      start = car.position.x;
+    g.crossing.beforeStep(1 / 60);
+    assert.equal(g.salvageEvolutions.wrecks.length, 0);
+    assert(!Composite.allBodies(g.engine.world).includes(wreck.body));
+    assert(!g.crossing.blocked);
+    assert(Math.abs(car.position.x - start - 4 * d) < 1e-6);
+  });
+}

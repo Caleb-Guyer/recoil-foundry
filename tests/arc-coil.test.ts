@@ -92,7 +92,7 @@ function tick(g: Game, n = 1, input: Partial<Input> = {}) {
 }
 
 test('Arc Coil is shared, costs 10 percent round damage, and Daisy Chain requires its parent', () => {
-  assert.equal(MODS.length, 59);
+  assert.equal(MODS.length, 61);
   for (const path of [[], ['deadeye'], ['crossfire'], ['shellshock']]) {
     assert(availableMods(path).some((m) => m.id === 'arc-coil'));
     assert(!availableMods(path).some((m) => m.id === 'daisy-chain'));
@@ -525,7 +525,16 @@ test('Overtime builds that exhausted the previous pool can resume and earn Arc C
   const mods: string[] = [];
   while (true) {
     const next = availableMods(mods).find(
-      (m) => !['arc-coil', 'daisy-chain', 'rail-spike', 'orbit', 'implosion'].includes(m.id),
+      (m) =>
+        ![
+          'arc-coil',
+          'daisy-chain',
+          'rail-spike',
+          'orbit',
+          'implosion',
+          'vector',
+          'afterburner',
+        ].includes(m.id),
     );
     if (!next) break;
     mods.push(next.id);

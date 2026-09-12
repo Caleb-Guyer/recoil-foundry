@@ -105,6 +105,13 @@ export class SalvageEvolutionSystem {
       this.contacts = this.contacts.filter((hit) => hit.wreck.body !== body);
     }
   }
+  crush(body: Matter.Body) {
+    const wreck = this.wrecks.find((w) => w.corpse && w.body === body);
+    if (!wreck) return;
+    this.finish(wreck);
+    this.game.burst(body.position, 6, '#acb4ac', 2);
+    this.game.onSound('crash');
+  }
   private finish(w: Wreck) {
     if (w.corpse) Composite.remove(this.game.engine.world, w.body);
     else if (w.enemy.hp > 0) {

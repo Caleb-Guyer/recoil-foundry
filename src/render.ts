@@ -560,7 +560,15 @@ export class Renderer {
           c.lineCap = 'round';
           for (let i = 1; i < points.length; i++) {
             c.globalAlpha = (this.reduced ? 0.32 : 0.48) * (0.3 + (0.7 * i) / (points.length - 1));
-            const color = s.rail ? '#b7e4ef' : s.charged ? '#e2edaf' : bank ? '#9dccb5' : '#bedde9';
+            const color = s.vector?.boosted
+              ? '#f5cb82'
+              : s.rail
+                ? '#b7e4ef'
+                : s.charged
+                  ? '#e2edaf'
+                  : bank
+                    ? '#9dccb5'
+                    : '#bedde9';
             this.line(
               points[i - 1],
               points[i],

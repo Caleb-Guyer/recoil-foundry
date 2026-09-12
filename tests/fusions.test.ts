@@ -172,7 +172,9 @@ test('actual rewards, Daily choices and Continue preserve fusion eligibility', (
 test('old exhausted Overtime builds with repairs resume and can earn their new fusion', () => {
   const mods = ['deadeye'];
   for (;;) {
-    const next = availableMods(mods).find((m) => !isFusion(m.id));
+    const next = availableMods(mods).find(
+      (m) => !isFusion(m.id) && !['vector', 'afterburner'].includes(m.id),
+    );
     if (!next) break;
     mods.push(next.id);
   }
@@ -187,10 +189,7 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   const g = new Game();
   g.start(save.seed, save);
   g.openReward();
-  assert.deepEqual(
-    g.offers.map((m) => m.id),
-    ['rail-spike'],
-  );
+  assert.deepEqual(new Set(g.offers.map((m) => m.id)), new Set(['rail-spike', 'vector']));
   let saved: Checkpoint | null = null;
   g.onCheckpoint = (s) => (saved = s);
   g.chooseMod('rail-spike');
@@ -198,11 +197,12 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   g.openReward();
   assert.deepEqual(
     g.offers.map((m) => m.id),
-    ['repair'],
+    ['vector'],
   );
-  const hp = g.hp;
-  g.chooseMod('repair');
-  assert.equal(g.hp, Math.min(100, hp + 24));
+  // Newly added shared upgrades remain earnable after the fusion.
+  g.chooseMod('vector');
+  assert(g.mods.includes('vector'));
+  assert(availableMods(g.mods).some((m) => m.id === 'afterburner'));
   assert(loadCheckpoint(saved));
   assert(
     !loadCheckpoint({ ...save, mods: mods.filter((id) => id !== 'light'), stage: save.stage - 1 }),

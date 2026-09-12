@@ -15,6 +15,7 @@ import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
+import { prepareVector, steerVector, redirectVector, type VectorFlight } from './vector-rounds.ts';
 import { CounterweightSystem } from './counterweights.ts';
 import { createInterceptor, updateInterceptor } from './interceptor.ts';
 import type { InterceptorRig } from './interceptor.ts';
@@ -178,6 +179,7 @@ export interface Shot {
   enemyAmmo?: EnemyAmmo;
   rail?: boolean;
   orbitReleased?: boolean;
+  vector?: VectorFlight;
 }
 export interface Particle {
   pos: Vec;
@@ -1253,6 +1255,7 @@ export class Game {
       hits: new Set(),
     };
     this.ballistics.prepare(shot);
+    prepareVector(shot, this.mods);
     this.shots.push(shot);
   }
   updateEnemy(e: Enemy, dt: number) {
@@ -1841,6 +1844,7 @@ export class Game {
   updateShots(dt: number) {
     for (const s of [...this.shots]) updateRivalAmmo(this, s, dt);
     for (const s of this.shots) this.ballistics.flight(s, dt);
+    for (const s of this.shots) steerVector(s, this.aim, dt);
     this.ballistics.reflect(dt);
     for (const s of [...this.shots]) {
       if (s.reflectedAt === this.time) continue;
@@ -1908,6 +1912,7 @@ export class Game {
           s.pos = { ...passage.pos };
           s.prev = { ...s.pos };
           s.vel = portalVector(s.vel, passage.entry, passage.exit);
+          redirectVector(s);
           s.waypoints = undefined;
           if (s.trace) s.trace.points = [{ ...s.pos }];
           remaining -= segment * passage.t;
@@ -2044,6 +2049,7 @@ export class Game {
             const dot = s.vel.x * nearest.normal.x + s.vel.y * nearest.normal.y;
             s.vel.x -= 2 * dot * nearest.normal.x;
             s.vel.y -= 2 * dot * nearest.normal.y;
+            redirectVector(s);
             s.bounces--;
             s.banks++;
             s.damage *= 1 + s.bankGrowth;

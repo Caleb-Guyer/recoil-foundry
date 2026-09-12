@@ -238,6 +238,7 @@ export class BallisticsSystem {
         if (s.shell) s.shell.damage *= 0.6;
         s.id = ++g.id;
         s.echo = true;
+        s.vector = undefined;
         s.discharge = undefined;
         s.hits.clear();
         if (s.trace) s.trace.points = [{ ...s.pos }];

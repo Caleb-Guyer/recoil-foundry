@@ -406,6 +406,18 @@ export const MODS = [
     description: 'Your saws wrap around exposed corners.',
     mark: 'corner-cutter',
   },
+  {
+    id: 'vector',
+    name: 'Vector rounds',
+    description: 'Steer flying rounds with your aim. 25% slower projectiles.',
+    mark: 'vector',
+  },
+  {
+    id: 'afterburner',
+    name: 'Afterburner',
+    description: 'Straighten a curved round: 35% faster, 30% more damage.',
+    mark: 'afterburner',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -466,6 +478,7 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
 export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  afterburner: 'vector',
   'corner-cutter': 'grindshot',
   'wrecking-ball': 'ramjet',
   flashpoint: 'cinder',
@@ -699,6 +712,9 @@ export function getGun(mods: readonly string[]): Gun {
         g.damage *= 0.75;
         g.pierce += 1;
         break;
+      case 'vector':
+        g.projectileSpeed *= 0.75;
+        break;
       case 'grindshot':
         g.damage *= 0.8;
         break;
@@ -791,6 +807,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               m.id === 'daisy-chain' ||
               m.id === 'grindshot' ||
               m.id === 'corner-cutter' ||
+              m.id === 'vector' ||
+              m.id === 'afterburner' ||
               isSalvage(MOD_REQUIRES[m.id]),
           ))));
   const validDetours =

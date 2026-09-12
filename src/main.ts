@@ -1,3 +1,4 @@
+import { vectorTestFromUrl } from './practice.ts';
 import { wallcrawlerTestFromUrl } from './practice.ts';
 import { counterweightTestFromUrl } from './practice.ts';
 import { grindshotTestFromUrl, interceptorGrindTestFromUrl } from './practice.ts';
@@ -128,6 +129,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  vectorTestFromUrl(entryUrl) ??
   counterweightTestFromUrl(entryUrl) ??
   wallcrawlerTestFromUrl(entryUrl) ??
   interceptorGrindTestFromUrl(entryUrl) ??
@@ -192,6 +194,8 @@ function updateTitle() {
         : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('CRAWLER-54-'))
     $('play').innerHTML = 'Test the Wallcrawler <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'VECTOR-56')
+    $('play').innerHTML = 'Test Vector rounds <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('BALANCE-55-'))
     $('play').innerHTML = 'Test counterweights <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('SAW-BOSS-53-'))
@@ -461,6 +465,8 @@ function modMark(mod: Mod) {
     cinder: 'M18 34c-9-10 4-14 5-24 12 9 6 15 11 12 8 15-12 21-16 12M12 40h28',
     crosswind: 'M7 17h28q12 0 8-7M7 25h34M7 33h23q13 0 9 8',
     grindshot: 'M5 38h46M16 17l7-6 4 5 8-2 1 8 6 4-5 6-8-1-5 5-5-7-7-2 4-7zM24 23h7v7h-7z',
+    vector: 'M6 36h10c19 0 8-24 28-24M36 5l8 7-8 7',
+    afterburner: 'M7 36h9c13 0 7-20 20-20h13M41 8l8 8-8 8M12 26h9M16 18h8',
     'corner-cutter': 'M8 40V16h30v24M18 31V8h28v20M41 23l5 5 5-5',
     'arc-coil': 'M8 24h10l9-15-3 13h9l-9 17 3-13H8M40 17h8v14h-8z',
     'daisy-chain': 'M5 12h8v8H5zM25 29h8v8h-8zM43 10h8v8h-8zM13 16l8 3-3 5 7 9M33 33l8-7-4-5 6-7',
