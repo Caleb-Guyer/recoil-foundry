@@ -58,6 +58,7 @@ export class MagnetSystem {
             .sort((a, b) => distance(a.body.position, m) - distance(b.body.position, m))[0] ?? null;
       }
       const prop = m.held;
+      if (prop) g.harpoons.disrupt(prop.body);
       if (
         prop &&
         (!g.props.items.includes(prop) ||

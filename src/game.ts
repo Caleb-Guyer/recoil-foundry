@@ -12,6 +12,8 @@ import type { TurbineRig } from './turbine.ts';
 import { EvolutionSystem } from './evolutions.ts';
 import { BallisticsSystem } from './ballistics.ts';
 import { FusionSystem, RAIL_RECOIL } from './fusions.ts';
+import { HarpoonSystem, createHarpooner } from './harpooner.ts';
+import type { HarpoonRig } from './harpooner.ts';
 import type { RecallFlight } from './ballistics.ts';
 import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
@@ -122,6 +124,7 @@ export interface Enemy {
   turbine?: TurbineRig;
   interceptor?: InterceptorRig;
   scrapper?: ScrapperRig;
+  harpoon?: HarpoonRig;
   sorter?: SorterRig;
 }
 export interface Shot {
@@ -192,6 +195,7 @@ export class Game {
   evolutions = new EvolutionSystem(this);
   ballistics = new BallisticsSystem(this);
   fusions = new FusionSystem(this);
+  harpoons = new HarpoonSystem(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -308,6 +312,7 @@ export class Game {
       this.evolutions.reset();
       this.ballistics.reset();
       this.fusions.reset();
+      this.harpoons.clear();
     }
     this.mode = mode;
     this.onChange();
@@ -373,6 +378,7 @@ export class Game {
     this.evolutions.reset();
     this.ballistics.reset();
     this.fusions.reset();
+    this.harpoons.clear();
     this.magnets.items = [];
     this.conveyors.clear();
     this.freight.clear();
@@ -558,6 +564,7 @@ export class Game {
     this.evolutions.reset();
     this.ballistics.reset();
     this.fusions.reset();
+    this.harpoons.clear();
     this.demolition.clear();
     this.escape.depart = 0;
     this.shots = [];
@@ -648,6 +655,10 @@ export class Game {
     if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
     if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
+    if (kind === 'harpooner') {
+      enemy.harpoon = createHarpooner();
+      Body.setMass(body, this.player.mass * 1.6);
+    }
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
     this.shake = Math.min(12, this.shake + amount);
@@ -771,6 +782,7 @@ export class Game {
     this.conveyors.beforeStep();
     this.magnets.update();
     this.fusions.beforeStep(dt);
+    this.harpoons.beforeStep(dt);
     this.props.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
@@ -779,6 +791,8 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.hazards.afterStep(dt);
     this.containPlayer();
+    this.harpoons.afterStep(dt);
+    if (this.mode !== 'playing') return;
     this.ballistics.update();
     if (this.mode !== 'playing') return;
     this.updateShots(dt);
@@ -1035,6 +1049,10 @@ export class Game {
           y: e.body.velocity.y + rear.y * 3.5 * (isBoss(e.kind) ? 0.25 : 1),
         });
     }
+    this.harpoons.blast(p, damage, 130, (target) => {
+      const d = direction(p, target);
+      return rear.x * d.x + rear.y * d.y >= Math.SQRT1_2;
+    });
     const targets = this.props.items.filter((prop) => {
       const target = prop.body.position,
         d = direction(p, target);
@@ -1111,6 +1129,7 @@ export class Game {
       else if (e.kind === 'kiln') updateKiln(this, e, dt);
       else if (e.kind === 'hopper') this.updateHopper(e);
       else if (e.kind === 'scrapper') updateScrapper(this, e);
+      else if (e.kind === 'harpooner') this.harpoons.updateEnemy(e);
       else if (e.kind === 'sniper') this.updateSniper(e);
       else if (e.kind === 'boss') this.updateBoss(e);
       else if (e.kind === 'skimmer' || e.kind === 'condenser') updateCoolingEnemy(this, e);
@@ -1148,7 +1167,7 @@ export class Game {
         (e.kind === 'charger' || e.kind === 'loader' || e.kind === 'kiln') &&
         e.state === 'recover'
       ) &&
-      !(e.kind === 'scrapper' && e.state === 'recover') &&
+      !((e.kind === 'scrapper' || e.kind === 'harpooner') && e.state === 'recover') &&
       (e.kind !== 'press' || e.state === 'rush') &&
       e.kind !== 'crane' &&
       Query.collides(this.player, [e.body]).length
@@ -1654,6 +1673,7 @@ export class Game {
           t: number;
           normal: Vec;
           enemy?: Enemy;
+          anchor?: Enemy;
           player?: boolean;
           caught?: boolean;
           prop?: Prop;
@@ -1688,6 +1708,9 @@ export class Game {
         const cable = this.cargo.trace(s.pos, end, s.radius);
         if (cable && (!nearest || cable.t < nearest.t))
           nearest = { t: cable.t, normal: cable.normal, cable: cable.prop };
+        const anchor = s.friendly ? this.harpoons.trace(s.pos, end, s.radius) : null;
+        if (anchor && (!nearest || anchor.t < nearest.t))
+          nearest = { t: anchor.t, normal: anchor.normal, anchor: anchor.enemy };
         if (s.recall?.returning) {
           const hit = segmentBox(s.pos, end, this.player.bounds.min, this.player.bounds.max);
           if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, caught: true };
@@ -1731,6 +1754,12 @@ export class Game {
         } else if (nearest.cable) {
           this.cargo.cut(nearest.cable, s.damage);
           rivalImpact(this, s);
+          s.life = 0;
+          this.demolition.impact(s);
+          if (this.mode !== 'playing') return;
+        } else if (nearest.anchor) {
+          this.harpoons.hitAnchor(nearest.anchor, s.damage);
+          this.splitShot(s, nearest.normal);
           s.life = 0;
           this.demolition.impact(s);
           if (this.mode !== 'playing') return;
@@ -1919,6 +1948,7 @@ export class Game {
     if (e.hp > 0) return blocked;
     breakSquad(this, e);
     releaseScrapper(this, e);
+    this.harpoons.disrupt(e.body);
     this.kills++;
     this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);

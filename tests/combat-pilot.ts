@@ -6,6 +6,7 @@ import { interceptorAngles, interceptorSpeed, interceptorOrigin } from '../src/i
 import { weaponAngles } from '../src/interceptor-weapons.ts';
 import { kilnMuzzle, kilnPoint } from '../src/kiln-ai.ts';
 import { sorterFan } from '../src/reclamation.ts';
+import { harpoonMuzzle, HARPOON_LOCK, HARPOON_SPEED } from '../src/harpooner.ts';
 import { areaIndex, clamp, distance, direction } from '../src/rules.ts';
 
 // Test-only player: compare short movement trajectories with visible bolts and
@@ -14,7 +15,7 @@ import { areaIndex, clamp, distance, direction } from '../src/rules.ts';
 // deliberately independent from Matter's collision solver.
 export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
   const p = g.player.position,
-    target = e.body.position;
+    target = e.harpoon?.phase === 'latched' ? harpoonMuzzle(e) : e.body.position;
   const boxes = g.solidBodies.map((b) => ({
     left: Math.min(...b.vertices.map((v) => v.x)),
     right: Math.max(...b.vertices.map((v) => v.x)),
@@ -40,6 +41,29 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
   // including the Loader's marked anti-air fan, before choosing a trajectory.
   for (const enemy of g.enemies) {
     if (enemy.spawn > 0 || enemy.squad || enemy.elite === 'volatile') continue;
+    const hook = enemy.harpoon;
+    if (
+      hook &&
+      (hook.phase === 'flight' || (hook.phase === 'aim' && enemy.timer <= HARPOON_LOCK))
+    ) {
+      const start = hook.phase === 'flight' ? hook.head : harpoonMuzzle(enemy);
+      const v =
+        hook.phase === 'flight'
+          ? hook.velocity
+          : { x: enemy.aim.x * HARPOON_SPEED, y: enemy.aim.y * HARPOON_SPEED };
+      bolts.push({
+        p: start,
+        v,
+        delay: hook.phase === 'flight' ? 0 : enemy.timer * 60,
+        radius: 4,
+        life:
+          Math.min(
+            840,
+            distance(start, g.lineEnd(start, { x: start.x + v.x * 60, y: start.y + v.y * 60 }, 4)),
+          ) / HARPOON_SPEED,
+      });
+      continue;
+    }
     const flak = enemy.attack === 'flak' && enemy.state === 'windup' && enemy.timer <= 0.38;
     const ordinary = ['shooter', 'flyer'].includes(enemy.kind) && enemy.timer <= 0.35;
     const sniper =
@@ -144,6 +168,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
     }
   } else if (
     e.kind !== 'sorter' &&
+    e.kind !== 'harpooner' &&
     !e.kiln &&
     (e.state === 'windup' || e.state === 'followup') &&
     e.timer <= 0.35

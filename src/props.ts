@@ -216,6 +216,7 @@ export class PropSystem {
     return prop;
   }
   remove(prop: Prop) {
+    this.game.harpoons.disrupt(prop.body);
     this.game.magnets.release(prop.body);
     disruptScrapperBody(this.game, prop.body);
     Composite.remove(this.game.engine.world, prop.body);
@@ -377,6 +378,7 @@ export class PropSystem {
     );
     const hurtsPlayer = distance(p, g.player.position) < 140 && visible(g.player.position);
     const panels = g.breaches.targets(p, 160);
+    g.harpoons.blast(p, 105, 160);
     g.burst(p, 30, '#ffd28a', 7);
     if (g.particles.length < 220)
       g.particles.push({

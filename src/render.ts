@@ -34,6 +34,7 @@ import { drawCargoCables } from './cargo-art.ts';
 import { drawConveyors } from './conveyor-art.ts';
 import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
+import { drawHarpooner } from './harpooner-art.ts';
 import { FREIGHT } from './freight-layout.ts';
 import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
@@ -192,6 +193,10 @@ export class Renderer {
       }
       if (e.kind === 'scrapper') {
         drawScrapper(c, g, e, this.reduced);
+        continue;
+      }
+      if (e.kind === 'harpooner') {
+        drawHarpooner(c, g, e, this.reduced);
         continue;
       }
       if (e.kind === 'interceptor') {

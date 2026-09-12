@@ -20,6 +20,11 @@ export interface ReinforcementDoor {
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
   if (level.freight) return [[], level.spawns.map((s) => ({ ...s }))];
   if (level.boss || level.spawns.length < 3) return [level.spawns.map((s) => ({ ...s })), []];
+  if (level.harpoonIntro)
+    return [
+      level.spawns.filter((s) => s.kind === 'harpooner').map((s) => ({ ...s })),
+      level.spawns.filter((s) => s.kind !== 'harpooner').map((s) => ({ ...s })),
+    ];
   const planned = squadSpawns(level.spawns, level, seed, stage);
   const count = planned.length;
   const openingCount = level.detour
@@ -48,6 +53,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           boss: 0,
           skimmer: 7,
           scrapper: 8,
+          harpooner: 9,
           condenser: 0,
           turbine: 0,
           interceptor: 0,
@@ -102,7 +108,10 @@ export class ReinforcementSystem {
       // Reuse a few opening anchors in the later wave. The normal occupancy
       // checks wait or relocate before opening a door through a living body.
       final.push(
-        ...opening.slice(0, 3).map(({ elite: _elite, squad: _squad, ...s }) => ({ ...s })),
+        ...opening
+          .filter((s) => s.kind !== 'harpooner')
+          .slice(0, 3)
+          .map(({ elite: _elite, squad: _squad, ...s }) => ({ ...s })),
       );
     }
     this.openingCount = opening.length;
@@ -164,6 +173,7 @@ export class ReinforcementSystem {
     if (g.mode !== 'playing' || g.escape || (g.level.boss && !g.overtime)) return;
     if (this.phase === 'opening') {
       if (g.level.freight) return;
+      if (g.level.harpoonIntro && g.enemies.length > 0) return;
       this.openingTime += dt;
       const overlap = g.detour
         ? 2

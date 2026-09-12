@@ -411,7 +411,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
       'fuse',
       'implosion',
       'light',
-      'backblast',
+      'countershot', // Defensive counterfire supports the slow planted-shell build.
       'scatter',
       'ricochet',
       'rapid',
@@ -502,7 +502,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
       'blast-surf',
       'chain-reaction',
       'light', // Take steering before the moving Reclaimer; earn Landing gear afterward.
-      'backblast',
+      'countershot',
       'scatter',
       'ricochet',
       'rapid',
@@ -985,6 +985,12 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion } of [
         move = p.x < fallingLoad.body.position.x ? -1 : 1;
         jump = false;
         firing = false;
+      }
+      // Read the Harpooner's locked line and exposed winch using normal inputs.
+      if (e?.harpoon?.phase === 'aim' && e.timer <= 0.55) jump ||= g.grounded;
+      if (e?.harpoon?.phase === 'latched') {
+        aim = { x: e.body.position.x + e.aim.x * 26, y: e.body.position.y - 5 + e.aim.y * 26 };
+        firing = true;
       }
       // Large shell builds coast between volleys near the edge. Continuing to
       // shoot from a corner repeatedly propels the player back into that corner.

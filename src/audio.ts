@@ -150,6 +150,7 @@ export class Sound {
         'cargo-release',
         'cargo-impact',
         'scrapper-lock',
+        'harpoon-lock',
       ].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
@@ -158,6 +159,18 @@ export class Sound {
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);
       this.crack(scatter ? 0.12 : 0.065, scatter ? 0.22 : 0.16, heavy ? 850 : 1800);
+    } else if (kind === 'harpoon-lock') {
+      this.tone(190, 480, 0.32, 0.05, 'sawtooth');
+      this.tone(620, 620, 0.06, 0.045, 'sine', 0.4);
+    } else if (kind === 'harpoon-fire') {
+      this.tone(260, 70, 0.14, 0.11);
+      this.crack(0.1, 0.13, 1900);
+    } else if (kind === 'harpoon-catch') {
+      this.crack(0.07, 0.13, 900);
+      this.tone(125, 80, 0.2, 0.065, 'sawtooth');
+    } else if (kind === 'harpoon-break') {
+      this.tone(510, 140, 0.14, 0.065);
+      this.crack(0.06, 0.085, 3000);
     } else if (kind === 'scrapper-grab') {
       this.tone(95, 180, 0.35, 0.045, 'sawtooth');
       this.crack(0.07, 0.05, 1200);

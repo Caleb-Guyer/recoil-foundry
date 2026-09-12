@@ -155,6 +155,7 @@ export function updateScrapper(g: Game, e: Enemy) {
       rig.phase = 'lift';
       rig.origin = { ...p };
       rig.held = prop;
+      g.harpoons.disrupt(prop.body);
       rig.tether = Constraint.create({
         pointA: anchor,
         bodyB: prop.body,

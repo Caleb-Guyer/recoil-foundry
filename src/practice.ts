@@ -228,6 +228,22 @@ export function scrapperTestFromUrl(url: URL): Checkpoint | null {
   );
 }
 
+export function harpoonerTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'harpooner' ||
+    p.getAll('mode').length > 1 ||
+    ['daily', 'dv', 'seed', 'area', 'formation', 'build'].some((k) => p.has(k))
+  )
+    return null;
+  const mode = p.get('mode') ?? 'normal';
+  if (mode !== 'normal' && mode !== 'overtime') return null;
+  if (mode === 'normal') return testCheckpoint('HARPOONER-1', 12);
+  const save = overtimeTestFromUrl(new URL('?test=overtime&area=reclamation', url))!;
+  return { ...save, seed: 'HARPOONER-OT' };
+}
+
 export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
   recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
   capacitor: ['capacitor', 'reserve-cell', 'magnum', 'kick', 'airshot', 'light'],

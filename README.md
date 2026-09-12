@@ -50,7 +50,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-11&dv=34`). Version 34 adds rare fusion upgrades; its best times are separate from earlier rulesets. Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-11&dv=35`). Version 35 introduces the Harpooner; its best times are separate from earlier rulesets. Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 
@@ -325,6 +325,18 @@ Bullets and small bodies keep their existing portal behavior. Teleporting the Sc
 
 Try the [Cooling Works Scrapper](https://caleb-guyer.github.io/recoil-foundry/?test=scrapper) or its [rooftop encounter](https://caleb-guyer.github.io/recoil-foundry/?test=scrapper&area=rooftops). Click **Test the Scrapper** and clear the opening group to meet it in the second wave. **R** or **Restart test** returns to the entrance with full health and the preset gun. Both tests preserve ordinary saves, Daily records, and earned Practice victories.
 
+## The Harpooner
+
+The first Reclamation room introduces a single Harpooner before its remaining enemies arrive. Selected Overtime rooms mix one into their ordinary waves. It replaces a ground enemy at an existing spawn point, preserving elites and the room's total roster. Boss arenas and freight elevators do not add Harpooners.
+
+Its forked winch gives a 0.95-second warning and locks aim for the final 0.55 seconds. Dodge after the lock or put cover in the firing lane. A hit deals 12 damage once and reels for up to 3.4 seconds. The cable pulls both bodies, so airborne recoil can drag the Harpooner off a ledge. Both still collide with crates, platforms, and machinery. Only one harpoon can aim, fly, or pull at a time.
+
+Shoot the bright winch at the enemy's muzzle to break the tether: it takes 18 damage, so a baseline round is enough. Kickback, explosive shells, and fuel blasts can also break it when exposed. Cover blocks these hits. The machine is harmless to touch during its recovery.
+
+Loose crates and fuel can catch the hook; fuel arms on impact. Fixed cover, anchored cargo, and other enemies stop it. A wall crossing the cable breaks it. Teleporting either endpoint or sending the hook into a portal snaps the cable. Death, room changes, and retries remove it; pause and hitstop freeze it. Its warning, weak point, and attachment are drawn in the world, with no extra combat HUD.
+
+Try the [Harpooner introduction](https://caleb-guyer.github.io/recoil-foundry/?test=harpooner) or a [mixed Overtime room](https://caleb-guyer.github.io/recoil-foundry/?test=harpooner&mode=overtime). Click **Test the Harpooner**; **R** restarts with full health and the preset gun. These tests preserve ordinary saves, Daily records, and earned Practice victories.
+
 ## Enemy squads
 
 Selected rooms pair two existing enemies in the second reinforcement wave. Squads add no enemies, health, or damage bonuses. Both members use the usual warned entrances. Small matching chassis marks identify an active pair without labels or connecting lines.
@@ -436,6 +448,9 @@ npm run preview
 | `src/scrapper.ts`         | Physical crate grabs, locked throws, counterfire interruption, and tether cleanup         |
 | `src/scrapper-layout.ts`  | Sparse enemy substitutions with a nearby crate and clear lifting space                    |
 | `src/scrapper-art.ts`     | Tracked chassis, articulated claw, and restrained throw warnings                          |
+| `src/harpooner.ts`        | Locked hooks, physical reeling, breakable winches, and cable cleanup                      |
+| `src/harpooner-layout.ts` | Solo Reclamation introduction and sparse Overtime substitutions                           |
+| `src/harpooner-art.ts`    | Forked winch, aim warning, hook head, and cable                                           |
 | `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup      |
 | `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane         |
 | `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains         |
@@ -465,6 +480,8 @@ Conveyor checks cover mirrored placement, clear approaches and machinery spacing
 Freight checks cover rare deterministic selection, full departure and door warnings, physical enemy boarding, lift carriage and ceiling stops, jumping back from both side ledges, recoil recovery after a floor fall, cargo impacts, shots and portals above the old ceiling, pause and hitstop, saved entrances, isolated retries, docking, and exactly one reward. An ordinary-input pilot clears all three waves with normal health and the legal five-upgrade test build; complete combat runs also traverse the event.
 
 Scrapper checks cover sparse seeded placement, reserved crate clearance, real grabs in both directions and authored rooms, full aim locks, ordinary-input dodges, counterfire, recovery contact, death cleanup, physical crate impacts against cover, enemies, fuel and the player, blocked pulls, occupied crates, exclusive grips, actual portal travel, pause and hitstop, saved and Daily entrances, and isolated retries. Existing enemy-contact tests include its hull; full combat runs reach extraction through Scrapper rooms with normal health and earned upgrades.
+
+Harpooner checks cover seeded introductions and Overtime rosters, full warnings, movement-only dodges, one active tether, rotated crate catches, fuel arming, cover, shootable winches, blasts, real portal crossings, recoil pulling a machine off a ledge, equal momentum, finite duration, pause, death, and isolated retries. Shared enemy-contact checks also exercise its physical hull against crates and fuel.
 
 Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links.
 

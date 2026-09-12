@@ -328,6 +328,7 @@ export class BallisticsSystem {
     if (!hit || !hit.body.isStatic || !g.solidBodies.includes(hit.body)) return;
     breakSquad(g, e);
     releaseScrapper(g, e);
+    g.harpoons.disrupt(e.body);
     e.state = 'recover';
     e.timer = 0.7;
     this.rivetAt.set(e.id, g.time + 2);
@@ -391,6 +392,7 @@ export class BallisticsSystem {
           continue;
         if (g.cargo.trace(a.pos, point, a.radius) || g.cargo.trace(b.pos, bullet, b.radius))
           continue;
+        if (g.harpoons.trace(a.pos, point, a.radius)) continue;
         if (firstSolid(point, bullet, { x: 0, y: 0 }, blockers)) continue;
         contacts.push({ a, b, t, point, bullet });
       }

@@ -138,6 +138,7 @@ export class DemolitionSystem {
       .map((panel) => ({ panel, amount: strength(panel.body, panel.body) }))
       .filter((hit) => hit.amount > 0);
     const launch = blast.launch * strength(g.player);
+    g.harpoons.blast(pos, damage, radius);
     const showEffect = !this.effects.some(
       (e) => e.kind === blast.kind && g.time - e.at < 0.055 && distance(e.pos, pos) < 14,
     );

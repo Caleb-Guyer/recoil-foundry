@@ -5,6 +5,7 @@ import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
 import { addScrapper } from './scrapper-layout.ts';
+import { addHarpooner } from './harpooner-layout.ts';
 import { seeded, sample, STAGES, formerStage } from './rules.ts';
 import type { Vec } from './rules.ts';
 import type { AreaId } from './areas.ts';
@@ -22,6 +23,7 @@ export type EnemyKind =
   | 'sniper'
   | 'hopper'
   | 'scrapper'
+  | 'harpooner'
   | 'loader'
   | 'crane'
   | 'press'
@@ -55,6 +57,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  harpoonIntro?: boolean;
   scrapperCrate?: Vec;
   mirrored: boolean;
   boss: boolean;
@@ -807,5 +810,5 @@ export function getLevel(
     const charger = result.spawns.find((s) => s.kind === 'charger' && !s.elite);
     if (charger) charger.kind = 'borer';
   }
-  return result;
+  return addHarpooner(result, seed, stage);
 }
