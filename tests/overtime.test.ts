@@ -249,7 +249,12 @@ test('Overtime increases ordinary projectile pressure without shortening locked 
 
 test('second-lap rewards are legal, finite and become repairs without stacking duplicate upgrades', () => {
   const g = new Game();
-  g.startTest(overtime());
+  // Four earned detours leave enough picks to exhaust the enlarged pool.
+  const initial = overtime();
+  for (let i = 0; i < 4; i++) initial.mods.push(availableMods(initial.mods)[0].id);
+  initial.detours = [0, 1, 2, 4];
+  initial.overtime!.baseMods = initial.mods.length;
+  g.startTest(initial);
   const base = g.mods.length;
   for (let stage = 0; stage < 19; stage++) {
     assert.equal(g.stage, stage);
@@ -264,7 +269,7 @@ test('second-lap rewards are legal, finite and become repairs without stacking d
     assert(validBuild(g.mods));
     assert.equal(g.mods.length + g.overtime!.repairs, base + g.stage);
     const save: Checkpoint = {
-      ...overtime(),
+      ...initial,
       stage: g.stage,
       mods: [...g.mods],
       overtime: { ...g.overtime! },

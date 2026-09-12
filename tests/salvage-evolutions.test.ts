@@ -470,7 +470,8 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
   const mods = ['deadeye', 'ramjet', 'cinder', 'crosswind'];
   while (true) {
     const next = availableMods(mods).find(
-      (m) => !['wrecking-ball', 'flashpoint', 'slipstream'].includes(m.id),
+      (m) =>
+        !['wrecking-ball', 'flashpoint', 'slipstream', 'grindshot', 'corner-cutter'].includes(m.id),
     );
     if (!next) break;
     mods.push(next.id);
@@ -490,6 +491,6 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
   assert(loadCheckpoint(save));
   assert.deepEqual(
     availableMods(mods).map((m) => m.id),
-    ['wrecking-ball', 'flashpoint', 'slipstream'],
+    ['wrecking-ball', 'flashpoint', 'slipstream', 'grindshot'],
   );
 });

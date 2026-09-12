@@ -550,7 +550,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       'homecoming',
       'arc-coil',
       'daisy-chain',
-      'repair',
+      'grindshot',
     ],
   },
   {

@@ -38,11 +38,21 @@ The three salvage upgrades now have evolutions in later reward pools. Each requi
 
 Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
 
-You always carry **one gun**. Fifty-one possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
+You always carry **one gun**. Fifty-nine possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
 
 Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
 
 Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, Scattershot widens the muzzle, and Burst fire cycles a bolt and three recessed chambers. These parts combine on the same weapon. Banked rounds leave short mint trails along their actual bounce paths; piercing rounds leave thin pale-blue streaks. Combined rounds keep both cues. Screen-shake settings also reduce the weapon animation and muzzle flash. These visual changes preserve the gun’s stats.
+
+## Grindshot
+
+**Grindshot** is shared by every path. Direct hits deal 20% less damage. After a primary round spends its bounces and Recall return, its final terrain impact becomes a small saw that skims the struck surface. Aim diagonally into the floor to sweep ground enemies, or into a wall to climb toward a perch. A straight wall shot climbs upward. Each saw lasts 1.2 seconds and can hit each enemy only once; at most eight exist at a time.
+
+**Corner Cutter** requires Grindshot and lets saws follow exposed corners onto the next face of the same surface. Ordinary saws end at the edge. Both follow moving terrain and disappear when their supporting material breaks. Other cover stops them, even when that impact destroys it. Directional shields stop the blade, boss armor keeps its protection, and kills grant ordinary Bloodwork healing.
+
+Banker damage and piercing attenuation carry into the saw. Shells still detonate or leave their fuse at the impact; the saw keeps only the direct-hit payload. Saw hits cannot trigger secondary upgrade chains, and fragments, echoes, reflected rounds, and rails cannot create saws. Fired rounds still travel through Fold normally; saws stay on their surface. No new control or HUD is added.
+
+[Test Grindshot](https://caleb-guyer.github.io/recoil-foundry/?test=grindshot) equips the pair in Furnace's low road. Add `&build=base` to test ordinary edges, `&build=bank` for ricochets, or `&build=shell` for sticky explosives. **R** retries. The pair also appears in the upgrade test picker. These isolated tests preserve normal saves, Daily records, and earned Practice victories.
 
 ## Freight Crossing
 
@@ -108,7 +118,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=45`). Version 45 fixes Freight Crossing edge pinning; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=46`). Version 46 adds Grindshot and Corner Cutter; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

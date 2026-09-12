@@ -394,6 +394,18 @@ export const MODS = [
     mark: 'slipstream',
     description: 'Gusts linger longer. Enter one to ride it through the air.',
   },
+  {
+    id: 'grindshot',
+    name: 'Grindshot',
+    description: '20% lighter hits. Spent rounds skim surfaces as saws.',
+    mark: 'grindshot',
+  },
+  {
+    id: 'corner-cutter',
+    name: 'Corner Cutter',
+    description: 'Your saws wrap around exposed corners.',
+    mark: 'corner-cutter',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -454,6 +466,7 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
 export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  'corner-cutter': 'grindshot',
   'wrecking-ball': 'ramjet',
   flashpoint: 'cinder',
   slipstream: 'crosswind',
@@ -686,6 +699,9 @@ export function getGun(mods: readonly string[]): Gun {
         g.damage *= 0.75;
         g.pierce += 1;
         break;
+      case 'grindshot':
+        g.damage *= 0.8;
+        break;
       case 'arc-coil':
         g.damage *= 0.9;
         break;
@@ -773,6 +789,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               isFusion(m.id) ||
               m.id === 'arc-coil' ||
               m.id === 'daisy-chain' ||
+              m.id === 'grindshot' ||
+              m.id === 'corner-cutter' ||
               isSalvage(MOD_REQUIRES[m.id]),
           ))));
   const validDetours =

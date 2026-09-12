@@ -1,3 +1,4 @@
+import { GrindshotSystem } from './grindshot.ts';
 import { CrossingSystem } from './crossing.ts';
 import { MagnetSystem } from './magnets.ts';
 import { TetherSystem } from './tethers.ts';
@@ -215,6 +216,7 @@ export class Game {
   sappers = new SapperSystem(this);
   tethers = new TetherSystem(this);
   arcs = new ArcCoilSystem(this);
+  grind = new GrindshotSystem(this);
   salvage = new BossSalvageSystem(this);
   salvageEvolutions = new SalvageEvolutionSystem(this);
   earnedSalvage: string | null = null;
@@ -359,6 +361,7 @@ export class Game {
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
       this.arcs.reset();
+      this.grind.reset();
       this.salvage.reset();
       this.salvageEvolutions.reset();
       this.tethers.reset();
@@ -439,6 +442,7 @@ export class Game {
   loadRoom(escapeRoom = false) {
     this.earnedSalvage = null;
     this.arcs.reset();
+    this.grind.reset();
     this.salvage.reset();
     this.salvageEvolutions.reset();
     this.tethers.reset();
@@ -642,6 +646,7 @@ export class Game {
       return;
     this.escape.phase = 'extracting';
     this.arcs.reset();
+    this.grind.reset();
     this.salvage.reset();
     this.salvageEvolutions.reset();
     this.tethers.reset();
@@ -901,6 +906,8 @@ export class Game {
     this.updateShots(dt);
     if (this.mode !== 'playing') return;
     this.arcs.update();
+    this.grind.update(dt);
+    if (this.mode !== 'playing') return;
     this.breaches.update(dt);
     this.particles = this.particles.filter((p) => {
       p.life -= dt;
@@ -930,6 +937,7 @@ export class Game {
       this.clear = true;
       this.clearAt = this.time;
       this.arcs.reset();
+      this.grind.reset();
       this.salvage.reset();
       this.salvageEvolutions.reset();
       this.tethers.reset();
@@ -2001,6 +2009,7 @@ export class Game {
             s.pos.y += nearest.normal.y;
           } else {
             s.life = 0;
+            this.grind.impact(s, nearest.body, nearest.normal);
             rivalImpact(this, s, nearest.prop?.body ?? nearest.body);
             this.demolition.impact(s, nearest.prop?.body ?? nearest.body);
             if (this.mode !== 'playing') return;

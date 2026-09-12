@@ -175,6 +175,9 @@ export class Sound {
       this.tone(260, 55, 0.14, 0.065, 'triangle');
     } else if (kind === 'ram') {
       this.tone(120, 40, 0.1, 0.07, 'triangle');
+    } else if (kind === 'grind') {
+      this.tone(240, 110, 0.1, 0.025, 'sawtooth');
+      this.crack(0.05, 0.025, 1700);
     } else if (kind === 'arc') {
       this.tone(950, 260, 0.085, 0.04, 'triangle');
       this.crack(0.04, 0.035, 2600);

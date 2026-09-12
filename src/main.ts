@@ -1,3 +1,4 @@
+import { grindshotTestFromUrl } from './practice.ts';
 import './style.css';
 import { Game } from './game.ts';
 import type { Input } from './game.ts';
@@ -125,6 +126,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  grindshotTestFromUrl(entryUrl) ??
   crossingTestFromUrl(entryUrl) ??
   salvageTestFromUrl(entryUrl) ??
   arcTestFromUrl(entryUrl) ??
@@ -183,6 +185,8 @@ function updateTitle() {
       (entryUrl.searchParams.get('evolved') === '1'
         ? 'Test salvage evolutions'
         : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'GRIND-52')
+    $('play').innerHTML = 'Test Grindshot <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('CROSSING-51-'))
     $('play').innerHTML = 'Test Freight Crossing <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
@@ -445,6 +449,8 @@ function modMark(mod: Mod) {
     ramjet: 'M9 15h20l12 9-12 9H9l7-9zM5 20h7M5 28h7M35 14l10 10-10 10',
     cinder: 'M18 34c-9-10 4-14 5-24 12 9 6 15 11 12 8 15-12 21-16 12M12 40h28',
     crosswind: 'M7 17h28q12 0 8-7M7 25h34M7 33h23q13 0 9 8',
+    grindshot: 'M5 38h46M16 17l7-6 4 5 8-2 1 8 6 4-5 6-8-1-5 5-5-7-7-2 4-7zM24 23h7v7h-7z',
+    'corner-cutter': 'M8 40V16h30v24M18 31V8h28v20M41 23l5 5 5-5',
     'arc-coil': 'M8 24h10l9-15-3 13h9l-9 17 3-13H8M40 17h8v14h-8z',
     'daisy-chain': 'M5 12h8v8H5zM25 29h8v8h-8zM43 10h8v8h-8zM13 16l8 3-3 5 7 9M33 33l8-7-4-5 6-7',
     snapback: 'M7 13h10v10H7zM39 26h10v10H39zM17 18l7 3M32 27l7 4M24 12l8 6-8 5 8 5-8 7',

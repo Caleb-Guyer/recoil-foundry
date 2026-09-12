@@ -311,6 +311,7 @@ export function sapperTestFromUrl(url: URL): Checkpoint | null {
 }
 
 export const UPGRADE_TEST_BUILDS: Record<string, string[]> = {
+  grindshot: ['grindshot', 'corner-cutter', 'magnum', 'rapid', 'light', 'leech'],
   'arc-coil': ['arc-coil', 'daisy-chain', 'rapid', 'pierce', 'light', 'leech'],
   tether: ['tether', 'snapback', 'rapid', 'pierce', 'light', 'leech'],
   recall: ['recall', 'pierce', 'homecoming', 'kick', 'airshot', 'light'],
@@ -558,4 +559,32 @@ export function crossingTestFromUrl(url: URL): Checkpoint | null {
       return testCheckpoint(seed, stage);
   }
   return null;
+}
+
+export function grindshotTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'grindshot' ||
+    p.getAll('build').length > 1 ||
+    [
+      'daily',
+      'dv',
+      'seed',
+      'area',
+      'formation',
+      'route',
+      'mode',
+      'layout',
+      'variant',
+      'mirror',
+    ].some((k) => p.has(k)) ||
+    (p.has('build') && !['base', 'evolved', 'bank', 'shell'].includes(p.get('build')!))
+  )
+    return null;
+  const mods = [...UPGRADE_TEST_BUILDS.grindshot];
+  if (p.get('build') === 'base') mods[1] = 'airshot';
+  if (p.get('build') === 'bank') mods.splice(2, 2, 'ricochet', 'banker');
+  if (p.get('build') === 'shell') mods.splice(2, 2, 'shellshock', 'fuse');
+  return { ...testCheckpoint('GRIND-52', 6), route: 'low', mods };
 }

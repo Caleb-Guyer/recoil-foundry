@@ -1,3 +1,4 @@
+import { drawGrindshot } from './grindshot-art.ts';
 import { drawCrossing } from './crossing-art.ts';
 import { drawMagnets, drawReclamationEnemy } from './reclamation-art.ts';
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
@@ -533,6 +534,7 @@ export class Renderer {
     this.drawPlayer();
     drawTethers(c, g, this.reduced);
     drawArcs(c, g, this.reduced);
+    drawGrindshot(c, g, this.reduced);
     drawBossSalvage(c, g, this.reduced);
     drawBallistics(c, g, this.reduced);
     drawFusions(c, g, this.reduced);
