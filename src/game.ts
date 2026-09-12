@@ -1,5 +1,6 @@
 import { MagnetSystem } from './magnets.ts';
 import { TetherSystem } from './tethers.ts';
+import { BossSalvageSystem } from './boss-salvage.ts';
 import { ArcCoilSystem } from './arc-coil.ts';
 import { DestructionSystem } from './destruction.ts';
 import { SapperSystem, createSapper } from './sapper.ts';
@@ -43,6 +44,8 @@ import {
   isDetourStage,
   isFusion,
   fusionUnlocked,
+  SALVAGE_BOSSES,
+  isSalvage,
   isRouteStage,
   dailyRoute,
 } from './rules.ts';
@@ -209,6 +212,8 @@ export class Game {
   sappers = new SapperSystem(this);
   tethers = new TetherSystem(this);
   arcs = new ArcCoilSystem(this);
+  salvage = new BossSalvageSystem(this);
+  earnedSalvage: string | null = null;
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   get worldWidth() {
@@ -348,6 +353,7 @@ export class Game {
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
       this.arcs.reset();
+      this.salvage.reset();
       this.tethers.reset();
       this.sappers.clear();
       for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
@@ -424,7 +430,9 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false) {
+    this.earnedSalvage = null;
     this.arcs.reset();
+    this.salvage.reset();
     this.tethers.reset();
     this.sappers.clear();
     this.destruction.clear();
@@ -624,6 +632,7 @@ export class Game {
       return;
     this.escape.phase = 'extracting';
     this.arcs.reset();
+    this.salvage.reset();
     this.tethers.reset();
     this.evolutions.reset();
     this.ballistics.reset();
@@ -850,11 +859,15 @@ export class Game {
     this.fusions.beforeStep(dt);
     this.harpoons.beforeStep(dt);
     this.tethers.beforeStep(dt);
+    this.salvage.beforeStep(dt);
+    if (this.mode !== 'playing') return;
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();
     this.portals.beforeStep();
     Engine.update(this.engine, 1000 / 60);
+    this.salvage.afterStep();
+    if (this.mode !== 'playing') return;
     this.conveyors.afterStep();
     this.props.afterStep(dt);
     if (this.mode !== 'playing') return;
@@ -901,6 +914,7 @@ export class Game {
       this.clear = true;
       this.clearAt = this.time;
       this.arcs.reset();
+      this.salvage.reset();
       this.tethers.reset();
       this.sappers.clear();
       this.shots = this.shots.filter((s) => s.friendly);
@@ -985,6 +999,7 @@ export class Game {
       x: clamp(this.player.velocity.x - d.x * impulse, -23, 23),
       y: clamp(this.player.velocity.y - d.y * impulse, -21, 20),
     });
+    this.salvage.launch(d, impulse);
     this.feedback((this.grounded ? 2.2 : 3.8) * (charged ? 1.3 : 1) * (rail ? 1.5 : 1), d);
     this.onSound(
       this.chargedFlash
@@ -1259,7 +1274,8 @@ export class Game {
       ) &&
       (e.kind !== 'press' || e.state === 'rush') &&
       e.kind !== 'crane' &&
-      Query.collides(this.player, [e.body]).length
+      Query.collides(this.player, [e.body]).length &&
+      !this.salvage.ram(e)
     )
       this.damagePlayer(
         isBoss(e.kind)
@@ -1823,6 +1839,7 @@ export class Game {
           continue;
         }
         if (!nearest) {
+          this.salvage.trace(s, s.pos, end);
           s.pos = end;
           recordShotTrace(s.trace, s.pos);
           if (waypoint && distance(s.pos, waypoint) < 0.01) {
@@ -1837,10 +1854,12 @@ export class Game {
           }
           break;
         }
+        const segmentStart = { ...s.pos };
         s.pos = {
           x: s.pos.x + (end.x - s.pos.x) * nearest.t,
           y: s.pos.y + (end.y - s.pos.y) * nearest.t,
         };
+        this.salvage.trace(s, segmentStart, s.pos);
         recordShotTrace(s.trace, s.pos);
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
@@ -1879,6 +1898,7 @@ export class Game {
             s.life = 0;
             continue;
           }
+          this.salvage.impact(s);
           this.evolutions.hit(s);
           this.ballistics.consumeFracture(e, s);
           this.ballistics.rivet(e, s);
@@ -1916,6 +1936,7 @@ export class Game {
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
+          this.salvage.impact(s, nearest.prop?.body ?? nearest.body, nearest.normal);
           if (nearest.prop)
             this.props.hit(
               nearest.prop,
@@ -2051,6 +2072,8 @@ export class Game {
       this.onSound('hit');
     }
     if (e.hp > 0) return blocked;
+    if (isBoss(e.kind) && !this.practice && this.mode === 'playing' && this.hp > 0 && e.spawn <= 0)
+      this.earnedSalvage = SALVAGE_BOSSES[e.kind] ?? null;
     breakSquad(this, e);
     releaseScrapper(this, e);
     this.harpoons.disrupt(e.body);
@@ -2149,7 +2172,7 @@ export class Game {
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
       seeded(this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage),
-      { stage: this.stage, overtime: !!this.overtime },
+      { stage: this.stage, overtime: !!this.overtime, salvage: this.earnedSalvage },
     );
     if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
     this.rewardTaken = false;
@@ -2161,9 +2184,10 @@ export class Game {
       this.mode !== 'upgrade' ||
       this.rewardTaken ||
       !this.offers.some((m) => m.id === id) ||
+      (isSalvage(id) && id !== this.earnedSalvage) ||
       (isFusion(id) && !fusionUnlocked({ stage: this.stage, overtime: !!this.overtime })) ||
       (!(id === 'repair' && this.overtime && availableMods(this.mods).length === 0) &&
-        !availableMods(this.mods).some((m) => m.id === id))
+        !availableMods(this.mods, true).some((m) => m.id === id))
     )
       return;
     if (this.enteringDetour && !this.canDetour) return;

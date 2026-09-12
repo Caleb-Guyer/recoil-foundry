@@ -354,6 +354,26 @@ export const MODS = [
     description: 'Stuck shells pull nearby enemies and loose debris inward before exploding.',
     mark: 'implosion',
   },
+  {
+    id: 'ramjet',
+    name: 'Ramjet',
+    mark: 'ramjet',
+    description: 'Fast recoil launches ram enemies. More speed, more damage. Bosses resist impact.',
+  },
+  {
+    id: 'cinder',
+    name: 'Cinder rounds',
+    mark: 'cinder',
+    description:
+      'Impacts leave brief burning patches on nearby surfaces. Overlapping burns do not stack.',
+  },
+  {
+    id: 'crosswind',
+    name: 'Crosswind',
+    mark: 'crosswind',
+    description:
+      'Shots leave a brief gust that pushes loose props and bends ordinary enemy bullets.',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -399,7 +419,19 @@ export const isFusion = (id: string) => Object.hasOwn(FUSION_REQUIRES, id);
 export interface RewardContext {
   stage: number;
   overtime?: boolean;
+  salvage?: string | null;
 }
+export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
+  loader: 'ramjet',
+  crane: 'ramjet',
+  press: 'cinder',
+  kiln: 'cinder',
+  condenser: 'crosswind',
+  turbine: 'crosswind',
+  sorter: 'ramjet',
+  boss: 'cinder',
+};
+export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
   'daisy-chain': 'arc-coil',
@@ -431,11 +463,12 @@ export const MOD_REQUIRES: Record<string, string> = {
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
 }
-export function availableMods(mods: readonly string[]): Mod[] {
+export function availableMods(mods: readonly string[], includeSalvage = false): Mod[] {
   const chosen = buildPath(mods);
   return MODS.filter((mod) => {
     const branch = MOD_PATHS[mod.id];
     return (
+      (includeSalvage || !isSalvage(mod.id)) &&
       !mods.includes(mod.id) &&
       (!MOD_REQUIRES[mod.id] || mods.includes(MOD_REQUIRES[mod.id])) &&
       (!isFusion(mod.id) ||
@@ -454,6 +487,10 @@ export function rewardMods(
   const path = buildPath(mods),
     pool = availableMods(mods).filter((mod) => !isFusion(mod.id) || fusionUnlocked(context)),
     offers: Mod[] = [];
+  const salvage = MODS.find(
+    (m) => m.id === context.salvage && isSalvage(m.id) && !mods.includes(m.id),
+  );
+  if (salvage && count > 0) offers.push(salvage);
   const weight = (mod: Mod) =>
     (path && MOD_PATHS[mod.id]?.path === path ? 1.5 : 1) *
     (isFusion(mod.id) ? (context.overtime ? 0.65 : 0.18) : 1);
@@ -468,12 +505,13 @@ export function rewardMods(
 export function validBuild(mods: readonly string[]) {
   const picked: string[] = [];
   for (const id of mods) {
-    if (!availableMods(picked).some((mod) => mod.id === id)) return false;
+    if (!availableMods(picked, true).some((mod) => mod.id === id)) return false;
     picked.push(id);
   }
   return true;
 }
 export function modPathLabel(id: string): string {
+  if (isSalvage(id)) return 'Salvage';
   const branch = MOD_PATHS[id];
   return branch ? PATH_NAMES[branch.path] + (isFusion(id) ? ' · Fusion' : '') : '';
 }

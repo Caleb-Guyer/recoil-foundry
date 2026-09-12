@@ -477,3 +477,50 @@ export function reclamationTestFromUrl(url: URL): Checkpoint | null {
     return null;
   return testCheckpoint('RECLAMATION-20', 12);
 }
+
+export function salvageTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'salvage' ||
+    [
+      'daily',
+      'dv',
+      'seed',
+      'area',
+      'formation',
+      'route',
+      'mode',
+      'layout',
+      'variant',
+      'mirror',
+    ].some((k) => p.has(k)) ||
+    p.getAll('build').length > 1 ||
+    (p.has('build') && !['ramjet', 'cinder', 'crosswind', 'all'].includes(p.get('build')!))
+  )
+    return null;
+  const mods = [
+    'leech',
+    'airshot',
+    'light',
+    'kick',
+    'rapid',
+    'magnum',
+    'pierce',
+    'ricochet',
+    'burst',
+    'countershot',
+  ];
+  const chosen = p.get('build') ?? 'all';
+  for (const id of ['ramjet', 'cinder', 'crosswind'])
+    mods.push(
+      chosen === 'all' || chosen === id
+        ? id
+        : id === 'ramjet'
+          ? 'redline'
+          : id === 'cinder'
+            ? 'split'
+            : 'landing',
+    );
+  return { ...testCheckpoint('SALVAGE-49', 13), mods };
+}

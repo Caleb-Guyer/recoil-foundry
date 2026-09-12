@@ -9,7 +9,7 @@ import { Game, WORLD, EXTRACTION_DURATION } from '../src/game.ts';
 import { EXTRACTION } from '../src/escape-layout.ts';
 import { CRANE_LOCK } from '../src/crane-ai.ts';
 import type { Input } from '../src/game.ts';
-import { getGun, MODS, distance, STAGES, availableMods } from '../src/rules.ts';
+import { getGun, MODS, distance, STAGES, availableMods, isSalvage } from '../src/rules.ts';
 const { Body, Composite, Query } = Matter;
 const input = (p: Partial<Input> = {}): Input => ({
   left: false,
@@ -341,6 +341,32 @@ test('extreme recoil combos remain inside the arena with bounded effects', () =>
 // Only offers are scripted: every upgrade is earned through an actual room clear.
 // New builds below exercise every new mechanic. Weighted pool/retry coverage lives in build-paths and daily.
 for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoads } of [
+  {
+    seed: 'path-run-65',
+    pressSpacing: 220,
+    pathMods: ['ramjet', 'cinder', 'crosswind'],
+    rewards: [
+      'leech',
+      'airshot',
+      'magnum',
+      'ramjet',
+      'crossfire',
+      'rapid',
+      'scatter',
+      'cinder',
+      'light',
+      'kick',
+      'burst',
+      'crosswind',
+      'pierce',
+      'backblast',
+      'bloom',
+      'convergence',
+      'redline',
+      'countershot',
+      'reprisal',
+    ],
+  },
   {
     seed: 'path-run-65',
     pressSpacing: 220,
@@ -715,7 +741,9 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
           return;
         }
         const preferred = MODS.find((m) => m.id === extendedRewards[g.stage])!;
-        assert(availableMods(g.mods).includes(preferred), 'Scripted offer is not legal');
+        if (isSalvage(preferred.id))
+          assert(g.offers.includes(preferred), 'Salvage must be earned from the actual boss');
+        assert(availableMods(g.mods, true).includes(preferred), 'Scripted offer is not legal');
         g.offers = [preferred, ...g.offers.filter((m) => m !== preferred)].slice(0, 3);
       };
     }
@@ -740,6 +768,14 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     let fusionUsed = false;
     let tetherUsed = false;
     let arcUsed = false;
+    let cinderUsed = false,
+      windUsed = false;
+    const salvageStep = g.salvage.beforeStep.bind(g.salvage);
+    g.salvage.beforeStep = (dt) => {
+      cinderUsed ||= g.salvage.cinders.length > 0;
+      windUsed ||= g.salvage.gusts.length > 0;
+      salvageStep(dt);
+    };
     g.onSound = (kind) => {
       if (kind === 'tether-link') tetherUsed = true;
       if (kind === 'arc') arcUsed = true;
@@ -1164,5 +1200,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     assert(g.hp > 0);
     if (fusion) assert(fusionUsed, `The run never used ${fusion}`);
     if (pathMods[0] === 'tether') assert(tetherUsed, 'The run never formed a tether');
+    if (pathMods[0] === 'ramjet')
+      assert(cinderUsed && windUsed, 'The full run must use both surface burns and wind');
     if (pathMods[0] === 'arc-coil') assert(arcUsed, 'The run never discharged Arc Coil');
   });

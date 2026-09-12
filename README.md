@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Boss salvage
+
+Boss victories can offer a modification recovered from their machinery. One card is salvage and the other two are ordinary upgrades. Daily Runs take the single fixed salvage card. Owned salvage is replaced by ordinary choices; it never appears in random upgrade draws before a victory. The final encounter keeps its extraction ending.
+
+- **Ramjet** comes from Docks machinery and the Sorter. An airborne recoil launch briefly lets fast impacts damage enemies, with damage based on closing speed. Small enemies bounce you away. Boss armor, directional shields and active charges retain their danger.
+- **Cinder rounds** come from Furnace machinery and the Reclaimer. Direct impacts leave small surface fires for 1.3 seconds. Burns deal 24 damage per second before armor, cannot stack on one target, and can ignite exposed fuel. Patches move with their supporting surface and disappear when it breaks.
+- **Crosswind** comes from Cooling Works machinery. Rounds leave faint, brief gusts that push loose props and bend ordinary hostile bullets by at most 16 degrees across their lifetime. Cover blocks the wind; heavy rounds and the Interceptor's special ammunition retain their trajectories.
+
+[Test boss salvage](https://caleb-guyer.github.io/recoil-foundry/?test=salvage) starts Reclamation Works with all three equipped. Shoot away from enemies while airborne to launch into them. Add `&build=ramjet`, `&build=cinder`, or `&build=crosswind` to isolate one. **R** retries. Tests preserve normal saves, Daily records and earned Practice unlocks.
+
 ## Play
 
 | Input                  | Action                     |
@@ -82,7 +92,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=41`). Version 41 adds Arc Coil and Daisy Chain; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=42`). Version 42 adds boss salvage rewards and their three upgrades; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

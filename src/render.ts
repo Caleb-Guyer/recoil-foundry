@@ -39,6 +39,7 @@ import { drawScrapper } from './scrapper-art.ts';
 import { drawHarpooner } from './harpooner-art.ts';
 import { drawSapper, drawCharge, drawSapperBlasts } from './sapper-art.ts';
 import { drawTethers } from './tether-art.ts';
+import { drawBossSalvage } from './salvage-art.ts';
 import { drawArcs } from './arc-art.ts';
 import { FREIGHT } from './freight-layout.ts';
 import { drawSquadTell } from './squad-art.ts';
@@ -530,6 +531,7 @@ export class Renderer {
     this.drawPlayer();
     drawTethers(c, g, this.reduced);
     drawArcs(c, g, this.reduced);
+    drawBossSalvage(c, g, this.reduced);
     drawBallistics(c, g, this.reduced);
     drawFusions(c, g, this.reduced);
     for (const s of g.shots) {
