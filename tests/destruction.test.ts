@@ -407,6 +407,7 @@ test('weak-material selection repeats and excludes structural floors, tall obsta
 });
 
 function walk(g: Game, path: Vec[]) {
+  const stairs = g.level.id.startsWith('dropworks');
   let index = 0,
     previous = g.player.position.x,
     stuck = 0;
@@ -415,13 +416,20 @@ function walk(g: Game, path: Vec[]) {
       t = path[index],
       dx = t.x - p.x,
       dy = p.y - t.y;
-    if (Math.abs(dx) < 40 && Math.abs(dy) < 65) {
+    if (
+      Math.abs(dx) < (stairs ? 32 : 40) &&
+      Math.abs(dy) < (stairs ? 12 : 65) &&
+      (!stairs || g.grounded)
+    ) {
       index++;
       continue;
     }
     stuck = Math.abs(p.x - previous) < 0.4 ? stuck + 1 : 0;
     previous = p.x;
-    const move = dx > 12 ? 1 : dx < -12 ? -1 : 0;
+    // Tall sequences need a landing and braking before the next takeoff.
+    const steer = stairs ? dx - g.player.velocity.x * 5 : dx;
+    const tolerance = stairs ? 6 : 12;
+    const move = steer > tolerance ? 1 : steer < -tolerance ? -1 : 0;
     const blocked =
       move && Query.ray(g.solidBodies, p, { x: p.x + move * 70, y: p.y }, 24).length > 0;
     g.tick(1 / 60, {

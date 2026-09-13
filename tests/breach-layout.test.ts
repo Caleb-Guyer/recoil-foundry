@@ -24,7 +24,7 @@ test('sparse vents preserve authored geometry, actors, route, hazard sweep and s
   let pickups = 0;
   let attached = 0;
   let freestanding = 0;
-  for (let i = 0; i < 256; i++) {
+  for (let i = 0; i < 512; i++) {
     const seed = 'breach-' + i;
     let runPickups = 0;
     for (let stage = 0; stage < 20; stage++) {
@@ -155,14 +155,14 @@ function cases() {
   const result = new Map<string, { seed: string; stage: number }>();
   for (
     let i = 0;
-    i < 256 &&
+    i < 512 &&
     result.size < LAYOUTS.filter((layout) => !layout.added && !layout.magnets).length * 2;
     i++
   ) {
     const seed = 'breach-route-' + i;
     for (const stage of [1, 5, 9, 17]) {
       const level = getLevel(seed, stage);
-      if (breachPlacement(level, seed, stage))
+      if (!result.has(level.id + ':' + level.mirrored) && breachPlacement(level, seed, stage))
         result.set(level.id + ':' + level.mirrored, { seed, stage });
     }
   }

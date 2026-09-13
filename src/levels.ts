@@ -1,4 +1,5 @@
 import { PRESSURE_LAYOUTS, pressureLayout, type PressurePlacement } from './pressure-layouts.ts';
+import { DROPWORKS_LAYOUTS, dropworksLayout } from './dropworks-layouts.ts';
 import { CROSSING_LAYOUT, crossingLevel } from './crossing-layout.ts';
 import {
   COUNTERWEIGHT_LAYOUTS,
@@ -59,6 +60,7 @@ export interface Spawn extends Vec {
   squad?: SquadTag;
 }
 export interface Layout {
+  hazards?: HazardPlacement[];
   vents?: PressurePlacement[];
   counterweights?: CounterweightPlacement[];
   setpiece?: {
@@ -89,7 +91,6 @@ export interface Level extends Layout {
   mirrored: boolean;
   boss: boolean;
   detour?: true;
-  hazards?: HazardPlacement[];
 }
 const box = (x: number, y: number, w: number, h: number): Solid => ({ x, y, w, h });
 const shelf = (x: number, y: number, w: number) => box(x, y, w, 22);
@@ -105,6 +106,7 @@ export const SPECIAL_LAYOUTS: Layout[] = [
   ...PHYSICS_LAYOUTS,
   ...COUNTERWEIGHT_LAYOUTS,
   ...PRESSURE_LAYOUTS,
+  ...DROPWORKS_LAYOUTS,
 ];
 export const LAYOUTS: Layout[] = [
   ...RECLAMATION_LAYOUTS,
@@ -715,6 +717,7 @@ function buildLevel(
     physicsLayout(seed, stage) ??
     counterweightLayout(seed, stage) ??
     pressureLayout(seed, stage) ??
+    dropworksLayout(seed, stage) ??
     (slot === 2
       ? ADDED_LAYOUTS[area]
       : legacyStage === 11
@@ -796,6 +799,9 @@ function buildLevel(
         }
       : {}),
     solids,
+    ...(source.hazards
+      ? { hazards: source.hazards.map((h) => ({ ...h, x: mirrored ? 2000 - h.x : h.x })) }
+      : {}),
     ...(source.vents
       ? {
           vents: source.vents.map((v) => ({

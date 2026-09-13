@@ -113,7 +113,7 @@ test('the independent furnace boss draw preserves established rooms everywhere o
       'chimney:false',
       'fortress:false',
       'split-deck:true',
-      'broken-bridge:true',
+      'dropworks-roof:true',
       'relay-roof:false',
     ],
   };

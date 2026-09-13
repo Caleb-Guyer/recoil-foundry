@@ -57,7 +57,7 @@ export class HazardSystem {
   }
   reset(level: Level, seed: string, stage: number) {
     this.clear();
-    if (level.detour) {
+    if (level.detour || level.hazards) {
       for (const placement of level.hazards ?? []) this.spawn(placement);
       return;
     }

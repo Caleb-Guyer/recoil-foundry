@@ -46,6 +46,7 @@ import {
   upgradeTestFromUrl,
   rerollTestFromUrl,
   massDriverTestFromUrl,
+  dropworksTestFromUrl,
   overtimeTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
@@ -142,6 +143,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  dropworksTestFromUrl(entryUrl) ??
   massDriverTestFromUrl(entryUrl) ??
   rerollTestFromUrl(entryUrl) ??
   countershotTestFromUrl(entryUrl) ??
@@ -191,6 +193,10 @@ function updateTitle() {
     $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('play').innerHTML = 'Test upgrade reroll <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('DROPWORKS-64-'))
+    $('play').innerHTML =
+      (linkedRunTest.stage === 17 ? 'Test Dropworks Roof' : 'Test the Dropworks') +
+      ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('MASSDRIVER-62-'))
     $('play').innerHTML =
       (entryUrl.searchParams.get('build') === 'forge' ? 'Test Drop Forge' : 'Test Mass Driver') +
@@ -272,6 +278,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.seed.startsWith('DROPWORKS-64-'))
+    $('title-hint').textContent = 'Climb the stairs. Drop the loads. R to restart test.';
   if (linkedRunTest?.seed.startsWith('MASSDRIVER-62-'))
     $('title-hint').textContent =
       entryUrl.searchParams.get('build') === 'forge'

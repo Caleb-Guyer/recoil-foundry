@@ -157,10 +157,19 @@ export class DestructionSystem {
     this.releaseUnsupported();
     const d = direction({ x: 0, y: 0 }, velocity);
     const rng = seeded(g.roomSeed + ':rubble:' + rect.x + ':' + rect.y);
+    // A collapsing support must release its load. Fresh solid rubble directly
+    // beneath a resting prop would catch or kick it sideways before it falls.
+    const loads = g.props.items
+      .filter((p) => !p.body.isStatic)
+      .map((p) => p.body.bounds)
+      .filter(
+        (b) => Math.abs(b.max.y - rect.y) < 6 && b.max.x > rect.x && b.min.x < rect.x + rect.w,
+      );
     for (let i = 0; i < 3; i++) {
       const x = rect.x + (rect.w * (i + 1)) / 4,
         y = rect.y + Math.min(rect.h / 2, 35);
       const hull = { min: { x: x - 14, y: y - 10 }, max: { x: x + 14, y: y + 10 } };
+      if (loads.some((b) => hull.max.x > b.min.x - 8 && hull.min.x < b.max.x + 8)) continue;
       if (Query.region([...g.solidBodies, g.player, ...g.enemies.map((e) => e.body)], hull).length)
         continue;
       const rubble = g.props.items.filter((p) => p.kind === 'rubble');

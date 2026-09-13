@@ -293,7 +293,8 @@ test('the five-area run includes Cooling Works and Cable Yard with a harder roof
     for (const stage of [8, 9]) {
       const level = getLevel(seed, stage);
       layouts.add(level.id);
-      if (level.setpiece) assert(['cable-yard', 'balance-house', 'pump-room'].includes(level.id));
+      if (level.setpiece)
+        assert(['cable-yard', 'balance-house', 'pump-room', 'dropworks'].includes(level.id));
       else assert(level.coolant!.length >= 2);
       assert(level.spawns.some((e) => e.kind === 'skimmer'));
     }
@@ -304,7 +305,7 @@ test('the five-area run includes Cooling Works and Cable Yard with a harder roof
     }
     assert(['condenser', 'turbine'].includes(getLevel(seed, 11).spawns[0].kind));
   }
-  assert.equal(layouts.size, 6);
+  assert.equal(layouts.size, 7);
 });
 
 test('rooftop collapsing platforms leave room to launch over adjacent steps', () => {

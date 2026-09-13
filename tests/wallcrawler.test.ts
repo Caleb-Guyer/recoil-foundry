@@ -329,23 +329,36 @@ test('wallcrawler placements are sparse, supported, deterministic, and preserve 
       const seed = 'crawler-placement-' + n,
         l = getLevel(seed, stage),
         c = l.spawns.filter((s) => s.kind === 'wallcrawler');
-      assert(c.length <= 1);
+      const authored = l.id.startsWith('dropworks');
+      assert(c.length <= (l.id === 'dropworks-roof' ? 2 : 1));
       if (!c.length) continue;
       seen.add(l.area + ':' + l.mirrored);
-      assert(stage >= 8 && !l.boss && !l.detour && !l.freight && !l.setpiece && !l.crossing);
-      assert(!c[0].elite && !c[0].squad);
+      assert(
+        stage >= 8 &&
+          !l.boss &&
+          !l.detour &&
+          !l.freight &&
+          (!l.setpiece || authored) &&
+          !l.crossing,
+      );
+      assert(c.every((crawler) => !crawler.elite && !crawler.squad));
       assert.deepEqual(l, getLevel(seed, stage));
       assert(
-        l.solids.some((s) => {
-          const x = Math.max(s.x, Math.min(c[0].x, s.x + s.w)),
-            y = Math.max(s.y, Math.min(c[0].y, s.y + s.h));
-          return Math.abs(Math.hypot(c[0].x - x, c[0].y - y) - 17) < 0.01;
-        }),
+        c.every((crawler) =>
+          l.solids.some((s) => {
+            const x = Math.max(s.x, Math.min(crawler.x, s.x + s.w)),
+              y = Math.max(s.y, Math.min(crawler.y, s.y + s.h));
+            return Math.abs(Math.hypot(crawler.x - x, crawler.y - y) - 17) < 0.01;
+          }),
+        ),
       );
       assert.equal(l.spawns.filter((s) => s.elite).length, stage >= 16 ? 2 : 1);
       const ot = getOvertimeLevel(seed, stage);
       assert(!ot.crawlerIntro);
-      assert(ot.spawns.filter((s) => s.kind === 'wallcrawler').length <= 1);
+      assert(
+        ot.spawns.filter((s) => s.kind === 'wallcrawler').length <=
+          (ot.id === 'dropworks-roof' ? 2 : 1),
+      );
     }
   assert.equal(seen.size, 6);
 });

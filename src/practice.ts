@@ -1,6 +1,7 @@
 import { breakableSolids } from './destruction-layout.ts';
 import { getLevel } from './levels.ts';
 import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
+import { DROPWORKS_LAYOUTS } from './dropworks-layouts.ts';
 import { bossStage, availableMods, rewardMods, seeded, type Checkpoint } from './rules.ts';
 
 // Encounter-only records cannot prove a win; start a separate victory history.
@@ -512,6 +513,96 @@ export function layoutTestFromUrl(url: URL): Checkpoint | null {
     if (id === 'demolition-lane')
       save.mods = ['shellshock', 'blast-surf', 'leech', 'kick', 'light'];
     return save;
+  }
+  return null;
+}
+export function dropworksTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  const keys = ['test', 'area', 'variant', 'mirror', 'build'];
+  let unknown = false;
+  p.forEach((_, key) => {
+    if (!keys.includes(key)) unknown = true;
+  });
+  if (p.get('test') !== 'dropworks' || unknown || keys.some((key) => p.getAll(key).length > 1))
+    return null;
+  const area = p.get('area') ?? 'cooling',
+    variant = p.get('variant') ?? '1',
+    mirror = p.get('mirror') ?? '0',
+    build = p.get('build') ?? 'forge';
+  if (
+    !['cooling', 'rooftops'].includes(area) ||
+    !['1', '2', '3'].includes(variant) ||
+    !['0', '1'].includes(mirror) ||
+    !['forge', 'bank', 'portal', 'standard'].includes(build)
+  )
+    return null;
+  const stage = area === 'cooling' ? 9 : 17;
+  const id = DROPWORKS_LAYOUTS[area === 'cooling' ? 0 : 1].id;
+  for (let i = 0; i < 4096; i++) {
+    const seed = `DROPWORKS-64-${i}`,
+      level = getLevel(seed, stage);
+    if (
+      level.id !== id ||
+      level.mirrored !== (mirror === '1') ||
+      physicsVariant(seed, id) !== Number(variant) - 1
+    )
+      continue;
+    const mods =
+      build === 'forge'
+        ? [
+            'mass-driver',
+            'drop-forge',
+            'rapid',
+            'light',
+            'leech',
+            'airshot',
+            'kick',
+            'pierce',
+            'capacitor',
+          ]
+        : build === 'bank'
+          ? [
+              'ricochet',
+              'banker',
+              'rapid',
+              'light',
+              'leech',
+              'airshot',
+              'kick',
+              'pierce',
+              'capacitor',
+            ]
+          : build === 'portal'
+            ? [
+                'fold',
+                'rewire',
+                'rapid',
+                'light',
+                'leech',
+                'airshot',
+                'kick',
+                'pierce',
+                'capacitor',
+              ]
+            : [
+                'magnum',
+                'rapid',
+                'light',
+                'leech',
+                'airshot',
+                'kick',
+                'pierce',
+                'capacitor',
+                'reserve-cell',
+              ];
+    while (mods.length < stage) {
+      const mod = availableMods(mods).find(
+        (m) => !['mass-driver', 'cutting-torch', 'rail-spike', 'recall', 'vector'].includes(m.id),
+      );
+      if (!mod) break;
+      mods.push(mod.id);
+    }
+    return { ...testCheckpoint(seed, stage), mods };
   }
   return null;
 }

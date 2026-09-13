@@ -1184,7 +1184,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         // before dropping; waiting directly above it cannot reach the low exit.
         const shelf = g.terrain.find(
           (body) =>
-            body.bounds.min.y < 630 &&
+            body.bounds.min.y < 720 &&
             body.bounds.max.y > g.player.bounds.max.y - 5 &&
             Math.abs(body.bounds.min.y - g.player.bounds.max.y) < 5 &&
             p.x > body.bounds.min.x - 14 &&

@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## The Dropworks
+
+**The Dropworks** can appear in Cooling Works' second room. Two permanent stairways climb to a narrow central perch, with open firing gaps between platforms. Crack the two loaded shelves to drop their crates onto enemies below. The load shelves are optional: breaking both still leaves an ordinary jumping route across the room. Falling loads use physical collisions, and the broken support does not spawn solid rubble directly beneath them.
+
+**Dropworks Roof** can appear in Rooftops' second room. It adds two lifts in clear vertical shafts, a second Wallcrawler, more overhead shooters and the area's tougher enemy variants. Both rooms have three seeded rosters and mirrored layouts. Upper guards, flying enemies and Wallcrawlers keep the highest perch under pressure. The existing controls and compact HUD are unchanged. Daily ruleset 58 identifies the expanded room pool; existing saves remain compatible.
+
+[Test The Dropworks](https://caleb-guyer.github.io/recoil-foundry/?test=dropworks) or [test Dropworks Roof](https://caleb-guyer.github.io/recoil-foundry/?test=dropworks&area=rooftops). These start at full health with a legal, stage-appropriate Drop Forge build. Add `&build=standard`, `&build=bank` or `&build=portal` for another gun, `&variant=2` or `&variant=3` for another roster, or `&mirror=1` to reverse the room. **R** restarts the isolated test; ordinary saves, Daily records and Practice victories remain untouched.
+
+Checks cover every roster and mirror, supported crates, empty lift sweeps, traversal with no upgrades after both shelves collapse, real damaging crate drops, full lift cycles, pressure on the highest perch and normal-health combat clears in both rooms and orientations.
+
 ## Drop Forge
 
 **Drop Forge** requires Mass Driver. Gravity builds up to 75% extra direct impact damage while a steel ball descends. Shooting straight down from close range starts uncharged; a longer fall earns the bonus. Powerful falling rounds develop an amber rim and drive loose crates and small enemies downward with a heavy impact sound. The shove uses real collisions and capped velocity; bosses, heavy machines, frontal shields and armed volatile enemies retain their resistance.
