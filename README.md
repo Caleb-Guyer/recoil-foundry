@@ -10,6 +10,8 @@ A physics roguelike about staying in motion. Clear twenty stages, take optional 
 
 Countershot deflects one small hostile bullet on contact with your fire. After a successful deflection, release fire for **0.8 uninterrupted seconds** to recharge; a quiet click confirms it is ready. Pellets, bursts, rear shots, echoes, returning rounds and Cutting Torch share that one charge. Holding fire, rapid taps and queued burst rounds cannot recharge it. Missing does not spend the charge.
 
+A small hinged fin on the gun folds down when that charge is spent, rises as it recharges, and briefly glints when ready. Firing before the recharge finishes folds it down again. It fits both the ordinary gun and Cutting Torch, alongside Capacitor cells. Reduced motion uses distinct folded and ready poses with no glint. The cue follows simulation time, including pause and hitstop.
+
 Returned rounds retain their original damage, capped at **24**, with no damage multiplier. Reprisal still adds two enemy penetrations. Blades and large boss ammunition remain undeflectable; walls, props, enemies, cables and portals still take precedence. Pause and hitstop freeze recovery, and room entrances and retries restore the charge.
 
 [Test Countershot against the final boss](https://caleb-guyer.github.io/recoil-foundry/?test=countershot) with a full nineteen-upgrade gun. Add `&build=precision` or `&build=torch` for other builds, or `&mirror=1` for the mirrored arena. **R** retries. This test preserves ordinary saves, Daily results and earned Practice victories.

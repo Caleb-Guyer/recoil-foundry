@@ -56,6 +56,7 @@ export class BallisticsSystem {
   private rivetAt = new Map<number, number>();
   private volleys = 0;
   private counterRecovery = 0;
+  private counterChargedAt = -100;
   private stickAt = -1;
   constructor(game: Game) {
     this.game = game;
@@ -70,6 +71,7 @@ export class BallisticsSystem {
     this.pins.clear();
     this.rivetAt.clear();
     this.counterRecovery = 0;
+    this.counterChargedAt = -100;
     this.stickAt = -1;
   }
   charge(dt: number, held: boolean) {
@@ -81,6 +83,7 @@ export class BallisticsSystem {
       this.counterRecovery = Math.max(0, this.counterRecovery - dt);
       if (this.counterReady) {
         this.counterRecovery = 0;
+        this.counterChargedAt = this.game.time;
         if (this.has('countershot')) this.game.onSound('loaded');
       }
     }
@@ -423,6 +426,12 @@ export class BallisticsSystem {
   }
   get counterReady() {
     return this.counterRecovery <= 1e-8;
+  }
+  get counterCharge() {
+    return this.counterReady ? 1 : clamp(1 - this.counterRecovery / COUNTERSHOT_RECHARGE, 0, 1);
+  }
+  get counterGlint() {
+    return this.counterReady ? clamp(1 - (this.game.time - this.counterChargedAt) / 0.18, 0, 1) : 0;
   }
   reflectRound(b: Shot, bullet: Vec) {
     // Every source of interception shares this recovery, including beam pulses,

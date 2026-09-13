@@ -69,3 +69,49 @@ export function drawCapacitor(c: CanvasRenderingContext2D, g: Game) {
     c.fillRect(10 + i * 7, -8, 5 * charge, 2.5);
   }
 }
+
+export function drawCountershot(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  reduced: boolean,
+  mountY = -6,
+) {
+  if (!g.ballistics.has('countershot')) return;
+  // The hinge follows real recovery, not the gun's firing animation. Reduced
+  // motion retains distinct folded/ready poses and suppresses the ready glint.
+  const ready = g.ballistics.counterReady;
+  const charge = reduced ? Number(ready) : g.ballistics.counterCharge;
+  c.save();
+  c.fillStyle = '#40594d';
+  c.fillRect(22, mountY - 1, 5, 3);
+  c.translate(24, mountY);
+  c.rotate(-charge * 1.05);
+  c.fillStyle = ready ? '#a8bfad' : '#6b8275';
+  c.beginPath();
+  c.moveTo(-1, 0.5);
+  c.lineTo(7, -0.7);
+  c.lineTo(8, -2.7);
+  c.lineTo(0.5, -2.3);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = ready ? '#cee9d7' : '#92a999';
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(0.5, -2.3);
+  c.lineTo(8, -2.7);
+  c.stroke();
+  c.fillStyle = '#30473b';
+  c.beginPath();
+  c.arc(0, -0.5, 1.1, 0, Math.PI * 2);
+  c.fill();
+  if (!reduced && g.ballistics.counterGlint > 0) {
+    c.globalAlpha *= g.ballistics.counterGlint;
+    c.strokeStyle = '#f0fff4';
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(3, -2.4);
+    c.lineTo(8, -2.7);
+    c.stroke();
+  }
+  c.restore();
+}

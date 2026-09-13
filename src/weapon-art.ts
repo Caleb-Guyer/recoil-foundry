@@ -1,13 +1,13 @@
 import { drawTorchWeapon } from './torch-art.ts';
 import type { Game } from './game.ts';
 import { clamp } from './rules.ts';
-import { drawCapacitor } from './ballistics-art.ts';
+import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
 
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
 export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolean): void {
   if (g.torch.equipped) {
-    drawTorchWeapon(c, g);
+    drawTorchWeapon(c, g, reduced);
     return;
   }
   const heavy = g.mods.includes('magnum'),
@@ -194,6 +194,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(24, 5, 2, 2);
   }
   drawCapacitor(c, g);
+  drawCountershot(c, g, reduced, heavy ? -8 : -half - 1);
   if (flash > 0) {
     const tip = muzzle - barrelKick;
     c.globalAlpha *= flash * (reduced ? 0.28 : 0.9);

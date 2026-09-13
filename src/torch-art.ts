@@ -1,6 +1,6 @@
 import type { Game } from './game.ts';
 import { distance } from './rules.ts';
-import { drawCapacitor } from './ballistics-art.ts';
+import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
 
 export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
   const t = g.torch;
@@ -49,7 +49,7 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   c.restore();
 }
 
-export function drawTorchWeapon(c: CanvasRenderingContext2D, g: Game) {
+export function drawTorchWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
   c.save();
   c.fillStyle = '#719084';
   c.fillRect(5, -5, 22, 10);
@@ -76,5 +76,6 @@ export function drawTorchWeapon(c: CanvasRenderingContext2D, g: Game) {
     c.fillRect(10, -6, 10, 1);
   }
   drawCapacitor(c, g);
+  drawCountershot(c, g, reduced);
   c.restore();
 }
