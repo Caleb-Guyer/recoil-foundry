@@ -197,7 +197,14 @@ export class Sound {
       ].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
-    if (['shot', 'scatter', 'heavy', 'charged'].includes(kind)) {
+    if (kind === 'mass-shot') {
+      this.tone(82, 28, 0.2, 0.24);
+      this.tone(240, 85, 0.085, 0.055, 'triangle');
+      this.crack(0.13, 0.17, 680);
+    } else if (kind === 'mass-impact') {
+      this.tone(420, 180, 0.085, 0.045, 'triangle');
+      this.crack(0.035, 0.035, 1100);
+    } else if (['shot', 'scatter', 'heavy', 'charged'].includes(kind)) {
       const heavy = kind === 'heavy' || kind === 'charged',
         scatter = kind === 'scatter';
       this.tone(heavy ? 110 : 180, 40, heavy ? 0.15 : 0.09, 0.25);

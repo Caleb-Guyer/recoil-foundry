@@ -10,7 +10,8 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     drawTorchWeapon(c, g, reduced);
     return;
   }
-  const heavy = g.mods.includes('magnum'),
+  const massDriver = g.massDriver.equipped,
+    heavy = g.mods.includes('magnum') || massDriver,
     scatter = g.mods.includes('scatter'),
     burst = g.mods.includes('burst'),
     rapid = g.mods.includes('rapid'),
@@ -24,8 +25,8 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     motion = reduced ? 0.16 : 1,
     receiverKick = punch * (heavy ? 2.2 : 2.8) * motion,
     barrelKick = punch * (heavy ? 4.8 : 0.4) * motion,
-    muzzle = heavy ? 40 : scatter ? 35 : 31,
-    muzzleHalf = scatter ? 8.5 : heavy ? 5.5 : 4,
+    muzzle = massDriver ? 45 : heavy ? 40 : scatter ? 35 : 31,
+    muzzleHalf = massDriver ? 8 : scatter ? 8.5 : heavy ? 5.5 : 4,
     cycling = burst && shotAge < Math.max(0.13, g.gun.interval * 0.35),
     // Pause cancels queued rounds; the mechanism follows the last discharge.
     chamber = clamp(
@@ -87,7 +88,19 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(22, -4, muzzle - 23, 2);
   }
 
-  if (scatter) {
+  if (massDriver) {
+    c.fillStyle = '#617a7b';
+    c.fillRect(27, -7, 17, 14);
+    c.fillStyle = '#c2cfc3';
+    c.fillRect(27, -9, 15, 2);
+    c.fillRect(27, 7, 15, 2);
+    c.fillStyle = '#334749';
+    c.fillRect(39, -8, 6, 16);
+    c.fillStyle = '#cbd3c5';
+    c.fillRect(40, -8, 4, 2);
+    c.fillStyle = '#15282c';
+    c.fillRect(43, -6, 2, 12);
+  } else if (scatter) {
     c.fillStyle = '#718879';
     c.beginPath();
     c.moveTo(muzzle - 10, -4);

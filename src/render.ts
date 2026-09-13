@@ -55,6 +55,7 @@ import { squadLineEnd } from './squads.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
 import { EXTRACTION } from './escape-layout.ts';
 import { drawWeapon } from './weapon-art.ts';
+import { drawMassRound } from './mass-driver-art.ts';
 import { drawBallistics } from './ballistics-art.ts';
 import { drawFusions } from './fusions-art.ts';
 export class Renderer {
@@ -558,6 +559,10 @@ export class Renderer {
     drawBallistics(c, g, this.reduced);
     drawFusions(c, g, this.reduced);
     for (const s of g.shots) {
+      if (s.massDriver) {
+        drawMassRound(c, s, this.reduced);
+        continue;
+      }
       if (s.blade) {
         drawBlade(c, s, g.time, this.reduced);
         continue;

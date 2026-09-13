@@ -45,6 +45,7 @@ import {
   reclamationTestFromUrl,
   upgradeTestFromUrl,
   rerollTestFromUrl,
+  massDriverTestFromUrl,
   overtimeTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
@@ -141,6 +142,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  massDriverTestFromUrl(entryUrl) ??
   rerollTestFromUrl(entryUrl) ??
   countershotTestFromUrl(entryUrl) ??
   pressureTestFromUrl(entryUrl) ??
@@ -189,6 +191,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('play').innerHTML = 'Test upgrade reroll <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('MASSDRIVER-62-'))
+    $('play').innerHTML = 'Test Mass Driver <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.overtime)
     $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
@@ -266,6 +270,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.seed.startsWith('MASSDRIVER-62-'))
+    $('title-hint').textContent = 'Arc your shots. Launch the crates. R to restart test.';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
     $('title-hint').textContent = 'Choose a fusion. Full health. R to retry.';
   if (linkedRunTest?.seed.startsWith('HARPOONER-'))
@@ -449,6 +455,7 @@ game.onChange = () => {
 };
 function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'mass-driver': 'M8 12h14l8 8M8 36h14l8-8M27 24h5M49 24a8 8 0 1 0-16 0 8 8 0 0 0 16 0M38 20l4-1',
     heavy: 'M10 24h34M34 17l10 7-10 7',
     spread: 'M9 24h12M27 24h18M27 13l16-5M27 35l16 5',
     rapid: 'M8 24h8M24 24h8M40 24h8',

@@ -442,6 +442,13 @@ export const MODS = [
     description: 'Straighten a curved round: 35% faster, 30% more damage.',
     mark: 'afterburner',
   },
+  {
+    id: 'mass-driver',
+    name: 'Mass Driver',
+    description:
+      'Heavy steel balls arc, bounce and launch debris. Slower fire. A much bigger kick.',
+    mark: 'mass-driver',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -542,13 +549,22 @@ export const MOD_REQUIRES: Record<string, string> = {
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
 }
-export const TORCH_ALTERNATIVES = ['recall', 'vector', 'grindshot', 'rail-spike'] as const;
+export const TORCH_ALTERNATIVES = [
+  'recall',
+  'vector',
+  'grindshot',
+  'rail-spike',
+  'mass-driver',
+] as const;
 export function compatibleMod(mods: readonly string[], id: string) {
   return (
     !(
       id === 'cutting-torch' &&
       mods.some((m) => (TORCH_ALTERNATIVES as readonly string[]).includes(m))
-    ) && !(mods.includes('cutting-torch') && (TORCH_ALTERNATIVES as readonly string[]).includes(id))
+    ) &&
+    !(mods.includes('cutting-torch') && (TORCH_ALTERNATIVES as readonly string[]).includes(id)) &&
+    !(id === 'mass-driver' && mods.includes('rail-spike')) &&
+    !(id === 'rail-spike' && mods.includes('mass-driver'))
   );
 }
 export function availableMods(mods: readonly string[], includeSalvage = false): Mod[] {
@@ -768,6 +784,13 @@ export function getGun(mods: readonly string[]): Gun {
       case 'arc-coil':
         g.damage *= 0.9;
         break;
+      case 'mass-driver':
+        g.damage *= 2.4;
+        g.interval *= 2.5;
+        g.recoil *= 1.65;
+        g.projectileSpeed *= 0.6;
+        g.bounces += 4;
+        break;
     }
   // Apply spread after Scattershot so acquisition order cannot change the build.
   if (mods.includes('deadeye')) g.spread *= 0.5;
@@ -916,6 +939,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               m.id === 'thermal-runaway' ||
               m.id === 'tripwire' ||
               m.id === 'tension' ||
+              m.id === 'mass-driver' ||
               isSalvage(MOD_REQUIRES[m.id]),
           ))));
   const validDetours =

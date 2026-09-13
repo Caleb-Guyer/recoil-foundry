@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Mass Driver
+
+**Mass Driver** is a shared upgrade that fires heavy steel balls. It gives 2.4 times the damage, 2.5 times the shot delay, 65% more recoil, 40% slower rounds and four additional bounces. Gravity bends each flight; impacts lose speed, while moving decks transfer their motion into the rebound. A wider steel barrel, a deep report and short metallic impact sounds identify the gun without adding a control or HUD.
+
+Loose crates take reduced structural damage and receive momentum, letting you launch them into other enemies. Small enemies can be knocked off their perches. Heavy enemies, bosses, frontal shields and armed volatile enemies resist the shove. Each ball damages a given enemy only once; piercing passes through its allotted targets, and rebounds cannot repeatedly grind the same enemy or prop. Balls break after 3.2 seconds or when spent, with at most 48 active. Their swept hulls interact with real cover and props without adding bodies that could wedge under machinery.
+
+Bank shot, Banker, pellets, rear volleys, charged shots, fragments, Recall, Vector, echoes and portals retain their behavior. Shellshock balls detonate or stick on their terminal impact; surviving explosive balls also spend their payload when they expire. Cutting Torch and Rail spike are alternative gun transformations and cannot be offered alongside Mass Driver. Existing saves remain compatible; Daily ruleset 56 identifies the expanded upgrade pool.
+
+[Test Mass Driver](https://caleb-guyer.github.io/recoil-foundry/?test=mass-driver) starts a Furnace room at full health with six upgrades. Add `&build=bank`, `&build=volley`, `&build=shell` or `&build=portal` for other builds, `&room=train` for Freight Crossing, or `&room=boss` for the final fight. `&mirror=1` reverses the arena. **R** restarts the isolated test; normal saves, Daily records and earned Practice victories are preserved.
+
 ## Risky reroll
 
 Once per reward, **Reroll · −12 health** replaces every card with a different legal upgrade. It keeps path weighting, prerequisites, transformation exclusions and fusion rules. Rerolling a boss reward also gives up its salvage card. The button disables after use, at 12 health or less, or when there are too few fresh upgrades to replace the full set. Field repair cannot be rerolled. Daily Runs retain their single predetermined upgrade and have no reroll button.

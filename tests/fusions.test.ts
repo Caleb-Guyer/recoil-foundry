@@ -173,7 +173,7 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   const mods = ['deadeye'];
   for (;;) {
     const next = availableMods(mods).find(
-      (m) => !isFusion(m.id) && !['vector', 'afterburner'].includes(m.id),
+      (m) => !isFusion(m.id) && !['vector', 'afterburner', 'mass-driver'].includes(m.id),
     );
     if (!next) break;
     mods.push(next.id);
@@ -189,7 +189,10 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   const g = new Game();
   g.start(save.seed, save);
   g.openReward();
-  assert.deepEqual(new Set(g.offers.map((m) => m.id)), new Set(['rail-spike', 'vector']));
+  assert.deepEqual(
+    new Set(g.offers.map((m) => m.id)),
+    new Set(['rail-spike', 'vector', 'mass-driver']),
+  );
   let saved: Checkpoint | null = null;
   g.onCheckpoint = (s) => (saved = s);
   g.chooseMod('rail-spike');

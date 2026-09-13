@@ -548,6 +548,49 @@ export function rerollTestFromUrl(url: URL): Checkpoint | null {
     },
   };
 }
+export const MASS_DRIVER_TEST_BUILDS: Record<string, string[]> = {
+  base: ['mass-driver', 'rapid', 'light', 'leech', 'airshot', 'countershot'],
+  bank: ['mass-driver', 'ricochet', 'banker', 'light', 'leech', 'capacitor'],
+  volley: ['mass-driver', 'crossfire', 'scatter', 'afterimage', 'light', 'leech'],
+  shell: ['mass-driver', 'shellshock', 'fuse', 'blast-surf', 'light', 'leech'],
+  portal: ['mass-driver', 'fold', 'rewire', 'ricochet', 'light', 'leech'],
+};
+export function massDriverTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  let unexpected = false;
+  p.forEach((_, key) => {
+    if (!['test', 'build', 'room', 'mirror'].includes(key)) unexpected = true;
+  });
+  if (
+    p.get('test') !== 'mass-driver' ||
+    unexpected ||
+    ['test', 'build', 'room', 'mirror'].some((key) => p.getAll(key).length > 1) ||
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))
+  )
+    return null;
+  const build = p.get('build') ?? 'base',
+    room = p.get('room') ?? 'furnace';
+  if (
+    !Object.hasOwn(MASS_DRIVER_TEST_BUILDS, build) ||
+    !['furnace', 'boss', 'train'].includes(room)
+  )
+    return null;
+  const stage = room === 'boss' ? 19 : room === 'train' ? 13 : 6;
+  for (let i = 0; i < 4096; i++) {
+    const seed = `MASSDRIVER-62-${i}`;
+    const level = getLevel(seed, stage);
+    if (level.mirrored !== (p.get('mirror') === '1') || (room === 'train' && !level.crossing))
+      continue;
+    const mods = [...MASS_DRIVER_TEST_BUILDS[build]];
+    while (mods.length < stage) {
+      const mod = availableMods(mods).find((m) => !['cutting-torch', 'rail-spike'].includes(m.id));
+      if (!mod) break;
+      mods.push(mod.id);
+    }
+    return { ...testCheckpoint(seed, stage), mods };
+  }
+  return null;
+}
 export function upgradeTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

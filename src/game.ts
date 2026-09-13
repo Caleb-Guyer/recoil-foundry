@@ -1,4 +1,5 @@
 import { PressureSystem, type PressureVent } from './pressure.ts';
+import { MassDriverSystem, MASS_DRIVER, type MassFlight } from './mass-driver.ts';
 import { TripwireSystem } from './tripwire.ts';
 import { TorchSystem } from './torch.ts';
 import { GrindshotSystem } from './grindshot.ts';
@@ -195,6 +196,7 @@ export interface Shot {
   vector?: VectorFlight;
   angler?: AnglerFlight;
   tripwire?: number;
+  massDriver?: MassFlight;
 }
 export interface Particle {
   pos: Vec;
@@ -226,6 +228,7 @@ export class Game {
   crossing = new CrossingSystem(this);
   counterweights = new CounterweightSystem(this);
   pressure = new PressureSystem(this);
+  massDriver = new MassDriverSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
   portals = new PortalSystem(this);
@@ -388,6 +391,7 @@ export class Game {
       this.portalRequest = null;
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.massDriver.reset();
       this.arcs.reset();
       this.grind.reset();
       this.torch.reset();
@@ -499,6 +503,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.massDriver.reset();
     this.earnedSalvage = null;
     this.arcs.reset();
     this.grind.reset();
@@ -860,6 +865,7 @@ export class Game {
       this.hitStop = Math.max(0, this.hitStop - dt);
       return;
     }
+    this.massDriver.beforeStep(dt);
     this.time += dt;
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
@@ -1131,17 +1137,24 @@ export class Game {
       y: clamp(this.player.velocity.y - d.y * impulse, -21, 20),
     });
     this.salvage.launch(d, impulse);
-    this.feedback((this.grounded ? 2.2 : 3.8) * (charged ? 1.3 : 1) * (rail ? 1.5 : 1), d);
+    this.feedback(
+      (this.grounded ? 2.2 : 3.8) *
+        (charged ? 1.3 : 1) *
+        (rail ? 1.5 : this.massDriver.equipped ? 1.35 : 1),
+      d,
+    );
     this.onSound(
-      this.chargedFlash
-        ? 'charged'
-        : this.gun.shellshock
-          ? 'shell-shot'
-          : this.mods.includes('magnum')
-            ? 'heavy'
-            : this.mods.includes('scatter')
-              ? 'scatter'
-              : 'shot',
+      this.massDriver.equipped
+        ? 'mass-shot'
+        : this.chargedFlash
+          ? 'charged'
+          : this.gun.shellshock
+            ? 'shell-shot'
+            : this.mods.includes('magnum')
+              ? 'heavy'
+              : this.mods.includes('scatter')
+                ? 'scatter'
+                : 'shot',
     );
     const damage =
       this.gun.damage *
@@ -1173,7 +1186,11 @@ export class Game {
   }
   fireVolley(d: Vec, damage: number, charged: boolean, primary = true) {
     const pos = { x: this.player.position.x + d.x * 26, y: this.player.position.y - 3 + d.y * 26 };
-    const radius = this.mods.includes('magnum') ? 4 : 2.5;
+    const radius = this.massDriver.equipped
+      ? MASS_DRIVER.radius
+      : this.mods.includes('magnum')
+        ? 4
+        : 2.5;
     const spawn = this.lineEnd(
       { x: this.player.position.x, y: this.player.position.y - 3 },
       pos,
@@ -1336,6 +1353,7 @@ export class Game {
     };
     this.ballistics.prepare(shot);
     prepareVector(shot, this.mods);
+    this.massDriver.prepare(shot);
     this.shots.push(shot);
   }
   updateEnemy(e: Enemy, dt: number) {
@@ -1351,6 +1369,7 @@ export class Game {
     if (this.ballistics.pinned(e)) return;
     if (this.tethers.staggered(e)) return;
     if (this.pressure.staggered(e)) return;
+    if (this.massDriver.staggered(e)) return;
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *
@@ -1925,6 +1944,8 @@ export class Game {
     });
   }
   updateShots(dt: number) {
+    this.massDriver.update(dt);
+    if (this.mode !== 'playing') return;
     for (const s of [...this.shots]) updateRivalAmmo(this, s, dt);
     for (const s of this.shots) updateAnglerShot(this, s);
     for (const s of this.shots) this.ballistics.flight(s, dt);
@@ -1960,7 +1981,12 @@ export class Game {
         for (const e of this.enemies) if (e.crane && e.spawn <= 0) targets.push([e.crane.body]);
         if (s.friendly) {
           for (const e of this.enemies)
-            if (!s.hits.has(e.id) && !s.recall?.skip.has(e.id) && e.spawn <= 0)
+            if (
+              (s.massDriver || !s.hits.has(e.id)) &&
+              !s.massDriver?.penetrating.has(e.id) &&
+              !s.recall?.skip.has(e.id) &&
+              e.spawn <= 0
+            )
               targets.push([e.body, e]);
         } else {
           targets.push([this.player, undefined, true]);
@@ -1970,7 +1996,7 @@ export class Game {
         }
         for (const [body, enemy, player] of targets) {
           const h =
-            s.angler || s.tripwire !== undefined || this.counterweights.owns(body)
+            s.massDriver || s.angler || s.tripwire !== undefined || this.counterweights.owns(body)
               ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, body)
               : segmentBox(
                   s.pos,
@@ -2062,6 +2088,12 @@ export class Game {
           if (this.mode !== 'playing') return;
         } else if (nearest.enemy) {
           const e = nearest.enemy;
+          if (s.massDriver?.struck.has(e.id)) {
+            this.massDriver.bounce(s, nearest.normal, e.body, false);
+            if (!e.body.isStatic) remaining = 0;
+            continue;
+          }
+          s.massDriver?.struck.add(e.id);
           s.hits.add(e.id);
           // Use this segment's incoming direction, including after a bank, rather
           // than the player's current position or the shot's original origin.
@@ -2074,6 +2106,11 @@ export class Game {
             y: e.body.position.y - s.vel.y,
           });
           if (blocked) {
+            if (s.massDriver && !s.shell) {
+              this.massDriver.bounce(s, nearest.normal, e.body, false);
+              if (!e.body.isStatic) remaining = 0;
+              continue;
+            }
             this.demolition.impact(s, e.body);
             if (this.mode !== 'playing') return;
             s.life = 0;
@@ -2088,12 +2125,14 @@ export class Game {
           this.splitShot(s);
           this.arcs.hit(e, s);
           if (this.mode !== 'playing') return;
-          if (!e.body.isStatic)
+          if (s.massDriver) this.massDriver.hitEnemy(s, e, nearest.normal);
+          else if (!e.body.isStatic)
             Body.setVelocity(e.body, {
               x: e.body.velocity.x + s.vel.x * 0.12 * (isBoss(e.kind) ? 0.08 : 1),
               y: e.body.velocity.y + s.vel.y * 0.09 * (isBoss(e.kind) ? 0.08 : 1),
             });
           if (s.pierce > 0) {
+            s.massDriver?.penetrating.add(e.id);
             s.pierce--;
             const falloff =
               s.rail || (s.recall?.returning && this.ballistics.has('homecoming')) ? 1 : 0.8;
@@ -2102,6 +2141,9 @@ export class Game {
             const d = direction({ x: 0, y: 0 }, s.vel);
             s.pos.x += d.x;
             s.pos.y += d.y;
+          } else if (s.massDriver && !s.shell) {
+            this.massDriver.bounce(s, nearest.normal, e.body, false);
+            if (!e.body.isStatic) remaining = 0;
           } else if (this.ballistics.turn(s)) {
             const d = direction({ x: 0, y: 0 }, s.vel);
             s.pos.x += d.x;
@@ -2117,10 +2159,19 @@ export class Game {
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
+          const impactBody = nearest.prop?.body ?? nearest.body;
+          if (s.massDriver && impactBody && s.massDriver.surfaces.has(impactBody.id)) {
+            this.massDriver.bounce(s, nearest.normal, impactBody);
+            if (!impactBody.isStatic) remaining = 0;
+            continue;
+          }
+          if (impactBody) s.massDriver?.surfaces.add(impactBody.id);
           this.tripwires.impact(s, nearest.body, nearest.normal);
           this.counterweights.hit(nearest.body, s.pos, s.vel, s.damage);
           this.salvage.impact(s, nearest.prop?.body ?? nearest.body, nearest.normal);
-          if (nearest.prop)
+          if (nearest.prop && s.massDriver)
+            this.massDriver.hitProp(s, nearest.prop, nearest.normal);
+          else if (nearest.prop)
             this.props.hit(
               nearest.prop,
               !s.friendly && s.enemyAmmo?.kind === 'precision' ? 90 : s.damage,
@@ -2156,7 +2207,13 @@ export class Game {
               s.bounces = 0;
             else s.angler.banked = true;
           }
-          if (s.bounces > 0) {
+          if (s.massDriver) {
+            const alive = this.massDriver.bounce(s, nearest.normal, impactBody);
+            if (impactBody && !impactBody.isStatic) remaining = 0;
+            if (alive) redirectVector(s);
+            else this.grind.impact(s, nearest.body, nearest.normal);
+            if (this.mode !== 'playing') return;
+          } else if (s.bounces > 0) {
             const dot = s.vel.x * nearest.normal.x + s.vel.y * nearest.normal.y;
             s.vel.x -= 2 * dot * nearest.normal.x;
             s.vel.y -= 2 * dot * nearest.normal.y;
