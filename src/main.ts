@@ -1,3 +1,4 @@
+import { anglerTestFromUrl } from './practice.ts';
 import { vectorTestFromUrl } from './practice.ts';
 import { wallcrawlerTestFromUrl } from './practice.ts';
 import { counterweightTestFromUrl } from './practice.ts';
@@ -129,6 +130,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  anglerTestFromUrl(entryUrl) ??
   vectorTestFromUrl(entryUrl) ??
   counterweightTestFromUrl(entryUrl) ??
   wallcrawlerTestFromUrl(entryUrl) ??
@@ -194,6 +196,8 @@ function updateTitle() {
         : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('CRAWLER-54-'))
     $('play').innerHTML = 'Test the Wallcrawler <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('ANGLER-57-'))
+    $('play').innerHTML = 'Test the Angler <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'VECTOR-56')
     $('play').innerHTML = 'Test Vector rounds <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('BALANCE-55-'))

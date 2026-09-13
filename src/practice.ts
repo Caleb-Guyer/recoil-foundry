@@ -717,3 +717,34 @@ export function counterweightTestFromUrl(url: URL): Checkpoint | null {
   }
   return null;
 }
+
+export function anglerTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'angler' ||
+    ['area', 'mirror', 'build'].some((k) => p.getAll(k).length > 1) ||
+    ['daily', 'dv', 'seed', 'route', 'mode', 'layout', 'variant', 'formation', 'phase'].some((k) =>
+      p.has(k),
+    ) ||
+    (p.has('area') && !['furnace', 'rooftops'].includes(p.get('area')!)) ||
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!)) ||
+    (p.has('build') && !['standard', 'vector'].includes(p.get('build')!))
+  )
+    return null;
+  const stage = p.get('area') === 'rooftops' ? 17 : 5;
+  for (let i = 0; i < 1024; i++) {
+    const seed = 'ANGLER-57-' + i,
+      level = getLevel(seed, stage);
+    if (
+      level.mirrored !== (p.get('mirror') === '1') ||
+      !level.spawns.some((s) => s.kind === 'angler')
+    )
+      continue;
+    if (stage === 17 && !level.counterweights) continue;
+    const save = testCheckpoint(seed, stage);
+    if (p.get('build') === 'vector') save.mods.splice(0, 2, 'vector', 'afterburner');
+    return save;
+  }
+  return null;
+}

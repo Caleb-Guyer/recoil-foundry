@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Angler
+
+The **Angler** is a mobile ricochet gunner that begins appearing in Furnace. It traces a single bank off a real surface to reach around cover. Its thin, dashed warning shows both legs, then turns solid for the final 0.6 seconds of its 1.2-second tell. Once locked, the shot never corrects toward you. Step away from the outgoing line or put cover in its path.
+
+Break its chosen wall or tilt its chosen counterweight before the round banks to interrupt the attack. The Angler opens its armor for 1.25 seconds and takes 50% extra damage. Its body still collides normally. Rounds stop at crates, other enemies and intervening cover; Countershot can reflect them, and a portal redirects them without giving them another bank.
+
+Rooms contain at most one Angler. Furnace's introduction brings it out before the remaining enemies; later rooms combine it with existing enemies, elites and coordinated pairs. Rooftop Anglers fire faster, harder rounds and can appear among the counterweight platforms. Boss rooms and the other enemy introductions retain their own rosters.
+
+[Test the Angler in Furnace](https://caleb-guyer.github.io/recoil-foundry/?test=angler) or [on the rooftops](https://caleb-guyer.github.io/recoil-foundry/?test=angler&area=rooftops). Add `&mirror=1` to reverse the layout or `&build=vector` for Vector rounds and Afterburner. **R** retries with full health. These links preserve saves, Daily records and earned Practice victories.
+
 ## Vector rounds
 
 **Vector rounds** lets your mouse aim bend primary rounds in flight. Rounds travel 25% slower and keep their muzzle direction for 0.05 seconds, then can steer for 0.7 seconds through a total of 135 degrees. The cursor guides the shot; enemies do not attract it. Aim around a wall, or fire downward while airborne and curve those rounds toward an enemy. Cover, props, enemies and moving machinery still stop the actual flight path.
@@ -159,7 +169,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=50`). Version 50 adds Vector rounds and Afterburner and fixes train compression; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=51`). Version 51 adds the Angler and its seeded encounters; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

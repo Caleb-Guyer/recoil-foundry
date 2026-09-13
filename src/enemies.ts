@@ -11,6 +11,7 @@ export const VOLATILE_TELL = 0.9;
 export const VOLATILE_RADIUS = 135;
 
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
+  angler: { w: 30, h: 32, hp: 80 },
   wallcrawler: { w: 28, h: 28, hp: 74 },
   sapper: { w: 30, h: 32, hp: 90 },
   borer: { w: 30, h: 32, hp: 96 },

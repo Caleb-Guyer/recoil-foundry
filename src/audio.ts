@@ -175,6 +175,13 @@ export class Sound {
       this.tone(260, 55, 0.14, 0.065, 'triangle');
     } else if (kind === 'ram') {
       this.tone(120, 40, 0.1, 0.07, 'triangle');
+    } else if (kind === 'angler-lock') {
+      this.tone(430, 610, 0.14, 0.025, 'triangle');
+    } else if (kind === 'angler-fire') {
+      this.tone(320, 110, 0.1, 0.035, 'triangle');
+      this.crack(0.06, 0.02, 1700);
+    } else if (kind === 'angler-break') {
+      this.tone(260, 75, 0.18, 0.03, 'triangle');
     } else if (kind === 'crawler-lock') {
       this.tone(650, 870, 0.13, 0.025, 'triangle');
     } else if (kind === 'counterweight-stop') {

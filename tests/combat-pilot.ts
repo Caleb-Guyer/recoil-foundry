@@ -1,4 +1,5 @@
 import { CRAWLER, crawlerSpeed } from '../src/wallcrawler.ts';
+import { ANGLER, anglerSpeed, anglerSurfaceValid, anglerWarningPoints } from '../src/angler.ts';
 import { RIVAL_GRIND, grindPlanValid } from '../src/interceptor-grindshot.ts';
 import type { Enemy, Game, Input } from '../src/game.ts';
 import { attackAngles, bossMuzzle, flakAngles } from '../src/enemies.ts';
@@ -41,8 +42,39 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
     }));
   // Multiple enemies can commit together. Read all ordinary locked warnings,
   // including the Loader's marked anti-air fan, before choosing a trajectory.
+  for (const s of g.shots) {
+    if (!s.angler || s.friendly || s.angler.banked || !anglerSurfaceValid(g, s.angler.plan))
+      continue;
+    const plan = s.angler.plan,
+      speed = Math.hypot(s.vel.x, s.vel.y);
+    bolts.push({
+      p: plan.bounce,
+      v: { x: plan.outgoing.x * speed, y: plan.outgoing.y * speed },
+      delay: distance(s.pos, plan.bounce) / speed,
+      radius: s.radius,
+      life: distance(plan.bounce, plan.end) / speed,
+    });
+  }
   for (const enemy of g.enemies) {
     if (enemy.spawn > 0 || enemy.squad || enemy.elite === 'volatile') continue;
+    if (enemy.angler && enemy.state === 'windup' && enemy.timer <= ANGLER.lock) {
+      const points = anglerWarningPoints(g, enemy),
+        speed = anglerSpeed(g);
+      let delay = enemy.timer * 60;
+      for (let i = 1; i < points.length; i++) {
+        const d = direction(points[i - 1], points[i]),
+          life = distance(points[i - 1], points[i]) / speed;
+        bolts.push({
+          p: points[i - 1],
+          v: { x: d.x * speed, y: d.y * speed },
+          delay,
+          radius: ANGLER.radius,
+          life,
+        });
+        delay += life;
+      }
+      continue;
+    }
     const crawler = enemy.crawler;
     if (
       crawler &&

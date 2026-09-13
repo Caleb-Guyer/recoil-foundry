@@ -38,6 +38,7 @@ import { PROP_STATS } from './props.ts';
 import { drawCargoCables } from './cargo-art.ts';
 import { drawConveyors } from './conveyor-art.ts';
 import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
+import { drawAngler } from './angler-art.ts';
 import { drawWallcrawler } from './wallcrawler-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
 import { drawHarpooner } from './harpooner-art.ts';
@@ -206,6 +207,10 @@ export class Renderer {
     for (const e of g.enemies) {
       if (e.kind === 'borer' || e.kind === 'sifter' || e.kind === 'sorter') {
         drawReclamationEnemy(c, g, e, this.reduced);
+        continue;
+      }
+      if (e.kind === 'angler') {
+        drawAngler(c, g, e, this.reduced);
         continue;
       }
       if (e.kind === 'wallcrawler') {

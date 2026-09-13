@@ -26,6 +26,11 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
       level.spawns.filter((s) => s.kind !== 'harpooner').map((s) => ({ ...s })),
     ];
   const planned = squadSpawns(level.spawns, level, seed, stage);
+  if (level.anglerIntro)
+    return [
+      planned.filter((s) => s.kind === 'angler').map((s) => ({ ...s })),
+      planned.filter((s) => s.kind !== 'angler').map((s) => ({ ...s })),
+    ];
   if (level.crawlerIntro)
     return [
       planned.filter((s) => s.kind === 'wallcrawler').map((s) => ({ ...s })),
@@ -65,6 +70,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           scrapper: 8,
           harpooner: 9,
           sapper: 8,
+          angler: 7,
           wallcrawler: 8,
           condenser: 0,
           turbine: 0,
@@ -121,7 +127,13 @@ export class ReinforcementSystem {
       // checks wait or relocate before opening a door through a living body.
       final.push(
         ...opening
-          .filter((s) => s.kind !== 'harpooner' && s.kind !== 'sapper' && s.kind !== 'wallcrawler')
+          .filter(
+            (s) =>
+              s.kind !== 'harpooner' &&
+              s.kind !== 'sapper' &&
+              s.kind !== 'wallcrawler' &&
+              s.kind !== 'angler',
+          )
           .slice(0, 3)
           .map(({ elite: _elite, squad: _squad, ...s }) => ({ ...s })),
       );
@@ -187,7 +199,10 @@ export class ReinforcementSystem {
     if (this.phase === 'opening') {
       if (g.level.freight) return;
       if (
-        (g.level.harpoonIntro || g.level.sapperIntro || g.level.crawlerIntro) &&
+        (g.level.harpoonIntro ||
+          g.level.sapperIntro ||
+          g.level.crawlerIntro ||
+          g.level.anglerIntro) &&
         g.enemies.length > 0
       )
         return;

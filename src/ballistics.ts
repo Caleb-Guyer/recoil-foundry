@@ -407,6 +407,10 @@ export class BallisticsSystem {
       b.vel = { x: d.x * 24, y: d.y * 24 };
       b.friendly = true;
       b.enemyAmmo = undefined;
+      if (b.angler) {
+        b.angler = undefined;
+        b.bounces = 0;
+      }
       b.fragment = true;
       b.reflected = true;
       b.reflectedAt = g.time;

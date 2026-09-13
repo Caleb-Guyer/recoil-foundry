@@ -6,6 +6,13 @@ import { SalvageEvolutionSystem } from './salvage-evolutions.ts';
 import { BossSalvageSystem } from './boss-salvage.ts';
 import { ArcCoilSystem } from './arc-coil.ts';
 import { DestructionSystem } from './destruction.ts';
+import {
+  createAngler,
+  updateAngler,
+  updateAnglerShot,
+  type AnglerRig,
+  type AnglerFlight,
+} from './angler.ts';
 import { createWallcrawler, updateWallcrawler } from './wallcrawler.ts';
 import type { CrawlerRig } from './wallcrawler.ts';
 import { SapperSystem, createSapper } from './sapper.ts';
@@ -144,6 +151,7 @@ export interface Enemy {
   scrapper?: ScrapperRig;
   harpoon?: HarpoonRig;
   sapper?: SapperRig;
+  angler?: AnglerRig;
   crawler?: CrawlerRig;
   sorter?: SorterRig;
 }
@@ -180,6 +188,7 @@ export interface Shot {
   rail?: boolean;
   orbitReleased?: boolean;
   vector?: VectorFlight;
+  angler?: AnglerFlight;
 }
 export interface Particle {
   pos: Vec;
@@ -772,6 +781,7 @@ export class Game {
     if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
     if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
+    if (kind === 'angler') enemy.angler = createAngler();
     if (kind === 'sapper') enemy.sapper = createSapper();
     if (kind === 'wallcrawler') enemy.crawler = createWallcrawler(this, enemy);
     if (kind === 'harpooner') {
@@ -1297,6 +1307,7 @@ export class Game {
       else if (e.kind === 'scrapper') updateScrapper(this, e);
       else if (e.kind === 'harpooner') this.harpoons.updateEnemy(e);
       else if (e.kind === 'sapper') this.sappers.updateEnemy(e);
+      else if (e.kind === 'angler') updateAngler(this, e, dt);
       else if (e.kind === 'wallcrawler') updateWallcrawler(this, e, dt);
       else if (e.kind === 'sniper') this.updateSniper(e);
       else if (e.kind === 'boss') this.updateBoss(e);
@@ -1339,7 +1350,8 @@ export class Game {
         (e.kind === 'scrapper' ||
           e.kind === 'harpooner' ||
           e.kind === 'sapper' ||
-          e.kind === 'wallcrawler') &&
+          e.kind === 'wallcrawler' ||
+          e.kind === 'angler') &&
         e.state === 'recover'
       ) &&
       (e.kind !== 'press' || e.state === 'rush') &&
@@ -1843,10 +1855,12 @@ export class Game {
   }
   updateShots(dt: number) {
     for (const s of [...this.shots]) updateRivalAmmo(this, s, dt);
+    for (const s of this.shots) updateAnglerShot(this, s);
     for (const s of this.shots) this.ballistics.flight(s, dt);
     for (const s of this.shots) steerVector(s, this.aim, dt);
     this.ballistics.reflect(dt);
     for (const s of [...this.shots]) {
+      updateAnglerShot(this, s);
       if (s.reflectedAt === this.time) continue;
       s.life -= dt;
       s.prev = { ...s.pos };
@@ -1883,18 +1897,21 @@ export class Game {
               if (e.id !== s.allyBlock && e.spawn <= 0) targets.push([e.body]);
         }
         for (const [body, enemy, player] of targets) {
-          const h = this.counterweights.owns(body)
-            ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, body)
-            : segmentBox(
-                s.pos,
-                end,
-                { x: body.bounds.min.x - s.radius, y: body.bounds.min.y - s.radius },
-                { x: body.bounds.max.x + s.radius, y: body.bounds.max.y + s.radius },
-              );
+          const h =
+            s.angler || this.counterweights.owns(body)
+              ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, body)
+              : segmentBox(
+                  s.pos,
+                  end,
+                  { x: body.bounds.min.x - s.radius, y: body.bounds.min.y - s.radius },
+                  { x: body.bounds.max.x + s.radius, y: body.bounds.max.y + s.radius },
+                );
           if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, enemy, player, body };
         }
         for (const prop of this.props.items) {
-          const h = traceProp(prop, s.pos, end, s.radius);
+          const h = s.angler
+            ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, prop.body)
+            : traceProp(prop, s.pos, end, s.radius);
           if (h && (!nearest || h.t < nearest.t)) nearest = { ...h, prop };
         }
         const cable = this.cargo.trace(s.pos, end, s.radius);
@@ -1913,6 +1930,10 @@ export class Game {
           s.prev = { ...s.pos };
           s.vel = portalVector(s.vel, passage.entry, passage.exit);
           redirectVector(s);
+          if (s.angler) {
+            s.angler = undefined;
+            s.bounces = 0;
+          }
           s.waypoints = undefined;
           if (s.trace) s.trace.points = [{ ...s.pos }];
           remaining -= segment * passage.t;
@@ -2045,6 +2066,15 @@ export class Game {
           );
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);
           this.splitShot(s, nearest.normal);
+          if (s.angler && !s.friendly) {
+            if (
+              nearest.body !== s.angler.plan.body ||
+              s.angler.banked ||
+              distance(s.pos, s.angler.plan.bounce) > 3
+            )
+              s.bounces = 0;
+            else s.angler.banked = true;
+          }
           if (s.bounces > 0) {
             const dot = s.vel.x * nearest.normal.x + s.vel.y * nearest.normal.y;
             s.vel.x -= 2 * dot * nearest.normal.x;
@@ -2136,6 +2166,7 @@ export class Game {
       this.burst({ x: e.body.position.x + e.facing * 19, y: e.body.position.y }, 4, '#e7d6ac', 2);
       this.onSound('bank');
     }
+    if (e.angler && e.angler.exposed > 0) damage *= 1.5;
     if (e.crawler && e.crawler.vulnerable > 0) damage *= 1.5;
     if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
     if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.25 : 0.4;

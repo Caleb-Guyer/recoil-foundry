@@ -1058,7 +1058,10 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         e?.kind === 'boss' ||
         e?.kind === 'condenser' ||
         e?.kind === 'turbine' ||
-        e?.kind === 'interceptor'
+        e?.kind === 'interceptor' ||
+        // Slow shells need the full visible tell to start their approach. Direct
+        // rounds can keep firing until the bank locks. Neither reads future aim.
+        (e?.kind === 'angler' && e.state === 'windup' && e.timer <= (g.gun.shellshock ? 1.2 : 0.6))
       ) {
         const choice = dodgePilot(g, e);
         move = Number(choice.right) - Number(choice.left);
@@ -1188,7 +1191,13 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
           : Math.abs(p.x - lowerDropX) > 8
             ? Math.sign(lowerDropX - p.x)
             : 0;
-        jump = false;
+        // Reaching the lower lane can still leave an ordinary obstacle before
+        // the fork. Jump that obstacle, then walk beneath the actual exit steps.
+        jump =
+          directExitReady &&
+          p.x < 1740 &&
+          g.grounded &&
+          Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
         firing = false;
       }
       if (g.clear && takeHighRoad && p.x > 1600) {
