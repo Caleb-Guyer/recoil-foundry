@@ -549,6 +549,7 @@ export function rerollTestFromUrl(url: URL): Checkpoint | null {
   };
 }
 export const MASS_DRIVER_TEST_BUILDS: Record<string, string[]> = {
+  forge: ['mass-driver', 'drop-forge', 'rapid', 'light', 'leech', 'airshot'],
   base: ['mass-driver', 'rapid', 'light', 'leech', 'airshot', 'countershot'],
   bank: ['mass-driver', 'ricochet', 'banker', 'light', 'leech', 'capacitor'],
   volley: ['mass-driver', 'crossfire', 'scatter', 'afterimage', 'light', 'leech'],

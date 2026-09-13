@@ -201,6 +201,9 @@ export class Sound {
       this.tone(82, 28, 0.2, 0.24);
       this.tone(240, 85, 0.085, 0.055, 'triangle');
       this.crack(0.13, 0.17, 680);
+    } else if (kind === 'forge-impact') {
+      this.tone(130, 38, 0.12, 0.09, 'triangle');
+      this.crack(0.055, 0.06, 720);
     } else if (kind === 'mass-impact') {
       this.tone(420, 180, 0.085, 0.045, 'triangle');
       this.crack(0.035, 0.035, 1100);

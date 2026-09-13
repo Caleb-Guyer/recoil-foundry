@@ -1958,6 +1958,7 @@ export class Game {
       s.prev = { ...s.pos };
       let remaining = dt * 60;
       for (let attempt = 0; attempt < 4 && remaining > 0.001 && s.life > 0; attempt++) {
+        this.massDriver.heading(s);
         const waypoint = s.waypoints?.[0];
         const speed = Math.hypot(s.vel.x, s.vel.y);
         const segment =
@@ -2030,6 +2031,7 @@ export class Game {
           s.pos = { ...passage.pos };
           s.prev = { ...s.pos };
           s.vel = portalVector(s.vel, passage.entry, passage.exit);
+          this.massDriver.redirect(s);
           redirectVector(s);
           if (s.angler) {
             s.angler = undefined;
@@ -2065,6 +2067,7 @@ export class Game {
         recordShotTrace(s.trace, s.pos);
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
+        const impactDamage = this.massDriver.impactDamage(s);
         if (nearest.caught) {
           this.fusions.catch(s);
           s.life = 0;
@@ -2075,13 +2078,13 @@ export class Game {
           this.demolition.impact(s);
           if (this.mode !== 'playing') return;
         } else if (nearest.cable) {
-          this.cargo.cut(nearest.cable, s.damage);
+          this.cargo.cut(nearest.cable, impactDamage);
           rivalImpact(this, s);
           s.life = 0;
           this.demolition.impact(s);
           if (this.mode !== 'playing') return;
         } else if (nearest.anchor) {
-          this.harpoons.hitAnchor(nearest.anchor, s.damage);
+          this.harpoons.hitAnchor(nearest.anchor, impactDamage);
           this.splitShot(s, nearest.normal);
           s.life = 0;
           this.demolition.impact(s);
@@ -2098,7 +2101,7 @@ export class Game {
           // Use this segment's incoming direction, including after a bank, rather
           // than the player's current position or the shot's original origin.
           const damage =
-            s.damage *
+            impactDamage *
             this.ballistics.fracture(e, s) *
             (this.gun.execute && s.friendly && !s.fragment && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
           const blocked = this.hitEnemy(e, damage, {
@@ -2167,7 +2170,7 @@ export class Game {
           }
           if (impactBody) s.massDriver?.surfaces.add(impactBody.id);
           this.tripwires.impact(s, nearest.body, nearest.normal);
-          this.counterweights.hit(nearest.body, s.pos, s.vel, s.damage);
+          this.counterweights.hit(nearest.body, s.pos, s.vel, impactDamage);
           this.salvage.impact(s, nearest.prop?.body ?? nearest.body, nearest.normal);
           if (nearest.prop && s.massDriver)
             this.massDriver.hitProp(s, nearest.prop, nearest.normal);
@@ -2190,10 +2193,10 @@ export class Game {
             s.pos.y += d.y;
             continue;
           }
-          this.breaches.hitBody(nearest.body, s.damage, s.vel);
+          this.breaches.hitBody(nearest.body, impactDamage, s.vel);
           this.destruction.hitBody(
             nearest.body,
-            !s.friendly && s.enemyAmmo?.kind === 'precision' ? 90 : s.damage,
+            !s.friendly && s.enemyAmmo?.kind === 'precision' ? 90 : impactDamage,
             s.vel,
           );
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);

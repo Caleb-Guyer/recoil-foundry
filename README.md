@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Drop Forge
+
+**Drop Forge** requires Mass Driver. Gravity builds up to 75% extra direct impact damage while a steel ball descends. Shooting straight down from close range starts uncharged; a longer fall earns the bonus. Powerful falling rounds develop an amber rim and drive loose crates and small enemies downward with a heavy impact sound. The shove uses real collisions and capped velocity; bosses, heavy machines, frontal shields and armed volatile enemies retain their resistance.
+
+Rising shots lose the bonus. Banks, portals and Orbit releases start a fresh fall. Damage is calculated at contact, so the bonus never compounds into Banker, piercing, fragments, arcs or explosive payloads. The ordinary damage, penetration and shell rules still apply. Reduced motion uses a steady amber outline without the soft glow. No control or HUD element is added. Existing saves remain compatible; Daily ruleset 57 identifies the new pool.
+
+[Test Drop Forge](https://caleb-guyer.github.io/recoil-foundry/?test=mass-driver&build=forge) starts a Furnace encounter with the cannon and follow-up equipped. Add `&room=train` or `&room=boss` for those encounters, or `&mirror=1` to reverse the layout. **R** retries; ordinary saves, Daily records and Practice unlocks are preserved.
+
 ## Mass Driver
 
 **Mass Driver** is a shared upgrade that fires heavy steel balls. It gives 2.4 times the damage, 2.5 times the shot delay, 65% more recoil, 40% slower rounds and four additional bounces. Gravity bends each flight; impacts lose speed, while moving decks transfer their motion into the rebound. A wider steel barrel, a deep report and short metallic impact sounds identify the gun without adding a control or HUD.

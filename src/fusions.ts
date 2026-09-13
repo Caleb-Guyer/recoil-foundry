@@ -101,6 +101,7 @@ export class FusionSystem {
       s.pos = this.position(round);
       s.prev = { ...s.pos };
       s.vel = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+      g.massDriver.redirect(s);
       s.id = ++g.id;
       s.life = 1.4;
       if (s.trace) s.trace.points = [{ ...s.pos }];

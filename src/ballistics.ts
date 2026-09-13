@@ -250,6 +250,7 @@ export class BallisticsSystem {
         s.pos = g.lineEnd(echo.origin, point(s.pos), s.radius);
         s.prev = { ...s.pos };
         s.vel = rotate(s.vel);
+        g.massDriver.redirect(s);
         s.waypoints = s.waypoints?.map(point);
         s.damage *= 0.6;
         if (s.shell) s.shell.damage *= 0.6;

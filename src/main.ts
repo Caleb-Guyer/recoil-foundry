@@ -192,7 +192,9 @@ function updateTitle() {
   if (linkedRunTest?.seed === 'REROLL-61')
     $('play').innerHTML = 'Test upgrade reroll <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('MASSDRIVER-62-'))
-    $('play').innerHTML = 'Test Mass Driver <span aria-hidden="true">↗</span>';
+    $('play').innerHTML =
+      (entryUrl.searchParams.get('build') === 'forge' ? 'Test Drop Forge' : 'Test Mass Driver') +
+      ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.overtime)
     $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
@@ -271,7 +273,10 @@ function updateTitle() {
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
   if (linkedRunTest?.seed.startsWith('MASSDRIVER-62-'))
-    $('title-hint').textContent = 'Arc your shots. Launch the crates. R to restart test.';
+    $('title-hint').textContent =
+      entryUrl.searchParams.get('build') === 'forge'
+        ? 'Get above them. Let the shots fall. R to restart test.'
+        : 'Arc your shots. Launch the crates. R to restart test.';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
     $('title-hint').textContent = 'Choose a fusion. Full health. R to retry.';
   if (linkedRunTest?.seed.startsWith('HARPOONER-'))
@@ -455,6 +460,8 @@ game.onChange = () => {
 };
 function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'drop-forge':
+      'M28 6v8M19 10l2 7M37 10l-2 7M35 24a7 7 0 1 0-14 0 7 7 0 0 0 14 0M17 39h22M28 34v5M13 32l5 4M43 32l-5 4',
     'mass-driver': 'M8 12h14l8 8M8 36h14l8-8M27 24h5M49 24a8 8 0 1 0-16 0 8 8 0 0 0 16 0M38 20l4-1',
     heavy: 'M10 24h34M34 17l10 7-10 7',
     spread: 'M9 24h12M27 24h18M27 13l16-5M27 35l16 5',

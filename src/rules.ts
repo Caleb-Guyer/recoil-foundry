@@ -449,6 +449,13 @@ export const MODS = [
       'Heavy steel balls arc, bounce and launch debris. Slower fire. A much bigger kick.',
     mark: 'mass-driver',
   },
+  {
+    id: 'drop-forge',
+    name: 'Drop Forge',
+    description:
+      'Falling steel balls build up to 75% more impact damage and slam light targets down.',
+    mark: 'drop-forge',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -513,6 +520,7 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
 export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  'drop-forge': 'mass-driver',
   tension: 'tripwire',
   'thermal-runaway': 'cutting-torch',
   afterburner: 'vector',
@@ -940,6 +948,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               m.id === 'tripwire' ||
               m.id === 'tension' ||
               m.id === 'mass-driver' ||
+              m.id === 'drop-forge' ||
               isSalvage(MOD_REQUIRES[m.id]),
           ))));
   const validDetours =

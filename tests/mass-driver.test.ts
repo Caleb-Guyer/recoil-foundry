@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Enemy, type Input, type Shot } from '../src/game.ts';
-import { MASS_DRIVER } from '../src/mass-driver.ts';
+import { MASS_DRIVER, DROP_FORGE, dropForgePower } from '../src/mass-driver.ts';
 import {
   availableMods,
   getGun,
@@ -530,8 +530,8 @@ test('dense balls and launched debris cannot jam the train against the boundary'
     assert(g.shots.filter((s) => s.massDriver).length <= MASS_DRIVER.limit);
   }
 });
-test('base, bank and shell builds clear both real test-room mirrors with normal health and ordinary inputs', () => {
-  for (const build of ['base', 'bank', 'shell'])
+test('base, forge, bank and shell builds clear both real test-room mirrors with normal health and ordinary inputs', () => {
+  for (const build of ['base', 'forge', 'bank', 'shell'])
     for (const mirror of [0, 1]) {
       const g = new Game();
       g.startTest(
@@ -593,4 +593,276 @@ test('base, bank and shell builds clear both real test-room mirrors with normal 
         JSON.stringify({ build, mirror, hp: g.hp, remaining: g.enemies.length }),
       );
     }
+});
+
+const forgedMods = ['mass-driver', 'drop-forge'];
+function fallingBall(g: Game, y = 100, extra: Partial<Shot> = {}) {
+  g.engine.gravity.y = 1;
+  return ball(g, { pos: { x: 500, y }, vel: { x: 0, y: 12 }, ...extra });
+}
+
+test('Drop Forge requires Mass Driver across every path and survives rewards, saves and isolated test links', () => {
+  for (const path of [[], ['deadeye'], ['crossfire'], ['shellshock']]) {
+    assert(!availableMods(path).some((m) => m.id === 'drop-forge'));
+    const parent = [...path, 'mass-driver'];
+    assert(availableMods(parent).some((m) => m.id === 'drop-forge'));
+    assert(validBuild([...parent, 'drop-forge']));
+    assert(!validBuild([...path, 'drop-forge']));
+    assert(!validBuild([...path, 'drop-forge', 'mass-driver']));
+    assert.deepEqual(getGun(parent), getGun([...parent, 'drop-forge']));
+    let offered = false;
+    for (let i = 0; i < 100; i++)
+      offered ||= rewardMods(parent, 3, seeded(`forge-${i}`)).some((m) => m.id === 'drop-forge');
+    assert(offered);
+  }
+  const save = massDriverTestFromUrl(new URL('https://test/?test=mass-driver&build=forge'))!;
+  assert(loadCheckpoint(save));
+  assert(save.mods.includes('drop-forge'));
+  const g = new Game();
+  g.start(save.seed, save);
+  g.fire();
+  assert(g.shots.some((s) => s.massDriver?.forge));
+});
+
+test('Drop Forge earns capped damage from gravity, never muzzle speed or time spent rising', () => {
+  const g = fixture(forgedMods),
+    s = fallingBall(g);
+  assert.equal(dropForgePower(s), 0);
+  const damage = s.damage;
+  shots(g, 9);
+  const partial = dropForgePower(s);
+  assert(partial > 0 && partial < 1);
+  shots(g, 9);
+  near(dropForgePower(s), 1);
+  near(g.massDriver.impactDamage(s), damage * 1.75);
+  assert.equal(s.damage, damage);
+  shots(g, 4);
+  near(g.massDriver.impactDamage(s), damage * 1.75);
+  const fast = fixture(forgedMods),
+    immediate = ball(fast, { vel: { x: 0, y: 38 } });
+  shots(fast, 5);
+  assert.equal(dropForgePower(immediate), 0, 'muzzle speed with no gravity earns nothing');
+  const guided = fixture([...forgedMods, 'vector', 'afterburner']);
+  guided.aim = { x: 800, y: 2000 };
+  const steered = ball(guided, { pos: { x: 800, y: 100 }, vel: { x: 18, y: 0 } });
+  shots(guided, 25);
+  assert(steered.vector?.boosted);
+  assert(steered.vel.y > 12);
+  assert.equal(dropForgePower(steered), 0, 'steering and Afterburner are not gravity');
+  const up = fixture(forgedMods),
+    rising = fallingBall(up, 400, { vel: { x: 0, y: -8 } });
+  shots(up, 20);
+  assert(rising.vel.y < 0);
+  assert.equal(dropForgePower(rising), 0);
+  shots(up, 15);
+  assert(rising.vel.y > 0);
+  assert(rising.massDriver!.forge!.gravity < 2, 'the ascent cannot preload a descent');
+});
+
+test('real falling impacts reward height, preserve base payload and cannot hit one enemy twice', () => {
+  const hits: number[] = [];
+  for (const [mods, height] of [
+    [['mass-driver'], 100],
+    [forgedMods, 100],
+    [forgedMods, 450],
+  ] as const) {
+    const g = fixture([...mods]),
+      e = target(g, 'runner', 500, 500);
+    const s = fallingBall(g, height),
+      damage = s.damage;
+    for (let i = 0; i < 40 && e.hp === e.maxHp; i++) shots(g);
+    hits.push(e.maxHp - e.hp);
+    assert(e.hp < e.maxHp);
+    assert.equal(s.damage, damage);
+    assert.equal(s.bounces, 3);
+    assert.equal(dropForgePower(s), 0);
+    const hp = e.hp;
+    s.pos = { x: 500, y: e.body.position.y - 30 };
+    s.vel = { x: 0, y: 18 };
+    shots(g);
+    assert.equal(e.hp, hp);
+  }
+  near(hits[1] / hits[0], 1.75);
+  assert(hits[2] > hits[0] && hits[2] < hits[1]);
+});
+
+test('forged slams drive crates and small enemies down through ordinary physics with bounded velocity', () => {
+  for (const kind of ['crate', 'shooter'] as const) {
+    const speeds: number[] = [];
+    for (const mods of [['mass-driver'], forgedMods]) {
+      const g = fixture(mods);
+      const actor = kind === 'crate' ? g.props.spawn('crate', 500, 500) : target(g, kind, 500, 500);
+      if (kind === 'shooter') Body.setStatic(actor.body, true);
+      const s = fallingBall(g);
+      for (let i = 0; i < 40 && s.bounces === 4; i++) shots(g);
+      speeds.push(actor.body.velocity.y);
+      assert(!actor.body.isStatic);
+      assert(actor.body.velocity.y > 0 && actor.body.velocity.y <= 18);
+      assert.equal(actor.body.position.y, 500, 'impact changes velocity, never teleports the hull');
+      g.shots = [];
+      for (let i = 0; i < 60; i++) {
+        g.time += dt;
+        g.props.beforeStep();
+        Engine.update(g.engine, 1000 / 60);
+        g.props.afterStep(dt);
+      }
+      assert(actor.body.position.y > 500 && actor.body.bounds.max.y <= 741);
+    }
+    assert(speeds[1] > speeds[0], kind);
+  }
+});
+
+test('Drop Forge respects every boss and heavy enemy while leaving their armor and attacks intact', () => {
+  for (const kind of [
+    'loader',
+    'crane',
+    'press',
+    'kiln',
+    'condenser',
+    'turbine',
+    'sorter',
+    'boss',
+    'interceptor',
+    'charger',
+    'scrapper',
+    'harpooner',
+    'borer',
+  ] as const) {
+    const damage: number[] = [];
+    for (const mods of [['mass-driver'], forgedMods]) {
+      const g = fixture(mods),
+        e = target(g, kind, 500, 540);
+      e.state = 'windup';
+      const before = { ...e.body.velocity },
+        state = e.state;
+      // The crane's hanging head is solid cover above its main hull. Aim
+      // beside that head, within the wider hull, to test actual armor damage.
+      fallingBall(g, 100, { pos: { x: kind === 'crane' ? 537 : 500, y: 100 } });
+      for (let i = 0; i < 40 && e.hp === e.maxHp; i++) shots(g);
+      assert(e.hp < e.maxHp, kind);
+      damage.push(e.maxHp - e.hp);
+      assert.deepEqual(e.body.velocity, before, kind);
+      assert.equal(e.state, state, kind);
+      assert(!g.massDriver.staggered(e), kind);
+    }
+    near(damage[1] / damage[0], 1.75);
+  }
+  const g = fixture(forgedMods),
+    e = target(g, 'runner', 500, 500, true);
+  e.facing = -1;
+  const s = fallingBall(g);
+  shots(g, 18);
+  s.pos = { x: 470, y: 474 };
+  s.vel = { x: 16, y: 16 };
+  shots(g, 2);
+  near(e.maxHp - e.hp, s.damage * 1.75 * 0.1);
+  assert.equal(e.body.velocity.y, 0);
+  assert(!g.massDriver.staggered(e));
+});
+
+test('piercing retains its falloff and the gravity bonus is recomputed without compounding', () => {
+  const g = fixture([...forgedMods, 'pierce']);
+  const a = target(g, 'runner', 500, 450),
+    b = target(g, 'runner', 500, 550);
+  Body.setStatic(a.body, true);
+  Body.setStatic(b.body, true);
+  const s = fallingBall(g),
+    damage = s.damage;
+  shots(g, 29);
+  near(a.maxHp - a.hp, damage * 1.75);
+  near(b.maxHp - b.hp, damage * 0.8 * 1.75);
+  near(s.damage, damage * 0.8 ** 2);
+});
+
+test('banks and portals reset the earned fall, while retaining ordinary momentum and Banker', () => {
+  const g = fixture([...forgedMods, 'banker']);
+  wall(g, 500, 510, 200, 10);
+  const s = fallingBall(g),
+    damage = s.damage;
+  for (let i = 0; i < 40 && s.banks === 0; i++) shots(g);
+  assert.equal(s.banks, 1);
+  near(s.damage, damage * 1.35);
+  assert.equal(s.massDriver!.forge!.gravity, 0);
+  assert.equal(dropForgePower(s), 0);
+  assert(s.vel.y < 0);
+  const p = fixture([...forgedMods, 'fold']);
+  assert(p.portals.place({ x: 500, y: 740 }));
+  assert(p.portals.place({ x: 1100, y: 740 }));
+  const round = fallingBall(p);
+  for (let i = 0; i < 45 && round.pos.x < 1000; i++) shots(p);
+  assert(round.pos.x > 1000);
+  assert(round.vel.y < 0);
+  assert.equal(round.massDriver!.forge!.gravity, 0);
+  assert.equal(round.bounces, 4);
+  assert.equal(round.damage, p.gun.damage);
+});
+
+test('explosions and Splinter keep their own payload instead of inheriting a permanent gravity multiplier', () => {
+  const g = fixture([...forgedMods, 'shellshock', 'fuse', 'split']);
+  const e = target(g, 'runner', 500, 500),
+    s = fallingBall(g);
+  const damage = s.damage,
+    payload = s.shell!.damage;
+  for (let i = 0; i < 40 && e.hp === e.maxHp; i++) shots(g);
+  near(e.maxHp - e.hp, damage * 1.75);
+  near(g.ballistics.shells[0].damage, payload * 1.4);
+  const fragments = g.shots.filter((s) => s.fragment);
+  assert.equal(fragments.length, 3);
+  for (const f of fragments) {
+    near(f.damage, damage * 0.2);
+    assert(!f.massDriver);
+  }
+});
+
+test('Recall, Orbit and echoes start fresh descents rather than retaining stored gravity', () => {
+  const g = fixture([...forgedMods, 'recall', 'crossfire', 'orbit']);
+  const s = fallingBall(g);
+  // Build an actual fall before introducing Recall to isolate the redirection.
+  s.recall = undefined;
+  shots(g, 18);
+  near(dropForgePower(s), 1);
+  g.ballistics.prepare(s);
+  g.ballistics.turn(s);
+  g.massDriver.heading(s);
+  assert.equal(s.massDriver!.forge!.gravity, 0);
+  // Orbit copies the caught shot, but releasing it starts a new descent.
+  s.vel.y = 18;
+  s.massDriver!.forge!.gravity = DROP_FORGE.gravity;
+  g.fusions.catch(s);
+  assert.equal(g.fusions.orbit.length, 1);
+  g.shots = [];
+  g.fusions.release({ x: 0, y: 1 });
+  assert.equal(g.shots[0].massDriver!.forge!.gravity, 0);
+  const h = fixture([...forgedMods, 'afterimage']);
+  h.aim = { x: 200, y: 700 };
+  for (let i = 0; i < 4; i++) h.fireRound();
+  assert(h.ballistics.echoes.length > 0);
+  h.time += 0.5;
+  h.ballistics.update();
+  assert(h.shots.some((s) => s.echo));
+  assert(h.shots.filter((s) => s.echo).every((s) => s.massDriver?.forge?.gravity === 0));
+});
+
+test('forged volleys remain bounded and freeze in pause and hitstop; room exits discard the charge', () => {
+  const g = fixture([...forgedMods, 'crossfire', 'scatter', 'burst', 'backfire']);
+  g.engine.gravity.y = 1;
+  g.aim = { x: 200, y: 700 };
+  for (let i = 0; i < 6; i++) g.fireRound();
+  shots(g, 5);
+  assert(g.shots.length <= MASS_DRIVER.limit);
+  assert(g.shots.every((s) => dropForgePower(s) >= 0 && dropForgePower(s) <= 1));
+  const before = structuredClone(g.shots);
+  g.setMode('paused');
+  g.tick(dt, idle);
+  assert.deepEqual(g.shots, before);
+  g.setMode('playing');
+  g.hitStop = 0.1;
+  g.tick(dt, idle);
+  assert.deepEqual(g.shots, before);
+  g.hitStop = 0;
+  shots(g, 200);
+  assert(!g.shots.length);
+  fallingBall(g);
+  g.loadRoom();
+  assert(!g.shots.length);
 });

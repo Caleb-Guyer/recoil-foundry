@@ -8,6 +8,7 @@ import { dropWallcrawler } from './wallcrawler.ts';
 
 const { Body } = Matter;
 export const MASS_DRIVER = { radius: 7, life: 3.2, mass: 2.4, limit: 48, maxSpeed: 40 };
+export const DROP_FORGE = { gravity: 4.5, bonus: 0.75, minSpeed: 4, fullSpeed: 12, slam: 0.6 };
 export interface MassFlight {
   age: number;
   spin: number;
@@ -15,6 +16,23 @@ export interface MassFlight {
   struck: Set<number>;
   penetrating: Set<number>;
   surfaces: Set<number>;
+  forge?: { gravity: number };
+}
+
+// Only acceleration supplied by gravity earns the bonus. Muzzle speed, a
+// Vector turn or a portal exit cannot create a charged impact on its own.
+export function dropForgePower(s: Shot) {
+  const forge = s.massDriver?.forge;
+  return forge
+    ? clamp(
+        Math.min(
+          forge.gravity / DROP_FORGE.gravity,
+          (s.vel.y - DROP_FORGE.minSpeed) / (DROP_FORGE.fullSpeed - DROP_FORGE.minSpeed),
+        ),
+        0,
+        1,
+      )
+    : 0;
 }
 
 // Swept projectiles exchange momentum with Matter bodies without adding rigid
@@ -48,6 +66,7 @@ export class MassDriverSystem {
       struck: new Set(),
       penetrating: new Set(),
       surfaces: new Set(),
+      ...(this.game.mods.includes('drop-forge') ? { forge: { gravity: 0 } } : {}),
     };
     s.radius = MASS_DRIVER.radius;
     s.life = MASS_DRIVER.life;
@@ -55,6 +74,15 @@ export class MassDriverSystem {
   }
   staggered(e: Enemy) {
     return (this.airborne.get(e) ?? 0) > this.game.time;
+  }
+  impactDamage(s: Shot) {
+    return s.damage * (1 + DROP_FORGE.bonus * dropForgePower(s));
+  }
+  redirect(s: Shot) {
+    if (s.massDriver?.forge) s.massDriver.forge.gravity = 0;
+  }
+  heading(s: Shot) {
+    if (s.vel.y <= 0) this.redirect(s);
   }
   beforeStep(dt: number) {
     this.movingSurfaces.clear();
@@ -101,6 +129,8 @@ export class MassDriverSystem {
         if (g.mode !== 'playing') return;
         continue;
       }
+      this.heading(s);
+      const downward = Math.max(0, s.vel.y);
       const gravity = g.engine.gravity.scale * (1000 / 60) ** 2 * dt * 60;
       s.vel.x += g.engine.gravity.x * gravity;
       s.vel.y += g.engine.gravity.y * gravity;
@@ -109,6 +139,11 @@ export class MassDriverSystem {
         s.vel.x *= MASS_DRIVER.maxSpeed / speed;
         s.vel.y *= MASS_DRIVER.maxSpeed / speed;
       }
+      if (m.forge)
+        m.forge.gravity = Math.min(
+          DROP_FORGE.gravity,
+          m.forge.gravity + Math.max(0, s.vel.y - downward),
+        );
       m.spin += s.vel.x * dt * 2;
     }
     for (const [e, at] of this.kicked) if (e.hp <= 0 || at <= g.time) this.kicked.delete(e);
@@ -120,14 +155,18 @@ export class MassDriverSystem {
     const closing = Math.max(0, -((s.vel.x - v.x) * normal.x + (s.vel.y - v.y) * normal.y));
     const mass = s.massDriver!.mass;
     const impulse = Math.min(15, (closing * 2 * mass) / (mass + body.mass));
+    const power = dropForgePower(s);
+    const slam = normal.y < -0.35 && power >= DROP_FORGE.slam;
+    const down = slam ? (8 * power * mass) / (mass + body.mass) : 0;
     Body.setVelocity(body, {
       x: clamp(v.x - normal.x * impulse, -18, 18),
       y: clamp(
-        v.y - normal.y * impulse - (lift ? Math.abs(normal.x) * impulse * 0.22 : 0),
+        v.y - normal.y * impulse + down - (lift ? Math.abs(normal.x) * impulse * 0.22 : 0),
         -18,
         18,
       ),
     });
+    if (slam) this.clang(s);
     return impulse;
   }
   hitProp(s: Shot, prop: Prop, normal: Vec) {
@@ -135,7 +174,7 @@ export class MassDriverSystem {
     const before = { ...prop.body.velocity };
     // Loose machinery takes less structural damage so a deliberate bank can
     // launch it into another target. Anchored cover retains its normal durability.
-    g.props.hit(prop, s.damage * (prop.body.isStatic || prop.charge ? 1 : 0.3), s.vel);
+    g.props.hit(prop, this.impactDamage(s) * (prop.body.isStatic || prop.charge ? 1 : 0.3), s.vel);
     if (prop.charge || prop.body.isStatic || !g.props.items.includes(prop)) return;
     Body.setVelocity(prop.body, before);
     const impulse = this.push(s, prop.body, normal, true) ?? 0;
@@ -172,9 +211,12 @@ export class MassDriverSystem {
   }
   bounce(s: Shot, normal: Vec, body?: Matter.Body, bank = true) {
     if (s.bounces <= 0 || Math.hypot(s.vel.x, s.vel.y) < 2.2) {
+      if (dropForgePower(s) >= DROP_FORGE.slam) this.clang(s);
       this.finish(s, true, body);
       return false;
     }
+    this.clang(s);
+    this.redirect(s);
     const surface = this.surfaceVelocity(body, s.pos);
     const vx = s.vel.x - surface.x,
       vy = s.vel.y - surface.y;
@@ -196,14 +238,14 @@ export class MassDriverSystem {
     }
     s.pos.x += normal.x * 0.75;
     s.pos.y += normal.y * 0.75;
-    this.clang(s);
     return true;
   }
   private clang(s: Shot) {
     const g = this.game;
-    g.burst(s.pos, 3, '#c7d0c8', 2);
+    const forged = dropForgePower(s) >= DROP_FORGE.slam;
+    g.burst(s.pos, 3, forged ? '#edc785' : '#c7d0c8', forged ? 3 : 2);
     if (g.time >= this.soundAt) {
-      g.onSound('mass-impact');
+      g.onSound(forged ? 'forge-impact' : 'mass-impact');
       this.soundAt = g.time + 0.08;
     }
   }
