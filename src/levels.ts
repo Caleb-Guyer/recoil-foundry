@@ -1,3 +1,4 @@
+import { PRESSURE_LAYOUTS, pressureLayout, type PressurePlacement } from './pressure-layouts.ts';
 import { CROSSING_LAYOUT, crossingLevel } from './crossing-layout.ts';
 import {
   COUNTERWEIGHT_LAYOUTS,
@@ -58,6 +59,7 @@ export interface Spawn extends Vec {
   squad?: SquadTag;
 }
 export interface Layout {
+  vents?: PressurePlacement[];
   counterweights?: CounterweightPlacement[];
   setpiece?: {
     rosters: number[][];
@@ -102,6 +104,7 @@ export const SPECIAL_LAYOUTS: Layout[] = [
   CROSSING_LAYOUT,
   ...PHYSICS_LAYOUTS,
   ...COUNTERWEIGHT_LAYOUTS,
+  ...PRESSURE_LAYOUTS,
 ];
 export const LAYOUTS: Layout[] = [
   ...RECLAMATION_LAYOUTS,
@@ -711,6 +714,7 @@ function buildLevel(
   const source =
     physicsLayout(seed, stage) ??
     counterweightLayout(seed, stage) ??
+    pressureLayout(seed, stage) ??
     (slot === 2
       ? ADDED_LAYOUTS[area]
       : legacyStage === 11
@@ -792,6 +796,16 @@ function buildLevel(
         }
       : {}),
     solids,
+    ...(source.vents
+      ? {
+          vents: source.vents.map((v) => ({
+            ...v,
+            x: mirrored ? 2000 - v.x : v.x,
+            dir: { x: mirrored ? -v.dir.x : v.dir.x, y: v.dir.y },
+            valve: { x: mirrored ? 2000 - v.valve.x : v.valve.x, y: v.valve.y },
+          })),
+        }
+      : {}),
     ...(source.counterweights
       ? {
           counterweights: source.counterweights.map((p) => ({

@@ -6,6 +6,18 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Pressure vents
+
+**Pressure Chamber** in Furnace introduces two upward jets beneath open launch shafts. **Pump Room** in Cooling Works uses opposing sideways jets, a raised firing lane, and staggered cover. Each layout has three seeded enemy arrangements and a mirrored version, and can appear in its area's second room. Existing freight, physics, and counterweight selections retain their priority.
+
+A recessed grille and a nearby valve identify each vent. The wheel's rim refills during its 4.2-second recharge. Once ready, shooting the wheel starts a full one-second warning: a rattle, a hiss, and faint lines along the exposed jet. It then bursts for 0.42 seconds. Ready valves also fire automatically after 1.8 seconds during combat; shooting never skips the warning or recharge. After clearing the room, only manual triggers start new bursts.
+
+Jets give each exposed body one bounded impulse per burst. Ride an upward jet, then fire to redirect your recoil flight. Loose crates become physical projectiles; cover and tilted machinery block the jet at their actual surfaces. Small enemies can be knocked off perches and briefly lose steering. Heavy ground enemies resist the lift; bosses, pinned enemies, and armed volatile enemies retain their anchors. Jets deal no direct damage. Ordinary jumps cross both layouts without using the machinery.
+
+Normal rounds, close muzzle shots, ricochets, portal-routed projectiles, and Cutting Torch can operate a valve. Shots must physically reach its wheel; cover and intervening enemies intercept them. Warnings, bursts, and recharge freeze during pause and hitstop. Room entrances and retries reconstruct the original machinery, including in Daily and Overtime. No new controls or HUD are added.
+
+[Test Pressure Chamber](https://caleb-guyer.github.io/recoil-foundry/?test=pressure) or [test Pump Room](https://caleb-guyer.github.io/recoil-foundry/?test=pressure&area=cooling). Add `&mirror=1`, `&variant=2` or `&variant=3` for another arrangement. Use `&build=torch`, `&build=tripwire`, or `&build=portal` to try a different preset gun. **R** retries at full health. Tests preserve saves, Daily results, and earned Practice victories.
+
 ## Tripwire
 
 **Tripwire** is a Demolition upgrade. Shoot two fixed surfaces to connect their impact points with a thin explosive wire. An enemy touching the wire triggers a blast at the crossing and consumes the trap. You can keep two wires active; completing a third replaces the oldest. No new controls or HUD.
@@ -193,7 +205,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-13&dv=53`). Version 53 adds Tripwire and Tension; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-13&dv=54`). Version 54 adds pressure vents and their two layouts; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

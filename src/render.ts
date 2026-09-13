@@ -1,3 +1,4 @@
+import { drawPressure } from './pressure-art.ts';
 import { drawTripwires } from './tripwire-art.ts';
 import { drawTorch } from './torch-art.ts';
 import { drawGrindshot } from './grindshot-art.ts';
@@ -193,6 +194,7 @@ export class Renderer {
     drawConveyors(c, g, this.reduced);
     drawCoolant(c, g, this.reduced);
     drawMagnets(c, g, this.reduced);
+    drawPressure(c, g, this.reduced);
     this.drawProps();
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced);

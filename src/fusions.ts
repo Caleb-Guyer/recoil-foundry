@@ -33,6 +33,7 @@ export class FusionSystem {
     const origin = { x: g.player.position.x, y: g.player.position.y - 3 };
     const muzzle = { x: origin.x + d.x * 26, y: origin.y + d.y * 26 };
     const pos = g.lineEnd(origin, muzzle, radius);
+    if (g.pressure.trace(origin, pos, radius)) Object.assign(pos, origin);
     if (distance(pos, muzzle) > 0.01) {
       pos.x -= d.x * 0.5;
       pos.y -= d.y * 0.5;

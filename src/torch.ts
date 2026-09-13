@@ -5,6 +5,7 @@ import { firstSolid } from './collisions.ts';
 import { portalVector } from './portals.ts';
 import { clamp, direction, distance, segmentBox, type Vec } from './rules.ts';
 import { isBoss } from './enemies.ts';
+import type { PressureVent } from './pressure.ts';
 
 export const TORCH = {
   range: 1100,
@@ -26,6 +27,7 @@ export interface TorchSegment {
   prop?: Prop;
   cable?: Prop;
   anchor?: Enemy;
+  valve?: PressureVent;
 }
 const add = (p: Vec, d: Vec, n: number): Vec => ({ x: p.x + d.x * n, y: p.y + d.y * n });
 const shielded = (e: Enemy, d: Vec) => e.elite === 'shielded' && -d.x * e.facing > 0.45;
@@ -54,8 +56,9 @@ export function traceTorch(g: Game, rear = false): TorchSegment[] {
       ]),
       cable = g.cargo.trace(from, end, TORCH.radius),
       anchor = g.harpoons.trace(from, end, TORCH.radius),
+      valve = g.pressure.trace(from, end, TORCH.radius),
       portal = g.portals.trace(from, end, half);
-    const t = Math.min(hit?.t ?? 1, cable?.t ?? 1, anchor?.t ?? 1),
+    const t = Math.min(hit?.t ?? 1, cable?.t ?? 1, anchor?.t ?? 1, valve?.t ?? 1),
       through = portal && portal.t <= t + 1e-6,
       point = add(from, d, remaining * (through ? portal!.t : t));
     const segment: TorchSegment = { a: { ...from }, b: point, dir: { ...d }, gain };
@@ -66,6 +69,10 @@ export function traceTorch(g: Game, rear = false): TorchSegment[] {
       d = portalVector(d, portal!.entry, portal!.exit);
       remaining -= 1;
       continue;
+    }
+    if (valve && valve.t <= t && (!hit || valve.t < hit.t)) {
+      segment.valve = valve.vent;
+      break;
     }
     if (cable && cable.t <= t) {
       segment.cable = cable.prop;
@@ -255,6 +262,7 @@ export class TorchSystem {
         return;
       }
       const s = this.pulse!;
+      if (segment.valve) g.pressure.trigger(segment.valve);
       s.pos = { ...segment.b };
       s.prev = { ...segment.a };
       s.vel = {

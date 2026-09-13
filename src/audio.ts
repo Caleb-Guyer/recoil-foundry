@@ -175,6 +175,7 @@ export class Sound {
         'lock',
         'charge',
         'machine',
+        'pressure-warn',
         'reinforce',
         'crane-wind',
         'crane-hit',
@@ -226,6 +227,12 @@ export class Sound {
       this.tone(260, 75, 0.18, 0.03, 'triangle');
     } else if (kind === 'crawler-lock') {
       this.tone(650, 870, 0.13, 0.025, 'triangle');
+    } else if (kind === 'pressure-warn') {
+      this.tone(145, 230, 0.24, 0.025, 'triangle');
+      this.crack(0.26, 0.024, 2100);
+    } else if (kind === 'pressure-burst') {
+      this.crack(0.28, 0.075, 1250);
+      this.tone(110, 45, 0.22, 0.04, 'triangle');
     } else if (kind === 'counterweight-stop') {
       this.tone(95, 45, 0.17, 0.028, 'triangle');
       this.crack(0.05, 0.015, 950);

@@ -718,6 +718,40 @@ export function counterweightTestFromUrl(url: URL): Checkpoint | null {
   return null;
 }
 
+export function pressureTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'pressure' ||
+    ['area', 'mirror', 'variant', 'build'].some((k) => p.getAll(k).length > 1) ||
+    ['daily', 'dv', 'seed', 'formation', 'route', 'mode', 'layout', 'phase'].some((k) =>
+      p.has(k),
+    ) ||
+    (p.has('area') && !['furnace', 'cooling'].includes(p.get('area')!)) ||
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!)) ||
+    (p.has('variant') && !['1', '2', '3'].includes(p.get('variant')!)) ||
+    (p.has('build') && !['standard', 'torch', 'tripwire', 'portal'].includes(p.get('build')!))
+  )
+    return null;
+  const stage = p.get('area') === 'cooling' ? 9 : 5;
+  for (let i = 0; i < 2048; i++) {
+    const seed = 'PRESSURE-60-' + i,
+      level = getLevel(seed, stage);
+    if (
+      !level.vents ||
+      level.mirrored !== (p.get('mirror') === '1') ||
+      physicsVariant(seed, level.id) !== Number(p.get('variant') ?? 1) - 1
+    )
+      continue;
+    const save = testCheckpoint(seed, stage);
+    if (p.get('build') === 'torch') save.mods.splice(0, 2, 'cutting-torch', 'thermal-runaway');
+    if (p.get('build') === 'tripwire') save.mods.splice(0, 2, 'tripwire', 'tension');
+    if (p.get('build') === 'portal') save.mods.splice(0, 2, 'fold', 'rewire');
+    return save;
+  }
+  return null;
+}
+
 export function anglerTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

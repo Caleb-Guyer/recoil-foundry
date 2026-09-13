@@ -1,3 +1,4 @@
+import { PressureSystem, type PressureVent } from './pressure.ts';
 import { TripwireSystem } from './tripwire.ts';
 import { TorchSystem } from './torch.ts';
 import { GrindshotSystem } from './grindshot.ts';
@@ -222,6 +223,7 @@ export class Game {
   freight = new FreightSystem(this);
   crossing = new CrossingSystem(this);
   counterweights = new CounterweightSystem(this);
+  pressure = new PressureSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
   portals = new PortalSystem(this);
@@ -496,6 +498,7 @@ export class Game {
     this.freight.clear();
     this.crossing.clear();
     this.counterweights.clear();
+    this.pressure.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -603,6 +606,7 @@ export class Game {
     }
     this.crossing.reset();
     this.destruction.reset();
+    this.pressure.reset();
   }
   startEscape() {
     if (this.practice || this.detour) return;
@@ -940,6 +944,7 @@ export class Game {
     this.salvageEvolutions.beforeStep();
     this.crossing.beforeStep(dt);
     if (this.mode !== 'playing') return;
+    this.pressure.beforeStep(dt);
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();
@@ -1143,6 +1148,8 @@ export class Game {
       pos,
       radius,
     );
+    const valveOrigin = { x: this.player.position.x, y: this.player.position.y - 3 };
+    if (this.pressure.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (distance(spawn, pos) > 0.01) {
       spawn.x -= d.x * 0.5;
       spawn.y -= d.y * 0.5;
@@ -1312,6 +1319,7 @@ export class Game {
     if (this.salvageEvolutions.carried(e)) return;
     if (this.ballistics.pinned(e)) return;
     if (this.tethers.staggered(e)) return;
+    if (this.pressure.staggered(e)) return;
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *
@@ -1910,6 +1918,7 @@ export class Game {
           normal: Vec;
           enemy?: Enemy;
           anchor?: Enemy;
+          valve?: PressureVent;
           player?: boolean;
           caught?: boolean;
           prop?: Prop;
@@ -1952,6 +1961,9 @@ export class Game {
         const anchor = s.friendly ? this.harpoons.trace(s.pos, end, s.radius) : null;
         if (anchor && (!nearest || anchor.t < nearest.t))
           nearest = { t: anchor.t, normal: anchor.normal, anchor: anchor.enemy };
+        const valve = s.friendly ? this.pressure.trace(s.pos, end, s.radius) : undefined;
+        if (valve && (!nearest || valve.t < nearest.t))
+          nearest = { t: valve.t, normal: valve.normal, valve: valve.vent };
         if (s.recall?.returning) {
           const hit = segmentBox(s.pos, end, this.player.bounds.min, this.player.bounds.max);
           if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, caught: true };
@@ -2000,6 +2012,11 @@ export class Game {
           this.fusions.catch(s);
           s.life = 0;
           s.shell = undefined;
+        } else if (nearest.valve) {
+          this.pressure.trigger(nearest.valve);
+          s.life = 0;
+          this.demolition.impact(s);
+          if (this.mode !== 'playing') return;
         } else if (nearest.cable) {
           this.cargo.cut(nearest.cable, s.damage);
           rivalImpact(this, s);

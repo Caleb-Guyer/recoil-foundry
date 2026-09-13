@@ -1,4 +1,5 @@
 import { dodgePilot } from './combat-pilot.ts';
+import { pressurePilot } from './pressure-pilot.ts';
 import { CRAWLER } from '../src/wallcrawler.ts';
 import { overtimeTestFromUrl } from '../src/practice.ts';
 import { freightPilot } from './freight-pilot.ts';
@@ -805,6 +806,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       loaderDodgeUntil = 0,
       loaderDirection = 1,
       loaderReacted = false;
+    const ventInput = pressurePilot();
     let retreatWaypoint: { x: number; y: number } | undefined;
     let settlingGun = false;
     let fusionUsed = false;
@@ -1293,6 +1295,13 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         jump ||= g.grounded;
         firing = !g.grounded && g.player.velocity.y > -4;
         if (firing) aim = { x: p.x, y: p.y + 500 };
+      }
+      if (g.pressure.items.length && !g.clear) {
+        const input = ventInput(g);
+        move = Number(input.right ?? false) - Number(input.left ?? false);
+        jump = !!input.jump;
+        firing = !!input.fire;
+        aim = input.aim ?? aim;
       }
       tick(g, 1, {
         left: move < 0,
