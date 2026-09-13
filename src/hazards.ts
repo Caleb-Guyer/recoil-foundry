@@ -242,7 +242,7 @@ export class HazardSystem {
     };
     if (hit(g.player)) {
       h.hits.add(g.player.id);
-      g.damagePlayer(24, h.body.position);
+      g.damagePlayer(24, h.body.position, { type: 'crusher' });
       if (g.mode !== 'playing') return oldBottom;
       if (!this.pushAside(h, g.player)) blocked(g.player);
     }

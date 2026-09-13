@@ -211,6 +211,7 @@ export function updateAngler(g: Game, e: Enemy, dt: number) {
         damage: g.stage >= 16 || g.overtime ? 19 : 15,
         life: Math.max(0.1, (locked.length - 26) / (speed * 60)),
         friendly: false,
+        damageCause: { type: 'shot', enemy: e.kind },
         radius: ANGLER.radius,
         bounces: 1,
         pierce: 0,

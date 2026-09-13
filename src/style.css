@@ -224,6 +224,7 @@ kbd {
   color: #e1b986;
 }
 .title-settings {
+  display: flex;
   position: absolute;
   right: 20px;
   bottom: 15px;
@@ -494,6 +495,79 @@ body[data-input='controller'] canvas {
   gap: 12px;
   flex-wrap: wrap;
   color: #d8e1d6;
+}
+.run-recap {
+  margin-top: 22px;
+  border-top: 1px solid #354440;
+  font-size: 14px;
+}
+.run-recap > summary {
+  cursor: pointer;
+  padding: 16px 0;
+  color: var(--ink);
+}
+.recap-body {
+  padding: 0 0 14px;
+}
+.recap-facts {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 10px 14px;
+  line-height: 1.5;
+}
+.recap-facts dt,
+.recap-note,
+.run-recap time {
+  color: #a8b4ae;
+}
+.recap-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.recap-seed {
+  font-family: 'Courier New', monospace;
+}
+.recap-body h3 {
+  margin: 24px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.recap-build {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: #d8e1d6;
+  line-height: 1.6;
+}
+.recap-note {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.recap-body .actions {
+  gap: 6px;
+  margin-top: 18px;
+}
+.run-history-list .run-recap {
+  margin-top: 0;
+}
+.recap-heading {
+  display: inline-flex;
+  width: calc(100% - 22px);
+  justify-content: space-between;
+  gap: 12px;
+  line-height: 1.6;
+}
+.recap-heading > span {
+  white-space: nowrap;
+  color: #a8b4ae;
+}
+.run-recap time {
+  display: block;
+  margin: 6px 0 0 18px;
+  font-size: 12px;
 }
 .touch-controls {
   display: none;

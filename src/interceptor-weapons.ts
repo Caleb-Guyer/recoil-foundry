@@ -222,6 +222,7 @@ export function updateRivalAmmo(g: Game, s: Shot, dt: number) {
         damage: 12,
         life: 1.3,
         friendly: false,
+        damageCause: { type: 'shot', enemy: e.kind },
         radius: 4,
         bounces: 0,
         pierce: 0,
@@ -302,7 +303,7 @@ export function updateArsenal(g: Game, e: Enemy, dt: number) {
     const terrain = g.destruction.targets(charge.pos, charge.radius);
     const visible = (p: Vec) => distance(g.lineEnd(charge.pos, p), p) < 1;
     if (distance(charge.pos, g.player.position) < charge.radius + 12 && visible(g.player.position))
-      g.damagePlayer(charge.damage, charge.pos);
+      g.damagePlayer(charge.damage, charge.pos, { type: 'blast', enemy: 'interceptor' });
     for (const prop of [...g.props.items])
       if (
         distance(charge.pos, prop.body.position) < charge.radius &&

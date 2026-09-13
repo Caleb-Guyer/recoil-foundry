@@ -131,7 +131,7 @@ export class CargoSystem {
     const enemy = g.enemies.find((e) => e.body === other || e.crane?.body === other);
     if (enemy && enemy.spawn <= 0 && enemy.hp > 0)
       g.hitEnemy(enemy, Math.min(isBoss(enemy.kind) ? CARGO_BOSS_DAMAGE : 240, speed * 18));
-    else if (other === g.player) g.damagePlayer(24, prop.body.position);
+    else if (other === g.player) g.damagePlayer(24, prop.body.position, { type: 'cargo' });
     else {
       const target = g.props.items.find((p) => p.body === other);
       if (target?.kind === 'canister') g.props.explode(target);

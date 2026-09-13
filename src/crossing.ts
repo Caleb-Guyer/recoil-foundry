@@ -152,7 +152,7 @@ export class CrossingSystem {
         g.feedback(10, d);
         g.burst(actor.position, 16, '#f5eee1', 4);
         g.onSound('train-impact');
-        g.die();
+        g.die({ type: 'train' });
         return;
       }
       if (g.time < (car.crushAt.get(actor.id) ?? 0)) return;
@@ -163,7 +163,7 @@ export class CrossingSystem {
     if (car.hits.has(actor.id)) return;
     car.hits.add(actor.id);
     car.crushAt.set(actor.id, g.time + 0.5);
-    if (actor === g.player) g.damagePlayer(24, car.body.position);
+    if (actor === g.player) g.damagePlayer(24, car.body.position, { type: 'train' });
     else if (enemy) g.hitEnemy(enemy, 80, d);
     else if (prop) g.props.strike(prop, 30, d);
     if (g.mode !== 'playing') return;

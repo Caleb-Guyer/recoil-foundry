@@ -327,7 +327,7 @@ export class SapperSystem {
     g.burst(pos, 16, '#efba76', 4);
     g.feedback(4);
     g.onSound('sapper-blast');
-    if (player) g.damagePlayer(24, pos);
+    if (player) g.damagePlayer(24, pos, { type: 'blast', enemy: 'sapper' });
     if (g.mode !== 'playing') return;
     for (const e of enemies) g.hitEnemy(e, isBoss(e.kind) ? 90 : 170 + g.stage * 7, pos);
     if (g.mode !== 'playing') return;

@@ -229,7 +229,7 @@ export function updatePress(g: Game, e: Enemy) {
         { x: player.x + 13 + halfWidth, y: player.y + 18 + half },
       )
     ) {
-      g.damagePlayer(30, p);
+      g.damagePlayer(30, p, { type: 'slam', enemy: e.kind });
       if (g.mode !== 'playing') return;
     }
     if (contact || e.timer <= 0) {

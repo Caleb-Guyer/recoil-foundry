@@ -1,4 +1,5 @@
 import { PressureSystem, type PressureVent } from './pressure.ts';
+import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { WorkshopSystem, workshopLevel, type WorkshopTarget } from './workshop.ts';
 import { workshopBuild, loadDiscoveries } from './workshop-build.ts';
 import { MassDriverSystem, MASS_DRIVER, type MassFlight } from './mass-driver.ts';
@@ -166,6 +167,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  damageCause?: DamageCause;
   id: number;
   launch?: { pos: Vec; at: number };
   pos: Vec;
@@ -353,6 +355,7 @@ export class Game {
     }));
   }
   hp = 100;
+  deathCause: DamageCause | null = null;
   mods: string[] = [];
   gun: Gun = getGun([]);
   elapsed = 0;
@@ -478,6 +481,7 @@ export class Game {
           : (save?.route ?? null)
         : null;
     this.hp = save?.hp ?? 100;
+    this.deathCause = null;
     this.mods = save ? [...save.mods] : [];
     this.gun = getGun(this.mods);
     this.elapsed = save?.elapsed ?? 0;
@@ -1070,7 +1074,7 @@ export class Game {
     if (this.trail.length > 9) this.trail.pop();
     if (this.player.position.y > 900 || !Number.isFinite(this.player.position.x)) {
       this.hp = 0;
-      this.die();
+      this.die({ type: 'fall' });
       return;
     }
     if (this.escape) {
@@ -1520,6 +1524,7 @@ export class Game {
             ? 22
             : 15,
         p,
+        { type: 'contact', enemy: e.kind },
       );
     if (p.y > 900) this.hitEnemy(e, 9999);
   }
@@ -1636,6 +1641,7 @@ export class Game {
       this.damagePlayer(
         Math.ceil(24 * (1 - distance(p, this.player.position) / (VOLATILE_RADIUS * 2))),
         p,
+        { type: 'volatile', enemy: e.kind },
       );
     if (this.mode !== 'playing') return;
     for (const other of enemies)
@@ -1995,6 +2001,7 @@ export class Game {
       damage,
       life: 4,
       friendly: false,
+      damageCause: { type: blade ? 'blade' : 'shot', enemy: e.kind },
       source: { ...e.body.position },
       ...(e.squad ? { allyBlock: e.id } : {}),
       radius: blade ? 11 : 5,
@@ -2220,7 +2227,7 @@ export class Game {
           }
         } else if (nearest.player) {
           rivalImpact(this, s);
-          this.damagePlayer(s.damage, s.pos);
+          this.damagePlayer(s.damage, s.pos, s.damageCause ?? { type: 'shot' });
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
@@ -2451,7 +2458,7 @@ export class Game {
     if (isBoss(e.kind)) for (const other of [...this.enemies]) this.hitEnemy(other, 9999);
     return blocked;
   }
-  damagePlayer(amount: number, from?: Vec) {
+  damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }) {
     if (this.workshop.active) return;
     if (this.escape?.phase === 'extracting') return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
@@ -2466,13 +2473,15 @@ export class Game {
       const d = direction(from, this.player.position);
       Body.setVelocity(this.player, { x: clamp(this.player.velocity.x + d.x * 4, -23, 23), y: -5 });
     }
-    if (this.hp <= 0) this.die();
+    if (this.hp <= 0) this.die(cause);
   }
-  die() {
+  die(cause: DamageCause = { type: 'unknown' }) {
+    if (this.mode === 'dead' || this.mode === 'won') return;
     if (this.workshop.active) {
       this.startWorkshop(this.workshop.discovered, this.mods);
       return;
     }
+    this.deathCause = loadDamageCause(cause);
     this.setMode('dead');
     if (!this.practice && !this.testRun) this.onCheckpoint(null);
     this.onSound('dead');

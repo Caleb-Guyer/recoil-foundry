@@ -238,7 +238,7 @@ export function updateRivalGrind(g: Game, e: Enemy, dt: number) {
         g.player,
       );
       if (player && (!block || player.t < block.t - 1e-6)) {
-        g.damagePlayer(RIVAL_GRIND.damage, start);
+        g.damagePlayer(RIVAL_GRIND.damage, start, { type: 'saw', enemy: 'interceptor' });
         saw.life = 0;
         if (g.mode !== 'playing') return;
         break;

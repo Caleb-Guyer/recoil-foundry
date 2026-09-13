@@ -347,7 +347,7 @@ export class PropSystem {
         if (other === g.player) {
           prop.throwHits?.add(other.id);
           prop.throwUntil = 0;
-          g.damagePlayer(SCRAPPER_DAMAGE, prop.body.position);
+          g.damagePlayer(SCRAPPER_DAMAGE, prop.body.position, { type: 'crate', enemy: 'scrapper' });
         } else {
           const target = this.items.find((p) => p.body === other);
           if (target) {
@@ -458,7 +458,10 @@ export class PropSystem {
       else this.hit(other, 80, direction(p, other.body.position));
       if (g.mode !== 'playing') return;
     }
-    if (hurtsPlayer) g.damagePlayer(Math.ceil(20 * (1 - distance(p, g.player.position) / 180)), p);
+    if (hurtsPlayer)
+      g.damagePlayer(Math.ceil(20 * (1 - distance(p, g.player.position) / 180)), p, {
+        type: 'fuel',
+      });
     if (g.mode !== 'playing') return;
     for (const panel of panels) g.breaches.hit(panel, 80, direction(p, panel.body.position));
     for (const piece of terrain)

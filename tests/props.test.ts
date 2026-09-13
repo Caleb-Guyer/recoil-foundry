@@ -214,6 +214,7 @@ test('a lethal chain stops immediately without later kills healing a dead player
   g.props.explode(first);
   assert.equal(g.mode, 'dead');
   assert.equal(g.hp, 0);
+  assert.deepEqual(g.deathCause, { type: 'fuel' });
   assert.equal(e.hp, e.maxHp);
   assert(g.props.items.includes(later));
 });

@@ -122,7 +122,11 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
         rig.pulse = 0.22;
         for (const x of rig.lanes) {
           if (Math.abs(g.player.position.x - x) < SORTER_WIDTH / 2 + 13)
-            g.damagePlayer(24, { x, y: g.player.position.y - 80 });
+            g.damagePlayer(
+              24,
+              { x, y: g.player.position.y - 80 },
+              { type: 'induction', enemy: 'sorter' },
+            );
           // Induction strikes dislodge metal as well as threatening the player.
           for (const prop of [...g.props.items])
             if (Math.abs(prop.body.position.x - x) < SORTER_WIDTH / 2 + 22)

@@ -246,7 +246,8 @@ export class HarpoonSystem {
           disruptScrapperBody(g, prop.body);
           g.magnets.release(prop.body);
           g.props.hit(prop, 0, rig.velocity);
-        } else g.damagePlayer(HARPOON_DAMAGE, e.body.position);
+        } else
+          g.damagePlayer(HARPOON_DAMAGE, e.body.position, { type: 'hook', enemy: 'harpooner' });
         if (g.mode !== 'playing') return;
         g.onSound('harpoon-catch');
       } else if (rig.travel >= HARPOON_RANGE) this.release(e);

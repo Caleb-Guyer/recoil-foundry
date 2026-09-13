@@ -207,6 +207,7 @@ for (const d of [1, -1]) {
       tick(g, 10);
       assert.equal(g.mode, 'dead');
       assert.equal(g.hp, 0);
+      assert.deepEqual(g.deathCause, { type: 'train' });
       assert(g.player.position.x >= 12.7 && g.player.position.x <= 1987.3);
       assert(
         Query.collides(g.player, g.crossing.bodies).every((c) => c.depth < 1),

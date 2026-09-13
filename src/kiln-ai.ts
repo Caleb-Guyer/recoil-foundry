@@ -241,7 +241,7 @@ function updateHazards(g: Game, e: Enemy, dt: number) {
         p,
       ) < 0.1
     ) {
-      g.damagePlayer(18, { x: patch.x, y: patch.y });
+      g.damagePlayer(18, { x: patch.x, y: patch.y }, { type: 'heat', enemy: 'kiln' });
       if (g.mode !== 'playing') return;
     }
   }
@@ -263,7 +263,7 @@ function updateHazards(g: Game, e: Enemy, dt: number) {
           { x: p.x + 13 + KILN_RADIUS, y: p.y + 18 + KILN_RADIUS },
         );
       if (playerHit && (!hit || playerHit.t < hit.t)) {
-        g.damagePlayer(26, shell.pos);
+        g.damagePlayer(26, shell.pos, { type: 'blast', enemy: 'kiln' });
         if (g.mode !== 'playing') return;
         consumed = true;
         g.burst(p, 10, '#e3a273', 2.5);

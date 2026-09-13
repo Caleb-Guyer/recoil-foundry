@@ -244,7 +244,7 @@ export function updateCrane(g: Game, e: Enemy) {
     );
     if (!rig.hit && contact && (!obstruction || contact.t < obstruction.t)) {
       rig.hit = true;
-      g.damagePlayer(24, rig.head);
+      g.damagePlayer(24, rig.head, { type: 'slam', enemy: 'crane' });
       if (g.mode !== 'playing') return;
     }
     setHead(rig, end);

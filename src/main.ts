@@ -16,6 +16,16 @@ import {
   workshopLink,
 } from './workshop-build.ts';
 import { workshopMenu } from './workshop-menu.ts';
+import {
+  RUN_HISTORY_KEY,
+  addRun,
+  canPracticeRunBuild,
+  canReplayRun,
+  loadRunHistory,
+  snapshotRun,
+  type RunRecap,
+} from './run-history.ts';
+import { bindRecapActions, resultRecap, runHistoryMenu } from './run-history-menu.ts';
 import type { Input } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
@@ -110,6 +120,9 @@ let discovered = discoverBuild(
   storedCheckpoint?.mods ?? [],
 );
 let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
+let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
+let finishedRun: RunRecap | null = null;
+let recapSaved = true;
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
@@ -120,7 +133,7 @@ document.getElementById('app')!.innerHTML = `
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button></div>
    <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
-  </div><button id="settings" class="quiet title-settings">Settings</button>
+  </div><div class="title-settings"><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
  </section>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
 </main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog><span id="save-status" class="sr-only" role="status"></span>`;
@@ -396,6 +409,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     startPractice(game.practice);
     return;
   }
+  finishedRun = null;
   linkedTest = null;
   linkedRunTest = null;
   linkedWorkshop = false;
@@ -443,6 +457,7 @@ function startPractice(encounter: Encounter) {
     )
   )
     return;
+  finishedRun = null;
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -455,6 +470,7 @@ function startPractice(encounter: Encounter) {
   canvas.focus();
 }
 function startRunTest(save: Checkpoint) {
+  finishedRun = null;
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -467,6 +483,7 @@ function startRunTest(save: Checkpoint) {
   if (game.mode === 'playing') canvas.focus();
 }
 function startWorkshop(mods: readonly string[] = workshopMods) {
+  finishedRun = null;
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -487,6 +504,43 @@ function menu() {
 function backFromPractice() {
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
   else if (game.mode === 'paused') showDialog('pause');
+  else resume();
+}
+function captureFinishedRun() {
+  if (
+    finishedRun ||
+    game.practice ||
+    game.testRun ||
+    game.workshop.active ||
+    (game.mode !== 'dead' && game.mode !== 'won')
+  )
+    return;
+  const id = Array.from(crypto.getRandomValues(new Uint32Array(4)), (n) =>
+    n.toString(16).padStart(8, '0'),
+  ).join('');
+  finishedRun = snapshotRun(game, id);
+  if (!finishedRun) return;
+  runHistory = addRun([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))], finishedRun);
+  recapSaved = write(RUN_HISTORY_KEY, runHistory);
+}
+function replayFinishedRun(run: RunRecap) {
+  if (!canReplayRun(run)) return;
+  // A replay begins at room one; the archived gun belongs only in Workshop.
+  const url = new URL(location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('seed', run.seed);
+  history.replaceState(null, '', url);
+  linkedDaily = null;
+  seedParam = run.seed;
+  start(undefined, false, run.seed);
+}
+function workshopFromRun(run: RunRecap) {
+  discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+  if (canPracticeRunBuild(run, discovered)) startWorkshop(run.mods);
+}
+function backFromHistory() {
+  if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
   else resume();
 }
 game.onCheckpoint = (s) => {
@@ -520,6 +574,8 @@ game.onBossDefeated = (kind) => {
   updateTitle();
 };
 game.onChange = () => {
+  captureFinishedRun();
+  $('history').hidden = runHistory.length === 0;
   updateMusic();
   if (game.mode !== 'playing') controller.stopRumble();
   const room = game.layoutSeed + ':' + game.stage + ':' + game.level.id;
@@ -637,7 +693,17 @@ function showDialog(kind: string) {
   modal.classList.toggle('practice-dialog', kind === 'practice');
   modal.classList.toggle('workshop-dialog', kind === 'workshop');
   const content = $('dialog-content');
-  if (kind === 'workshop') {
+  if (kind === 'history') {
+    discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+    runHistory = loadRunHistory([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))]);
+    content.innerHTML =
+      runHistoryMenu(runHistory, discovered) +
+      (!recapSaved
+        ? '<p class="recap-note" role="status">History could not be saved. New recaps remain available until this page closes.</p>'
+        : '');
+    bindRecapActions(content, runHistory, discovered, replayFinishedRun, workshopFromRun);
+    $('back').onclick = backFromHistory;
+  } else if (kind === 'workshop') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     workshopMenu(
       content,
@@ -897,6 +963,17 @@ function showDialog(kind: string) {
         }
       };
     }
+    if (finishedRun) {
+      content.insertAdjacentHTML(
+        'beforeend',
+        resultRecap(finishedRun, discovered) +
+          (!recapSaved
+            ? '<p class="recap-note" role="status">Recap could not be saved. It remains available until this page closes.</p>'
+            : ''),
+      );
+      bindRecapActions(content, [finishedRun], discovered, replayFinishedRun, workshopFromRun);
+      $('recap-history').onclick = () => showDialog('history');
+    }
     $('retry').onclick = () => start(undefined, true);
     $('menu').onclick = menu;
   } else {
@@ -1011,8 +1088,9 @@ function showDialog(kind: string) {
   }
   if (!modal.open) modal.showModal();
   updateControlHints();
-  if (kind === 'upgrade' || kind === 'practice' || (kind === 'result' && game.practice))
+  if (kind === 'upgrade' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
+  if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (inputDevice === 'controller') focusControllerMenu(content);
 }
 function controllerOptions() {
@@ -1165,6 +1243,7 @@ $('continue').onclick = () => {
   if (checkpoint) start(checkpoint);
 };
 $('settings').onclick = () => showDialog('settings');
+$('history').onclick = () => showDialog('history');
 $('practice').onclick = () => {
   if (encounters.length) showDialog('practice');
 };
@@ -1174,6 +1253,10 @@ $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (dialogKind === 'history') {
+    backFromHistory();
+    return;
+  }
   if (dialogKind === 'practice') {
     backFromPractice();
     return;
