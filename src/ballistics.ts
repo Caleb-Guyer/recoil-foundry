@@ -401,30 +401,34 @@ export class BallisticsSystem {
     for (const { a, b, bullet } of contacts) {
       if (!a.counter || b.friendly) continue;
       a.counter--;
-      const d = b.source ? direction(bullet, b.source) : direction(b.vel, { x: 0, y: 0 });
-      b.pos = bullet;
-      b.prev = { ...bullet };
-      b.vel = { x: d.x * 24, y: d.y * 24 };
-      b.friendly = true;
-      b.enemyAmmo = undefined;
-      if (b.angler) {
-        b.angler = undefined;
-        b.bounces = 0;
-      }
-      b.fragment = true;
-      b.reflected = true;
-      b.reflectedAt = g.time;
-      b.allyBlock = undefined;
-      b.damage = Math.min(65, b.damage * 1.5);
-      b.life = 1.4;
-      b.pierce = this.has('reprisal') ? 2 : 0;
-      b.hits.clear();
-      if (b.pierce) b.trace = { bank: false, pierce: true, points: [{ ...bullet }] };
-      g.burst(bullet, 4, '#b9e1d5', 2);
-      if (g.time >= this.reflectionAt) {
-        g.onSound('bank');
-        this.reflectionAt = g.time + 0.06;
-      }
+      this.reflectRound(b, bullet);
+    }
+  }
+  reflectRound(b: Shot, bullet: Vec) {
+    const g = this.game;
+    const d = b.source ? direction(bullet, b.source) : direction(b.vel, { x: 0, y: 0 });
+    b.pos = bullet;
+    b.prev = { ...bullet };
+    b.vel = { x: d.x * 24, y: d.y * 24 };
+    b.friendly = true;
+    b.enemyAmmo = undefined;
+    if (b.angler) {
+      b.angler = undefined;
+      b.bounces = 0;
+    }
+    b.fragment = true;
+    b.reflected = true;
+    b.reflectedAt = g.time;
+    b.allyBlock = undefined;
+    b.damage = Math.min(65, b.damage * 1.5);
+    b.life = 1.4;
+    b.pierce = this.has('reprisal') ? 2 : 0;
+    b.hits.clear();
+    if (b.pierce) b.trace = { bank: false, pierce: true, points: [{ ...bullet }] };
+    g.burst(bullet, 4, '#b9e1d5', 2);
+    if (g.time >= this.reflectionAt) {
+      g.onSound('bank');
+      this.reflectionAt = g.time + 0.06;
     }
   }
 }

@@ -748,3 +748,34 @@ export function anglerTestFromUrl(url: URL): Checkpoint | null {
   }
   return null;
 }
+
+export function torchTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'torch' ||
+    p.getAll('build').length > 1 ||
+    [
+      'daily',
+      'dv',
+      'seed',
+      'area',
+      'formation',
+      'route',
+      'mode',
+      'layout',
+      'variant',
+      'mirror',
+      'phase',
+    ].some((k) => p.has(k)) ||
+    (p.has('build') &&
+      !['base', 'evolved', 'bank', 'portal', 'precision'].includes(p.get('build')!))
+  )
+    return null;
+  const mods = ['cutting-torch', 'thermal-runaway', 'kick', 'airshot', 'light', 'leech'];
+  if (p.get('build') === 'base') mods[1] = 'rapid';
+  if (p.get('build') === 'bank') mods.splice(2, 2, 'ricochet', 'banker');
+  if (p.get('build') === 'portal') mods.splice(2, 2, 'fold', 'rewire');
+  if (p.get('build') === 'precision') mods.splice(2, 4, 'deadeye', 'rivet', 'fracture', 'pierce');
+  return { ...testCheckpoint('TORCH-58', 6), route: 'low', mods };
+}

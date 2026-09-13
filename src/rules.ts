@@ -407,6 +407,18 @@ export const MODS = [
     mark: 'corner-cutter',
   },
   {
+    id: 'cutting-torch',
+    name: 'Cutting Torch',
+    description: 'A continuous beam with steady recoil. Hold fire to cut.',
+    mark: 'torch',
+  },
+  {
+    id: 'thermal-runaway',
+    name: 'Thermal Runaway',
+    description: 'Hold the beam on one enemy for up to 75% more damage.',
+    mark: 'thermal',
+  },
+  {
     id: 'vector',
     name: 'Vector rounds',
     description: 'Steer flying rounds with your aim. 25% slower projectiles.',
@@ -433,6 +445,8 @@ export const PATH_NAMES: Record<BuildPath, string> = {
   demolition: 'Demolition',
 };
 export const MOD_PATHS: Record<string, { path: BuildPath }> = {
+  'cutting-torch': { path: 'precision' },
+  'thermal-runaway': { path: 'precision' },
   shellshock: { path: 'demolition' },
   'blast-surf': { path: 'demolition' },
   aftershock: { path: 'demolition' },
@@ -478,6 +492,7 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
 export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  'thermal-runaway': 'cutting-torch',
   afterburner: 'vector',
   'corner-cutter': 'grindshot',
   'wrecking-ball': 'ramjet',
@@ -512,6 +527,15 @@ export const MOD_REQUIRES: Record<string, string> = {
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
 }
+export const TORCH_ALTERNATIVES = ['recall', 'vector', 'grindshot', 'rail-spike'] as const;
+export function compatibleMod(mods: readonly string[], id: string) {
+  return (
+    !(
+      id === 'cutting-torch' &&
+      mods.some((m) => (TORCH_ALTERNATIVES as readonly string[]).includes(m))
+    ) && !(mods.includes('cutting-torch') && (TORCH_ALTERNATIVES as readonly string[]).includes(id))
+  );
+}
 export function availableMods(mods: readonly string[], includeSalvage = false): Mod[] {
   const chosen = buildPath(mods);
   return MODS.filter((mod) => {
@@ -519,6 +543,7 @@ export function availableMods(mods: readonly string[], includeSalvage = false): 
     return (
       (includeSalvage || !isSalvage(mod.id)) &&
       !mods.includes(mod.id) &&
+      compatibleMod(mods, mod.id) &&
       (!MOD_REQUIRES[mod.id] || mods.includes(MOD_REQUIRES[mod.id])) &&
       (!isFusion(mod.id) ||
         (!mods.some(isFusion) && FUSION_REQUIRES[mod.id].every((id) => mods.includes(id)))) &&
@@ -809,6 +834,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               m.id === 'corner-cutter' ||
               m.id === 'vector' ||
               m.id === 'afterburner' ||
+              m.id === 'cutting-torch' ||
+              m.id === 'thermal-runaway' ||
               isSalvage(MOD_REQUIRES[m.id]),
           ))));
   const validDetours =

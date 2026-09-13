@@ -202,6 +202,47 @@ function assertCancelled(context: AudioContextMock, sources: SourceNodeMock[]) {
   }
 }
 
+test('torch sound reuses one voice, follows heat, and releases its entire graph on stop or mute', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.updateTorch(true);
+  assert.equal(sound.context, null, 'Firing cannot bypass audio unlock');
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const initial = context.nodes.length;
+  for (let i = 0; i < 600; i++) sound.updateTorch(true);
+  assert.equal(context.sources.length, 1);
+  const first = context.sources[0];
+  assert.equal(first.frequency.value, 92);
+  assert.equal(
+    first.frequency.events.length,
+    1,
+    'Steady heat should not queue repeated automation',
+  );
+  sound.updateTorch(true, 1);
+  assert.equal(first.frequency.value, 140);
+  sound.updateTorch(false);
+  context.advance(0.2);
+  assert(context.nodes.slice(initial).every((node) => node.disconnected));
+  assert.equal(first.stopCalls.length, 1);
+  sound.updateTorch(true);
+  const second = context.sources[1];
+  sound.enabled = false;
+  context.advance(0.2);
+  assert(second.disconnected);
+  sound.updateTorch(true);
+  assert.equal(context.sources.length, 2, 'Muted firing created a voice');
+  sound.enabled = true;
+  sound.updateTorch(true);
+  const third = context.sources[2];
+  context.state = 'suspended';
+  sound.updateTorch(true);
+  assert(third.stopTime < Infinity);
+  context.state = 'running';
+  context.advance(0.2);
+  assert(third.disconnected);
+});
+
 test('music schedules a short future window without duplicating notes on repeated frames', () => {
   const { context, music } = fixture();
   music.update(scene());

@@ -1,3 +1,4 @@
+import { TorchSystem } from './torch.ts';
 import { GrindshotSystem } from './grindshot.ts';
 import { CrossingSystem } from './crossing.ts';
 import { MagnetSystem } from './magnets.ts';
@@ -233,6 +234,7 @@ export class Game {
   tethers = new TetherSystem(this);
   arcs = new ArcCoilSystem(this);
   grind = new GrindshotSystem(this);
+  torch = new TorchSystem(this);
   salvage = new BossSalvageSystem(this);
   salvageEvolutions = new SalvageEvolutionSystem(this);
   earnedSalvage: string | null = null;
@@ -380,6 +382,7 @@ export class Game {
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
       this.arcs.reset();
       this.grind.reset();
+      this.torch.reset();
       this.salvage.reset();
       this.salvageEvolutions.reset();
       this.tethers.reset();
@@ -470,6 +473,7 @@ export class Game {
     this.earnedSalvage = null;
     this.arcs.reset();
     this.grind.reset();
+    this.torch.reset();
     this.salvage.reset();
     this.salvageEvolutions.reset();
     this.tethers.reset();
@@ -676,6 +680,7 @@ export class Game {
     this.escape.phase = 'extracting';
     this.arcs.reset();
     this.grind.reset();
+    this.torch.reset();
     this.salvage.reset();
     this.salvageEvolutions.reset();
     this.tethers.reset();
@@ -896,7 +901,10 @@ export class Game {
         });
       this.jumpCut = true;
     }
-    if (this.burstRemaining > 0 && this.time >= this.burstAt) {
+    if (this.torch.equipped) {
+      this.torch.beforeStep(dt, input.fire || this.fireBuffer > 0);
+      this.fireBuffer = 0;
+    } else if (this.burstRemaining > 0 && this.time >= this.burstAt) {
       this.burstRemaining--;
       this.burstAt = this.time + this.gun.interval * 0.3;
       this.fireRound();
@@ -950,6 +958,7 @@ export class Game {
     this.ballistics.update();
     if (this.mode !== 'playing') return;
     this.updateShots(dt);
+    this.torch.afterStep(dt);
     if (this.mode !== 'playing') return;
     this.arcs.update();
     this.grind.update(dt);
@@ -984,6 +993,7 @@ export class Game {
       this.clearAt = this.time;
       this.arcs.reset();
       this.grind.reset();
+      this.torch.reset();
       this.salvage.reset();
       this.salvageEvolutions.reset();
       this.tethers.reset();
@@ -1047,6 +1057,11 @@ export class Game {
     this.fireRound();
   }
   fireRound() {
+    if (this.torch.equipped) {
+      this.torch.beforeStep(1 / 60, true);
+      this.torch.afterStep(1 / 60);
+      return;
+    }
     const charged = this.gun.landing && this.landingReady;
     const capacitor = this.ballistics.discharge();
     const rail = capacitor && this.fusions.has('rail-spike');
@@ -2156,15 +2171,17 @@ export class Game {
       });
     }
   }
-  hitEnemy(e: Enemy, damage: number, from?: Vec): boolean {
+  hitEnemy(e: Enemy, damage: number, from?: Vec, feedback = true): boolean {
     if (e.hp <= 0) return false;
     const blocked =
       e.elite === 'shielded' && !!from && direction(e.body.position, from).x * e.facing > 0.45;
     if (blocked) {
       damage *= 0.1;
       e.shieldFlash = 0.14;
-      this.burst({ x: e.body.position.x + e.facing * 19, y: e.body.position.y }, 4, '#e7d6ac', 2);
-      this.onSound('bank');
+      if (feedback) {
+        this.burst({ x: e.body.position.x + e.facing * 19, y: e.body.position.y }, 4, '#e7d6ac', 2);
+        this.onSound('bank');
+      }
     }
     if (e.angler && e.angler.exposed > 0) damage *= 1.5;
     if (e.crawler && e.crawler.vulnerable > 0) damage *= 1.5;
@@ -2181,7 +2198,7 @@ export class Game {
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
     e.hp -= damage;
-    if (!blocked) {
+    if (!blocked && feedback) {
       e.flash = 0.08;
       this.burst(e.body.position, 4, '#f28a79', 2.3);
       this.onSound('hit');

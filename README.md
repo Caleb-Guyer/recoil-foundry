@@ -6,6 +6,18 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Cutting Torch
+
+**Cutting Torch** is a Precision upgrade that replaces your gun's primary rounds with one thin, continuous beam. Hold the normal fire control to cut. Output is 78% of the gun's combined damage per second; Scattershot concentrates its pellets into that one beam, and fire-rate changes affect output. Recoil becomes steady thrust, stronger in the air: jump and aim down to climb, then sweep sideways while drifting. Release fire to stop immediately.
+
+**Thermal Runaway** requires Cutting Torch. Stay on the first enemy in the beam to build up to 75% extra damage over 1.5 seconds. Releasing fire, losing the line, changing targets, or player portal travel resets that heat. Pierced targets do not inherit it. A brighter contact point marks the heat; there is no meter or extra control.
+
+Cover stops the beam at its actual shape. Breakable terrain gradually gives way, and the beam can reach the opening on its next simulation step. Bank shot and Banker reflect it; Punch through penetrates enemies with the usual falloff; linked portals redirect it without drawing a line across the intervening map. Boss armor and shields remain effective.
+
+Capacitor, Landing shot and Slingshot empower one short pulse, not an entire trigger hold. On-hit effects and Countershot operate at the gun's firing cadence rather than once per frame. Backfire adds a rear beam while retaining forward recoil. Recall, Vector rounds, Grindshot and Rail Spike are alternative transformations: owning one prevents the torch from being offered, and vice versa. Existing saved builds remain valid.
+
+[Test Cutting Torch and Thermal Runaway](https://caleb-guyer.github.io/recoil-foundry/?test=torch). Use `&build=base` for the torch alone, `&build=bank` for bank shots, `&build=portal` for reusable portals, or `&build=precision` for penetration and pinning. **R** retries at full health. Test links preserve saves, Daily records and earned Practice victories.
+
 ## Angler
 
 The **Angler** is a mobile ricochet gunner that begins appearing in Furnace. It traces a single bank off a real surface to reach around cover. Its thin, dashed warning shows both legs, then turns solid for the final 0.6 seconds of its 1.2-second tell. Once locked, the shot never corrects toward you. Step away from the outgoing line or put cover in its path.
@@ -169,7 +181,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=51`). Version 51 adds the Angler and its seeded encounters; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-12&dv=52`). Version 52 adds Cutting Torch and Thermal Runaway; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

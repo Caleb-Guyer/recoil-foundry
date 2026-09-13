@@ -54,6 +54,7 @@ export class EvolutionSystem {
   settle() {
     if (!this.discharges.length) return;
     const live = new Set(this.game.shots.filter((s) => s.life > 0).map((s) => s.discharge));
+    if (this.game.torch.discharge !== undefined) live.add(this.game.torch.discharge);
     // Resolve in firing order: a slow banked round must not reset a newer hit
     // out of order. One pellet or piercing hit qualifies the entire discharge.
     while (this.discharges.length) {

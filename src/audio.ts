@@ -12,7 +12,10 @@ export class Sound {
     this.audioEnabled = value;
     if (this.master && this.context)
       this.master.gain.setTargetAtTime(value ? 0.34 : 0, this.context.currentTime, 0.012);
-    if (!value) this.silenceMusic();
+    if (!value) {
+      this.silenceMusic();
+      this.updateTorch(false);
+    }
   }
   get musicEnabled() {
     return this.scoreEnabled;
@@ -24,6 +27,45 @@ export class Sound {
   context: AudioContext | null = null;
   master: GainNode | null = null;
   noise: AudioBuffer | null = null;
+  private torchVoice: { osc: OscillatorNode; gain: GainNode; frequency: number } | null = null;
+  updateTorch(active: boolean, heat = 0) {
+    const c = this.context;
+    if (!active || !this.enabled || !c || c.state !== 'running') {
+      const voice = this.torchVoice;
+      if (voice && c) {
+        voice.gain.gain.setTargetAtTime(0, c.currentTime, 0.02);
+        voice.osc.stop(c.currentTime + 0.12);
+      }
+      this.torchVoice = null;
+      return;
+    }
+    if (!this.torchVoice) {
+      const osc = c.createOscillator(),
+        gain = c.createGain();
+      osc.type = 'sawtooth';
+      gain.gain.value = 0;
+      const filter = c.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 650;
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.master!);
+      osc.start();
+      gain.gain.setTargetAtTime(0.035, c.currentTime, 0.025);
+      this.torchVoice = { osc, gain, frequency: -1 };
+      // The filter is owned by this voice and disconnects with its oscillator.
+      osc.onended = () => {
+        osc.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      };
+    }
+    const frequency = 92 + Math.min(1, Math.max(0, heat)) * 48;
+    if (Math.abs(frequency - this.torchVoice.frequency) >= 0.5) {
+      this.torchVoice.osc.frequency.setTargetAtTime(frequency, c.currentTime, 0.08);
+      this.torchVoice.frequency = frequency;
+    }
+  }
   voices = 0;
   played = new Map<string, number>();
   unlock() {

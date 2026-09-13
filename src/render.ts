@@ -1,3 +1,4 @@
+import { drawTorch } from './torch-art.ts';
 import { drawGrindshot } from './grindshot-art.ts';
 import { drawCounterweights, drawCounterweightMounts } from './counterweight-art.ts';
 import { drawCrossing } from './crossing-art.ts';
@@ -530,6 +531,7 @@ export class Renderer {
         );
       }
     }
+    drawTorch(c, g, this.reduced);
     if (g.blast.life > 0) {
       const { pos, dir, life } = g.blast,
         base = Math.atan2(dir.y, dir.x);
