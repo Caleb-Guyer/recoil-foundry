@@ -361,8 +361,12 @@ function updateMusic(active = pageActive && document.hasFocus() && !document.hid
     game.torch.heat,
   );
 }
-function newSeed() {
-  return crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
+function newSeed(previous?: string) {
+  let seed: string;
+  do {
+    seed = crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
+  } while (seed === previous);
+  return seed;
 }
 function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   if (retry && game.workshop.active) {
@@ -385,7 +389,9 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   closeDialog();
   const seed =
     save?.seed ??
-    (retry ? game.seed : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? newSeed()));
+    (retry
+      ? (dailyFromSeed(game.seed)?.seed ?? newSeed(game.seed))
+      : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? newSeed()));
   activeDaily = dailyFromSeed(seed);
   linkedDaily = activeDaily;
   invalidDailyLink = false;

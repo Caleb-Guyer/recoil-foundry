@@ -657,7 +657,7 @@ The music dips beneath attack warnings and damage sounds. It fades out on pause,
 
 **Music** in Settings or Pause switches only the soundtrack. **Sound** is the master switch for both effects and music. Both preferences are saved in this browser, and an existing muted setting stays muted. Audio begins only after a player interaction; unsupported or blocked audio does not prevent playing.
 
-Checkpoints save at room entrances. Continue reconstructs that room and area with its modified gun and saved health. Death clears the checkpoint. Existing version 3 saves remain compatible; their room number now selects from the new area pools. Saves stay in this browser. A `?seed=YOURSEED` URL repeats room layouts and upgrade selection within this version.
+Checkpoints save at room entrances. Continue reconstructs that room and area with its modified gun and saved health. Death clears the checkpoint. **Again** starts a fresh seed after a normal loss or win, including runs initially opened through a custom seed link. Daily Runs retry the same challenge; Practice, test presets and Workshop resets keep their selected setup. Existing version 3 saves remain compatible; their room number now selects from the new area pools. Saves stay in this browser. A `?seed=YOURSEED` URL starts that seed's room layouts and upgrade selection within this version; retrying a normal run clears the custom seed from the URL.
 
 ## Develop
 
