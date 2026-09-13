@@ -1,0 +1,101 @@
+import { MODS, MOD_REQUIRES, FUSION_REQUIRES, availableMods, modPathLabel } from './rules.ts';
+import { workshopBuild } from './workshop-build.ts';
+
+export function workshopMenu(
+  content: HTMLElement,
+  known: readonly string[],
+  initial: readonly string[],
+  active: boolean,
+  apply: (mods: string[]) => void,
+  back: () => void,
+) {
+  let draft = workshopBuild(initial, known);
+  const discovered = MODS.filter((mod) => known.includes(mod.id));
+  content.innerHTML =
+    '<h2 id="dialog-title">The Workshop</h2>' +
+    '<p class="practice-note">' +
+    (discovered.length
+      ? 'Build with upgrades you’ve collected. Normal path rules apply.'
+      : 'Collect upgrades during runs to unlock them here. You can practice with the starting gun.') +
+    '</p>' +
+    (discovered.length > 12
+      ? '<label class="sr-only" for="workshop-search">Find a collected upgrade</label><input id="workshop-search" class="workshop-search" type="search" placeholder="Find an upgrade" autocomplete="off">'
+      : '') +
+    '<div id="workshop-list" class="workshop-list"></div>' +
+    '<div class="workshop-actions"><p id="workshop-status" class="workshop-status" role="status"></p><button id="workshop-apply" class="primary">' +
+    (active ? 'Apply & reset' : 'Enter Workshop') +
+    '</button><button id="workshop-clear" class="quiet">Clear build</button><button id="workshop-back" class="quiet">Back</button></div>';
+  const list = content.querySelector<HTMLElement>('#workshop-list')!;
+  const search = content.querySelector<HTMLInputElement>('#workshop-search');
+  const status = content.querySelector<HTMLElement>('#workshop-status')!;
+  const clear = content.querySelector<HTMLButtonElement>('#workshop-clear')!;
+  function render() {
+    const eligible = new Set(availableMods(draft, true).map((mod) => mod.id));
+    const matches = discovered.filter((mod) =>
+      mod.name.toLowerCase().includes(search?.value.trim().toLowerCase() ?? ''),
+    );
+    list.innerHTML =
+      matches
+        .map((mod) => {
+          const picked = draft.includes(mod.id),
+            enabled = picked || eligible.has(mod.id);
+          const missing = [MOD_REQUIRES[mod.id], ...(FUSION_REQUIRES[mod.id] ?? [])].filter(
+            (id) => id && !draft.includes(id),
+          );
+          const reason = !enabled
+            ? missing.length
+              ? 'Fit ' +
+                missing.map((id) => MODS.find((mod) => mod.id === id)!.name).join(' + ') +
+                ' first.'
+              : 'Incompatible with this build.'
+            : mod.description;
+          return (
+            '<button class="workshop-mod" data-workshop-mod="' +
+            mod.id +
+            '" aria-pressed="' +
+            picked +
+            '" title="' +
+            reason +
+            '"' +
+            (enabled ? '' : ' disabled') +
+            '><span class="workshop-mod-name"><strong>' +
+            mod.name +
+            '</strong><span aria-hidden="true">' +
+            (picked ? '✓' : '+') +
+            '</span></span><span class="workshop-mod-copy">' +
+            (enabled ? mod.description : reason) +
+            '</span>' +
+            (modPathLabel(mod.id)
+              ? '<span class="mod-path">' + modPathLabel(mod.id) + '</span>'
+              : '') +
+            '</button>'
+          );
+        })
+        .join('') ||
+      (search?.value ? '<p class="practice-note">No collected upgrades match.</p>' : '');
+    status.textContent = draft.length ? draft.length + ' fitted' : 'Starting gun';
+    clear.disabled = draft.length === 0;
+    list.querySelectorAll<HTMLButtonElement>('[data-workshop-mod]').forEach((button) => {
+      button.onclick = () => {
+        const id = button.dataset.workshopMod!;
+        const before = draft.length;
+        draft = workshopBuild(
+          draft.includes(id) ? draft.filter((mod) => mod !== id) : [...draft, id],
+          known,
+        );
+        render();
+        if (before - draft.length > 1) status.textContent += ' · Dependent upgrades removed';
+        list.querySelector<HTMLButtonElement>('[data-workshop-mod="' + id + '"]')?.focus();
+      };
+    });
+  }
+  if (search) search.oninput = render;
+  clear.onclick = () => {
+    draft = [];
+    render();
+    content.querySelector<HTMLButtonElement>('#workshop-apply')!.focus();
+  };
+  content.querySelector<HTMLButtonElement>('#workshop-apply')!.onclick = () => apply(draft);
+  content.querySelector<HTMLButtonElement>('#workshop-back')!.onclick = back;
+  render();
+}

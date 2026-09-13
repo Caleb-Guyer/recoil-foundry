@@ -1,4 +1,5 @@
 import { drawPressure } from './pressure-art.ts';
+import { drawWorkshopTarget, drawWorkshopMounts } from './workshop-art.ts';
 import { drawTripwires } from './tripwire-art.ts';
 import { drawTorch } from './torch-art.ts';
 import { drawGrindshot } from './grindshot-art.ts';
@@ -185,7 +186,8 @@ export class Renderer {
       if (weak) drawCracks(c, weak, this.reduced);
     }
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
-    this.drawExit();
+    if (!g.workshop.active) this.drawExit();
+    drawWorkshopMounts(c, g);
     drawDetourDoor(c, g);
     drawRouteExits(c, g);
     this.drawHazards();
@@ -211,6 +213,10 @@ export class Renderer {
       c.globalAlpha = 1;
     }
     for (const e of g.enemies) {
+      if (e.workshopTarget) {
+        drawWorkshopTarget(c, e);
+        continue;
+      }
       if (e.kind === 'borer' || e.kind === 'sifter' || e.kind === 'sorter') {
         drawReclamationEnemy(c, g, e, this.reduced);
         continue;

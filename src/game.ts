@@ -1,4 +1,6 @@
 import { PressureSystem, type PressureVent } from './pressure.ts';
+import { WorkshopSystem, workshopLevel, type WorkshopTarget } from './workshop.ts';
+import { workshopBuild, loadDiscoveries } from './workshop-build.ts';
 import { MassDriverSystem, MASS_DRIVER, type MassFlight } from './mass-driver.ts';
 import { TripwireSystem } from './tripwire.ts';
 import { TorchSystem } from './torch.ts';
@@ -130,6 +132,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  workshopTarget?: WorkshopTarget;
   id: number;
   body: Matter.Body;
   kind: EnemyKind;
@@ -276,6 +279,7 @@ export class Game {
   trail: Vec[] = [];
   mode: Mode = 'title';
   practice: Encounter | null = null;
+  workshop = new WorkshopSystem(this);
   seed = '';
   stage = 0;
   overtime: Checkpoint['overtime'] | null = null;
@@ -287,7 +291,13 @@ export class Game {
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
   get canChooseRoute() {
-    return !this.practice && !this.escape && !this.detour && isRouteStage(this.stage + 1);
+    return (
+      !this.workshop.active &&
+      !this.practice &&
+      !this.escape &&
+      !this.detour &&
+      isRouteStage(this.stage + 1)
+    );
   }
   get routeChoices(): RouteChoice[] {
     return !this.canChooseRoute
@@ -299,6 +309,7 @@ export class Game {
   detourStepsReady = false;
   get canDetour() {
     return (
+      !this.workshop.active &&
       !this.practice &&
       !this.overtime &&
       !this.escape &&
@@ -315,6 +326,7 @@ export class Game {
   }
   get canOvertime() {
     return (
+      !this.workshop.active &&
       !this.practice &&
       !this.overtime &&
       !this.escape &&
@@ -420,6 +432,17 @@ export class Game {
     this.start(save.seed, save, { ...encounter });
     return true;
   }
+  startWorkshop(discovered: readonly string[], mods: readonly string[] = []) {
+    this.workshop.discovered = loadDiscoveries(discovered);
+    const build = workshopBuild(mods, this.workshop.discovered);
+    this.start(
+      'WORKSHOP',
+      { version: 5, seed: 'WORKSHOP', stage: 0, hp: 100, mods: build, kills: 0, elapsed: 0 },
+      null,
+      null,
+      true,
+    );
+  }
   startTest(save: Checkpoint) {
     this.start(save.seed, save, null, save);
     const match = /^SAW-BOSS-53-([123])-/.exec(save.seed);
@@ -434,7 +457,9 @@ export class Game {
     save?: Checkpoint,
     practice: Encounter | null = null,
     testRun: Checkpoint | null = null,
+    workshop = false,
   ) {
+    this.workshop.active = workshop;
     this.practice = practice;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
@@ -474,7 +499,7 @@ export class Game {
     this.save();
   }
   save() {
-    if (this.practice || this.testRun) return;
+    if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 5,
       seed: this.seed,
@@ -569,25 +594,27 @@ export class Game {
       this.terrain.push(b);
       Composite.add(this.engine.world, b);
     };
-    this.level = escapeRoom
-      ? {
-          ...ESCAPE_LAYOUT,
-          solids: ESCAPE_LAYOUT.solids.map((s) => ({ ...s })),
-          route: ESCAPE_LAYOUT.route.map((p) => ({ ...p })),
-          spawns: [],
-        }
-      : this.detour
-        ? getDetour(this.seed, this.stage)
-        : this.overtime
-          ? getOvertimeLevel(this.seed, this.stage)
-          : getLevel(
-              this.seed,
-              this.stage,
-              this.practice?.kind === 'condenser' ? 'condenser' : undefined,
-              this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
-                ? this.practice.kind
-                : undefined,
-            );
+    this.level = this.workshop.active
+      ? workshopLevel()
+      : escapeRoom
+        ? {
+            ...ESCAPE_LAYOUT,
+            solids: ESCAPE_LAYOUT.solids.map((s) => ({ ...s })),
+            route: ESCAPE_LAYOUT.route.map((p) => ({ ...p })),
+            spawns: [],
+          }
+        : this.detour
+          ? getDetour(this.seed, this.stage)
+          : this.overtime
+            ? getOvertimeLevel(this.seed, this.stage)
+            : getLevel(
+                this.seed,
+                this.stage,
+                this.practice?.kind === 'condenser' ? 'condenser' : undefined,
+                this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
+                  ? this.practice.kind
+                  : undefined,
+              );
     if (this.route && !escapeRoom && !this.detour) {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
@@ -643,9 +670,10 @@ export class Game {
     this.crossing.reset();
     this.destruction.reset();
     this.pressure.reset();
+    this.workshop.reset();
   }
   startEscape() {
-    if (this.practice || this.detour) return;
+    if (this.practice || this.detour || this.workshop.active) return;
     if (this.escape || this.stage !== STAGES - 1 || !this.clear || this.mode !== 'playing') return;
     this.loadRoom(true);
     this.save();
@@ -1032,6 +1060,10 @@ export class Game {
       this.boardExtraction();
       return;
     }
+    if (this.workshop.active) {
+      this.workshop.update(dt);
+      return;
+    }
     this.waves.update(dt);
     if (
       !this.enemies.length &&
@@ -1370,6 +1402,10 @@ export class Game {
     if (this.tethers.staggered(e)) return;
     if (this.pressure.staggered(e)) return;
     if (this.massDriver.staggered(e)) return;
+    if (e.workshopTarget) {
+      this.workshop.move(e);
+      return;
+    }
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *
@@ -2330,7 +2366,14 @@ export class Game {
       this.onSound('hit');
     }
     if (e.hp > 0) return blocked;
-    if (isBoss(e.kind) && !this.practice && this.mode === 'playing' && this.hp > 0 && e.spawn <= 0)
+    if (
+      isBoss(e.kind) &&
+      !this.practice &&
+      !this.workshop.active &&
+      this.mode === 'playing' &&
+      this.hp > 0 &&
+      e.spawn <= 0
+    )
       this.earnedSalvage = SALVAGE_BOSSES[e.kind] ?? null;
     breakSquad(this, e);
     releaseScrapper(this, e);
@@ -2348,6 +2391,7 @@ export class Game {
       isBoss(e.kind) &&
       !this.practice &&
       !this.testRun &&
+      !this.workshop.active &&
       this.mode === 'playing' &&
       this.hp > 0 &&
       e.spawn <= 0
@@ -2371,6 +2415,7 @@ export class Game {
     return blocked;
   }
   damagePlayer(amount: number, from?: Vec) {
+    if (this.workshop.active) return;
     if (this.escape?.phase === 'extracting') return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     this.hp = Math.max(0, this.hp - amount);
@@ -2386,6 +2431,10 @@ export class Game {
     if (this.hp <= 0) this.die();
   }
   die() {
+    if (this.workshop.active) {
+      this.startWorkshop(this.workshop.discovered, this.mods);
+      return;
+    }
     this.setMode('dead');
     if (!this.practice && !this.testRun) this.onCheckpoint(null);
     this.onSound('dead');
@@ -2409,7 +2458,7 @@ export class Game {
     }
   }
   openReward(enterDetour = false, route?: RouteChoice) {
-    if (this.practice || this.escape || this.mode !== 'playing') return;
+    if (this.practice || this.workshop.active || this.escape || this.mode !== 'playing') return;
     if (
       route &&
       (enterDetour ||
@@ -2452,6 +2501,7 @@ export class Game {
   }
   get canReroll() {
     return (
+      !this.workshop.active &&
       this.mode === 'upgrade' &&
       !this.practice &&
       !dailyFromSeed(this.seed) &&
@@ -2475,7 +2525,7 @@ export class Game {
     return true;
   }
   chooseMod(id: string) {
-    if (this.practice) return;
+    if (this.practice || this.workshop.active) return;
     if (
       this.mode !== 'upgrade' ||
       this.rewardTaken ||

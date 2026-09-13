@@ -589,3 +589,117 @@ dialog.practice-dialog {
   color: #64ceff;
   background: #193d51;
 }
+
+body[data-workshop='true'] #health {
+  visibility: hidden;
+}
+.workshop-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.workshop-tools[hidden] {
+  display: none;
+}
+.workshop-tools .quiet {
+  padding: 6px 10px;
+}
+.workshop-tools .icon {
+  font-size: 23px;
+}
+dialog.workshop-dialog {
+  width: min(760px, calc(100% - 28px));
+  padding-bottom: 0;
+}
+.workshop-dialog h2 {
+  margin-bottom: 24px;
+}
+.workshop-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.workshop-mod {
+  text-align: left;
+  padding: 14px;
+  border: 1px solid #3b4a48;
+  border-radius: 3px;
+  background: #1b282b;
+  color: var(--ink);
+}
+.workshop-mod:hover:not(:disabled) {
+  background: #233439;
+  border-color: #94b7ac;
+}
+.workshop-mod[aria-pressed='true'] {
+  border-color: #b8d0b7;
+  background: #2b3b36;
+}
+.workshop-mod:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.workshop-mod-name {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 15px;
+}
+.workshop-mod-name > span {
+  color: #b8d0b7;
+}
+.workshop-mod-copy {
+  display: block;
+  color: #a6b5ae;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 7px;
+}
+.workshop-mod .mod-path {
+  font-size: 10px;
+  padding-top: 9px;
+}
+.workshop-status {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+.workshop-search {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  margin-bottom: 14px;
+  border: 1px solid #4b5b56;
+  background: #111b1e;
+  color: var(--ink);
+  font: inherit;
+  border-radius: 3px;
+}
+.workshop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0 36px;
+  background: #182023;
+}
+.workshop-actions .quiet:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 600px) {
+  .workshop-actions {
+    padding-bottom: 24px;
+  }
+  .workshop-list {
+    grid-template-columns: 1fr;
+  }
+  .workshop-actions .primary {
+    width: 100%;
+  }
+  .workshop-tools {
+    gap: 2px;
+  }
+}

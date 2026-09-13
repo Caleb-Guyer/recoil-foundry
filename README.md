@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## The Workshop
+
+Open **Workshop** from the title screen to build a gun using upgrades you have actually collected. Only discovered upgrades appear; path locks, prerequisites, transformation exclusions and the one-fusion rule still apply. Removing a prerequisite also removes its dependent upgrades. Search your collection, clear the build, or return to the range with **Apply & reset**. Your Workshop gun is remembered separately from your run.
+
+The range has neutral physical targets, a moving target, a directional shield dummy, loose crates, two loaded breakable ledges, and a tall recoil practice shaft. Targets use the normal projectile, armor, knockback, portal and upgrade systems. Destroyed targets return after a short delay, waiting if their mount is occupied. They never attack. The player cannot take damage here. **R** or the reset button restores the entire room and your selected gun. **Build** reopens the compact editor; **Esc** pauses. Normal movement, firing and portal controls remain the same.
+
+Collected upgrades persist through lost and completed runs. Normal runs, Daily Runs, detours and Overtime all contribute; Practice and test presets do not. The current saved gun is imported on first launch. Earlier completed or lost runs did not store their individual upgrade history, so those older collections cannot be recovered. Workshop sessions never overwrite Continue, grant rewards or boss victories, or submit Daily times. Storage failures leave the current session usable. Daily ruleset 58 is unchanged because this range does not alter run generation or balance.
+
+[Open The Workshop](https://caleb-guyer.github.io/recoil-foundry/?workshop=1). The link uses your own collection and never unlocks upgrades. New players can enter with the starting gun.
+
 ## The Dropworks
 
 **The Dropworks** can appear in Cooling Works' second room. Two permanent stairways climb to a narrow central perch, with open firing gaps between platforms. Crack the two loaded shelves to drop their crates onto enemies below. The load shelves are optional: breaking both still leaves an ordinary jumping route across the room. Falling loads use physical collisions, and the broken support does not spawn solid rubble directly beneath them.

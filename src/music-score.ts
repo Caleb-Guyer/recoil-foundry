@@ -40,7 +40,7 @@ export function musicScene(game: Game): MusicScene {
       clear: departing,
     };
   }
-  const alive = game.enemies.filter((enemy) => enemy.hp > 0);
+  const alive = game.enemies.filter((enemy) => enemy.hp > 0 && !enemy.workshopTarget);
   const boss = alive.some((enemy) => isBoss(enemy.kind));
   const clear = game.clear || (alive.length === 0 && !game.waves.pending);
   let intensity = 0;

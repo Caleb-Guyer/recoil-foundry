@@ -7,6 +7,15 @@ import { counterweightTestFromUrl } from './practice.ts';
 import { grindshotTestFromUrl, interceptorGrindTestFromUrl } from './practice.ts';
 import './style.css';
 import { Game } from './game.ts';
+import {
+  DISCOVERIES_KEY,
+  WORKSHOP_BUILD_KEY,
+  discoverBuild,
+  loadDiscoveries,
+  workshopBuild,
+  workshopLink,
+} from './workshop-build.ts';
+import { workshopMenu } from './workshop-menu.ts';
 import type { Input } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
@@ -89,6 +98,11 @@ const storedCheckpoint = loadCheckpoint(
 let unavailableDailySave = !!storedCheckpoint && isUnsupportedDailySeed(storedCheckpoint.seed);
 let checkpoint = unavailableDailySave ? null : storedCheckpoint;
 const encounters = loadEncounters(read(VICTORIES_KEY));
+let discovered = discoverBuild(
+  loadDiscoveries(read(DISCOVERIES_KEY)),
+  storedCheckpoint?.mods ?? [],
+);
+let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
@@ -96,7 +110,7 @@ document.getElementById('app')!.innerHTML = `
  <section id="title-screen">
   <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
-   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button></div>
+   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button></div>
    <p class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><button id="settings" class="quiet title-settings">Settings</button>
@@ -107,6 +121,13 @@ const game = new Game(),
   canvas = $<HTMLCanvasElement>('game'),
   renderer = new Renderer(canvas, game),
   sound = new Sound();
+if (discovered.length) write(DISCOVERIES_KEY, discovered);
+const workshopTools = document.createElement('div');
+workshopTools.className = 'workshop-tools';
+workshopTools.hidden = true;
+workshopTools.innerHTML =
+  '<button id="workshop-edit" class="quiet">Build</button><button id="workshop-reset" class="icon" aria-label="Reset Workshop" title="Reset room · R">↻</button>';
+document.querySelector('.run-info')!.prepend(workshopTools);
 const rawSettings = read('rf-settings-v2');
 const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}) as {
   sound?: boolean;
@@ -176,6 +197,7 @@ let linkedRunTest =
   cargoTestFromUrl(entryUrl) ??
   expandedTestFromUrl(entryUrl);
 let linkedDaily = dailyFromUrl(entryUrl);
+let linkedWorkshop = workshopLink(entryUrl);
 let invalidDailyLink = entryUrl.searchParams.has('daily') && !linkedDaily;
 let seedParam = entryUrl.searchParams.has('daily')
   ? undefined
@@ -187,6 +209,7 @@ function updateTitle() {
   $('play').innerHTML =
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
+  if (linkedWorkshop) $('play').innerHTML = 'Open Workshop <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'RECLAMATION-20')
     $('play').innerHTML = 'Test Reclamation Works <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
@@ -342,6 +365,10 @@ function newSeed() {
   return crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
 }
 function start(save?: Checkpoint, retry = false, seedOverride?: string) {
+  if (retry && game.workshop.active) {
+    startWorkshop(game.mods);
+    return;
+  }
   if (retry && game.testRun) {
     startRunTest(game.testRun);
     return;
@@ -352,6 +379,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   }
   linkedTest = null;
   linkedRunTest = null;
+  linkedWorkshop = false;
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -368,6 +396,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   } else {
     const url = new URL(location.href);
     url.searchParams.delete('test');
+    url.searchParams.delete('workshop');
     url.searchParams.delete('area');
     url.searchParams.delete('formation');
     url.searchParams.delete('build');
@@ -416,6 +445,20 @@ function startRunTest(save: Checkpoint) {
   pointer.y = canvas.clientHeight * 0.6;
   if (game.mode === 'playing') canvas.focus();
 }
+function startWorkshop(mods: readonly string[] = workshopMods) {
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  activeDaily = null;
+  dailyResult = null;
+  workshopMods = workshopBuild(mods, discovered);
+  write(WORKSHOP_BUILD_KEY, workshopMods);
+  game.startWorkshop(discovered, workshopMods);
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
+  canvas.focus();
+}
 function menu() {
   closeDialog();
   game.setMode('title');
@@ -426,7 +469,17 @@ function backFromPractice() {
   else resume();
 }
 game.onCheckpoint = (s) => {
-  if (game.practice || game.testRun) return;
+  if (game.practice || game.testRun || game.workshop.active) return;
+  if (s) {
+    const next = discoverBuild(
+      loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]),
+      s.mods,
+    );
+    if (next.length !== discovered.length) {
+      discovered = next;
+      write(DISCOVERIES_KEY, discovered);
+    }
+  }
   checkpoint = s;
   if (write('rf-checkpoint-v5', s)) {
     write('rf-checkpoint-v4', null);
@@ -449,16 +502,20 @@ game.onChange = () => {
     shownRoom = room;
   }
   document.body.dataset.mode = game.mode;
+  document.body.dataset.workshop = String(game.workshop.active);
+  workshopTools.hidden = !game.workshop.active;
   $('title-screen').hidden = game.mode !== 'title';
-  $('stage').textContent = game.practice
-    ? 'PRACTICE'
-    : (game.testRun ? 'TEST · ' : activeDaily ? 'DAILY · ' : '') +
-      (game.overtime ? 'OT · ' : '') +
-      (game.escape
-        ? 'ESCAPE'
-        : game.detour
-          ? 'CHALLENGE'
-          : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
+  $('stage').textContent = game.workshop.active
+    ? 'WORKSHOP'
+    : game.practice
+      ? 'PRACTICE'
+      : (game.testRun ? 'TEST · ' : activeDaily ? 'DAILY · ' : '') +
+        (game.overtime ? 'OT · ' : '') +
+        (game.escape
+          ? 'ESCAPE'
+          : game.detour
+            ? 'CHALLENGE'
+            : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
@@ -551,8 +608,19 @@ function showDialog(kind: string) {
   const singleUpgrade = kind === 'upgrade' && game.offers.length === 1;
   modal.classList.toggle('single-upgrade', singleUpgrade);
   modal.classList.toggle('practice-dialog', kind === 'practice');
+  modal.classList.toggle('workshop-dialog', kind === 'workshop');
   const content = $('dialog-content');
-  if (kind === 'layout-test') {
+  if (kind === 'workshop') {
+    discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+    workshopMenu(
+      content,
+      discovered,
+      game.workshop.active ? game.mods : workshopMods,
+      game.workshop.active,
+      startWorkshop,
+      resume,
+    );
+  } else if (kind === 'layout-test') {
     const descriptions = [
       'Staggered platforms. Stretch a tether.',
       'Cracked barriers. Shoot the fuel.',
@@ -831,21 +899,23 @@ function showDialog(kind: string) {
             : '<p>Portals are fixed until the next room.</p>'
         : '') +
       '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
-      (game.practice
-        ? 'Defeat the boss. Press R to retry.'
-        : game.testRun
-          ? 'Preset test. Press R to restart the test.'
-          : game.escape
-            ? 'Reach the extraction lift.'
-            : game.detour
-              ? 'Survive for an extra upgrade, without a health refill.'
-              : game.canOvertime
-                ? 'Upper door: Overtime with your build. Ground door: extract.'
-                : game.overtime
-                  ? 'Second lap. Clear all twenty rooms, then extract.'
-                  : game.canDetour
-                    ? 'After clearing, the upper door offers an optional challenge.'
-                    : 'Clear the room, then leave through the right door.') +
+      (game.workshop.active
+        ? 'Targets reset automatically. R restores the room. Build changes your gun.'
+        : game.practice
+          ? 'Defeat the boss. Press R to retry.'
+          : game.testRun
+            ? 'Preset test. Press R to restart the test.'
+            : game.escape
+              ? 'Reach the extraction lift.'
+              : game.detour
+                ? 'Survive for an extra upgrade, without a health refill.'
+                : game.canOvertime
+                  ? 'Upper door: Overtime with your build. Ground door: extract.'
+                  : game.overtime
+                    ? 'Second lap. Clear all twenty rooms, then extract.'
+                    : game.canDetour
+                      ? 'After clearing, the upper door offers an optional challenge.'
+                      : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun' +
@@ -857,13 +927,15 @@ function showDialog(kind: string) {
       '<div class="actions"><button id="back" class="primary">' +
       (paused ? 'Resume' : 'Back') +
       '</button>' +
-      (paused && game.practice
-        ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet"' +
-          (encounters.length ? '' : ' hidden') +
-          '>Choose fight</button>'
-        : paused && game.testRun
-          ? '<button id="retry" class="quiet">Restart test</button>'
-          : '') +
+      (paused && game.workshop.active
+        ? '<button id="workshop-pause-build" class="quiet">Build</button><button id="workshop-pause-reset" class="quiet">Reset room</button>'
+        : paused && game.practice
+          ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet"' +
+            (encounters.length ? '' : ' hidden') +
+            '>Choose fight</button>'
+          : paused && game.testRun
+            ? '<button id="retry" class="quiet">Restart test</button>'
+            : '') +
       (paused ? '<button id="menu" class="quiet">Menu</button>' : '') +
       '</div>';
     $<HTMLInputElement>('sound').onchange = (e) => {
@@ -883,6 +955,10 @@ function showDialog(kind: string) {
       persistSettings();
     };
     $('back').onclick = resume;
+    if (paused && game.workshop.active) {
+      $('workshop-pause-build').onclick = () => showDialog('workshop');
+      $('workshop-pause-reset').onclick = () => startWorkshop(game.mods);
+    }
     if (paused && (game.practice || game.testRun)) {
       $('retry').onclick = () => start(undefined, true);
       if (game.practice) $('choose-fight').onclick = () => showDialog('practice');
@@ -907,15 +983,17 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
-    ? showDialog('layout-test')
-    : linkedRunTest?.seed.startsWith('UPGRADES-') || linkedRunTest?.seed.startsWith('FUSIONS-')
-      ? showDialog('upgrade-test')
-      : linkedRunTest
-        ? startRunTest(linkedRunTest)
-        : linkedTest
-          ? startPractice(linkedTest)
-          : start();
+  linkedWorkshop
+    ? showDialog('workshop')
+    : linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
+      ? showDialog('layout-test')
+      : linkedRunTest?.seed.startsWith('UPGRADES-') || linkedRunTest?.seed.startsWith('FUSIONS-')
+        ? showDialog('upgrade-test')
+        : linkedRunTest
+          ? startRunTest(linkedRunTest)
+          : linkedTest
+            ? startPractice(linkedTest)
+            : start();
 $('daily').onclick = () => {
   if (linkedDaily) {
     linkedDaily = null;
@@ -930,6 +1008,9 @@ $('settings').onclick = () => showDialog('settings');
 $('practice').onclick = () => {
   if (encounters.length) showDialog('practice');
 };
+$('workshop').onclick = () => showDialog('workshop');
+$('workshop-edit').onclick = () => showDialog('workshop');
+$('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
@@ -956,9 +1037,10 @@ window.addEventListener('keydown', (e) => {
   if (e.repeat) return;
   if (
     e.code === 'KeyR' &&
-    (game.practice || game.testRun) &&
+    (game.practice || game.testRun || game.workshop.active) &&
     game.mode !== 'title' &&
-    dialogKind !== 'practice'
+    dialogKind !== 'practice' &&
+    dialogKind !== 'workshop'
   ) {
     e.preventDefault();
     start(undefined, true);
