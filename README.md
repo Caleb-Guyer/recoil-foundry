@@ -690,6 +690,8 @@ Checkpoints save at room entrances. Continue reconstructs that room and area wit
 
 ## Develop
 
+[Upgrade compatibility audit and branching roadmap](docs/upgrade-roadmap.md) documents all 67 current upgrades, the complete pair inventory, proposed interaction fixes and twelve proposed new specializations. It is a design document; the proposed gameplay changes are not yet implemented.
+
 Node.js 24 and npm:
 
 ```sh
