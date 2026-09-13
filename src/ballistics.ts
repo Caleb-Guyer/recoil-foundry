@@ -14,6 +14,8 @@ export const FUSE_TIME = 0.72;
 export const FUSE_LIMIT = 48;
 export const ECHO_DELAY = 0.42;
 export const ECHO_LIMIT = 4;
+export const COUNTERSHOT_RECHARGE = 0.8;
+export const COUNTERSHOT_DAMAGE_CAP = 24;
 export interface RecallFlight {
   age: number;
   returning: boolean;
@@ -53,7 +55,7 @@ export class BallisticsSystem {
   pins = new Map<number, Pin>();
   private rivetAt = new Map<number, number>();
   private volleys = 0;
-  private reflectionAt = -1;
+  private counterRecovery = 0;
   private stickAt = -1;
   constructor(game: Game) {
     this.game = game;
@@ -67,10 +69,21 @@ export class BallisticsSystem {
     this.echoes = [];
     this.pins.clear();
     this.rivetAt.clear();
-    this.reflectionAt = -1;
+    this.counterRecovery = 0;
     this.stickAt = -1;
   }
   charge(dt: number, held: boolean) {
+    if (held || this.game.burstRemaining > 0) {
+      // A full trigger release is required; rapid taps and long gun intervals
+      // cannot assemble a recharge out of tiny gaps in sustained fire.
+      if (this.counterRecovery > 0) this.counterRecovery = COUNTERSHOT_RECHARGE;
+    } else if (this.counterRecovery > 0) {
+      this.counterRecovery = Math.max(0, this.counterRecovery - dt);
+      if (this.counterReady) {
+        this.counterRecovery = 0;
+        if (this.has('countershot')) this.game.onSound('loaded');
+      }
+    }
     if (!this.has('capacitor')) return;
     if (held || this.game.burstRemaining > 0) {
       this.idle = 0;
@@ -86,6 +99,7 @@ export class BallisticsSystem {
   }
   discharge() {
     this.idle = 0;
+    if (this.counterRecovery > 0) this.counterRecovery = COUNTERSHOT_RECHARGE;
     if (!this.has('capacitor') || this.charges === 0) return false;
     this.charges--;
     return true;
@@ -345,6 +359,7 @@ export class BallisticsSystem {
   }
   reflect(dt: number) {
     const g = this.game;
+    if (!this.counterReady) return;
     const friendly = g.shots.filter((s) => s.life > dt && s.friendly && (s.counter ?? 0) > 0);
     const hostile = g.shots.filter((s) => s.life > dt && !s.friendly && !s.blade && s.radius <= 5);
     if (!friendly.length || !hostile.length) return;
@@ -400,12 +415,21 @@ export class BallisticsSystem {
     contacts.sort((a, b) => a.t - b.t || a.a.id - b.a.id || a.b.id - b.b.id);
     for (const { a, b, bullet } of contacts) {
       if (!a.counter || b.friendly) continue;
-      a.counter--;
-      this.reflectRound(b, bullet);
+      if (this.reflectRound(b, bullet)) {
+        a.counter--;
+        break;
+      }
     }
   }
+  get counterReady() {
+    return this.counterRecovery <= 1e-8;
+  }
   reflectRound(b: Shot, bullet: Vec) {
+    // Every source of interception shares this recovery, including beam pulses,
+    // pellets, echoes and returning rounds. Only a successful contact spends it.
+    if (!this.counterReady || b.friendly || b.life <= 0 || b.blade || b.radius > 5) return false;
     const g = this.game;
+    this.counterRecovery = COUNTERSHOT_RECHARGE;
     const d = b.source ? direction(bullet, b.source) : direction(b.vel, { x: 0, y: 0 });
     b.pos = bullet;
     b.prev = { ...bullet };
@@ -420,15 +444,13 @@ export class BallisticsSystem {
     b.reflected = true;
     b.reflectedAt = g.time;
     b.allyBlock = undefined;
-    b.damage = Math.min(65, b.damage * 1.5);
+    b.damage = Math.min(COUNTERSHOT_DAMAGE_CAP, b.damage);
     b.life = 1.4;
     b.pierce = this.has('reprisal') ? 2 : 0;
     b.hits.clear();
     if (b.pierce) b.trace = { bank: false, pierce: true, points: [{ ...bullet }] };
     g.burst(bullet, 4, '#b9e1d5', 2);
-    if (g.time >= this.reflectionAt) {
-      g.onSound('bank');
-      this.reflectionAt = g.time + 0.06;
-    }
+    g.onSound('bank');
+    return true;
   }
 }

@@ -324,7 +324,7 @@ test('on-hit arcs, cables and fragments use gun cadence rather than frame rate',
   assert(b.hp < 10000);
   assert(g.shots.length <= 9);
 });
-test('Countershot reflects at most one bullet per pulse and never reaches through blocking cover', () => {
+test('Countershot beam pulses share one charge, require a full release and cannot reach through cover', () => {
   const g = fixture(['cutting-torch', 'countershot']);
   bullets(g, [
     { x: 400, y: 298 },
@@ -334,12 +334,37 @@ test('Countershot reflects at most one bullet per pulse and never reaches throug
   beam(g, 0.2);
   assert.equal(g.shots.filter((s) => s.friendly).length, 1);
   beam(g, 0.1);
+  assert.equal(g.shots.filter((s) => s.friendly).length, 1);
+  beam(g, 2);
+  assert.equal(g.shots.filter((s) => s.friendly).length, 1);
+  beam(g, 0.8, false);
+  beam(g, 1 / 60);
   assert.equal(g.shots.filter((s) => s.friendly).length, 2);
   const h = fixture(['cutting-torch', 'countershot']);
   wall(h, 350, 300, 20, 100);
   bullets(h, [{ x: 500, y: 298 }]);
   beam(h, 0.5);
   assert(h.shots.every((s) => !s.friendly));
+});
+
+test('ordinary rounds and front, rear and banked beams cannot each claim a deflection', () => {
+  const g = fixture(['cutting-torch', 'countershot', 'backblast', 'backfire', 'ricochet']);
+  bullets(g, [
+    { x: 400, y: 298 },
+    { x: 450, y: 298 },
+  ]);
+  const [first, second] = g.shots;
+  assert(g.ballistics.reflectRound(first, { ...first.pos }));
+  beam(g, 0.6);
+  assert(!second.reflected);
+  beam(g, 0.8, false);
+  beam(g, 1 / 60);
+  assert(second.reflected);
+  bullets(g, [{ x: 500, y: 298 }]);
+  const third = g.shots.at(-1)!;
+  assert(!g.ballistics.reflectRound(third, { ...third.pos }));
+  beam(g, 2);
+  assert(!third.reflected);
 });
 test('deadlock records beam pulses and misses; backfire has a rear beam without canceling thrust', () => {
   const g = fixture(['cutting-torch', 'deadeye', 'deadlock']);

@@ -1,4 +1,4 @@
-import { pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
+import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
 import { torchTestFromUrl } from './practice.ts';
 import { anglerTestFromUrl } from './practice.ts';
 import { vectorTestFromUrl } from './practice.ts';
@@ -132,6 +132,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  countershotTestFromUrl(entryUrl) ??
   pressureTestFromUrl(entryUrl) ??
   tripwireTestFromUrl(entryUrl) ??
   torchTestFromUrl(entryUrl) ??
@@ -213,6 +214,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test counterweights <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('PRESSURE-60-'))
     $('play').innerHTML = 'Test pressure vents <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('COUNTERSHOT-61-'))
+    $('play').innerHTML = 'Test Countershot <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('SAW-BOSS-53-'))
     $('play').innerHTML = 'Test Interceptor saws <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'GRIND-52')

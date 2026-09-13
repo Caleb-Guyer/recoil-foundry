@@ -13,7 +13,15 @@ import {
   rewardMods,
   seeded,
 } from '../src/rules.ts';
-import { CHARGE_TIME, ECHO_DELAY, FUSE_TIME, FUSE_LIMIT, ECHO_LIMIT } from '../src/ballistics.ts';
+import {
+  CHARGE_TIME,
+  ECHO_DELAY,
+  FUSE_TIME,
+  FUSE_LIMIT,
+  ECHO_LIMIT,
+  COUNTERSHOT_RECHARGE,
+  COUNTERSHOT_DAMAGE_CAP,
+} from '../src/ballistics.ts';
 import { UPGRADE_TEST_BUILDS, upgradeTestFromUrl } from '../src/practice.ts';
 import { dailyForDate } from '../src/daily.ts';
 const { Body, Bodies, Composite, Engine } = Matter;
@@ -281,6 +289,127 @@ test('one round reflects only one bullet; Reprisal penetrates multiple targets w
   step(g, 20);
   assert(x.hp < 10000 && y.hp < 10000);
   assert(!g.shots.some((s) => s.fragment && !s.reflected));
+});
+
+test('pellets and separate volleys share one Countershot charge without deleting unblocked bullets', () => {
+  const g = fixture(['countershot', 'reprisal', 'scatter', 'crossfire', 'rapid', 'burst']);
+  const rounds = [shot(g, 670, 360, 80), shot(g, 670, 400, 80), shot(g, 670, 440, 80)];
+  const incoming = [
+    shot(g, 765, 360, -80, 0, false),
+    shot(g, 765, 400, -80, 0, false),
+    shot(g, 765, 440, -80, 0, false),
+  ];
+  step(g);
+  assert.equal(incoming.filter((s) => s.reflected).length, 1);
+  assert.equal(rounds.filter((s) => s.counter === 0).length, 1);
+  assert(incoming.filter((s) => !s.reflected).every((s) => g.shots.includes(s) && !s.friendly));
+  g.shots = [];
+  for (let i = 0; i < 5; i++) {
+    g.ballistics.charge(1, true);
+    shot(g, 670, 400, 80);
+    const b = shot(g, 765, 400, -80, 0, false);
+    step(g);
+    assert(!b.reflected);
+    g.shots = [];
+  }
+});
+
+test('Countershot requires an uninterrupted release, including slow guns and queued burst shots', () => {
+  const g = fixture(['countershot', 'magnum', 'burst']);
+  const b = shot(g, 765, 400, -80, 0, false);
+  assert(g.ballistics.reflectRound(b, { ...b.pos }));
+  for (let i = 0; i < 8; i++) {
+    g.ballistics.charge(COUNTERSHOT_RECHARGE - 0.01, false);
+    assert(!g.ballistics.counterReady);
+    g.ballistics.charge(1 / 60, true);
+  }
+  g.ballistics.charge(0.4, false);
+  g.burstRemaining = 1;
+  g.ballistics.charge(1, false);
+  assert(!g.ballistics.counterReady);
+  g.burstRemaining = 0;
+  g.ballistics.charge(COUNTERSHOT_RECHARGE - 0.01, false);
+  assert(!g.ballistics.counterReady);
+  // A buffered/queued discharge also resets an incomplete release.
+  g.ballistics.discharge();
+  g.ballistics.charge(COUNTERSHOT_RECHARGE - 0.01, false);
+  assert(!g.ballistics.counterReady);
+  let clicks = 0;
+  g.onSound = (kind) => {
+    if (kind === 'loaded') clicks++;
+  };
+  g.ballistics.charge(0.01, false);
+  assert(g.ballistics.counterReady);
+  g.ballistics.charge(1, false);
+  assert.equal(clicks, 1);
+  g.shots = [];
+  shot(g, 670, 400, 80);
+  const next = shot(g, 765, 400, -80, 0, false);
+  step(g);
+  assert(next.reflected);
+});
+
+test('missing preserves Countershot; reflected boss damage is not multiplied and cannot exceed the cap', () => {
+  for (const damage of [8, 20, 26, 100]) {
+    const g = fixture(['countershot', 'reprisal', 'magnum', 'deadeye']);
+    const boss = target(g, 1400, 400, 'interceptor');
+    g.fireRound();
+    step(g, 3);
+    assert(g.ballistics.counterReady);
+    g.shots = [];
+    const b = shot(g, 765, 400, -80, 0, false);
+    b.damage = damage;
+    b.enemyAmmo = { owner: boss.id, kind: 'precision', age: 0.2 };
+    shot(g, 670, 400, 80);
+    step(g);
+    assert(b.reflected);
+    assert.equal(b.damage, Math.min(damage, COUNTERSHOT_DAMAGE_CAP));
+    assert.equal(b.enemyAmmo, undefined);
+    assert.equal(b.pierce, 2);
+    assert.equal(b.counter, undefined);
+  }
+});
+
+test('large ammunition, blades and already friendly shots cannot consume the deflection charge', () => {
+  const g = fixture(['countershot']);
+  for (const kind of ['large', 'blade', 'friendly', 'expired']) {
+    const b = shot(g, 765, 400, -80, 0, false);
+    if (kind === 'large') b.radius = 10;
+    if (kind === 'blade') b.blade = true;
+    if (kind === 'friendly') b.friendly = true;
+    if (kind === 'expired') b.life = 0;
+    assert(!g.ballistics.reflectRound(b, { ...b.pos }), kind);
+    assert(g.ballistics.counterReady, kind);
+    assert(!b.reflected, kind);
+  }
+});
+
+test('Countershot recovery freezes during pause and hitstop and resets on a new room or retry', () => {
+  const g = fixture(['countershot']);
+  target(g, 1500);
+  const b = shot(g, 765, 400, -80, 0, false);
+  assert(g.ballistics.reflectRound(b, { ...b.pos }));
+  g.shots = [];
+  for (let i = 0; i < 24; i++) g.tick(1 / 60, idle);
+  assert(!g.ballistics.counterReady);
+  g.setMode('paused');
+  g.tick(2, idle);
+  assert(!g.ballistics.counterReady);
+  g.setMode('playing');
+  g.hitStop = 0.1;
+  g.tick(1 / 60, idle);
+  assert(!g.ballistics.counterReady);
+  g.hitStop = 0;
+  for (let i = 0; i < 24; i++) g.tick(1 / 60, idle);
+  assert(g.ballistics.counterReady);
+  const again = shot(g, 765, 400, -80, 0, false);
+  assert(g.ballistics.reflectRound(again, { ...again.pos }));
+  g.loadRoom();
+  assert(g.ballistics.counterReady);
+  const last = shot(g, 765, 400, -80, 0, false);
+  assert(g.ballistics.reflectRound(last, { ...last.pos }));
+  g.start('countershot-retry');
+  assert(g.ballistics.counterReady);
 });
 
 test('Rivet sweeps enemies against walls, pins briefly, and cannot chain-stun them', () => {

@@ -265,7 +265,7 @@ export const MODS = [
   {
     id: 'countershot',
     name: 'Countershot',
-    description: 'Each round can reflect one small enemy bullet back at its source.',
+    description: 'Deflect one small enemy bullet. Stop firing for 0.8s to recharge.',
     mark: 'countershot',
   },
   {

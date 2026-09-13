@@ -16,7 +16,7 @@ import { areaIndex, clamp, distance, direction } from '../src/rules.ts';
 // locked warnings. It sends ordinary inputs; it never changes health, enemies,
 // shots, upgrades, or the simulation. Approximate terrain/recoil prediction is
 // deliberately independent from Matter's collision solver.
-export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
+export function dodgePilot(g: Game, e: Enemy, allowFire = true): Partial<Input> {
   const p = g.player.position,
     target = e.harpoon?.phase === 'latched' ? harpoonMuzzle(e) : e.body.position;
   const boxes = g.solidBodies.map((b) => ({
@@ -320,7 +320,7 @@ export function dodgePilot(g: Game, e: Enemy): Partial<Input> {
   ]);
   for (const move of [-1, 0, 1])
     for (const jump of g.grounded ? [false, true] : [false])
-      for (const fire of [true, false])
+      for (const fire of allowFire ? [true, false] : [false])
         for (const lift of fire &&
         (e.kind === 'sorter' ||
           e.kind === 'boss' ||

@@ -318,9 +318,9 @@ export class TorchSystem {
       }
       if (first && !segment.enemy) g.salvage.impact(s, segment.body, segment.normal);
       if (!this.wind) g.salvage.trace(s, segment.a, segment.b);
-      // One reflection per ordinary discharge; solids/cables/portals already
-      // terminate each traced segment, so the beam never reflects through cover.
-      if (!this.reflected && g.mods.includes('countershot')) {
+      // Beam pulses share Countershot's recovery with all other rounds.
+      // Traced segments still stop at solids/cables/portals before interception.
+      if (!this.reflected && g.mods.includes('countershot') && g.ballistics.counterReady) {
         const hits = g.shots
           .filter((b) => !b.friendly && b.life > 0 && !b.blade && b.radius <= 5)
           .flatMap((b) => {
@@ -345,8 +345,7 @@ export class TorchSystem {
           })
           .sort((a, b) => a.t - b.t);
         if (hits[0]) {
-          g.ballistics.reflectRound(hits[0].b, { ...hits[0].b.pos });
-          this.reflected = true;
+          this.reflected = g.ballistics.reflectRound(hits[0].b, { ...hits[0].b.pos });
         }
       }
     }

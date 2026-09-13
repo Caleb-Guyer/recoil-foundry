@@ -346,6 +346,84 @@ export const FUSION_TEST_BUILDS: Record<string, string[]> = {
     'implosion',
   ],
 };
+const countershotBase = [
+  'countershot',
+  'reprisal',
+  'magnum',
+  'rapid',
+  'kick',
+  'pierce',
+  'ricochet',
+  'light',
+  'leech',
+  'airshot',
+  'landing',
+];
+export const COUNTERSHOT_TEST_BUILDS: Record<string, string[]> = {
+  barrage: [
+    ...countershotBase,
+    'crossfire',
+    'scatter',
+    'burst',
+    'recall',
+    'homecoming',
+    'afterimage',
+    'parallax',
+    'split',
+  ],
+  precision: [
+    ...countershotBase,
+    'deadeye',
+    'deadlock',
+    'banker',
+    'rivet',
+    'fracture',
+    'execute',
+    'capacitor',
+    'reserve-cell',
+  ],
+  torch: [
+    ...countershotBase,
+    'cutting-torch',
+    'thermal-runaway',
+    'deadeye',
+    'deadlock',
+    'banker',
+    'rivet',
+    'fracture',
+    'execute',
+  ],
+};
+export function countershotTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'countershot' ||
+    ['build', 'mirror'].some((k) => p.getAll(k).length > 1) ||
+    [
+      'daily',
+      'dv',
+      'seed',
+      'area',
+      'formation',
+      'route',
+      'mode',
+      'layout',
+      'variant',
+      'phase',
+    ].some((k) => p.has(k)) ||
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))
+  )
+    return null;
+  const build = p.get('build') ?? 'barrage';
+  if (!Object.hasOwn(COUNTERSHOT_TEST_BUILDS, build)) return null;
+  for (let i = 0; i < 128; i++) {
+    const seed = `COUNTERSHOT-61-${i}`;
+    if (getLevel(seed, 19).mirrored === (p.get('mirror') === '1'))
+      return { ...testCheckpoint(seed, 19), mods: [...COUNTERSHOT_TEST_BUILDS[build]] };
+  }
+  return null;
+}
 export function tetherTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

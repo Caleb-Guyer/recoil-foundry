@@ -101,7 +101,7 @@ test('crossing test rejects malformed or conflicting parameters', () => {
 });
 test('Daily and Overtime include crossings only in their two non-introductory slots', () => {
   const seen = new Set<string>();
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 120; i++) {
     const seed = dailyForDate(new Date(Date.UTC(2026, 8, i + 1)).toISOString().slice(0, 10))!.seed;
     for (let stage = 0; stage < 20; stage++)
       for (const [mode, l] of [

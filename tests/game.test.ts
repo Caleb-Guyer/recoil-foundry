@@ -1303,6 +1303,23 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         firing = !!input.fire;
         aim = input.aim ?? aim;
       }
+      // The slow shell gun coasts and dodges while recharging a spent deflection.
+      // Rapid builds keep their recoil movement; lifts and urgent bombs take priority.
+      if (
+        e &&
+        g.gun.shellshock &&
+        g.mods.includes('countershot') &&
+        !g.ballistics.counterReady &&
+        !lift &&
+        !bomb &&
+        !g.clear
+      ) {
+        const recharge = dodgePilot(g, e, false);
+        move = Number(recharge.right) - Number(recharge.left);
+        jump = !!recharge.jump;
+        firing = false;
+        aim = recharge.aim ?? aim;
+      }
       tick(g, 1, {
         left: move < 0,
         right: move > 0,
