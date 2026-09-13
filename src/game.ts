@@ -124,6 +124,7 @@ export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
 export interface Input {
   left: boolean;
   right: boolean;
+  move?: number;
   jump: boolean;
   jumpHeld: boolean;
   fire: boolean;
@@ -388,6 +389,7 @@ export class Game {
   rewardRerolled = false;
   onChange: () => void = () => {};
   onSound: (kind: string) => void = () => {};
+  onHaptic: (kind: 'shot' | 'land' | 'hurt', strength: number) => void = () => {};
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
   onBossDefeated: (kind: EnemyKind) => void = () => {};
   constructor() {
@@ -930,6 +932,7 @@ export class Game {
         this.feedback(Math.min(3, impact * 0.15));
         this.burst({ x: this.player.position.x, y: this.player.bounds.max.y }, 8, '#697477', 2);
         this.onSound('land');
+        if (impact >= 7) this.onHaptic('land', Math.min(1, impact / 18));
       }
       if (this.gun.landing && impact >= 7 && !this.landingReady) {
         this.landingReady = true;
@@ -942,12 +945,25 @@ export class Game {
     this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
     this.fireBuffer = Math.max(0, this.fireBuffer - dt);
     this.conveyors.beginStep();
-    const move = Number(input.right) - Number(input.left),
+    const move =
+        typeof input.move === 'number' && Number.isFinite(input.move)
+          ? clamp(input.move, -1, 1)
+          : Number(input.right) - Number(input.left),
       max = 7.3 * this.gun.speed;
     let vx = this.player.velocity.x;
     // Steering never clamps a recoil boost back to walking speed.
-    if (move && (Math.sign(vx) !== move || Math.abs(vx) < max))
+    if (move && (Math.sign(vx) !== Math.sign(move) || Math.abs(vx) < max * Math.abs(move)))
       vx += move * (this.grounded ? 1.05 : 0.42) * this.gun.speed;
+    // Ease a walking pace down with the stick, without eating an airborne recoil boost.
+    if (
+      this.grounded &&
+      move &&
+      Math.abs(move) < 1 &&
+      Math.sign(vx) === Math.sign(move) &&
+      Math.abs(vx) <= max &&
+      Math.abs(vx) > max * Math.abs(move)
+    )
+      vx += (max * move - vx) * 0.18;
     if (this.grounded && !move) vx *= onCoolant(this) ? 0.965 : 0.72;
     Body.setVelocity(this.player, { x: clamp(vx, -23, 23), y: clamp(vy, -21, 20) });
     if (this.jumpBuffer > 0 && this.coyote > 0) {
@@ -1170,6 +1186,7 @@ export class Game {
       y: clamp(this.player.velocity.y - d.y * impulse, -21, 20),
     });
     this.salvage.launch(d, impulse);
+    this.onHaptic('shot', Math.min(1, 0.3 + impulse / 12));
     this.feedback(
       (this.grounded ? 2.2 : 3.8) *
         (charged ? 1.3 : 1) *
@@ -2444,6 +2461,7 @@ export class Game {
     this.hitStop = 0.045;
     this.burst(this.player.position, 12, '#f5eee1', 3);
     this.onSound('hurt');
+    this.onHaptic('hurt', Math.min(1, 0.5 + amount / 40));
     if (from) {
       const d = direction(from, this.player.position);
       Body.setVelocity(this.player, { x: clamp(this.player.velocity.x + d.x * 4, -23, 23), y: -5 });

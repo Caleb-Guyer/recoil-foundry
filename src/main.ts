@@ -19,6 +19,13 @@ import { workshopMenu } from './workshop-menu.ts';
 import type { Input } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
+import { Controller, controllerSettings } from './controller.ts';
+import {
+  confirmControllerMenu,
+  focusControllerMenu,
+  navigateControllerMenu,
+} from './controller-menu.ts';
+import { controllerPortalTarget } from './controller-target.ts';
 import { musicScene } from './music-score.ts';
 import { AREAS } from './areas.ts';
 import {
@@ -111,7 +118,7 @@ document.getElementById('app')!.innerHTML = `
   <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button></div>
-   <p class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
+   <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><button id="settings" class="quiet title-settings">Settings</button>
  </section>
@@ -133,7 +140,11 @@ const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}
   sound?: boolean;
   music?: boolean;
   reduced?: boolean;
+  controller?: unknown;
 };
+const controller = new Controller(controllerSettings(prefs.controller));
+let inputDevice: 'pointer' | 'controller' = 'pointer';
+let padAim = { x: 1, y: 0 };
 sound.enabled = prefs.sound !== false;
 sound.musicEnabled = prefs.music !== false;
 renderer.reduced =
@@ -331,7 +342,8 @@ function updateTitle() {
   if (linkedRunTest?.seed === 'SALVAGE-49' && entryUrl.searchParams.get('evolved') === '1')
     $('title-hint').textContent = 'Salvage evolutions equipped. R to retry.';
 }
-function clearInput() {
+function clearInput(disarm = true) {
+  if (disarm) controller.disarm();
   keys.clear();
   mouseButtons = 0;
   touchAim.clear();
@@ -339,6 +351,8 @@ function clearInput() {
   input.left = input.right = input.jump = input.jumpHeld = input.fire = false;
   input.firePressed = false;
   input.portal = undefined;
+  input.move = undefined;
+  renderer.portalAim = undefined;
   portalTouch = false;
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
@@ -352,6 +366,7 @@ function persistSettings() {
     sound: sound.enabled,
     music: sound.musicEnabled,
     reduced: renderer.reduced,
+    controller: controller.settings,
   });
 }
 function updateMusic(active = pageActive && document.hasFocus() && !document.hidden) {
@@ -493,6 +508,10 @@ game.onCheckpoint = (s) => {
   }
 };
 game.onSound = (kind) => sound.play(kind);
+game.onHaptic = (kind, strength) => {
+  if (inputDevice === 'controller' && pageActive && document.hasFocus() && !document.hidden)
+    controller.rumble(kind, strength, performance.now());
+};
 game.onBossDefeated = (kind) => {
   const victory = loadEncounters([{ kind, seed: game.layoutSeed }])[0];
   if (!victory || encounters.some((record) => record.kind === kind)) return;
@@ -502,10 +521,12 @@ game.onBossDefeated = (kind) => {
 };
 game.onChange = () => {
   updateMusic();
+  if (game.mode !== 'playing') controller.stopRumble();
   const room = game.layoutSeed + ':' + game.stage + ':' + game.level.id;
   if (room !== shownRoom) {
     renderer.reset();
     shownRoom = room;
+    padAim = { x: 1, y: 0 };
   }
   document.body.dataset.mode = game.mode;
   document.body.dataset.workshop = String(game.workshop.active);
@@ -896,7 +917,8 @@ function showDialog(kind: string) {
       ' /></label><label>Screen shake<input id="shake" type="checkbox" ' +
       (!renderer.reduced ? 'checked' : '') +
       ' /></label></div>' +
-      '<div class="controls-copy">' +
+      controllerOptions() +
+      '<div class="controls-copy"><div id="device-controls">' +
       (game.portals.equipped
         ? game.mods.includes('rewire')
           ? '<p>Right-click or <kbd>E</kbd> to place or move either portal.</p>'
@@ -904,7 +926,7 @@ function showDialog(kind: string) {
             ? '<p>Right-click or <kbd>E</kbd> on two surfaces. One portal pair per room.</p>'
             : '<p>Portals are fixed until the next room.</p>'
         : '') +
-      '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p><p>' +
+      '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p></div><p>' +
       (game.workshop.active
         ? 'Targets reset automatically. R restores the room. Build changes your gun.'
         : game.practice
@@ -960,6 +982,22 @@ function showDialog(kind: string) {
       renderer.reduced = !(e.target as HTMLInputElement).checked;
       persistSettings();
     };
+    $<HTMLInputElement>('rumble').onchange = (e) => {
+      controller.settings.rumble = (e.target as HTMLInputElement).checked;
+      if (!controller.settings.rumble) controller.stopRumble();
+      persistSettings();
+    };
+    for (const [id, key] of [
+      ['move-zone', 'moveDeadzone'],
+      ['aim-zone', 'aimDeadzone'],
+    ] as const) {
+      const slider = $<HTMLInputElement>(id);
+      slider.oninput = () => {
+        controller.settings[key] = slider.valueAsNumber / 100;
+        $(id + '-value').textContent = slider.value + '%';
+      };
+      slider.onchange = persistSettings;
+    }
     $('back').onclick = resume;
     if (paused && game.workshop.active) {
       $('workshop-pause-build').onclick = () => showDialog('workshop');
@@ -972,8 +1010,124 @@ function showDialog(kind: string) {
     if (paused) $('menu').onclick = menu;
   }
   if (!modal.open) modal.showModal();
+  updateControlHints();
   if (kind === 'upgrade' || kind === 'practice' || (kind === 'result' && game.practice))
     content.querySelector<HTMLButtonElement>('button')?.focus();
+  if (inputDevice === 'controller') focusControllerMenu(content);
+}
+function controllerOptions() {
+  return (
+    '<details class="controller-settings"><summary>Controller</summary>' +
+    '<p id="controller-status" class="controller-note"></p><div class="settings-list">' +
+    '<label>Rumble<input id="rumble" type="checkbox"' +
+    (controller.settings.rumble ? ' checked' : '') +
+    '></label>' +
+    (['move', 'aim'] as const)
+      .map((id) => {
+        const value = Math.round(
+          controller.settings[id === 'move' ? 'moveDeadzone' : 'aimDeadzone'] * 100,
+        );
+        return (
+          '<label for="' +
+          id +
+          '-zone">' +
+          (id === 'move' ? 'Move' : 'Aim') +
+          ' deadzone' +
+          '<span class="controller-slider"><input id="' +
+          id +
+          '-zone" type="range" min="5" max="40" step="1" value="' +
+          value +
+          '"><output id="' +
+          id +
+          '-zone-value" for="' +
+          id +
+          '-zone">' +
+          value +
+          '%</output></span></label>'
+        );
+      })
+      .join('') +
+    '</div><p class="controller-note">Left stick: move · Right stick: aim<br>' +
+    'LB / L1: jump · RT / R2: fire · LT / L2: portal<br>' +
+    'A / ✕: jump or confirm · B / ○: back · Start / Options: pause<br>' +
+    'D-pad: menus · Left / right: adjust sliders<br>Rumble depends on your controller and browser.</p></details>'
+  );
+}
+function updateControlHints() {
+  const pad = inputDevice === 'controller';
+  document.body.dataset.input = inputDevice;
+  $('title-controls').innerHTML = pad
+    ? 'Left stick move <i>·</i> Right stick aim <i>·</i> LB jump <i>·</i> RT fire'
+    : '<kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire';
+  canvas.setAttribute(
+    'aria-label',
+    pad
+      ? 'Recoil Foundry. Left stick to move. Right stick to aim. Left bumper to jump. Right trigger to fire. Left trigger to place a portal. Start to pause.'
+      : 'Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb.',
+  );
+  const copy = document.getElementById('device-controls');
+  if (copy)
+    copy.innerHTML =
+      (game.portals.equipped
+        ? '<p>' +
+          (game.portals.canPlace
+            ? (pad ? 'Aim at a surface and press LT / L2.' : 'Right-click or E on a surface.') +
+              (game.mods.includes('rewire')
+                ? ' Place or move either portal.'
+                : ' One portal pair per room.')
+            : 'Portals are fixed until the next room.') +
+          '</p>'
+        : '') +
+      (pad
+        ? '<p>Left stick: move · Right stick: aim</p><p>LB / L1: jump · RT / R2: fire</p>'
+        : '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire.</p>') +
+      '<p>Shoot down in the air to climb.</p>';
+  const status = document.getElementById('controller-status');
+  if (status)
+    status.textContent = controller.pad
+      ? 'Controller connected.'
+      : 'Connect a controller and press a button.';
+}
+function useInputDevice(device: 'pointer' | 'controller') {
+  if (inputDevice === device) return;
+  const dx = game.aim.x - game.player.position.x,
+    dy = game.aim.y - game.player.position.y;
+  if (Math.hypot(dx, dy) > 0.01)
+    padAim = { x: dx / Math.hypot(dx, dy), y: dy / Math.hypot(dx, dy) };
+  clearInput(device !== 'controller');
+  inputDevice = device;
+  updateControlHints();
+  if (device === 'controller') {
+    sound.unlock();
+    if (modal.open) focusControllerMenu($('dialog-content'));
+    else if (game.mode === 'title') focusControllerMenu($('title-screen'));
+  }
+}
+function pollController(now: number) {
+  const wasConnected = !!controller.pad;
+  const sample = controller.poll(now, pageActive && document.hasFocus() && !document.hidden);
+  if (sample.connected !== wasConnected) updateControlHints();
+  if (sample.disconnected && inputDevice === 'controller') {
+    useInputDevice('pointer');
+    if (game.mode === 'playing') showDialog('pause');
+    $('save-status').textContent = 'Controller disconnected. Game paused.';
+    return null;
+  }
+  if (sample.activity) useInputDevice('controller');
+  if (inputDevice !== 'controller') return null;
+  if (sample.pause) {
+    if (!modal.open || dialogKind === 'pause') pause();
+    return null;
+  }
+  if (modal.open || game.mode === 'title') {
+    const root = modal.open ? $('dialog-content') : $('title-screen');
+    if (sample.navigation) navigateControllerMenu(root, sample.navigation);
+    if (sample.back && modal.open)
+      root.querySelector<HTMLElement>('#practice-back, #workshop-back, #back, #menu')?.click();
+    else if (sample.confirm) confirmControllerMenu(root);
+    return null;
+  }
+  return sample;
 }
 function resume() {
   sound.unlock();
@@ -1028,6 +1182,7 @@ modal.addEventListener('cancel', (e) => {
   resume();
 });
 window.addEventListener('keydown', (e) => {
+  useInputDevice('pointer');
   if (
     e.ctrlKey ||
     e.metaKey ||
@@ -1077,6 +1232,14 @@ window.addEventListener('keydown', (e) => {
   if (['Space', 'KeyW', 'ArrowUp'].includes(e.code)) input.jump = true;
 });
 window.addEventListener('keyup', (e) => keys.delete(e.code));
+window.addEventListener('pointerdown', () => useInputDevice('pointer'), { capture: true });
+window.addEventListener(
+  'pointermove',
+  (e) => {
+    if (Math.hypot(e.movementX, e.movementY) > 2) useInputDevice('pointer');
+  },
+  { capture: true },
+);
 function updatePointer(e: PointerEvent) {
   const r = canvas.getBoundingClientRect();
   pointer.x = e.clientX - r.left;
@@ -1152,6 +1315,7 @@ new ResizeObserver(() => renderer.resize()).observe($('arena'));
 function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
+  const pad = pollController(now);
   if (game.mode === 'playing') {
     accumulator += dt;
     input.left = keys.has('KeyA') || keys.has('ArrowLeft') || touch.left;
@@ -1159,8 +1323,42 @@ function frame(now: number) {
     input.jumpHeld = keys.has('Space') || keys.has('KeyW') || keys.has('ArrowUp') || touch.jump;
     input.fire = (mouseButtons & 1) !== 0 || touchAim.size > 0;
     input.aim = renderer.toWorld(pointer.x, pointer.y);
+    input.move = undefined;
+    if (inputDevice === 'controller') {
+      input.left = input.right = false;
+      input.move = pad?.move ?? 0;
+      input.jumpHeld = pad?.jumpHeld ?? false;
+      input.fire = pad?.fire ?? false;
+      input.jump ||= pad?.jump ?? false;
+      input.firePressed ||= pad?.firePressed ?? false;
+      if (pad && Math.hypot(pad.aim.x, pad.aim.y) > 0.05) {
+        const length = Math.hypot(pad.aim.x, pad.aim.y);
+        padAim = { x: pad.aim.x / length, y: pad.aim.y / length };
+      }
+      input.aim = {
+        x: game.player.position.x + padAim.x * 400,
+        y: game.player.position.y + padAim.y * 400,
+      };
+      renderer.portalAim = controllerPortalTarget(game, padAim, {
+        ...renderer.camera,
+        width: renderer.width / renderer.scale,
+        height: renderer.height / renderer.scale,
+      });
+      if (pad?.portal && game.portals.equipped) {
+        if (renderer.portalAim) input.portal = renderer.portalAim;
+        else {
+          game.portals.rejected = { pos: { ...input.aim }, until: game.time + 0.22 };
+          sound.play('portal-denied');
+        }
+      }
+    }
     let n = 0;
     while (accumulator >= 1 / 60 && n < 5) {
+      if (inputDevice === 'controller')
+        input.aim = {
+          x: game.player.position.x + padAim.x * 400,
+          y: game.player.position.y + padAim.y * 400,
+        };
       game.tick(1 / 60, input);
       input.jump = false;
       input.firePressed = false;

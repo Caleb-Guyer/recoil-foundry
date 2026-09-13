@@ -181,6 +181,7 @@ export class TorchSystem {
         capacitor = g.ballistics.discharge();
       g.landingReady = false;
       g.shotCount++;
+      g.onHaptic('shot', g.grounded ? 0.25 : 0.45);
       const evolution = g.evolutions.discharge(g.shotCount);
       // Redline remains responsive to actual speed during continuous thrust.
       this.boost =

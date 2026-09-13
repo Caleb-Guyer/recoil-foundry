@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Controller
+
+Connect a controller and press a button. Left stick moves, right stick aims, **LB / L1** jumps, **RT / R2** fires, and **LT / L2** places an equipped portal on the surface you aim at. The dashed portal preview shows a valid placement. Fold still allows one pair per room; Rewire allows replacement. Aim keeps its last direction when you release the stick. Partial movement gives a slower pace without cutting airborne recoil momentum.
+
+**A / ✕** also jumps, and confirms in menus. **B / ○** goes back; **Start / Options** pauses or resumes. Use the D-pad or left stick to navigate upgrades, Workshop and settings. Left and right adjust a focused slider. Under **Settings → Controller**, adjust the movement and aim deadzones or disable rumble. Recoil, hard landings and damage produce brief pulses. Controller hints and focus outlines appear when you use the pad; keyboard, mouse and touch switch back automatically.
+
+Disconnecting or leaving the page pauses play and stops rumble. Release held buttons before continuing after a menu or reconnect. The game uses the browser's [standard controller mapping](https://www.w3.org/TR/gamepad/#remapping); unmapped devices leave keyboard and mouse controls available. [Rumble support](https://developer.mozilla.org/en-US/docs/Web/API/GamepadHapticActuator/playEffect) varies by controller and browser and is optional. The Workshop is a safe place to tune your sticks. Existing saves and Daily ruleset 58 remain compatible.
+
 ## The Workshop
 
 Open **Workshop** from the title screen to build a gun using upgrades you have actually collected. Only discovered upgrades appear; path locks, prerequisites, transformation exclusions and the one-fusion rule still apply. Removing a prerequisite also removes its dependent upgrades. Search your collection, clear the build, or return to the range with **Apply & reset**. Your Workshop gun is remembered separately from your run.

@@ -78,6 +78,7 @@ export class Renderer {
   scale = 1;
   camera: Vec = { x: 0, y: 0 };
   reduced = false;
+  portalAim: Vec | null | undefined;
   last = 0;
   clock = 0;
   portalRevision = 0;
@@ -211,7 +212,7 @@ export class Renderer {
     drawPressure(c, g, this.reduced);
     this.drawProps();
     this.drawBreaches();
-    drawPortals(c, g, this.clock, this.reduced);
+    drawPortals(c, g, this.clock, this.reduced, this.portalAim);
     drawTripwires(c, g, this.reduced);
     drawDemolition(c, g, this.reduced);
     drawSapperBlasts(c, g, this.reduced);

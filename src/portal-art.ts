@@ -1,8 +1,15 @@
 import type { Game } from './game.ts';
 import { PORTAL_RADIUS, PORTAL_COLORS } from './portals.ts';
 import type { Portal } from './portals.ts';
+import type { Vec } from './rules.ts';
 
-export function drawPortals(c: CanvasRenderingContext2D, g: Game, clock: number, reduced: boolean) {
+export function drawPortals(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  clock: number,
+  reduced: boolean,
+  aim: Vec | null = g.aim,
+) {
   if (!g.portals.equipped) return;
   const aperture = (p: Portal, index: number, preview = false) => {
     c.save();
@@ -56,7 +63,7 @@ export function drawPortals(c: CanvasRenderingContext2D, g: Game, clock: number,
     if (p) aperture(p, i);
   });
   if (g.mode === 'playing' && g.escape?.phase !== 'extracting') {
-    const preview = g.portals.candidate(g.aim);
+    const preview = aim && g.portals.candidate(aim);
     if (preview) aperture(preview, g.portals.nextIndex, true);
     const rejected = g.portals.rejected;
     if (rejected && rejected.until > g.time) {

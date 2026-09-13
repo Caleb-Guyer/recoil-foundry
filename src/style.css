@@ -425,6 +425,45 @@ dialog.practice-dialog {
   width: 18px;
   height: 18px;
 }
+.controller-settings {
+  margin-top: 20px;
+  font-size: 14px;
+}
+.controller-settings summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.controller-note {
+  color: #b2c0b7;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.controller-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.controller-slider input {
+  width: clamp(75px, 20vw, 140px);
+}
+.controller-slider output {
+  width: 3ch;
+  font-size: 13px;
+  text-align: right;
+}
+body[data-input='controller'] :is(button, summary, input):focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+body[data-input='controller'] .mod-top kbd {
+  visibility: hidden;
+}
+body[data-input='controller'] .touch-controls {
+  display: none !important;
+}
+body[data-input='controller'] canvas {
+  cursor: none;
+}
 .controls-copy {
   font-size: 14px;
   color: #b2c0b7;
