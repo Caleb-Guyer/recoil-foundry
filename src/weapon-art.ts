@@ -182,6 +182,17 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(9, -half - 1, 14, 2);
   }
 
+  if (g.mods.includes('tripwire')) {
+    c.fillStyle = '#687867';
+    c.fillRect(17, 4, 9, 4);
+    c.strokeStyle = '#c2b18a';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(21, 8, 3, 0, Math.PI * 2);
+    c.stroke();
+    c.fillStyle = g.tripwires.anchor ? '#f0ce8a' : '#899783';
+    c.fillRect(24, 5, 2, 2);
+  }
   drawCapacitor(c, g);
   if (flash > 0) {
     const tip = muzzle - barrelKick;

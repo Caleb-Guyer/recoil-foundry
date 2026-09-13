@@ -6,6 +6,18 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Tripwire
+
+**Tripwire** is a Demolition upgrade. Shoot two fixed surfaces to connect their impact points with a thin explosive wire. An enemy touching the wire triggers a blast at the crossing and consumes the trap. You can keep two wires active; completing a third replaces the oldest. No new controls or HUD.
+
+Place anchors 80–720 world units apart with clear space between them. A short dashed line becomes solid when the trap arms after 0.22 seconds. Repeated shots at one spot retain the first pin. A blocked or out-of-range second anchor becomes your new starting point. Floors, walls, ceilings and intact breakable terrain work; loose props and moving machinery cannot hold anchors. Destroyed anchors and cover sweeping through a wire break it harmlessly.
+
+**Tension** requires Tripwire. Longer wires gain up to 75% extra blast damage, reaching full strength at 600 units. The base blast deals 2.4 times the average combined shot damage used to place its two anchors, capped at 260 before Tension, with a 104-unit radius and ordinary blast falloff. Boss armor and shields still apply. Aftershock and Blast surfing work with the trap blast. The player never takes damage from it.
+
+Only the forward center round places a pin: pellets, rear volleys, repeated ricochets, fragments, echoes and reflected bullets cannot flood the map with traps. Enemy crossings use their swept hulls, so fast charges cannot tunnel through. Portal travel has no invisible crossing between its entry and exit. Wires add no physical bodies or constraints that could jam a train.
+
+[Test Tripwire and Tension](https://caleb-guyer.github.io/recoil-foundry/?test=tripwire). Shoot two points on an exposed stretch of floor, then lure a runner across it. Use `&build=base` without Tension, `&build=bank` for ricochets, `&build=portal` for reusable portals, or `&build=demolition` for Aftershock and Blast surfing. **R** retries at full health. Tests preserve saves, Daily records and Practice unlocks.
+
 ## Cutting Torch
 
 **Cutting Torch** is a Precision upgrade that replaces your gun's primary rounds with one thin, continuous beam. Hold the normal fire control to cut. Output is 78% of the gun's combined damage per second; Scattershot concentrates its pellets into that one beam, and fire-rate changes affect output. Recoil becomes steady thrust, stronger in the air: jump and aim down to climb, then sweep sideways while drifting. Release fire to stop immediately.
@@ -181,7 +193,7 @@ The room counter marks active challenges with **DAILY**, and Pause shows the cha
 
 The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
 
-Daily links include a ruleset version (`?daily=2026-09-12&dv=52`). Version 52 adds Cutting Torch and Thermal Runaway; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+Daily links include a ruleset version (`?daily=2026-09-13&dv=53`). Version 53 adds Tripwire and Tension; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
 
 ## Expanded-run test
 

@@ -1,3 +1,4 @@
+import { tripwireTestFromUrl } from './practice.ts';
 import { torchTestFromUrl } from './practice.ts';
 import { anglerTestFromUrl } from './practice.ts';
 import { vectorTestFromUrl } from './practice.ts';
@@ -131,6 +132,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  tripwireTestFromUrl(entryUrl) ??
   torchTestFromUrl(entryUrl) ??
   anglerTestFromUrl(entryUrl) ??
   vectorTestFromUrl(entryUrl) ??
@@ -198,6 +200,8 @@ function updateTitle() {
         : 'Test boss salvage') + ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('CRAWLER-54-'))
     $('play').innerHTML = 'Test the Wallcrawler <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'TRIPWIRE-59')
+    $('play').innerHTML = 'Test Tripwire <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'TORCH-58')
     $('play').innerHTML = 'Test Cutting Torch <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('ANGLER-57-'))
@@ -477,6 +481,8 @@ function modMark(mod: Mod) {
     cinder: 'M18 34c-9-10 4-14 5-24 12 9 6 15 11 12 8 15-12 21-16 12M12 40h28',
     crosswind: 'M7 17h28q12 0 8-7M7 25h34M7 33h23q13 0 9 8',
     grindshot: 'M5 38h46M16 17l7-6 4 5 8-2 1 8 6 4-5 6-8-1-5 5-5-7-7-2 4-7zM24 23h7v7h-7z',
+    tripwire: 'M7 9v12M4 15h7L41 37h7M45 31v12',
+    tension: 'M6 11v12M3 17h8l30 18h8M45 29v12M23 9v7M31 13l-3 6',
     torch: 'M7 20h15v10H7zM22 22h9v6h-9M34 25h14M40 18l5-4M40 32l5 4',
     thermal: 'M8 34h27M15 31c-9-9 10-12 5-25 17 10 17 20 7 25M36 24h12M41 18l5-5',
     vector: 'M6 36h10c19 0 8-24 28-24M36 5l8 7-8 7',

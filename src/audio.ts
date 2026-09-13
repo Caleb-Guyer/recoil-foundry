@@ -240,6 +240,10 @@ export class Sound {
     } else if (kind === 'arc') {
       this.tone(950, 260, 0.085, 0.04, 'triangle');
       this.crack(0.04, 0.035, 2600);
+    } else if (kind === 'tripwire-pin') {
+      this.tone(720, 460, 0.035, 0.022, 'triangle');
+    } else if (kind === 'tripwire-link') {
+      this.tone(480, 920, 0.08, 0.035, 'sine');
     } else if (kind === 'tether-mark') {
       this.tone(600, 430, 0.045, 0.025, 'triangle');
     } else if (kind === 'tether-link') {

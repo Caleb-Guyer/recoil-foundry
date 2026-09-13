@@ -68,15 +68,19 @@ function bullet(g: Game, damage = 24, pierce = 0) {
 }
 
 function populatedDaily() {
-  const g = new Game(),
-    challenge = dailyForDate('2026-09-06')!;
-  g.start(challenge.seed);
-  for (let stage = 0; stage < 11; stage++) {
-    if (g.breaches.placement) return g;
-    g.openReward();
-    g.chooseMod(g.offers[0].id);
+  // A ruleset bump changes room seeds; no single date guarantees a passage.
+  // Find a real Daily passage within this fixed, bounded set of challenges.
+  for (let day = 6; day < 13; day++) {
+    const g = new Game(),
+      challenge = dailyForDate(`2026-09-${String(day).padStart(2, '0')}`)!;
+    g.start(challenge.seed);
+    for (let stage = 0; stage < 11; stage++) {
+      if (g.breaches.placement) return g;
+      g.openReward();
+      g.chooseMod(g.offers[0].id);
+    }
   }
-  assert.fail('The daily fixture did not encounter a breach room');
+  assert.fail('The Daily fixtures did not encounter a breach room');
 }
 
 test('a cracked panel absorbs two ordinary rounds and then removes its physical and sight-line obstruction', () => {

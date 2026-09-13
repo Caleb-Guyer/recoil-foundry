@@ -291,6 +291,7 @@ export class PortalSystem {
       g.magnets.release(body);
       Matter.Body.setPosition(body, { x: pos.x + rest.x * travel, y: pos.y + rest.y * travel });
       Matter.Body.setVelocity(body, velocity);
+      g.tripwires.teleported(body);
       // Old contact warm-start impulses belong to the entrance, not the exit.
       const impulse = (body as Matter.Body & { positionImpulse: Vec }).positionImpulse;
       impulse.x = impulse.y = 0;

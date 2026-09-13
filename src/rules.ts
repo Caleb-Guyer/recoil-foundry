@@ -407,6 +407,18 @@ export const MODS = [
     mark: 'corner-cutter',
   },
   {
+    id: 'tripwire',
+    name: 'Tripwire',
+    description: 'Shoot two surfaces to rig an explosive wire. Keep two traps active.',
+    mark: 'tripwire',
+  },
+  {
+    id: 'tension',
+    name: 'Tension',
+    description: 'Longer tripwires deal up to 75% more blast damage.',
+    mark: 'tension',
+  },
+  {
     id: 'cutting-torch',
     name: 'Cutting Torch',
     description: 'A continuous beam with steady recoil. Hold fire to cut.',
@@ -445,6 +457,8 @@ export const PATH_NAMES: Record<BuildPath, string> = {
   demolition: 'Demolition',
 };
 export const MOD_PATHS: Record<string, { path: BuildPath }> = {
+  tripwire: { path: 'demolition' },
+  tension: { path: 'demolition' },
   'cutting-torch': { path: 'precision' },
   'thermal-runaway': { path: 'precision' },
   shellshock: { path: 'demolition' },
@@ -492,6 +506,7 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
 export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  tension: 'tripwire',
   'thermal-runaway': 'cutting-torch',
   afterburner: 'vector',
   'corner-cutter': 'grindshot',
@@ -836,6 +851,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               m.id === 'afterburner' ||
               m.id === 'cutting-torch' ||
               m.id === 'thermal-runaway' ||
+              m.id === 'tripwire' ||
+              m.id === 'tension' ||
               isSalvage(MOD_REQUIRES[m.id]),
           ))));
   const validDetours =

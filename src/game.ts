@@ -1,3 +1,4 @@
+import { TripwireSystem } from './tripwire.ts';
 import { TorchSystem } from './torch.ts';
 import { GrindshotSystem } from './grindshot.ts';
 import { CrossingSystem } from './crossing.ts';
@@ -190,6 +191,7 @@ export interface Shot {
   orbitReleased?: boolean;
   vector?: VectorFlight;
   angler?: AnglerFlight;
+  tripwire?: number;
 }
 export interface Particle {
   pos: Vec;
@@ -235,6 +237,7 @@ export class Game {
   arcs = new ArcCoilSystem(this);
   grind = new GrindshotSystem(this);
   torch = new TorchSystem(this);
+  tripwires = new TripwireSystem(this);
   salvage = new BossSalvageSystem(this);
   salvageEvolutions = new SalvageEvolutionSystem(this);
   earnedSalvage: string | null = null;
@@ -383,6 +386,7 @@ export class Game {
       this.arcs.reset();
       this.grind.reset();
       this.torch.reset();
+      this.tripwires.reset();
       this.salvage.reset();
       this.salvageEvolutions.reset();
       this.tethers.reset();
@@ -474,6 +478,7 @@ export class Game {
     this.arcs.reset();
     this.grind.reset();
     this.torch.reset();
+    this.tripwires.reset();
     this.salvage.reset();
     this.salvageEvolutions.reset();
     this.tethers.reset();
@@ -681,6 +686,7 @@ export class Game {
     this.arcs.reset();
     this.grind.reset();
     this.torch.reset();
+    this.tripwires.reset();
     this.salvage.reset();
     this.salvageEvolutions.reset();
     this.tethers.reset();
@@ -834,6 +840,7 @@ export class Game {
     this.hazards.beforeStep(dt);
     this.demolition.update();
     if (this.mode !== 'playing') return;
+    this.tripwires.beforeStep();
     const wasGrounded = this.grounded,
       vy = this.player.velocity.y;
     const counterweightSupport = this.counterweights.supporting(this.player);
@@ -959,6 +966,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.updateShots(dt);
     this.torch.afterStep(dt);
+    this.tripwires.afterStep();
     if (this.mode !== 'playing') return;
     this.arcs.update();
     this.grind.update(dt);
@@ -994,6 +1002,7 @@ export class Game {
       this.arcs.reset();
       this.grind.reset();
       this.torch.reset();
+      this.tripwires.reset();
       this.salvage.reset();
       this.salvageEvolutions.reset();
       this.tethers.reset();
@@ -1108,7 +1117,8 @@ export class Game {
     else {
       this.fireVolley(d, damage, this.chargedFlash);
       // Recoil belongs to the aimed shot; Backfire never cancels movement.
-      if (this.gun.rearVolley) this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash);
+      if (this.gun.rearVolley)
+        this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash, false);
     }
     this.ballistics.record(beforeVolley, origin, d);
     this.fusions.release(d);
@@ -1125,7 +1135,7 @@ export class Game {
         kind: 'shell',
       });
   }
-  fireVolley(d: Vec, damage: number, charged: boolean) {
+  fireVolley(d: Vec, damage: number, charged: boolean, primary = true) {
     const pos = { x: this.player.position.x + d.x * 26, y: this.player.position.y - 3 + d.y * 26 };
     const radius = this.mods.includes('magnum') ? 4 : 2.5;
     const spawn = this.lineEnd(
@@ -1189,6 +1199,13 @@ export class Game {
           charged,
           discharge: this.gun.deadlock ? this.shotCount : undefined,
           waypoints,
+          tripwire:
+            primary &&
+            this.mods.includes('tripwire') &&
+            lane === Math.floor(this.gun.lanes / 2) &&
+            i === Math.floor(this.gun.pellets / 2)
+              ? damage * this.gun.pellets
+              : undefined,
         });
       }
     this.burst(pos, 4, '#ffcc84', 3, d);
@@ -1913,7 +1930,7 @@ export class Game {
         }
         for (const [body, enemy, player] of targets) {
           const h =
-            s.angler || this.counterweights.owns(body)
+            s.angler || s.tripwire !== undefined || this.counterweights.owns(body)
               ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, body)
               : segmentBox(
                   s.pos,
@@ -2052,6 +2069,7 @@ export class Game {
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
+          this.tripwires.impact(s, nearest.body, nearest.normal);
           this.counterweights.hit(nearest.body, s.pos, s.vel, s.damage);
           this.salvage.impact(s, nearest.prop?.body ?? nearest.body, nearest.normal);
           if (nearest.prop)

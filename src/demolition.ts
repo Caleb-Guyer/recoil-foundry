@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import type { Game, Shot } from './game.ts';
+import type { Game, Shot, Enemy } from './game.ts';
 import { clamp, direction, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { isBoss } from './enemies.ts';
@@ -23,7 +23,7 @@ export interface DemolitionBlast {
   damage: number;
   radius: number;
   launch: number;
-  kind: 'shell' | 'echo' | 'chain';
+  kind: 'shell' | 'echo' | 'chain' | 'tripwire';
 }
 export interface PendingBlast extends DemolitionBlast {
   at: number;
@@ -115,7 +115,9 @@ export class DemolitionSystem {
       this.detonate(blast);
     }
   }
-  detonate(blast: DemolitionBlast) {
+  // A swept tripwire contact already touched the blast origin during this step.
+  // Preserve that hit even if a fast enemy has moved beyond the radius by now.
+  detonate(blast: DemolitionBlast, contact?: Enemy) {
     const g = this.game;
     if (g.mode !== 'playing' || g.escape?.phase === 'extracting' || !(blast.damage > 0)) return;
     const { pos, radius, damage } = blast;
@@ -129,7 +131,7 @@ export class DemolitionSystem {
     // get a new snapshot at their own position, on their own simulation tick.
     const enemies = g.enemies
       .filter((e) => e.spawn <= 0 && e.hp > 0)
-      .map((enemy) => ({ enemy, amount: strength(enemy.body) }))
+      .map((enemy) => ({ enemy, amount: enemy === contact ? 1 : strength(enemy.body) }))
       .filter((hit) => hit.amount > 0);
     const props = g.props.items
       .map((prop) => ({ prop, amount: strength(prop.body, prop) }))

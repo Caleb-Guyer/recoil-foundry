@@ -1,3 +1,4 @@
+import { drawTripwires } from './tripwire-art.ts';
 import { drawTorch } from './torch-art.ts';
 import { drawGrindshot } from './grindshot-art.ts';
 import { drawCounterweights, drawCounterweightMounts } from './counterweight-art.ts';
@@ -195,6 +196,7 @@ export class Renderer {
     this.drawProps();
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced);
+    drawTripwires(c, g, this.reduced);
     drawDemolition(c, g, this.reduced);
     drawSapperBlasts(c, g, this.reduced);
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
