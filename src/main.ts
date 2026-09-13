@@ -43,6 +43,7 @@ import {
   loadCheckpoint,
   STAGES,
   modPathLabel,
+  modDescription,
   buildPath,
   PATH_NAMES,
   REROLL_COST,
@@ -829,7 +830,7 @@ function showDialog(kind: string) {
             '</kbd></span><strong>' +
             m.name +
             '</strong><span class="mod-copy">' +
-            m.description +
+            modDescription(m, game.mods) +
             '</span>' +
             (modPathLabel(m.id) ? '<span class="mod-path">' + modPathLabel(m.id) + '</span>' : '') +
             '</button>',

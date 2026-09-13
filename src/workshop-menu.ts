@@ -1,4 +1,11 @@
-import { MODS, MOD_REQUIRES, FUSION_REQUIRES, availableMods, modPathLabel } from './rules.ts';
+import {
+  MODS,
+  MOD_REQUIRES,
+  FUSION_REQUIRES,
+  availableMods,
+  modPathLabel,
+  modDescription,
+} from './rules.ts';
 import { workshopBuild } from './workshop-build.ts';
 
 export function workshopMenu(
@@ -48,7 +55,7 @@ export function workshopMenu(
                 missing.map((id) => MODS.find((mod) => mod.id === id)!.name).join(' + ') +
                 ' first.'
               : 'Incompatible with this build.'
-            : mod.description;
+            : modDescription(mod, draft);
           return (
             '<button class="workshop-mod" data-workshop-mod="' +
             mod.id +
@@ -63,7 +70,7 @@ export function workshopMenu(
             '</strong><span aria-hidden="true">' +
             (picked ? '✓' : '+') +
             '</span></span><span class="workshop-mod-copy">' +
-            (enabled ? mod.description : reason) +
+            (enabled ? modDescription(mod, draft) : reason) +
             '</span>' +
             (modPathLabel(mod.id)
               ? '<span class="mod-path">' + modPathLabel(mod.id) + '</span>'

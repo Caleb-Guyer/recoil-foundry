@@ -464,6 +464,28 @@ export const REPAIR_REWARD = {
   mark: 'heal',
 } as const;
 export type Mod = (typeof MODS)[number] | typeof REPAIR_REWARD;
+// Conversion-specific copy describes what the owned gun will actually do.
+export function modDescription(mod: Mod, mods: readonly string[]): string {
+  if (mod.id === 'cutting-torch')
+    return mods.includes('burst')
+      ? 'A laser with three concentrated pulses, then recovery. Hold fire to cut.'
+      : mod.description;
+  if (!mods.includes('cutting-torch')) return mod.description;
+  switch (mod.id) {
+    case 'scatter':
+      return 'A wider beam. 28% more sustained damage. Slower pulses.';
+    case 'burst':
+      return 'Three concentrated beam pulses, then recovery. 10% lighter hits.';
+    case 'rapid':
+      return '15% more sustained beam damage. Faster pulses. Gentler recoil.';
+    case 'magnum':
+      return '75% stronger pulses with 40% longer spacing. 25% more sustained damage.';
+    case 'deadeye':
+      return '30% stronger pulses with 20% longer spacing. 8% more sustained damage.';
+    default:
+      return mod.description;
+  }
+}
 export type BuildPath = 'bullet-hell' | 'precision' | 'demolition';
 export const PATH_NAMES: Record<BuildPath, string> = {
   'bullet-hell': 'Bullet hell',

@@ -114,15 +114,19 @@ Only the forward center round places a pin: pellets, rear volleys, repeated rico
 
 ## Cutting Torch
 
-**Cutting Torch** is a Precision upgrade that replaces your gun's primary rounds with one thin, continuous beam. Hold the normal fire control to cut. Output is 78% of the gun's combined damage per second; Scattershot concentrates its pellets into that one beam, and fire-rate changes affect output. Recoil becomes steady thrust, stronger in the air: jump and aim down to climb, then sweep sideways while drifting. Release fire to stop immediately.
+**Cutting Torch** is a Precision upgrade that replaces your gun's primary rounds with one continuous beam. Hold the normal fire control to cut. Output is 78% of the gun's combined damage per second. Recoil becomes steady thrust, stronger in the air: jump and aim down to climb, then sweep sideways while drifting. Release fire to stop immediately.
 
-**Thermal Runaway** requires Cutting Torch. Stay on the first enemy in the beam to build up to 75% extra damage over 1.5 seconds. Releasing fire, losing the line, changing targets, or player portal travel resets that heat. Pierced targets do not inherit it. A brighter contact point marks the heat; there is no meter or extra control.
+**Scattershot** concentrates its five pellets into a visibly wider beam with a wider physical hitbox and 28% more sustained damage. Its full width stops on real cover, including glancing edges. **Burst fire** instead delivers three concentrated laser pulses, each carrying one discharge's damage and recoil, followed by recovery. Aim can change between pulses. The normal 10% lighter hits remain; damage arrives in short bursts instead of being averaged into a weaker continuous beam. Combining them gives three wide pulses. Releasing cancels unfinished pulses while preserving recovery, so tapping cannot skip the delay.
+
+Upgrade cards and the Workshop describe these laser effects, including the actual sustained-output changes from Heavy hitter, Hair trigger and Deadeye. Existing builds work in either acquisition order and Continue preserves their upgrades. **Daily ruleset 60** identifies the changed laser behavior.
+
+**Thermal Runaway** requires Cutting Torch. Stay on the first enemy in the beam to build up to 75% extra damage over 1.5 seconds of beam contact. Intentional burst gaps preserve heat while you continue aiming at the same exposed target; they add no heat or damage. Releasing fire, losing the line, changing targets, or player portal travel resets that heat. Pierced targets do not inherit it. A brighter contact point marks the heat; there is no meter or extra control.
 
 Cover stops the beam at its actual shape. Breakable terrain gradually gives way, and the beam can reach the opening on its next simulation step. Bank shot and Banker reflect it; Punch through penetrates enemies with the usual falloff; linked portals redirect it without drawing a line across the intervening map. Boss armor and shields remain effective.
 
 Capacitor, Landing shot and Slingshot empower one short pulse, not an entire trigger hold. On-hit effects and Countershot operate at the gun's firing cadence rather than once per frame. Backfire adds a rear beam while retaining forward recoil. Recall, Vector rounds, Grindshot and Rail Spike are alternative transformations: owning one prevents the torch from being offered, and vice versa. Existing saved builds remain valid.
 
-[Test Cutting Torch and Thermal Runaway](https://caleb-guyer.github.io/recoil-foundry/?test=torch). Use `&build=base` for the torch alone, `&build=bank` for bank shots, `&build=portal` for reusable portals, or `&build=precision` for penetration and pinning. **R** retries at full health. Test links preserve saves, Daily records and earned Practice victories.
+[Test the combined wide, pulsing laser](https://caleb-guyer.github.io/recoil-foundry/?test=torch&build=combined), [Scattershot](https://caleb-guyer.github.io/recoil-foundry/?test=torch&build=scatter), or [Burst fire](https://caleb-guyer.github.io/recoil-foundry/?test=torch&build=burst). [Test Cutting Torch and Thermal Runaway](https://caleb-guyer.github.io/recoil-foundry/?test=torch) keeps the continuous beam. Use `&build=base` for the torch alone, `&build=bank` for bank shots, `&build=portal` for reusable portals, or `&build=precision` for penetration and pinning. **R** retries at full health. Test links preserve saves, Daily records and earned Practice victories.
 
 ## Angler
 

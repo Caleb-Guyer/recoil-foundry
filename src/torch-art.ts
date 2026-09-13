@@ -7,6 +7,7 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   if (!t.equipped || !t.active || !['playing', 'paused'].includes(g.mode)) return;
   c.save();
   c.lineCap = 'round';
+  const width = g.gun.pellets > 1 ? 8 : 1.6;
   for (const path of [t.segments, t.rear])
     for (let i = 0; i < path.length; i++) {
       const s = path[i],
@@ -19,11 +20,11 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
       c.lineTo(s.b.x, s.b.y);
       c.strokeStyle = '#ebad68';
       c.globalAlpha = reduced ? 0.13 : 0.19;
-      c.lineWidth = 7;
+      c.lineWidth = width + 5.4;
       c.stroke();
       c.strokeStyle = hot > 0.6 ? '#fff0c7' : '#ffd59b';
       c.globalAlpha = 0.9;
-      c.lineWidth = 1.6 + hot * 0.6;
+      c.lineWidth = width + hot * 0.6;
       c.stroke();
       if (s.body || s.cable || s.anchor) {
         c.globalAlpha = 0.8;
@@ -62,7 +63,8 @@ export function drawTorchWeapon(c: CanvasRenderingContext2D, g: Game, reduced: b
   c.fillStyle = '#d1b181';
   for (const x of [23, 27]) c.fillRect(x, -5, 2, 10);
   c.fillStyle = g.torch.active ? '#ffe0a3' : '#5b7470';
-  c.fillRect(31, -2, 3, 4);
+  const aperture = g.gun.pellets > 1 ? 5 : 2;
+  c.fillRect(31, -aperture, 3, aperture * 2);
   if (g.mods.includes('thermal-runaway')) {
     c.fillStyle = g.torch.heat > 0.5 ? '#ffc97d' : '#9c805c';
     c.fillRect(15, -6, 5, 2);

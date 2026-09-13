@@ -1050,10 +1050,15 @@ export function torchTestFromUrl(url: URL): Checkpoint | null {
       'phase',
     ].some((k) => p.has(k)) ||
     (p.has('build') &&
-      !['base', 'evolved', 'bank', 'portal', 'precision'].includes(p.get('build')!))
+      !['base', 'evolved', 'bank', 'portal', 'precision', 'scatter', 'burst', 'combined'].includes(
+        p.get('build')!,
+      ))
   )
     return null;
   const mods = ['cutting-torch', 'thermal-runaway', 'kick', 'airshot', 'light', 'leech'];
+  if (p.get('build') === 'scatter') mods[1] = 'scatter';
+  if (p.get('build') === 'burst') mods[1] = 'burst';
+  if (p.get('build') === 'combined') mods.splice(1, 2, 'scatter', 'burst');
   if (p.get('build') === 'base') mods[1] = 'rapid';
   if (p.get('build') === 'bank') mods.splice(2, 2, 'ricochet', 'banker');
   if (p.get('build') === 'portal') mods.splice(2, 2, 'fold', 'rewire');

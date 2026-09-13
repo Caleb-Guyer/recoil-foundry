@@ -11,6 +11,8 @@ import {
   rewardMods,
   seeded,
   distance,
+  MODS,
+  modDescription,
 } from '../src/rules.ts';
 import { torchTestFromUrl } from '../src/practice.ts';
 import { dailyForDate } from '../src/daily.ts';
@@ -126,14 +128,163 @@ test('holding fire delivers steady damage rather than an instant volley, indepen
   }
 });
 test('Scattershot and faster fire change the output of one beam without adding firing lanes', () => {
-  for (const extras of [[], ['scatter'], ['rapid'], ['burst'], ['magnum', 'scatter', 'rapid']]) {
+  for (const extras of [[], ['scatter'], ['rapid'], ['magnum', 'scatter', 'rapid']]) {
     const g = fixture(['cutting-torch', ...extras]),
       e = target(g);
     beam(g, 1);
-    const period = g.gun.interval * (g.gun.burstCount === 3 ? 3.1 / 3 : 1);
+    const period = g.gun.interval;
     near(10000 - e.hp, ((g.gun.damage * g.gun.pellets) / period) * TORCH.output);
     assert.equal(g.torch.segments.length, 1);
     assert.equal(g.shots.length, 0);
+  }
+});
+test('Scattershot visibly widens the ray hitbox and still stops at grazing cover', () => {
+  for (const scatter of [false, true]) {
+    const g = fixture(['cutting-torch', ...(scatter ? ['scatter'] : [])]),
+      e = target(g);
+    const half = (e.body.bounds.max.y - e.body.bounds.min.y) / 2;
+    Body.setPosition(e.body, { x: 600, y: 297 + half + 3.2 });
+    beam(g, 0.2);
+    assert.equal(e.hp < 10000, scatter, 'Only the wider beam reaches this glancing target');
+    if (scatter) {
+      wall(g, 400, 350, 20, 100);
+      const hp = e.hp;
+      beam(g, 0.2);
+      near(e.hp, hp);
+      assert(g.torch.segments[0].body !== e.body, 'The full beam width must respect cover');
+    }
+  }
+});
+test('Burst makes three real concentrated pulses with a harmless recovery gap at every supported sample rate', () => {
+  for (const dt of [1 / 30, 1 / 60, 1 / 120]) {
+    const g = fixture(['cutting-torch', 'burst']),
+      e = target(g);
+    beam(g, 0.4, true, dt);
+    near(10000 - e.hp, 3 * 21.6 * 0.78);
+    assert.equal(g.shotCount, 3);
+    const hp = e.hp,
+      vx = g.player.velocity.x;
+    beam(g, 0.2, true, dt);
+    assert(!g.torch.active);
+    near(e.hp, hp);
+    near(g.player.velocity.x, vx);
+    assert.equal(g.shotCount, 3);
+    beam(g, 0.2, true, dt);
+    assert.equal(g.shotCount, 4);
+    near(hp - e.hp, 21.6 * 0.78);
+  }
+});
+test('burst peak damage arrives early; Scattershot, fire rate, armor and rear beams compose with it', () => {
+  const steady = fixture(),
+    pulse = fixture(['cutting-torch', 'burst']);
+  const a = target(steady),
+    b = target(pulse);
+  beam(steady, 1 / 15);
+  beam(pulse, 1 / 15);
+  assert(10000 - b.hp > 2 * (10000 - a.hp));
+  for (const extras of [
+    [],
+    ['scatter'],
+    ['rapid'],
+    ['scatter', 'rapid'],
+    ['magnum', 'backblast', 'backfire'],
+  ]) {
+    const g = fixture(['cutting-torch', 'burst', ...extras]);
+    Body.setPosition(g.player, { x: 700, y: 300 });
+    const front = target(g, 1100),
+      rear = target(g, 300);
+    // End after the third pulse and before the next cycle, with fine stepping.
+    const dt = 1 / 600,
+      end = g.gun.interval * 2;
+    beam(g, end, true, dt);
+    near(10000 - front.hp, 3 * g.gun.damage * g.gun.pellets * TORCH.output);
+    assert.equal(rear.hp < 10000, extras.includes('backfire'));
+    assert.equal(g.shotCount, 3);
+    assert(g.player.velocity.x < 0);
+  }
+  const g = fixture(['cutting-torch', 'scatter', 'burst']),
+    boss = target(g, 600, 300, 'loader');
+  boss.state = 'idle';
+  beam(g, 0.6);
+  near(10000 - boss.hp, 3 * g.gun.damage * g.gun.pellets * TORCH.output * 0.4);
+});
+test('burst gaps cannot deflect or consume charges; release cancels remaining pulses without bypassing recovery', () => {
+  const g = fixture(['cutting-torch', 'burst', 'capacitor', 'countershot']),
+    e = target(g);
+  beam(g, 1, false);
+  assert.equal(g.ballistics.charges, 1);
+  beam(g, 0.1);
+  near(10000 - e.hp, 21.6 * 0.78 * 2);
+  assert.equal(g.ballistics.charges, 0);
+  assert(!g.torch.active);
+  bullets(g, [{ x: 400, y: 298 }]);
+  beam(g, 1 / 30);
+  assert(!g.shots[0].friendly);
+  beam(g, 1 / 30);
+  assert(g.shots[0].friendly);
+  beam(g, 1 / 60, false);
+  const hp = e.hp,
+    shots = g.shotCount;
+  for (let n = 0; n < 20; n++) beam(g, 1 / 60, n % 2 === 0);
+  near(e.hp, hp);
+  assert.equal(g.shotCount, shots);
+});
+test('Thermal Runaway builds across aimed burst gaps, but aiming away or releasing resets it', () => {
+  const g = fixture(['cutting-torch', 'burst', 'thermal-runaway']);
+  target(g);
+  beam(g, 0.4);
+  assert(g.torch.heat > 0.15);
+  const heat = g.torch.heat;
+  beam(g, 0.2);
+  near(g.torch.heat, heat);
+  g.aim = { x: 1300, y: 100 };
+  beam(g, 1 / 60);
+  near(g.torch.heat, 0);
+  g.aim = { ...idle.aim };
+  beam(g, 0.4);
+  assert(g.torch.heat > 0);
+  beam(g, 1 / 60, false);
+  near(g.torch.heat, 0);
+});
+test('laser upgrade descriptions explain conversions while ordinary gun descriptions stay unchanged', () => {
+  for (const id of ['scatter', 'burst', 'rapid', 'magnum', 'deadeye']) {
+    const mod = MODS.find((m) => m.id === id)!;
+    assert.equal(modDescription(mod, []), mod.description);
+    assert.notEqual(modDescription(mod, ['cutting-torch']), mod.description);
+  }
+  assert.match(
+    modDescription(MODS.find((m) => m.id === 'burst')!, ['cutting-torch']),
+    /Three concentrated beam pulses/,
+  );
+});
+test('combined laser builds remain valid in either acquisition order and retry resets pulse recovery', () => {
+  const first = ['cutting-torch', 'scatter', 'burst', 'rapid', 'kick', 'airshot'],
+    last = ['scatter', 'burst', 'rapid', 'kick', 'airshot', 'cutting-torch'];
+  for (const mods of [first, last]) {
+    assert(validBuild(mods));
+    const save = { ...torchTestFromUrl(new URL('https://test/?test=torch'))!, mods };
+    assert.deepEqual(loadCheckpoint(save), save);
+    const g = new Game();
+    g.startTest(save);
+    const input = { ...idle, fire: true };
+    for (let n = 0; n < 8; n++) g.tick(1 / 60, input);
+    const time = g.time,
+      shots = g.shotCount;
+    g.setMode('paused');
+    for (let n = 0; n < 120; n++) g.tick(1 / 60, input);
+    near(g.time, time);
+    assert.equal(g.shotCount, shots);
+    g.setMode('playing');
+    g.hitStop = 0.2;
+    for (let n = 0; n < 6; n++) g.tick(1 / 60, input);
+    near(g.time, time);
+    assert.equal(g.shotCount, shots);
+    g.startTest(save);
+    g.tick(1 / 60, input);
+    assert.equal(g.shotCount, 1);
+    assert(g.torch.active);
+    g.damagePlayer(1000);
+    assert(!g.torch.active);
   }
 });
 test('Thermal Runaway ramps only the first continuously touched enemy, caps, and resets on any lost contact', () => {
@@ -407,7 +558,16 @@ test('pause and hitstop freeze heat; release, death, room changes and retry remo
   assert.equal(g.shots.length, 0);
 });
 test('all test presets are legal saved builds, deterministic Daily offers respect exclusions, and test progress stays isolated', () => {
-  for (const build of ['base', 'evolved', 'bank', 'portal', 'precision']) {
+  for (const build of [
+    'base',
+    'evolved',
+    'bank',
+    'portal',
+    'precision',
+    'scatter',
+    'burst',
+    'combined',
+  ]) {
     const save = torchTestFromUrl(new URL('https://test/?test=torch&build=' + build));
     assert(save);
     assert.deepEqual(loadCheckpoint(save), save);
@@ -450,7 +610,7 @@ test('all test presets are legal saved builds, deterministic Daily offers respec
 
 test('Torch clears its real test encounter using ordinary movement, aiming, and fire', () => {
   const results = [];
-  for (const build of ['base', 'evolved', 'precision']) {
+  for (const build of ['base', 'evolved', 'precision', 'scatter', 'burst', 'combined']) {
     const g = new Game();
     g.startTest(torchTestFromUrl(new URL('https://test/?test=torch&build=' + build))!);
     let frames = 0,

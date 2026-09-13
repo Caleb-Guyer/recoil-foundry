@@ -10,6 +10,10 @@ import type { PressureVent } from './pressure.ts';
 export const TORCH = {
   range: 1100,
   radius: 1.5,
+  scatterRadius: 5,
+  burstSpacing: 0.7,
+  burstWidth: 0.35,
+  burstCycle: 3.1,
   output: 0.78,
   thrust: 1.2,
   heatTime: 1.5,
@@ -31,6 +35,7 @@ export interface TorchSegment {
 }
 const add = (p: Vec, d: Vec, n: number): Vec => ({ x: p.x + d.x * n, y: p.y + d.y * n });
 const shielded = (e: Enemy, d: Vec) => e.elite === 'shielded' && -d.x * e.facing > 0.45;
+export const torchRadius = (g: Game) => (g.gun.pellets > 1 ? TORCH.scatterRadius : TORCH.radius);
 
 // Trace first, damage afterwards. Cutting a surface never lets the same step
 // hit something that was behind it. Every segment uses actual convex hulls.
@@ -45,7 +50,8 @@ export function traceTorch(g: Game, rear = false): TorchSegment[] {
     gain = 1;
   const result: TorchSegment[] = [],
     visited = new Set<Matter.Body>();
-  const half = { x: TORCH.radius, y: TORCH.radius };
+  const radius = torchRadius(g),
+    half = { x: radius, y: radius };
   for (let n = 0; n < TORCH.segments && remaining > 1; n++) {
     const end = add(from, d, remaining),
       enemies = g.enemies.filter((e) => e.hp > 0 && e.spawn <= 0 && !visited.has(e.body)),
@@ -54,9 +60,9 @@ export function traceTorch(g: Game, rear = false): TorchSegment[] {
         ...enemies.map((e) => e.body),
         ...g.enemies.filter((e) => e.crane && e.spawn <= 0).map((e) => e.crane!.body),
       ]),
-      cable = g.cargo.trace(from, end, TORCH.radius),
-      anchor = g.harpoons.trace(from, end, TORCH.radius),
-      valve = g.pressure.trace(from, end, TORCH.radius),
+      cable = g.cargo.trace(from, end, radius),
+      anchor = g.harpoons.trace(from, end, radius),
+      valve = g.pressure.trace(from, end, radius),
       portal = g.portals.trace(from, end, half);
     const t = Math.min(hit?.t ?? 1, cable?.t ?? 1, anchor?.t ?? 1, valve?.t ?? 1),
       through = portal && portal.t <= t + 1e-6,
@@ -121,6 +127,12 @@ export class TorchSystem {
   target: number | undefined;
   private until = -1;
   private period = 0.22;
+  private cycling = false;
+  private burstLeft = 0;
+  private restartAt = -1;
+  private burnFrom = -1;
+  private burnUntil = -1;
+  private stepBurn = 0;
   private boost = 1;
   private recoilBoost = 1;
   private pulse: Shot | null = null;
@@ -142,12 +154,17 @@ export class TorchSystem {
   reset() {
     this.stop();
     this.until = -1;
+    this.restartAt = -1;
     this.pulse = null;
     this.processed.clear();
     this.fracture.clear();
     this.revision = -1;
   }
   stop() {
+    this.cycling = false;
+    this.burstLeft = 0;
+    this.burnUntil = -1;
+    this.stepBurn = 0;
     this.active = false;
     this.segments = [];
     this.rear = [];
@@ -166,17 +183,43 @@ export class TorchSystem {
       this.stop();
       return;
     }
-    this.active = true;
+    this.cycling = true;
     g.burstRemaining = 0;
     let d = direction(g.player.position, g.aim);
     if (!d.x && !d.y) d = { x: 1, y: 0 };
+    const bursting = g.gun.burstCount === 3;
+    let due = g.time + 1e-8 >= this.until;
+    if (bursting) {
+      const start = g.time - dt;
+      if (!this.burstLeft && g.time > this.restartAt + 1e-8) {
+        this.until = Math.max(start, this.restartAt);
+        this.restartAt = this.until + g.gun.interval * TORCH.burstCycle;
+        this.burstLeft = 3;
+      }
+      due = this.burstLeft > 0 && g.time + 1e-8 >= this.until;
+      if (due) {
+        this.burnFrom = this.until;
+        this.burnUntil = this.burnFrom + g.gun.interval * TORCH.burstWidth;
+        this.burstLeft--;
+        this.until = this.burstLeft
+          ? this.burnFrom + g.gun.interval * TORCH.burstSpacing
+          : Infinity;
+      }
+      // Integrate the lit part of the fixed step, including fractional edges.
+      // A pulse delivers one discharge's damage and recoil, independent of FPS.
+      this.stepBurn = Math.max(
+        0,
+        Math.min(g.time, this.burnUntil) - Math.max(start, this.burnFrom),
+      );
+    } else this.stepBurn = dt;
+    this.active = this.stepBurn > 1e-8;
     // Pay shot-based charges at the gun's ordinary cadence, never each frame.
-    if (g.time + 1e-8 >= this.until) {
+    if (due) {
       this.pulse = null;
       g.evolutions.settle();
-      this.period = g.gun.interval * (g.gun.burstCount === 3 ? 3.1 / 3 : 1);
-      this.until = g.time + this.period;
-      g.shootAt = this.until;
+      this.period = g.gun.interval * (bursting ? TORCH.burstWidth : 1);
+      if (!bursting) this.until = g.time + this.period;
+      g.shootAt = bursting ? this.restartAt : this.until;
       const landing = g.gun.landing && g.landingReady,
         capacitor = g.ballistics.discharge();
       g.landingReady = false;
@@ -196,7 +239,7 @@ export class TorchSystem {
         damage: 0,
         life: this.period,
         friendly: true,
-        radius: TORCH.radius,
+        radius: torchRadius(g),
         bounces: 0,
         pierce: 0,
         fragment: false,
@@ -212,17 +255,22 @@ export class TorchSystem {
       this.reflected = this.wind = this.split = false;
       if (g.gun.backblast) g.fireBackblast(d, this.payload() * 0.8);
     }
+    if (!this.active) return;
     g.lastShot = g.time;
     g.muzzle = 0;
     const impulse =
-      (g.gun.recoil / this.period) * dt * TORCH.thrust * (g.grounded ? 0.21 : 1) * this.recoilBoost;
+      (g.gun.recoil / this.period) *
+      this.stepBurn *
+      TORCH.thrust *
+      (g.grounded ? 0.21 : 1) *
+      this.recoilBoost;
     Matter.Body.setVelocity(g.player, {
       x: clamp(g.player.velocity.x - d.x * impulse, -23, 23),
       y: clamp(g.player.velocity.y - d.y * impulse, -21, 20),
     });
     // Ramjet still requires fast travel; a beam renews its launch, not its hits.
     g.salvage.launch(d, g.gun.recoil * (g.grounded ? 0.21 : 1));
-    g.feedback(dt * (g.grounded ? 2 : 5), d);
+    g.feedback(this.stepBurn * (g.grounded ? 2 : 5), d);
   }
   private payload() {
     const g = this.game;
@@ -237,7 +285,7 @@ export class TorchSystem {
   }
   afterStep(dt: number) {
     const g = this.game;
-    if (!this.active || !this.equipped || g.mode !== 'playing' || !(dt > 0)) return;
+    if (!this.cycling || !this.equipped || g.mode !== 'playing' || !(dt > 0)) return;
     if (this.revision !== g.portals.revision) {
       this.heat = 0;
       this.target = undefined;
@@ -251,9 +299,13 @@ export class TorchSystem {
       this.heat = 0;
       this.target = eligible ? target.id : undefined;
     }
+    // Intentional gaps preserve heat only while the aim still tracks the same
+    // exposed target. They deal no damage, thrust, contact procs or deflections.
+    if (!this.active) return;
+    const burn = this.stepBurn;
     const old = this.heat;
     if (eligible && g.mods.includes('thermal-runaway'))
-      this.heat = Math.min(1, this.heat + dt / TORCH.heatTime);
+      this.heat = Math.min(1, this.heat + burn / TORCH.heatTime);
     const hot = 1 + (old + this.heat) * 0.5 * TORCH.heatBonus;
     const all = [...this.segments, ...this.rear],
       damaged = new Set<Matter.Body>();
@@ -283,7 +335,7 @@ export class TorchSystem {
           g.ballistics.consumeFracture(e, s);
         }
         const damage =
-          ((s.damage * dt) / this.period) *
+          ((s.damage * burn) / this.period) *
           (this.fracture.get(e.id) ?? 1) *
           (g.gun.execute && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
         const blocked = g.hitEnemy(e, damage, add(e.body.position, segment.dir, -30), !!first);
@@ -296,7 +348,7 @@ export class TorchSystem {
             g.salvage.impact(s);
           }
           if (e.hp > 0 && !e.body.isStatic) {
-            const force = (dt / this.period) * (isBoss(e.kind) ? 0.08 : 1);
+            const force = (burn / this.period) * (isBoss(e.kind) ? 0.08 : 1);
             Matter.Body.setVelocity(e.body, {
               x: e.body.velocity.x + s.vel.x * 0.12 * force,
               y: e.body.velocity.y + s.vel.y * 0.09 * force,
@@ -325,7 +377,7 @@ export class TorchSystem {
         const hits = g.shots
           .filter((b) => !b.friendly && b.life > 0 && !b.blade && b.radius <= 5)
           .flatMap((b) => {
-            const r = b.radius + TORCH.radius,
+            const r = b.radius + torchRadius(g),
               h = segmentBox(
                 segment.a,
                 segment.b,
