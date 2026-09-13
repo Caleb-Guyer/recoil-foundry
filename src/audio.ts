@@ -11,6 +11,7 @@ const ATTACK_WARNINGS = new Set([
   'crane-wind',
   'kiln-wind',
   'strain',
+  'cargo-release',
   'arm',
   'phase',
   'interceptor-lock',

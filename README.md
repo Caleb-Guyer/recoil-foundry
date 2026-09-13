@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## The Loader's changing arena
+
+The Loader's bay has two marked steel barriers, each connected to a suspended load. Charges smash the barriers at real contact and retain the exposed crash window. Gunfire can also break a barrier or cut its cable. The damaged support then turns amber, outlines the barrier and marks the cargo's landing area for **1.35 seconds** before failing. The falling load creates new, low cover beside the opened charge lane.
+
+At **65% and 30% health**, remaining supports begin to fail. Automatic failures are staggered, including when a powerful volley crosses both thresholds at once. Each support can fail only once. Loose cargo can damage the Loader through physical impacts, can be pushed with your gun, and breaks under one committed ram. The permanent floor and upper shelves remain intact; ordinary jumps cross both orientations before and after collapse. The boss keeps its existing health, attack warnings and armor rules.
+
+Pause and hitstop freeze the sequence. Player death, leaving the run or defeating the Loader cancels pending failures. Completed-fight cargo stays physical but cannot damage the player. Retry and Continue rebuild the entrance with both supports intact. The arrangement also appears in Daily and Overtime when their seed selects the Loader. Normal saves remain compatible; **Daily ruleset 59** identifies the changed encounter. No controls or HUD elements are added, and reduced motion keeps steady warning outlines.
+
+[Test the Loader](https://caleb-guyer.github.io/recoil-foundry/?test=loader) or [its mirrored arena](https://caleb-guyer.github.io/recoil-foundry/?test=loader&mirror=1). Click **Test the Loader** to start with 100 health and three upgrades. **R** retries the fight. These isolated tests preserve Continue, Daily records, run history and earned Practice victories. Ordinary Practice still unlocks only after defeating the boss in a run.
+
 ## Run recaps
 
 After losing or escaping, expand **Run recap** to see the fatal hit, room and layout reached, time, kills, seed and every upgrade on your final gun. **Recent runs** on the title screen keeps the last ten finished normal and Daily runs on this device, newest first. Recording starts with this update; earlier runs cannot be recovered. Recaps stay collapsed by default and reveal only the build, location and attacker from that run.

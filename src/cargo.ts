@@ -20,6 +20,8 @@ export interface CargoRig {
   flash: number;
   impactAt: number;
   hits: Map<number, number>;
+  tell?: number;
+  disabled?: boolean;
 }
 
 export class CargoSystem {
@@ -78,7 +80,7 @@ export class CargoSystem {
     let nearest: { t: number; normal: Vec; prop: Prop } | null = null;
     for (const p of this.items) {
       const rig = p.cargo!;
-      if (rig.state !== 'hanging') continue;
+      if (rig.state !== 'hanging' || rig.disabled) continue;
       const hit = segmentBox(
         from,
         to,
@@ -96,6 +98,7 @@ export class CargoSystem {
       g.mode !== 'playing' ||
       !this.items.includes(prop) ||
       rig?.state !== 'hanging' ||
+      rig.disabled ||
       !(damage > 0)
     )
       return;
@@ -104,7 +107,7 @@ export class CargoSystem {
     g.onSound('prop');
     if (rig.cableHp > 0) return;
     rig.state = 'warning';
-    rig.releaseAt = g.time + CARGO_TELL;
+    rig.releaseAt = g.time + (rig.tell ?? CARGO_TELL);
     g.onSound('cargo-release');
   }
   update(dt: number) {
@@ -131,8 +134,9 @@ export class CargoSystem {
     const enemy = g.enemies.find((e) => e.body === other || e.crane?.body === other);
     if (enemy && enemy.spawn <= 0 && enemy.hp > 0)
       g.hitEnemy(enemy, Math.min(isBoss(enemy.kind) ? CARGO_BOSS_DAMAGE : 240, speed * 18));
-    else if (other === g.player) g.damagePlayer(24, prop.body.position, { type: 'cargo' });
-    else {
+    else if (other === g.player) {
+      if (!rig.disabled) g.damagePlayer(24, prop.body.position, { type: 'cargo' });
+    } else {
       const target = g.props.items.find((p) => p.body === other);
       if (target?.kind === 'canister') g.props.explode(target);
       else if (target) g.props.hit(target, clamp(speed * 9, 45, 120), prop.velocity);

@@ -27,6 +27,23 @@ export interface Encounter {
 export function testEncounterFromUrl(url: URL): Encounter | null {
   const params = url.searchParams;
   const requested = params.get('test');
+  if (requested === 'loader') {
+    if (
+      params.getAll('test').length !== 1 ||
+      params.getAll('mirror').length > 1 ||
+      !['0', '1'].includes(params.get('mirror') ?? '0') ||
+      ['daily', 'dv', 'seed', 'workshop', 'area', 'build', 'variant'].some((key) => params.has(key))
+    )
+      return null;
+    return (
+      loadEncounters([
+        {
+          kind: 'loader',
+          seed: params.get('mirror') === '1' ? 'LOADER-SHIFT-0' : 'LOADER-SHIFT-5',
+        },
+      ])[0] ?? null
+    );
+  }
   const kind = requested === 'reclaimer' ? 'boss' : requested;
   if (
     params.getAll('test').length !== 1 ||

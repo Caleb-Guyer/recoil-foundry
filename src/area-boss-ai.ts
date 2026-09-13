@@ -141,7 +141,25 @@ export function updateLoader(g: Game, e: Enemy) {
     Body.setVelocity(e.body, { x: v.x + (sign * 3.4 - v.x) * 0.1, y: v.y });
     const blocked = Math.abs(g.lineEnd(p, { x: p.x + sign * nose, y: p.y }).x - p.x) < nose - 1;
     if (counter && e.timer <= 0 && visible(g, bossMuzzle(e))) beginFlak(g, e);
-    else if (grounded && blocked) {
+    else if (
+      grounded &&
+      blocked &&
+      !counter &&
+      e.timer <= 0 &&
+      g.loaderArena.active &&
+      g.loaderArena.supports.some(
+        (s) =>
+          g.destruction.pieces.includes(s.barrier) &&
+          Math.sign(s.barrier.body.position.x - p.x) === sign &&
+          Math.abs(s.barrier.body.position.x - p.x) < nose + s.barrier.rect.w / 2,
+      )
+    ) {
+      // The marked bumpers are intentional charge targets, not permanent walls to hop.
+      e.attack = 'aimed';
+      e.state = 'windup';
+      e.timer = LOADER_TELL;
+      g.onSound('charge');
+    } else if (grounded && blocked) {
       Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
       e.timer = Math.max(e.timer, 0.6);
     } else if (grounded && e.timer <= 0) {

@@ -673,7 +673,9 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     ],
   },
   {
-    seed: 'path-run-66',
+    // Updated full-run fixture for the changing Loader arena. The base and
+    // Orbit builds still exercise path-run-66; every build must reach extraction.
+    seed: 'path-run-65',
     pressSpacing: 230,
     pathMods: [
       'crossfire',
@@ -1094,33 +1096,42 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         firing = e.state !== 'rush' && !(e.state === 'windup' && e.timer <= CRANE_LOCK);
         aim = { ...ep };
       }
-      // Read the Loader's warning with every build; spread guns close the gap
-      // between attacks instead of treating its hull as an ordinary runner.
+      // Re-evaluate actual cover and visible fire after each support failure.
+      // A fixed direction held for a full second can cross a newly opened charge lane.
       if (e?.kind === 'loader') {
-        const spacing = g.gun.pellets === 1 ? 320 : 220;
-        move = dx > spacing ? 1 : dx < -spacing ? -1 : 0;
-        if (distance(g.lineEnd(p, ep), ep) > 1) move = Math.sign(dx);
-        jump =
-          g.grounded &&
-          !!move &&
-          Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
-        aim = { ...ep };
-        firing = true;
-        if (e.state === 'windup' && e.timer <= 0.38 && !loaderReacted) {
-          loaderReacted = true;
-          loaderDodgeUntil = g.time + 0.9;
-          loaderDirection = p.x < 400 ? 1 : p.x > 1600 ? -1 : Math.sign(dx);
-          jump ||= g.grounded;
-        }
-        if (e.state !== 'windup') loaderReacted = false;
-        if (g.time < loaderDodgeUntil) {
-          move = loaderDirection;
-          firing = false;
-        }
-        if (e.state === 'rush' && Math.abs(dx) < 300) jump ||= g.grounded;
-        if (p.x < 160 || p.x > 1840) {
-          move = p.x < 160 ? 1 : -1;
-          firing = false;
+        if (g.mods.includes('rapid')) {
+          const input = dodgePilot(g, e);
+          move = Number(input.right) - Number(input.left);
+          jump = !!input.jump;
+          firing = !!input.fire;
+          aim = input.aim ?? aim;
+        } else {
+          // Slower guns jump across the locked volley and coast before firing again.
+          const spacing = g.gun.pellets === 1 ? 320 : 220;
+          move = dx > spacing ? 1 : dx < -spacing ? -1 : 0;
+          if (distance(g.lineEnd(p, ep), ep) > 1) move = Math.sign(dx);
+          jump =
+            g.grounded &&
+            !!move &&
+            Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 20).length > 0;
+          aim = { ...ep };
+          firing = true;
+          if (e.state === 'windup' && e.timer <= 0.38 && !loaderReacted) {
+            loaderReacted = true;
+            loaderDodgeUntil = g.time + 0.9;
+            loaderDirection = p.x < 400 ? 1 : p.x > 1600 ? -1 : Math.sign(dx);
+            jump ||= g.grounded;
+          }
+          if (e.state !== 'windup') loaderReacted = false;
+          if (g.time < loaderDodgeUntil) {
+            move = loaderDirection;
+            firing = false;
+          }
+          if (e.state === 'rush' && Math.abs(dx) < 300) jump ||= g.grounded;
+          if (p.x < 160 || p.x > 1840) {
+            move = p.x < 160 ? 1 : -1;
+            firing = false;
+          }
         }
       }
       if (
@@ -1315,6 +1326,8 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
         !g.ballistics.counterReady &&
         !lift &&
         !bomb &&
+        !train &&
+        !(g.stage >= 12 && !g.level.boss && (p.x < 250 || p.x > 1750)) &&
         !g.clear
       ) {
         const recharge = dodgePilot(g, e, false);
@@ -1334,7 +1347,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     assert.equal(
       g.mode,
       'won',
-      `Run stopped in ${g.level.id} at (${Math.round(g.player.position.x)}, ${Math.round(g.player.position.y)}), stage ${g.stage}, ${Math.round(g.time)}s, enemies: ${g.enemies.map((e) => e.kind + ':' + Math.round(e.hp)).join(', ')}, gun: ${g.mods.join(', ')}`,
+      `Run stopped in ${g.level.id} at (${Math.round(g.player.position.x)}, ${Math.round(g.player.position.y)}), stage ${g.stage}, ${Math.round(g.time)}s, cause: ${JSON.stringify(g.deathCause)}, enemies: ${g.enemies.map((e) => e.kind + ':' + Math.round(e.hp)).join(', ')}, gun: ${g.mods.join(', ')}`,
     );
     assert(escapeSeen, 'The run bypassed the escape route');
     assert.equal(g.stage, STAGES - 1);

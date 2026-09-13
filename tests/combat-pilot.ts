@@ -484,9 +484,42 @@ export function dodgePilot(g: Game, e: Enemy, allowFire = true): Partial<Input> 
                 Math.abs(x - m.x) < 55
               )
                 score += 50 / (frame + 8);
-            const ex = target.x + e.body.velocity.x * Math.min(frame, 8),
-              ey = target.y + e.body.velocity.y * Math.min(frame, 8);
-            if (Math.abs(x - ex) < 72 && Math.abs(y - ey) < 73) score += 2000 / (frame + 8);
+            let ex = target.x + e.body.velocity.x * Math.min(frame, 8);
+            const ey = target.y + e.body.velocity.y * Math.min(frame, 8);
+            let contactDanger = true;
+            if (e.kind === 'loader') {
+              contactDanger = e.state !== 'recover';
+              if (e.state === 'rush' || (e.state === 'windup' && e.attack !== 'flak')) {
+                // The visible charge line remains committed beyond the old bumper.
+                const travel = Math.max(0, frame - (e.state === 'rush' ? 0 : e.timer * 60)) * 15;
+                const sign = e.aim.x;
+                let stop = Infinity;
+                for (const b of boxes) {
+                  if (b.top >= target.y + 33 || b.bottom <= target.y - 33) continue;
+                  const gap = sign > 0 ? b.left - target.x - 56 : target.x - 56 - b.right;
+                  if (gap >= -1) stop = Math.min(stop, Math.max(0, gap));
+                }
+                ex = target.x + sign * Math.min(travel, stop);
+                if (travel >= stop) contactDanger = false; // A real crash exposes the harmless hull.
+              }
+              for (const load of g.cargo.items) {
+                const rig = load.cargo!;
+                if (rig.state === 'hanging' || rig.disabled) continue;
+                const fallingFrames =
+                  rig.state === 'warning' ? frame - (rig.releaseAt - g.time) * 60 : frame;
+                if (fallingFrames < 0) continue;
+                const cy = Math.min(
+                  712,
+                  load.body.position.y +
+                    load.body.velocity.y * fallingFrames +
+                    0.139 * fallingFrames ** 2,
+                );
+                if (cy < 710 && Math.abs(x - load.body.position.x) < 64 && Math.abs(y - cy) < 48)
+                  score += 2500 / (frame + 8);
+              }
+            }
+            if (contactDanger && Math.abs(x - ex) < 72 && Math.abs(y - ey) < 73)
+              score += 2000 / (frame + 8);
             score += x < 90 || x > 1910 ? 4 : 0;
           }
           // Prefer a useful firing lane and modest spacing when trajectories are safe.

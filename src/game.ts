@@ -1,4 +1,5 @@
 import { PressureSystem, type PressureVent } from './pressure.ts';
+import { LoaderArenaSystem } from './loader-arena.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { WorkshopSystem, workshopLevel, type WorkshopTarget } from './workshop.ts';
 import { workshopBuild, loadDiscoveries } from './workshop-build.ts';
@@ -228,6 +229,7 @@ export class Game {
   terrain: Matter.Body[] = [];
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
+  loaderArena = new LoaderArenaSystem(this);
   magnets = new MagnetSystem(this);
   hazards = new HazardSystem(this);
   conveyors = new ConveyorSystem(this);
@@ -409,6 +411,7 @@ export class Game {
       this.portalRequest = null;
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.loaderArena.stop();
       this.massDriver.reset();
       this.arcs.reset();
       this.grind.reset();
@@ -546,6 +549,7 @@ export class Game {
     this.tethers.reset();
     this.sappers.clear();
     this.destruction.clear();
+    this.loaderArena.clear();
     this.enteringDetour = false;
     this.enteringRoute = null;
     this.detourStepsReady = false;
@@ -676,6 +680,7 @@ export class Game {
     }
     this.crossing.reset();
     this.destruction.reset();
+    this.loaderArena.reset();
     this.pressure.reset();
     this.workshop.reset();
   }
@@ -1013,6 +1018,7 @@ export class Game {
       this.fire();
       this.fireBuffer = 0;
     }
+    this.loaderArena.update();
     for (const e of [...this.enemies]) {
       this.updateEnemy(e, dt);
       if (this.mode !== 'playing') return;
@@ -2430,6 +2436,7 @@ export class Game {
     clearKiln(e);
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
+    if (e.kind === 'loader') this.loaderArena.stop();
     this.salvageEvolutions.killed(e);
     if (
       isBoss(e.kind) &&

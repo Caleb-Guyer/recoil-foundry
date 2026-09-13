@@ -46,7 +46,7 @@ test('the explicit Turbine test link selects its real boss and never overrides D
     '',
     '?test=',
     '?test=constructor',
-    '?test=loader',
+    '?test=unknown-boss',
     '?test=turbine&test=turbine',
     '?test=turbine&daily=2026-09-07',
     '?test=turbine&dv=22',

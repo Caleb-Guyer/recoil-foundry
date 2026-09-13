@@ -1,5 +1,6 @@
 import { PRESSURE_LAYOUTS, pressureLayout, type PressurePlacement } from './pressure-layouts.ts';
 import { DROPWORKS_LAYOUTS, dropworksLayout } from './dropworks-layouts.ts';
+import { LOADER_ARENA } from './loader-layout.ts';
 import { CROSSING_LAYOUT, crossingLevel } from './crossing-layout.ts';
 import {
   COUNTERWEIGHT_LAYOUTS,
@@ -530,20 +531,7 @@ export const BOSS_LAYOUTS: Layout[] = [
   COOLING_BOSS,
   TURBINE_ARENA,
   INTERCEPTOR_ARENA,
-  {
-    id: 'loader-bay',
-    area: 'docks',
-    name: 'Loader bay',
-    solids: [
-      box(520, 660, 140, 80),
-      box(1250, 660, 140, 80),
-      shelf(740, 495, 260),
-      shelf(350, 405, 200),
-      shelf(1430, 405, 200),
-    ],
-    spawns: [{ kind: 'loader', x: 1470, y: 705 }],
-    route: route([300, 720], [590, 640], [900, 720], [1320, 640], [1600, 720], [1800, 720]),
-  },
+  LOADER_ARENA,
   {
     id: 'crane-bay',
     area: 'docks',

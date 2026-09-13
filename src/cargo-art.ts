@@ -34,7 +34,7 @@ export function drawCargoCables(c: CanvasRenderingContext2D, g: Game, reduced: b
     }
     if (warning) {
       const floor = g.lineEnd({ x, y: r.origin.y + CARGO_SIZE.h / 2 + 1 }, { x, y: 740 }, 0, p).y;
-      const progress = 1 - Math.max(0, r.releaseAt - g.time) / CARGO_TELL;
+      const progress = 1 - Math.max(0, r.releaseAt - g.time) / (r.tell ?? CARGO_TELL);
       c.fillStyle = 'rgba(220,163,89,0.06)';
       c.fillRect(x - CARGO_SIZE.w / 2, bottom, CARGO_SIZE.w, floor - bottom);
       c.strokeStyle = '#e8b577';

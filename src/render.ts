@@ -1,3 +1,4 @@
+import { drawLoaderSupports } from './loader-arena-art.ts';
 import {
   attackBrace,
   drawThreatRound,
@@ -197,6 +198,7 @@ export class Renderer {
       const weak = g.destruction.pieces.find((piece) => piece.body === b);
       if (weak) drawCracks(c, weak, this.reduced);
     }
+    drawLoaderSupports(c, g, this.reduced);
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
     if (!g.workshop.active) this.drawExit();
     drawWorkshopMounts(c, g);
