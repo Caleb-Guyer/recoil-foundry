@@ -56,6 +56,8 @@ import {
   STAGES,
   areaIndex,
   ROOM_HEAL,
+  REROLL_COST,
+  MODS,
   REPAIR_REWARD,
   segmentBox,
   isDetourStage,
@@ -367,6 +369,7 @@ export class Game {
   offers: Mod[] = [];
   rng = seeded('run');
   rewardTaken = false;
+  rewardRerolled = false;
   onChange: () => void = () => {};
   onSound: (kind: string) => void = () => {};
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
@@ -453,8 +456,17 @@ export class Game {
     this.hurtAt = -100;
     this.lastShot = -100;
     this.offers = [];
-    this.loadRoom(save?.escape === true);
-    this.setMode('playing');
+    this.loadRoom(save?.escape === true, !!save?.reward);
+    if (save?.reward) {
+      this.offers = save.reward.offers.map((id) =>
+        id === 'repair' ? REPAIR_REWARD : MODS.find((m) => m.id === id)!,
+      );
+      this.rewardRerolled = save.reward.rerolled;
+      this.earnedSalvage = save.reward.salvage ?? null;
+      this.enteringDetour = save.reward.enteringDetour === true;
+      this.enteringRoute = save.reward.enteringRoute ?? null;
+    }
+    this.setMode(save?.reward ? 'upgrade' : 'playing');
     this.save();
   }
   save() {
@@ -473,9 +485,20 @@ export class Game {
       ...(this.detours.length ? { detours: [...this.detours] } : {}),
       ...(this.overtime ? { overtime: { ...this.overtime } } : {}),
       ...(this.route ? { route: this.route } : {}),
+      ...(this.mode === 'upgrade' && !this.rewardTaken
+        ? {
+            reward: {
+              offers: this.offers.map((m) => m.id),
+              rerolled: this.rewardRerolled,
+              ...(this.earnedSalvage ? { salvage: this.earnedSalvage } : {}),
+              ...(this.enteringDetour ? { enteringDetour: true as const } : {}),
+              ...(this.enteringRoute ? { enteringRoute: this.enteringRoute } : {}),
+            },
+          }
+        : {}),
     });
   }
-  loadRoom(escapeRoom = false) {
+  loadRoom(escapeRoom = false, clearedRoom = false) {
     this.earnedSalvage = null;
     this.arcs.reset();
     this.grind.reset();
@@ -521,6 +544,8 @@ export class Game {
     this.jumpAt = -100;
     this.grounded = false;
     this.rewardTaken = false;
+    this.rewardRerolled = false;
+    this.offers = [];
     this.shake = 0;
     this.kick = { x: 0, y: 0 };
     this.hitStop = 0;
@@ -578,8 +603,14 @@ export class Game {
     });
     Composite.add(this.engine.world, this.player);
     this.counterweights.reset();
-    for (const spawn of this.waves.reset(this.level))
-      this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
+    if (clearedRoom) {
+      this.waves.clear();
+      this.clear = true;
+      this.clearAt = this.time;
+    } else {
+      for (const spawn of this.waves.reset(this.level))
+        this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
+    }
     if (escapeRoom) {
       this.hazards.clear();
       for (const placement of ESCAPE_PLATFORMS) this.hazards.spawn(placement).permanent = true;
@@ -2344,7 +2375,44 @@ export class Game {
     );
     if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
     this.rewardTaken = false;
+    this.rewardRerolled = false;
     this.setMode('upgrade');
+    this.save();
+  }
+  private replacementOffers() {
+    return rewardMods(
+      this.mods,
+      this.offers.length,
+      seeded(
+        this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage + ':reroll',
+      ),
+      { stage: this.stage, overtime: !!this.overtime },
+      this.offers.map((m) => m.id),
+    );
+  }
+  get canReroll() {
+    return (
+      this.mode === 'upgrade' &&
+      !this.practice &&
+      !dailyFromSeed(this.seed) &&
+      !this.rewardTaken &&
+      !this.rewardRerolled &&
+      this.hp > REROLL_COST &&
+      this.offers.length > 0 &&
+      !this.offers.some((m) => m.id === 'repair') &&
+      this.replacementOffers().length === this.offers.length
+    );
+  }
+  rerollReward() {
+    if (!this.canReroll) return false;
+    const replacements = this.replacementOffers();
+    this.hp -= REROLL_COST;
+    this.rewardRerolled = true;
+    this.offers = replacements;
+    this.save();
+    this.onSound('upgrade');
+    this.onChange();
+    return true;
   }
   chooseMod(id: string) {
     if (this.practice) return;

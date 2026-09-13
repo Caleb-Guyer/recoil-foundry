@@ -12,7 +12,15 @@ import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
 import { musicScene } from './music-score.ts';
 import { AREAS } from './areas.ts';
-import { MODS, loadCheckpoint, STAGES, modPathLabel, buildPath, PATH_NAMES } from './rules.ts';
+import {
+  MODS,
+  loadCheckpoint,
+  STAGES,
+  modPathLabel,
+  buildPath,
+  PATH_NAMES,
+  REROLL_COST,
+} from './rules.ts';
 import type { Checkpoint, Mod } from './rules.ts';
 import {
   VICTORIES_KEY,
@@ -36,6 +44,7 @@ import {
   layoutTestFromUrl,
   reclamationTestFromUrl,
   upgradeTestFromUrl,
+  rerollTestFromUrl,
   overtimeTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
@@ -132,6 +141,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  rerollTestFromUrl(entryUrl) ??
   countershotTestFromUrl(entryUrl) ??
   pressureTestFromUrl(entryUrl) ??
   tripwireTestFromUrl(entryUrl) ??
@@ -177,6 +187,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test Reclamation Works <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'REROLL-61')
+    $('play').innerHTML = 'Test upgrade reroll <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.overtime)
     $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
@@ -252,6 +264,8 @@ function updateTitle() {
             : 'Shoot down. Go up.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
+  if (linkedRunTest?.seed === 'REROLL-61')
+    $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
     $('title-hint').textContent = 'Choose a fusion. Full health. R to retry.';
   if (linkedRunTest?.seed.startsWith('HARPOONER-'))
@@ -351,7 +365,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
-  canvas.focus();
+  if (game.mode === 'playing') canvas.focus();
 }
 function startPractice(encounter: Encounter) {
   if (
@@ -381,7 +395,7 @@ function startRunTest(save: Checkpoint) {
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
-  canvas.focus();
+  if (game.mode === 'playing') canvas.focus();
 }
 function menu() {
   closeDialog();
@@ -638,7 +652,33 @@ function showDialog(kind: string) {
             '</button>',
         )
         .join('') +
-      '</div>';
+      '</div>' +
+      (!activeDaily && !game.practice && game.offers[0]?.id !== 'repair'
+        ? '<div class="reward-actions"><button id="reroll" class="quiet"' +
+          (game.canReroll ? '' : ' disabled') +
+          ' title="' +
+          (game.rewardRerolled
+            ? 'Once per reward'
+            : game.hp <= REROLL_COST
+              ? 'Requires more than ' + REROLL_COST + ' health'
+              : !game.canReroll
+                ? 'No full set of new upgrades available'
+                : 'Replace every card. Once per reward.') +
+          '">' +
+          (game.rewardRerolled ? 'Reroll used' : 'Reroll · −' + REROLL_COST + ' health') +
+          '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
+        : '');
+    const reroll = document.getElementById('reroll');
+    if (reroll)
+      reroll.onclick = () => {
+        sound.unlock();
+        if (game.rerollReward()) {
+          $('reward-status').textContent = 'Choices replaced. ' + REROLL_COST + ' health spent.';
+          // Do not let a second Enter on the reroll accept an unfamiliar card.
+          $('dialog-title').tabIndex = -1;
+          $('dialog-title').focus();
+        }
+      };
     content.querySelectorAll<HTMLButtonElement>('[data-mod]').forEach(
       (b) =>
         (b.onclick = () => {
@@ -828,7 +868,7 @@ function showDialog(kind: string) {
     if (paused) $('menu').onclick = menu;
   }
   if (!modal.open) modal.showModal();
-  if (kind === 'practice' || (kind === 'result' && game.practice))
+  if (kind === 'upgrade' || kind === 'practice' || (kind === 'result' && game.practice))
     content.querySelector<HTMLButtonElement>('button')?.focus();
 }
 function resume() {

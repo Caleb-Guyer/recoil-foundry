@@ -186,10 +186,12 @@ test('destroying the motor cancels its rig and opens exactly one ordinary docks 
   for (const mirrored of [false, true]) {
     const { g, e } = room('crane', mirrored),
       sounds: string[] = [];
-    let saves = 0;
+    let saves = 0,
+      rewardsSaved = 0;
     g.onSound = (sound) => sounds.push(sound);
     g.onCheckpoint = (save) => {
-      if (save) saves++;
+      if (save?.reward) rewardsSaved++;
+      else if (save) saves++;
     };
     Body.setPosition(g.player, { x: 1910, y: 722 });
     step(g);
@@ -216,6 +218,7 @@ test('destroying the motor cancels its rig and opens exactly one ordinary docks 
     assert.equal(g.stage, 4);
     assert.equal(g.mods.length, 3);
     assert.equal(saves, 1);
+    assert.equal(rewardsSaved, 1);
   }
 });
 

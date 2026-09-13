@@ -572,12 +572,19 @@ export function rewardMods(
   count: number,
   rng: () => number,
   context: RewardContext = { stage: 0 },
+  excluded: readonly string[] = [],
 ): Mod[] {
   const path = buildPath(mods),
-    pool = availableMods(mods).filter((mod) => !isFusion(mod.id) || fusionUnlocked(context)),
+    pool = availableMods(mods).filter(
+      (mod) => !excluded.includes(mod.id) && (!isFusion(mod.id) || fusionUnlocked(context)),
+    ),
     offers: Mod[] = [];
   const salvage = MODS.find(
-    (m) => m.id === context.salvage && isSalvage(m.id) && !mods.includes(m.id),
+    (m) =>
+      m.id === context.salvage &&
+      isSalvage(m.id) &&
+      !mods.includes(m.id) &&
+      !excluded.includes(m.id),
   );
   if (salvage && count > 0) offers.push(salvage);
   const weight = (mod: Mod) =>
@@ -777,6 +784,7 @@ export const areaIndex = (stage: number) =>
   Math.min(4, Math.max(0, Math.floor(stage / ROOMS_PER_AREA)));
 export const bossStage = (area: number) => area * ROOMS_PER_AREA + ROOMS_PER_AREA - 1;
 export const ROOM_HEAL = 12;
+export const REROLL_COST = 12;
 export type RouteChoice = 'low' | 'high';
 export const isRouteStage = (stage: number) =>
   Number.isInteger(stage) && stage >= 0 && stage < STAGES && stage % ROOMS_PER_AREA === 2;
@@ -788,6 +796,13 @@ export const isDetourStage = (stage: number) =>
   stage < STAGES &&
   stage !== 14 &&
   stage % ROOMS_PER_AREA === 2;
+export interface RewardCheckpoint {
+  offers: string[];
+  rerolled: boolean;
+  salvage?: string;
+  enteringDetour?: true;
+  enteringRoute?: RouteChoice;
+}
 export interface Checkpoint {
   version: 5;
   seed: string;
@@ -802,6 +817,54 @@ export interface Checkpoint {
   missedUpgrades?: number;
   overtime?: { baseMods: number; repairs: number };
   route?: RouteChoice;
+  reward?: RewardCheckpoint;
+}
+function validRewardCheckpoint(d: Checkpoint) {
+  const r = d.reward;
+  if (r === undefined) return true;
+  if (!r || typeof r !== 'object' || d.version !== 5 || d.escape || d.stage === STAGES - 1)
+    return false;
+  const daily = /^RF-D\d+-/.test(d.seed);
+  if (
+    typeof r.rerolled !== 'boolean' ||
+    (daily && r.rerolled) ||
+    !Array.isArray(r.offers) ||
+    r.offers.length < 1 ||
+    r.offers.length > (daily ? 1 : 3) ||
+    new Set(r.offers).size !== r.offers.length ||
+    (r.salvage !== undefined &&
+      (d.detour ||
+        !(
+          (r.salvage === 'ramjet' && [3, 15].includes(d.stage)) ||
+          (r.salvage === 'cinder' && [7, 15].includes(d.stage)) ||
+          (r.salvage === 'crosswind' && d.stage === 11)
+        ))) ||
+    (r.enteringDetour !== undefined &&
+      (r.enteringDetour !== true ||
+        d.detour ||
+        d.overtime ||
+        !isDetourStage(d.stage) ||
+        d.detours?.includes(areaIndex(d.stage))))
+  )
+    return false;
+  if (!d.detour && isRouteStage(d.stage + 1)) {
+    if (
+      (r.enteringRoute !== 'low' && r.enteringRoute !== 'high') ||
+      (daily && r.enteringRoute !== dailyRoute(d.seed, d.stage + 1))
+    )
+      return false;
+  } else if (r.enteringRoute !== undefined) return false;
+  if (r.offers.includes('repair'))
+    return (
+      !!d.overtime && !r.rerolled && r.offers.length === 1 && availableMods(d.mods).length === 0
+    );
+  const legal = availableMods(d.mods, true);
+  return r.offers.every(
+    (id) =>
+      legal.some((m) => m.id === id) &&
+      (!isSalvage(id) || (!r.rerolled && id === r.salvage)) &&
+      (!isFusion(id) || fusionUnlocked({ stage: d.stage, overtime: !!d.overtime })),
+  );
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (!value || typeof value !== 'object') return null;
@@ -914,7 +977,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (!!overtime ||
           d.mods.length === stages - 1 + completed.length - missed ||
           (oldEscape && completed.length === 0))));
-  if (!valid) return null;
+  if (!valid || !validRewardCheckpoint(d)) return null;
   if (!legacy && !previous) return d;
   // Keep the same room, gun and health. Skipped new rooms are recorded so later
   // detour and escape checkpoints remain valid without inventing upgrade picks.

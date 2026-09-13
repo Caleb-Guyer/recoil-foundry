@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Risky reroll
+
+Once per reward, **Reroll · −12 health** replaces every card with a different legal upgrade. It keeps path weighting, prerequisites, transformation exclusions and fusion rules. Rerolling a boss reward also gives up its salvage card. The button disables after use, at 12 health or less, or when there are too few fresh upgrades to replace the full set. Field repair cannot be rerolled. Daily Runs retain their single predetermined upgrade and have no reroll button.
+
+The cost is immediate; choosing an upgrade still gives the usual 12-health room refill. At 64 health, rerolling leaves 52, then choosing leaves 64 instead of 76. Bonus detour upgrades still give no healing. Pending cards, spent health, the used reroll and the selected route or detour are saved together. Continue returns directly to that reward without replaying the cleared room or charging again.
+
+[Test the reroll](https://caleb-guyer.github.io/recoil-foundry/?test=reroll) opens the first reward at 64 health. Reroll, choose a card, and play the next room. **R** restarts this isolated test; normal saves, Daily records and Practice unlocks are preserved.
+
 ## Countershot balance
 
 Countershot deflects one small hostile bullet on contact with your fire. After a successful deflection, release fire for **0.8 uninterrupted seconds** to recharge; a quiet click confirms it is ready. Pellets, bursts, rear shots, echoes, returning rounds and Cutting Torch share that one charge. Holding fire, rapid taps and queued burst rounds cannot recharge it. Missing does not spend the charge.

@@ -242,9 +242,11 @@ test('cleared exits advance automatically and choices modify the same gun', () =
   const g = new Game();
   g.start('progress');
   let saves = 0,
+    rewardsSaved = 0,
     cleared = false;
   g.onCheckpoint = (s) => {
-    if (s) saves++;
+    if (s?.reward) rewardsSaved++;
+    else if (s) saves++;
     else cleared = true;
   };
   for (let stage = 0; stage < STAGES; stage++) {
@@ -279,6 +281,7 @@ test('cleared exits advance automatically and choices modify the same gun', () =
   assert.equal(g.escape?.phase, 'route');
   assert.equal(g.mods.length, STAGES - 1);
   assert.equal(saves, STAGES);
+  assert.equal(rewardsSaved, STAGES - 1);
   assert(!cleared);
   Body.setPosition(g.player, { x: EXTRACTION.x, y: EXTRACTION.y - 18 });
   Body.setVelocity(g.player, { x: 0, y: 0 });

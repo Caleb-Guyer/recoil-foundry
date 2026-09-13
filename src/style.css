@@ -361,6 +361,19 @@ dialog.practice-dialog {
   flex-wrap: wrap;
   margin-top: 26px;
 }
+.reward-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+.reward-actions .quiet {
+  padding: 10px 0;
+}
+.reward-actions .quiet:disabled {
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: default;
+}
 .result-line {
   color: #b5c3b9;
   font-size: 16px;

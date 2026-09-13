@@ -1,7 +1,7 @@
 import { breakableSolids } from './destruction-layout.ts';
 import { getLevel } from './levels.ts';
 import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
-import { bossStage, availableMods, type Checkpoint } from './rules.ts';
+import { bossStage, availableMods, rewardMods, seeded, type Checkpoint } from './rules.ts';
 
 // Encounter-only records cannot prove a win; start a separate victory history.
 export const VICTORIES_KEY = 'rf-boss-victories-v1';
@@ -529,6 +529,23 @@ export function fusionTestFromUrl(url: URL): Checkpoint | null {
   return {
     ...testCheckpoint('FUSIONS-' + key.toUpperCase(), 8),
     mods: [...FUSION_TEST_BUILDS[key]],
+  };
+}
+export function rerollTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  let unexpected = false;
+  p.forEach((_, key) => {
+    if (key !== 'test') unexpected = true;
+  });
+  if (p.getAll('test').length !== 1 || p.get('test') !== 'reroll' || unexpected) return null;
+  const seed = 'REROLL-61';
+  return {
+    ...testCheckpoint(seed, 0),
+    hp: 64,
+    reward: {
+      offers: rewardMods([], 3, seeded(seed + ':rewards:0')).map((m) => m.id),
+      rerolled: false,
+    },
   };
 }
 export function upgradeTestFromUrl(url: URL): Checkpoint | null {
