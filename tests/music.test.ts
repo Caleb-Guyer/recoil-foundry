@@ -202,6 +202,64 @@ function assertCancelled(context: AudioContextMock, sources: SourceNodeMock[]) {
   }
 }
 
+test('attack warnings stay audible when gunfire fills the effect voice budget', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  for (let i = 0; i < 50; i++) sound.tone(180, 40, 0.15, 0.1);
+  assert.equal(sound.voices, 24);
+  const before = context.sources.length;
+  sound.play('interceptor-lock');
+  assert(context.sources.length > before, 'Critical tell must have reserved voices');
+  assert(sound.voices <= 32);
+  const warningVoices = context.sources.slice(before);
+  const reaches = (node: AudioNodeMock, target: unknown): boolean =>
+    node === target || node.connections.some((next) => reaches(next, target));
+  assert(warningVoices.every((node) => reaches(node, sound.master)));
+  assert(
+    warningVoices.every((node) => !reaches(node, sound.effects)),
+    'Warnings bypass the ducked effects bus',
+  );
+  const automation = sound.effects!.gain as unknown as AudioParamMock;
+  assert(automation.events.some((event) => event.kind === 'target' && event.value === 0.35));
+  assert(
+    automation.events.some(
+      (event) => event.kind === 'target' && event.value === 1 && event.time > context.currentTime,
+    ),
+  );
+  const warned = context.sources.length;
+  sound.play('interceptor-lock');
+  assert.equal(context.sources.length, warned, 'A volley should not duplicate its warning sound');
+  context.advance(1);
+  assert.equal(sound.voices, 0);
+  assert(context.sources.every((source) => source.disconnected));
+});
+
+test('armor, impact and kill cues use different voices and rapid hits are bounded', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const signatures: number[][] = [];
+  for (const kind of ['armor', 'hit', 'kill']) {
+    const first = context.sources.length;
+    sound.play(kind);
+    const sources = context.sources.slice(first);
+    assert(sources.length > 0);
+    signatures.push(
+      sources.filter((node) => node.kind === 'oscillator').map((node) => node.frequency.value),
+    );
+    const count = context.sources.length;
+    for (let i = 0; i < 30; i++) sound.play(kind);
+    assert.equal(context.sources.length, count);
+    context.advance(0.4);
+  }
+  assert.notDeepEqual(signatures[0], signatures[1]);
+  assert.notDeepEqual(signatures[1], signatures[2]);
+  assert.equal(sound.voices, 0);
+});
+
 test('torch sound reuses one voice, follows heat, and releases its entire graph on stop or mute', (t) => {
   installContext(t);
   const sound = new Sound();

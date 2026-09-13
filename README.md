@@ -635,6 +635,12 @@ The escape entrance is saved automatically. Continue rebuilds the same route fro
 
 ## Feel
 
+Combat readability: hostile rounds have a dark separation stroke, a coral hollow outline and a pale core; fast rounds use pointed silhouettes. Interceptor ammunition keeps its additional weapon-specific markings, and returned turbine blades switch to the player's pale green. Hostile shots render above player gunfire and cosmetic particles. Sparks, blast rings and friendly bullet trails fade locally near incoming rounds while physical debris and active hazards remain visible.
+
+The final part of an enemy's windup gains a small closing brace, with a steady version when screen shake is disabled. Ordinary shooters and flyers give a short aiming sound; existing boss and specialist tells retain their timing. Warning sounds briefly lower gunfire and explosions, have reserved audio voices, and still respect the master mute. Armor produces a metallic ping and outward pale sparks, exposed hits a dry impact, and kills a lower break sound. Damage and attack timing are unchanged.
+
+Newly fired offscreen shots aimed near the player briefly mark their direction at the screen edge. Missed shots, visible attackers, reflected bullets and shots obstructed by current solid geometry produce no cue. Nearby volley indicators merge, with at most four on screen; cues expire after 0.42 seconds and stay fixed against screen shake. No enemy names, permanent radar or additional text appears. This is a presentation update, so Daily ruleset 58 and existing saves remain compatible.
+
 - Buffered jumps, coyote time, variable jump height, and quick ground acceleration.
 - Strong airborne recoil, preserved momentum, and bounded speeds.
 - Directional camera kick and short screen shake, muzzle flashes, casings, impact sparks, kill pauses, and landing squash.

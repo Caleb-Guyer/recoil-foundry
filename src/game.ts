@@ -166,6 +166,7 @@ export interface Enemy {
 }
 export interface Shot {
   id: number;
+  launch?: { pos: Vec; at: number };
   pos: Vec;
   prev: Vec;
   vel: Vec;
@@ -1373,6 +1374,7 @@ export class Game {
       bankGrowth: 0,
       charged: false,
       ...data,
+      launch: data.friendly ? undefined : { pos: { ...(data.source ?? data.pos) }, at: this.time },
       shell,
       damage: shell ? data.damage * SHELL_DIRECT : data.damage,
       trace:
@@ -1453,6 +1455,13 @@ export class Game {
       }
     }
     if ((e.kind === 'shooter' && !coordinated) || e.kind === 'flyer') {
+      if (
+        e.timer <= 0.35 &&
+        e.timer + dt > 0.35 &&
+        dist < 1450 &&
+        distance(this.lineEnd(p, this.player.position), this.player.position) < 1
+      )
+        this.onSound('aim-warn');
       if (e.timer > 0.35) e.aim = d;
       if (e.timer <= 0 && dist < 1450) {
         const base = Math.atan2(e.aim.y, e.aim.x);
@@ -2335,15 +2344,12 @@ export class Game {
   }
   hitEnemy(e: Enemy, damage: number, from?: Vec, feedback = true): boolean {
     if (e.hp <= 0) return false;
+    const incomingDamage = damage;
     const blocked =
       e.elite === 'shielded' && !!from && direction(e.body.position, from).x * e.facing > 0.45;
     if (blocked) {
       damage *= 0.1;
       e.shieldFlash = 0.14;
-      if (feedback) {
-        this.burst({ x: e.body.position.x + e.facing * 19, y: e.body.position.y }, 4, '#e7d6ac', 2);
-        this.onSound('bank');
-      }
     }
     if (e.angler && e.angler.exposed > 0) damage *= 1.5;
     if (e.crawler && e.crawler.vulnerable > 0) damage *= 1.5;
@@ -2360,10 +2366,24 @@ export class Game {
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
     e.hp -= damage;
-    if (!blocked && feedback) {
+    if (feedback) {
+      const armored = blocked || damage < incomingDamage * 0.75;
+      const directionToHit = from ? direction(e.body.position, from) : { x: 0, y: -1 };
+      const impact = armored
+        ? {
+            x: e.body.position.x + directionToHit.x * ENEMY_STATS[e.kind].w * 0.5,
+            y: e.body.position.y + directionToHit.y * ENEMY_STATS[e.kind].h * 0.5,
+          }
+        : e.body.position;
       e.flash = 0.08;
-      this.burst(e.body.position, 4, '#f28a79', 2.3);
-      this.onSound('hit');
+      this.burst(
+        impact,
+        4,
+        armored ? '#e7d6ac' : '#f28a79',
+        armored ? 2 : 2.3,
+        armored ? directionToHit : undefined,
+      );
+      if (e.hp > 0) this.onSound(armored ? 'armor' : 'hit');
     }
     if (e.hp > 0) return blocked;
     if (

@@ -1,3 +1,13 @@
+import {
+  attackBrace,
+  drawThreatRound,
+  effectOpacity,
+  incomingEdgeCues,
+  inCombatView,
+  THREAT_BACK,
+  THREAT_COLOR,
+  THREAT_CORE,
+} from './combat-readability.ts';
 import { drawPressure } from './pressure-art.ts';
 import { drawWorkshopTarget, drawWorkshopMounts } from './workshop-art.ts';
 import { drawTripwires } from './tripwire-art.ts';
@@ -120,6 +130,7 @@ export class Renderer {
       dt = Math.min(0.05, (now - this.last) / 1000 || 1 / 60);
     this.last = now;
     if (g.mode === 'playing' || g.mode === 'title') this.clock += dt;
+    const threats = g.shots.filter((shot) => !shot.friendly && shot.life > 0);
     const ratio = this.canvas.width / this.width;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
     const viewW = this.width / this.scale,
@@ -212,6 +223,27 @@ export class Renderer {
       });
       c.globalAlpha = 1;
     }
+    for (const p of g.particles) {
+      c.globalAlpha =
+        clamp(p.life / p.max, 0, 1) *
+        effectOpacity(p.pos, p.kind === 'ring' ? p.size * (1 - p.life / p.max) : p.size, threats);
+      if (p.kind === 'ring') this.circle(p.pos, p.size * (1 - p.life / p.max), p.color, false, 1.5);
+      else if (p.kind === 'shell') {
+        c.save();
+        c.translate(p.pos.x, p.pos.y);
+        c.rotate((1 - p.life / p.max) * 9);
+        c.fillStyle = p.color;
+        c.fillRect(-3, -1, 6, 2);
+        c.restore();
+      } else
+        this.line(
+          p.pos,
+          { x: p.pos.x - p.vel.x * 1.7, y: p.pos.y - p.vel.y * 1.7 },
+          p.color,
+          p.size,
+        );
+    }
+    c.globalAlpha = 1;
     for (const e of g.enemies) {
       if (e.workshopTarget) {
         drawWorkshopTarget(c, e);
@@ -528,8 +560,8 @@ export class Renderer {
         this.line(
           p,
           squadLineEnd(g, e, p, { x: p.x + e.aim.x * length, y: p.y + e.aim.y * length }),
-          '#794239',
-          1,
+          e.timer <= 0.35 ? '#d89b7f' : '#a56553',
+          1.25,
         );
         c.setLineDash([]);
         this.circle(
@@ -537,7 +569,7 @@ export class Renderer {
             x: p.x + e.aim.x * 28,
             y: p.y + e.aim.y * 28,
           },
-          3 + Math.sin(this.clock * 30) * 1.5,
+          3 + clamp(1 - e.timer / 0.4, 0, 1) * 1.5,
           '#ffd7a0',
         );
       }
@@ -565,6 +597,7 @@ export class Renderer {
     drawBallistics(c, g, this.reduced);
     drawFusions(c, g, this.reduced);
     for (const s of g.shots) {
+      if (!s.friendly || s.life <= 0) continue;
       if (s.massDriver) {
         drawMassRound(c, s, this.reduced);
         continue;
@@ -575,13 +608,16 @@ export class Renderer {
       }
       if (s.friendly) {
         c.save();
-        if (s.echo) c.globalAlpha = 0.65;
+        c.globalAlpha = (s.echo ? 0.65 : 1) * effectOpacity(s.pos, s.radius, threats);
         if (s.trace) {
           const { points, bank, pierce } = s.trace;
           c.save();
           c.lineCap = 'round';
           for (let i = 1; i < points.length; i++) {
-            c.globalAlpha = (this.reduced ? 0.32 : 0.48) * (0.3 + (0.7 * i) / (points.length - 1));
+            c.globalAlpha =
+              effectOpacity(points[i], s.radius, threats) *
+              (this.reduced ? 0.32 : 0.48) *
+              (0.3 + (0.7 * i) / (points.length - 1));
             const color = s.vector?.boosted
               ? '#f5cb82'
               : s.rail
@@ -623,35 +659,46 @@ export class Renderer {
         if (s.recall?.returning || s.reflected)
           this.circle(s.pos, s.radius + 1, s.reflected ? '#b5ecd8' : '#a9ccd8', false, 1);
         c.restore();
-      } else {
-        if (s.enemyAmmo) {
-          drawRivalShot(c, s);
-          continue;
-        }
-        if (Math.hypot(s.vel.x, s.vel.y) > 12) this.line(s.prev, s.pos, '#ffd3a0', 2);
-        this.circle(s.pos, 6, '#ee745f', false, 2);
-        this.circle(s.pos, 2, '#ffcdb4');
       }
     }
-    for (const p of g.particles) {
-      c.globalAlpha = clamp(p.life / p.max, 0, 1);
-      if (p.kind === 'ring') this.circle(p.pos, p.size * (1 - p.life / p.max), p.color, false, 1.5);
-      else if (p.kind === 'shell') {
-        c.save();
-        c.translate(p.pos.x, p.pos.y);
-        c.rotate((1 - p.life / p.max) * 9);
-        c.fillStyle = p.color;
-        c.fillRect(-3, -1, 6, 2);
-        c.restore();
-      } else
-        this.line(
-          p.pos,
-          { x: p.pos.x - p.vel.x * 1.7, y: p.pos.y - p.vel.y * 1.7 },
-          p.color,
-          p.size,
-        );
+    // Hostile projectiles stay above player shots and all cosmetic particles.
+    for (const s of threats) {
+      if (s.blade) drawBlade(c, s, g.time, this.reduced);
+      else if (s.enemyAmmo) drawRivalShot(c, s);
+      else drawThreatRound(c, s);
     }
-    c.globalAlpha = 1;
+    const view = { x: this.camera.x, y: this.camera.y, w: viewW, h: viewH };
+    for (const e of g.enemies) {
+      const brace = attackBrace(e);
+      if (
+        !brace ||
+        !inCombatView(e.body.position, view) ||
+        distance(e.body.position, g.player.position) > 1450
+      )
+        continue;
+      c.save();
+      c.translate(e.body.position.x, e.body.position.y);
+      c.rotate(Math.atan2(e.aim.y, e.aim.x));
+      const reach =
+        Math.max(ENEMY_STATS[e.kind].w, ENEMY_STATS[e.kind].h) / 2 +
+        8 +
+        (this.reduced ? 0 : (1 - brace) * 7);
+      c.globalAlpha = 0.5 + brace * 0.45;
+      c.beginPath();
+      for (const sign of [-1, 1]) {
+        c.moveTo(reach - 5, sign * 12);
+        c.lineTo(reach, sign * 7);
+        c.lineTo(reach + 5, sign * 7);
+      }
+      c.strokeStyle = THREAT_BACK;
+      c.lineWidth = 5;
+      c.stroke();
+      c.strokeStyle = THREAT_CORE;
+      c.lineWidth = 1.5;
+      c.stroke();
+      c.restore();
+    }
+
     if (g.escape) this.drawExtraction(true);
     if (g.mode === 'playing' && g.escape?.phase !== 'extracting') {
       const a = g.aim,
@@ -679,6 +726,38 @@ export class Renderer {
       }
     }
     c.restore();
+    if (g.mode === 'playing' && !g.clear && !g.workshop.active && !g.escape) {
+      c.save();
+      // Screen-space cues do not jitter with recoil or screen shake.
+      for (const cue of incomingEdgeCues(
+        threats,
+        g.player.position,
+        view,
+        g.time,
+        g.solidBodies,
+        28 / this.scale,
+      )) {
+        c.save();
+        c.translate(
+          (cue.pos.x - this.camera.x) * this.scale,
+          (cue.pos.y - this.camera.y) * this.scale,
+        );
+        c.rotate(cue.angle);
+        c.globalAlpha = this.reduced ? 0.65 : cue.alpha;
+        c.beginPath();
+        c.moveTo(-4, -7);
+        c.lineTo(3, 0);
+        c.lineTo(-4, 7);
+        c.strokeStyle = THREAT_BACK;
+        c.lineWidth = 5;
+        c.stroke();
+        c.strokeStyle = THREAT_COLOR;
+        c.lineWidth = 2;
+        c.stroke();
+        c.restore();
+      }
+      c.restore();
+    }
     if (g.mode === 'playing' && g.time - g.hurtAt < 0.2) {
       c.fillStyle = 'rgba(222,64,44,' + (0.2 - (g.time - g.hurtAt)) * 0.28 + ')';
       c.fillRect(0, 0, this.width, this.height);

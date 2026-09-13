@@ -1,4 +1,5 @@
 import { grindPlanValid } from './interceptor-grindshot.ts';
+import { drawThreatRound } from './combat-readability.ts';
 import type { Enemy, Game, Shot } from './game.ts';
 import { firstSolid } from './collisions.ts';
 import { distance, clamp } from './rules.ts';
@@ -112,16 +113,12 @@ export function drawRivalEffects(c: CanvasRenderingContext2D, g: Game, e: Enemy)
   c.restore();
 }
 export function drawRivalShot(c: CanvasRenderingContext2D, s: Shot) {
+  drawThreatRound(c, s);
   const ammo = s.enemyAmmo!,
     color = INTERCEPTOR_WEAPONS[ammo.kind].color;
   c.save();
   c.strokeStyle = color;
   c.lineWidth = 2;
-  c.fillStyle = '#ffcdb4';
-  c.beginPath();
-  c.arc(s.pos.x, s.pos.y, s.radius + 1, 0, Math.PI * 2);
-  c.stroke();
-  c.fillRect(s.pos.x - 1.5, s.pos.y - 1.5, 3, 3);
   if (ammo.kind === 'recall') {
     const a = Math.atan2((ammo.reverse ?? s.vel).y, (ammo.reverse ?? s.vel).x);
     c.translate(s.pos.x, s.pos.y);

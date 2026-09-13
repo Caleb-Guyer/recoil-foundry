@@ -1,6 +1,32 @@
 import { Music } from './music.ts';
 import type { MusicScene } from './music-score.ts';
 
+const ATTACK_WARNINGS = new Set([
+  'aim-warn',
+  'lock',
+  'charge',
+  'machine',
+  'pressure-warn',
+  'reinforce',
+  'crane-wind',
+  'kiln-wind',
+  'strain',
+  'arm',
+  'phase',
+  'interceptor-lock',
+  'interceptor-heavy',
+  'loader',
+  'press',
+  'scrapper-lock',
+  'harpoon-lock',
+  'angler-lock',
+  'crawler-lock',
+  'turbine-wind',
+  'train-warn',
+  'train-horn',
+  'sapper-lock',
+]);
+
 export class Sound {
   private audioEnabled = true;
   private scoreEnabled = true;
@@ -26,6 +52,8 @@ export class Sound {
   }
   context: AudioContext | null = null;
   master: GainNode | null = null;
+  effects: GainNode | null = null;
+  private priorityCue = false;
   noise: AudioBuffer | null = null;
   private torchVoice: { osc: OscillatorNode; gain: GainNode; frequency: number } | null = null;
   updateTorch(active: boolean, heat = 0) {
@@ -49,7 +77,7 @@ export class Sound {
       filter.frequency.value = 650;
       osc.connect(filter);
       filter.connect(gain);
-      gain.connect(this.master!);
+      gain.connect(this.effects ?? this.master!);
       osc.start();
       gain.gain.setTargetAtTime(0.035, c.currentTime, 0.025);
       this.torchVoice = { osc, gain, frequency: -1 };
@@ -84,12 +112,16 @@ export class Sound {
         compressor.release.value = 0.12;
         master.connect(compressor);
         compressor.connect(c.destination);
+        const effects = c.createGain();
+        effects.gain.value = 1;
+        effects.connect(master);
         const noise = c.createBuffer(1, Math.ceil(c.sampleRate * 0.3), c.sampleRate);
         const data = noise.getChannelData(0);
         for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
         this.music = new Music(c, master);
         this.context = c;
         this.master = master;
+        this.effects = effects;
         this.noise = noise;
       } catch {
         if (c) void c.close().catch(() => {});
@@ -116,7 +148,7 @@ export class Sound {
     delay = 0,
   ) {
     const c = this.context!;
-    if (this.voices > 30) return;
+    if (this.voices >= (this.priorityCue ? 32 : 24)) return;
     this.voices++;
     const now = c.currentTime + delay,
       osc = c.createOscillator(),
@@ -129,7 +161,7 @@ export class Sound {
     gain.gain.linearRampToValueAtTime(volume, now + 0.003);
     gain.gain.exponentialRampToValueAtTime(0.001, now + length);
     osc.connect(gain);
-    gain.connect(this.master!);
+    gain.connect(this.priorityCue ? this.master! : (this.effects ?? this.master!));
     osc.onended = () => {
       this.voices--;
       osc.disconnect();
@@ -140,7 +172,7 @@ export class Sound {
   }
   crack(length: number, volume: number, frequency: number) {
     const c = this.context!;
-    if (this.voices > 30) return;
+    if (this.voices >= (this.priorityCue ? 32 : 24)) return;
     this.voices++;
     const now = c.currentTime,
       source = c.createBufferSource(),
@@ -154,7 +186,7 @@ export class Sound {
     gain.gain.exponentialRampToValueAtTime(0.001, now + length);
     source.connect(filter);
     filter.connect(gain);
-    gain.connect(this.master!);
+    gain.connect(this.priorityCue ? this.master! : (this.effects ?? this.master!));
     source.onended = () => {
       this.voices--;
       source.disconnect();
@@ -168,36 +200,32 @@ export class Sound {
     const c = this.context;
     if (!this.enabled || !c || c.state !== 'running') return;
     const previous = this.played.get(kind) ?? -10;
-    if (c.currentTime - previous < (kind === 'hit' ? 0.04 : 0.015)) return;
+    const warning = ATTACK_WARNINGS.has(kind);
+    const cooldown = warning
+      ? 0.12
+      : kind === 'hit' || kind === 'armor' || kind === 'kill'
+        ? 0.055
+        : 0.015;
+    if (c.currentTime - previous < cooldown) return;
     this.played.set(kind, c.currentTime);
+    this.priorityCue = warning || kind === 'hurt';
+    if (warning && this.effects) {
+      const gain = this.effects.gain;
+      gain.cancelScheduledValues(c.currentTime);
+      gain.setTargetAtTime(0.35, c.currentTime, 0.008);
+      gain.setTargetAtTime(1, c.currentTime + 0.2, 0.07);
+    }
     if (
-      [
-        'lock',
-        'charge',
-        'machine',
-        'pressure-warn',
-        'reinforce',
-        'crane-wind',
-        'crane-hit',
-        'kiln-wind',
-        'kiln-impact',
-        'strain',
-        'arm',
-        'hurt',
-        'phase',
-        'interceptor-lock',
-        'interceptor-heavy',
-        'loader',
-        'press',
-        'slam',
-        'cargo-release',
-        'cargo-impact',
-        'scrapper-lock',
-        'harpoon-lock',
-      ].includes(kind)
+      warning ||
+      ['crane-hit', 'kiln-impact', 'hurt', 'slam', 'cargo-release', 'cargo-impact'].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
-    if (kind === 'mass-shot') {
+    if (kind === 'aim-warn') {
+      this.tone(760, 1050, 0.085, 0.028, 'sine');
+    } else if (kind === 'armor') {
+      this.tone(1650, 950, 0.055, 0.035, 'sine');
+      this.crack(0.025, 0.025, 3600);
+    } else if (kind === 'mass-shot') {
       this.tone(82, 28, 0.2, 0.24);
       this.tone(240, 85, 0.085, 0.055, 'triangle');
       this.crack(0.13, 0.17, 680);
@@ -478,5 +506,6 @@ export class Sound {
     } else if (kind === 'dead') {
       this.tone(140, 25, 0.55, 0.17, 'sawtooth');
     }
+    this.priorityCue = false;
   }
 }

@@ -6,8 +6,8 @@ export function drawBlade(c: CanvasRenderingContext2D, s: Shot, time: number, re
   c.save();
   c.translate(s.pos.x, s.pos.y);
   c.rotate(reduced ? 0 : time * 15 + s.id);
-  c.fillStyle = '#bf795f';
-  c.strokeStyle = '#ffd5a1';
+  c.fillStyle = s.friendly ? '#90c9b6' : '#4c302e';
+  c.strokeStyle = '#102025';
   c.lineWidth = 1.5;
   c.beginPath();
   for (let i = 0; i < 12; i++) {
@@ -18,6 +18,10 @@ export function drawBlade(c: CanvasRenderingContext2D, s: Shot, time: number, re
   }
   c.closePath();
   c.fill();
+  c.lineWidth = 5;
+  c.stroke();
+  c.strokeStyle = s.friendly ? '#d6f0df' : '#ff8875';
+  c.lineWidth = 2;
   c.stroke();
   c.fillStyle = '#263c40';
   c.beginPath();
