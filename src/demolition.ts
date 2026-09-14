@@ -4,6 +4,7 @@ import { clamp, direction, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
 import { isBoss } from './enemies.ts';
 import type { Prop } from './props.ts';
+import { firstSolid } from './collisions.ts';
 
 export const SHELL_DIRECT = 0.55;
 export const SHELL_BLAST = 0.85;
@@ -23,8 +24,21 @@ export interface DemolitionBlast {
   damage: number;
   radius: number;
   launch: number;
-  kind: 'shell' | 'echo' | 'chain' | 'tripwire';
+  kind: 'shell' | 'echo' | 'chain' | 'tripwire' | 'cluster';
+  direction?: Vec;
+  normal?: Vec;
+  shaped?: boolean;
 }
+export interface Bomblet {
+  pos: Vec;
+  prev: Vec;
+  vel: Vec;
+  damage: number;
+  launch: number;
+  at: number;
+  last: number;
+}
+export const CLUSTER_LIMIT = 48;
 export interface PendingBlast extends DemolitionBlast {
   at: number;
 }
@@ -63,6 +77,7 @@ export class DemolitionSystem {
   game: Game;
   pending: PendingBlast[] = [];
   effects: BlastEffect[] = [];
+  bomblets: Bomblet[] = [];
   feedbackAt = -1;
   constructor(game: Game) {
     this.game = game;
@@ -70,6 +85,7 @@ export class DemolitionSystem {
   clear() {
     this.pending = [];
     this.effects = [];
+    this.bomblets = [];
     this.feedbackAt = -1;
   }
   payload(damage: number): ShellPayload | undefined {
@@ -85,7 +101,14 @@ export class DemolitionSystem {
     const payload = shot.shell;
     shot.shell = undefined;
     if (!payload || !shot.friendly || shot.fragment) return;
-    this.detonate({ pos: { ...shot.pos }, ...payload, radius: SHELL_RADIUS, kind: 'shell' });
+    this.detonate({
+      pos: { ...shot.pos },
+      ...payload,
+      radius: SHELL_RADIUS,
+      kind: 'shell',
+      direction: direction({ x: 0, y: 0 }, shot.vel),
+      normal: body && shot.impactNormal ? shot.impactNormal : direction(shot.vel, { x: 0, y: 0 }),
+    });
   }
   brokenProp(pos: Vec) {
     if (!this.game.gun.chainReaction || this.game.mode !== 'playing') return;
@@ -107,6 +130,31 @@ export class DemolitionSystem {
   update() {
     const g = this.game;
     if (g.mode !== 'playing' || g.hitStop > 0) return;
+    for (const b of [...this.bomblets]) {
+      const dt = Math.max(0, Math.min(0.1, g.time - b.last));
+      b.last = g.time;
+      b.prev = { ...b.pos };
+      b.vel.y += dt * 12;
+      const end = { x: b.pos.x + b.vel.x * dt * 60, y: b.pos.y + b.vel.y * dt * 60 };
+      const hit = firstSolid(b.pos, end, { x: 2, y: 2 }, [
+        ...g.solidBodies,
+        ...g.enemies.filter((e) => e.spawn <= 0 && e.hp > 0).map((e) => e.body),
+      ]);
+      b.pos = hit
+        ? { x: b.pos.x + (end.x - b.pos.x) * hit.t, y: b.pos.y + (end.y - b.pos.y) * hit.t }
+        : end;
+      if (hit || g.time >= b.at) {
+        this.bomblets = this.bomblets.filter((other) => other !== b);
+        this.detonate({
+          pos: b.pos,
+          damage: b.damage,
+          radius: 62,
+          launch: b.launch,
+          kind: 'cluster',
+        });
+        if (g.mode !== 'playing') return;
+      }
+    }
     this.effects = this.effects.filter((e) => g.time - e.at < 0.22);
     const due = this.pending.filter((e) => e.at <= g.time);
     this.pending = this.pending.filter((e) => e.at > g.time);
@@ -120,11 +168,57 @@ export class DemolitionSystem {
   detonate(blast: DemolitionBlast, contact?: Enemy) {
     const g = this.game;
     if (g.mode !== 'playing' || g.escape?.phase === 'extracting' || !(blast.damage > 0)) return;
+    if (blast.kind === 'shell' && g.mods.includes('shaped-charge'))
+      blast = {
+        ...blast,
+        shaped: true,
+        radius: blast.radius * 1.5,
+        direction: blast.direction ?? direction(g.player.position, g.aim),
+      };
+    if (blast.kind === 'shell' && g.mods.includes('cluster-shell')) {
+      const normal = blast.normal ?? { x: 0, y: -1 };
+      const base = Math.atan2(normal.y, normal.x);
+      let emitted = 0;
+      for (const spread of [-0.65, 0, 0.65]) {
+        if (this.bomblets.length >= CLUSTER_LIMIT) break;
+        const pos = g.lineEnd(
+          blast.pos,
+          { x: blast.pos.x + normal.x * 4, y: blast.pos.y + normal.y * 4 },
+          2,
+        );
+        this.bomblets.push({
+          pos,
+          prev: { ...pos },
+          vel: { x: Math.cos(base + spread) * 6, y: Math.sin(base + spread) * 6 },
+          damage: blast.damage * 0.2,
+          launch: blast.launch * 0.2,
+          at: g.time + 0.28,
+          last: g.time,
+        });
+        emitted++;
+      }
+      // A saturated field merges excess payload into the parent, never drops it.
+      blast = {
+        ...blast,
+        damage: blast.damage * (1 - emitted * 0.2),
+        launch: blast.launch * (1 - emitted * 0.2),
+      };
+    }
     const { pos, radius, damage } = blast;
-    const strength = (body: Matter.Body, ignore?: Matter.Body | Prop) => {
+    const inCone = (point: Vec) => {
+      if (!blast.shaped || !blast.direction || distance(pos, point) < 1) return true;
+      const d = direction(pos, point);
+      return d.x * blast.direction.x + d.y * blast.direction.y >= Math.cos(0.55);
+    };
+    const strength = (body: Matter.Body, ignore?: Matter.Body | Prop, radial = false) => {
       const point = closestBlastPoint(pos, body),
         d = distance(pos, point);
-      if (d > radius || distance(g.lineEnd(pos, point, 0, ignore), point) > 0.1) return 0;
+      if (
+        d > radius ||
+        (!radial && !inCone(point)) ||
+        distance(g.lineEnd(pos, point, 0, ignore), point) > 0.1
+      )
+        return 0;
       return 1 - (0.65 * d) / radius;
     };
     // Snapshot cover before any hit can remove a panel or a prop. Chained blasts
@@ -139,22 +233,26 @@ export class DemolitionSystem {
     const panels = g.breaches.panels
       .map((panel) => ({ panel, amount: strength(panel.body, panel.body) }))
       .filter((hit) => hit.amount > 0);
-    const launch = blast.launch * strength(g.player);
+    const launch = blast.launch * strength(g.player, undefined, true);
     const terrain = g.destruction.pieces
       .map((piece) => ({ piece, amount: strength(piece.body, piece.body) }))
       .filter((hit) => hit.amount > 0);
-    g.harpoons.blast(pos, damage, radius);
+    g.harpoons.blast(pos, damage, radius, inCone);
     const showEffect = !this.effects.some(
       (e) => e.kind === blast.kind && g.time - e.at < 0.055 && distance(e.pos, pos) < 14,
     );
     if (showEffect) {
       const outline = Array.from({ length: 32 }, (_, i) => {
-        const angle = (i * Math.PI) / 16;
+        const angle =
+          blast.shaped && blast.direction
+            ? Math.atan2(blast.direction.y, blast.direction.x) - 0.55 + (i / 31) * 1.1
+            : (i * Math.PI) / 16;
         return g.lineEnd(pos, {
           x: pos.x + Math.cos(angle) * radius,
           y: pos.y + Math.sin(angle) * radius,
         });
       });
+      if (blast.shaped) outline.unshift({ ...pos });
       this.effects.push({ ...blast, pos: { ...pos }, at: g.time, outline });
       if (this.effects.length > DEMOLITION_EFFECT_LIMIT) this.effects.shift();
       g.burst(pos, blast.kind === 'echo' ? 3 : 6, '#edbc7c', blast.kind === 'echo' ? 2 : 3);

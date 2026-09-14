@@ -1,6 +1,8 @@
 # Upgrade compatibility and branching roadmap
 
-**Status: audited proposal, not implemented gameplay.** Baseline: game **2.70.0**, commit `06a0526`, 13 September 2026. The existing Ray fix remains intact. New names and tuning values below are proposals.
+**Status: implemented in 2.71.0.** The original audit and design rationale below retain their 2.70.0 baseline (`06a0526`, 13 September 2026). All twelve additions and the listed compatibility changes have shipped together. The [current build guide](new-upgrade-builds.md) documents final behavior and test links; the [max-combo catalog](max-upgrade-combos.md) lists every upgrade in all 292 new completed builds.
+
+The regenerated inventory now covers **79 upgrades / 3,081 pairs: 2,692 allowed and 389 blocked**. Save format 6 preserves the old Rail/Vector combination for existing owned builds and pending old offers. Daily ruleset 61 identifies the new pool. The old numerical targets below explain intent; runtime rules and the current guide are authoritative.
 
 The goal is one gun with a recognizable identity, several meaningful directions per build, and no upgrade whose main effect silently disappears after another pick. Keep Precision, Bullet hell and Demolition. Add **local forks** inside them and inside shared upgrade families; do not add another global path yet.
 

@@ -7,6 +7,7 @@ import { isBoss } from './enemies.ts';
 import { releaseScrapper } from './scrapper.ts';
 import { breakSquad } from './squads.ts';
 import { SHELL_RADIUS } from './demolition.ts';
+import type { VectorSample } from './vector-rounds.ts';
 
 export const CHARGE_TIME = 0.85;
 export const RECALL_TIME = 0.24;
@@ -29,6 +30,10 @@ export interface StuckShell {
   at: number;
   damage: number;
   launch: number;
+  heading?: number;
+  direction?: Vec;
+  normalHeading?: number;
+  normal?: Vec;
 }
 interface Pin {
   pos: Vec;
@@ -43,6 +48,7 @@ export interface EchoVolley {
   at: number;
   fired: boolean;
   shots: Shot[];
+  guides?: Map<number, VectorSample[]>;
 }
 
 // Only room-local state lives here. Saved builds contain upgrade IDs alone.
@@ -75,6 +81,7 @@ export class BallisticsSystem {
     this.stickAt = -1;
   }
   charge(dt: number, held: boolean) {
+    held ||= this.game.torch.emitting;
     if (held || this.game.burstRemaining > 0) {
       // A full trigger release is required; rapid taps and long gun intervals
       // cannot assemble a recharge out of tiny gaps in sustained fire.
@@ -117,6 +124,12 @@ export class BallisticsSystem {
     const r = s.recall;
     if (!r || r.returning) return false;
     r.returning = true;
+    if (s.massDriver) {
+      s.massDriver.struck.clear();
+      s.massDriver.penetrating.clear();
+      s.massDriver.rolling = undefined;
+      this.game.massDriver.redirect(s);
+    }
     r.skip = new Set(s.hits);
     s.hits.clear();
     s.pierce = r.pierce + (this.has('homecoming') ? 2 : 0);
@@ -133,7 +146,7 @@ export class BallisticsSystem {
     const r = s.recall;
     if (!r || s.life <= 0) return;
     r.age += dt;
-    if (!r.returning && r.age >= RECALL_TIME) this.turn(s);
+    if (!r.returning && r.age >= (s.vector ? 0.5 : RECALL_TIME)) this.turn(s);
     if (!r.returning) return;
     for (const id of r.skip) {
       const e = this.game.enemies.find((e) => e.id === id);
@@ -163,7 +176,14 @@ export class BallisticsSystem {
       (s) => s.id > afterId && s.friendly && !s.fragment && !s.echo,
     );
     if (!shots.length) return;
+    const guides = new Map<number, VectorSample[]>();
+    for (const shot of shots)
+      if (shot.vector) {
+        shot.vector.recording ??= [];
+        guides.set(shot.id, shot.vector.recording);
+      }
     this.echoes.push({
+      guides,
       origin: { ...origin },
       direction: { ...forward },
       at: this.game.time + ECHO_DELAY,
@@ -187,6 +207,8 @@ export class BallisticsSystem {
         launch: payload.launch,
         radius: SHELL_RADIUS,
         kind: 'shell',
+        direction: direction({ x: 0, y: 0 }, s.vel),
+        normal: s.impactNormal ?? direction(s.vel, { x: 0, y: 0 }),
       });
       return true;
     }
@@ -200,6 +222,12 @@ export class BallisticsSystem {
       at: this.game.time + FUSE_TIME,
       damage: payload.damage * 1.4,
       launch: payload.launch,
+      heading: Math.atan2(s.vel.y, s.vel.x) - (body?.angle ?? 0),
+      direction: direction({ x: 0, y: 0 }, s.vel),
+      normalHeading:
+        Math.atan2(s.impactNormal?.y ?? -s.vel.y, s.impactNormal?.x ?? -s.vel.x) -
+        (body?.angle ?? 0),
+      normal: s.impactNormal ?? direction(s.vel, { x: 0, y: 0 }),
     });
     return true;
   }
@@ -226,12 +254,17 @@ export class BallisticsSystem {
         launch: s.launch,
         radius: SHELL_RADIUS,
         kind: 'shell',
+        direction: s.direction,
+        normal: s.normal ?? (s.direction ? { x: -s.direction.x, y: -s.direction.y } : undefined),
       });
       if (g.mode !== 'playing') return;
     }
     for (const echo of this.echoes) {
       if (echo.fired || echo.at > g.time) continue;
       echo.fired = true;
+      const storedOrigin = { ...echo.origin };
+      if (this.has('follow-through'))
+        echo.origin = { x: g.player.position.x, y: g.player.position.y - 3 };
       // A moving crusher or crate may occupy an old firing position.
       if (Matter.Query.point(g.solidBodies, echo.origin).length) continue;
       const target = this.has('parallax') ? direction(echo.origin, g.aim) : echo.direction;
@@ -241,7 +274,7 @@ export class BallisticsSystem {
         y: p.x * Math.sin(angle) + p.y * Math.cos(angle),
       });
       const point = (p: Vec) => {
-        const v = rotate({ x: p.x - echo.origin.x, y: p.y - echo.origin.y });
+        const v = rotate({ x: p.x - storedOrigin.x, y: p.y - storedOrigin.y });
         return { x: v.x + echo.origin.x, y: v.y + echo.origin.y };
       };
       for (const template of echo.shots) {
@@ -256,7 +289,14 @@ export class BallisticsSystem {
         if (s.shell) s.shell.damage *= 0.6;
         s.id = ++g.id;
         s.echo = true;
-        s.vector = undefined;
+        if (s.vector && echo.guides?.has(template.id)) {
+          s.vector.recording = undefined;
+          s.vector.age = 0;
+          s.vector.replay = { samples: echo.guides.get(template.id)!, index: 0 };
+        } else s.vector = undefined;
+        // A replay does not purchase another portal allowance or trap pin.
+        s.relay = true;
+        s.tripwire = undefined;
         s.discharge = undefined;
         s.hits.clear();
         if (s.trace) s.trace.points = [{ ...s.pos }];
@@ -279,6 +319,16 @@ export class BallisticsSystem {
     for (const s of this.shells) {
       if (s.body && !bodies.has(s.body)) s.body = undefined;
       if (!s.body) continue;
+      if (s.heading !== undefined)
+        s.direction = {
+          x: Math.cos(s.heading + s.body.angle),
+          y: Math.sin(s.heading + s.body.angle),
+        };
+      if (s.normalHeading !== undefined)
+        s.normal = {
+          x: Math.cos(s.normalHeading + s.body.angle),
+          y: Math.sin(s.normalHeading + s.body.angle),
+        };
       const a = s.body.angle,
         p = s.body.position;
       s.pos = {

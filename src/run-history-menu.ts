@@ -37,6 +37,9 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
     escapeRecapText(run.seed) +
     '</dd></dl>' +
     '<h3>Your gun</h3>' +
+    (run.legacyMods
+      ? '<p class="recap-note">Legacy build · Preserved from earlier upgrade rules.</p>'
+      : '') +
     (run.mods.length
       ? '<ul class="recap-build">' +
         run.mods
@@ -58,7 +61,11 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
     (replay
       ? 'Replay starts a new run with the starting gun. Your choices can change the route and build.'
       : 'Seed replay is unavailable for this older set of game rules.') +
-    (!canBuild ? ' This build needs upgrades unavailable in your collection.' : '') +
+    (!canBuild
+      ? run.legacyMods
+        ? ' This preserved combination is unavailable for new Workshop builds.'
+        : ' This build needs upgrades unavailable in your collection.'
+      : '') +
     '</p></div>'
   );
 }

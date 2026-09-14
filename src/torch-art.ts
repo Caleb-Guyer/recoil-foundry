@@ -7,12 +7,12 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   if (!t.equipped || !t.active || !['playing', 'paused'].includes(g.mode)) return;
   c.save();
   c.lineCap = 'round';
-  const width = g.gun.pellets > 1 ? 8 : 1.6;
+  const width = (g.gun.pellets > 1 ? 8 : 1.6) * (t.finisher ? 0.6 : 1);
   for (const path of [t.segments, t.rear])
     for (let i = 0; i < path.length; i++) {
       const s = path[i],
         len = distance(s.a, s.b),
-        offset = i === 0 ? Math.min(path === t.rear ? 17 : 31, len) : 0,
+        offset = s.muzzle ? Math.min(path === t.rear ? 17 : 31, len) : 0,
         a = { x: s.a.x + s.dir.x * offset, y: s.a.y + s.dir.y * offset },
         hot = s.enemy?.id === t.target ? t.heat : 0;
       c.beginPath();
@@ -65,6 +65,42 @@ export function drawTorchWeapon(c: CanvasRenderingContext2D, g: Game, reduced: b
   c.fillStyle = g.torch.active ? '#ffe0a3' : '#5b7470';
   const aperture = g.gun.pellets > 1 ? 5 : 2;
   c.fillRect(31, -aperture, 3, aperture * 2);
+  if (g.mods.includes('prism-array')) {
+    c.strokeStyle = '#ddc597';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(27, 0);
+    c.lineTo(35, -5);
+    c.moveTo(27, 0);
+    c.lineTo(35, 5);
+    c.stroke();
+  }
+  if (g.mods.includes('pulse-chamber')) {
+    for (let i = 0; i < 3; i++) {
+      c.fillStyle = g.torch.active && (g.torch.finisher ? i === 2 : i < 2) ? '#ffe7b3' : '#658479';
+      c.fillRect(9 + i * 5, -7, 3, 2);
+    }
+  }
+  if (g.mods.includes('charge-lens')) {
+    const charge = g.torch.chargeProgress;
+    c.strokeStyle = '#b8a178';
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(28, 0, 7, -Math.PI / 2, Math.PI * 1.5);
+    c.stroke();
+    c.strokeStyle = '#ffe3a5';
+    c.beginPath();
+    c.arc(28, 0, 7, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+    c.stroke();
+    if (charge > 0) {
+      c.globalAlpha = 0.3 + charge * 0.6;
+      c.fillStyle = '#ffe3a5';
+      c.beginPath();
+      c.arc(33, 0, 1.5 + charge * 2, 0, Math.PI * 2);
+      c.fill();
+      c.globalAlpha = 1;
+    }
+  }
   if (g.mods.includes('thermal-runaway')) {
     c.fillStyle = g.torch.heat > 0.5 ? '#ffc97d' : '#9c805c';
     c.fillRect(15, -6, 5, 2);

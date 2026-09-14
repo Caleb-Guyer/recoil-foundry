@@ -4,6 +4,18 @@ import { clamp, distance } from './rules.ts';
 
 export function drawDemolition(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
   c.save();
+  for (const b of g.demolition.bomblets) {
+    c.strokeStyle = '#c5a87a';
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(b.prev.x, b.prev.y);
+    c.lineTo(b.pos.x, b.pos.y);
+    c.stroke();
+    c.fillStyle = '#f2c782';
+    c.beginPath();
+    c.arc(b.pos.x, b.pos.y, 2.5, 0, Math.PI * 2);
+    c.fill();
+  }
   const shown: typeof g.demolition.pending = [];
   for (const blast of g.demolition.pending) {
     if (
@@ -23,7 +35,12 @@ export function drawDemolition(c: CanvasRenderingContext2D, g: Game, reduced: bo
     c.globalAlpha = reduced ? 0.36 : 0.25 + progress * 0.25;
     c.setLineDash([3, 9]);
     c.beginPath();
-    c.arc(blast.pos.x, blast.pos.y, blast.radius, 0, Math.PI * 2);
+    if (blast.shaped && blast.direction) {
+      const a = Math.atan2(blast.direction.y, blast.direction.x);
+      c.moveTo(blast.pos.x, blast.pos.y);
+      c.arc(blast.pos.x, blast.pos.y, blast.radius, a - 0.55, a + 0.55);
+      c.closePath();
+    } else c.arc(blast.pos.x, blast.pos.y, blast.radius, 0, Math.PI * 2);
     c.stroke();
     c.setLineDash([]);
     c.globalAlpha = 0.6;

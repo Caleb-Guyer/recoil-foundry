@@ -42,7 +42,7 @@ export class FusionSystem {
     g.addShot({
       pos,
       vel: { x: d.x * speed, y: d.y * speed },
-      damage: damage * g.gun.pellets * g.gun.lanes * (g.gun.rearVolley ? 2 : 1),
+      damage: damage * g.gun.pellets * g.gun.lanes,
       life: 1.4,
       friendly: true,
       radius,

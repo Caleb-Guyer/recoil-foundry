@@ -1,4 +1,4 @@
-import { MODS, availableMods, validBuild } from './rules.ts';
+import { MODS, availableMods, validSavedBuild } from './rules.ts';
 
 export const DISCOVERIES_KEY = 'rf-discovered-mods-v1';
 export const WORKSHOP_BUILD_KEY = 'rf-workshop-build-v1';
@@ -9,8 +9,12 @@ export function loadDiscoveries(value: unknown): string[] {
   return MODS.filter((mod) => ids.has(mod.id)).map((mod) => mod.id);
 }
 
-export function discoverBuild(known: readonly string[], collected: readonly string[]): string[] {
-  return loadDiscoveries(validBuild(collected) ? [...known, ...collected] : known);
+export function discoverBuild(
+  known: readonly string[],
+  collected: readonly string[],
+  legacyMods?: readonly string[],
+): string[] {
+  return loadDiscoveries(validSavedBuild(collected, legacyMods) ? [...known, ...collected] : known);
 }
 
 // Preserve acquisition order. Removing a prerequisite removes its dependents,

@@ -12,12 +12,20 @@ export const VECTOR = {
   boostDamage: 1.3,
 };
 export interface VectorFlight {
+  age?: number;
+  recording?: VectorSample[];
+  replay?: { samples: VectorSample[]; index: number };
   grace: number;
   time: number;
   bent: number;
   settled: number;
   afterburner: boolean;
   boosted: boolean;
+}
+export interface VectorSample {
+  at: number;
+  turn: number;
+  boost: boolean;
 }
 export function prepareVector(s: Shot, mods: readonly string[]) {
   if (!mods.includes('vector') || !s.friendly || s.fragment || s.reflected || s.rail || s.echo)
@@ -41,7 +49,22 @@ export function redirectVector(s: Shot) {
 }
 export function steerVector(s: Shot, aim: Vec, dt: number) {
   const v = s.vector;
-  if (!v || s.life <= 0 || s.recall?.returning || v.boosted || s.waypoints?.length) return;
+  if (!v || s.life <= 0 || !(dt > 0)) return;
+  v.age = (v.age ?? 0) + dt;
+  if (s.recall?.returning || s.massDriver?.rolling || v.boosted || s.waypoints?.length) return;
+  if (v.replay) {
+    while (
+      v.replay.index < v.replay.samples.length &&
+      v.replay.samples[v.replay.index].at <= v.age + 1e-8
+    ) {
+      const sample = v.replay.samples[v.replay.index++];
+      const a = Math.atan2(s.vel.y, s.vel.x) + sample.turn;
+      const speed = Math.hypot(s.vel.x, s.vel.y);
+      s.vel = { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+      if (sample.boost && !v.boosted) boostVector(s, v);
+    }
+    return;
+  }
   if (!Number.isFinite(aim.x) || !Number.isFinite(aim.y) || !(dt > 0)) return;
   // Preserve the muzzle direction before accepting steering, including rear
   // rounds. Convergence completes its authored shape before guidance takes over.
@@ -67,10 +90,15 @@ export function steerVector(s: Shot, aim: Vec, dt: number) {
   // then hold a steady line; the boosted round commits to that line.
   v.settled = Math.abs(delta) < 0.07 && v.bent >= 0.18 ? v.settled + step : 0;
   if (v.afterburner && v.settled + 1e-8 >= VECTOR.settle) {
-    v.boosted = true;
-    s.vel.x *= VECTOR.boostSpeed;
-    s.vel.y *= VECTOR.boostSpeed;
-    s.damage *= VECTOR.boostDamage;
-    if (s.shell) s.shell.damage *= VECTOR.boostDamage;
+    boostVector(s, v);
   }
+  if (v.recording && v.recording.length < 128 && (turn !== 0 || v.boosted))
+    v.recording.push({ at: v.age, turn, boost: v.boosted });
+}
+function boostVector(s: Shot, v: VectorFlight) {
+  v.boosted = true;
+  s.vel.x *= VECTOR.boostSpeed;
+  s.vel.y *= VECTOR.boostSpeed;
+  s.damage *= VECTOR.boostDamage;
+  if (s.shell) s.shell.damage *= VECTOR.boostDamage;
 }

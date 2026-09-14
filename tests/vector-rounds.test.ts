@@ -213,7 +213,7 @@ test('portals carry the actual velocity and remaining steering budget without a 
 test('Recall owns its return, Convergence finishes its pattern, and secondary rounds stay independent', () => {
   const g = fixture(['vector', 'afterburner', 'recall']),
     s = round(g);
-  s.recall!.age = 0.24;
+  s.recall!.age = 0.5;
   g.aim = { x: 1500, y: 700 };
   advance(g);
   assert(s.recall!.returning);
@@ -272,7 +272,7 @@ test('echoes and Orbit releases do not duplicate steering or Afterburner charges
   g.ballistics.update();
   const echoes = g.shots.filter((s) => s.echo);
   assert(echoes.length > 0);
-  assert(echoes.every((s) => !s.vector));
+  assert(echoes.every((s) => s.vector?.replay && !s.vector.recording));
   const orbit = fixture(['crossfire', 'recall', 'afterimage', 'orbit', 'vector', 'afterburner']);
   const s = round(orbit);
   s.recall!.returning = true;

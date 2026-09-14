@@ -5,6 +5,7 @@ import { clamp, type Vec } from './rules.ts';
 import { isBoss } from './enemies.ts';
 import { breakSquad } from './squads.ts';
 import { dropWallcrawler } from './wallcrawler.ts';
+import { firstSolid } from './collisions.ts';
 
 const { Body } = Matter;
 export const MASS_DRIVER = { radius: 7, life: 3.2, mass: 2.4, limit: 48, maxSpeed: 40 };
@@ -17,6 +18,7 @@ export interface MassFlight {
   penetrating: Set<number>;
   surfaces: Set<number>;
   forge?: { gravity: number };
+  rolling?: { bodyId: number };
 }
 
 // Only acceleration supplied by gravity earns the bonus. Muzzle speed, a
@@ -130,6 +132,29 @@ export class MassDriverSystem {
         continue;
       }
       this.heading(s);
+      if (m.rolling) {
+        const body = g.terrainBodies.find((b) => b.id === m.rolling!.bodyId);
+        if (body) {
+          const carried = this.surfaceVelocity(body, s.pos);
+          s.pos = g.lineEnd(
+            s.pos,
+            { x: s.pos.x + carried.x * dt * 60, y: s.pos.y + carried.y * dt * 60 },
+            s.radius,
+            body,
+          );
+        }
+        const support =
+          body && firstSolid(s.pos, { x: s.pos.x, y: s.pos.y + 14 }, { x: 0, y: 0 }, [body]);
+        if (!support || support.normal.y > -0.8 || s.recall?.returning) m.rolling = undefined;
+        else {
+          const tangent = { x: -support.normal.y, y: support.normal.x };
+          const sign = Math.sign(s.vel.x) || 1;
+          const speed = clamp(Math.hypot(s.vel.x, s.vel.y), 18, 32);
+          s.vel = { x: tangent.x * speed * sign, y: tangent.y * speed * sign };
+          m.spin += s.vel.x * dt * 2;
+          continue;
+        }
+      }
       const downward = Math.max(0, s.vel.y);
       const gravity = g.engine.gravity.scale * (1000 / 60) ** 2 * dt * 60;
       s.vel.x += g.engine.gravity.x * gravity;
@@ -216,6 +241,16 @@ export class MassDriverSystem {
       return false;
     }
     this.clang(s);
+    const skim =
+      this.game.mods.includes('skid-plate') &&
+      bank &&
+      body &&
+      this.game.terrainBodies.includes(body) &&
+      normal.y < -0.8 &&
+      !s.recall?.returning &&
+      Math.abs(s.vel.x) > 5 &&
+      Math.abs(s.vel.y) < Math.abs(s.vel.x) * 1.1;
+    s.massDriver!.rolling = undefined;
     this.redirect(s);
     const surface = this.surfaceVelocity(body, s.pos);
     const vx = s.vel.x - surface.x,
@@ -238,6 +273,12 @@ export class MassDriverSystem {
     }
     s.pos.x += normal.x * 0.75;
     s.pos.y += normal.y * 0.75;
+    if (skim) {
+      s.massDriver!.rolling = { bodyId: body.id };
+      const speed = clamp(Math.hypot(vx, vy) * 1.15, 18, 32);
+      const sign = Math.sign(vx) || 1;
+      s.vel = { x: -normal.y * speed * sign, y: normal.x * speed * sign };
+    }
     return true;
   }
   private clang(s: Shot) {

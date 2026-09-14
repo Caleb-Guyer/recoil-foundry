@@ -83,6 +83,18 @@ export class ArcCoilSystem {
       return;
     }
     this.charges.delete(enemy.id);
+    if (g.mods.includes('short-circuit')) {
+      if (enemy.hp > 0) {
+        const d = direction({ x: 0, y: 0 }, shot.vel);
+        g.hitEnemy(enemy, charge.damage * 0.4, {
+          x: enemy.body.position.x - d.x * 30,
+          y: enemy.body.position.y - d.y * 30,
+        });
+        g.burst(enemy.body.position, 5, '#c5e5da', 3);
+        g.onSound('arc');
+      }
+      return;
+    }
     // The three actual round payloads determine the arc. Pellets cannot each
     // borrow the full gun's damage; temporary bonuses apply only once.
     this.discharge(enemy, charge.damage * 0.4);

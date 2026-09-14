@@ -204,16 +204,10 @@ test('shield contact consumes the saw and boss armor retains its damage reductio
   advance(h, 25);
   near(loader.hp, 490.4);
 });
-test('secondary rounds, props, and enemy hulls cannot seed saws; density is bounded', () => {
+test('fragments, reflections, props, and enemy hulls cannot seed saws; density is bounded', () => {
   const g = fixture(),
     b = wall(g);
-  for (const extra of [
-    { fragment: true },
-    { echo: true },
-    { reflected: true },
-    { rail: true },
-    { friendly: false },
-  ]) {
+  for (const extra of [{ fragment: true }, { reflected: true }, { friendly: false }]) {
     g.grind.impact(round(g, { pos: { x: 700, y: 478 }, ...extra }), b, { x: 0, y: -1 });
   }
   const p = g.props.spawn('crate', 1000, 718);

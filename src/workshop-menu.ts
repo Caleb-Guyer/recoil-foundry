@@ -7,6 +7,7 @@ import {
   modDescription,
 } from './rules.ts';
 import { workshopBuild } from './workshop-build.ts';
+import { BRANCH_PARENTS } from './upgrade-branches.ts';
 
 export function workshopMenu(
   content: HTMLElement,
@@ -46,9 +47,13 @@ export function workshopMenu(
         .map((mod) => {
           const picked = draft.includes(mod.id),
             enabled = picked || eligible.has(mod.id);
-          const missing = [MOD_REQUIRES[mod.id], ...(FUSION_REQUIRES[mod.id] ?? [])].filter(
-            (id) => id && !draft.includes(id),
-          );
+          const missing = [
+            ...new Set([
+              MOD_REQUIRES[mod.id],
+              ...(FUSION_REQUIRES[mod.id] ?? []),
+              ...(BRANCH_PARENTS[mod.id] ?? []),
+            ]),
+          ].filter((id) => id && !draft.includes(id));
           const reason = !enabled
             ? missing.length
               ? 'Fit ' +

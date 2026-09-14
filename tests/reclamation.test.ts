@@ -219,7 +219,7 @@ test('v4 entrances and escapes preserve gun, clock and rooftop detours through t
     };
     const migrated = loadCheckpoint(old)!;
     assert(migrated);
-    assert.equal(migrated.version, 5);
+    assert.equal(migrated.version, 6);
     assert.equal(migrated.stage, stage + (stage >= 12 ? 4 : 0));
     assert.equal(migrated.missedUpgrades, stage >= 12 ? 4 : 0);
     assert.deepEqual(migrated.mods, old.mods);

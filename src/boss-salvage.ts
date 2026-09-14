@@ -51,6 +51,8 @@ export class BossSalvageSystem {
   private bends = new Map<number, number>();
   private burnAt = 0;
   private before: { pos: Vec; velocity: Vec } | null = null;
+  private tripOrigin: Vec | null = null;
+  private tripShot = -1;
   constructor(game: Game) {
     this.game = game;
   }
@@ -64,9 +66,15 @@ export class BossSalvageSystem {
     this.bends.clear();
     this.burnAt = 0;
     this.before = null;
+    this.tripOrigin = null;
+    this.tripShot = -1;
   }
   launch(dir: Vec, impulse: number) {
     const g = this.game;
+    if (this.tripOrigin) {
+      if (g.shotCount <= this.tripShot || distance(g.player.position, this.tripOrigin) < 64) return;
+      this.tripOrigin = null;
+    }
     if (g.mods.includes('ramjet') && !g.grounded && impulse >= 2) {
       this.ramUntil = g.time + 0.4;
       this.ramDirection = { x: -dir.x, y: -dir.y };
@@ -113,6 +121,7 @@ export class BossSalvageSystem {
     const boss = isBoss(e.kind);
     const blocked = g.hitEnemy(e, clamp((closing - 7) * 7, 18, 90) * (boss ? 0.2 : 1), from);
     const protectedImpact = !boss && !blocked && e.elite !== 'volatile' && e.state !== 'rush';
+    const trip = g.mods.includes('triphammer') && !blocked;
     if (protectedImpact) {
       this.ramSeparation.set(e.id, g.time + 0.12);
       Body.setVelocity(g.player, {
@@ -121,6 +130,16 @@ export class BossSalvageSystem {
       });
       if (!g.salvageEvolutions.throwEnemy(e, d, closing) && e.hp > 0 && !e.body.isStatic)
         Body.setVelocity(e.body, { x: d.x * 7, y: Math.min(-2, d.y * 7) });
+    }
+    if (trip) {
+      const rebound = clamp(closing * 0.8, 11, 17);
+      Body.setVelocity(g.player, {
+        x: clamp(velocity.x - d.x * (closing + rebound), -23, 23),
+        y: clamp(Math.min(-4, velocity.y - d.y * (closing + rebound)), -21, 20),
+      });
+      this.tripOrigin = { ...g.player.position };
+      this.tripShot = g.shotCount;
+      this.ramUntil = -1;
     }
     g.feedback(3, d);
     g.onSound('ram');

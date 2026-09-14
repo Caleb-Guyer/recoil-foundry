@@ -80,7 +80,7 @@ test('all twelve legacy entrances preserve the same arena, health and gun throug
     old.kills = 29;
     const migrated = loadCheckpoint(old)!;
     assert(migrated);
-    assert.equal(migrated.version, 5);
+    assert.equal(migrated.version, 6);
     assert.equal(
       migrated.stage,
       Math.floor(stage / 3) * 4 + (stage % 3 === 2 ? 3 : stage % 3) + (stage >= 9 ? 4 : 0),

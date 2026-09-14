@@ -12,13 +12,20 @@ import {
   isFusion,
   validBuild,
 } from '../src/rules.ts';
+import { BRANCH_PARENTS } from '../src/upgrade-branches.ts';
 
 const packageInfo = JSON.parse(await readFile(new URL('../package.json', import.meta.url)));
 const ids = new Set(MODS.map((mod) => mod.id));
 assert.equal(ids.size, MODS.length, 'Duplicate upgrade ID');
 
 function prerequisites(id) {
-  return [...(MOD_REQUIRES[id] ? [MOD_REQUIRES[id]] : []), ...(FUSION_REQUIRES[id] ?? [])];
+  return [
+    ...new Set([
+      ...(MOD_REQUIRES[id] ? [MOD_REQUIRES[id]] : []),
+      ...(FUSION_REQUIRES[id] ?? []),
+      ...(BRANCH_PARENTS[id] ?? []),
+    ]),
+  ];
 }
 
 function expand(wanted) {

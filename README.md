@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Upgrade branches · 2.71.0
+
+Twelve new specializations make local choices within the existing three paths. Cutting Torch can become **Pulse Chamber**, **Charge Lens** or **Prism Array**. Other families gain **Pinwheel**, **Follow-through**, **Shaped Charge**, **Cluster Shell**, **Skid Plate**, **Relay Gate**, **Short Circuit**, **Triphammer** and **Crosscut**. Specializations appear from reward stage 7 after their parents; each local fork allows one choice. Daily still gives one predetermined legal card under **ruleset 61**.
+
+[Every new upgrade, complete builds and test links](docs/new-upgrade-builds.md) · [All 292 new fully maxed combinations](docs/max-upgrade-combos.md) · [Download every build as CSV](docs/max-upgrade-combos.csv).
+
+Rail spike now fires a real rear rail with Backfire and can leave a surface saw. Rail spike and Vector are alternatives for new builds; existing owned legacy saves and recaps survive. Returning steel balls may hit each enemy once per flight leg. Guided echoes replay recorded turns and can leave saws. Breach has a shared clearance budget and cannot erase heavy ammunition. Cards describe these adaptations without adding combat HUD text.
+
+[Try Charge Lens](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&v=2.71.0): click **Test Charge Lens**, hold fire, then release. These explicit tests preserve Continue, discoveries, Daily records and Practice unlocks. Press **R** to repeat the preset. Normal runs still retry with a fresh seed.
+
 ## The Loader's changing arena
 
 The Loader's bay has two marked steel barriers, each connected to a suspended load. Charges smash the barriers at real contact and retain the exposed crash window. Gunfire can also break a barrier or cut its cable. The damaged support then turns amber, outlines the barrier and marks the cargo's landing area for **1.35 seconds** before failing. The falling load creates new, low cover beside the opened charge lane.

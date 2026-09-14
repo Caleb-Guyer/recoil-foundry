@@ -13,6 +13,7 @@ import {
   modPathLabel,
 } from '../src/rules.ts';
 import { salvageTestFromUrl } from '../src/practice.ts';
+import { isBranch } from '../src/upgrade-branches.ts';
 import { WRECK_LIMIT, WRECK_LIFE, FLASH_RADIUS } from '../src/salvage-evolutions.ts';
 import { SLIPSTREAM_LIFE } from '../src/boss-salvage.ts';
 const { Body, Bodies, Composite, Engine } = Matter;
@@ -471,6 +472,7 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
   while (true) {
     const next = availableMods(mods).find(
       (m) =>
+        !isBranch(m.id) &&
         ![
           'wrecking-ball',
           'flashpoint',
@@ -499,6 +501,6 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
   assert(loadCheckpoint(save));
   assert.deepEqual(
     availableMods(mods).map((m) => m.id),
-    ['wrecking-ball', 'flashpoint', 'slipstream', 'grindshot', 'vector'],
+    ['wrecking-ball', 'flashpoint', 'slipstream', 'grindshot', 'triphammer'],
   );
 });

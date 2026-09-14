@@ -1,3 +1,12 @@
+import {
+  BRANCH_MODS,
+  BRANCH_PATHS,
+  BRANCH_PARENTS,
+  BRANCH_STAGE,
+  isBranch,
+  compatibleBranch,
+  branchGroup,
+} from './upgrade-branches.ts';
 export type Vec = { x: number; y: number };
 export const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -339,7 +348,8 @@ export const MODS = [
   {
     id: 'arc-coil',
     name: 'Arc Coil',
-    description: 'Every third hit arcs to a nearby enemy or metal prop. 10% lighter rounds.',
+    description:
+      'Hit one enemy three times to arc to a nearby enemy or metal prop. 10% lighter rounds.',
     mark: 'arc-coil',
   },
   {
@@ -453,9 +463,10 @@ export const MODS = [
     id: 'drop-forge',
     name: 'Drop Forge',
     description:
-      'Falling steel balls build up to 75% more impact damage and slam light targets down.',
+      'Falling steel balls build up to 75% more direct-hit damage and slam light targets down.',
     mark: 'drop-forge',
   },
+  ...BRANCH_MODS,
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -466,11 +477,48 @@ export const REPAIR_REWARD = {
 export type Mod = (typeof MODS)[number] | typeof REPAIR_REWARD;
 // Conversion-specific copy describes what the owned gun will actually do.
 export function modDescription(mod: Mod, mods: readonly string[]): string {
+  const beam = mods.includes('cutting-torch');
+  if (mod.id === 'cutting-torch' && mods.includes('charge-lens'))
+    return 'Hold to charge the beam. Release a cutting lance with a heavy kick.';
+  if (mod.id === 'cutting-torch' && mods.includes('prism-array'))
+    return 'Two angled rays with steady recoil. Hold fire and aim along either ray.';
+  if (beam && mods.includes('charge-lens')) {
+    if (mod.id === 'scatter')
+      return 'A wider lance with 60% more damage. 25% longer charge and recovery.';
+    if (mod.id === 'rapid')
+      return 'Shorter charge and recovery. 28% lighter lances and gentler recoil.';
+    if (mod.id === 'magnum') return '75% stronger lances with 40% longer charge and recovery.';
+    if (mod.id === 'deadeye') return '30% stronger lances with 20% longer charge and recovery.';
+  }
+  if (mod.id === 'relay-gate' && beam)
+    return 'Your fixed portals give each beam one extra bank and 15% remaining range, once.';
+  if (mod.id === 'thermal-runaway' && mods.includes('charge-lens'))
+    return 'Track one exposed enemy while charging for up to 75% more lance damage.';
+  if (mod.id === 'burst' && mods.includes('charge-lens'))
+    return 'Release three shorter charged lances, then recover. Each pulse can spend a stored charge.';
+  if (mod.id === 'rail-spike')
+    return 'Charged pellets merge into a piercing rail. Backfire keeps a separate rear rail.';
+  if (mods.includes('rail-spike')) {
+    if (mod.id === 'scatter')
+      return 'Five pellets merge into a stronger charged rail. Uncharged fire stays a spread.';
+    if (mod.id === 'backfire')
+      return 'Add a charged rear rail or an uncharged rear volley. 20% longer shot delay.';
+    if (mod.id === 'grindshot')
+      return 'Spent rounds and rails become surface saws. 20% lighter direct hits.';
+  }
+  if (mod.id === 'recall' && mods.includes('mass-driver'))
+    return 'Steel balls curve back and may hit each enemy once per leg. 25% lighter hits.';
+  if (mod.id === 'vector' && mods.includes('recall'))
+    return 'Guide rounds for up to half a second before they return. 25% slower projectiles.';
+  if (mod.id === 'fuse' && mods.includes('tripwire'))
+    return 'Shells stick, then blast 40% harder. Wires still trigger immediately on contact.';
+  if (mod.id === 'breach')
+    return 'Rear blasts clear up to two small bullets every 0.45 seconds. Heavy rounds resist.';
   if (mod.id === 'cutting-torch')
     return mods.includes('burst')
       ? 'A laser with three concentrated pulses, then recovery. Hold fire to cut.'
       : mod.description;
-  if (!mods.includes('cutting-torch')) return mod.description;
+  if (!beam) return mod.description;
   switch (mod.id) {
     case 'scatter':
       return 'A wider beam. 28% more sustained damage. Slower pulses.';
@@ -493,6 +541,7 @@ export const PATH_NAMES: Record<BuildPath, string> = {
   demolition: 'Demolition',
 };
 export const MOD_PATHS: Record<string, { path: BuildPath }> = {
+  ...BRANCH_PATHS,
   tripwire: { path: 'demolition' },
   tension: { path: 'demolition' },
   'cutting-torch': { path: 'precision' },
@@ -542,6 +591,7 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
 export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
+  ...Object.fromEntries(Object.entries(BRANCH_PARENTS).map(([id, parents]) => [id, parents[0]])),
   'drop-forge': 'mass-driver',
   tension: 'tripwire',
   'thermal-runaway': 'cutting-torch',
@@ -586,8 +636,14 @@ export const TORCH_ALTERNATIVES = [
   'rail-spike',
   'mass-driver',
 ] as const;
-export function compatibleMod(mods: readonly string[], id: string) {
+export function compatibleMod(mods: readonly string[], id: string, legacy = false) {
   return (
+    compatibleBranch(mods, id) &&
+    (legacy ||
+      !(
+        (id === 'rail-spike' && mods.includes('vector')) ||
+        (id === 'vector' && mods.includes('rail-spike'))
+      )) &&
     !(
       id === 'cutting-torch' &&
       mods.some((m) => (TORCH_ALTERNATIVES as readonly string[]).includes(m))
@@ -597,14 +653,19 @@ export function compatibleMod(mods: readonly string[], id: string) {
     !(id === 'rail-spike' && mods.includes('mass-driver'))
   );
 }
-export function availableMods(mods: readonly string[], includeSalvage = false): Mod[] {
+export function availableMods(
+  mods: readonly string[],
+  includeSalvage = false,
+  legacy = false,
+): Mod[] {
   const chosen = buildPath(mods);
   return MODS.filter((mod) => {
     const branch = MOD_PATHS[mod.id];
     return (
       (includeSalvage || !isSalvage(mod.id)) &&
       !mods.includes(mod.id) &&
-      compatibleMod(mods, mod.id) &&
+      compatibleMod(mods, mod.id, legacy) &&
+      (!BRANCH_PARENTS[mod.id] || BRANCH_PARENTS[mod.id].every((id) => mods.includes(id))) &&
       (!MOD_REQUIRES[mod.id] || mods.includes(MOD_REQUIRES[mod.id])) &&
       (!isFusion(mod.id) ||
         (!mods.some(isFusion) && FUSION_REQUIRES[mod.id].every((id) => mods.includes(id)))) &&
@@ -622,13 +683,17 @@ export function rewardMods(
 ): Mod[] {
   const path = buildPath(mods),
     pool = availableMods(mods).filter(
-      (mod) => !excluded.includes(mod.id) && (!isFusion(mod.id) || fusionUnlocked(context)),
+      (mod) =>
+        !excluded.includes(mod.id) &&
+        (!isFusion(mod.id) || fusionUnlocked(context)) &&
+        (!isBranch(mod.id) || context.overtime || context.stage >= BRANCH_STAGE),
     ),
     offers: Mod[] = [];
   const salvage = MODS.find(
     (m) =>
       m.id === context.salvage &&
       isSalvage(m.id) &&
+      availableMods(mods, true).some((candidate) => candidate.id === m.id) &&
       !mods.includes(m.id) &&
       !excluded.includes(m.id),
   );
@@ -644,10 +709,28 @@ export function rewardMods(
   }
   return offers;
 }
-export function validBuild(mods: readonly string[]) {
+export function validBuild(mods: readonly string[], legacy = false) {
   const picked: string[] = [];
   for (const id of mods) {
-    if (!availableMods(picked, true).some((mod) => mod.id === id)) return false;
+    if (!availableMods(picked, true, legacy).some((mod) => mod.id === id)) return false;
+    picked.push(id);
+  }
+  return true;
+}
+export const validLegacyBuild = (mods: readonly string[]) =>
+  !mods.some(isBranch) && validBuild(mods, true);
+export function validSavedBuild(mods: readonly string[], legacyMods?: readonly string[]) {
+  if (legacyMods === undefined) return validBuild(mods);
+  if (
+    !Array.isArray(legacyMods) ||
+    !validLegacyBuild(legacyMods) ||
+    legacyMods.length > mods.length ||
+    legacyMods.some((id, i) => mods[i] !== id)
+  )
+    return false;
+  const picked = [...legacyMods];
+  for (const id of mods.slice(legacyMods.length)) {
+    if (!availableMods(picked, true).some((m) => m.id === id)) return false;
     picked.push(id);
   }
   return true;
@@ -655,7 +738,10 @@ export function validBuild(mods: readonly string[]) {
 export function modPathLabel(id: string): string {
   if (isSalvage(id) || isSalvage(MOD_REQUIRES[id])) return 'Salvage';
   const branch = MOD_PATHS[id];
-  return branch ? PATH_NAMES[branch.path] + (isFusion(id) ? ' · Fusion' : '') : '';
+  const group = isBranch(id) ? branchGroup(id) : undefined;
+  return branch
+    ? PATH_NAMES[branch.path] + (isFusion(id) ? ' · Fusion' : group ? ' · ' + group : '')
+    : (group ?? '');
 }
 export function getGun(mods: readonly string[]): Gun {
   const g: Gun = {
@@ -857,7 +943,9 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
-  version: 5;
+  version: 5 | 6;
+  legacyMods?: string[];
+  legacyOffers?: string[];
   seed: string;
   stage: number;
   hp: number;
@@ -875,7 +963,13 @@ export interface Checkpoint {
 function validRewardCheckpoint(d: Checkpoint) {
   const r = d.reward;
   if (r === undefined) return true;
-  if (!r || typeof r !== 'object' || d.version !== 5 || d.escape || d.stage === STAGES - 1)
+  if (
+    !r ||
+    typeof r !== 'object' ||
+    ![5, 6].includes(d.version) ||
+    d.escape ||
+    d.stage === STAGES - 1
+  )
     return false;
   const daily = /^RF-D\d+-/.test(d.seed);
   if (
@@ -911,12 +1005,13 @@ function validRewardCheckpoint(d: Checkpoint) {
     return (
       !!d.overtime && !r.rerolled && r.offers.length === 1 && availableMods(d.mods).length === 0
     );
-  const legal = availableMods(d.mods, true);
+  const legal = availableMods(d.mods, true, !!d.legacyOffers);
   return r.offers.every(
     (id) =>
       legal.some((m) => m.id === id) &&
       (!isSalvage(id) || (!r.rerolled && id === r.salvage)) &&
-      (!isFusion(id) || fusionUnlocked({ stage: d.stage, overtime: !!d.overtime })),
+      (!isFusion(id) || fusionUnlocked({ stage: d.stage, overtime: !!d.overtime })) &&
+      (!isBranch(id) || !!d.overtime || d.stage >= BRANCH_STAGE),
   );
 }
 export function loadCheckpoint(value: unknown): Checkpoint | null {
@@ -924,7 +1019,39 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const raw = value as Record<string, unknown>;
   const legacy = raw.version === 3;
   const previous = raw.version === 4;
-  const d = value as Checkpoint;
+  const incoming = value as Checkpoint;
+  if (
+    incoming.version !== 6 &&
+    (incoming.legacyMods !== undefined || incoming.legacyOffers !== undefined)
+  )
+    return null;
+  const oldBuild =
+    incoming.version === 5 && Array.isArray(incoming.mods) && validLegacyBuild(incoming.mods);
+  const oldOffers =
+    oldBuild &&
+    Array.isArray(incoming.reward?.offers) &&
+    incoming.reward.offers.some(
+      (id) =>
+        !availableMods(incoming.mods, true).some((m) => m.id === id) &&
+        availableMods(incoming.mods, true, true).some((m) => m.id === id),
+    );
+  const d: Checkpoint = {
+    ...incoming,
+    ...(oldBuild && !validBuild(incoming.mods) ? { legacyMods: [...incoming.mods] } : {}),
+    ...(oldOffers ? { legacyOffers: [...incoming.reward!.offers] } : {}),
+  };
+  if (
+    d.legacyOffers !== undefined &&
+    (!Array.isArray(d.legacyOffers) ||
+      !d.reward ||
+      !Array.isArray(d.reward.offers) ||
+      !Array.isArray(d.mods) ||
+      !validLegacyBuild(d.mods) ||
+      d.legacyOffers.some(isBranch) ||
+      d.legacyOffers.length !== d.reward.offers.length ||
+      d.legacyOffers.some((id, i) => d.reward!.offers[i] !== id))
+  )
+    return null;
   const stages = legacy ? 12 : previous ? 16 : STAGES;
   const rooms = legacy ? 3 : ROOMS_PER_AREA;
   const missed = d.missedUpgrades ?? 0;
@@ -938,7 +1065,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const overtime = d.overtime;
   const validOvertime =
     overtime === undefined ||
-    (d.version === 5 &&
+    ([5, 6].includes(d.version) &&
       !!overtime &&
       typeof overtime === 'object' &&
       Array.isArray(completed) &&
@@ -955,10 +1082,11 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       // Older exhausted builds can contain repairs earned before later mods
       // existed. They may resume and earn those additions on their next clear.
       (overtime.repairs === 0 ||
-        (validBuild(d.mods) &&
+        (validSavedBuild(d.mods, d.legacyMods) &&
           availableMods(d.mods).every(
             (m) =>
               isFusion(m.id) ||
+              isBranch(m.id) ||
               m.id === 'arc-coil' ||
               m.id === 'daisy-chain' ||
               m.id === 'grindshot' ||
@@ -986,7 +1114,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
-    (d.version === 5 || previous || legacy) &&
+    ([5, 6].includes(d.version) || previous || legacy) &&
     typeof d.seed === 'string' &&
     d.seed.length <= 40 &&
     Number.isInteger(d.stage) &&
@@ -1002,8 +1130,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     Array.isArray(d.mods) &&
     new Set(d.mods).size === d.mods.length &&
     d.mods.length <= MODS.length &&
-    validBuild(d.mods) &&
-    (!d.mods.some(isFusion) || (d.version === 5 && (!!overtime || d.stage >= 8))) &&
+    validSavedBuild(d.mods, d.legacyMods) &&
+    (!d.mods.some(isFusion) || ([5, 6].includes(d.version) && (!!overtime || d.stage >= 8))) &&
+    (!d.mods.some(isBranch) || ([5, 6].includes(d.version) && (!!overtime || d.stage >= 8))) &&
     Number.isInteger(d.kills) &&
     d.kills >= 0 &&
     Number.isFinite(d.elapsed) &&
@@ -1011,7 +1140,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     validDetours &&
     validOvertime &&
     (d.route === undefined ||
-      (d.version === 5 &&
+      ([5, 6].includes(d.version) &&
         (d.route === 'low' || d.route === 'high') &&
         isRouteStage(d.stage) &&
         !d.detour &&
@@ -1033,7 +1162,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
           d.mods.length === stages - 1 + completed.length - missed ||
           (oldEscape && completed.length === 0))));
   if (!valid || !validRewardCheckpoint(d)) return null;
-  if (!legacy && !previous) return d;
+  if (!legacy && !previous)
+    return oldOffers || (oldBuild && !validBuild(incoming.mods)) ? { ...d, version: 6 } : incoming;
   // Keep the same room, gun and health. Skipped new rooms are recorded so later
   // detour and escape checkpoints remain valid without inventing upgrade picks.
   const oldStage = legacy
@@ -1044,7 +1174,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const stage = oldStage >= 12 ? oldStage + 4 : oldStage;
   return {
     ...d,
-    version: 5,
+    version: 6,
     stage,
     ...(d.detours ? { detours: d.detours.map((area) => (area === 3 ? 4 : area)) } : {}),
     missedUpgrades:

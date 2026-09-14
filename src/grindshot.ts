@@ -54,9 +54,7 @@ export class GrindshotSystem {
       !g.mods.includes('grindshot') ||
       !shot.friendly ||
       shot.fragment ||
-      shot.echo ||
       shot.reflected ||
-      shot.rail ||
       !g.terrainBodies.includes(body) ||
       !(shot.damage > 0)
     )
@@ -94,20 +92,24 @@ export class GrindshotSystem {
       return;
     const tangent = shot.vel.x * t.x + shot.vel.y * t.y;
     const fallback = Math.abs(t.x) > 0.5 ? (g.aim.x - g.player.position.x || 1) * t.x : -t.y;
-    this.saws.push({
-      body,
-      edge,
-      along,
-      dir: Math.sign(Math.abs(tangent) > 0.001 ? tangent : fallback),
-      pos,
-      trail: [pos],
-      life: GRIND.life,
-      damage: shot.damage,
-      hits: new Set(shot.hits),
-      wrap: g.mods.includes('corner-cutter'),
-      travel: 0,
-    });
-    if (this.saws.length > GRIND.limit) this.saws.shift();
+    const signs = g.mods.includes('crosscut')
+      ? [-1, 1]
+      : [Math.sign(Math.abs(tangent) > 0.001 ? tangent : fallback)];
+    for (const sign of signs)
+      this.saws.push({
+        body,
+        edge,
+        along,
+        dir: sign,
+        pos,
+        trail: [pos],
+        life: GRIND.life,
+        damage: shot.damage * (signs.length === 2 ? 0.6 : 1),
+        hits: new Set(shot.hits),
+        wrap: g.mods.includes('corner-cutter'),
+        travel: 0,
+      });
+    while (this.saws.length > GRIND.limit) this.saws.shift();
     if (g.time >= this.soundAt) {
       g.onSound('grind');
       this.soundAt = g.time + 0.12;

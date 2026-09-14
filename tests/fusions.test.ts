@@ -200,19 +200,20 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   g.openReward();
   assert.deepEqual(
     g.offers.map((m) => m.id),
-    ['vector'],
+    ['repair'],
   );
-  // Newly added shared upgrades remain earnable after the fusion.
+  // Vector is now an alternative to Rail; an exhausted build receives repairs.
   g.chooseMod('vector');
-  assert(g.mods.includes('vector'));
-  assert(availableMods(g.mods).some((m) => m.id === 'afterburner'));
+  assert(!g.mods.includes('vector'));
+  assert(!availableMods(g.mods).some((m) => m.id === 'afterburner'));
+  g.chooseMod('repair');
   assert(loadCheckpoint(saved));
   assert(
     !loadCheckpoint({ ...save, mods: mods.filter((id) => id !== 'light'), stage: save.stage - 1 }),
   );
 });
 
-test('Rail spike merges charged forward and rear pellets and applies one larger recoil impulse', () => {
+test('Rail spike merges each direction separately and applies one larger recoil impulse', () => {
   const g = fixture([
     'deadeye',
     'capacitor',
@@ -225,9 +226,15 @@ test('Rail spike merges charged forward and rear pellets and applies one larger 
   charge(g);
   const damage = g.gun.damage * 2 * 5 * 2;
   g.fire();
-  assert.equal(g.shots.length, 1);
+  assert.equal(g.shots.length, 2);
   const s = g.shots[0];
-  near(s.damage, damage);
+  near(s.damage, damage / 2);
+  near(
+    g.shots.reduce((sum, round) => sum + round.damage, 0),
+    damage,
+  );
+  assert(g.shots[1].vel.x < 0);
+  assert(g.shots[1].pos.x < g.player.position.x);
   assert(s.rail);
   assert.equal(s.pierce, 4);
   assert.equal(s.vel.x, 72);

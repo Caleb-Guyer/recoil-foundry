@@ -6,6 +6,7 @@ import { workshopBuild, loadDiscoveries } from './workshop-build.ts';
 import { MassDriverSystem, MASS_DRIVER, type MassFlight } from './mass-driver.ts';
 import { TripwireSystem } from './tripwire.ts';
 import { TorchSystem } from './torch.ts';
+import { isBranch, BRANCH_STAGE } from './upgrade-branches.ts';
 import { GrindshotSystem } from './grindshot.ts';
 import { CrossingSystem } from './crossing.ts';
 import { MagnetSystem } from './magnets.ts';
@@ -205,6 +206,8 @@ export interface Shot {
   angler?: AnglerFlight;
   tripwire?: number;
   massDriver?: MassFlight;
+  relay?: boolean;
+  impactNormal?: Vec;
 }
 export interface Particle {
   pos: Vec;
@@ -359,6 +362,8 @@ export class Game {
   hp = 100;
   deathCause: DamageCause | null = null;
   mods: string[] = [];
+  legacyMods?: string[];
+  legacyOffers?: string[];
   gun: Gun = getGun([]);
   elapsed = 0;
   time = 0;
@@ -386,6 +391,8 @@ export class Game {
   landingReady = false;
   chargedFlash = false;
   burstRemaining = 0;
+  breachAt = -1;
+  breachClears = 0;
   burstAt = 0;
   blast = { pos: { x: 0, y: 0 }, dir: { x: -1, y: 0 }, life: 0 };
   offers: Mod[] = [];
@@ -409,6 +416,7 @@ export class Game {
     if (mode !== 'playing') {
       this.burstRemaining = 0;
       this.portalRequest = null;
+      if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
       this.loaderArena.stop();
@@ -486,6 +494,8 @@ export class Game {
     this.hp = save?.hp ?? 100;
     this.deathCause = null;
     this.mods = save ? [...save.mods] : [];
+    this.legacyMods = save?.legacyMods ? [...save.legacyMods] : undefined;
+    this.legacyOffers = save?.legacyOffers ? [...save.legacyOffers] : undefined;
     this.gun = getGun(this.mods);
     this.elapsed = save?.elapsed ?? 0;
     this.kills = save?.kills ?? 0;
@@ -511,7 +521,9 @@ export class Game {
   save() {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
-      version: 5,
+      version: 6,
+      ...(this.legacyMods ? { legacyMods: [...this.legacyMods] } : {}),
+      ...(this.legacyOffers ? { legacyOffers: [...this.legacyOffers] } : {}),
       seed: this.seed,
       stage: this.stage,
       hp: this.hp,
@@ -538,6 +550,8 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.breachAt = -1;
+    this.breachClears = 0;
     this.massDriver.reset();
     this.earnedSalvage = null;
     this.arcs.reset();
@@ -1004,7 +1018,10 @@ export class Game {
       this.jumpCut = true;
     }
     if (this.torch.equipped) {
-      this.torch.beforeStep(dt, input.fire || this.fireBuffer > 0);
+      this.torch.beforeStep(
+        dt,
+        input.fire || (!this.mods.includes('charge-lens') && this.fireBuffer > 0),
+      );
       this.fireBuffer = 0;
     } else if (this.burstRemaining > 0 && this.time >= this.burstAt) {
       this.burstRemaining--;
@@ -1222,8 +1239,10 @@ export class Game {
       (charged ? 2 : 1) *
       (capacitor ? 2 : 1) *
       evolutionDamage;
-    if (rail) this.fusions.fireRail(d, damage);
-    else {
+    if (rail) {
+      this.fusions.fireRail(d, damage);
+      if (this.gun.rearVolley) this.fusions.fireRail({ x: -d.x, y: -d.y }, damage);
+    } else {
       this.fireVolley(d, damage, this.chargedFlash);
       // Recoil belongs to the aimed shot; Backfire never cancels movement.
       if (this.gun.rearVolley)
@@ -1266,7 +1285,10 @@ export class Game {
       for (let i = 0; i < this.gun.pellets; i++) {
         let a =
           Math.atan2(d.y, d.x) +
-          (lane - (this.gun.lanes - 1) / 2) * 0.22 +
+          (lane - (this.gun.lanes - 1) / 2) *
+            (this.mods.includes('pinwheel')
+              ? 0.12 + (Math.sin((this.shotCount * Math.PI) / 4) + 1) * 0.2
+              : 0.22) +
           (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
         let waypoints: Vec[] | undefined;
         if (this.gun.convergence && this.gun.lanes > 1) {
@@ -1333,10 +1355,17 @@ export class Game {
     // Check cover before this same blast can break it. Only ordinary hostile
     // rounds are cleared; warned hazards, bombs and boss machinery stay intact.
     if (this.gun.breach) {
+      if (this.time >= this.breachAt) {
+        this.breachClears = 2;
+        this.breachAt = this.time + 0.45;
+      }
       for (const shot of this.shots) {
         const d = direction(p, shot.pos);
         if (
           shot.friendly ||
+          shot.blade ||
+          shot.radius > 5 ||
+          this.breachClears <= 0 ||
           shot.life <= 0 ||
           distance(p, shot.pos) > 130 ||
           rear.x * d.x + rear.y * d.y < Math.SQRT1_2 ||
@@ -1344,6 +1373,7 @@ export class Game {
         )
           continue;
         shot.life = 0;
+        this.breachClears--;
         this.burst(shot.pos, 2, '#e3b47a', 1.4);
       }
       this.shots = this.shots.filter((shot) => shot.life > 0);
@@ -2053,7 +2083,9 @@ export class Game {
           cable?: Prop;
           body?: Matter.Body;
         } | null = null;
-        const targets: [Matter.Body, Enemy?, boolean?][] = this.terrainBodies.map((b) => [b]);
+        const targets: [Matter.Body, Enemy?, boolean?][] = this.terrainBodies
+          .filter((b) => s.massDriver?.rolling?.bodyId !== b.id)
+          .map((b) => [b]);
         for (const e of this.enemies) if (e.crane && e.spawn <= 0) targets.push([e.crane.body]);
         if (s.friendly) {
           for (const e of this.enemies)
@@ -2106,6 +2138,20 @@ export class Game {
           s.pos = { ...passage.pos };
           s.prev = { ...s.pos };
           s.vel = portalVector(s.vel, passage.entry, passage.exit);
+          if (
+            this.mods.includes('relay-gate') &&
+            s.friendly &&
+            !s.fragment &&
+            !s.reflected &&
+            !s.echo &&
+            !s.relay
+          ) {
+            s.relay = true;
+            s.bounces++;
+            s.vel.x *= 1.15;
+            s.vel.y *= 1.15;
+          }
+          if (s.massDriver) s.massDriver.rolling = undefined;
           this.massDriver.redirect(s);
           redirectVector(s);
           if (s.angler) {
@@ -2143,6 +2189,7 @@ export class Game {
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
         const impactDamage = this.massDriver.impactDamage(s);
+        s.impactNormal = { ...nearest.normal };
         if (nearest.caught) {
           this.fusions.catch(s);
           s.life = 0;
@@ -2573,6 +2620,7 @@ export class Game {
     this.hp -= REROLL_COST;
     this.rewardRerolled = true;
     this.offers = replacements;
+    this.legacyOffers = undefined;
     this.save();
     this.onSound('upgrade');
     this.onChange();
@@ -2586,14 +2634,17 @@ export class Game {
       !this.offers.some((m) => m.id === id) ||
       (isSalvage(id) && id !== this.earnedSalvage) ||
       (isFusion(id) && !fusionUnlocked({ stage: this.stage, overtime: !!this.overtime })) ||
+      (isBranch(id) && !this.overtime && this.stage < BRANCH_STAGE) ||
       (!(id === 'repair' && this.overtime && availableMods(this.mods).length === 0) &&
-        !availableMods(this.mods, true).some((m) => m.id === id))
+        !availableMods(this.mods, true, !!this.legacyOffers?.includes(id)).some((m) => m.id === id))
     )
       return;
     if (this.enteringDetour && !this.canDetour) return;
     this.rewardTaken = true;
     if (id === 'repair' && this.overtime) this.overtime.repairs++;
     else this.mods.push(id);
+    if (this.legacyOffers?.includes(id)) this.legacyMods = [...this.mods];
+    this.legacyOffers = undefined;
     this.gun = getGun(this.mods);
     this.route = this.enteringRoute;
     if (this.detour) {

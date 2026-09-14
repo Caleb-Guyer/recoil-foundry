@@ -1,5 +1,6 @@
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
 import { torchTestFromUrl } from './practice.ts';
+import { branchTestFromUrl, BRANCH_TEST_BUILDS } from './branch-builds.ts';
 import { anglerTestFromUrl } from './practice.ts';
 import { vectorTestFromUrl } from './practice.ts';
 import { wallcrawlerTestFromUrl } from './practice.ts';
@@ -119,6 +120,7 @@ const encounters = loadEncounters(read(VICTORIES_KEY));
 let discovered = discoverBuild(
   loadDiscoveries(read(DISCOVERIES_KEY)),
   storedCheckpoint?.mods ?? [],
+  storedCheckpoint?.legacyMods,
 );
 let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
 let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
@@ -196,6 +198,7 @@ let linkedRunTest =
   pressureTestFromUrl(entryUrl) ??
   tripwireTestFromUrl(entryUrl) ??
   torchTestFromUrl(entryUrl) ??
+  branchTestFromUrl(entryUrl) ??
   anglerTestFromUrl(entryUrl) ??
   vectorTestFromUrl(entryUrl) ??
   counterweightTestFromUrl(entryUrl) ??
@@ -278,6 +281,13 @@ function updateTitle() {
     $('play').innerHTML = 'Test Tripwire <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'TORCH-58')
     $('play').innerHTML = 'Test Cutting Torch <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('BRANCHES-71-')) {
+    const name = entryUrl.searchParams.has('combo')
+      ? 'max combo'
+      : (BRANCH_TEST_BUILDS[entryUrl.searchParams.get('build') ?? 'pulse']?.name ??
+        'upgrade branches');
+    $('play').innerHTML = 'Test ' + name + ' <span aria-hidden="true">↗</span>';
+  }
   if (linkedRunTest?.seed.startsWith('ANGLER-57-'))
     $('play').innerHTML = 'Test the Angler <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'VECTOR-56')
@@ -550,6 +560,7 @@ game.onCheckpoint = (s) => {
     const next = discoverBuild(
       loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]),
       s.mods,
+      s.legacyMods,
     );
     if (next.length !== discovered.length) {
       discovered = next;
@@ -609,6 +620,19 @@ game.onChange = () => {
 };
 function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'pulse-chamber': 'M6 16h10M21 24h10M36 32h15M44 26l7 6-7 6M37 7v11',
+    'charge-lens': 'M7 24h12M30 10a14 14 0 1 0 0 28M28 17v14M35 24h16M44 17l7 7-7 7',
+    'prism-array': 'M5 24h16l10-12 10 12-10 12-10-12M41 24l11-12M41 24l11 12',
+    pinwheel: 'M7 24h42M7 24l34-15M7 24l34 15M44 11q9 13 0 26',
+    'follow-through': 'M7 12h19v7H7zM28 30h19v7H28zM12 32h9M17 27l5 5-5 5M26 15h14',
+    'shaped-charge': 'M8 24l34-16v32L8 24M17 24h30M35 18l12 6-12 6',
+    'cluster-shell':
+      'M7 20h12v8H7zM19 24l17-13M19 24h23M19 24l17 13M39 8h6v6h-6zM44 21h6v6h-6zM39 34h6v6h-6z',
+    'skid-plate': 'M5 40h46M17 29a8 8 0 1 0 16 0 8 8 0 0 0-16 0M5 17l13 5M34 29h15M43 24l6 5-6 5',
+    'relay-gate': 'M17 8c-13 0-13 32 0 32M17 8c13 0 13 32 0 32M29 34l11-22 10 22M35 12h5v7',
+    'short-circuit': 'M28 6l-9 18h10l-4 18 14-23H29l4-13M8 16v16M46 16v16',
+    triphammer: 'M7 12l16 11-9 15M23 23h17M34 16l8 7-8 7M11 25l-5 9M38 39l11-9',
+    crosscut: 'M5 39h46M26 26H5M12 19l-7 7 7 7M30 26h21M44 19l7 7-7 7M28 8v14',
     'drop-forge':
       'M28 6v8M19 10l2 7M37 10l-2 7M35 24a7 7 0 1 0-14 0 7 7 0 0 0 14 0M17 39h22M28 34v5M13 32l5 4M43 32l-5 4',
     'mass-driver': 'M8 12h14l8 8M8 36h14l8-8M27 24h5M49 24a8 8 0 1 0-16 0 8 8 0 0 0 16 0M38 20l4-1',
@@ -1160,7 +1184,11 @@ function updateControlHints() {
       (pad
         ? '<p>Left stick: move · Right stick: aim</p><p>LB / L1: jump · RT / R2: fire</p>'
         : '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire.</p>') +
-      '<p>Shoot down in the air to climb.</p>';
+      (game.mods.includes('charge-lens')
+        ? '<p>Hold ' +
+          (pad ? 'RT / R2' : 'left click') +
+          ' to charge. Release to fire.</p><p>Release downward in the air to climb.</p>'
+        : '<p>Shoot down in the air to climb.</p>');
   const status = document.getElementById('controller-status');
   if (status)
     status.textContent = controller.pad

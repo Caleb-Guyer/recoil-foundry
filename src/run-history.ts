@@ -1,7 +1,7 @@
 import type { Game } from './game.ts';
 import { AREAS, type AreaId } from './areas.ts';
 import { DAILY_RULESET, dailyFromSeed, isUnsupportedDailySeed } from './daily.ts';
-import { STAGES, validBuild } from './rules.ts';
+import { STAGES, validBuild, validLegacyBuild, validSavedBuild } from './rules.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { workshopBuild } from './workshop-build.ts';
 
@@ -24,6 +24,7 @@ export interface RunRecap {
   kills: number;
   elapsed: number;
   mods: string[];
+  legacyMods?: string[];
   cause: DamageCause | null;
 }
 const text = (value: unknown, max: number): value is string =>
@@ -59,7 +60,10 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       raw.elapsed < 0 ||
       raw.elapsed > 1e8 ||
       !Array.isArray(raw.mods) ||
-      !validBuild(raw.mods) ||
+      !validSavedBuild(
+        raw.mods,
+        raw.legacyMods ?? (raw.ruleset <= 60 && validLegacyBuild(raw.mods) ? raw.mods : undefined),
+      ) ||
       records.some((record) => record.id === raw.id)
     )
       continue;
@@ -82,6 +86,11 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       kills: raw.kills,
       elapsed: raw.elapsed,
       mods: [...raw.mods],
+      ...(raw.legacyMods
+        ? { legacyMods: [...raw.legacyMods] }
+        : !validBuild(raw.mods) && raw.ruleset <= 60
+          ? { legacyMods: [...raw.mods] }
+          : {}),
       cause: raw.outcome === 'dead' ? loadDamageCause(raw.cause) : null,
     });
   }
@@ -114,6 +123,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
         kills: game.kills,
         elapsed: game.elapsed,
         mods: game.mods,
+        ...(game.legacyMods ? { legacyMods: game.legacyMods } : {}),
         cause: game.deathCause,
       },
     ])[0] ?? null
@@ -125,6 +135,7 @@ export function addRun(value: unknown, run: RunRecap): RunRecap[] {
 export function canReplayRun(run: RunRecap) {
   return (
     run.ruleset === DAILY_RULESET &&
+    !run.legacyMods &&
     !isUnsupportedDailySeed(run.seed) &&
     (run.mode !== 'daily' || !!dailyFromSeed(run.seed))
   );
