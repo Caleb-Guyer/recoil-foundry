@@ -10,6 +10,7 @@ import { firstSolid } from './collisions.ts';
 const { Body } = Matter;
 export const MASS_DRIVER = { radius: 7, life: 3.2, mass: 2.4, limit: 48, maxSpeed: 40 };
 export const DROP_FORGE = { gravity: 4.5, bonus: 0.75, minSpeed: 4, fullSpeed: 12, slam: 0.6 };
+export const FLYWHEEL_DISTANCE = 600;
 export interface MassFlight {
   age: number;
   spin: number;
@@ -19,6 +20,7 @@ export interface MassFlight {
   surfaces: Set<number>;
   forge?: { gravity: number };
   rolling?: { bodyId: number };
+  flywheel?: { distance: number; spent: boolean };
 }
 
 // Only acceleration supplied by gravity earns the bonus. Muzzle speed, a
@@ -69,6 +71,7 @@ export class MassDriverSystem {
       penetrating: new Set(),
       surfaces: new Set(),
       ...(this.game.mods.includes('drop-forge') ? { forge: { gravity: 0 } } : {}),
+      ...(this.game.mods.includes('flywheel') ? { flywheel: { distance: 0, spent: false } } : {}),
     };
     s.radius = MASS_DRIVER.radius;
     s.life = MASS_DRIVER.life;
@@ -76,6 +79,11 @@ export class MassDriverSystem {
   }
   staggered(e: Enemy) {
     return (this.airborne.get(e) ?? 0) > this.game.time;
+  }
+  travel(s: Shot, length: number) {
+    const m = s.massDriver;
+    if (m?.rolling && m.flywheel && !m.flywheel.spent && !s.recall?.returning)
+      m.flywheel.distance = Math.min(FLYWHEEL_DISTANCE, m.flywheel.distance + Math.max(0, length));
   }
   impactDamage(s: Shot) {
     return s.damage * (1 + DROP_FORGE.bonus * dropForgePower(s));
@@ -292,6 +300,14 @@ export class MassDriverSystem {
   }
   finish(s: Shot, payload = true, body?: Matter.Body) {
     if (s.life <= 0) return;
+    // Expiring on a floor spends the stored roll on that real support. Density
+    // culling and mid-air expiry do not create an extra surface or saw pair.
+    if (payload && !body && s.massDriver?.rolling && s.massDriver.flywheel) {
+      const support = this.game.terrainBodies.find((b) => b.id === s.massDriver!.rolling!.bodyId);
+      const hit =
+        support && firstSolid(s.pos, { x: s.pos.x, y: s.pos.y + 14 }, { x: 0, y: 0 }, [support]);
+      if (hit) this.game.grind.impact(s, support, hit.normal);
+    }
     s.life = 0;
     this.game.burst(s.pos, 5, '#a4b2b3', 2.8);
     if (payload) this.game.demolition.impact(s, body);

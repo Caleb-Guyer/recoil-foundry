@@ -5,7 +5,7 @@ export function drawGrindshot(c: CanvasRenderingContext2D, g: Game, reduced: boo
   for (const saw of g.grind.saws) {
     c.save();
     c.globalAlpha = Math.min(1, saw.life / 0.18);
-    c.strokeStyle = '#d4c895';
+    c.strokeStyle = (saw.charge ?? 0) > 0.3 ? '#c1ecd7' : '#d4c895';
     c.lineWidth = 1.4;
     if (!reduced) {
       c.globalAlpha *= 0.25;

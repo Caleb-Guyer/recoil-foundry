@@ -1,6 +1,6 @@
 import type { Shot } from './game.ts';
 import { clamp } from './rules.ts';
-import { dropForgePower } from './mass-driver.ts';
+import { dropForgePower, FLYWHEEL_DISTANCE } from './mass-driver.ts';
 
 export function drawMassRound(c: CanvasRenderingContext2D, s: Shot, reduced: boolean) {
   c.save();
@@ -16,6 +16,19 @@ export function drawMassRound(c: CanvasRenderingContext2D, s: Shot, reduced: boo
   }
   c.globalAlpha = (s.echo ? 0.65 : 1) * clamp(s.life / 0.18, 0, 1);
   c.translate(s.pos.x, s.pos.y);
+  if (s.massDriver?.flywheel && s.massDriver.flywheel.distance > 0) {
+    c.strokeStyle = '#c1ecd7';
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(
+      0,
+      0,
+      s.radius + 2,
+      -Math.PI / 2,
+      -Math.PI / 2 + Math.PI * 2 * clamp(s.massDriver.flywheel.distance / FLYWHEEL_DISTANCE, 0, 1),
+    );
+    c.stroke();
+  }
   const heat = clamp((dropForgePower(s) - 0.35) / 0.65, 0, 1);
   if (heat > 0) {
     c.save();

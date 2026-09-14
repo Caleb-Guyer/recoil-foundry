@@ -467,6 +467,27 @@ export const MODS = [
     mark: 'drop-forge',
   },
   ...BRANCH_MODS,
+  {
+    id: 'resonator',
+    name: 'Resonator',
+    description:
+      'A third pulse through a portal repeats from its exit at 60% power. First two pulses are 25% lighter.',
+    mark: 'resonator',
+  },
+  {
+    id: 'flywheel',
+    name: 'Flywheel',
+    description:
+      'Rolling distance charges your final saws, up to double damage. Two fewer ball banks.',
+    mark: 'flywheel',
+  },
+  {
+    id: 'storm-cell',
+    name: 'Storm Cell',
+    description:
+      'Landed bomblets link into brief electrical traps. 28% smaller shell explosions. Keep three cells.',
+    mark: 'storm-cell',
+  },
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -566,11 +587,16 @@ export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   'rail-spike': { path: 'precision' },
   orbit: { path: 'bullet-hell' },
   implosion: { path: 'demolition' },
+  resonator: { path: 'precision' },
+  'storm-cell': { path: 'demolition' },
 };
 export const FUSION_REQUIRES: Record<string, readonly string[]> = {
   'rail-spike': ['deadeye', 'capacitor'],
   orbit: ['crossfire', 'recall'],
   implosion: ['shellshock', 'fuse'],
+  resonator: ['pulse-chamber', 'relay-gate'],
+  flywheel: ['skid-plate', 'crosscut'],
+  'storm-cell': ['cluster-shell', 'arc-coil'],
 };
 export const isFusion = (id: string) => Object.hasOwn(FUSION_REQUIRES, id);
 export interface RewardContext {
@@ -741,7 +767,7 @@ export function modPathLabel(id: string): string {
   const group = isBranch(id) ? branchGroup(id) : undefined;
   return branch
     ? PATH_NAMES[branch.path] + (isFusion(id) ? ' · Fusion' : group ? ' · ' + group : '')
-    : (group ?? '');
+    : (group ?? (isFusion(id) ? 'Fusion' : ''));
 }
 export function getGun(mods: readonly string[]): Gun {
   const g: Gun = {
@@ -912,6 +938,7 @@ export function getGun(mods: readonly string[]): Gun {
   if (mods.includes('deadeye')) g.spread *= 0.5;
   // Recall's extra penetration must compose in either acquisition order.
   if (mods.includes('recall') && mods.includes('pierce')) g.pierce = 3;
+  if (mods.includes('flywheel')) g.bounces = Math.max(0, g.bounces - 2);
   return g;
 }
 export const STAGES = 20;

@@ -5,6 +5,7 @@ import type { Vec } from './rules.ts';
 import { isBoss } from './enemies.ts';
 import type { Prop } from './props.ts';
 import { firstSolid } from './collisions.ts';
+import { STORM_CELL } from './cross-fusions.ts';
 
 export const SHELL_DIRECT = 0.55;
 export const SHELL_BLAST = 0.85;
@@ -30,6 +31,7 @@ export interface DemolitionBlast {
   shaped?: boolean;
 }
 export interface Bomblet {
+  cell?: number;
   pos: Vec;
   prev: Vec;
   vel: Vec;
@@ -145,6 +147,7 @@ export class DemolitionSystem {
         : end;
       if (hit || g.time >= b.at) {
         this.bomblets = this.bomblets.filter((other) => other !== b);
+        if (hit) g.fusions.storm.land(b.cell, b.pos, hit.body, hit.normal);
         this.detonate({
           pos: b.pos,
           damage: b.damage,
@@ -168,6 +171,8 @@ export class DemolitionSystem {
   detonate(blast: DemolitionBlast, contact?: Enemy) {
     const g = this.game;
     if (g.mode !== 'playing' || g.escape?.phase === 'extracting' || !(blast.damage > 0)) return;
+    if (g.mods.includes('storm-cell') && (blast.kind === 'shell' || blast.kind === 'cluster'))
+      blast = { ...blast, radius: blast.radius * STORM_CELL.radius };
     if (blast.kind === 'shell' && g.mods.includes('shaped-charge'))
       blast = {
         ...blast,
@@ -178,6 +183,8 @@ export class DemolitionSystem {
     if (blast.kind === 'shell' && g.mods.includes('cluster-shell')) {
       const normal = blast.normal ?? { x: 0, y: -1 };
       const base = Math.atan2(normal.y, normal.x);
+      const cell =
+        this.bomblets.length < CLUSTER_LIMIT ? g.fusions.storm.create(blast.damage) : undefined;
       let emitted = 0;
       for (const spread of [-0.65, 0, 0.65]) {
         if (this.bomblets.length >= CLUSTER_LIMIT) break;
@@ -187,12 +194,13 @@ export class DemolitionSystem {
           2,
         );
         this.bomblets.push({
+          cell,
           pos,
           prev: { ...pos },
           vel: { x: Math.cos(base + spread) * 6, y: Math.sin(base + spread) * 6 },
           damage: blast.damage * 0.2,
           launch: blast.launch * 0.2,
-          at: g.time + 0.28,
+          at: g.time + (cell === undefined ? 0.28 : 1.2),
           last: g.time,
         });
         emitted++;

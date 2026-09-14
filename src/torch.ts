@@ -21,6 +21,7 @@ export const TORCH = {
   segments: 12,
 };
 export interface TorchSegment {
+  portalExit?: TorchOrigin;
   a: Vec;
   b: Vec;
   dir: Vec;
@@ -35,6 +36,15 @@ export interface TorchSegment {
   ray?: number;
   muzzle?: boolean;
 }
+export interface TorchOrigin {
+  from: Vec;
+  dir: Vec;
+  remaining: number;
+  banks: number;
+  pierce: number;
+  gain: number;
+  radius: number;
+}
 const add = (p: Vec, d: Vec, n: number): Vec => ({ x: p.x + d.x * n, y: p.y + d.y * n });
 const shielded = (e: Enemy, d: Vec) => e.elite === 'shielded' && -d.x * e.facing > 0.45;
 export const torchRadius = (g: Game) =>
@@ -48,6 +58,7 @@ export function traceTorch(
   angle = 0,
   limit = TORCH.segments,
   relay = { used: false },
+  start?: TorchOrigin,
 ): TorchSegment[] {
   let d = direction(g.player.position, g.aim);
   if (!d.x && !d.y) d = { x: 1, y: 0 };
@@ -62,9 +73,17 @@ export function traceTorch(
     banks = g.gun.bounces,
     pierce = g.gun.pierce + (g.torch?.extraPierce ?? 0),
     gain = 1;
+  if (start) {
+    from = { ...start.from };
+    d = { ...start.dir };
+    remaining = start.remaining;
+    banks = start.banks;
+    pierce = start.pierce;
+    gain = start.gain;
+  }
   const result: TorchSegment[] = [],
     visited = new Set<Matter.Body>();
-  const radius = torchRadius(g),
+  const radius = start?.radius ?? torchRadius(g),
     half = { x: radius, y: radius };
   for (let n = 0; n < limit && remaining > 1; n++) {
     const end = add(from, d, remaining),
@@ -86,7 +105,7 @@ export function traceTorch(
       b: point,
       dir: { ...d },
       gain,
-      muzzle: n === 0,
+      muzzle: !start && n === 0,
     };
     result.push(segment);
     remaining -= distance(from, point);
@@ -99,6 +118,15 @@ export function traceTorch(
       from = { ...portal!.pos };
       d = portalVector(d, portal!.entry, portal!.exit);
       remaining -= 1;
+      segment.portalExit = {
+        from: { ...from },
+        dir: { ...d },
+        remaining,
+        banks,
+        pierce,
+        gain,
+        radius,
+      };
       continue;
     }
     if (valve && valve.t <= t && (!hit || valve.t < hit.t)) {
@@ -270,6 +298,7 @@ export class TorchSystem {
         this.burstLeft--;
         this.finisher = g.mods.includes('pulse-chamber') && this.burstLeft === 0;
         this.pulseGain = g.mods.includes('pulse-chamber') ? (this.finisher ? 1.6 : 0.7) : 1;
+        if (!this.finisher && g.mods.includes('resonator')) this.pulseGain *= 0.75;
         this.until = this.burstLeft
           ? this.burnFrom + g.gun.interval * TORCH.burstSpacing
           : Infinity;
@@ -444,6 +473,18 @@ export class TorchSystem {
       1 + (g.mods.includes('charge-lens') ? this.heat : (old + this.heat) * 0.5) * TORCH.heatBonus;
     const all = [...this.segments, ...this.rear],
       damaged = new Set<string>();
+    if (this.finisher && g.mods.includes('resonator')) {
+      const exit = all.find((s) => s.portalExit)?.portalExit;
+      if (exit)
+        g.fusions.resonator.record(
+          this.pulse!.id,
+          exit,
+          (this.payload() * burn) / this.period,
+          this.target,
+          hot,
+          this.burnUntil,
+        );
+    }
     for (const segment of all) {
       if (g.mode !== 'playing') {
         this.stop();

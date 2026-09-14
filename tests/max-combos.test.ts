@@ -5,6 +5,7 @@ import { maxCombos } from '../src/branch-builds.ts';
 import { MASS_DRIVER } from '../src/mass-driver.ts';
 import { GRIND } from '../src/grindshot.ts';
 import { CLUSTER_LIMIT } from '../src/demolition.ts';
+import { RESONATOR, STORM_CELL } from '../src/cross-fusions.ts';
 
 test('every maximal build fires in the actual Workshop with finite physics and bounded secondary effects', () => {
   for (const combo of maxCombos()) {
@@ -35,6 +36,8 @@ test('every maximal build fires in the actual Workshop with finite physics and b
       assert(g.grind.saws.length <= GRIND.limit, combo.code);
       assert(g.demolition.bomblets.length <= CLUSTER_LIMIT, combo.code);
       assert(g.tripwires.wires.length <= 2, combo.code);
+      assert(g.fusions.resonator.pending.length <= RESONATOR.limit, combo.code);
+      assert(g.fusions.storm.cells.length <= STORM_CELL.limit, combo.code);
       for (const s of g.shots)
         assert([s.pos.x, s.pos.y, s.vel.x, s.vel.y, s.damage].every(Number.isFinite), combo.code);
     }
@@ -42,5 +45,7 @@ test('every maximal build fires in the actual Workshop with finite physics and b
     g.setMode('dead');
     assert.equal(g.demolition.bomblets.length, 0);
     assert.equal(g.grind.saws.length, 0);
+    assert.equal(g.fusions.resonator.pending.length, 0);
+    assert.equal(g.fusions.storm.cells.length, 0);
   }
 });

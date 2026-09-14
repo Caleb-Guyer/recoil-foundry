@@ -1081,6 +1081,7 @@ export class Game {
     this.updateShots(dt);
     this.torch.afterStep(dt);
     this.tripwires.afterStep();
+    this.fusions.storm.afterStep();
     if (this.mode !== 'playing') return;
     this.arcs.update();
     this.grind.update(dt);
@@ -2134,6 +2135,14 @@ export class Game {
           if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, caught: true };
         }
         const passage = this.portals.trace(s.pos, end, { x: s.radius, y: s.radius });
+        this.massDriver.travel(
+          s,
+          speed *
+            segment *
+            (passage && (!nearest || passage.t <= nearest.t + 1e-6)
+              ? passage.t
+              : (nearest?.t ?? 1)),
+        );
         if (passage && (!nearest || passage.t <= nearest.t + 1e-6)) {
           s.pos = { ...passage.pos };
           s.prev = { ...s.pos };

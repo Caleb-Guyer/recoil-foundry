@@ -5,6 +5,7 @@ import { clamp, direction, distance } from './rules.ts';
 import { isBoss } from './enemies.ts';
 import { closestBlastPoint } from './demolition.ts';
 import { FUSE_TIME } from './ballistics.ts';
+import { ResonatorSystem, StormCellSystem } from './cross-fusions.ts';
 
 export const RAIL_RECOIL = 1.65;
 export const ORBIT_LIMIT = 24;
@@ -18,11 +19,17 @@ export interface StoredRound {
 export class FusionSystem {
   game: Game;
   orbit: StoredRound[] = [];
+  resonator: ResonatorSystem;
+  storm: StormCellSystem;
   constructor(game: Game) {
     this.game = game;
+    this.resonator = new ResonatorSystem(game);
+    this.storm = new StormCellSystem(game);
   }
   reset() {
     this.orbit = [];
+    this.resonator.reset();
+    this.storm.reset();
   }
   has(id: string) {
     return this.game.mods.includes(id);
@@ -115,7 +122,9 @@ export class FusionSystem {
     const g = this.game;
     if (g.mode !== 'playing' || g.hitStop > 0 || g.escape?.phase === 'extracting') return;
     this.expire();
-    if (!this.has('implosion') || !g.ballistics.shells.length) return;
+    this.resonator.update();
+    this.storm.beforeStep();
+    if (g.mode !== 'playing' || !this.has('implosion') || !g.ballistics.shells.length) return;
     g.ballistics.positionShells();
     const bodies = [
       ...g.enemies.filter((e) => e.hp > 0 && e.spawn <= 0 && !isBoss(e.kind)).map((e) => e.body),

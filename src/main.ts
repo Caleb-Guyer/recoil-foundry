@@ -633,6 +633,9 @@ function modMark(mod: Mod) {
     'short-circuit': 'M28 6l-9 18h10l-4 18 14-23H29l4-13M8 16v16M46 16v16',
     triphammer: 'M7 12l16 11-9 15M23 23h17M34 16l8 7-8 7M11 25l-5 9M38 39l11-9',
     crosscut: 'M5 39h46M26 26H5M12 19l-7 7 7 7M30 26h21M44 19l7 7-7 7M28 8v14',
+    resonator: 'M7 13v30M13 20v16M18 28h17M38 13v30M44 20v16M35 23l5 5-5 5',
+    flywheel: 'M38 16a16 16 0 1 0 5 17M38 8v9h9M28 19v9l8 5M9 47h38',
+    'storm-cell': 'M8 42l20-30 20 30ZM24 23l-5 10h9l-3 9 13-17h-9l3-6',
     'drop-forge':
       'M28 6v8M19 10l2 7M37 10l-2 7M35 24a7 7 0 1 0-14 0 7 7 0 0 0 14 0M17 39h22M28 34v5M13 32l5 4M43 32l-5 4',
     'mass-driver': 'M8 12h14l8 8M8 36h14l8-8M27 24h5M49 24a8 8 0 1 0-16 0 8 8 0 0 0 16 0M38 20l4-1',

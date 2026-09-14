@@ -17,6 +17,7 @@ import {
 import type { Checkpoint } from '../src/rules.ts';
 import { FUSION_TEST_BUILDS, fusionTestFromUrl, testCheckpoint } from '../src/practice.ts';
 import { dailyForDate } from '../src/daily.ts';
+import { withParents } from '../src/branch-builds.ts';
 import { FUSE_TIME, FUSE_LIMIT } from '../src/ballistics.ts';
 import { ORBIT_LIMIT, ORBIT_TIME, RAIL_RECOIL } from '../src/fusions.ts';
 const { Body, Bodies, Composite, Engine } = Matter;
@@ -102,7 +103,8 @@ function collect(g: Game) {
 }
 
 test('fusions require both parents and exclude every other fusion, including forged builds', () => {
-  for (const [id, parents] of Object.entries(FUSION_REQUIRES)) {
+  for (const [id, required] of Object.entries(FUSION_REQUIRES)) {
+    const parents = withParents([], required)!;
     assert(!availableMods([]).some((m) => m.id === id));
     for (const parent of parents) assert(!availableMods([parent]).some((m) => m.id === id));
     assert(availableMods(parents).some((m) => m.id === id));
@@ -115,7 +117,8 @@ test('fusions require both parents and exclude every other fusion, including for
 });
 
 test('fusion rewards open after the second boss, repeat by seed, and favor Overtime', () => {
-  for (const [id, parents] of Object.entries(FUSION_REQUIRES)) {
+  for (const [id, required] of Object.entries(FUSION_REQUIRES)) {
+    const parents = withParents([], required)!;
     let normal = 0,
       overtime = 0;
     for (let i = 0; i < 5000; i++) {

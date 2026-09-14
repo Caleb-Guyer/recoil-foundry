@@ -3,6 +3,7 @@ import {
   FUSION_REQUIRES,
   availableMods,
   validBuild,
+  isFusion,
   type Checkpoint,
 } from './rules.ts';
 import { BRANCH_GROUPS, BRANCH_PARENTS } from './upgrade-branches.ts';
@@ -39,6 +40,51 @@ export function completeBuild(build: readonly string[]) {
 }
 
 export const BRANCH_TEST_BUILDS: Record<string, { name: string; mods: readonly string[] }> = {
+  resonator: {
+    name: 'Resonator',
+    mods: [
+      'cutting-torch',
+      'burst',
+      'pulse-chamber',
+      'fold',
+      'relay-gate',
+      'resonator',
+      'scatter',
+      'airshot',
+      'light',
+      'leech',
+    ],
+  },
+  flywheel: {
+    name: 'Flywheel',
+    mods: [
+      'mass-driver',
+      'skid-plate',
+      'grindshot',
+      'crosscut',
+      'flywheel',
+      'pierce',
+      'banker',
+      'airshot',
+      'light',
+      'leech',
+    ],
+  },
+  storm: {
+    name: 'Storm Cell',
+    mods: [
+      'shellshock',
+      'cluster-shell',
+      'arc-coil',
+      'storm-cell',
+      'aftershock',
+      'blast-surf',
+      'airshot',
+      'light',
+      'leech',
+      'rapid',
+    ],
+  },
   pulse: {
     name: 'Pulse Chamber',
     mods: [
@@ -233,11 +279,26 @@ export function maxCombos(): readonly MaxCombo[] {
       const groups = Object.values(BRANCH_GROUPS);
       const walk = (build: string[], choices: string[], index: number) => {
         if (index === groups.length) {
-          const mods = completeBuild(build)!;
-          const key = [...mods].sort().join(',');
-          if (seen.has(key)) return;
-          seen.add(key);
-          result.push({ code: [path, weapon, ...choices].join('.'), path, weapon, choices, mods });
+          const options = build.some(isFusion)
+            ? [build]
+            : Object.keys(FUSION_REQUIRES).flatMap((id) => {
+                const mods = withParents(build, [id]);
+                return mods ? [mods] : [];
+              });
+          if (!options.length) options.push(build);
+          for (const [i, option] of options.entries()) {
+            const mods = completeBuild(option)!;
+            const key = [...mods].sort().join(',');
+            if (seen.has(key)) continue;
+            seen.add(key);
+            result.push({
+              code: [path, weapon, ...choices, ...(i ? [mods.find(isFusion)!] : [])].join('.'),
+              path,
+              weapon,
+              choices,
+              mods,
+            });
+          }
           return;
         }
         const variants = groups[index].flatMap((id) => {

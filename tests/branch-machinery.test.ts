@@ -7,6 +7,8 @@ import { getGun } from '../src/rules.ts';
 import { CROSSING } from '../src/crossing-layout.ts';
 import { MASS_DRIVER } from '../src/mass-driver.ts';
 import { CLUSTER_LIMIT } from '../src/demolition.ts';
+import { withParents } from '../src/branch-builds.ts';
+import { STORM_CELL } from '../src/cross-fusions.ts';
 const idle = {
   left: false,
   right: false,
@@ -37,50 +39,57 @@ test('rolling balls ride a rising deck, respect adjacent cover and leave steep s
   assert(!s.massDriver!.rolling);
 });
 
-test('Skid Plate and clustered explosions cannot wedge the train at either boundary', () => {
-  for (const mirror of [0, 1]) {
-    const g = new Game();
-    g.startTest(
-      massDriverTestFromUrl(new URL(`https://test/?test=mass-driver&room=train&mirror=${mirror}`))!,
-    );
-    g.mods = ['mass-driver', 'skid-plate', 'shellshock', 'cluster-shell', 'aftershock'];
-    g.gun = getGun(g.mods);
-    for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
-    g.enemies = [];
-    g.waves.clear();
-    g.spawnEnemy('shooter', 1000, 100);
-    g.updateEnemy = () => {};
-    Body.setPosition(g.player, { x: 1000, y: 250 });
-    g.crossing.beginStep(1.01);
-    g.crossing.beginStep(CROSSING.tell + 0.01);
-    const d = g.crossing.direction,
-      edge = d > 0 ? 1930 : 70;
-    g.props.spawn('crate', d > 0 ? 1974 : 26, 715);
-    g.props.spawn('canister', d > 0 ? 1960 : 40, 700);
-    for (const [i, c] of g.crossing.cars.entries())
-      Body.setPosition(c.body, {
-        x: edge - d * (CROSSING.width / 2 + i * (CROSSING.width + CROSSING.gap)),
-        y: c.body.position.y,
-      });
-    for (let i = 0; i < 300 && g.crossing.cars.length; i++) {
-      for (let j = 0; j < 4; j++)
-        round(g, { pos: { x: d > 0 ? 1980 : 20, y: 700 - j * 4 }, vel: { x: -d * 18, y: 0 } });
-      if (i % 6 === 0)
-        g.demolition.detonate({
-          pos: { x: edge, y: 700 },
-          damage: 100,
-          radius: 96,
-          launch: 6,
-          kind: 'shell',
+test('rolling balls, charged saws and Storm cells cannot wedge the train at either boundary', () => {
+  for (const fusion of [[], ['flywheel'], ['storm-cell']])
+    for (const mirror of [0, 1]) {
+      const g = new Game();
+      g.startTest(
+        massDriverTestFromUrl(
+          new URL(`https://test/?test=mass-driver&room=train&mirror=${mirror}`),
+        )!,
+      );
+      g.mods = withParents(
+        [],
+        ['mass-driver', 'skid-plate', 'shellshock', 'cluster-shell', 'aftershock', ...fusion],
+      )!;
+      g.gun = getGun(g.mods);
+      for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
+      g.enemies = [];
+      g.waves.clear();
+      g.spawnEnemy('shooter', 1000, 100);
+      g.updateEnemy = () => {};
+      Body.setPosition(g.player, { x: 1000, y: 250 });
+      g.crossing.beginStep(1.01);
+      g.crossing.beginStep(CROSSING.tell + 0.01);
+      const d = g.crossing.direction,
+        edge = d > 0 ? 1930 : 70;
+      g.props.spawn('crate', d > 0 ? 1974 : 26, 715);
+      g.props.spawn('canister', d > 0 ? 1960 : 40, 700);
+      for (const [i, c] of g.crossing.cars.entries())
+        Body.setPosition(c.body, {
+          x: edge - d * (CROSSING.width / 2 + i * (CROSSING.width + CROSSING.gap)),
+          y: c.body.position.y,
         });
-      g.hitStop = 0;
-      g.tick(1 / 60, idle);
-      assert.equal(g.mode, 'playing');
-      assert(g.demolition.bomblets.length <= CLUSTER_LIMIT);
+      for (let i = 0; i < 300 && g.crossing.cars.length; i++) {
+        for (let j = 0; j < 4; j++)
+          round(g, { pos: { x: d > 0 ? 1980 : 20, y: 700 - j * 4 }, vel: { x: -d * 18, y: 0 } });
+        if (i % 6 === 0)
+          g.demolition.detonate({
+            pos: { x: edge, y: 700 },
+            damage: 100,
+            radius: 96,
+            launch: 6,
+            kind: 'shell',
+          });
+        g.hitStop = 0;
+        g.tick(1 / 60, idle);
+        assert.equal(g.mode, 'playing');
+        assert(g.demolition.bomblets.length <= CLUSTER_LIMIT);
+        assert(g.fusions.storm.cells.length <= STORM_CELL.limit);
+      }
+      assert.equal(g.crossing.cars.length, 0);
+      assert(g.shots.filter((s) => s.massDriver).length <= MASS_DRIVER.limit);
     }
-    assert.equal(g.crossing.cars.length, 0);
-    assert(g.shots.filter((s) => s.massDriver).length <= MASS_DRIVER.limit);
-  }
 });
 
 test('Breach with rapid Burst and Countershot still leaves stationary players vulnerable to the final boss', () => {

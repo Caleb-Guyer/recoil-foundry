@@ -1,9 +1,18 @@
 // Exact legal acquisition lists and stable links, generated from runtime rules.
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
-import { MODS, PATH_NAMES, availableMods, validBuild, modDescription } from '../src/rules.ts';
+import {
+  MODS,
+  PATH_NAMES,
+  FUSION_REQUIRES,
+  isFusion,
+  availableMods,
+  validBuild,
+  modDescription,
+} from '../src/rules.ts';
+import { DAILY_RULESET } from '../src/daily.ts';
 import { maxCombos, BRANCH_TEST_BUILDS, branchTestFromUrl } from '../src/branch-builds.ts';
-import { BRANCH_MODS, BRANCH_PARENTS, BRANCH_GROUPS, isBranch } from '../src/upgrade-branches.ts';
+import { BRANCH_PARENTS, BRANCH_GROUPS, isBranch } from '../src/upgrade-branches.ts';
 const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url)));
 const names = new Map(MODS.map((m) => [m.id, m.name]));
 const name = (id) => names.get(id);
@@ -17,6 +26,7 @@ const csv = [
     'path',
     'weapon',
     'branches',
+    'fusion',
     'upgrade_count',
     'upgrades_in_acquisition_order',
     'upgrade_ids_in_acquisition_order',
@@ -30,9 +40,9 @@ const max = [
   '',
   `Game **${version}**. **${combos.length}** distinct legal completed builds contain a new specialization.`,
   '',
-  '“Maxed” means every remaining compatible upgrade is fitted, including boss salvage. These contain 43–53 upgrades: Overtime/stress builds, beyond the ordinary run’s 19 picks. Different acquisition orders of the same gun are counted once. The four completed builds containing only old upgrades are omitted.',
+  `“Maxed” means every remaining compatible upgrade is fitted, including boss salvage. These contain ${Math.min(...combos.map((c) => c.mods.length))}–${Math.max(...combos.map((c) => c.mods.length))} upgrades: Overtime/stress builds, beyond the ordinary run’s 19 picks. Different acquisition orders of the same gun are counted once. The four completed builds containing only old upgrades are omitted.`,
   '',
-  '[Download the complete CSV](max-upgrade-combos.csv) · [Twelve focused builds and controls](new-upgrade-builds.md)',
+  '[Download the complete CSV](max-upgrade-combos.csv) · [Focused builds and controls](new-upgrade-builds.md)',
   '',
   'Each expandable entry gives **every upgrade in a valid acquisition order**. Test links preserve Continue, Daily records, discoveries and Practice unlocks. Click the test button on the title screen; R repeats that preset.',
   '',
@@ -51,6 +61,7 @@ for (const c of combos) {
     PATH_NAMES[c.path],
     name(c.weapon),
     c.choices.map(name).join(' + '),
+    name(c.mods.find(isFusion)),
     c.mods.length,
     c.mods.map(name).join(' > '),
     c.mods.join(' > '),
@@ -64,7 +75,7 @@ for (const c of combos) {
   }
   max.push(
     '<details>',
-    `<summary>${name(c.weapon)} · ${c.choices.map(name).join(' · ')}</summary>`,
+    `<summary>${[...new Set([c.weapon, ...c.choices, c.mods.find(isFusion)])].filter(Boolean).map(name).join(' · ')}</summary>`,
     '',
     `${c.mods.length} upgrades. [Test room](${room}) · [Mirror](${mirror}) · [Final boss](${boss})`,
     '',
@@ -75,6 +86,12 @@ for (const c of combos) {
   );
 }
 const tips = {
+  resonator:
+    'Right-click/E or LT/L2 to place both portals, then hold fire through the entrance. Every third pulse repeats its transmitted energy from the exit at 60% power after a short delay. The first two pulses are 25% lighter. Repeats keep the original exit aim and spent range, check current cover and cannot trigger more repeats.',
+  flywheel:
+    'Fire shallowly into a floor. After 600 units of actual rolling travel, the final saw pair reaches double damage. The ball has two fewer banks. Air travel, riding a moving platform and teleporting do not charge it; the saw pair spends its charge once.',
+  storm:
+    'Aim near floors so the three bomblets can land apart. Two landings arm a cell after 0.12 seconds, linking exposed nodes for 1.3 seconds. Each cell hits an enemy once for half the original shell payload. Shell explosions have 28% less radius; at most three cells can remain. Cover interrupts links.',
   pulse:
     'Hold fire. Two light pulses lead into a narrow piercing finisher. Burst fire is a required parent.',
   charge:
@@ -102,9 +119,9 @@ const tips = {
 const guide = [
   '# New upgrade builds',
   '',
-  `Implemented in **${version}** · Daily ruleset **61**.`,
+  `Implemented in **${version}** · Daily ruleset **${DAILY_RULESET}**.`,
   '',
-  'All twelve additions are local specializations. New specialization offers start at reward stage 7 with their parents fitted. Choose one member of each local fork; unrelated families still combine. The chosen broad path retains its slight reward preference. Daily still gives one predetermined legal card.',
+  'Twelve local specializations and three rare fusions extend the existing gun. New specialization offers start at reward stage 7 with their parents fitted. Choose one member of each local fork; unrelated families still combine. Resonator, Flywheel and Storm Cell each require both named parents and obey the one-fusion limit. The chosen broad path retains its slight reward preference. Daily still gives one predetermined legal card.',
   '',
   `For **every upgrade in every new max combo**, use the [${combos.length}-build catalog](max-upgrade-combos.md) or [CSV](max-upgrade-combos.csv).`,
   '',
@@ -123,13 +140,15 @@ guide.push('', '## What to fit', '');
 for (const [key, b] of Object.entries(BRANCH_TEST_BUILDS)) {
   const save = branchTestFromUrl(new URL(link('build=' + key)));
   assert(save && validBuild(save.mods));
-  const mod = BRANCH_MODS.find((m) => m.name === b.name);
+  const mod = MODS.find((m) => m.name === b.name);
   guide.push(
     '### ' + b.name,
     '',
     tips[key],
     '',
-    '**Parents:** ' + BRANCH_PARENTS[mod.id].map(name).join(' + ') + '.',
+    '**Parents:** ' +
+      (BRANCH_PARENTS[mod.id] ?? FUSION_REQUIRES[mod.id]).map(name).join(' + ') +
+      '.',
     '',
     '**Complete room build:** ' + save.mods.map(name).join(' → ') + '.',
     '',

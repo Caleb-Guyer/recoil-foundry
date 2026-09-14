@@ -6,11 +6,21 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Three new fusions · 2.72.0
+
+**Resonator** combines Pulse Chamber with Relay Gate: the third pulse repeats from a portal exit at 60% power, while the first two pulses are 25% lighter. **Flywheel** combines Skid Plate with Crosscut: rolling distance charges the final saw pair up to double damage, costing two ball banks. **Storm Cell** combines Cluster Shell with Arc Coil: landed bomblets form brief electrical traps, with 28% smaller shell blast radii and a three-cell limit.
+
+All three require both parents and share the existing rare, late-run fusion offers. Only one fusion can be fitted. Repeats check real cover, saw charge excludes teleport gaps and platform carrying, and each cell can hit an enemy only once. No new controls or combat HUD text. Daily uses **ruleset 62**; ordinary Continue saves remain compatible.
+
+[Test Resonator](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&v=2.72.0) · [Test Flywheel](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&v=2.72.0) · [Test Storm Cell](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&v=2.72.0). Click the title-screen test button. **R** repeats the preset. These tests preserve your saves and discoveries. For Resonator, right-click/E or LT/L2 to place both portals, then fire through the entrance.
+
+[All focused builds and controls](docs/new-upgrade-builds.md) · [All 332 new fully maxed combinations](docs/max-upgrade-combos.md) · [Every build as CSV](docs/max-upgrade-combos.csv).
+
 ## Upgrade branches · 2.71.0
 
 Twelve new specializations make local choices within the existing three paths. Cutting Torch can become **Pulse Chamber**, **Charge Lens** or **Prism Array**. Other families gain **Pinwheel**, **Follow-through**, **Shaped Charge**, **Cluster Shell**, **Skid Plate**, **Relay Gate**, **Short Circuit**, **Triphammer** and **Crosscut**. Specializations appear from reward stage 7 after their parents; each local fork allows one choice. Daily still gives one predetermined legal card under **ruleset 61**.
 
-[Every new upgrade, complete builds and test links](docs/new-upgrade-builds.md) · [All 292 new fully maxed combinations](docs/max-upgrade-combos.md) · [Download every build as CSV](docs/max-upgrade-combos.csv).
+[Every new upgrade, complete builds and test links](docs/new-upgrade-builds.md). The complete-build catalog above includes these twelve specializations and the newer fusions.
 
 Rail spike now fires a real rear rail with Backfire and can leave a surface saw. Rail spike and Vector are alternatives for new builds; existing owned legacy saves and recaps survive. Returning steel balls may hit each enemy once per flight leg. Guided echoes replay recorded turns and can leave saws. Breach has a shared clearance budget and cannot erase heavy ammunition. Cards describe these adaptations without adding combat HUD text.
 

@@ -2,6 +2,7 @@ import type Matter from 'matter-js';
 import type { Game, Shot } from './game.ts';
 import { firstSolid, sweepBox } from './collisions.ts';
 import { clamp, direction, distance, type Vec } from './rules.ts';
+import { FLYWHEEL_DISTANCE } from './mass-driver.ts';
 
 export const GRIND = { speed: 420, life: 1.2, radius: 7, offset: 8.5, limit: 8 };
 export interface GrindSaw {
@@ -16,6 +17,7 @@ export interface GrindSaw {
   hits: Set<number>;
   wrap: boolean;
   travel: number;
+  charge?: number;
 }
 
 // Offset the actual convex hull, keeping even rotated surfaces and their corners
@@ -59,6 +61,8 @@ export class GrindshotSystem {
       !(shot.damage > 0)
     )
       return;
+    const flywheel = shot.massDriver?.flywheel;
+    if (flywheel?.spent) return;
     const points = grindRail(body);
     let best = Infinity,
       edge = -1,
@@ -95,6 +99,8 @@ export class GrindshotSystem {
     const signs = g.mods.includes('crosscut')
       ? [-1, 1]
       : [Math.sign(Math.abs(tangent) > 0.001 ? tangent : fallback)];
+    const charge = flywheel ? clamp(flywheel.distance / FLYWHEEL_DISTANCE, 0, 1) : 0;
+    if (flywheel) flywheel.spent = true;
     for (const sign of signs)
       this.saws.push({
         body,
@@ -104,7 +110,8 @@ export class GrindshotSystem {
         pos,
         trail: [pos],
         life: GRIND.life,
-        damage: shot.damage * (signs.length === 2 ? 0.6 : 1),
+        damage: shot.damage * (signs.length === 2 ? 0.6 : 1) * (1 + charge),
+        charge,
         hits: new Set(shot.hits),
         wrap: g.mods.includes('corner-cutter'),
         travel: 0,
