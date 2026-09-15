@@ -3,6 +3,13 @@ import type { HazardPlacement } from './hazard-layouts.ts';
 
 export const ESCAPE_WIDTH = 7400;
 export const EXTRACTION = { x: ESCAPE_WIDTH - 150, y: 700, w: 150, h: 20 };
+export const OVERTIME_LIFT = { x: ESCAPE_WIDTH - 400, y: 410, w: 150, h: 20 };
+// A raised landing in the same departure bay. The floor remains an unobstructed
+// route to extraction; short ordinary jumps lead toward the optional second lap.
+export const OVERTIME_STEPS: Solid[] = [
+  { x: 6690, y: 630, w: 110, h: 18 },
+  { x: 6820, y: 520, w: 110, h: 18 },
+];
 
 const block = (x: number, w: number, h: number): Solid => ({ x, y: 740 - h, w, h });
 const shelf = (x: number, y: number, w: number): Solid => ({ x, y, w, h: 18 });

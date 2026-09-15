@@ -76,6 +76,7 @@ import {
   massDriverTestFromUrl,
   dropworksTestFromUrl,
   overtimeTestFromUrl,
+  exitTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
   fusionTestFromUrl,
@@ -216,6 +217,7 @@ let linkedRunTest =
   harpoonerTestFromUrl(entryUrl) ??
   fusionTestFromUrl(entryUrl) ??
   overtimeTestFromUrl(entryUrl) ??
+  exitTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??
   scrapperTestFromUrl(entryUrl) ??
@@ -254,6 +256,8 @@ function updateTitle() {
       ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.overtime)
     $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'EXITS-73')
+    $('play').innerHTML = 'Test exit elevators <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
     $('play').innerHTML = 'Test fusions <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('HARPOONER-'))
@@ -336,6 +340,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.seed === 'EXITS-73')
+    $('title-hint').textContent = 'Up: New Game+. Right: finish. R to restart test.';
   if (linkedRunTest?.seed.startsWith('DROPWORKS-64-'))
     $('title-hint').textContent = 'Climb the stairs. Drop the loads. R to restart test.';
   if (linkedRunTest?.seed.startsWith('MASSDRIVER-62-'))
@@ -1039,16 +1045,16 @@ function showDialog(kind: string) {
           : game.testRun
             ? 'Preset test. Press R to restart the test.'
             : game.escape
-              ? 'Reach the extraction lift.'
+              ? game.canOvertime
+                ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
+                : 'Reach the Exit lift to finish your run.'
               : game.detour
                 ? 'Survive for an extra upgrade, without a health refill.'
-                : game.canOvertime
-                  ? 'Upper door: Overtime with your build. Ground door: extract.'
-                  : game.overtime
-                    ? 'Second lap. Clear all twenty rooms, then extract.'
-                    : game.canDetour
-                      ? 'After clearing, the upper door offers an optional challenge.'
-                      : 'Clear the room, then leave through the right door.') +
+                : game.overtime
+                  ? 'Second lap. Clear all twenty rooms, then extract.'
+                  : game.canDetour
+                    ? 'After clearing, the upper door offers an optional challenge.'
+                    : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun' +

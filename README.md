@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## New Game+ elevator · 2.73.0
+
+The escape route now ends at a shared departure bay. Follow the amber steps **up to NEW GAME+** to carry your current gun and health into the harder second lap. The green **EXIT** lift on the lower floor finishes your run. Both lifts have physical decks and closing gates, and carry you upward before their destination loads. New Game+ requires a deliberate landing inside the raised car. Ordinary jumps reach it; recoil is optional.
+
+The old New Game+ door is removed from the final boss arena. Continue rebuilds the escape entrance with the appropriate elevators. Daily and completed New Game+ runs have only the finishing lift; their gameplay and Daily ruleset 62 are unchanged.
+
+[Test the exit elevators](https://caleb-guyer.github.io/recoil-foundry/?test=exits&v=2.73.0) starts beside the steps with the full end-of-run gun. Click **Test exit elevators**, then climb to continue or walk right to finish. **R** returns to the departure bay. The test preserves your real save, discoveries and Daily records.
+
 ## Three new fusions · 2.72.0
 
 **Resonator** combines Pulse Chamber with Relay Gate: the third pulse repeats from a portal exit at 60% power, while the first two pulses are 25% lighter. **Flywheel** combines Skid Plate with Crosscut: rolling distance charges the final saw pair up to double damage, costing two ball banks. **Storm Cell** combines Cluster Shell with Arc Coil: landed bomblets form brief electrical traps, with 28% smaller shell blast radii and a three-cell limit.
@@ -288,7 +296,7 @@ Portals on destroyed surfaces disappear without refunding their placements. Atta
 
 ## Overtime
 
-After clearing the Interceptor's arena in an ordinary run, two exits open. The ground door, **EXTRACT**, leads into the usual escape. Jump up the two suspended steps to **OVERTIME** to keep your exact gun, health, kills, and elapsed time for a second twenty-room lap. There is no entry heal. This is one optional second lap; its final boss leads to extraction.
+After clearing the Interceptor's arena in an ordinary run, leave through its ground door and cross the escape route. Both elevators wait in the final departure bay: climb the amber steps to **NEW GAME+** to keep your exact gun, health, kills, and elapsed time for a second twenty-room lap, or board the lower green **EXIT** lift to finish. The selected lift closes and rises before the transition. There is no entry heal. This is one optional second lap; its final boss leads to extraction.
 
 Overtime uses its own repeatable layout and roster seed. Ground attackers mix Chargers, Hoppers and Borers; aerial threats mix Flyers, Skimmers and Sifters. Rooms have more elites and extra reinforcements, with a 4.5-second deadline before the second wave. Occupied entrances wait or relocate and keep their full warning. Ordinary gunfire becomes faster and more damaging as the lap progresses.
 

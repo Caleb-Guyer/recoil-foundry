@@ -1,18 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
-import { Game } from '../src/game.ts';
+import { Game, EXTRACTION_DURATION } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
 import { getOvertimeLevel, overtimeHealth, overtimeSeed } from '../src/overtime.ts';
 import { getLevel } from '../src/levels.ts';
 import { ENEMY_STATS, bossPhase, isBoss } from '../src/enemies.ts';
 import { availableMods, getGun, loadCheckpoint, validBuild, STAGES } from '../src/rules.ts';
 import type { Checkpoint } from '../src/rules.ts';
-import { testCheckpoint, overtimeTestFromUrl, loadEncounters } from '../src/practice.ts';
+import {
+  testCheckpoint,
+  overtimeTestFromUrl,
+  exitTestFromUrl,
+  loadEncounters,
+} from '../src/practice.ts';
 import { dailyForDate } from '../src/daily.ts';
 import { beginInterceptorAttack } from '../src/interceptor.ts';
 import { REINFORCEMENT_TELL } from '../src/reinforcements.ts';
-import { DETOUR_DOOR, DETOUR_STEPS } from '../src/detours.ts';
+import { EXTRACTION, OVERTIME_LIFT, OVERTIME_STEPS } from '../src/escape-layout.ts';
 const { Body, Query } = Matter;
 const idle: Input = {
   left: false,
@@ -36,6 +41,19 @@ function clearedFinal() {
   tick(g, 45);
   assert(g.clear);
   return g;
+}
+function boardOvertime(g: Game) {
+  if (!g.escape) g.startEscape();
+  assert(g.overtimeLift);
+  Body.setPosition(g.player, { x: OVERTIME_LIFT.x, y: OVERTIME_LIFT.y - 18 });
+  Body.setVelocity(g.player, { x: 0, y: 0 });
+  for (let i = 0; i < 5 && g.escape?.phase === 'route'; i++) tick(g);
+  assert.equal(g.escape?.destination, 'overtime');
+  assert.equal(g.escape?.phase, 'extracting');
+}
+function rideOvertime(g: Game) {
+  for (let i = 0; i < 170 && !g.overtime; i++) tick(g);
+  assert(g.overtime);
 }
 
 test('Overtime rosters and layout mirrors repeat without changing the first lap', () => {
@@ -83,7 +101,10 @@ test('entering Overtime carries the exact gun, health, kills and clock and saves
   let saved: Checkpoint | null = null;
   g.testRun = null;
   g.onCheckpoint = (s) => (saved = s);
-  assert(g.startOvertime());
+  assert(!g.startOvertime(), 'The boss room is no longer a New Game+ entrance');
+  boardOvertime(g);
+  g.elapsed = 812;
+  rideOvertime(g);
   assert.equal(g.stage, 0);
   assert.deepEqual(g.mods, mods);
   assert.deepEqual(g.gun, gun);
@@ -102,27 +123,36 @@ test('entering Overtime carries the exact gun, health, kills and clock and saves
   assert(!resumed.canOvertime);
 });
 
-test('both physical exits work and the raised choice requires a deliberate landing', () => {
+test('the final room leads to one departure bay, with ordinary jumps to its New Game+ elevator', () => {
   const exit = clearedFinal();
   Body.setPosition(exit.player, { x: 1915, y: 710 });
   Body.setVelocity(exit.player, { x: 0, y: 0 });
   tick(exit, 10);
   assert(exit.escape);
   assert.equal(exit.overtime, null);
+  assert(exit.extractionLift && exit.overtimeLift);
+  Body.setPosition(exit.player, { x: EXTRACTION.x, y: EXTRACTION.y - 18 });
+  tick(exit, 170);
+  assert.equal(exit.mode, 'won');
+  assert.equal(exit.overtime, null);
   const g = clearedFinal();
-  assert(g.detourStepsReady);
-  Body.setPosition(g.player, { x: 1725, y: 722 });
+  assert(!g.detourStepsReady && !g.canBranch);
+  g.startEscape();
+  // Traverse with the starting gun: the continuation must not require recoil upgrades.
+  g.mods = [];
+  g.gun = getGun([]);
+  Body.setPosition(g.player, { x: 6600, y: 722 });
   Body.setVelocity(g.player, { x: 0, y: 0 });
   const path = [
-    { x: 1828, y: 572 },
-    { x: 1930, y: 442 },
+    ...OVERTIME_STEPS.map((s) => ({ x: s.x + s.w / 2, y: s.y - 18 })),
+    { x: OVERTIME_LIFT.x, y: OVERTIME_LIFT.y - 18 },
   ];
   let point = 0,
-    previous = 1725,
+    previous = 6600,
     stuck = 0;
   for (let i = 0; i < 1200 && !g.overtime; i++) {
     const p = g.player.position,
-      target = path[Math.min(point, 1)],
+      target = path[Math.min(point, path.length - 1)],
       dx = target.x - p.x;
     if (g.grounded && Math.abs(dx) < 22 && Math.abs(p.y - target.y) < 8) point++;
     stuck = Math.abs(p.x - previous) < 0.4 ? stuck + 1 : 0;
@@ -139,20 +169,55 @@ test('both physical exits work and the raised choice requires a deliberate landi
   assert(g.overtime, JSON.stringify(g.player.position));
   assert.equal(g.stage, 0);
   assert.equal(g.escape, null);
+  assert.equal(g.shotCount, 0);
 });
 
-test('exit steps never materialize through a player or crate', () => {
-  const g = new Game();
-  g.startTest(testCheckpoint('OT-CHOICE', 19));
-  const s = DETOUR_STEPS[0];
-  Body.setPosition(g.player, { x: s.x + s.w / 2, y: s.y });
-  for (const e of [...g.enemies]) g.hitEnemy(e, 1e9);
-  g.hitStop = 0;
-  tick(g);
-  assert(!g.detourStepsReady);
-  Body.setPosition(g.player, { x: 140, y: 680 });
-  tick(g);
-  assert(g.detourStepsReady);
+test('New Game+ requires landing inside its deck and freezes the complete ride on pause', () => {
+  const g = clearedFinal();
+  g.startEscape();
+  for (const pos of [
+    { x: OVERTIME_LIFT.x, y: OVERTIME_LIFT.y - 180, vy: 0 },
+    { x: OVERTIME_LIFT.x - OVERTIME_LIFT.w / 2 + 5, y: OVERTIME_LIFT.y - 18, vy: 0 },
+    { x: OVERTIME_LIFT.x, y: OVERTIME_LIFT.y - 18, vy: -8 },
+  ]) {
+    Body.setPosition(g.player, pos);
+    Body.setVelocity(g.player, { x: 0, y: pos.vy });
+    tick(g);
+    assert.equal(g.escape?.phase, 'route');
+    assert(!g.startOvertime());
+  }
+  let wins = 0;
+  g.onSound = (s) => {
+    if (s === 'win') wins++;
+  };
+  boardOvertime(g);
+  const hp = g.hp,
+    elapsed = g.elapsed,
+    shots = g.shotCount,
+    y = g.player.position.y;
+  g.damagePlayer(9999);
+  g.fire();
+  tick(g, 30, { right: true, fire: true, jump: true });
+  assert.equal(g.hp, hp);
+  assert.equal(g.elapsed, elapsed);
+  assert.equal(g.shotCount, shots);
+  assert.equal(g.player.position.x, OVERTIME_LIFT.x);
+  assert(g.player.position.y < y);
+  assert.equal(g.extractionLift!.position.y, EXTRACTION.y + EXTRACTION.h / 2);
+  const depart = g.escape!.depart,
+    at = { ...g.player.position };
+  g.setMode('paused');
+  tick(g, 120);
+  assert.equal(g.escape!.depart, depart);
+  assert.deepEqual(g.player.position, at);
+  g.setMode('playing');
+  tick(g, Math.floor((EXTRACTION_DURATION - depart) * 60) - 2);
+  assert.equal(g.overtime, null);
+  rideOvertime(g);
+  assert.equal(wins, 0);
+  assert.equal(g.elapsed, elapsed);
+  assert.equal(g.overtimeLift, null);
+  assert.equal(g.extractionLift, null);
 });
 
 test('Overtime is opt-in, unavailable in Daily or Practice, and cannot loop twice', () => {
@@ -165,10 +230,14 @@ test('Overtime is opt-in, unavailable in Daily or Practice, and cannot loop twic
   g.waves.clear();
   assert(!g.canOvertime);
   assert(!g.startOvertime());
+  g.startEscape();
+  assert.equal(g.overtimeLift, null);
+  assert(OVERTIME_STEPS.every((s) => !g.level.solids.some((b) => b.x === s.x && b.y === s.y)));
   g.startPractice({ kind: 'interceptor', seed: 'OT-PRACTICE' });
   assert(!g.canOvertime);
   const ot = clearedFinal();
-  assert(ot.startOvertime());
+  boardOvertime(ot);
+  rideOvertime(ot);
   ot.stage = 19;
   ot.loadRoom();
   ot.clear = true;
@@ -178,6 +247,7 @@ test('Overtime is opt-in, unavailable in Daily or Practice, and cannot loop twic
   assert(!ot.startOvertime());
   ot.startEscape();
   assert(ot.escape);
+  assert.equal(ot.overtimeLift, null);
 });
 
 test('overpowered full builds still face upgraded health and late boss phases', () => {
@@ -322,7 +392,8 @@ test('malformed lap state is rejected and earlier checkpoints still migrate', ()
   g.clear = true;
   g.enemies = [];
   g.waves.clear();
-  assert(g.startOvertime());
+  boardOvertime(g);
+  rideOvertime(g);
   let saved: Checkpoint | null = null;
   g.onCheckpoint = (s) => (saved = s);
   g.save();
@@ -355,4 +426,42 @@ test('test links isolate saves, retries, unlocks and every starting area', () =>
     'test=overtime&area=bad',
   ])
     assert.equal(overtimeTestFromUrl(new URL('https://example.com/?' + query)), null);
+});
+
+test('the exit elevator test starts at the shared bay and retries there without changing real saves', () => {
+  const save = exitTestFromUrl(new URL('https://example.com/?test=exits'))!;
+  assert(loadCheckpoint(save));
+  const g = new Game();
+  let writes = 0,
+    victories = 0;
+  g.onCheckpoint = () => writes++;
+  g.onBossDefeated = () => victories++;
+  g.startTest(save);
+  assert.equal(g.player.position.x, 6600);
+  assert(g.extractionLift && g.overtimeLift);
+  const layout = structuredClone(g.level),
+    build = [...g.mods];
+  boardOvertime(g);
+  rideOvertime(g);
+  g.save();
+  assert.deepEqual(g.mods, build);
+  g.startTest(g.testRun!);
+  assert.equal(g.player.position.x, 6600);
+  assert.equal(g.overtime, null);
+  assert.equal(g.escape?.phase, 'route');
+  assert.deepEqual(g.level, layout);
+  Body.setPosition(g.player, { x: EXTRACTION.x, y: EXTRACTION.y - 18 });
+  Body.setVelocity(g.player, { x: 0, y: 0 });
+  tick(g, 170);
+  assert.equal(g.mode, 'won');
+  assert.equal(writes, 0);
+  assert.equal(victories, 0);
+  for (const query of [
+    'test=exits&test=exits',
+    'test=exits&daily=2026-09-15',
+    'test=exits&seed=abc',
+    'test=exits&area=docks',
+    'test=exits&mode=overtime',
+  ])
+    assert.equal(exitTestFromUrl(new URL('https://example.com/?' + query)), null);
 });

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, WORLD, EXTRACTION_DURATION } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
-import { ESCAPE_LAYOUT, ESCAPE_WIDTH, EXTRACTION } from '../src/escape-layout.ts';
+import { ESCAPE_LAYOUT, ESCAPE_WIDTH, EXTRACTION, OVERTIME_STEPS } from '../src/escape-layout.ts';
 import { CRUMBLE_TELL, CRUMBLE_RESET } from '../src/hazards.ts';
 import { STAGES, getGun, loadCheckpoint } from '../src/rules.ts';
 import type { Checkpoint } from '../src/rules.ts';
@@ -358,7 +358,11 @@ test('escape checkpoints validate strictly and resume at the route entrance with
   assert.equal(g.elapsed, saved.elapsed);
   assert.deepEqual(g.mods, saved.mods);
   assert.deepEqual(g.gun, getGun(saved.mods));
-  assert.deepEqual(g.level, ESCAPE_LAYOUT);
+  assert.deepEqual(g.level, {
+    ...ESCAPE_LAYOUT,
+    solids: [...ESCAPE_LAYOUT.solids, ...OVERTIME_STEPS],
+  });
+  assert(g.overtimeLift);
   assert(
     g.hazards.items.every(
       (hazard) => hazard.state === 'idle' && hazard.visible && hazard.permanent,

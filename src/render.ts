@@ -65,7 +65,7 @@ import { FREIGHT } from './freight-layout.ts';
 import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
-import { EXTRACTION } from './escape-layout.ts';
+import { EXTRACTION, OVERTIME_LIFT, OVERTIME_STEPS } from './escape-layout.ts';
 import { drawWeapon } from './weapon-art.ts';
 import { drawMassRound } from './mass-driver-art.ts';
 import { drawBallistics } from './ballistics-art.ts';
@@ -830,30 +830,56 @@ export class Renderer {
       this.line({ x: x - 7, y: y - 5 }, { x, y }, '#73998d', 1.5);
       this.line({ x, y }, { x: x - 7, y: y + 5 }, '#73998d', 1.5);
     }
+    if (g.overtimeLift) {
+      for (const s of OVERTIME_STEPS) {
+        const x = s.x + s.w / 2,
+          y = s.y - 26;
+        this.line({ x: s.x + 4, y: s.y }, { x: s.x + s.w - 4, y: s.y }, '#e8bd7d', 3);
+        this.line({ x: x - 7, y: y + 4 }, { x, y: y - 4 }, '#e8bd7d', 2);
+        this.line({ x, y: y - 4 }, { x: x + 7, y: y + 4 }, '#e8bd7d', 2);
+      }
+      const c = this.ctx;
+      c.save();
+      c.font = '13px monospace';
+      c.textAlign = 'right';
+      c.fillStyle = '#e8bd7d';
+      c.fillText('NEW GAME+ ↑', 6664, 661);
+      c.fillStyle = '#a8d2b8';
+      c.fillText('EXIT →', 6664, 686);
+      c.restore();
+    }
   }
   drawExtraction(foreground = false) {
+    this.drawEscapeLift(foreground, false);
+    if (this.game.overtimeLift) this.drawEscapeLift(foreground, true);
+  }
+  drawEscapeLift(foreground: boolean, overtime: boolean) {
     const c = this.ctx,
       g = this.game;
-    if (!g.escape || !g.extractionLift) return;
-    const { x, y: restY, w, h } = EXTRACTION,
+    const body = overtime ? g.overtimeLift : g.extractionLift;
+    if (!g.escape || !body) return;
+    const { x, y: restY, w, h } = overtime ? OVERTIME_LIFT : EXTRACTION,
       left = x - w / 2,
       right = x + w / 2,
-      floor = g.extractionLift.position.y - h / 2,
+      floor = body.position.y - h / 2,
       roof = floor - 100,
-      closing = clamp(g.escape.depart / 0.55, 0, 1);
+      active = overtime === (g.escape.destination === 'overtime'),
+      closing = active ? clamp(g.escape.depart / 0.55, 0, 1) : 0,
+      accent = overtime ? '#edc68b' : '#a8d2b8',
+      frame = overtime ? '#a4875e' : '#627d70';
     c.save();
     if (foreground) {
       if (closing > 0) {
         for (const side of [-1, 1]) {
           const doorWidth = (w / 2 - 7) * closing,
             edge = side < 0 ? left + 7 : right - 7 - doorWidth;
-          c.fillStyle = 'rgba(57,85,77,0.28)';
+          c.fillStyle = overtime ? 'rgba(117,87,48,0.32)' : 'rgba(57,85,77,0.28)';
           c.fillRect(edge, roof + 10, doorWidth, 82);
-          c.strokeStyle = '#77998b';
+          c.strokeStyle = frame;
           c.lineWidth = 1.5;
           c.strokeRect(edge, roof + 10, doorWidth, 82);
           for (let rail = edge + 12; rail < edge + doorWidth; rail += 16)
-            this.line({ x: rail, y: roof + 13 }, { x: rail, y: floor - 11 }, '#587567', 1);
+            this.line({ x: rail, y: roof + 13 }, { x: rail, y: floor - 11 }, frame, 1);
         }
       }
       c.restore();
@@ -861,28 +887,37 @@ export class Renderer {
     }
     for (const side of [-1, 1]) {
       const rail = x + side * (w / 2 + 10);
-      this.line({ x: rail, y: restY - 690 }, { x: rail, y: restY + h }, '#293d40', 7);
-      this.line({ x: rail - 1, y: restY - 690 }, { x: rail - 1, y: restY + h }, '#647e76', 2);
+      this.line({ x: rail, y: 10 }, { x: rail, y: restY + h }, '#293d40', 7);
+      this.line({ x: rail - 1, y: 10 }, { x: rail - 1, y: restY + h }, frame, 2);
     }
-    c.fillStyle = 'rgba(121,190,151,0.06)';
+    c.fillStyle = overtime ? 'rgba(237,198,139,0.07)' : 'rgba(121,190,151,0.06)';
     c.fillRect(left + 7, floor - 95, w - 14, 95);
-    c.fillStyle = '#243c36';
+    c.fillStyle = overtime ? '#3b3429' : '#243c36';
     c.fillRect(left, roof, w, 7);
     c.fillRect(left, floor, w, h);
     for (const edge of [left, right - 6]) {
-      c.fillStyle = '#627d70';
+      c.fillStyle = frame;
       c.fillRect(edge, roof + 7, 6, 93);
     }
-    c.fillStyle = '#a8d2b8';
+    c.fillStyle = accent;
     c.fillRect(left + 4, floor, w - 8, 3);
     c.fillRect(x - 17, roof + 3, 34, 2);
     c.fillStyle = '#172c28';
     c.fillRect(left + 8, floor + 6, w - 16, Math.max(3, h - 8));
-    this.line({ x: x - 8, y: roof + 44 }, { x, y: roof + 35 }, '#a2c8af', 2);
-    this.line({ x, y: roof + 35 }, { x: x + 8, y: roof + 44 }, '#a2c8af', 2);
+    this.line({ x: x - 8, y: roof + 44 }, { x, y: roof + 35 }, accent, 2);
+    this.line({ x, y: roof + 35 }, { x: x + 8, y: roof + 44 }, accent, 2);
+    // Fixed station signs distinguish continuing from finishing before boarding.
+    c.fillStyle = '#142127';
+    c.fillRect(x - 115, restY - 157, 230, 48);
+    c.textAlign = 'center';
+    c.fillStyle = accent;
+    c.font = 'bold 20px monospace';
+    c.fillText(overtime ? 'NEW GAME+' : 'EXIT', x, restY - 134);
+    c.font = '10px monospace';
+    c.fillText(overtime ? 'KEEP YOUR GUN · HARDER RUN' : 'FINISH RUN', x, restY - 117);
     if (g.escape.phase === 'route') {
-      this.line({ x: left - 34, y: restY - 20 }, { x: left - 22, y: restY - 11 }, '#9bbfac', 2);
-      this.line({ x: left - 22, y: restY - 11 }, { x: left - 34, y: restY - 2 }, '#9bbfac', 2);
+      this.line({ x: left - 34, y: restY - 20 }, { x: left - 22, y: restY - 11 }, accent, 2);
+      this.line({ x: left - 22, y: restY - 11 }, { x: left - 34, y: restY - 2 }, accent, 2);
     }
     c.restore();
   }

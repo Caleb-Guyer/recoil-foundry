@@ -120,7 +120,14 @@ import type { Encounter } from './practice.ts';
 import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
 import type { ShotTrace } from './shot-trails.ts';
-import { ESCAPE_WIDTH, ESCAPE_LAYOUT, ESCAPE_PLATFORMS, EXTRACTION } from './escape-layout.ts';
+import {
+  ESCAPE_WIDTH,
+  ESCAPE_LAYOUT,
+  ESCAPE_PLATFORMS,
+  EXTRACTION,
+  OVERTIME_LIFT,
+  OVERTIME_STEPS,
+} from './escape-layout.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
 export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
@@ -222,6 +229,7 @@ export const WORLD = { width: 2000, height: 840, floor: 740 };
 export const EXTRACTION_DURATION = 2.6;
 export interface EscapeState {
   phase: 'route' | 'extracting';
+  destination?: 'overtime';
   time: number;
   depart: number;
 }
@@ -262,6 +270,7 @@ export class Game {
   earnedSalvage: string | null = null;
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
+  overtimeLift: Matter.Body | null = null;
   get worldWidth() {
     return this.escape ? ESCAPE_WIDTH : WORLD.width;
   }
@@ -277,6 +286,7 @@ export class Game {
       ...this.breaches.bodies,
       ...this.salvageEvolutions.bodies,
       ...(this.extractionLift ? [this.extractionLift] : []),
+      ...(this.overtimeLift ? [this.overtimeLift] : []),
     ];
   }
   get solidBodies() {
@@ -338,14 +348,14 @@ export class Game {
       !this.workshop.active &&
       !this.practice &&
       !this.overtime &&
-      !this.escape &&
+      !!this.escape &&
       !this.detour &&
       this.stage === STAGES - 1 &&
       !dailyFromSeed(this.seed)
     );
   }
   get canBranch() {
-    return this.canDetour || this.canOvertime || this.routeChoices.length === 2;
+    return this.canDetour || this.routeChoices.length === 2;
   }
   get branchDoor() {
     return {
@@ -462,6 +472,10 @@ export class Game {
   }
   startTest(save: Checkpoint) {
     this.start(save.seed, save, null, save);
+    if (save.seed === 'EXITS-73' && this.escape) {
+      Body.setPosition(this.player, { x: 6600, y: 722 });
+      Body.setVelocity(this.player, { x: 0, y: 0 });
+    }
     const match = /^SAW-BOSS-53-([123])-/.exec(save.seed);
     const boss = this.enemies.find((e) => e.kind === 'interceptor');
     if (match && boss) {
@@ -585,6 +599,7 @@ export class Game {
     Engine.clear(this.engine);
     this.escape = escapeRoom ? { phase: 'route', time: 0, depart: 0 } : null;
     this.extractionLift = null;
+    this.overtimeLift = null;
     this.breaches.clear();
     this.terrain = [];
     this.enemies = [];
@@ -644,6 +659,7 @@ export class Game {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
+    if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
     wall(this.worldWidth + 30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -682,6 +698,15 @@ export class Game {
         label: 'extraction',
       });
       Composite.add(this.engine.world, this.extractionLift);
+      if (this.canOvertime) {
+        const { x, y, w, h } = OVERTIME_LIFT;
+        this.overtimeLift = Bodies.rectangle(x, y + h / 2, w, h, {
+          isStatic: true,
+          friction: 0,
+          label: 'new-game-plus',
+        });
+        Composite.add(this.engine.world, this.overtimeLift);
+      }
     } else if (this.level.freight) {
       this.freight.reset();
     } else {
@@ -709,6 +734,9 @@ export class Game {
   startOvertime() {
     if (
       !this.canOvertime ||
+      this.escape?.phase !== 'extracting' ||
+      this.escape.destination !== 'overtime' ||
+      this.escape.depart < EXTRACTION_DURATION ||
       !this.clear ||
       this.enemies.length ||
       this.waves.pending ||
@@ -770,12 +798,15 @@ export class Game {
   boardExtraction() {
     if (this.escape?.phase !== 'route' || !this.extractionLift) return;
     const p = this.player;
-    if (
-      !this.hazards.supported(p, this.extractionLift) ||
-      p.bounds.min.x < EXTRACTION.x - EXTRACTION.w / 2 + 8 ||
-      p.bounds.max.x > EXTRACTION.x + EXTRACTION.w / 2 - 8
-    )
-      return;
+    const supported = (body: Matter.Body, lift: typeof EXTRACTION) =>
+      this.hazards.supported(p, body) &&
+      p.bounds.min.x >= lift.x - lift.w / 2 + 8 &&
+      p.bounds.max.x <= lift.x + lift.w / 2 - 8;
+    const overtime =
+      this.canOvertime && this.overtimeLift && supported(this.overtimeLift, OVERTIME_LIFT);
+    if (!overtime && !supported(this.extractionLift, EXTRACTION)) return;
+    const lift = overtime ? OVERTIME_LIFT : EXTRACTION;
+    if (overtime) this.escape.destination = 'overtime';
     this.escape.phase = 'extracting';
     this.arcs.reset();
     this.grind.reset();
@@ -797,25 +828,33 @@ export class Game {
     this.fireBuffer = this.jumpBuffer = 0;
     this.blast.life = this.muzzle = this.hitStop = 0;
     Body.setVelocity(p, { x: 0, y: 0 });
-    Body.setPosition(p, { x: EXTRACTION.x, y: EXTRACTION.y - 18 });
+    Body.setPosition(p, { x: lift.x, y: lift.y - 18 });
     this.grounded = true;
     this.onSound('extract');
     this.onChange();
   }
   updateExtraction(dt: number) {
     if (!this.escape || !this.extractionLift) return;
+    const overtime = this.escape.destination === 'overtime';
+    const lift = overtime ? OVERTIME_LIFT : EXTRACTION;
+    const body = overtime ? this.overtimeLift : this.extractionLift;
+    if (!body) return;
     this.time += dt;
     this.escape.time += dt;
     this.escape.depart = Math.min(EXTRACTION_DURATION, this.escape.depart + dt);
     const t = this.escape.depart / EXTRACTION_DURATION;
-    const top = EXTRACTION.y - t * t * (3 - 2 * t) * 580;
-    Body.setPosition(this.extractionLift, { x: EXTRACTION.x, y: top + EXTRACTION.h / 2 });
-    Body.setPosition(this.player, { x: EXTRACTION.x, y: top - 18 });
+    const top = lift.y - t * t * (3 - 2 * t) * (lift.y - 120);
+    Body.setPosition(body, { x: lift.x, y: top + lift.h / 2 });
+    Body.setPosition(this.player, { x: lift.x, y: top - 18 });
     Body.setVelocity(this.player, { x: 0, y: 0 });
     this.shake *= 0.8;
     this.kick.x *= 0.72;
     this.kick.y *= 0.72;
     if (t >= 1) {
+      if (overtime) {
+        this.startOvertime();
+        return;
+      }
       this.setMode('won');
       if (!this.testRun) this.onCheckpoint(null);
       this.onSound('win');
@@ -1144,8 +1183,7 @@ export class Game {
       this.player.position.x < this.branchDoor.x + 40 &&
       Math.abs(this.player.position.y - (this.branchDoor.floor - 18)) < 8
     ) {
-      if (this.canOvertime) this.startOvertime();
-      else if (this.canChooseRoute) this.openReward(false, 'high');
+      if (this.canChooseRoute) this.openReward(false, 'high');
       else this.openReward(true);
       return;
     }

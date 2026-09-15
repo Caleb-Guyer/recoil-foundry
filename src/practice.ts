@@ -172,6 +172,19 @@ export function overtimeTestFromUrl(url: URL): Checkpoint | null {
   return save;
 }
 
+export function exitTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (
+    p.getAll('test').length !== 1 ||
+    p.get('test') !== 'exits' ||
+    ['daily', 'dv', 'seed', 'area', 'mode', 'room', 'build', 'mirror', 'workshop'].some((k) =>
+      p.has(k),
+    )
+  )
+    return null;
+  return { ...testCheckpoint('EXITS-73', 19), escape: true };
+}
+
 export function cargoTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

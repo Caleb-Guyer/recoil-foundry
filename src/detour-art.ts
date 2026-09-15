@@ -33,10 +33,10 @@ export function drawDetourDoor(c: CanvasRenderingContext2D, g: Game) {
   c.fillRect(x - 1, floor - 68, 2, 2);
   c.font = '9px monospace';
   c.textAlign = 'center';
-  c.fillText(g.canOvertime ? 'OVERTIME' : 'CHALLENGE', x, floor - 124);
+  c.fillText('CHALLENGE', x, floor - 124);
   if (g.clear) {
     c.font = '12px monospace';
-    c.fillText(g.canOvertime ? 'II' : '+1', x - 7, floor - 25);
+    c.fillText('+1', x - 7, floor - 25);
     c.beginPath();
     c.moveTo(x + 13, floor - 36);
     c.lineTo(x + 20, floor - 29);
