@@ -6,6 +6,12 @@ import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
 export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolean): void {
+  if (g.mods.includes('scrap-feed')) {
+    c.save();
+    c.fillStyle = g.scrap.loaded ? '#dec297' : '#63756a';
+    for (let i = 0; i < 3; i++) c.fillRect(9 + i * 4, -12, 2, 4);
+    c.restore();
+  }
   if (g.torch.equipped) {
     drawTorchWeapon(c, g, reduced);
     return;

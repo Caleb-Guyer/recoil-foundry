@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import type { Game } from './game.ts';
+import type { Game, Shot } from './game.ts';
 import type { Level, Solid } from './levels.ts';
 import { breachPlacement } from './breach-layout.ts';
 import type { BreachPlacement } from './breach-layout.ts';
@@ -76,17 +76,18 @@ export class BreachSystem {
     Composite.add(this.game.engine.world, body);
     return panel;
   }
-  hitBody(body: Matter.Body | undefined, damage: number, velocity: Vec) {
+  hitBody(body: Matter.Body | undefined, damage: number, velocity: Vec, source?: Shot) {
     const panel = this.panels.find((p) => p.body === body);
-    if (panel) this.hit(panel, damage, velocity);
+    if (panel) this.hit(panel, damage, velocity, source);
   }
-  hit(panel: BreachPanel, damage: number, velocity: Vec) {
+  hit(panel: BreachPanel, damage: number, velocity: Vec, source?: Shot) {
     const g = this.game;
     if (g.mode !== 'playing' || !this.panels.includes(panel) || !(damage > 0)) return;
     panel.hp -= damage;
     panel.flash = 0.08;
     g.onSound('prop');
     if (panel.hp > 0) return;
+    g.scrap.collect(source);
     Composite.remove(g.engine.world, panel.body);
     this.panels = this.panels.filter((p) => p !== panel);
     const { x, y, w, h } = panel.rect,

@@ -6,6 +6,22 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Grapnel, Convoy and workshop follow-ups · 2.75.0
+
+Five additions bring the catalog to **100 upgrades**:
+
+- **Grapnel:** a Tether rounds alternative to Snapback. An airborne wall hit anchors a short-lived swing cable; recoil builds momentum and jumping detaches. One anchor per airtime. Moving hosts remain free to move.
+- **Convoy:** a Crosshatch alternative to Thread the Needle. Fifteen stored rounds follow your movement trail, then converge from their current positions when released. Cover blocks the formation and teleportation clears it.
+- **Thermal Shock:** Coolant Rounds + Cinder fusion. Flames consume cold for a bounded steam blast, pushing ordinary enemies and loose debris. Boss armor applies and bosses cannot be stunned. Steam cannot trigger more steam or Flashpoint.
+- **Corner Pocket:** follows Banker. The first wall bank redirects toward a nearby enemy through clear space. Direct hits before the bank are 20% weaker. Beams, steel balls and rails share the same rules; returning rounds keep their spent allowance.
+- **Scrap Feed:** follows Splinter. Direct shots that destroy crates or cover load one seven-fragment blast for the next discharge. Rubble, explosions and secondary fragments cannot reload it. A small gun indicator shows the charge.
+
+Daily uses **ruleset 64**, with one predetermined legal reward. Continue and older New Game+ builds remain compatible. No extra controls or combat HUD panels.
+
+[Try Grapnel](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=grapnel&v=2.75.0) · [Convoy](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=convoy&v=2.75.0) · [Thermal Shock](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=thermal&v=2.75.0) · [Corner Pocket](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pocket&v=2.75.0) · [Scrap Feed](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=scrap&v=2.75.0).
+
+Click the named test button; **R** repeats the preset. Test runs preserve your normal saves and discoveries. [Build instructions](docs/new-upgrade-builds.md) include controls, mirrored rooms and boss tests. [All 1,024 maxed combinations](docs/max-upgrade-combos.md) and [their CSV](docs/max-upgrade-combos.csv) list complete legal acquisition orders.
+
 ## Cryogenic, Stasis and movement branches · 2.74.0
 
 Thirteen new upgrades bring the catalog to **95**, across **five paths**:

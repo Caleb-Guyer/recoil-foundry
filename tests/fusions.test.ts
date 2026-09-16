@@ -178,9 +178,17 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
     const next = availableMods(mods).find(
       (m) =>
         !isFusion(m.id) &&
-        !['vector', 'afterburner', 'mass-driver', 'retrace', 'wallrunner', 'air-brake'].includes(
-          m.id,
-        ),
+        ![
+          'vector',
+          'afterburner',
+          'mass-driver',
+          'retrace',
+          'wallrunner',
+          'air-brake',
+          'grapnel',
+          'corner-pocket',
+          'scrap-feed',
+        ].includes(m.id),
     );
     if (!next) break;
     mods.push(next.id);

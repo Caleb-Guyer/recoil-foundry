@@ -5,6 +5,7 @@ import { firstSolid } from './collisions.ts';
 import { portalVector } from './portals.ts';
 import { clamp, direction, distance, segmentBox, type Vec } from './rules.ts';
 import { isBoss } from './enemies.ts';
+import { POCKET, pocketDirection } from './corner-pocket.ts';
 import type { PressureVent } from './pressure.ts';
 
 export const TORCH = {
@@ -37,6 +38,7 @@ export interface TorchSegment {
   muzzle?: boolean;
 }
 export interface TorchOrigin {
+  pocketSpent?: boolean;
   from: Vec;
   dir: Vec;
   remaining: number;
@@ -72,7 +74,8 @@ export function traceTorch(
     remaining = TORCH.range,
     banks = g.gun.bounces,
     pierce = g.gun.pierce + (g.torch?.extraPierce ?? 0),
-    gain = 1;
+    gain = 1,
+    pocketSpent = start?.pocketSpent ?? !!start;
   if (start) {
     from = { ...start.from };
     d = { ...start.dir };
@@ -119,6 +122,7 @@ export function traceTorch(
       d = portalVector(d, portal!.entry, portal!.exit);
       remaining -= 1;
       segment.portalExit = {
+        pocketSpent,
         from: { ...from },
         dir: { ...d },
         remaining,
@@ -166,6 +170,18 @@ export function traceTorch(
     d = { x: d.x - 2 * dot * hit.normal.x, y: d.y - 2 * dot * hit.normal.y };
     gain *= 1 + g.gun.bankGrowth;
     from = add(point, hit.normal, 0.5);
+    if (g.mods.includes('corner-pocket') && !pocketSpent) {
+      pocketSpent = true;
+      gain /= POCKET.direct;
+      d =
+        pocketDirection(
+          g,
+          from,
+          hit.normal,
+          radius,
+          new Set(g.enemies.filter((e) => visited.has(e.body)).map((e) => e.id)),
+        ) ?? d;
+    }
     remaining -= 0.5;
   }
   return result;
@@ -328,6 +344,7 @@ export class TorchSystem {
       this.boost =
         ((landing ? 2 : 1) * (capacitor ? 2 : 1) * evolution) / (1 + g.evolutions.redline);
       this.recoilBoost = (landing ? 1.25 : 1) * g.mobility.shot(d);
+      g.scrap.fire(d);
       g.chargedFlash = landing || capacitor || evolution / (1 + g.evolutions.redline) > 1;
       this.pulse = {
         id: ++g.id,
@@ -539,11 +556,12 @@ export class TorchSystem {
       } else if (first) {
         if (segment.cable) g.cargo.cut(segment.cable, s.damage);
         else if (segment.anchor) g.harpoons.hitAnchor(segment.anchor, s.damage);
-        else if (segment.prop) g.props.hit(segment.prop, s.damage, s.vel);
+        else if (segment.prop) g.props.hit(segment.prop, s.damage, s.vel, s);
         else if (segment.body) {
           g.counterweights.hit(segment.body, segment.b, s.vel, s.damage);
-          g.breaches.hitBody(segment.body, s.damage, s.vel);
-          g.destruction.hitBody(segment.body, s.damage, s.vel);
+          g.grapnel.impact(s, segment.body, segment.normal);
+          g.breaches.hitBody(segment.body, s.damage, s.vel, s);
+          g.destruction.hitBody(segment.body, s.damage, s.vel, s);
         }
       }
       if (first && !this.split) {

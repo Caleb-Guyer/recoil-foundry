@@ -1,6 +1,6 @@
 import Matter from 'matter-js';
 import { dropWallcrawler } from './wallcrawler.ts';
-import type { Game } from './game.ts';
+import type { Game, Shot } from './game.ts';
 import type { Solid } from './levels.ts';
 import type { Vec } from './rules.ts';
 import { clamp, direction, distance, seeded, segmentBox } from './rules.ts';
@@ -91,13 +91,13 @@ export class DestructionSystem {
     this.pieces.push(piece);
     return piece;
   }
-  hitBody(body: Matter.Body | undefined, damage: number, velocity: Vec) {
+  hitBody(body: Matter.Body | undefined, damage: number, velocity: Vec, source?: Shot) {
     const piece = this.pieces.find((p) => p.body === body);
     if (!piece || this.game.mode !== 'playing' || !Number.isFinite(damage) || damage <= 0) return;
     piece.hp -= damage;
     piece.flash = 0.07;
     this.game.onSound('prop');
-    if (piece.hp <= 0) this.break(piece, velocity);
+    if (piece.hp <= 0) this.break(piece, velocity, source);
   }
   hitAlong(start: Vec, end: Vec, impact: Vec, damage: number, velocity: Vec, padding = 0) {
     for (const p of this.pieces) {
@@ -124,9 +124,10 @@ export class DestructionSystem {
       );
     });
   }
-  break(piece: Breakable, velocity: Vec) {
+  break(piece: Breakable, velocity: Vec, source?: Shot) {
     const g = this.game;
     if (g.mode !== 'playing' || !this.pieces.includes(piece)) return;
+    g.scrap.collect(source);
     const rect = piece.rect;
     Composite.remove(g.engine.world, piece.body);
     g.sappers.disrupt(piece.body);

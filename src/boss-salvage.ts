@@ -169,7 +169,11 @@ export class BossSalvageSystem {
     for (const e of [...g.enemies]) {
       if (e.spawn > 0 || e.hp <= 0) continue;
       const patch = this.cinders.find((f) => this.touches(f, e.body));
-      if (patch) g.hitEnemy(e, 4.8, patch.pos);
+      if (patch) {
+        g.cryogenic.steam(e, patch.pos);
+        if (g.mode !== 'playing') return;
+        if (e.hp > 0) g.hitEnemy(e, 4.8, patch.pos);
+      }
       if (g.mode !== 'playing') return;
     }
     for (const p of [...g.props.items]) {

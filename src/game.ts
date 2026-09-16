@@ -34,6 +34,9 @@ import Matter from 'matter-js';
 import { CryogenicSystem } from './cryogenic.ts';
 import { StasisSystem, suspended, type StasisFlight } from './stasis.ts';
 import { MobilitySystem } from './mobility.ts';
+import { GrapnelSystem } from './grapnel.ts';
+import { ScrapFeedSystem } from './scrap-feed.ts';
+import { pocketBank } from './corner-pocket.ts';
 import { recordRoute, routeTarget } from './retrace.ts';
 import { prepareVector, steerVector, redirectVector, type VectorFlight } from './vector-rounds.ts';
 import { CounterweightSystem } from './counterweights.ts';
@@ -207,6 +210,8 @@ export interface Shot {
   source?: Vec;
   recall?: RecallFlight;
   stasis?: StasisFlight;
+  pocketSpent?: boolean;
+  feedGeneration?: number;
   counter?: number;
   reflected?: boolean;
   reflectedAt?: number;
@@ -264,6 +269,8 @@ export class Game {
   cryogenic = new CryogenicSystem(this);
   stasis = new StasisSystem(this);
   mobility = new MobilitySystem(this);
+  grapnel = new GrapnelSystem(this);
+  scrap = new ScrapFeedSystem(this);
   fusions = new FusionSystem(this);
   harpoons = new HarpoonSystem(this);
   destruction = new DestructionSystem(this);
@@ -460,6 +467,8 @@ export class Game {
       this.cryogenic.reset();
       this.stasis.reset();
       this.mobility.reset();
+      this.grapnel.reset();
+      this.scrap.reset();
       this.fusions.reset();
       this.harpoons.clear();
     }
@@ -599,6 +608,8 @@ export class Game {
     this.cryogenic.reset();
     this.stasis.reset();
     this.mobility.reset();
+    this.grapnel.reset();
+    this.scrap.reset();
     this.fusions.reset();
     this.harpoons.clear();
     this.magnets.items = [];
@@ -836,6 +847,8 @@ export class Game {
     this.cryogenic.reset();
     this.stasis.reset();
     this.mobility.reset();
+    this.grapnel.reset();
+    this.scrap.reset();
     this.fusions.reset();
     this.harpoons.clear();
     this.demolition.clear();
@@ -1049,6 +1062,7 @@ export class Game {
       vx += (max * move - vx) * 0.18;
     if (this.grounded && !move) vx *= onCoolant(this) ? 0.965 : 0.72;
     Body.setVelocity(this.player, { x: clamp(vx, -23, 23), y: clamp(vy, -21, 20) });
+    this.grapnel.input();
     if (this.jumpBuffer > 0 && this.coyote > 0) {
       Body.setVelocity(this.player, {
         x: this.player.velocity.x,
@@ -1115,6 +1129,7 @@ export class Game {
     this.fusions.beforeStep(dt);
     this.harpoons.beforeStep(dt);
     this.tethers.beforeStep(dt);
+    this.grapnel.beforeStep();
     this.salvage.beforeStep(dt);
     if (this.mode !== 'playing') return;
     this.salvageEvolutions.beforeStep();
@@ -1307,6 +1322,7 @@ export class Game {
       (charged ? 2 : 1) *
       (capacitor ? 2 : 1) *
       evolutionDamage;
+    this.scrap.fire(d);
     if (rail) {
       this.fusions.fireRail(d, damage);
       if (this.gun.rearVolley) this.fusions.fireRail({ x: -d.x, y: -d.y }, damage);
@@ -1515,6 +1531,8 @@ export class Game {
     this.ballistics.prepare(shot);
     prepareVector(shot, this.mods);
     this.massDriver.prepare(shot);
+    if (shot.friendly && !shot.fragment && !shot.echo && !shot.reflected)
+      shot.feedGeneration ??= this.shotCount;
     this.stasis.prepare(shot);
     this.shots.push(shot);
     return shot;
@@ -2408,6 +2426,7 @@ export class Game {
             continue;
           }
           if (impactBody) s.massDriver?.surfaces.add(impactBody.id);
+          this.grapnel.impact(s, nearest.body, nearest.normal);
           this.tripwires.impact(s, nearest.body, nearest.normal);
           this.counterweights.hit(nearest.body, s.pos, s.vel, impactDamage);
           this.salvage.impact(s, nearest.prop?.body ?? nearest.body, nearest.normal);
@@ -2418,6 +2437,7 @@ export class Game {
               nearest.prop,
               !s.friendly && s.enemyAmmo?.kind === 'precision' ? 90 : s.damage,
               s.vel,
+              s,
             );
           if (
             !s.friendly &&
@@ -2432,11 +2452,12 @@ export class Game {
             s.pos.y += d.y;
             continue;
           }
-          this.breaches.hitBody(nearest.body, impactDamage, s.vel);
+          this.breaches.hitBody(nearest.body, impactDamage, s.vel, s);
           this.destruction.hitBody(
             nearest.body,
             !s.friendly && s.enemyAmmo?.kind === 'precision' ? 90 : impactDamage,
             s.vel,
+            s,
           );
           this.burst(s.pos, 3, s.friendly ? '#bcbdb2' : '#ef7264', 1.5);
           this.splitShot(s, nearest.normal);
@@ -2470,6 +2491,7 @@ export class Game {
             }
             s.pos.x += nearest.normal.x;
             s.pos.y += nearest.normal.y;
+            pocketBank(this, s, nearest.body, nearest.normal);
             recordRoute(s);
           } else if (this.ballistics.turn(s, nearest.normal)) {
             s.pos.x += nearest.normal.x;
@@ -2538,7 +2560,7 @@ export class Game {
       });
     }
   }
-  hitEnemy(e: Enemy, damage: number, from?: Vec, feedback = true): boolean {
+  hitEnemy(e: Enemy, damage: number, from?: Vec, feedback = true, killEffects = true): boolean {
     if (e.hp <= 0) return false;
     const incomingDamage = damage;
     const blocked =
@@ -2603,7 +2625,7 @@ export class Game {
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
     if (e.kind === 'loader') this.loaderArena.stop();
-    this.salvageEvolutions.killed(e);
+    this.salvageEvolutions.killed(e, killEffects);
     if (
       isBoss(e.kind) &&
       !this.practice &&

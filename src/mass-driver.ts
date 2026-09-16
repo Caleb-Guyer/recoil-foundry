@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { pocketBank } from './corner-pocket.ts';
 import { dormant } from './stasis.ts';
 import type { Enemy, Game, Shot } from './game.ts';
 import type { Prop } from './props.ts';
@@ -208,7 +209,12 @@ export class MassDriverSystem {
     const before = { ...prop.body.velocity };
     // Loose machinery takes less structural damage so a deliberate bank can
     // launch it into another target. Anchored cover retains its normal durability.
-    g.props.hit(prop, this.impactDamage(s) * (prop.body.isStatic || prop.charge ? 1 : 0.3), s.vel);
+    g.props.hit(
+      prop,
+      this.impactDamage(s) * (prop.body.isStatic || prop.charge ? 1 : 0.3),
+      s.vel,
+      s,
+    );
     if (prop.charge || prop.body.isStatic || !g.props.items.includes(prop)) return;
     Body.setVelocity(prop.body, before);
     const impulse = this.push(s, prop.body, normal, true) ?? 0;
@@ -288,6 +294,7 @@ export class MassDriverSystem {
       const sign = Math.sign(vx) || 1;
       s.vel = { x: -normal.y * speed * sign, y: normal.x * speed * sign };
     }
+    if (bank) pocketBank(this.game, s, body, normal);
     return true;
   }
   private clang(s: Shot) {

@@ -7,6 +7,7 @@ import {
   compatibleBranch,
   branchGroup,
 } from './upgrade-branches.ts';
+import { WORKSHOP_MODS, WORKSHOP_PARENTS } from './workshop-upgrades.ts';
 import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
 export type Vec = { x: number; y: number };
 export const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -469,6 +470,7 @@ export const MODS = [
   },
   ...BRANCH_MODS,
   ...NEW_PATH_MODS,
+  ...WORKSHOP_MODS,
   {
     id: 'resonator',
     name: 'Resonator',
@@ -500,6 +502,12 @@ export const REPAIR_REWARD = {
 export type Mod = (typeof MODS)[number] | typeof REPAIR_REWARD;
 // Conversion-specific copy describes what the owned gun will actually do.
 export function modDescription(mod: Mod, mods: readonly string[]): string {
+  if (mod.id === 'tether' && mods.includes('grapnel'))
+    return 'Airborne wall hits anchor your swing cable. Recoil builds momentum; jump to detach. One anchor per airtime.';
+  if (mod.id === 'suspension' && mods.includes('convoy'))
+    return 'Hold to store up to 15 rounds in a trailing convoy. Release to fire; old rounds auto-launch after 2.5 seconds.';
+  if (mod.id === 'corner-pocket' && mods.includes('cutting-torch'))
+    return 'The first wall bank redirects the beam toward a nearby exposed enemy. Beam hits before that bank deal 20% less damage.';
   if (mod.id === 'suspension' && mods.includes('tripline'))
     return 'Fire to park up to 30 proximity traps toward your aim. Recoil is immediate; traps expire after four seconds.';
   if (mod.id === 'backfire' && mods.includes('crosshatch'))
@@ -576,6 +584,8 @@ export const PATH_NAMES: Record<BuildPath, string> = {
 export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   ...BRANCH_PATHS,
   ...NEW_PATH_IDS,
+  convoy: { path: 'stasis' },
+  'thermal-shock': { path: 'cryogenic' },
   tripwire: { path: 'demolition' },
   tension: { path: 'demolition' },
   'cutting-torch': { path: 'precision' },
@@ -610,6 +620,7 @@ export const FUSION_REQUIRES: Record<string, readonly string[]> = {
   resonator: ['pulse-chamber', 'relay-gate'],
   flywheel: ['skid-plate', 'crosscut'],
   'storm-cell': ['cluster-shell', 'arc-coil'],
+  'thermal-shock': ['coolant-rounds', 'cinder'],
 };
 export const isFusion = (id: string) => Object.hasOwn(FUSION_REQUIRES, id);
 export interface RewardContext {
@@ -665,6 +676,7 @@ export const MOD_REQUIRES: Record<string, string> = {
   afterimage: 'crossfire',
   parallax: 'afterimage',
   ...NEW_PATH_PARENTS,
+  ...WORKSHOP_PARENTS,
 };
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
@@ -931,6 +943,7 @@ export function getGun(mods: readonly string[]): Gun {
         g.damage *= 0.75;
         g.pierce += 1;
         break;
+      case 'corner-pocket':
       case 'coolant-rounds':
         g.damage *= 0.8;
         break;
@@ -1132,6 +1145,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               isFusion(m.id) ||
               isBranch(m.id) ||
               NEW_PATH_MODS.some((mod) => mod.id === m.id) ||
+              WORKSHOP_MODS.some((mod) => mod.id === m.id) ||
               m.id === 'arc-coil' ||
               m.id === 'daisy-chain' ||
               m.id === 'grindshot' ||

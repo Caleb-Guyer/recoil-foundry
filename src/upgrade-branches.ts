@@ -87,6 +87,8 @@ export const BRANCH_GROUPS: Readonly<Record<string, readonly string[]>> = {
   Saw: ['corner-cutter', 'crosscut'],
   Cold: ['deep-freeze', 'cold-snap'],
   Stasis: ['crosshatch', 'tripline'],
+  Cable: ['snapback', 'grapnel'],
+  Volley: ['thread-the-needle', 'convoy'],
 };
 export const BRANCH_PARENTS: Readonly<Record<string, readonly string[]>> = {
   'pulse-chamber': ['cutting-torch', 'burst'],

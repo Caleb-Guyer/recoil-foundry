@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import type { Game, Enemy, Shot } from './game.ts';
-import { clamp, direction, distance } from './rules.ts';
+import { clamp, direction, distance, type Vec } from './rules.ts';
+import { firstSolid } from './collisions.ts';
 import { isBoss } from './enemies.ts';
 import { breakSquad } from './squads.ts';
 import { releaseScrapper } from './scrapper.ts';
@@ -143,6 +144,87 @@ export class CryogenicSystem {
       releaseScrapper(g, e);
       g.burst(e.body.position, 5, '#a3e6ec', 1.5);
     }
+  }
+  steam(e: Enemy, from: Vec) {
+    const g = this.game,
+      state = this.states.get(e.id);
+    if (
+      !g.mods.includes('thermal-shock') ||
+      !state ||
+      e.hp <= 0 ||
+      e.spawn > 0 ||
+      g.mode !== 'playing'
+    )
+      return;
+    if (e.elite === 'shielded' && direction(e.body.position, from).x * e.facing > 0.45) return;
+    const cold = state.ready || state.frozen > g.time ? COLD.threshold : state.cold;
+    if (cold < 1) return;
+    // Consume before dealing any damage. Steam does not add/spread cold, burn,
+    // break cover or call itself, and cannot become a boss stun loop.
+    state.cold = state.frozen = 0;
+    state.ready = false;
+    state.immune = Math.max(state.immune, g.time + COLD.recharge);
+    const origin = { ...e.body.position },
+      power = Math.min(1, cold / COLD.threshold),
+      radius = 65 + 45 * power;
+    const visible = (p: Vec, body?: Matter.Body) =>
+      !firstSolid(
+        origin,
+        p,
+        { x: 0, y: 0 },
+        g.solidBodies.filter((b) => b !== body),
+      );
+    const enemies = g.enemies.filter(
+      (other) =>
+        other.hp > 0 &&
+        other.spawn <= 0 &&
+        distance(origin, other.body.position) <= radius &&
+        visible(other.body.position),
+    );
+    const props = g.props.items.filter(
+      (p) =>
+        !p.body.isStatic &&
+        (!p.cargo || p.cargo.state === 'loose') &&
+        distance(origin, p.body.position) <= radius &&
+        visible(p.body.position, p.body),
+    );
+    for (const other of enemies) {
+      const blocked = g.hitEnemy(
+        other,
+        48 * power * (other === e ? 1 : 0.65),
+        other === e ? from : origin,
+        false,
+        false,
+      );
+      if (!blocked && !isBoss(other.kind) && !other.body.isStatic && other.hp > 0) {
+        const d = direction(other === e ? from : origin, other.body.position);
+        Matter.Body.setVelocity(other.body, {
+          x: clamp(other.body.velocity.x + d.x * 5 * power, -18, 18),
+          y: clamp(other.body.velocity.y + d.y * 5 * power - power, -18, 18),
+        });
+      }
+      if (g.mode !== 'playing') return;
+    }
+    for (const p of props) {
+      const d = direction(origin, p.body.position),
+        v = p.body.velocity;
+      Matter.Body.setVelocity(p.body, {
+        x: clamp(v.x + d.x * 5 * power, -18, 18),
+        y: clamp(v.y + d.y * 5 * power - power, -18, 18),
+      });
+    }
+    g.burst(origin, 9, '#d4e8dd', 3);
+    if (g.particles.length < 220)
+      g.particles.push({
+        pos: origin,
+        vel: { x: 0, y: 0 },
+        life: 0.22,
+        max: 0.22,
+        size: radius,
+        color: '#c5e2dc',
+        kind: 'ring',
+      });
+    g.onSound('bank');
   }
   private burst(e: Enemy) {
     const g = this.game;

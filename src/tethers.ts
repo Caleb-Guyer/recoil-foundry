@@ -86,6 +86,7 @@ export class TetherSystem {
     if (
       g.mode !== 'playing' ||
       !g.mods.includes('tether') ||
+      g.mods.includes('grapnel') ||
       !(s.damage > 0) ||
       !s.friendly ||
       s.fragment ||

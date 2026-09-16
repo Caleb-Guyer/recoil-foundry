@@ -10,6 +10,7 @@ export interface StasisFlight {
   launchAt?: number;
   batch?: number;
   order?: number;
+  convoyAt?: number;
 }
 interface Release {
   ids: number[];
@@ -25,6 +26,7 @@ export class StasisSystem {
   held = false;
   private serial = 0;
   releases = new Map<number, Release>();
+  trail: { pos: Vec; at: number }[] = [];
   constructor(game: Game) {
     this.game = game;
   }
@@ -33,6 +35,10 @@ export class StasisSystem {
     this.releases.clear();
     this.held = false;
     this.serial = 0;
+    this.trail = [];
+  }
+  get limit() {
+    return this.game.mods.includes('convoy') ? 15 : STASIS.limit;
   }
   get stock() {
     return this.game.shots.filter((s) => suspended(s) && s.life > 0);
@@ -49,7 +55,7 @@ export class StasisSystem {
     )
       return;
     const stock = this.stock;
-    if (stock.length >= STASIS.limit) {
+    if (stock.length >= this.limit) {
       if (g.mods.includes('tripline')) stock[0].life = 0;
       else this.release([stock[0]]);
     }
@@ -66,15 +72,21 @@ export class StasisSystem {
     const speed = Math.hypot(s.vel.x, s.vel.y);
     s.vel = { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed };
     s.stasis = { target, velocity, born: g.time, phase: 'setting' };
+    if (g.mods.includes('convoy')) {
+      this.track();
+      s.stasis.convoyAt = this.trail.at(-1)?.at ?? 0;
+    }
   }
   input(fire: boolean) {
     const g = this.game;
     if (!g.mods.includes('suspension')) return;
+    if (g.mods.includes('convoy')) this.track();
     if (!fire && this.held && !g.mods.includes('tripline')) this.release(this.stock);
     this.held = fire;
   }
   update() {
     const g = this.game;
+    if (g.mods.includes('convoy')) this.track();
     for (const s of g.shots)
       if (s.stasis?.phase === 'queued' && g.time >= s.stasis.launchAt!) s.stasis.phase = 'released';
     for (const [id, batch] of this.releases) if (batch.until < g.time) this.releases.delete(id);
@@ -87,6 +99,7 @@ export class StasisSystem {
         continue;
       }
       if (state.phase !== 'parked') continue;
+      if (state.convoyAt !== undefined) this.follow(s);
       // Parked rounds are not rigid bodies. Moving cover can consume them but
       // they can never obstruct a train, lift, enemy or player.
       if (distance(g.lineEnd(s.pos, { x: s.pos.x + 0.01, y: s.pos.y }, s.radius), s.pos) < 0.001) {
@@ -118,6 +131,52 @@ export class StasisSystem {
         : [s];
       this.release(chain, enemy.body.position);
     }
+  }
+  teleported() {
+    for (const s of this.stock) if (s.stasis?.convoyAt !== undefined) s.life = 0;
+    this.trail = [];
+  }
+  private track() {
+    const p = this.game.player.position,
+      last = this.trail.at(-1);
+    if (last && distance(last.pos, p) > 90) {
+      // Teleportation breaks the formation instead of sweeping its gap or
+      // smuggling stored rounds through a wall to the new player position.
+      for (const s of this.stock) if (s.stasis?.convoyAt !== undefined) s.life = 0;
+      this.trail = [];
+    }
+    const tail = this.trail.at(-1);
+    if (!tail || distance(tail.pos, p) >= 3)
+      this.trail.push({ pos: { ...p }, at: (tail?.at ?? 0) + (tail ? distance(tail.pos, p) : 0) });
+    while (
+      this.trail.length > 256 ||
+      (this.trail.length > 2 && this.trail.at(-1)!.at - this.trail[1].at > 900)
+    )
+      this.trail.shift();
+  }
+  private follow(s: Shot) {
+    const state = s.stasis!,
+      index = this.stock.indexOf(s),
+      end = this.trail.at(-1);
+    if (!end || !this.trail.length) return;
+    const limit = Math.max(state.convoyAt!, end.at - 36 - index * 18);
+    const next =
+      this.trail.find((p) => p.at >= state.convoyAt! + 0.01 && p.at <= limit) ??
+      this.trail.find((p) => p.at >= state.convoyAt!);
+    if (!next || next.at > limit + 3) return;
+    const length = distance(s.pos, next.pos),
+      speed = Math.min(18, length),
+      d = direction(s.pos, next.pos);
+    const to = { x: s.pos.x + d.x * speed, y: s.pos.y + d.y * speed };
+    const clear = this.game.lineEnd(s.pos, to, s.radius);
+    if (distance(clear, to) > 0.01) {
+      s.life = 0;
+      return;
+    }
+    s.prev = { ...s.pos };
+    s.pos = to;
+    if (length <= 18) state.convoyAt = next.at + 0.001;
+    // Moving stored rounds are inert. Only their released trajectory can hit.
   }
   private clear(s: Shot, e: Enemy) {
     return distance(this.game.lineEnd(s.pos, e.body.position, s.radius), e.body.position) < 1;

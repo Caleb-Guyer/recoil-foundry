@@ -484,6 +484,9 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
           'retrace',
           'wallrunner',
           'air-brake',
+          'grapnel',
+          'corner-pocket',
+          'scrap-feed',
         ].includes(m.id),
     );
     if (!next) break;
@@ -513,6 +516,8 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
       'retrace',
       'wallrunner',
       'air-brake',
+      'corner-pocket',
+      'scrap-feed',
     ],
   );
 });

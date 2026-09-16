@@ -1,10 +1,10 @@
 # New upgrade builds
 
-Implemented in **2.74.0** · Daily ruleset **63**.
+Implemented in **2.75.0** · Daily ruleset **64**.
 
-Cryogenic and Stasis join Precision, Bullet Hell and Demolition. Each run chooses one main path, with local alternatives within it. Cryogenic forks into Deep Freeze → Icebreaker or Cold Snap → Cold Front. Stasis forks into Crosshatch → Thread the Needle or Tripline → Chain Release. Retrace, Wallrunner and Air Brake are shared follow-ups. These thirteen additions require their parents and can appear from the next reward. The twelve earlier local specializations retain their stage-7 gate, and fusions retain their parent and rarity rules. Daily still gives one predetermined legal card.
+Cryogenic and Stasis join Precision, Bullet Hell and Demolition. Each run chooses one main path, with local alternatives within it. Cryogenic forks into Deep Freeze → Icebreaker or Cold Snap → Cold Front. Stasis forks into Crosshatch → Thread the Needle or Tripline → Chain Release. Retrace, Wallrunner and Air Brake are shared follow-ups. Grapnel branches away from Snapback, and Convoy branches away from Thread the Needle. Corner Pocket follows Banker; Scrap Feed follows Splinter. Thermal Shock fuses Coolant Rounds with Cinder in the one fusion slot. All follow-ups require their parents. The twelve earlier local specializations retain their stage-7 gate, and fusions retain their parent and rarity rules. Daily still gives one predetermined legal card.
 
-For **every upgrade in every new max combo**, use the [464-build catalog](max-upgrade-combos.md) or [CSV](max-upgrade-combos.csv).
+For **every upgrade in every new max combo**, use the [1024-build catalog](max-upgrade-combos.md) or [CSV](max-upgrade-combos.csv).
 
 ## Quick tests
 
@@ -12,30 +12,85 @@ These start in a real room with 100 health and a ten-upgrade gun. Each link open
 
 | Build | Normal room | Mirrored room | Final boss | Fully maxed |
 | --- | --- | --- | --- | --- |
-| Icebreaker | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&max=1&v=2.74.0) |
-| Cold Front | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&max=1&v=2.74.0) |
-| Thread the Needle | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&max=1&v=2.74.0) |
-| Chain Release | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&max=1&v=2.74.0) |
-| Retrace | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&max=1&v=2.74.0) |
-| Wallrunner | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&max=1&v=2.74.0) |
-| Air Brake | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&max=1&v=2.74.0) |
-| Resonator | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&max=1&v=2.74.0) |
-| Flywheel | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&max=1&v=2.74.0) |
-| Storm Cell | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&max=1&v=2.74.0) |
-| Pulse Chamber | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&max=1&v=2.74.0) |
-| Charge Lens | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&max=1&v=2.74.0) |
-| Prism Array | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&max=1&v=2.74.0) |
-| Pinwheel | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&max=1&v=2.74.0) |
-| Follow-through | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&max=1&v=2.74.0) |
-| Shaped Charge | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&max=1&v=2.74.0) |
-| Cluster Shell | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&max=1&v=2.74.0) |
-| Skid Plate | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&max=1&v=2.74.0) |
-| Relay Gate | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&max=1&v=2.74.0) |
-| Short Circuit | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&max=1&v=2.74.0) |
-| Triphammer | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&max=1&v=2.74.0) |
-| Crosscut | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&mirror=1&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&room=boss&v=2.74.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&max=1&v=2.74.0) |
+| Grapnel | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=grapnel&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=grapnel&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=grapnel&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=grapnel&max=1&v=2.75.0) |
+| Convoy | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=convoy&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=convoy&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=convoy&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=convoy&max=1&v=2.75.0) |
+| Thermal Shock | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=thermal&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=thermal&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=thermal&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=thermal&max=1&v=2.75.0) |
+| Corner Pocket | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pocket&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pocket&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pocket&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pocket&max=1&v=2.75.0) |
+| Scrap Feed | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=scrap&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=scrap&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=scrap&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=scrap&max=1&v=2.75.0) |
+| Icebreaker | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&max=1&v=2.75.0) |
+| Cold Front | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&max=1&v=2.75.0) |
+| Thread the Needle | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&max=1&v=2.75.0) |
+| Chain Release | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&max=1&v=2.75.0) |
+| Retrace | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&max=1&v=2.75.0) |
+| Wallrunner | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&max=1&v=2.75.0) |
+| Air Brake | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&max=1&v=2.75.0) |
+| Resonator | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&max=1&v=2.75.0) |
+| Flywheel | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&max=1&v=2.75.0) |
+| Storm Cell | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&max=1&v=2.75.0) |
+| Pulse Chamber | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pulse&max=1&v=2.75.0) |
+| Charge Lens | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&max=1&v=2.75.0) |
+| Prism Array | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=prism&max=1&v=2.75.0) |
+| Pinwheel | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pinwheel&max=1&v=2.75.0) |
+| Follow-through | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=follow&max=1&v=2.75.0) |
+| Shaped Charge | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&max=1&v=2.75.0) |
+| Cluster Shell | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&max=1&v=2.75.0) |
+| Skid Plate | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=skid&max=1&v=2.75.0) |
+| Relay Gate | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=relay&max=1&v=2.75.0) |
+| Short Circuit | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=short&max=1&v=2.75.0) |
+| Triphammer | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=triphammer&max=1&v=2.75.0) |
+| Crosscut | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&mirror=1&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&room=boss&v=2.75.0) | [Play](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosscut&max=1&v=2.75.0) |
 
 ## What to fit
+
+### Grapnel
+
+Requires Tether rounds; replaces enemy links and locks Snapback. Your first eligible airborne surface hit within 560 units anchors a cable for 2.8 seconds. Recoil supplies tangential momentum; jump detaches. Landing rearms it. Cover, destroyed hosts and teleportation break the cable; it never constrains moving machinery.
+
+**Parents:** Tether rounds.
+
+**Complete room build:** Tether rounds → Grapnel → Kickback → Light frame → Airshot → Redline → Bloodwork → Punch through → Heavy hitter → Hair trigger.
+
+**Card:** Your first airborne wall hit anchors a swing cable instead of linking enemies. Jump to detach. One anchor per airtime.
+
+### Convoy
+
+Requires Suspension and Crosshatch; alternative to Thread the Needle. Hold to store 15 rounds that follow your actual movement trail, then release to converge on your aim from their current positions. Cover can consume the formation; player teleportation clears it. Stored movement is inert. Old and excess rounds still auto-launch.
+
+**Parents:** Crosshatch.
+
+**Complete room build:** Suspension → Crosshatch → Convoy → Scattershot → Hair trigger → Light frame → Kickback → Airshot → Bloodwork → Punch through.
+
+**Card:** Stored rounds trail your movement. Release to converge from their positions. Holds 15 rounds.
+
+### Thermal Shock
+
+Requires Coolant Rounds and Cinder rounds; occupies the one fusion slot. Flame ticks consume accumulated cold, including a frozen target or a ready boss bonus, for up to 48 steam damage in a 110-unit radius. Nearby enemies take 65% splash. Cover and armor apply. Steam pushes ordinary enemies and loose props, never stuns bosses, and cannot trigger Flashpoint or spread cold.
+
+**Parents:** Coolant Rounds + Cinder rounds.
+
+**Complete room build:** Coolant Rounds → Cinder rounds → Thermal Shock → Deep Freeze → Punch through → Hair trigger → Light frame → Airshot → Bloodwork → Bank shot.
+
+**Card:** Your flames consume cold for a steam blast. More cold, more damage. Pushes debris and ordinary enemies.
+
+### Corner Pocket
+
+Requires Banker. The first terrain bank aims toward the nearest exposed enemy within 480 units, spending its opportunity even if no target is visible. Pre-bank direct hits are 20% weaker. Later bounces, returning routes and portals retain their spent budget. Steel balls and beam banks use the same targeting; Vector yields briefly after the bank.
+
+**Parents:** Banker.
+
+**Complete room build:** Bank shot → Banker → Corner Pocket → Punch through → Heavy hitter → Hair trigger → Light frame → Airshot → Bloodwork → Kickback.
+
+**Card:** The first wall bounce aims at a nearby exposed enemy. Hits before that bounce deal 20% less damage.
+
+### Scrap Feed
+
+Requires Splinter. Direct primary shots that destroy crates, cover, cracked panels or breakable terrain load one charge. Your next discharge adds seven short-range fragments at eight damage each. Beam pulses use the same cadence. One credit per discharge prevents recycling; rubble, explosions, echoes and shrapnel cannot load it.
+
+**Parents:** Splinter.
+
+**Complete room build:** Splinter → Scrap Feed → Shatter → Heavy hitter → Hair trigger → Light frame → Airshot → Bloodwork → Punch through → Kickback.
+
+**Card:** Break crates or cover with a direct shot to load a short shrapnel blast into your next discharge. Stores one charge.
 
 ### Icebreaker
 
@@ -272,6 +327,8 @@ Spend a shot against a solid surface after its banks/return. Two saws travel opp
 | Saw | Corner Cutter / Crosscut |
 | Cold | Deep Freeze / Cold Snap |
 | Stasis | Crosshatch / Tripline |
+| Cable | Snapback / Grapnel |
+| Volley | Thread the Needle / Convoy |
 
 ## Existing combinations repaired
 

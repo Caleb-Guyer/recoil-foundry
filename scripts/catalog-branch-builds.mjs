@@ -16,7 +16,7 @@ import { maxCombos, BRANCH_TEST_BUILDS, branchTestFromUrl } from '../src/branch-
 import { BRANCH_PARENTS, BRANCH_GROUPS, isBranch } from '../src/upgrade-branches.ts';
 const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url)));
 const names = new Map(MODS.map((m) => [m.id, m.name]));
-const name = (id) => names.get(id);
+const name = (id) => names.get(id) ?? '';
 const base = 'https://caleb-guyer.github.io/recoil-foundry/';
 const link = (query) => base + '?test=branches&' + query + '&v=' + version;
 const combos = maxCombos();
@@ -87,6 +87,16 @@ for (const c of combos) {
   );
 }
 const tips = {
+  grapnel:
+    'Requires Tether rounds; replaces enemy links and locks Snapback. Your first eligible airborne surface hit within 560 units anchors a cable for 2.8 seconds. Recoil supplies tangential momentum; jump detaches. Landing rearms it. Cover, destroyed hosts and teleportation break the cable; it never constrains moving machinery.',
+  convoy:
+    'Requires Suspension and Crosshatch; alternative to Thread the Needle. Hold to store 15 rounds that follow your actual movement trail, then release to converge on your aim from their current positions. Cover can consume the formation; player teleportation clears it. Stored movement is inert. Old and excess rounds still auto-launch.',
+  thermal:
+    'Requires Coolant Rounds and Cinder rounds; occupies the one fusion slot. Flame ticks consume accumulated cold, including a frozen target or a ready boss bonus, for up to 48 steam damage in a 110-unit radius. Nearby enemies take 65% splash. Cover and armor apply. Steam pushes ordinary enemies and loose props, never stuns bosses, and cannot trigger Flashpoint or spread cold.',
+  pocket:
+    'Requires Banker. The first terrain bank aims toward the nearest exposed enemy within 480 units, spending its opportunity even if no target is visible. Pre-bank direct hits are 20% weaker. Later bounces, returning routes and portals retain their spent budget. Steel balls and beam banks use the same targeting; Vector yields briefly after the bank.',
+  scrap:
+    'Requires Splinter. Direct primary shots that destroy crates, cover, cracked panels or breakable terrain load one charge. Your next discharge adds seven short-range fragments at eight damage each. Beam pulses use the same cadence. One credit per discharge prevents recycling; rubble, explosions, echoes and shrapnel cannot load it.',
   icebreaker:
     'Coolant Rounds trades 20% direct damage for cold. At 48 cold, Deep Freeze holds an ordinary enemy for 0.55 seconds; Icebreaker spends it on one hit and three inert fragments. A 1.6-second immunity follows. Bosses never freeze: they bank one capped bonus hit, followed by a 0.7-second recharge.',
   coldfront:
@@ -136,7 +146,7 @@ const guide = [
   '',
   `Implemented in **${version}** · Daily ruleset **${DAILY_RULESET}**.`,
   '',
-  'Cryogenic and Stasis join Precision, Bullet Hell and Demolition. Each run chooses one main path, with local alternatives within it. Cryogenic forks into Deep Freeze → Icebreaker or Cold Snap → Cold Front. Stasis forks into Crosshatch → Thread the Needle or Tripline → Chain Release. Retrace, Wallrunner and Air Brake are shared follow-ups. These thirteen additions require their parents and can appear from the next reward. The twelve earlier local specializations retain their stage-7 gate, and fusions retain their parent and rarity rules. Daily still gives one predetermined legal card.',
+  'Cryogenic and Stasis join Precision, Bullet Hell and Demolition. Each run chooses one main path, with local alternatives within it. Cryogenic forks into Deep Freeze → Icebreaker or Cold Snap → Cold Front. Stasis forks into Crosshatch → Thread the Needle or Tripline → Chain Release. Retrace, Wallrunner and Air Brake are shared follow-ups. Grapnel branches away from Snapback, and Convoy branches away from Thread the Needle. Corner Pocket follows Banker; Scrap Feed follows Splinter. Thermal Shock fuses Coolant Rounds with Cinder in the one fusion slot. All follow-ups require their parents. The twelve earlier local specializations retain their stage-7 gate, and fusions retain their parent and rarity rules. Daily still gives one predetermined legal card.',
   '',
   `For **every upgrade in every new max combo**, use the [${combos.length}-build catalog](max-upgrade-combos.md) or [CSV](max-upgrade-combos.csv).`,
   '',

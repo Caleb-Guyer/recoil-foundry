@@ -40,6 +40,81 @@ export function completeBuild(build: readonly string[]) {
 }
 
 export const BRANCH_TEST_BUILDS: Record<string, { name: string; mods: readonly string[] }> = {
+  grapnel: {
+    name: 'Grapnel',
+    mods: [
+      'tether',
+      'grapnel',
+      'kick',
+      'light',
+      'airshot',
+      'redline',
+      'leech',
+      'pierce',
+      'magnum',
+      'rapid',
+    ],
+  },
+  convoy: {
+    name: 'Convoy',
+    mods: [
+      'suspension',
+      'crosshatch',
+      'convoy',
+      'scatter',
+      'rapid',
+      'light',
+      'kick',
+      'airshot',
+      'leech',
+      'pierce',
+    ],
+  },
+  thermal: {
+    name: 'Thermal Shock',
+    mods: [
+      'coolant-rounds',
+      'cinder',
+      'thermal-shock',
+      'deep-freeze',
+      'pierce',
+      'rapid',
+      'light',
+      'airshot',
+      'leech',
+      'ricochet',
+    ],
+  },
+  pocket: {
+    name: 'Corner Pocket',
+    mods: [
+      'ricochet',
+      'banker',
+      'corner-pocket',
+      'pierce',
+      'magnum',
+      'rapid',
+      'light',
+      'airshot',
+      'leech',
+      'kick',
+    ],
+  },
+  scrap: {
+    name: 'Scrap Feed',
+    mods: [
+      'split',
+      'scrap-feed',
+      'shatter',
+      'magnum',
+      'rapid',
+      'light',
+      'airshot',
+      'leech',
+      'pierce',
+      'kick',
+    ],
+  },
   icebreaker: {
     name: 'Icebreaker',
     mods: [

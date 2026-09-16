@@ -42,7 +42,7 @@ function hit(g: Game, e: Enemy, extra = {}) {
 
 test('all thirteen upgrades have legal reachable prerequisites, mutually exclusive forks and save support', () => {
   assert.equal(NEW_PATH_MODS.length, 13);
-  assert.equal(MODS.length, 95);
+  assert.equal(MODS.length, 100);
   for (const mod of NEW_PATH_MODS) {
     const build = withParents([], [mod.id])!;
     assert(build && validBuild(build), mod.id);

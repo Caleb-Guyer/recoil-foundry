@@ -122,7 +122,7 @@ export class SalvageEvolutionSystem {
   }
   // Runs after the defeated enemy has been removed. A killing ram can still
   // throw its hull, and killing a living thrown enemy preserves its flight.
-  killed(e: Enemy) {
+  killed(e: Enemy, allowBurst = true) {
     const g = this.game;
     const wreck = this.wrecks.find((w) => !w.corpse && w.enemy === e);
     if (wreck) {
@@ -131,7 +131,13 @@ export class SalvageEvolutionSystem {
       wreck.corpse = true;
       Body.setVelocity(wreck.body, velocity);
     }
-    if (!g.mods.includes('flashpoint') || this.flashing || isBoss(e.kind) || !g.salvage.burning(e))
+    if (
+      !allowBurst ||
+      !g.mods.includes('flashpoint') ||
+      this.flashing ||
+      isBoss(e.kind) ||
+      !g.salvage.burning(e)
+    )
       return;
     const pos = { ...e.body.position };
     const blockers = [

@@ -380,6 +380,11 @@ function updateTitle() {
       retrace: 'Returning rounds follow your banks and portals. R to retry.',
       wallrunner: 'Shoot away from a wall to grip it, then jump. R to retry.',
       airbrake: 'Fire in the air, release to brake, then fire to redirect. R to retry.',
+      grapnel: 'Shoot a wall in midair. Recoil swings the cable; jump detaches. R to retry.',
+      convoy: 'Hold fire while moving, then release the trailing volley. R to retry.',
+      thermal: 'Chill enemies beside your burning impacts to burst steam. R to retry.',
+      pocket: 'Bank off walls to redirect shots toward exposed enemies. R to retry.',
+      scrap: 'Shoot crates or cover apart, then fire the loaded shrapnel. R to retry.',
     };
     const hint = hints[entryUrl.searchParams.get('build') ?? ''];
     if (hint) $('title-hint').textContent = hint;
@@ -652,6 +657,11 @@ function modMark(mod: Mod) {
     retrace: 'M8 34l12-23 18 26 10-17M8 39l12-22 17 25M7 31v8h8',
     wallrunner: 'M10 7v35M16 34V18l15-7M25 10l6 1-1 7M23 27h9v9h-9z',
     'air-brake': 'M7 17l15 7-15 7M49 17l-15 7 15 7M26 13v22M30 13v22',
+    grapnel: 'M10 40L39 11M30 9h13v13M10 31v9h9',
+    convoy: 'M7 34l8-6 8 2 8-11 13-3M7 34h1M15 28h1M23 30h1M39 12l8 4-6 7',
+    'thermal-shock': 'M12 38l5-9-5-8 5-10M26 38l5-9-5-8 5-10M40 38l5-9-5-8 5-10',
+    'corner-pocket': 'M8 9h40M12 36l16-23 14 20M35 30l7 3 2-8',
+    'scrap-feed': 'M9 9h15v15H9zM12 12l9 9M33 25l10-8M35 33l12 1M29 40l5 7M10 36h12',
     'pulse-chamber': 'M6 16h10M21 24h10M36 32h15M44 26l7 6-7 6M37 7v11',
     'charge-lens': 'M7 24h12M30 10a14 14 0 1 0 0 28M28 17v14M35 24h16M44 17l7 7-7 7',
     'prism-array': 'M5 24h16l10-12 10 12-10 12-10-12M41 24l11-12M41 24l11 12',

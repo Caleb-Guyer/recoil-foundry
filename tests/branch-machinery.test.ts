@@ -46,6 +46,9 @@ test('rolling balls, charged saws and Storm cells cannot wedge the train at eith
     [...base, 'flywheel'],
     [...base, 'storm-cell'],
     ['suspension', 'tripline', 'chain-release', 'mass-driver', 'skid-plate'],
+    ['suspension', 'crosshatch', 'convoy', 'mass-driver', 'skid-plate'],
+    ['tether', 'grapnel', 'split', 'scrap-feed', 'banker', 'corner-pocket', 'mass-driver'],
+    ['coolant-rounds', 'deep-freeze', 'cinder', 'thermal-shock', 'mass-driver'],
   ])
     for (const mirror of [0, 1]) {
       const g = new Game();

@@ -287,6 +287,10 @@ export class PortalSystem {
       disruptScrapperBody(g, body);
       g.sappers.disrupt(body);
       g.tethers.disrupt(body);
+      if (body === g.player) {
+        g.grapnel.detach();
+        g.stasis.teleported();
+      }
       g.harpoons.disrupt(body);
       g.magnets.release(body);
       Matter.Body.setPosition(body, { x: pos.x + rest.x * travel, y: pos.y + rest.y * travel });

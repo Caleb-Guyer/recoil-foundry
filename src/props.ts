@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import type { Game } from './game.ts';
+import type { Game, Shot } from './game.ts';
 import type { Level } from './levels.ts';
 import { clamp, direction, distance, segmentBox, seeded, sample } from './rules.ts';
 import type { Vec } from './rules.ts';
@@ -258,7 +258,7 @@ export class PropSystem {
     Composite.remove(this.game.engine.world, prop.body);
     this.items = this.items.filter((p) => p !== prop);
   }
-  hit(prop: Prop, damage: number, velocity: Vec) {
+  hit(prop: Prop, damage: number, velocity: Vec, source?: Shot) {
     if (prop.charge) {
       this.game.sappers.knock(prop, damage, velocity);
       return;
@@ -292,16 +292,17 @@ export class PropSystem {
           clamp(prop.body.angularVelocity + d.x * 0.05, -0.18, 0.18),
         );
     }
-    if (prop.hp <= 0) this.break(prop);
+    if (prop.hp <= 0) this.break(prop, source);
   }
   // Direct heavy contact shares the same material response across every enemy.
   strike(prop: Prop, damage: number, velocity: Vec) {
     if (prop.kind === 'canister') this.explode(prop);
     else this.hit(prop, damage, velocity);
   }
-  break(prop: Prop) {
+  break(prop: Prop, source?: Shot) {
     if (!this.items.includes(prop)) return;
     this.remove(prop);
+    if (prop.kind === 'crate' || prop.kind === 'cover') this.game.scrap.collect(source);
     if (prop.charge) return;
     if (prop.kind === 'rubble') {
       this.game.burst(prop.body.position, 3, '#a9b5b3', 1.5);

@@ -6,6 +6,21 @@ export function drawTethers(c: CanvasRenderingContext2D, g: Game, reduced: boole
   c.save();
   c.lineWidth = 1.4;
   c.strokeStyle = '#a7c9c6';
+  const anchor = g.grapnel.anchor;
+  if (anchor) {
+    const p = g.player.position,
+      a = anchor.pos;
+    c.globalAlpha = clamp((anchor.until - g.time) / 0.3, 0, 0.8);
+    const sag = Math.min(20, Math.max(0, anchor.length - distance(p, a)) * 0.3);
+    c.beginPath();
+    c.moveTo(p.x, p.y);
+    c.quadraticCurveTo((p.x + a.x) / 2, (p.y + a.y) / 2 + sag, a.x, a.y);
+    c.stroke();
+    c.beginPath();
+    c.arc(a.x, a.y, 4, 0, Math.PI * 2);
+    c.stroke();
+    c.globalAlpha = 1;
+  }
   if (t.mark) {
     const p = t.mark.enemy.body.position;
     c.globalAlpha = clamp((t.mark.until - g.time) / 0.3, 0, 1);
