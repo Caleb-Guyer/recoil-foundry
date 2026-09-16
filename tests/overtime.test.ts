@@ -319,8 +319,8 @@ test('Overtime increases ordinary projectile pressure without shortening locked 
 
 test('second-lap rewards are legal, finite and become repairs without stacking duplicate upgrades', () => {
   const g = new Game();
-  // Commit to Rail spike before Overtime: its alternative transformations
-  // stay locked, so four earned detours can exhaust this legal build's pool.
+  // Commit to Rail spike before Overtime; every actual second-lap checkpoint
+  // must remain legal as the growing pool delays its first exhausted reward.
   const initial = overtime();
   assert(availableMods(initial.mods).some((m) => m.id === 'rail-spike'));
   initial.mods.push('rail-spike');
@@ -353,10 +353,17 @@ test('second-lap rewards are legal, finite and become repairs without stacking d
     };
     assert(loadCheckpoint(save));
   }
-  assert(g.overtime!.repairs > 0);
-  assert.equal(availableMods(g.mods).length, 0);
+  // Independently exhaust the expanded pool to exercise the repair fallback.
+  // No room transition is attempted past the real final stage.
+  while (availableMods(g.mods).length) g.mods.push(availableMods(g.mods)[0].id);
+  g.openReward();
+  assert.deepEqual(
+    g.offers.map((m) => m.id),
+    ['repair'],
+  );
   assert(!g.mods.includes('repair'));
   const count = g.mods.length;
+  g.setMode('playing');
   g.chooseMod('repair');
   assert.equal(g.mods.length, count);
 });

@@ -481,6 +481,9 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
           'corner-cutter',
           'vector',
           'afterburner',
+          'retrace',
+          'wallrunner',
+          'air-brake',
         ].includes(m.id),
     );
     if (!next) break;
@@ -501,6 +504,15 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
   assert(loadCheckpoint(save));
   assert.deepEqual(
     availableMods(mods).map((m) => m.id),
-    ['wrecking-ball', 'flashpoint', 'slipstream', 'grindshot', 'triphammer'],
+    [
+      'wrecking-ball',
+      'flashpoint',
+      'slipstream',
+      'grindshot',
+      'triphammer',
+      'retrace',
+      'wallrunner',
+      'air-brake',
+    ],
   );
 });

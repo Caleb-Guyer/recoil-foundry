@@ -7,6 +7,7 @@ import {
   compatibleBranch,
   branchGroup,
 } from './upgrade-branches.ts';
+import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
 export type Vec = { x: number; y: number };
 export const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -467,6 +468,7 @@ export const MODS = [
     mark: 'drop-forge',
   },
   ...BRANCH_MODS,
+  ...NEW_PATH_MODS,
   {
     id: 'resonator',
     name: 'Resonator',
@@ -498,6 +500,14 @@ export const REPAIR_REWARD = {
 export type Mod = (typeof MODS)[number] | typeof REPAIR_REWARD;
 // Conversion-specific copy describes what the owned gun will actually do.
 export function modDescription(mod: Mod, mods: readonly string[]): string {
+  if (mod.id === 'suspension' && mods.includes('tripline'))
+    return 'Fire to park up to 30 proximity traps toward your aim. Recoil is immediate; traps expire after four seconds.';
+  if (mod.id === 'backfire' && mods.includes('crosshatch'))
+    return 'Also parks a rear volley. Both directions converge on your aim when released. 20% slower firing.';
+  if (mod.id === 'air-brake' && mods.includes('cutting-torch'))
+    return 'Release the beam during recoil flight to brake once per jump. The next beam pulse kicks 35% harder.';
+  if (mod.id === 'deep-freeze' && mods.includes('coolant-rounds'))
+    return 'Full cold briefly freezes ordinary enemies, with a recovery window. Boss cold hits gain a larger damage bonus.';
   const beam = mods.includes('cutting-torch');
   if (mod.id === 'cutting-torch' && mods.includes('charge-lens'))
     return 'Hold to charge the beam. Release a cutting lance with a heavy kick.';
@@ -555,14 +565,17 @@ export function modDescription(mod: Mod, mods: readonly string[]): string {
       return mod.description;
   }
 }
-export type BuildPath = 'bullet-hell' | 'precision' | 'demolition';
+export type BuildPath = 'bullet-hell' | 'precision' | 'demolition' | 'cryogenic' | 'stasis';
 export const PATH_NAMES: Record<BuildPath, string> = {
   'bullet-hell': 'Bullet hell',
   precision: 'Precision',
   demolition: 'Demolition',
+  cryogenic: 'Cryogenic',
+  stasis: 'Stasis',
 };
 export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   ...BRANCH_PATHS,
+  ...NEW_PATH_IDS,
   tripwire: { path: 'demolition' },
   tension: { path: 'demolition' },
   'cutting-torch': { path: 'precision' },
@@ -651,6 +664,7 @@ export const MOD_REQUIRES: Record<string, string> = {
   'linked-fuse': 'fuse',
   afterimage: 'crossfire',
   parallax: 'afterimage',
+  ...NEW_PATH_PARENTS,
 };
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
@@ -917,6 +931,9 @@ export function getGun(mods: readonly string[]): Gun {
         g.damage *= 0.75;
         g.pierce += 1;
         break;
+      case 'coolant-rounds':
+        g.damage *= 0.8;
+        break;
       case 'vector':
         g.projectileSpeed *= 0.75;
         break;
@@ -1114,6 +1131,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
             (m) =>
               isFusion(m.id) ||
               isBranch(m.id) ||
+              NEW_PATH_MODS.some((mod) => mod.id === m.id) ||
               m.id === 'arc-coil' ||
               m.id === 'daisy-chain' ||
               m.id === 'grindshot' ||

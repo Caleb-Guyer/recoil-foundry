@@ -30,7 +30,7 @@ import { dailyForDate } from '../src/daily.ts';
 
 test('all twelve choices require their complete parents, respect both orders and enter at stage seven', () => {
   assert.equal(BRANCH_MODS.length, 12);
-  assert.equal(MODS.length, 82);
+  assert.equal(MODS.length, 95);
   for (const mod of BRANCH_MODS) {
     const parents = withParents([], BRANCH_PARENTS[mod.id])!;
     assert(validBuild([...parents, mod.id]));
@@ -63,7 +63,7 @@ test('all twelve choices require their complete parents, respect both orders and
 
 test('every maximal combination is unique, legal, complete, saveable and addressed by its stable choices', () => {
   const combos = maxCombos();
-  assert.equal(combos.length, 336);
+  assert.equal(combos.length, 464);
   assert.equal(new Set(combos.map((c) => c.code)).size, combos.length);
   assert.equal(new Set(combos.map((c) => [...c.mods].sort().join(','))).size, combos.length);
   for (const combo of combos) {

@@ -371,6 +371,19 @@ function updateTitle() {
     $('title-hint').textContent = 'Salvage equipped. Shoot backward to ram. R to retry.';
   if (linkedRunTest?.seed === 'SALVAGE-49' && entryUrl.searchParams.get('evolved') === '1')
     $('title-hint').textContent = 'Salvage evolutions equipped. R to retry.';
+  if (linkedRunTest?.seed.startsWith('BRANCHES-71-')) {
+    const hints: Record<string, string> = {
+      icebreaker: 'Build cold. Hit a frozen enemy to shatter it. R to retry.',
+      coldfront: 'Cold bursts chill nearby enemies. Follow up with shots. R to retry.',
+      crosshatch: 'Hold fire, aim, then release the volley. R to retry.',
+      tripline: 'Fire to place traps. Draw enemies close to trigger them. R to retry.',
+      retrace: 'Returning rounds follow your banks and portals. R to retry.',
+      wallrunner: 'Shoot away from a wall to grip it, then jump. R to retry.',
+      airbrake: 'Fire in the air, release to brake, then fire to redirect. R to retry.',
+    };
+    const hint = hints[entryUrl.searchParams.get('build') ?? ''];
+    if (hint) $('title-hint').textContent = hint;
+  }
 }
 function clearInput(disarm = true) {
   if (disarm) controller.disarm();
@@ -626,6 +639,19 @@ game.onChange = () => {
 };
 function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'coolant-rounds': 'M28 7v34M13 15l30 18M13 33l30-18M22 10l6 6 6-6M22 38l6-6 6 6',
+    'deep-freeze': 'M15 10h26v28H15zM28 14v20M19 19l18 10M19 29l18-10',
+    icebreaker: 'M7 24h21M19 17l9 7-9 7M35 7l-6 14 10 6-6 14M43 12l6-5M44 35l6 5',
+    'cold-snap': 'M28 7l4 11 12-3-8 9 8 9-12-3-4 11-4-11-12 3 8-9-8-9 12 3z',
+    'cold-front': 'M8 24h12M15 18l6 6-6 6M30 7v34M23 15l14 18M23 33l14-18M44 16v16',
+    suspension: 'M8 24h9M24 17v14M30 17v14M40 24h10M44 18l6 6-6 6',
+    crosshatch: 'M8 8l40 32M8 40L48 8M8 24h40M28 18v12',
+    'thread-the-needle': 'M7 24h41M17 14v20M28 10v28M40 6v36M44 20l5 4-5 4',
+    tripline: 'M10 24h36M10 18v12M46 18v12M25 21h6v6h-6zM22 8l6 7 6-7',
+    'chain-release': 'M8 25h8M24 25h8M40 25h8M9 19v12M25 19v12M41 19v12M13 10h29l-6-5',
+    retrace: 'M8 34l12-23 18 26 10-17M8 39l12-22 17 25M7 31v8h8',
+    wallrunner: 'M10 7v35M16 34V18l15-7M25 10l6 1-1 7M23 27h9v9h-9z',
+    'air-brake': 'M7 17l15 7-15 7M49 17l-15 7 15 7M26 13v22M30 13v22',
     'pulse-chamber': 'M6 16h10M21 24h10M36 32h15M44 26l7 6-7 6M37 7v11',
     'charge-lens': 'M7 24h12M30 10a14 14 0 1 0 0 28M28 17v14M35 24h16M44 17l7 7-7 7',
     'prism-array': 'M5 24h16l10-12 10 12-10 12-10-12M41 24l11-12M41 24l11 12',

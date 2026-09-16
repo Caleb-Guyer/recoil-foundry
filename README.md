@@ -6,6 +6,20 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Cryogenic, Stasis and movement branches · 2.74.0
+
+Thirteen new upgrades bring the catalog to **95**, across **five paths**:
+
+- **Cryogenic:** Coolant Rounds → Deep Freeze → Icebreaker, or Cold Snap → Cold Front. Cold trades some direct damage for slowing, shatters and chain setups. Bosses build a capped bonus hit; they cannot be frozen or repeatedly interrupted.
+- **Stasis:** Suspension → Crosshatch → Thread the Needle, or Tripline → Chain Release. Hold fire to park rounds, then release a converging volley, or place proximity traps farther toward your aim. Recoil remains immediate. Thirty rounds maximum; traps check cover and expire. Enemy attacks continue normally.
+- **Shared:** Recall → Retrace follows actual banks and unchanged portal crossings back. Light Frame → Wallrunner adds brief recoil wall grips and wall jumps. Kickback → Air Brake adds one midair trigger-release brake and a stronger next launch.
+
+Each fork allows one choice. Rewards, Daily, Workshop, saves and upgrade discovery use the same prerequisites. The new follow-ups can appear after their parents; earlier stage-gated specializations keep their gate. Daily now uses **ruleset 63**. Older ordinary runs, including exhausted New Game+ saves, retain their builds and can earn compatible additions. No extra controls or HUD panels.
+
+[Try Icebreaker](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&v=2.74.0) · [Cold Front](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&v=2.74.0) · [Crosshatch](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&v=2.74.0) · [Tripline](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&v=2.74.0) · [Retrace](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&v=2.74.0) · [Wallrunner](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&v=2.74.0) · [Air Brake](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&v=2.74.0).
+
+Click the named test button; **R** repeats the preset. Test runs preserve Continue, discoveries, Daily records and Practice unlocks. [Build instructions](docs/new-upgrade-builds.md) include mirrored rooms and boss tests. [All 464 fully maxed combinations](docs/max-upgrade-combos.md) and [their CSV](docs/max-upgrade-combos.csv) include every legal upgrade in acquisition order; these are stress-test builds beyond ordinary run rewards.
+
 ## New Game+ elevator · 2.73.0
 
 The escape route now ends at a shared departure bay. Follow the amber steps **up to NEW GAME+** to carry your current gun and health into the harder second lap. The green **EXIT** lift on the lower floor finishes your run. Both lifts have physical decks and closing gates, and carry you upward before their destination loads. New Game+ requires a deliberate landing inside the raised car. Ordinary jumps reach it; recoil is optional.
@@ -22,7 +36,7 @@ All three require both parents and share the existing rare, late-run fusion offe
 
 [Test Resonator](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&v=2.72.0) · [Test Flywheel](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&v=2.72.0) · [Test Storm Cell](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&v=2.72.0). Click the title-screen test button. **R** repeats the preset. These tests preserve your saves and discoveries. For Resonator, right-click/E or LT/L2 to place both portals, then fire through the entrance.
 
-[All focused builds and controls](docs/new-upgrade-builds.md) · [All 332 new fully maxed combinations](docs/max-upgrade-combos.md) · [Every build as CSV](docs/max-upgrade-combos.csv).
+[All focused builds and controls](docs/new-upgrade-builds.md) · [All fully maxed combinations](docs/max-upgrade-combos.md) · [Every build as CSV](docs/max-upgrade-combos.csv).
 
 ## Upgrade branches · 2.71.0
 

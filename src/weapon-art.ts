@@ -36,6 +36,14 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     );
 
   c.save();
+  if (g.mods.includes('coolant-rounds') || g.mods.includes('suspension')) {
+    c.fillStyle = g.mods.includes('suspension') ? '#b4a6dd' : '#9bdbe5';
+    c.fillRect(17, -9, 12, 2);
+  }
+  if (g.mobility.launchReady) {
+    c.fillStyle = '#b8ddc9';
+    c.fillRect(7, -7, 5, 2);
+  }
   if (backblast) {
     c.fillStyle = '#b99f71';
     c.fillRect(2, -4.5, 4, 9);

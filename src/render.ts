@@ -70,6 +70,7 @@ import { drawWeapon } from './weapon-art.ts';
 import { drawMassRound } from './mass-driver-art.ts';
 import { drawBallistics } from './ballistics-art.ts';
 import { drawFusions } from './fusions-art.ts';
+import { drawNewPaths, drawStoredRound } from './new-paths-art.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -593,6 +594,7 @@ export class Renderer {
       c.fill();
     }
     this.drawPlayer();
+    drawNewPaths(c, g);
     drawTethers(c, g, this.reduced);
     drawArcs(c, g, this.reduced);
     drawGrindshot(c, g, this.reduced);
@@ -601,6 +603,10 @@ export class Renderer {
     drawFusions(c, g, this.reduced);
     for (const s of g.shots) {
       if (!s.friendly || s.life <= 0) continue;
+      if (s.stasis?.phase === 'parked' || s.stasis?.phase === 'queued') {
+        drawStoredRound(c, s, g.mods.includes('tripline'));
+        continue;
+      }
       if (s.massDriver) {
         drawMassRound(c, s, this.reduced);
         continue;
@@ -644,7 +650,15 @@ export class Renderer {
           this.line(
             { x: s.pos.x - s.vel.x * 0.55, y: s.pos.y - s.vel.y * 0.55 },
             s.pos,
-            s.fragment ? '#bea88b' : s.charged ? '#eff5b5' : '#f6d49a',
+            s.fragment
+              ? '#bea88b'
+              : s.charged
+                ? '#eff5b5'
+                : g.mods.includes('coolant-rounds')
+                  ? '#9bdbe5'
+                  : s.stasis
+                    ? '#c3b4f0'
+                    : '#f6d49a',
             s.radius * 1.15 + (s.charged ? 1 : 0),
           );
           this.circle(s.pos, s.radius, '#fff2d5');

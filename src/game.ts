@@ -31,6 +31,10 @@ import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
+import { CryogenicSystem } from './cryogenic.ts';
+import { StasisSystem, suspended, type StasisFlight } from './stasis.ts';
+import { MobilitySystem } from './mobility.ts';
+import { recordRoute, routeTarget } from './retrace.ts';
 import { prepareVector, steerVector, redirectVector, type VectorFlight } from './vector-rounds.ts';
 import { CounterweightSystem } from './counterweights.ts';
 import { createInterceptor, updateInterceptor } from './interceptor.ts';
@@ -202,6 +206,7 @@ export interface Shot {
   allyBlock?: number;
   source?: Vec;
   recall?: RecallFlight;
+  stasis?: StasisFlight;
   counter?: number;
   reflected?: boolean;
   reflectedAt?: number;
@@ -256,6 +261,9 @@ export class Game {
   demolition = new DemolitionSystem(this);
   evolutions = new EvolutionSystem(this);
   ballistics = new BallisticsSystem(this);
+  cryogenic = new CryogenicSystem(this);
+  stasis = new StasisSystem(this);
+  mobility = new MobilitySystem(this);
   fusions = new FusionSystem(this);
   harpoons = new HarpoonSystem(this);
   destruction = new DestructionSystem(this);
@@ -424,6 +432,8 @@ export class Game {
   }
   setMode(mode: Mode) {
     if (mode !== 'playing') {
+      this.stasis.held = false;
+      this.mobility.pause();
       this.burstRemaining = 0;
       this.portalRequest = null;
       if (this.mods.includes('charge-lens')) this.torch.stop();
@@ -447,6 +457,9 @@ export class Game {
       this.demolition.clear();
       this.evolutions.reset();
       this.ballistics.reset();
+      this.cryogenic.reset();
+      this.stasis.reset();
+      this.mobility.reset();
       this.fusions.reset();
       this.harpoons.clear();
     }
@@ -583,6 +596,9 @@ export class Game {
     this.detourStepsReady = false;
     this.evolutions.reset();
     this.ballistics.reset();
+    this.cryogenic.reset();
+    this.stasis.reset();
+    this.mobility.reset();
     this.fusions.reset();
     this.harpoons.clear();
     this.magnets.items = [];
@@ -817,6 +833,9 @@ export class Game {
     this.tethers.reset();
     this.evolutions.reset();
     this.ballistics.reset();
+    this.cryogenic.reset();
+    this.stasis.reset();
+    this.mobility.reset();
     this.fusions.reset();
     this.harpoons.clear();
     this.demolition.clear();
@@ -963,6 +982,8 @@ export class Game {
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
+    this.cryogenic.update(dt);
+    this.stasis.input(input.fire);
     this.ballistics.charge(dt, input.fire || !!input.firePressed || this.fireBuffer > 0);
     if (this.portalRequest) {
       this.portals.place(this.portalRequest);
@@ -1056,6 +1077,7 @@ export class Game {
         });
       this.jumpCut = true;
     }
+    this.mobility.update(input);
     if (this.torch.equipped) {
       this.torch.beforeStep(
         dt,
@@ -1076,7 +1098,13 @@ export class Game {
     }
     this.loaderArena.update();
     for (const e of [...this.enemies]) {
-      this.updateEnemy(e, dt);
+      const slow = this.cryogenic.slow(e);
+      this.updateEnemy(e, dt * slow);
+      if (slow < 1 && !e.body.isStatic && e.spawn <= 0)
+        Body.setVelocity(e.body, {
+          x: e.body.velocity.x * slow,
+          y: e.kind === 'flyer' ? e.body.velocity.y * slow : e.body.velocity.y,
+        });
       if (this.mode !== 'playing') return;
     }
     // Capture descent before Matter resolves the landing collision and zeros velocity.
@@ -1244,6 +1272,7 @@ export class Game {
     if (d.x === 0 && d.y === 0) d.x = 1;
     const impulse =
       this.gun.recoil *
+      this.mobility.shot(d) *
       (this.grounded ? 0.21 : 1) *
       (charged ? 1.25 : 1) *
       (rail ? RAIL_RECOIL : 1);
@@ -1288,6 +1317,8 @@ export class Game {
         this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash, false);
     }
     this.ballistics.record(beforeVolley, origin, d);
+    if (!this.stasis.held && !this.mods.includes('tripline'))
+      this.stasis.release(this.shots.filter((s) => s.id > beforeVolley));
     this.fusions.release(d);
     if (this.gun.backblast) this.fireBackblast(d, damage * this.gun.pellets * this.gun.lanes * 0.8);
     this.evolutions.settle();
@@ -1484,7 +1515,9 @@ export class Game {
     this.ballistics.prepare(shot);
     prepareVector(shot, this.mods);
     this.massDriver.prepare(shot);
+    this.stasis.prepare(shot);
     this.shots.push(shot);
+    return shot;
   }
   updateEnemy(e: Enemy, dt: number) {
     if (e.hp <= 0 || !this.enemies.includes(e)) return;
@@ -1495,6 +1528,7 @@ export class Game {
       if (e.crawler) updateWallcrawler(this, e, dt);
       return;
     }
+    if (this.cryogenic.frozen(e)) return;
     if (this.salvageEvolutions.carried(e)) return;
     if (this.ballistics.pinned(e)) return;
     if (this.tethers.staggered(e)) return;
@@ -2088,6 +2122,7 @@ export class Game {
     });
   }
   updateShots(dt: number) {
+    this.stasis.update();
     this.massDriver.update(dt);
     if (this.mode !== 'playing') return;
     for (const s of [...this.shots]) updateRivalAmmo(this, s, dt);
@@ -2098,12 +2133,17 @@ export class Game {
     for (const s of [...this.shots]) {
       updateAnglerShot(this, s);
       if (s.reflectedAt === this.time) continue;
-      s.life -= dt;
+      if (s.stasis?.phase === 'parked' || s.stasis?.phase === 'queued') continue;
+      if (!suspended(s)) s.life -= dt;
       s.prev = { ...s.pos };
       let remaining = dt * 60;
       for (let attempt = 0; attempt < 4 && remaining > 0.001 && s.life > 0; attempt++) {
         this.massDriver.heading(s);
-        const waypoint = s.waypoints?.[0];
+        const retracing = !!s.recall?.returning && !!s.recall.route?.length;
+        const waypoint =
+          routeTarget(this, s) ??
+          (s.stasis?.phase === 'setting' ? s.stasis.target : s.waypoints?.[0]);
+        if (s.life <= 0) break;
         const speed = Math.hypot(s.vel.x, s.vel.y);
         const segment =
           waypoint && speed > 0
@@ -2172,7 +2212,9 @@ export class Game {
           const hit = segmentBox(s.pos, end, this.player.bounds.min, this.player.bounds.max);
           if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, caught: true };
         }
-        const passage = this.portals.trace(s.pos, end, { x: s.radius, y: s.radius });
+        const passage = retracing
+          ? null
+          : this.portals.trace(s.pos, end, { x: s.radius, y: s.radius });
         this.massDriver.travel(
           s,
           speed *
@@ -2182,6 +2224,17 @@ export class Game {
               : (nearest?.t ?? 1)),
         );
         if (passage && (!nearest || passage.t <= nearest.t + 1e-6)) {
+          const entryPoint = {
+            x: s.pos.x + (end.x - s.pos.x) * passage.t + passage.entry.normal.x * 0.5,
+            y: s.pos.y + (end.y - s.pos.y) * passage.t + passage.entry.normal.y * 0.5,
+          };
+          recordRoute(s, entryPoint);
+          recordRoute(s, passage.pos, {
+            pos: entryPoint,
+            entry: passage.entry,
+            exit: passage.exit,
+          });
+          this.stasis.abandon(s);
           s.pos = { ...passage.pos };
           s.prev = { ...s.pos };
           s.vel = portalVector(s.vel, passage.entry, passage.exit);
@@ -2213,8 +2266,18 @@ export class Game {
         if (!nearest) {
           this.salvage.trace(s, s.pos, end);
           s.pos = end;
+          recordRoute(s);
           recordShotTrace(s.trace, s.pos);
           if (waypoint && distance(s.pos, waypoint) < 0.01) {
+            if (retracing) {
+              routeTarget(this, s);
+              remaining -= segment;
+              continue;
+            }
+            if (s.stasis?.phase === 'setting') {
+              s.stasis.phase = 'parked';
+              break;
+            }
             s.waypoints!.shift();
             const next = s.waypoints![0];
             if (next) {
@@ -2233,6 +2296,7 @@ export class Game {
         };
         this.salvage.trace(s, segmentStart, s.pos);
         recordShotTrace(s.trace, s.pos);
+        this.stasis.abandon(s);
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
         const impactDamage = this.massDriver.impactDamage(s);
@@ -2269,10 +2333,14 @@ export class Game {
           s.hits.add(e.id);
           // Use this segment's incoming direction, including after a bank, rather
           // than the player's current position or the shot's original origin.
-          const damage =
+          const damage = this.cryogenic.damage(
+            e,
+            s,
             impactDamage *
-            this.ballistics.fracture(e, s) *
-            (this.gun.execute && s.friendly && !s.fragment && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
+              this.stasis.damage(s) *
+              this.ballistics.fracture(e, s) *
+              (this.gun.execute && s.friendly && !s.fragment && e.hp < e.maxHp * 0.3 ? 1.6 : 1),
+          );
           const blocked = this.hitEnemy(e, damage, {
             x: e.body.position.x - s.vel.x,
             y: e.body.position.y - s.vel.y,
@@ -2289,6 +2357,8 @@ export class Game {
             continue;
           }
           this.salvage.impact(s);
+          this.cryogenic.hit(e, s);
+          this.stasis.hit(s);
           this.evolutions.hit(s);
           this.ballistics.consumeFracture(e, s);
           this.ballistics.rivet(e, s);
@@ -2400,6 +2470,7 @@ export class Game {
             }
             s.pos.x += nearest.normal.x;
             s.pos.y += nearest.normal.y;
+            recordRoute(s);
           } else if (this.ballistics.turn(s, nearest.normal)) {
             s.pos.x += nearest.normal.x;
             s.pos.y += nearest.normal.y;
@@ -2412,6 +2483,7 @@ export class Game {
           }
         }
         recordShotTrace(s.trace, s.pos);
+        recordRoute(s);
       }
       if (
         s.pos.x < -50 ||

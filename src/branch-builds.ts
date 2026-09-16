@@ -40,6 +40,111 @@ export function completeBuild(build: readonly string[]) {
 }
 
 export const BRANCH_TEST_BUILDS: Record<string, { name: string; mods: readonly string[] }> = {
+  icebreaker: {
+    name: 'Icebreaker',
+    mods: [
+      'coolant-rounds',
+      'deep-freeze',
+      'icebreaker',
+      'pierce',
+      'rapid',
+      'airshot',
+      'light',
+      'kick',
+      'leech',
+      'vector',
+    ],
+  },
+  coldfront: {
+    name: 'Cold Front',
+    mods: [
+      'coolant-rounds',
+      'cold-snap',
+      'cold-front',
+      'pierce',
+      'rapid',
+      'airshot',
+      'light',
+      'kick',
+      'leech',
+      'banker',
+    ],
+  },
+  crosshatch: {
+    name: 'Thread the Needle',
+    mods: [
+      'suspension',
+      'crosshatch',
+      'thread-the-needle',
+      'scatter',
+      'rapid',
+      'light',
+      'kick',
+      'airshot',
+      'leech',
+      'pierce',
+    ],
+  },
+  tripline: {
+    name: 'Chain Release',
+    mods: [
+      'suspension',
+      'tripline',
+      'chain-release',
+      'scatter',
+      'backblast',
+      'backfire',
+      'light',
+      'airshot',
+      'rapid',
+      'leech',
+    ],
+  },
+  retrace: {
+    name: 'Retrace',
+    mods: [
+      'recall',
+      'retrace',
+      'homecoming',
+      'ricochet',
+      'pierce',
+      'banker',
+      'fold',
+      'slingshot',
+      'light',
+      'airshot',
+    ],
+  },
+  wallrunner: {
+    name: 'Wallrunner',
+    mods: [
+      'light',
+      'wallrunner',
+      'kick',
+      'redline',
+      'airshot',
+      'leech',
+      'rapid',
+      'magnum',
+      'backblast',
+      'pierce',
+    ],
+  },
+  airbrake: {
+    name: 'Air Brake',
+    mods: [
+      'kick',
+      'air-brake',
+      'backblast',
+      'backfire',
+      'light',
+      'airshot',
+      'leech',
+      'magnum',
+      'landing',
+      'rapid',
+    ],
+  },
   resonator: {
     name: 'Resonator',
     mods: [
@@ -272,6 +377,8 @@ export function maxCombos(): readonly MaxCombo[] {
     ['precision', 'deadeye'],
     ['bullet-hell', 'crossfire'],
     ['demolition', 'shellshock'],
+    ['cryogenic', 'coolant-rounds'],
+    ['stasis', 'suspension'],
   ]) {
     for (const weapon of ['cutting-torch', 'rail-spike', 'mass-driver']) {
       const start = withParents([], [root, weapon]);

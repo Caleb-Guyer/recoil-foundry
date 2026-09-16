@@ -1,4 +1,5 @@
 import type { Shot } from './game.ts';
+import { dormant } from './stasis.ts';
 import { clamp, distance, type Vec } from './rules.ts';
 
 export const VECTOR = {
@@ -49,7 +50,7 @@ export function redirectVector(s: Shot) {
 }
 export function steerVector(s: Shot, aim: Vec, dt: number) {
   const v = s.vector;
-  if (!v || s.life <= 0 || !(dt > 0)) return;
+  if (!v || s.life <= 0 || !(dt > 0) || dormant(s)) return;
   v.age = (v.age ?? 0) + dt;
   if (s.recall?.returning || s.massDriver?.rolling || v.boosted || s.waypoints?.length) return;
   if (v.replay) {

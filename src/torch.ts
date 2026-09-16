@@ -327,7 +327,7 @@ export class TorchSystem {
       // Redline remains responsive to actual speed during continuous thrust.
       this.boost =
         ((landing ? 2 : 1) * (capacitor ? 2 : 1) * evolution) / (1 + g.evolutions.redline);
-      this.recoilBoost = landing ? 1.25 : 1;
+      this.recoilBoost = (landing ? 1.25 : 1) * g.mobility.shot(d);
       g.chargedFlash = landing || capacitor || evolution / (1 + g.evolutions.redline) > 1;
       this.pulse = {
         id: ++g.id,
@@ -355,6 +355,7 @@ export class TorchSystem {
       if (lens) g.onSound('charged');
     }
     if (!this.active) return;
+    g.mobility.thrust(d);
     g.lastShot = g.time;
     g.muzzle = 0;
     const impulse =

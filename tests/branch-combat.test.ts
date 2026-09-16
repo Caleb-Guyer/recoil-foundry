@@ -70,6 +70,24 @@ function play(g: Game, seconds: number) {
       }
     } else climbX = undefined;
     if (g.mods.includes('charge-lens')) input.fire = !!input.fire && frame % 72 < 48;
+    if (g.mods.includes('suspension') && !g.mods.includes('tripline'))
+      input.fire = !!input.fire && frame % 48 < 32;
+    // Traps and returning rounds have finite reach. Stop thrusting downward
+    // from the ceiling and move into range instead of firing forever outside it.
+    const reach = g.mods.includes('tripline')
+      ? 480
+      : g.mods.includes('recall')
+        ? g.gun.projectileSpeed * 60 * (g.mods.includes('vector') ? 0.5 : 0.24) * 0.9
+        : Infinity;
+    if (target && target.body.position.y - g.player.position.y > reach) input.fire = false;
+    if (
+      target &&
+      distance(g.lineEnd(g.player.position, target.body.position), target.body.position) < 1 &&
+      Math.abs(target.body.position.x - g.player.position.x) > reach
+    ) {
+      input.left = target.body.position.x < g.player.position.x;
+      input.right = target.body.position.x > g.player.position.x;
+    }
     if (g.mods.includes('prism-array') && input.aim) {
       const dx = input.aim.x - g.player.position.x,
         dy = input.aim.y - g.player.position.y;
@@ -95,7 +113,8 @@ function play(g: Game, seconds: number) {
     kills: g.kills,
     time: g.time,
     shots: g.shotCount,
-    enemies: g.enemies.map((e) => ({ kind: e.kind, hp: e.hp })),
+    player: { ...g.player.position },
+    enemies: g.enemies.map((e) => ({ kind: e.kind, hp: e.hp, pos: { ...e.body.position } })),
   };
 }
 

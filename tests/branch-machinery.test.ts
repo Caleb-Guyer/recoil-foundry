@@ -40,7 +40,13 @@ test('rolling balls ride a rising deck, respect adjacent cover and leave steep s
 });
 
 test('rolling balls, charged saws and Storm cells cannot wedge the train at either boundary', () => {
-  for (const fusion of [[], ['flywheel'], ['storm-cell']])
+  const base = ['mass-driver', 'skid-plate', 'shellshock', 'cluster-shell', 'aftershock'];
+  for (const wanted of [
+    base,
+    [...base, 'flywheel'],
+    [...base, 'storm-cell'],
+    ['suspension', 'tripline', 'chain-release', 'mass-driver', 'skid-plate'],
+  ])
     for (const mirror of [0, 1]) {
       const g = new Game();
       g.startTest(
@@ -48,10 +54,7 @@ test('rolling balls, charged saws and Storm cells cannot wedge the train at eith
           new URL(`https://test/?test=mass-driver&room=train&mirror=${mirror}`),
         )!,
       );
-      g.mods = withParents(
-        [],
-        ['mass-driver', 'skid-plate', 'shellshock', 'cluster-shell', 'aftershock', ...fusion],
-      )!;
+      g.mods = withParents([], wanted)!;
       g.gun = getGun(g.mods);
       for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
       g.enemies = [];

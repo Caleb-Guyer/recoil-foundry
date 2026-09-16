@@ -8,6 +8,8 @@ import { releaseScrapper } from './scrapper.ts';
 import { breakSquad } from './squads.ts';
 import { SHELL_RADIUS } from './demolition.ts';
 import type { VectorSample } from './vector-rounds.ts';
+import { recordRoute, routeTarget, type RoutePoint } from './retrace.ts';
+import { dormant } from './stasis.ts';
 
 export const CHARGE_TIME = 0.85;
 export const RECALL_TIME = 0.24;
@@ -22,6 +24,7 @@ export interface RecallFlight {
   returning: boolean;
   pierce: number;
   skip: Set<number>;
+  route?: RoutePoint[];
 }
 export interface StuckShell {
   pos: Vec;
@@ -118,11 +121,13 @@ export class BallisticsSystem {
     if (!s.friendly || s.fragment || s.reflected) return;
     if (this.has('recall'))
       s.recall = { age: 0, returning: false, pierce: s.pierce, skip: new Set() };
+    if (s.recall && this.has('retrace')) s.recall.route = [{ pos: { ...s.pos } }];
     if (this.has('countershot')) s.counter = 1;
   }
   turn(s: Shot, normal?: Vec) {
     const r = s.recall;
     if (!r || r.returning) return false;
+    recordRoute(s);
     r.returning = true;
     if (s.massDriver) {
       s.massDriver.struck.clear();
@@ -140,11 +145,12 @@ export class BallisticsSystem {
       s.vel.x -= 2 * dot * normal.x;
       s.vel.y -= 2 * dot * normal.y;
     } else s.vel = { x: -s.vel.x, y: -s.vel.y };
+    routeTarget(this.game, s);
     return true;
   }
   flight(s: Shot, dt: number) {
     const r = s.recall;
-    if (!r || s.life <= 0) return;
+    if (!r || s.life <= 0 || dormant(s)) return;
     r.age += dt;
     if (!r.returning && r.age >= (s.vector ? 0.5 : RECALL_TIME)) this.turn(s);
     if (!r.returning) return;
@@ -161,6 +167,7 @@ export class BallisticsSystem {
       )
         r.skip.delete(id);
     }
+    if (routeTarget(this.game, s)) return;
     const d = direction(s.pos, this.game.player.position);
     const a = Math.atan2(s.vel.y, s.vel.x),
       target = Math.atan2(d.y, d.x);
@@ -414,7 +421,9 @@ export class BallisticsSystem {
   reflect(dt: number) {
     const g = this.game;
     if (!this.counterReady) return;
-    const friendly = g.shots.filter((s) => s.life > dt && s.friendly && (s.counter ?? 0) > 0);
+    const friendly = g.shots.filter(
+      (s) => s.life > dt && s.friendly && !dormant(s) && (s.counter ?? 0) > 0,
+    );
     const hostile = g.shots.filter((s) => s.life > dt && !s.friendly && !s.blade && s.radius <= 5);
     if (!friendly.length || !hostile.length) return;
     const contacts: { a: Shot; b: Shot; t: number; point: Vec; bullet: Vec }[] = [];

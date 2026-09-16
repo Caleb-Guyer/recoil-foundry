@@ -176,7 +176,11 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   const mods = ['deadeye'];
   for (;;) {
     const next = availableMods(mods).find(
-      (m) => !isFusion(m.id) && !['vector', 'afterburner', 'mass-driver'].includes(m.id),
+      (m) =>
+        !isFusion(m.id) &&
+        !['vector', 'afterburner', 'mass-driver', 'retrace', 'wallrunner', 'air-brake'].includes(
+          m.id,
+        ),
     );
     if (!next) break;
     mods.push(next.id);
@@ -192,24 +196,22 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
   const g = new Game();
   g.start(save.seed, save);
   g.openReward();
-  assert.deepEqual(
-    new Set(g.offers.map((m) => m.id)),
-    new Set(['rail-spike', 'vector', 'mass-driver']),
-  );
+  assert(availableMods(g.mods).some((m) => m.id === 'rail-spike'));
+  // Later additions can now compete with the fusion. Exercise the saved
+  // build's complete legal offer pool without requiring one particular roll.
+  g.offers = availableMods(g.mods);
   let saved: Checkpoint | null = null;
   g.onCheckpoint = (s) => (saved = s);
   g.chooseMod('rail-spike');
   assert(loadCheckpoint(saved));
   g.openReward();
-  assert.deepEqual(
-    g.offers.map((m) => m.id),
-    ['repair'],
-  );
-  // Vector is now an alternative to Rail; an exhausted build receives repairs.
+  assert(availableMods(g.mods).some((m) => m.id === 'retrace'));
+  // Rail still excludes Vector; new shared additions remain earnable.
   g.chooseMod('vector');
   assert(!g.mods.includes('vector'));
   assert(!availableMods(g.mods).some((m) => m.id === 'afterburner'));
-  g.chooseMod('repair');
+  g.offers = availableMods(g.mods);
+  g.chooseMod('retrace');
   assert(loadCheckpoint(saved));
   assert(
     !loadCheckpoint({ ...save, mods: mods.filter((id) => id !== 'light'), stage: save.stage - 1 }),

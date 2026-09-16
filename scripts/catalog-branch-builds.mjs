@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import {
   MODS,
+  MOD_REQUIRES,
   PATH_NAMES,
   FUSION_REQUIRES,
   isFusion,
@@ -18,7 +19,7 @@ const names = new Map(MODS.map((m) => [m.id, m.name]));
 const name = (id) => names.get(id);
 const base = 'https://caleb-guyer.github.io/recoil-foundry/';
 const link = (query) => base + '?test=branches&' + query + '&v=' + version;
-const combos = maxCombos().filter((c) => c.mods.some(isBranch));
+const combos = maxCombos();
 const cells = (row) => row.map((v) => '"' + String(v).replaceAll('"', '""') + '"').join(',');
 const csv = [
   [
@@ -40,7 +41,7 @@ const max = [
   '',
   `Game **${version}**. **${combos.length}** distinct legal completed builds contain a new specialization.`,
   '',
-  `“Maxed” means every remaining compatible upgrade is fitted, including boss salvage. These contain ${Math.min(...combos.map((c) => c.mods.length))}–${Math.max(...combos.map((c) => c.mods.length))} upgrades: Overtime/stress builds, beyond the ordinary run’s 19 picks. Different acquisition orders of the same gun are counted once. The four completed builds containing only old upgrades are omitted.`,
+  `“Maxed” means every remaining compatible upgrade is fitted, including boss salvage. These contain ${Math.min(...combos.map((c) => c.mods.length))}–${Math.max(...combos.map((c) => c.mods.length))} upgrades: stress builds, beyond the ordinary run’s 19 picks. Different acquisition orders of the same gun are counted once. All five paths are included.`,
   '',
   '[Download the complete CSV](max-upgrade-combos.csv) · [Focused builds and controls](new-upgrade-builds.md)',
   '',
@@ -86,6 +87,20 @@ for (const c of combos) {
   );
 }
 const tips = {
+  icebreaker:
+    'Coolant Rounds trades 20% direct damage for cold. At 48 cold, Deep Freeze holds an ordinary enemy for 0.55 seconds; Icebreaker spends it on one hit and three inert fragments. A 1.6-second immunity follows. Bosses never freeze: they bank one capped bonus hit, followed by a 0.7-second recharge.',
+  coldfront:
+    'Cold Snap spends full cold on a burst instead of a freeze. Cold Front spreads 24 cold to exposed enemies within 150 units; spread stops below the trigger threshold and cannot trigger itself. Shoot again to continue the chain. Bosses bank the bonus for the next hit.',
+  crosshatch:
+    'Hold fire to park rounds, then aim and release. Crosshatch converges from their real positions. Thread the Needle gives the final round up to 150% extra damage for consecutive earlier hits in that release; a miss breaks the streak and piercing/returning cannot reuse the bonus. Recoil happens when firing. Thirty-round cap; overflow and rounds held for 2.5 seconds launch automatically.',
+  tripline:
+    'Fire to leave parked proximity traps, then move to draw enemies within 140 units. Chain Release launches traps within 200 units of the triggering round toward the same enemy, each with its own cover check. Release no longer launches the traps. They expire after four seconds; at most thirty remain. Enemy shots stay live and parked rounds cannot deflect them.',
+  retrace:
+    'Returning rounds reverse their recorded outward route, then home toward you. Banks keep their spent budget. Portal gaps are never swept for damage, and changing the portal pair cuts the recorded return. New cover still blocks the return.',
+  wallrunner:
+    'Shoot away from a nearby wall so recoil drives you into it. A 0.32-second grip lets you jump away. Gripping the same wall again requires touching another surface; moving walls retain collision and destroyed support releases the grip.',
+  airbrake:
+    'Release fire during recoil flight to reduce velocity to 25%, once per jump. The next airborne shot has 35% more recoil. Landing clears the launch charge. Burst rounds, rear volleys and beam pulses share the same one-use charge; pause is not a trigger release.',
   resonator:
     'Right-click/E or LT/L2 to place both portals, then hold fire through the entrance. Every third pulse repeats its transmitted energy from the exit at 60% power after a short delay. The first two pulses are 25% lighter. Repeats keep the original exit aim and spent range, check current cover and cannot trigger more repeats.',
   flywheel:
@@ -121,7 +136,7 @@ const guide = [
   '',
   `Implemented in **${version}** · Daily ruleset **${DAILY_RULESET}**.`,
   '',
-  'Twelve local specializations and three rare fusions extend the existing gun. New specialization offers start at reward stage 7 with their parents fitted. Choose one member of each local fork; unrelated families still combine. Resonator, Flywheel and Storm Cell each require both named parents and obey the one-fusion limit. The chosen broad path retains its slight reward preference. Daily still gives one predetermined legal card.',
+  'Cryogenic and Stasis join Precision, Bullet Hell and Demolition. Each run chooses one main path, with local alternatives within it. Cryogenic forks into Deep Freeze → Icebreaker or Cold Snap → Cold Front. Stasis forks into Crosshatch → Thread the Needle or Tripline → Chain Release. Retrace, Wallrunner and Air Brake are shared follow-ups. These thirteen additions require their parents and can appear from the next reward. The twelve earlier local specializations retain their stage-7 gate, and fusions retain their parent and rarity rules. Daily still gives one predetermined legal card.',
   '',
   `For **every upgrade in every new max combo**, use the [${combos.length}-build catalog](max-upgrade-combos.md) or [CSV](max-upgrade-combos.csv).`,
   '',
@@ -147,7 +162,10 @@ for (const [key, b] of Object.entries(BRANCH_TEST_BUILDS)) {
     tips[key],
     '',
     '**Parents:** ' +
-      (BRANCH_PARENTS[mod.id] ?? FUSION_REQUIRES[mod.id]).map(name).join(' + ') +
+      (BRANCH_PARENTS[mod.id] ?? FUSION_REQUIRES[mod.id] ?? [MOD_REQUIRES[mod.id]])
+        .filter(Boolean)
+        .map(name)
+        .join(' + ') +
       '.',
     '',
     '**Complete room build:** ' + save.mods.map(name).join(' → ') + '.',

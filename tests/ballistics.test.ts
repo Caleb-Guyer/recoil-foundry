@@ -113,7 +113,7 @@ test('twelve upgrades have legal prerequisite chains, path locks, saves and reac
     'afterimage',
     'parallax',
   ];
-  assert.equal(MODS.length, 82);
+  assert.equal(MODS.length, 95);
   for (const id of ids) {
     const parents = ancestors(id),
       build = [...parents, id];
