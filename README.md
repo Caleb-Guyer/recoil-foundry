@@ -6,6 +6,20 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Area events · 2.76.0
+
+Fresh runs have a **75% chance of one area event**, selected by the run seed. It changes all three combat rooms in either the Furnace Halls, Cooling Works, or Reclamation Works. The full twenty-stage campaign, bosses, routes, and optional detours remain available.
+
+- **Blackout:** dimmed scenery and an exposed emergency relay in each room. Its locked beam warns for a full second and stops at cover; it can also hit enemies. Break all three relays to restore reserve power, adding **6 health to ordinary room recovery** for the rest of the run.
+- **Turf War:** amber and teal crews fight one another and still attack you. Two rival flyers join each room. Your second crew kill unlocks a salvage case; reach it to bank **one free upgrade reroll**. Rival kills cannot trigger your healing or kill effects. Daily salvage restores 16 health instead, preserving its single fixed reward.
+- **Lockdown:** one warned patrol can arrive per room. After clearing the room, **jump beside the terminal** to voluntarily summon its commander. Defeating it cancels later patrols in that area and favors **a legal follow-up upgrade** in remaining area rewards, while preserving boss salvage and all build restrictions.
+
+Brief arrival and reward notices fade away. Objectives sit on open floor; faction markers use both color and one/two stripes. Event progress and banked rerolls survive Continue. Older saved runs keep their original event-free course. Practice, Workshop, detours, and New Game+ do not receive event encounters; event perks end on entering New Game+. Daily now uses **ruleset 65**.
+
+[**Test Blackout**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=blackout&v=2.76.0) · [**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.76.0) · [**Test Lockdown**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=lockdown&v=2.76.0)
+
+Click the named test button. Each link starts at the beginning of the affected area with full health and four upgrades; continue through the area to see the event develop. **R** restarts the preset. These tests never write your campaign save, discoveries, Daily record, or Practice unlocks.
+
 ## Grapnel, Convoy and workshop follow-ups · 2.75.0
 
 Five additions bring the catalog to **100 upgrades**:

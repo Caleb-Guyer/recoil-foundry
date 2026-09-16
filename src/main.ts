@@ -1,3 +1,4 @@
+import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
 import { torchTestFromUrl } from './practice.ts';
 import { branchTestFromUrl, BRANCH_TEST_BUILDS } from './branch-builds.ts';
@@ -192,6 +193,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  eventTestFromUrl(entryUrl) ??
   dropworksTestFromUrl(entryUrl) ??
   massDriverTestFromUrl(entryUrl) ??
   rerollTestFromUrl(entryUrl) ??
@@ -240,6 +242,11 @@ function updateTitle() {
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   if (linkedWorkshop) $('play').innerHTML = 'Open Workshop <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.areaEvent)
+    $('play').innerHTML =
+      'Test ' +
+      AREA_EVENTS[linkedRunTest.areaEvent.kind].name +
+      ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'RECLAMATION-20')
     $('play').innerHTML = 'Test Reclamation Works <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
@@ -336,6 +343,8 @@ function updateTitle() {
           : unavailableDailySave
             ? 'Saved daily unavailable. Start a new daily.'
             : 'Shoot down. Go up.';
+  if (linkedRunTest?.areaEvent)
+    $('title-hint').textContent = AREA_EVENTS[linkedRunTest.areaEvent.kind].hint + ' R to restart.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')
@@ -912,21 +921,28 @@ function showDialog(kind: string) {
           ' title="' +
           (game.rewardRerolled
             ? 'Once per reward'
-            : game.hp <= REROLL_COST
+            : !game.areaEvents.freeReroll && game.hp <= REROLL_COST
               ? 'Requires more than ' + REROLL_COST + ' health'
               : !game.canReroll
                 ? 'No full set of new upgrades available'
                 : 'Replace every card. Once per reward.') +
           '">' +
-          (game.rewardRerolled ? 'Reroll used' : 'Reroll · −' + REROLL_COST + ' health') +
+          (game.rewardRerolled
+            ? 'Reroll used'
+            : game.areaEvents.freeReroll
+              ? 'Reroll · free'
+              : 'Reroll · −' + REROLL_COST + ' health') +
           '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
         : '');
     const reroll = document.getElementById('reroll');
     if (reroll)
       reroll.onclick = () => {
         sound.unlock();
+        const free = game.areaEvents.freeReroll;
         if (game.rerollReward()) {
-          $('reward-status').textContent = 'Choices replaced. ' + REROLL_COST + ' health spent.';
+          $('reward-status').textContent = free
+            ? 'Choices replaced. Salvage used.'
+            : 'Choices replaced. ' + REROLL_COST + ' health spent.';
           // Do not let a second Enter on the reroll accept an unfamiliar card.
           $('dialog-title').tabIndex = -1;
           $('dialog-title').focus();

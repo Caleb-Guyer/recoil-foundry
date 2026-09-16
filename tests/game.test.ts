@@ -752,6 +752,9 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     common._seed = 0;
     const g = new Game();
     g.start(seed);
+    // Keep this weapon-progression battery on its original event-free course.
+    // Area event combat, objectives and rewards have their own ordinary-input tests.
+    g.areaEvents.state = null;
     if (overtimeRun)
       g.startTest(overtimeTestFromUrl(new URL('https://example.com/?test=overtime'))!);
     const extendedRewards = rewards && [...rewards];

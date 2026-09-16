@@ -1,3 +1,4 @@
+import { drawAreaEvent, drawEventEnemy, drawEventNotice } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
 import {
   attackBrace,
@@ -162,6 +163,14 @@ export class Renderer {
     if (g.level.freight && g.mode !== 'title') drawFreightScenery(c, this.camera, viewW, viewH);
     else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
     else drawScenery(c, g.level.area, this.camera, viewW, viewH);
+    if (
+      g.areaEvents.active === 'blackout' &&
+      g.areaEvents.state!.relays.length < 3 &&
+      !g.areaEvents.state!.relays.includes(g.stage)
+    ) {
+      c.fillStyle = '#02060888';
+      c.fillRect(0, 0, viewW, viewH);
+    }
     c.restore();
     c.save();
     if (!this.reduced && g.mode !== 'title') {
@@ -249,6 +258,7 @@ export class Renderer {
     }
     c.globalAlpha = 1;
     for (const e of g.enemies) {
+      if (drawEventEnemy(c, e)) continue;
       if (e.workshopTarget) {
         drawWorkshopTarget(c, e);
         continue;
@@ -678,6 +688,7 @@ export class Renderer {
         c.restore();
       }
     }
+    drawAreaEvent(c, g);
     // Hostile projectiles stay above player shots and all cosmetic particles.
     for (const s of threats) {
       if (s.blade) drawBlade(c, s, g.time, this.reduced);
@@ -743,6 +754,7 @@ export class Renderer {
       }
     }
     c.restore();
+    drawEventNotice(c, g, this.width);
     if (g.mode === 'playing' && !g.clear && !g.workshop.active && !g.escape) {
       c.save();
       // Screen-space cues do not jitter with recoil or screen shake.

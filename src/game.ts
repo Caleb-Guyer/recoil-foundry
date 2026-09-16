@@ -1,3 +1,4 @@
+import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
@@ -150,6 +151,9 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  eventRole?: EventRole;
+  crewMeleeAt?: number;
+  crew?: 0 | 1;
   workshopTarget?: WorkshopTarget;
   id: number;
   body: Matter.Body;
@@ -183,6 +187,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  crew?: 0 | 1;
   damageCause?: DamageCause;
   id: number;
   launch?: { pos: Vec; at: number };
@@ -248,6 +253,7 @@ export class Game {
   player!: Matter.Body;
   level!: Level;
   terrain: Matter.Body[] = [];
+  areaEvents = new AreaEventSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   loaderArena = new LoaderArenaSystem(this);
@@ -446,6 +452,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.areaEvents.clear();
       this.loaderArena.stop();
       this.massDriver.reset();
       this.arcs.reset();
@@ -516,6 +523,7 @@ export class Game {
     this.practice = practice;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
+    this.areaEvents.start(save);
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
     this.missedUpgrades = save?.missedUpgrades ?? 0;
@@ -558,6 +566,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.areaEvents.state ? { areaEvent: structuredClone(this.areaEvents.state) } : {}),
       ...(this.legacyMods ? { legacyMods: [...this.legacyMods] } : {}),
       ...(this.legacyOffers ? { legacyOffers: [...this.legacyOffers] } : {}),
       seed: this.seed,
@@ -586,6 +595,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.areaEvents.clear();
     this.breachAt = -1;
     this.breachClears = 0;
     this.massDriver.reset();
@@ -749,6 +759,7 @@ export class Game {
     this.loaderArena.reset();
     this.pressure.reset();
     this.workshop.reset();
+    this.areaEvents.reset(clearedRoom);
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active) return;
@@ -770,6 +781,7 @@ export class Game {
       this.mode !== 'playing'
     )
       return false;
+    this.areaEvents.state = null;
     this.overtime = { baseMods: this.mods.length, repairs: 0 };
     this.stage = 0;
     this.route = null;
@@ -950,6 +962,7 @@ export class Game {
       attack: 'aimed',
     };
     this.enemies.push(enemy);
+    this.areaEvents.assignCrew(enemy);
     if (kind === 'crane') enemy.crane = createCrane(this, enemy);
     if (kind === 'kiln') enemy.kiln = createKiln();
     if (kind === 'turbine') enemy.turbine = createTurbine();
@@ -983,7 +996,7 @@ export class Game {
     this.muzzle = Math.max(0, this.muzzle - dt);
     this.land = Math.max(0, this.land - dt);
     // Keep jump taps through the tiny impact pause.
-    if (input.jump) this.jumpBuffer = 0.12;
+    if (input.jump && !this.areaEvents.input(true)) this.jumpBuffer = 0.12;
     if (input.firePressed) this.fireBuffer = 0.12;
     if (input.portal) this.portalRequest = { ...input.portal };
     if (this.hitStop > 0) {
@@ -1191,9 +1204,12 @@ export class Game {
       this.workshop.update(dt);
       return;
     }
+    this.areaEvents.update(dt);
+    if (this.mode !== 'playing') return;
     this.waves.update(dt);
     if (
       !this.enemies.length &&
+      !this.areaEvents.pending &&
       !this.waves.pending &&
       !this.clear &&
       (!this.freight.active || this.freight.arrived)
@@ -1546,7 +1562,14 @@ export class Game {
       if (e.crawler) updateWallcrawler(this, e, dt);
       return;
     }
-    if (this.cryogenic.frozen(e)) return;
+    if (this.cryogenic.frozen(e)) {
+      if (e.eventRole === 'relay') {
+        this.areaEvents.beam = null;
+        e.state = 'idle';
+        e.timer = 1.2;
+      }
+      return;
+    }
     if (this.salvageEvolutions.carried(e)) return;
     if (this.ballistics.pinned(e)) return;
     if (this.tethers.staggered(e)) return;
@@ -1556,6 +1579,7 @@ export class Game {
       this.workshop.move(e);
       return;
     }
+    if (this.areaEvents.updateEnemy(e, dt)) return;
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *
@@ -2128,6 +2152,7 @@ export class Game {
       damage,
       life: 4,
       friendly: false,
+      ...(e.crew !== undefined ? { crew: e.crew } : {}),
       damageCause: { type: blade ? 'blade' : 'shot', enemy: e.kind },
       source: { ...e.body.position },
       ...(e.squad ? { allyBlock: e.id } : {}),
@@ -2195,6 +2220,10 @@ export class Game {
               targets.push([e.body, e]);
         } else {
           targets.push([this.player, undefined, true]);
+          if (s.crew !== undefined)
+            for (const e of this.enemies)
+              if (e.crew !== undefined && e.crew !== s.crew && e.spawn <= 0)
+                targets.push([e.body, e]);
           if (s.allyBlock !== undefined)
             for (const e of this.enemies)
               if (e.id !== s.allyBlock && e.spawn <= 0) targets.push([e.body]);
@@ -2342,6 +2371,18 @@ export class Game {
           if (this.mode !== 'playing') return;
         } else if (nearest.enemy) {
           const e = nearest.enemy;
+          if (!s.friendly) {
+            this.hitEnemy(
+              e,
+              s.damage,
+              { x: e.body.position.x - s.vel.x, y: e.body.position.y - s.vel.y },
+              true,
+              false,
+              false,
+            );
+            s.life = 0;
+            continue;
+          }
           if (s.massDriver?.struck.has(e.id)) {
             this.massDriver.bounce(s, nearest.normal, e.body, false);
             if (!e.body.isStatic) remaining = 0;
@@ -2563,7 +2604,14 @@ export class Game {
       });
     }
   }
-  hitEnemy(e: Enemy, damage: number, from?: Vec, feedback = true, killEffects = true): boolean {
+  hitEnemy(
+    e: Enemy,
+    damage: number,
+    from?: Vec,
+    feedback = true,
+    killEffects = true,
+    credited = true,
+  ): boolean {
     if (e.hp <= 0) return false;
     const incomingDamage = damage;
     const blocked =
@@ -2619,16 +2667,17 @@ export class Game {
     breakSquad(this, e);
     releaseScrapper(this, e);
     this.harpoons.disrupt(e.body);
-    this.kills++;
+    if (credited && e.eventRole !== 'relay') this.kills++;
+    this.areaEvents.killed(e, credited);
     this.tethers.disrupt(e.body);
-    this.hp = Math.min(100, this.hp + this.gun.heal);
+    if (credited && e.eventRole !== 'relay') this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);
     clearKiln(e);
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
     if (e.kind === 'loader') this.loaderArena.stop();
-    this.salvageEvolutions.killed(e, killEffects);
+    if (credited && e.eventRole !== 'relay') this.salvageEvolutions.killed(e, killEffects);
     if (
       isBoss(e.kind) &&
       !this.practice &&
@@ -2727,6 +2776,20 @@ export class Game {
       seeded(this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage),
       { stage: this.stage, overtime: !!this.overtime, salvage: this.earnedSalvage },
     );
+    if (this.areaEvents.clearance)
+      this.offers = this.areaEvents.preferRewards(
+        this.offers,
+        rewardMods(
+          this.mods,
+          MODS.length,
+          seeded(this.layoutSeed + ':event-rewards:' + this.stage),
+          {
+            stage: this.stage,
+            overtime: !!this.overtime,
+            salvage: this.earnedSalvage,
+          },
+        ),
+      );
     if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
     this.rewardTaken = false;
     this.rewardRerolled = false;
@@ -2734,13 +2797,22 @@ export class Game {
     this.save();
   }
   private replacementOffers() {
-    return rewardMods(
+    const replacements = rewardMods(
       this.mods,
       this.offers.length,
       seeded(
         this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage + ':reroll',
       ),
       { stage: this.stage, overtime: !!this.overtime },
+      this.offers.map((m) => m.id),
+    );
+    if (!this.areaEvents.clearance) return replacements;
+    return this.areaEvents.preferRewards(
+      replacements,
+      rewardMods(this.mods, MODS.length, seeded(this.layoutSeed + ':event-reroll:' + this.stage), {
+        stage: this.stage,
+        overtime: !!this.overtime,
+      }),
       this.offers.map((m) => m.id),
     );
   }
@@ -2752,7 +2824,7 @@ export class Game {
       !dailyFromSeed(this.seed) &&
       !this.rewardTaken &&
       !this.rewardRerolled &&
-      this.hp > REROLL_COST &&
+      (this.areaEvents.freeReroll || this.hp > REROLL_COST) &&
       this.offers.length > 0 &&
       !this.offers.some((m) => m.id === 'repair') &&
       this.replacementOffers().length === this.offers.length
@@ -2761,7 +2833,8 @@ export class Game {
   rerollReward() {
     if (!this.canReroll) return false;
     const replacements = this.replacementOffers();
-    this.hp -= REROLL_COST;
+    if (this.areaEvents.freeReroll) this.areaEvents.spendReroll();
+    else this.hp -= REROLL_COST;
     this.rewardRerolled = true;
     this.offers = replacements;
     this.legacyOffers = undefined;
@@ -2796,7 +2869,10 @@ export class Game {
       this.detour = false;
       this.stage++;
     } else {
-      this.hp = Math.min(100, this.hp + (id === 'repair' ? 24 : ROOM_HEAL));
+      this.hp = Math.min(
+        100,
+        this.hp + (id === 'repair' ? 24 : ROOM_HEAL) + this.areaEvents.roomHeal,
+      );
       if (this.enteringDetour) this.detour = true;
       else this.stage++;
     }

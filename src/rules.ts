@@ -1,3 +1,4 @@
+import { validAreaEvent } from './area-events.ts';
 import {
   BRANCH_MODS,
   BRANCH_PATHS,
@@ -1000,6 +1001,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  areaEvent?: import('./area-events.ts').AreaEventSave;
   version: 5 | 6;
   legacyMods?: string[];
   legacyOffers?: string[];
@@ -1173,6 +1175,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
+    validAreaEvent(d.areaEvent, d.stage, !!d.reward || !!d.overtime) &&
     ([5, 6].includes(d.version) || previous || legacy) &&
     typeof d.seed === 'string' &&
     d.seed.length <= 40 &&
