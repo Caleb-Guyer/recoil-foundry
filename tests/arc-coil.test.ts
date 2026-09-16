@@ -505,6 +505,8 @@ test('Daily rewards remain deterministic and valid with both new mods in the poo
       b = new Game();
     a.start(seed);
     b.start(seed);
+    // This fixture skips combat to test rewards; event fights have their own playtests.
+    a.areaEvents.state = b.areaEvents.state = null;
     for (let stage = 0; stage < 19; stage++) {
       a.openReward();
       b.openReward();

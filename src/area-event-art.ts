@@ -1,14 +1,13 @@
 import type { Enemy, Game } from './game.ts';
-import { clamp, distance } from './rules.ts';
-
+import { clamp, distance, type Vec } from './rules.ts';
 const AMBER = '#e8bb76',
-  TEAL = '#8dcac5';
+  BLUE = '#6bb7ff';
 export function drawEventEnemy(c: CanvasRenderingContext2D, e: Enemy): boolean {
   if (e.eventRole !== 'relay') return false;
   const p = e.body.position;
   c.save();
   c.translate(p.x, p.y);
-  c.fillStyle = '#172125';
+  c.fillStyle = '#152028';
   c.strokeStyle = AMBER;
   c.lineWidth = 2;
   c.fillRect(-19, -17, 38, 33);
@@ -19,22 +18,49 @@ export function drawEventEnemy(c: CanvasRenderingContext2D, e: Enemy): boolean {
   c.lineTo(3, 1);
   c.lineTo(-2, 11);
   c.stroke();
-  c.fillStyle = e.flash > 0 ? '#fff1d1' : AMBER;
-  c.fillRect(-19, -24, 38 * Math.max(0, e.hp / e.maxHp), 3);
+  c.fillStyle = '#ffc67e';
+  c.fillRect(12, -12, 3, 3);
   c.restore();
   return true;
 }
 export function drawAreaEvent(c: CanvasRenderingContext2D, g: Game) {
   const event = g.areaEvents;
-  if (!event.active || g.level.boss) return;
+  if (!event.active) return;
   c.save();
-  for (const e of g.enemies) {
-    if (e.crew === undefined && e.eventRole !== 'commander') continue;
+  for (const e of event.allies) {
     const p = e.body.position;
-    c.strokeStyle = e.crew === 1 ? TEAL : AMBER;
+    c.globalAlpha =
+      event.departingAt === null ? 1 : clamp(1 - (g.time - event.departingAt) / 3, 0, 1);
+    c.fillStyle = e.flash > 0 ? '#e7f6ff' : '#163c63';
+    c.strokeStyle = BLUE;
     c.lineWidth = 2;
     c.beginPath();
+    c.arc(p.x, p.y, 19, 0, Math.PI * 2);
+    c.fill();
+    c.stroke();
+    c.beginPath();
+    c.moveTo(p.x + e.aim.x * 11, p.y + e.aim.y * 11);
+    c.lineTo(p.x + e.aim.x * 28, p.y + e.aim.y * 28);
+    c.stroke();
+    c.fillStyle = '#b9e0ff';
+    c.fillRect(p.x - 3, p.y - 3, 6, 6);
+  }
+  c.globalAlpha = 1;
+  for (const s of g.shots)
+    if (s.allied && s.life > 0) {
+      c.strokeStyle = '#6bb7ff';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(s.pos.x - s.vel.x * 0.7, s.pos.y - s.vel.y * 0.7);
+      c.lineTo(s.pos.x, s.pos.y);
+      c.stroke();
+    }
+  for (const e of g.enemies)
     if (e.eventRole === 'commander') {
+      const p = e.body.position;
+      c.strokeStyle = AMBER;
+      c.lineWidth = 2;
+      c.beginPath();
       c.moveTo(p.x - 15, p.y - 29);
       c.lineTo(p.x - 12, p.y - 39);
       c.lineTo(p.x, p.y - 32);
@@ -43,32 +69,11 @@ export function drawAreaEvent(c: CanvasRenderingContext2D, g: Game) {
       c.stroke();
       c.fillStyle = AMBER;
       c.fillRect(p.x - 24, p.y - 45, 48 * Math.max(0, e.hp / e.maxHp), 3);
-    } else {
-      c.moveTo(p.x - 11, p.y - 28);
-      c.lineTo(p.x + 11, p.y - 28);
-      if (e.crew === 1) {
-        c.moveTo(p.x - 11, p.y - 32);
-        c.lineTo(p.x + 11, p.y - 32);
-      }
-      c.stroke();
     }
-  }
-  const beam = event.beam;
-  if (beam) {
-    const to = g.lineEnd(beam.from, beam.to, 5);
-    c.strokeStyle = beam.warning ? '#e8bb7690' : '#fff0cd';
-    c.lineWidth = beam.warning ? 1.5 : 10;
-    if (beam.warning) c.setLineDash([8, 10]);
-    c.beginPath();
-    c.moveTo(beam.from.x, beam.from.y);
-    c.lineTo(to.x, to.y);
-    c.stroke();
-    c.setLineDash([]);
-  }
   const p = event.site;
   if (event.active === 'turf' && !event.cacheTaken && !event.state?.caches.includes(g.stage)) {
     c.fillStyle = '#192527';
-    c.strokeStyle = event.cacheReady ? TEAL : '#6b7470';
+    c.strokeStyle = event.cacheReady ? BLUE : '#555e64';
     c.lineWidth = 2;
     c.fillRect(p.x - 20, p.y - 14, 40, 30);
     c.strokeRect(p.x - 20, p.y - 14, 40, 30);
@@ -76,62 +81,86 @@ export function drawAreaEvent(c: CanvasRenderingContext2D, g: Game) {
     c.moveTo(p.x - 20, p.y - 4);
     c.lineTo(p.x + 20, p.y - 4);
     c.stroke();
-    c.fillStyle = event.cacheReady ? TEAL : '#6b7470';
-    for (let i = 0; i < 2; i++)
-      if (event.crewKills > i) c.fillRect(p.x - 9 + i * 12, p.y + 3, 6, 6);
-    if (event.cacheReady) {
-      c.beginPath();
-      c.arc(p.x, p.y - 36, 3, 0, Math.PI * 2);
-      c.fill();
-    }
+    c.fillStyle = event.cacheReady ? '#b9e0ff' : '#555e64';
+    c.fillRect(p.x - 3, p.y + 3, 6, 6);
   }
   if (event.active === 'lockdown') {
-    const done = event.state?.commander;
+    const ready = event.terminalReady,
+      done = event.hunted && !event.pending;
     c.fillStyle = '#192527';
-    c.strokeStyle = done ? TEAL : AMBER;
+    c.strokeStyle = done ? '#8dcac5' : ready ? AMBER : '#687278';
     c.lineWidth = 2;
-    c.fillRect(p.x - 14, p.y - 42, 28, 24);
-    c.strokeRect(p.x - 14, p.y - 42, 28, 24);
+    c.fillRect(p.x - 16, p.y - 46, 32, 28);
+    c.strokeRect(p.x - 16, p.y - 46, 32, 28);
     c.beginPath();
     c.moveTo(p.x, p.y - 18);
     c.lineTo(p.x, p.y + 16);
     c.stroke();
-    if ((event.patrolWarned && !event.patrolDone) || event.pending) {
+    c.fillStyle = c.strokeStyle;
+    if (ready) {
+      // A raised illuminated switch suggests the existing jump interaction.
       c.beginPath();
-      c.arc(p.x, p.y - 30, 26, 0, Math.PI * 2);
+      c.moveTo(p.x - 7, p.y - 30);
+      c.lineTo(p.x, p.y - 38);
+      c.lineTo(p.x + 7, p.y - 30);
       c.stroke();
-    }
-    if (g.clear && !done && !event.hunted && distance(g.player.position, p) < 170) {
-      c.font = '11px monospace';
-      c.textAlign = 'center';
-      c.fillStyle = AMBER;
-      c.fillText('JUMP · HUNT', p.x, p.y - 57);
-    }
+      c.fillRect(p.x - 4, p.y - 26, 8, 3);
+      if (distance(g.player.position, p) < 80) {
+        c.beginPath();
+        c.arc(p.x, p.y - 32, 25, 0, Math.PI * 2);
+        c.stroke();
+      }
+    } else
+      for (let i = 0; i < 3; i++) c.fillRect(p.x - 9 + i * 7, p.y - 35, 4, event.pending ? 10 : 4);
   }
   c.restore();
 }
-export function drawEventNotice(c: CanvasRenderingContext2D, g: Game, width: number) {
-  const ev = g.areaEvents;
-  if (g.mode !== 'playing' || !ev.banner || g.time >= ev.bannerUntil) return;
-  c.save();
-  c.globalAlpha = clamp((ev.bannerUntil - g.time) * 2, 0, 1);
-  c.font = '12px monospace';
-  c.textAlign = 'center';
-  c.fillStyle = '#e5e1d1';
-  const lines: string[] = [];
-  let line = '';
-  for (const word of ev.banner.split(' ')) {
-    const next = line ? line + ' ' + word : word;
-    if (c.measureText(next).width > width - 64 && line) {
-      lines.push(line);
-      line = word;
-    } else line = next;
+// A mask darkens the actual world, including terrain and characters. Only a
+// small pool around the pilot and the box's indicator cut through the blackout.
+const masks = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+export function drawBlackout(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  camera: Vec,
+  scale: number,
+  width: number,
+  height: number,
+) {
+  if (!g.areaEvents.dark) return;
+  let mask = masks.get(c.canvas);
+  if (!mask) {
+    mask = document.createElement('canvas');
+    masks.set(c.canvas, mask);
   }
-  lines.push(line);
-  const w = Math.min(width - 32, Math.max(...lines.map((l) => c.measureText(l).width)) + 28);
-  c.fillStyle = '#111a20e8';
-  c.fillRect((width - w) / 2, 71, w, 20 + lines.length * 18);
-  c.fillStyle = '#e5e1d1';
-  lines.forEach((l, i) => c.fillText(l, width / 2, 93 + i * 18));
+  const w = Math.ceil(width),
+    h = Math.ceil(height);
+  if (mask.width !== w || mask.height !== h) {
+    mask.width = w;
+    mask.height = h;
+  }
+  const m = mask.getContext('2d')!;
+  m.globalCompositeOperation = 'source-over';
+  m.clearRect(0, 0, w, h);
+  m.fillStyle = 'rgba(0,3,7,0.985)';
+  m.fillRect(0, 0, w, h);
+  m.globalCompositeOperation = 'destination-out';
+  const light = (pos: Vec, radius: number, strength: number) => {
+    const x = (pos.x - camera.x) * scale,
+      y = (pos.y - camera.y) * scale,
+      r = radius * scale;
+    const gradient = m.createRadialGradient(x, y, 0, x, y, r);
+    gradient.addColorStop(0, 'rgba(0,0,0,' + strength + ')');
+    gradient.addColorStop(0.35, 'rgba(0,0,0,' + strength * 0.65 + ')');
+    gradient.addColorStop(1, 'transparent');
+    m.fillStyle = gradient;
+    m.fillRect(x - r, y - r, r * 2, r * 2);
+  };
+  light(g.player.position, 175, 0.92);
+  light(g.areaEvents.site, 75, 0.8);
+  if (g.muzzle > 0) light(g.player.position, 225, Math.min(0.6, g.muzzle * 4));
+  // Small shot glints retain a readable hazard without illuminating whole rooms.
+  for (const s of g.shots.slice(-80)) if (s.life > 0) light(s.pos, 18, 0.72);
+  c.save();
+  c.drawImage(mask, 0, 0, width, height);
   c.restore();
 }

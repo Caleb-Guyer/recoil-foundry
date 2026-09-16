@@ -245,6 +245,8 @@ test('shared, continued, and retried dailies reproduce twenty rooms and nineteen
   let second = new Game();
   first.start(challenge.seed);
   second.start(dailyFromUrl(new URL(dailyLink(challenge, 'https://example.com/game/')))!.seed);
+  // This fixture skips combat to test rewards; event fights have their own playtests.
+  first.areaEvents.state = second.areaEvents.state = null;
   const rooms: string[] = [];
   const bosses: number[] = [];
   const sequence: string[] = [];
@@ -288,6 +290,7 @@ test('shared, continued, and retried dailies reproduce twenty rooms and nineteen
   assert.deepEqual(first.mods, sequence);
 
   first.start(first.seed);
+  first.areaEvents.state = null;
   for (let stage = 0; stage < STAGES - 1; stage++) {
     assert.equal(first.level.id, rooms[stage]);
     for (let i = 0; i < 31 + stage; i++) first.rng();
@@ -360,6 +363,8 @@ test('ordinary runs retain three distinct upgrade choices after every eligible r
   for (const seed of ['ordinary-run', '2026-09-06', `RF-D${DAILY_RULESET}-invalid`]) {
     const game = new Game();
     game.start(seed);
+    // This fixture skips combat to test rewards; event fights have their own playtests.
+    game.areaEvents.state = null;
     for (let stage = 0; stage < STAGES - 1; stage++) {
       game.openReward();
       assert.equal(game.offers.length, 3, `${seed}, room ${stage + 1}`);

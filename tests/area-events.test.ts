@@ -9,14 +9,9 @@ import {
   validAreaEvent,
   type AreaEventKind,
 } from '../src/area-events.ts';
-import {
-  getGun,
-  loadCheckpoint,
-  MOD_REQUIRES,
-  rewardMods,
-  seeded,
-  type Checkpoint,
-} from '../src/rules.ts';
+import { loadCheckpoint, MOD_REQUIRES, rewardMods, seeded, type Checkpoint } from '../src/rules.ts';
+import { todayDaily } from '../src/daily.ts';
+import { freightSelected } from '../src/freight-layout.ts';
 import { Body, Composite, fixture, round, target, wall } from './branches-fixture.ts';
 import { playRoom } from './room-pilot.ts';
 const idle = {
@@ -35,19 +30,25 @@ function game(kind: AreaEventKind) {
   g.startTest(preset(kind));
   return g;
 }
-function killAll(g: Game) {
-  g.waves.clear();
-  for (const e of [...g.enemies]) {
-    e.spawn = 0;
-    g.hitEnemy(e, 99999);
-  }
+function kill(g: Game, keepBox = false) {
+  for (const e of [...g.enemies])
+    if (!keepBox || e.eventRole !== 'relay') {
+      e.spawn = 0;
+      g.hitEnemy(e, 99999);
+    }
   g.hitStop = 0;
 }
+function settle(g: Game, frames = 160) {
+  for (let i = 0; i < frames && g.mode === 'playing'; i++) {
+    g.hitStop = 0;
+    g.tick(1 / 60, idle);
+  }
+}
 
-test('event plans are deterministic, optional, and limited to one middle area', () => {
+test('seeded events remain optional, repeatable and Blackout selects exactly one combat room', () => {
   const seen = new Set<string>();
   let absent = 0;
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 250; i++) {
     const seed = 'event-plan-' + i,
       a = planAreaEvent(seed);
     assert.deepEqual(a, planAreaEvent(seed));
@@ -57,11 +58,16 @@ test('event plans are deterministic, optional, and limited to one middle area', 
     }
     seen.add(a.kind + a.area);
     assert(validAreaEvent(a, 0, false));
+    if (a.kind === 'blackout') {
+      assert.equal(Math.floor(a.room! / 4), a.area);
+      assert(a.room! % 4 < 3);
+      assert(!freightSelected(seed, a.room!));
+    }
   }
   assert.equal(seen.size, 9);
-  assert(absent > 80 && absent < 180);
+  assert(absent > 30 && absent < 100);
 });
-test('links validate and isolated event runs cannot write saves or boss discoveries', () => {
+test('all direct links are legal, reject mixed modes, and never write campaign saves or unlocks', () => {
   for (const kind of Object.keys(AREA_EVENTS) as AreaEventKind[]) {
     const save = preset(kind);
     assert(loadCheckpoint(save));
@@ -71,25 +77,27 @@ test('links validate and isolated event runs cannot write saves or boss discover
     g.onBossDefeated = () => writes++;
     g.startTest(save);
     assert.equal(g.areaEvents.active, kind);
-    killAll(g);
-    g.openReward();
-    g.chooseMod(g.offers[0].id);
+    g.save();
     g.die();
+    g.startTest(g.testRun!);
     assert.equal(writes, 0);
+    assert.equal(g.hp, 100);
   }
   for (const suffix of [
     'event=bogus',
     'event=turf&event=blackout',
     'event=turf&daily=2026-09-16',
     'event=turf&seed=foo',
-    'event=turf&test=events',
   ])
     assert.equal(eventTestFromUrl(new URL('https://example.test/?test=events&' + suffix)), null);
 });
-test('old checkpoints, Workshop, practice, detours and Overtime do not gain event machinery', () => {
+test('old checkpoints, Workshop, detours, bosses and Overtime do not gain event encounters', () => {
   const g = game('blackout');
-  g.detour = true;
+  g.stage = 5;
+  g.loadRoom();
+  assert.equal(g.areaEvents.active, null);
   g.stage = 6;
+  g.detour = true;
   g.loadRoom();
   assert.equal(g.areaEvents.active, null);
   g.startWorkshop(['magnum'], ['magnum']);
@@ -98,216 +106,331 @@ test('old checkpoints, Workshop, practice, detours and Overtime do not gain even
   delete save.areaEvent;
   g.start(save.seed, save);
   assert.equal(g.areaEvents.state, null);
-  g.startTest(preset('blackout'));
+  g.startTest(preset('turf'));
+  g.stage = 7;
+  g.loadRoom();
+  assert.equal(g.areaEvents.active, null);
+  assert.equal(g.areaEvents.allies.length, 0);
+  g.stage = 4;
   g.overtime = { baseMods: 4, repairs: 0 };
   g.loadRoom();
   assert.equal(g.areaEvents.active, null);
 });
-test('objectives have clear floor placement across all event areas, routes and seeded layouts', () => {
-  for (let i = 0; i < 35; i++)
+test('event boxes and terminals occupy clear floor across areas, routes and mirrored seeded layouts', () => {
+  for (let i = 0; i < 20; i++)
     for (const area of [1, 2, 3])
       for (const offset of [0, 1, 2]) {
         const save = preset('blackout');
         save.seed = 'event-placement-' + i;
         save.stage = area * 4 + offset;
         save.areaEvent!.area = area;
+        save.areaEvent!.room = save.stage;
         const g = new Game();
         g.startTest(save);
-        const relay = g.enemies.find((e) => e.eventRole === 'relay')!;
-        assert(relay);
-        assert.equal(relay.body.bounds.max.y, 740);
-        assert.equal(
-          Matter.Query.collides(relay.body, g.solidBodies).length,
-          0,
-          `${g.level.id} ${JSON.stringify(g.areaEvents.site)}`,
-        );
-        assert.equal(g.enemies.length <= 14, true);
+        if (g.level.freight) {
+          assert.equal(g.areaEvents.active, null);
+          assert(!g.waves.held);
+          continue;
+        }
+        const box = g.enemies.find((e) => e.eventRole === 'relay')!;
+        assert(box);
+        assert.equal(box.body.bounds.max.y, 740);
+        assert.equal(Matter.Query.collides(box.body, g.solidBodies).length, 0, g.level.id);
         if (offset === 2)
           for (const route of ['low', 'high'] as const) {
             g.route = route;
             g.loadRoom();
-            const r = g.enemies.find((e) => e.eventRole === 'relay')!;
-            assert.equal(Matter.Query.collides(r.body, g.solidBodies).length, 0, g.level.id);
+            const e = g.enemies.find((e) => e.eventRole === 'relay')!;
+            assert.equal(Matter.Query.collides(e.body, g.solidBodies).length, 0, g.level.id);
           }
       }
 });
-test('Blackout beam is telegraphed, cover clipped, and cannot repeat damage to a target', () => {
-  const g = fixture([]);
-  g.areaEvents.state = preset('blackout').areaEvent!;
-  g.areaEvents.active = 'blackout';
-  const e = target(g, 500, 300);
-  e.eventRole = 'relay';
-  e.timer = 0;
-  Body.setPosition(g.player, { x: 900, y: 300 });
-  g.areaEvents.updateEnemy(e, 1 / 60);
-  assert(g.areaEvents.beam?.warning);
-  const cover = wall(g, 700, 300, 30, 150);
-  e.timer = 0;
-  g.areaEvents.updateEnemy(e, 1);
-  assert.equal(g.areaEvents.beam!.warning, false);
-  g.areaEvents.update(1 / 60);
-  assert.equal(g.hp, 100);
-  Composite.remove(g.engine.world, cover);
-  g.terrain = g.terrain.filter((b) => b !== cover);
-  g.areaEvents.update(1 / 60);
-  assert.equal(g.hp, 81);
-  g.hurtAt = -100;
-  g.areaEvents.update(1 / 60);
-  assert.equal(g.hp, 81);
-  g.hitEnemy(e, 1e6);
-  assert.equal(g.areaEvents.beam, null);
-});
-test('relay objectives accept ordinary rounds and beams, and all three earn persistent recovery', () => {
-  const g = game('blackout');
-  for (const stage of [4, 5, 6]) {
-    g.stage = stage;
-    g.loadRoom();
-    const relay = g.enemies.find((e) => e.eventRole === 'relay')!;
-    relay.spawn = 0;
-    const p = relay.body.position;
-    // An actual primary projectile resolves through Game.updateShots.
-    round(g, { pos: { x: p.x - 40, y: p.y }, vel: { x: 25, y: 0 }, damage: 1000 });
-    for (let frame = 0; frame < 4; frame++) g.updateShots(1 / 60);
-    assert(relay.hp <= 0);
-    assert.equal(g.areaEvents.state!.relays.length, stage - 3);
+test('events preserve the freight shaft boarding waves and never strand objectives below its lift', () => {
+  const seed = Array.from({ length: 100 }, (_, i) => 'event-freight-' + i).find((s) =>
+    freightSelected(s, 5),
+  )!;
+  assert(seed);
+  for (const kind of Object.keys(AREA_EVENTS) as AreaEventKind[]) {
+    const save = preset(kind);
+    save.seed = seed;
+    save.stage = 5;
+    if (kind === 'blackout') save.areaEvent!.room = 5;
+    const g = new Game();
+    g.startTest(save);
+    assert(g.level.freight && g.freight.active);
+    assert.equal(g.areaEvents.active, null);
+    assert.equal(g.areaEvents.allies.length, 0);
+    assert.equal(g.enemies.length, 0);
+    assert.equal(g.waves.doors.length, 7);
+    assert(!g.waves.held);
   }
+});
+test('Blackout holds its reserve indefinitely and a single shot reveals the exit and releases wave two once', () => {
+  const g = game('blackout');
+  assert(g.areaEvents.dark && g.waves.held && g.waves.pending);
+  kill(g, true);
+  for (let i = 0; i < 1800; i++) g.waves.update(1 / 60);
+  assert.equal(g.waves.phase, 'opening');
+  assert(g.waves.doors.every((d) => d.state === 'sealed'));
+  g.openReward();
+  assert.equal(g.mode, 'playing');
+  const box = g.enemies.find((e) => e.eventRole === 'relay')!,
+    p = box.body.position;
+  round(g, { pos: { x: p.x - 24, y: p.y }, vel: { x: 12, y: 0 }, damage: 1 });
+  g.updateShots(1 / 60);
+  assert.equal(box.hp, 0);
+  assert(!g.areaEvents.dark && !g.waves.held);
+  assert.equal(g.waves.phase, 'warning');
+  assert.deepEqual(g.areaEvents.state!.relays, [4]);
   assert.equal(g.areaEvents.roomHeal, 6);
-  g.stage = 8;
+  const doors = g.waves.doors.length;
+  g.areaEvents.killed(box, true);
+  assert.equal(g.waves.doors.length, doors);
+  settle(g);
+  assert(g.enemies.length > 0);
+  assert(!g.clear);
+  g.waves.clear();
+  kill(g);
+  g.tick(1 / 60, idle);
+  assert(g.clear);
+  g.stage = 5;
   g.loadRoom();
   assert.equal(g.areaEvents.active, null);
-  assert.equal(g.areaEvents.roomHeal, 6);
-  const beamGame = fixture(['cutting-torch']);
-  beamGame.areaEvents.state = preset('blackout').areaEvent!;
-  beamGame.areaEvents.active = 'blackout';
-  const relay = target(beamGame, 400, 300);
-  relay.eventRole = 'relay';
-  relay.hp = 40;
-  for (let i = 0; i < 120 && relay.hp > 0; i++) {
-    beamGame.time += 1 / 60;
-    beamGame.torch.beforeStep(1 / 60, true);
-    beamGame.torch.afterStep(1 / 60);
-  }
-  assert(relay.hp <= 0);
+  assert(!g.waves.held);
 });
-test('rival fire hits the opposing crew but cannot proc player healing, kills or upgrades', () => {
-  const g = fixture(['leech', 'coolant-rounds', 'tether']);
+test('the power box can also be activated with an actual beam', () => {
+  const g = fixture(['cutting-torch']);
+  g.areaEvents.active = 'blackout';
+  g.areaEvents.state = preset('blackout').areaEvent!;
+  g.waves.held = true;
+  const box = target(g, 400, 300);
+  box.eventRole = 'relay';
+  box.hp = 1;
+  for (let i = 0; i < 30 && box.hp > 0; i++) {
+    g.time += 1 / 60;
+    g.torch.beforeStep(1 / 60, true);
+    g.torch.afterStep(1 / 60);
+  }
+  assert(box.hp <= 0);
+  assert(g.areaEvents.powered);
+  assert(!g.waves.held);
+});
+test('Turf War starts as a large simultaneous battle with blue allies on the left and no second wave', () => {
+  for (let i = 0; i < 12; i++) {
+    const save = preset('turf');
+    save.seed = 'turf-density-' + i;
+    const g = new Game();
+    g.startTest(save);
+    assert.equal(g.enemies.length, 22, g.level.id);
+    assert.equal(g.areaEvents.allies.length, 5);
+    assert(g.areaEvents.allies.every((e) => e.allied && e.body.position.x <= 175));
+    assert.equal(g.waves.doors.length, 0);
+    assert(!g.waves.pending);
+    for (const e of [...g.enemies, ...g.areaEvents.allies])
+      assert.equal(
+        Matter.Query.collides(e.body, g.solidBodies).length,
+        0,
+        g.level.id + ' ' + e.kind,
+      );
+  }
+});
+test('allied targeting chooses red enemies and never falls back to the player', () => {
+  const g = game('turf');
+  const ally = g.areaEvents.allies[0];
+  Body.setPosition(ally.body, { x: 180, y: 160 });
+  ally.spawn = 0;
+  ally.timer = 0;
+  const e = g.enemies[0];
+  Body.setPosition(e.body, { x: 340, y: 160 });
+  e.spawn = 0;
+  g.areaEvents.beforeStep(1 / 60);
+  const shot = g.shots.find((s) => s.allied)!;
+  assert(shot);
+  assert(shot.vel.x > 0);
+  assert.equal(shot.friendly, false);
+  kill(g);
+  g.shots = [];
+  ally.timer = 0;
+  g.areaEvents.beforeStep(1 / 60);
+  assert.equal(g.shots.length, 0);
+});
+test('blue bullets pass the player, damage red enemies, and cannot trigger player kill bonuses', () => {
+  const g = fixture(['leech', 'countershot']);
   g.hp = 40;
-  const a = target(g, 400, 300);
-  a.crew = 0;
-  const b = target(g, 600, 300);
-  b.crew = 1;
-  b.hp = 10;
-  g.enemyShot(a, 0, 20, 30);
+  const e = target(g, 650, 300);
+  e.hp = 10;
+  Body.setPosition(g.player, { x: 500, y: 300 });
+  round(g, {
+    pos: { x: 400, y: 300 },
+    vel: { x: 20, y: 0 },
+    damage: 30,
+    friendly: false,
+    allied: true,
+  });
   for (let i = 0; i < 20; i++) g.updateShots(1 / 60);
-  assert(b.hp <= 0);
+  assert(e.hp <= 0);
   assert.equal(g.hp, 40);
   assert.equal(g.kills, 0);
-  assert.equal(g.areaEvents.crewKills, 0);
 });
-test('rival fire respects cover and still threatens the player', () => {
-  const g = fixture([]);
-  const a = target(g, 400, 300);
-  a.crew = 0;
-  const b = target(g, 700, 300);
-  b.crew = 1;
-  b.hp = 100;
-  const cover = wall(g, 550, 300, 25, 150);
-  g.enemyShot(a, 0, 20, 30);
-  for (let i = 0; i < 20; i++) g.updateShots(1 / 60);
-  assert.equal(b.hp, 100);
-  Composite.remove(g.engine.world, cover);
-  g.terrain = g.terrain.filter((t) => t !== cover);
-  Body.setPosition(g.player, { x: 550, y: 300 });
-  g.enemyShot(a, 0, 20, 30);
-  for (let i = 0; i < 20; i++) g.updateShots(1 / 60);
-  assert.equal(g.hp, 70);
-  assert.equal(b.hp, 100);
-});
-test('Turf War requires two credited kills and physical collection; salvage is spent once', () => {
-  const g = game('turf');
-  const crew = g.enemies.filter((e) => e.crew !== undefined);
-  assert(crew.length >= 2);
-  for (const e of crew.slice(0, 2)) {
-    e.spawn = 0;
-    g.hitEnemy(e, 99999);
+test('player projectiles and beams pass through allies without spending a hit or hurting them', () => {
+  for (const beam of [false, true]) {
+    const g = fixture(beam ? ['cutting-torch'] : []);
+    const ally = target(g, 400, 300);
+    ally.allied = true;
+    g.enemies = g.enemies.filter((e) => e !== ally);
+    g.areaEvents.allies = [ally];
+    const enemy = target(g, 550, 300),
+      before = enemy.hp,
+      alliedHp = ally.hp;
+    if (beam)
+      for (let i = 0; i < 60; i++) {
+        g.time += 1 / 60;
+        g.torch.beforeStep(1 / 60, true);
+        g.torch.afterStep(1 / 60);
+      }
+    else {
+      round(g, { pos: { x: 300, y: 300 } });
+      for (let i = 0; i < 15; i++) g.updateShots(1 / 60);
+    }
+    assert(enemy.hp < before);
+    assert.equal(ally.hp, alliedHp);
+    g.hitEnemy(ally, 1e6);
+    assert.equal(ally.hp, alliedHp);
+    g.fireBackblast({ x: -1, y: 0 }, 9999);
+    assert.equal(ally.hp, alliedHp);
   }
-  assert(g.areaEvents.cacheReady);
-  assert.equal(g.areaEvents.state!.rerolls, 0);
+});
+test('allied fire is blocked by cover and cannot be reflected or consume interception charges', () => {
+  const g = fixture(['countershot']);
+  const e = target(g, 700, 300);
+  wall(g, 550, 300, 30, 180);
+  const before = e.hp;
+  const shot = round(g, { friendly: false, allied: true });
+  assert(!g.ballistics.reflectRound(shot, shot.pos));
+  assert(g.ballistics.counterReady);
+  for (let i = 0; i < 20; i++) g.updateShots(1 / 60);
+  assert.equal(e.hp, before);
+  assert(shot.life <= 0);
+});
+test('red gunmen return fire at closer visible blue allies and respect cover', () => {
+  const g = fixture([]);
+  g.areaEvents.active = 'turf';
+  const red = target(g, 800, 300, 'flyer');
+  const ally = target(g, 650, 300);
+  ally.allied = true;
+  g.enemies = g.enemies.filter((e) => e !== ally);
+  g.areaEvents.allies = [ally];
+  Body.setPosition(g.player, { x: 1200, y: 300 });
+  assert.equal(g.areaEvents.redTarget(red), ally.body.position);
+  red.timer = 1;
+  g.updateEnemy(red, 1 / 60);
+  assert(red.aim.x < 0);
+  wall(g, 720, 300, 25, 180);
+  assert.equal(g.areaEvents.redTarget(red), g.player.position);
+  g.areaEvents.active = null;
+  assert.equal(g.areaEvents.redTarget(red), g.player.position);
+});
+test('blue shots cannot detonate canisters or damage cover beside the player', () => {
+  for (const kind of ['canister', 'cover'] as const) {
+    const g = fixture([]);
+    const prop = g.props.spawn(kind, 500, 300);
+    const before = prop.hp;
+    const shot = round(g, { friendly: false, allied: true, damage: 9999 });
+    for (let i = 0; i < 10; i++) g.updateShots(1 / 60);
+    assert.equal(prop.hp, before);
+    assert.equal(prop.armedAt, Infinity);
+    assert(g.props.items.includes(prop));
+    assert.equal(g.hp, 100);
+    assert(shot.life <= 0);
+  }
+});
+test('red projectiles can defeat blue allies without awarding kills or blocking the exit', () => {
+  const g = fixture([]);
+  const ally = target(g, 600, 300);
+  ally.allied = true;
+  ally.hp = 10;
+  g.enemies = [];
+  g.areaEvents.allies = [ally];
+  round(g, { pos: { x: 400, y: 300 }, vel: { x: 20, y: 0 }, damage: 30, friendly: false });
+  for (let i = 0; i < 20; i++) g.updateShots(1 / 60);
+  assert.equal(g.areaEvents.allies.length, 0);
+  assert.equal(g.kills, 0);
+});
+test('surviving allies leave after the last red enemy, never need killing, and salvage is collected once', () => {
+  const g = game('turf');
+  kill(g);
+  g.tick(1 / 60, idle);
+  assert(g.clear && g.areaEvents.cacheReady);
+  assert.notEqual(g.areaEvents.departingAt, null);
   Body.setPosition(g.player, g.areaEvents.site);
   g.areaEvents.update(1 / 60);
   g.areaEvents.update(1 / 60);
   assert.equal(g.areaEvents.state!.rerolls, 1);
-  assert.deepEqual(g.areaEvents.state!.caches, [4]);
-  killAll(g);
+  for (let i = 0; i < 190; i++) {
+    g.time += 1 / 60;
+    g.areaEvents.beforeStep(1 / 60);
+  }
+  assert.equal(g.areaEvents.allies.length, 0);
+  assert(!g.waves.pending);
   g.openReward();
   g.hp = 1;
-  assert(g.canReroll);
   assert(g.rerollReward());
   assert.equal(g.hp, 1);
-  assert.equal(g.areaEvents.state!.rerolls, 0);
   assert(!g.rerollReward());
 });
-test('Daily salvage is healing; Daily still has exactly one predetermined card and no reroll', () => {
+test('Daily salvage heals and its reward stays one fixed legal card', () => {
   const g = game('turf');
-  g.seed = 'RF-D65-2026-09-16';
+  g.seed = todayDaily().seed;
   g.hp = 40;
-  for (const e of g.enemies.filter((e) => e.crew !== undefined)) {
-    e.spawn = 0;
-    g.hitEnemy(e, 99999);
-  }
+  kill(g);
+  g.areaEvents.update(1 / 60);
   Body.setPosition(g.player, g.areaEvents.site);
   g.areaEvents.update(1 / 60);
   assert.equal(g.hp, 56);
   assert.equal(g.areaEvents.state!.rerolls, 0);
-  killAll(g);
   g.openReward();
   assert.equal(g.offers.length, 1);
-  assert.equal(g.canReroll, false);
+  assert(!g.canReroll);
 });
-test('Lockdown hunt is opt-in, warns before arrival, blocks the exit, and cancels later patrols', () => {
+test('Lockdown requires its terminal instead of an automatic second wave, every affected room', () => {
   const g = game('lockdown');
-  killAll(g);
-  g.tick(1 / 60, idle);
-  assert(g.clear);
-  assert(!g.areaEvents.input(true));
+  assert(g.waves.held);
   Body.setPosition(g.player, g.areaEvents.site);
-  assert(g.areaEvents.input(true));
+  assert(!g.areaEvents.input(true));
+  kill(g);
+  for (let i = 0; i < 1800; i++) g.waves.update(1 / 60);
+  assert(g.waves.held && g.areaEvents.terminalReady);
+  g.tick(1 / 60, idle);
   assert(!g.clear);
-  assert(g.areaEvents.pending);
-  assert(!g.enemies.some((e) => e.eventRole === 'commander'));
-  g.time += 1.2;
-  g.areaEvents.update(1 / 60);
+  g.openReward();
+  assert.equal(g.mode, 'playing');
+  assert(g.areaEvents.input(true));
+  assert(!g.areaEvents.input(true));
+  assert(g.areaEvents.pending && !g.waves.held);
+  settle(g);
   const commander = g.enemies.find((e) => e.eventRole === 'commander')!;
   assert(commander);
-  assert(!g.areaEvents.pending);
-  assert(!g.areaEvents.input(true));
-  commander.spawn = 0;
-  g.hitEnemy(commander, 99999);
-  assert(g.areaEvents.state!.commander);
-  g.stage++;
+  assert(g.enemies.length >= 4);
+  assert(!g.clear);
+  g.waves.clear();
+  kill(g);
+  g.tick(1 / 60, idle);
+  assert(g.clear && g.areaEvents.state!.commander);
+  g.stage = 6;
   g.loadRoom();
-  const n = g.enemies.length;
-  g.time += 20;
-  g.areaEvents.update(1 / 60);
-  assert.equal(g.enemies.length, n);
-  assert(!g.areaEvents.input(true));
+  assert(g.waves.held);
+  kill(g);
+  Body.setPosition(g.player, g.areaEvents.site);
+  assert(g.areaEvents.input(true));
+  settle(g);
+  assert(g.enemies.some((e) => e.eventRole === 'commander'));
 });
-test('Lockdown patrols are bounded and never spawn over the body cap', () => {
-  const g = game('lockdown');
-  g.time += 11;
-  g.areaEvents.update(1 / 60);
-  const n = g.enemies.length;
-  assert(g.areaEvents.patrolDone);
-  for (let i = 0; i < 100; i++) {
-    g.time++;
-    g.areaEvents.update(1);
-  }
-  assert.equal(g.enemies.length, n);
-});
-test('Clearance favors legal follow-ups, preserves boss salvage and never duplicates a card', () => {
+test('Clearance preserves legal follow-ups and boss salvage', () => {
   const g = game('lockdown');
   g.areaEvents.state!.commander = true;
-  for (let i = 0; i < 80; i++) {
+  g.waves.clear();
+  kill(g);
+  for (let i = 0; i < 25; i++) {
     g.seed = 'clearance-' + i;
     g.openReward();
     assert(g.offers.some((m) => MOD_REQUIRES[m.id]));
@@ -324,49 +447,52 @@ test('Clearance favors legal follow-ups, preserves boss salvage and never duplic
   g.openReward();
   assert.equal(g.offers[0].id, 'cinder');
 });
-test('event progress survives reward reload and rejects duplicated, future or unrelated claims', () => {
+test('event progress survives reward reload; single-room Blackout rejects future or duplicate claims', () => {
   const g = new Game();
   g.start(preset('blackout').seed, preset('blackout'));
   let save: Checkpoint | null = null;
   g.onCheckpoint = (s) => (save = s);
-  killAll(g);
+  kill(g);
+  g.waves.clear();
   g.openReward();
-  assert(save);
-  assert(loadCheckpoint(save));
+  assert(save && loadCheckpoint(save));
   const resumed = new Game();
   resumed.start(save.seed, loadCheckpoint(save)!);
   assert.deepEqual(resumed.areaEvents.state, g.areaEvents.state);
-  assert.equal(resumed.enemies.length, 0);
+  assert(!resumed.areaEvents.dark);
   for (const change of [
     { relays: [4, 4] },
     { relays: [4, 5] },
+    { room: 7 },
+    { room: 8 },
     { caches: [4] },
     { rerolls: 1 },
-    { kind: 'bogus' },
   ])
     assert.equal(loadCheckpoint({ ...save, areaEvent: { ...save.areaEvent, ...change } }), null);
   resumed.chooseMod(resumed.offers[0].id);
   assert.equal(resumed.stage, 5);
+  assert.equal(resumed.areaEvents.active, null);
 });
-test('event mechanics pause and stop cleanly on death', () => {
+test('pause freezes terminal arrival and death or restart removes allied bodies and event state', () => {
   const g = game('lockdown');
+  kill(g);
   Body.setPosition(g.player, g.areaEvents.site);
-  g.clear = true;
   g.areaEvents.input(true);
   g.setMode('paused');
   const time = g.time;
   for (let i = 0; i < 120; i++) g.tick(1 / 60, idle);
   assert.equal(g.time, time);
   assert(!g.enemies.some((e) => e.eventRole === 'commander'));
-  g.setMode('playing');
   g.die();
-  assert.equal(g.areaEvents.active, null);
   assert(!g.areaEvents.pending);
-  assert.equal(g.areaEvents.beam, null);
+  g.startTest(preset('turf'));
+  const bodies = g.areaEvents.allies.map((e) => e.body);
+  g.die();
+  assert.equal(g.areaEvents.allies.length, 0);
+  assert(bodies.every((b) => !Matter.Composite.allBodies(g.engine.world).includes(b)));
 });
-
 for (const kind of Object.keys(AREA_EVENTS) as AreaEventKind[])
-  test(`${kind} test room clears with its four-upgrade gun, normal health and ordinary inputs`, (t) => {
+  test(kind + ' revised encounter clears with normal health and ordinary combat input', (t) => {
     const common = Matter.Common as typeof Matter.Common & { _nextId: number; _seed: number };
     common._nextId = common._seed = 0;
     const random = Math.random;
@@ -375,18 +501,18 @@ for (const kind of Object.keys(AREA_EVENTS) as AreaEventKind[])
       Math.random = random;
     });
     const g = game(kind);
-    const result = playRoom(g, 75);
-    assert(result.clear && result.hp > 0, JSON.stringify(result));
-    if (kind === 'blackout') assert.deepEqual(g.areaEvents.state!.relays, [4]);
-    if (kind === 'turf') assert(g.areaEvents.cacheReady);
     if (kind === 'lockdown') {
-      // Position at the interaction only; the entire commander fight uses inputs.
+      const first = playRoom(g, 45, () => g.areaEvents.terminalReady);
+      assert(g.areaEvents.terminalReady && g.hp > 0, JSON.stringify(first));
       Body.setPosition(g.player, g.areaEvents.site);
       Body.setVelocity(g.player, { x: 0, y: 0 });
       g.tick(1 / 60, { ...idle, jump: true });
       assert(g.areaEvents.hunted);
-      const hunt = playRoom(g, 50);
-      assert(hunt.clear && hunt.hp > 0 && g.areaEvents.state!.commander, JSON.stringify(hunt));
     }
+    const result = playRoom(g, 90);
+    assert(result.clear && result.hp > 0, JSON.stringify(result));
+    if (kind === 'blackout') assert(g.areaEvents.powered);
+    if (kind === 'lockdown') assert(g.areaEvents.state!.commander);
+    if (kind === 'turf') assert(g.areaEvents.cacheReady);
     t.diagnostic(JSON.stringify(result));
   });

@@ -749,6 +749,8 @@ test('all six test presets retry safely, preserve normal saves and use valid bui
     b = new Game();
   a.start(daily.seed);
   b.start(daily.seed);
+  // This fixture skips combat to test rewards; event fights have their own playtests.
+  a.areaEvents.state = b.areaEvents.state = null;
   for (let i = 0; i < 15; i++) {
     a.openReward();
     b.openReward();

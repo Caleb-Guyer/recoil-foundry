@@ -101,6 +101,7 @@ export class ReinforcementSystem {
   game: Game;
   doors: ReinforcementDoor[] = [];
   phase: 'opening' | 'warning' | 'final' | 'done' = 'done';
+  held = false;
   openingCount = 0;
   openingTime = 0;
   constructor(game: Game) {
@@ -109,7 +110,18 @@ export class ReinforcementSystem {
   get pending() {
     return this.phase === 'opening' || this.phase === 'warning';
   }
+  release() {
+    if (!this.held) return false;
+    this.held = false;
+    this.phase = this.doors.length ? 'warning' : 'done';
+    for (const door of this.doors) {
+      door.state = 'warning';
+      door.timer = REINFORCEMENT_TELL;
+    }
+    return true;
+  }
   clear() {
+    this.held = false;
     this.doors = [];
     this.phase = 'done';
     this.openingCount = 0;
@@ -118,6 +130,7 @@ export class ReinforcementSystem {
   reset(level: Level) {
     this.clear();
     const g = this.game;
+    if (g.areaEvents.encounter === 'turf') return level.spawns.map((s) => ({ ...s }));
     const [opening, final] =
       g.overtime && level.boss
         ? [level.spawns.slice(0, 1), level.spawns.slice(1)]
@@ -195,7 +208,7 @@ export class ReinforcementSystem {
   }
   update(dt: number) {
     const g = this.game;
-    if (g.mode !== 'playing' || g.escape || (g.level.boss && !g.overtime)) return;
+    if (this.held || g.mode !== 'playing' || g.escape || (g.level.boss && !g.overtime)) return;
     if (this.phase === 'opening') {
       if (g.level.freight) return;
       if (

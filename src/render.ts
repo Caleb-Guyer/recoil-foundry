@@ -1,4 +1,4 @@
-import { drawAreaEvent, drawEventEnemy, drawEventNotice } from './area-event-art.ts';
+import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
 import {
   attackBrace,
@@ -134,7 +134,7 @@ export class Renderer {
       dt = Math.min(0.05, (now - this.last) / 1000 || 1 / 60);
     this.last = now;
     if (g.mode === 'playing' || g.mode === 'title') this.clock += dt;
-    const threats = g.shots.filter((shot) => !shot.friendly && shot.life > 0);
+    const threats = g.shots.filter((shot) => !shot.friendly && !shot.allied && shot.life > 0);
     const ratio = this.canvas.width / this.width;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
     const viewW = this.width / this.scale,
@@ -163,14 +163,6 @@ export class Renderer {
     if (g.level.freight && g.mode !== 'title') drawFreightScenery(c, this.camera, viewW, viewH);
     else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
     else drawScenery(c, g.level.area, this.camera, viewW, viewH);
-    if (
-      g.areaEvents.active === 'blackout' &&
-      g.areaEvents.state!.relays.length < 3 &&
-      !g.areaEvents.state!.relays.includes(g.stage)
-    ) {
-      c.fillStyle = '#02060888';
-      c.fillRect(0, 0, viewW, viewH);
-    }
     c.restore();
     c.save();
     if (!this.reduced && g.mode !== 'title') {
@@ -184,7 +176,7 @@ export class Renderer {
     c.scale(this.scale, this.scale);
     c.translate(-this.camera.x, -this.camera.y);
     this.drawBreachBackdrop();
-    drawReinforcementDoors(c, g, this.reduced);
+    if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);
     const palette = AREAS[g.level.area];
     for (const b of g.terrain) {
@@ -210,10 +202,12 @@ export class Renderer {
     }
     drawLoaderSupports(c, g, this.reduced);
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
-    if (!g.workshop.active) this.drawExit();
+    if (!g.workshop.active && !g.areaEvents.dark) this.drawExit();
     drawWorkshopMounts(c, g);
-    drawDetourDoor(c, g);
-    drawRouteExits(c, g);
+    if (!g.areaEvents.dark) {
+      drawDetourDoor(c, g);
+      drawRouteExits(c, g);
+    }
     this.drawHazards();
     drawFreightLift(c, g);
     drawCrossing(c, g, this.reduced);
@@ -754,7 +748,22 @@ export class Renderer {
       }
     }
     c.restore();
-    drawEventNotice(c, g, this.width);
+    drawBlackout(c, g, this.camera, this.scale, this.width, this.height);
+    if (g.areaEvents.dark && g.mode === 'playing') {
+      c.save();
+      c.strokeStyle = '#dce8e199';
+      c.lineWidth = 1;
+      c.beginPath();
+      c.arc(
+        (g.aim.x - this.camera.x) * this.scale,
+        (g.aim.y - this.camera.y) * this.scale,
+        5,
+        0,
+        Math.PI * 2,
+      );
+      c.stroke();
+      c.restore();
+    }
     if (g.mode === 'playing' && !g.clear && !g.workshop.active && !g.escape) {
       c.save();
       // Screen-space cues do not jitter with recoil or screen shake.

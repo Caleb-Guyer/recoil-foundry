@@ -343,8 +343,6 @@ function updateTitle() {
           : unavailableDailySave
             ? 'Saved daily unavailable. Start a new daily.'
             : 'Shoot down. Go up.';
-  if (linkedRunTest?.areaEvent)
-    $('title-hint').textContent = AREA_EVENTS[linkedRunTest.areaEvent.kind].hint + ' R to restart.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')

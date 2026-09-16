@@ -152,8 +152,7 @@ export interface Input {
 }
 export interface Enemy {
   eventRole?: EventRole;
-  crewMeleeAt?: number;
-  crew?: 0 | 1;
+  allied?: boolean;
   workshopTarget?: WorkshopTarget;
   id: number;
   body: Matter.Body;
@@ -187,7 +186,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
-  crew?: 0 | 1;
+  allied?: boolean;
   damageCause?: DamageCause;
   id: number;
   launch?: { pos: Vec; at: number };
@@ -912,7 +911,7 @@ export class Game {
     attackDelay?: number,
     squad?: SquadTag,
   ) {
-    if (this.enemies.length >= 14) return;
+    if (this.enemies.length >= (this.areaEvents.encounter === 'turf' ? 24 : 14)) return;
     const { w, h } = ENEMY_STATS[kind];
     const hp = Math.ceil(
       (this.overtime
@@ -962,7 +961,6 @@ export class Game {
       attack: 'aimed',
     };
     this.enemies.push(enemy);
-    this.areaEvents.assignCrew(enemy);
     if (kind === 'crane') enemy.crane = createCrane(this, enemy);
     if (kind === 'kiln') enemy.kiln = createKiln();
     if (kind === 'turbine') enemy.turbine = createTurbine();
@@ -996,7 +994,7 @@ export class Game {
     this.muzzle = Math.max(0, this.muzzle - dt);
     this.land = Math.max(0, this.land - dt);
     // Keep jump taps through the tiny impact pause.
-    if (input.jump && !this.areaEvents.input(true)) this.jumpBuffer = 0.12;
+    if (input.jump) this.jumpBuffer = this.areaEvents.input(true) ? 0 : 0.12;
     if (input.firePressed) this.fireBuffer = 0.12;
     if (input.portal) this.portalRequest = { ...input.portal };
     if (this.hitStop > 0) {
@@ -1134,6 +1132,7 @@ export class Game {
         });
       if (this.mode !== 'playing') return;
     }
+    this.areaEvents.beforeStep(dt);
     // Capture descent before Matter resolves the landing collision and zeros velocity.
     if (!this.grounded) this.landingSpeed = this.player.velocity.y;
     this.cargo.update(dt);
@@ -1209,7 +1208,7 @@ export class Game {
     this.waves.update(dt);
     if (
       !this.enemies.length &&
-      !this.areaEvents.pending &&
+      !this.areaEvents.waiting &&
       !this.waves.pending &&
       !this.clear &&
       (!this.freight.active || this.freight.arrived)
@@ -1465,6 +1464,7 @@ export class Game {
         const d = direction(p, shot.pos);
         if (
           shot.friendly ||
+          shot.allied ||
           shot.blade ||
           shot.radius > 5 ||
           this.breachClears <= 0 ||
@@ -1562,14 +1562,7 @@ export class Game {
       if (e.crawler) updateWallcrawler(this, e, dt);
       return;
     }
-    if (this.cryogenic.frozen(e)) {
-      if (e.eventRole === 'relay') {
-        this.areaEvents.beam = null;
-        e.state = 'idle';
-        e.timer = 1.2;
-      }
-      return;
-    }
+    if (this.cryogenic.frozen(e)) return;
     if (this.salvageEvolutions.carried(e)) return;
     if (this.ballistics.pinned(e)) return;
     if (this.tethers.staggered(e)) return;
@@ -1587,8 +1580,9 @@ export class Game {
         ? 1.12
         : 1);
     const p = e.body.position,
-      d = direction(p, this.player.position),
-      dist = distance(p, this.player.position);
+      target = this.areaEvents.redTarget(e),
+      d = direction(p, target),
+      dist = distance(p, target);
     if (e.elite === 'volatile') {
       this.updateVolatile(e);
       // A volatile flyer only harms the player through its warned explosion.
@@ -1619,9 +1613,9 @@ export class Game {
         if (!turning) this.updateRunner(e, d, dist);
       } else if (e.kind === 'flyer') {
         Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
-        const height = clamp(this.player.position.y - 190, this.worldTop + 220, 500);
+        const height = clamp(target.y - 190, this.worldTop + 220, 500);
         Body.setVelocity(e.body, {
-          x: clamp((this.player.position.x - d.x * 350 - p.x) * 0.009, -2.4, 2.4),
+          x: clamp((target.x - d.x * 350 - p.x) * 0.009, -2.4, 2.4),
           y: clamp((height - p.y) * 0.04, -3, 3),
         });
       }
@@ -1631,7 +1625,7 @@ export class Game {
         e.timer <= 0.35 &&
         e.timer + dt > 0.35 &&
         dist < 1450 &&
-        distance(this.lineEnd(p, this.player.position), this.player.position) < 1
+        distance(this.lineEnd(p, target), target) < 1
       )
         this.onSound('aim-warn');
       if (e.timer > 0.35) e.aim = d;
@@ -2136,6 +2130,7 @@ export class Game {
       y: blade ? 11 : 5,
     });
     if (distance(end, muzzle) > 0.01 && !portalMuzzle) {
+      if (e.allied) return;
       this.burst(end, 3, '#ef7264', 1.5);
       const prop = this.props.items.find((p) => {
         const hit = traceProp(p, origin, muzzle, padding);
@@ -2152,7 +2147,7 @@ export class Game {
       damage,
       life: 4,
       friendly: false,
-      ...(e.crew !== undefined ? { crew: e.crew } : {}),
+      ...(e.allied ? { allied: true } : {}),
       damageCause: { type: blade ? 'blade' : 'shot', enemy: e.kind },
       source: { ...e.body.position },
       ...(e.squad ? { allyBlock: e.id } : {}),
@@ -2219,11 +2214,12 @@ export class Game {
             )
               targets.push([e.body, e]);
         } else {
-          targets.push([this.player, undefined, true]);
-          if (s.crew !== undefined)
-            for (const e of this.enemies)
-              if (e.crew !== undefined && e.crew !== s.crew && e.spawn <= 0)
-                targets.push([e.body, e]);
+          if (s.allied) {
+            for (const e of this.enemies) if (e.spawn <= 0) targets.push([e.body, e]);
+          } else {
+            targets.push([this.player, undefined, true]);
+            for (const e of this.areaEvents.allies) if (e.spawn <= 0) targets.push([e.body, e]);
+          }
           if (s.allyBlock !== undefined)
             for (const e of this.enemies)
               if (e.id !== s.allyBlock && e.spawn <= 0) targets.push([e.body]);
@@ -2348,6 +2344,13 @@ export class Game {
         s.waypoints = undefined;
         const impactDamage = this.massDriver.impactDamage(s);
         s.impactNormal = { ...nearest.normal };
+        if (s.allied && !nearest.enemy) {
+          // Allied rounds stop at scenery without detonating player-adjacent
+          // canisters or cutting suspended cargo onto the player.
+          s.life = 0;
+          this.burst(s.pos, 2, '#6bb7ff', 1);
+          continue;
+        }
         if (nearest.caught) {
           this.fusions.catch(s);
           s.life = 0;
@@ -2372,14 +2375,16 @@ export class Game {
         } else if (nearest.enemy) {
           const e = nearest.enemy;
           if (!s.friendly) {
-            this.hitEnemy(
-              e,
-              s.damage,
-              { x: e.body.position.x - s.vel.x, y: e.body.position.y - s.vel.y },
-              true,
-              false,
-              false,
-            );
+            if (e.allied) this.areaEvents.hitAlly(e, s.damage);
+            else
+              this.hitEnemy(
+                e,
+                s.damage,
+                { x: e.body.position.x - s.vel.x, y: e.body.position.y - s.vel.y },
+                true,
+                false,
+                false,
+              );
             s.life = 0;
             continue;
           }
@@ -2612,7 +2617,7 @@ export class Game {
     killEffects = true,
     credited = true,
   ): boolean {
-    if (e.hp <= 0) return false;
+    if (e.hp <= 0 || e.allied) return false;
     const incomingDamage = damage;
     const blocked =
       e.elite === 'shielded' && !!from && direction(e.body.position, from).x * e.facing > 0.45;
@@ -2752,6 +2757,7 @@ export class Game {
     }
   }
   openReward(enterDetour = false, route?: RouteChoice) {
+    if (this.areaEvents.waiting) return;
     if (this.practice || this.workshop.active || this.escape || this.mode !== 'playing') return;
     if (
       route &&

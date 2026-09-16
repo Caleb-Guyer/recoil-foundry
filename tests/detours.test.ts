@@ -26,6 +26,8 @@ const overlap = (
 function entrance(seed = 'detour-test', stage = 2) {
   const g = new Game();
   g.start(seed);
+  // Traverse directly to the detour; event combat is covered separately.
+  g.areaEvents.state = null;
   while (g.stage < stage) {
     g.openReward();
     g.chooseMod(g.offers[0].id);
@@ -130,6 +132,8 @@ test('challenge geometry leaves spawns, machinery sweeps, entry and ground exit 
 test('normal rewards and direct exits skip every detour while preserving twenty stages and nineteen picks', () => {
   const g = new Game();
   g.start('direct-route');
+  // This fixture skips combat to test rewards; event fights have their own playtests.
+  g.areaEvents.state = null;
   for (let stage = 0; stage < 19; stage++) {
     assert.equal(g.canDetour, [2, 6, 10, 18].includes(stage));
     g.openReward();
@@ -175,6 +179,8 @@ test('entering pays only the regular room reward, bonus pays one upgrade without
 test('each challenge can be taken once and all four detours preserve the complete escape checkpoint', () => {
   const g = new Game();
   g.start('all-detours');
+  // This fixture skips combat to test rewards; event fights have their own playtests.
+  g.areaEvents.state = null;
   while (g.stage < 19) {
     if (g.canDetour) {
       enter(g);
@@ -283,6 +289,8 @@ test('Daily routes have one forced legal offer per reward and replay identically
     other = new Game();
   g.start(seed);
   other.start(seed);
+  // This fixture skips combat to test rewards; event fights have their own playtests.
+  g.areaEvents.state = other.areaEvents.state = null;
   while (g.stage < 19) {
     if (g.canDetour) {
       enter(g);

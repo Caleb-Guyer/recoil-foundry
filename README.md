@@ -6,7 +6,19 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
-## Area events · 2.76.0
+## Reworked events · 2.77.0
+
+- **Blackout** affects exactly **one combat room**. The world is almost completely dark, with a small light around you and the electrical box. The exit stays invisible until you shoot the box. One hit restores the lights and releases the second wave. Restored power adds 6 health to ordinary room recovery for the rest of the run.
+- **Turf War** opens with **22 red enemies and five blue allies entering from the left**, with no second wave. Blue units target red enemies; your weapons pass through the blue team, and their fire cannot hurt you or set off nearby explosives. Ordinary red gunmen return fire at closer visible allies. Surviving allies leave when every red enemy is defeated. The salvage case then opens for one free reroll, or 16 health in Daily.
+- **Lockdown** holds its reserve until the opening enemies are defeated and you **jump beside the lit terminal**. This summons the commander and its forces; defeating them opens the exit. Each affected combat room has its own terminal fight. Commander clearance still favors legal follow-up upgrades during the area.
+
+No event instruction banners or reward notices. Light, color, an upward terminal symbol and enemy behavior communicate the encounters. Turf War and Lockdown affect the area's ordinary combat rooms; Blackout covers only one. The freight shaft keeps its separate lift encounter, with Blackout scheduled in another room. Daily uses **ruleset 66**.
+
+[**Test Blackout**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=blackout&v=2.77.0) · [**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.77.0) · [**Test Lockdown**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=lockdown&v=2.77.0)
+
+Click the named test button. **R** restarts the preset. Tests preserve your campaign save, discoveries, Daily records and Practice unlocks.
+
+## Area events · 2.76.0 (original release; revised above)
 
 Fresh runs have a **75% chance of one area event**, selected by the run seed. It changes all three combat rooms in either the Furnace Halls, Cooling Works, or Reclamation Works. The full twenty-stage campaign, bosses, routes, and optional detours remain available.
 

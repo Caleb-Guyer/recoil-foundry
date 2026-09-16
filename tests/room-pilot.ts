@@ -5,12 +5,16 @@ import { dodgePilot } from './combat-pilot.ts';
 
 // Ordinary input only: navigate around shelves, use recoil to climb, and
 // deliberately release charged weapons. Health, AI and physics stay intact.
-export function playRoom(g: Game, seconds: number) {
+export function playRoom(g: Game, seconds: number, stop: () => boolean = () => false) {
   let stuck = 0,
     lastX = g.player.position.x,
     advanceUntil = 0,
     climbX: number | undefined;
-  for (let frame = 0; frame < seconds * 60 && !g.clear && g.mode === 'playing'; frame++) {
+  for (
+    let frame = 0;
+    frame < seconds * 60 && !g.clear && g.mode === 'playing' && !stop();
+    frame++
+  ) {
     const target = g.enemies
       .filter((e) => e.spawn <= 0)
       .sort(

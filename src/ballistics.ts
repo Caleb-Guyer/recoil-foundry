@@ -424,7 +424,9 @@ export class BallisticsSystem {
     const friendly = g.shots.filter(
       (s) => s.life > dt && s.friendly && !dormant(s) && (s.counter ?? 0) > 0,
     );
-    const hostile = g.shots.filter((s) => s.life > dt && !s.friendly && !s.blade && s.radius <= 5);
+    const hostile = g.shots.filter(
+      (s) => s.life > dt && !s.friendly && !s.allied && !s.blade && s.radius <= 5,
+    );
     if (!friendly.length || !hostile.length) return;
     const contacts: { a: Shot; b: Shot; t: number; point: Vec; bullet: Vec }[] = [];
     const step = dt * 60;
@@ -496,7 +498,8 @@ export class BallisticsSystem {
   reflectRound(b: Shot, bullet: Vec) {
     // Every source of interception shares this recovery, including beam pulses,
     // pellets, echoes and returning rounds. Only a successful contact spends it.
-    if (!this.counterReady || b.friendly || b.life <= 0 || b.blade || b.radius > 5) return false;
+    if (!this.counterReady || b.friendly || b.allied || b.life <= 0 || b.blade || b.radius > 5)
+      return false;
     const g = this.game;
     this.counterRecovery = COUNTERSHOT_RECHARGE;
     const d = b.source ? direction(bullet, b.source) : direction(b.vel, { x: 0, y: 0 });

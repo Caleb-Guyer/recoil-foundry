@@ -574,7 +574,7 @@ export class TorchSystem {
       // Traced segments still stop at solids/cables/portals before interception.
       if (!this.reflected && g.mods.includes('countershot') && g.ballistics.counterReady) {
         const hits = g.shots
-          .filter((b) => !b.friendly && b.life > 0 && !b.blade && b.radius <= 5)
+          .filter((b) => !b.friendly && !b.allied && b.life > 0 && !b.blade && b.radius <= 5)
           .flatMap((b) => {
             const r = b.radius + torchRadius(g),
               h = segmentBox(

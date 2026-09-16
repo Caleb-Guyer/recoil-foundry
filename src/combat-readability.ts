@@ -57,7 +57,7 @@ export function incomingEdgeCues(
   if (!inCombatView(player, view)) return cues;
   for (const shot of shots) {
     const launch = shot.launch;
-    if (shot.friendly || shot.life <= 0 || !launch) continue;
+    if (shot.friendly || shot.allied || shot.life <= 0 || !launch) continue;
     const age = time - launch.at;
     if (
       age < 0 ||
