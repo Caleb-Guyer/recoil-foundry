@@ -473,6 +473,48 @@ test('Scrap Feed loads through real direct crate hits and pays one fixed blast o
   assert.equal(g.shots.filter((s) => s.fragment).length, SCRAP.rounds);
 });
 
+test('Splinter finishing cover retains the original discharge credit, including beam fragments', () => {
+  for (const torch of [false, true]) {
+    const g = fixture([...scrapBuild, ...(torch ? ['deadeye', 'cutting-torch'] : [])]);
+    const p = g.props.spawn('cover', 450, 300);
+    p.hp = g.gun.damage + 0.5;
+    g.rng = () => 0; // Aim Splinter children into the remaining cover.
+    if (torch) {
+      beam(g, 0.02);
+      advance(g, 2);
+    } else {
+      round(g);
+      advance(g, 5);
+    }
+    assert(!g.props.items.includes(p));
+    assert(g.scrap.loaded);
+    const credited = g.shots.find((s) => s.fragment && s.feedGeneration !== undefined);
+    g.scrap.fire({ x: 1, y: 0 });
+    assert(!g.scrap.loaded);
+    if (credited) g.props.hit(g.props.spawn('cover', 480, 300), 200, { x: 1, y: 0 }, credited);
+    assert(!g.scrap.loaded, 'one discharge cannot recycle its credit');
+    const scrap = g.shots.find(
+      (s) => s.fragment && s.damage === SCRAP.damage && s.feedGeneration === undefined,
+    )!;
+    assert(scrap);
+    g.props.hit(g.props.spawn('cover', 520, 300), 200, { x: 1, y: 0 }, scrap);
+    assert(!g.scrap.loaded, 'scrap cannot generate scrap');
+  }
+});
+
+test('Splinter children of echoes and reflected shots cannot acquire scrap credit', () => {
+  for (const flags of [{ echo: true }, { reflected: true }]) {
+    const g = fixture(scrapBuild);
+    const parent = round(g, { ...flags, feedGeneration: 42 });
+    g.splitShot(parent);
+    for (const child of g.shots.filter((s) => s.fragment)) {
+      assert.equal(child.feedGeneration, undefined);
+      g.props.hit(g.props.spawn('cover', 500, 300), 200, { x: 1, y: 0 }, child);
+      assert(!g.scrap.loaded);
+    }
+  }
+});
+
 test('Scrap Feed does not load from rubble, secondary shots, environmental destruction or duplicate beam pulses', () => {
   for (const flags of [
     { fragment: true },

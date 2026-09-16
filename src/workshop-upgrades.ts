@@ -32,7 +32,7 @@ export const WORKSHOP_MODS = [
     name: 'Scrap Feed',
     mark: 'scrap-feed',
     description:
-      'Break crates or cover with a direct shot to load a short shrapnel blast into your next discharge. Stores one charge.',
+      'Break crates or cover with your shots to load a short shrapnel blast into your next discharge. Stores one charge; its shrapnel cannot reload it.',
   },
 ] as const;
 export const WORKSHOP_PARENTS: Record<string, string> = {

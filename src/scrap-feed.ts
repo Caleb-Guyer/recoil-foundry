@@ -19,7 +19,7 @@ export class ScrapFeedSystem {
       !g.mods.includes('scrap-feed') ||
       !s ||
       !s.friendly ||
-      s.fragment ||
+      (s.fragment && s.feedGeneration === undefined) ||
       s.echo ||
       s.reflected ||
       !(s.damage > 0)

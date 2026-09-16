@@ -2532,6 +2532,9 @@ export class Game {
           : { ...s.pos },
         vel: { x: Math.cos(a) * (shatter ? 20 : 16), y: Math.sin(a) * (shatter ? 20 : 16) },
         damage: s.damage * (shatter ? 0.3 : 0.2),
+        // Splinter shares its originating discharge's scrap credit. Echo and
+        // reflected fragments cannot turn secondary damage into a fresh charge.
+        feedGeneration: !s.echo && !s.reflected ? (s.feedGeneration ?? s.discharge) : undefined,
         life: shatter ? 0.6 : 0.4,
         friendly: true,
         radius: 2,

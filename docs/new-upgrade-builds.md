@@ -84,13 +84,13 @@ Requires Banker. The first terrain bank aims toward the nearest exposed enemy wi
 
 ### Scrap Feed
 
-Requires Splinter. Direct primary shots that destroy crates, cover, cracked panels or breakable terrain load one charge. Your next discharge adds seven short-range fragments at eight damage each. Beam pulses use the same cadence. One credit per discharge prevents recycling; rubble, explosions, echoes and shrapnel cannot load it.
+Requires Splinter. Your primary rounds and their Splinter fragments load one charge when they destroy crates, cover, cracked panels or breakable terrain. Your next discharge adds seven short-range fragments at eight damage each. Beam pulses use the same cadence. One credit per discharge prevents recycling; rubble, explosions, echoes and the extra scrap shrapnel cannot load it.
 
 **Parents:** Splinter.
 
 **Complete room build:** Splinter → Scrap Feed → Shatter → Heavy hitter → Hair trigger → Light frame → Airshot → Bloodwork → Punch through → Kickback.
 
-**Card:** Break crates or cover with a direct shot to load a short shrapnel blast into your next discharge. Stores one charge.
+**Card:** Break crates or cover with your shots to load a short shrapnel blast into your next discharge. Stores one charge; its shrapnel cannot reload it.
 
 ### Icebreaker
 

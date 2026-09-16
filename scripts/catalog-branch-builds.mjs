@@ -96,7 +96,7 @@ const tips = {
   pocket:
     'Requires Banker. The first terrain bank aims toward the nearest exposed enemy within 480 units, spending its opportunity even if no target is visible. Pre-bank direct hits are 20% weaker. Later bounces, returning routes and portals retain their spent budget. Steel balls and beam banks use the same targeting; Vector yields briefly after the bank.',
   scrap:
-    'Requires Splinter. Direct primary shots that destroy crates, cover, cracked panels or breakable terrain load one charge. Your next discharge adds seven short-range fragments at eight damage each. Beam pulses use the same cadence. One credit per discharge prevents recycling; rubble, explosions, echoes and shrapnel cannot load it.',
+    'Requires Splinter. Your primary rounds and their Splinter fragments load one charge when they destroy crates, cover, cracked panels or breakable terrain. Your next discharge adds seven short-range fragments at eight damage each. Beam pulses use the same cadence. One credit per discharge prevents recycling; rubble, explosions, echoes and the extra scrap shrapnel cannot load it.',
   icebreaker:
     'Coolant Rounds trades 20% direct damage for cold. At 48 cold, Deep Freeze holds an ordinary enemy for 0.55 seconds; Icebreaker spends it on one hit and three inert fragments. A 1.6-second immunity follows. Bosses never freeze: they bank one capped bonus hit, followed by a 0.7-second recharge.',
   coldfront:

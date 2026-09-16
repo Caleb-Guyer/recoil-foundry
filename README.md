@@ -14,7 +14,7 @@ Five additions bring the catalog to **100 upgrades**:
 - **Convoy:** a Crosshatch alternative to Thread the Needle. Fifteen stored rounds follow your movement trail, then converge from their current positions when released. Cover blocks the formation and teleportation clears it.
 - **Thermal Shock:** Coolant Rounds + Cinder fusion. Flames consume cold for a bounded steam blast, pushing ordinary enemies and loose debris. Boss armor applies and bosses cannot be stunned. Steam cannot trigger more steam or Flashpoint.
 - **Corner Pocket:** follows Banker. The first wall bank redirects toward a nearby enemy through clear space. Direct hits before the bank are 20% weaker. Beams, steel balls and rails share the same rules; returning rounds keep their spent allowance.
-- **Scrap Feed:** follows Splinter. Direct shots that destroy crates or cover load one seven-fragment blast for the next discharge. Rubble, explosions and secondary fragments cannot reload it. A small gun indicator shows the charge.
+- **Scrap Feed:** follows Splinter. Your rounds and their Splinter fragments load one seven-fragment blast when they destroy crates or cover. Rubble, explosions and the extra scrap shrapnel cannot reload it. A small gun indicator shows the charge.
 
 Daily uses **ruleset 64**, with one predetermined legal reward. Continue and older New Game+ builds remain compatible. No extra controls or combat HUD panels.
 
