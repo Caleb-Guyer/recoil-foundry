@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Turf War territories · 2.79.0
+
+Turf War begins with **12 blue allies spread throughout the left half** and **14 red enemies spread throughout the right half**. The dividing point is the room's midpoint, with every unit's full body inside its starting territory. Both formations keep at least 125 units of spacing and use supported ground positions or clear airspace. The center remains open so both sides can advance once combat starts.
+
+Allies retain the existing runner, shooter and flyer types. There is still one simultaneous battle, no second wave, no friendly fire, and surviving allies leave when the reds are defeated. Daily uses **ruleset 68**.
+
+[**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.79.0). Click the named test button; **R** restarts it without affecting your campaign save.
+
 ## Turf War formations · 2.78.0
 
 Turf War still opens with **22 reds and five blue allies**, without a second wave. Every red spawn, including the room's original roster, now stays at least **480 world units from the player** and begins beyond the entrance lane. Units have at least **125 units of separation**, spread between the room's platforms, floor and airspace. Ground units spawn on clear support surfaces.

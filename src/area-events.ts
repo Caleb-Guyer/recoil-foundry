@@ -6,7 +6,8 @@ import { ENEMY_STATS } from './enemies.ts';
 import { areaIndex, clamp, direction, distance, MOD_REQUIRES, seeded } from './rules.ts';
 import type { Checkpoint, Mod, Vec } from './rules.ts';
 
-export const TURF_ENTRY_X = 620;
+export const TURF_RED_COUNT = 14;
+export const TURF_BLUE_COUNT = 12;
 export const TURF_SPACING = 125;
 type AllyKind = 'runner' | 'shooter' | 'flyer';
 
@@ -213,7 +214,9 @@ export class AreaEventSystem {
   turfOpening(level: Level): Spawn[] {
     const result: Spawn[] = [];
     for (const spawn of level.spawns) {
-      if (spawn.x < TURF_ENTRY_X || distance(spawn, this.game.player.position) < 480) continue;
+      if (result.length >= TURF_RED_COUNT) break;
+      // Keep the whole hull inside red's half, including wide authored units.
+      if (spawn.x - ENEMY_STATS[spawn.kind].w / 2 < this.game.worldWidth / 2 + 4) continue;
       if (result.some((other) => distance(other, spawn) < TURF_SPACING)) continue;
       result.push({ ...spawn });
     }
@@ -223,13 +226,14 @@ export class AreaEventSystem {
     const g = this.game,
       { w, h } = ENEMY_STATS[kind],
       result: Vec[] = [];
-    const min = allied ? 55 : TURF_ENTRY_X,
-      max = allied ? 355 : g.worldWidth - 110;
+    const middle = g.worldWidth / 2,
+      min = allied ? 55 : middle + w / 2 + 5,
+      max = allied ? middle - w / 2 - 5 : g.worldWidth - 55;
     const supports = g.terrain.filter(
       (b) => b.bounds.max.x - b.bounds.min.x > 70 && b.bounds.min.y >= 100 && b.bounds.min.y <= 740,
     );
     const candidates: Vec[] = [];
-    for (let x = min; x <= max; x += allied ? 50 : 65) {
+    for (let x = min; x <= max; x += 55) {
       if (kind === 'flyer') {
         for (let y = 140; y <= 660; y += 80) candidates.push({ x, y });
       } else
@@ -240,11 +244,7 @@ export class AreaEventSystem {
     }
     for (const p of candidates) {
       if (distance(p, g.player.position) < (allied ? 55 : 480)) continue;
-      if (
-        [...g.enemies, ...this.allies].some(
-          (e) => distance(p, e.body.position) < (allied ? 75 : TURF_SPACING),
-        )
-      )
+      if ([...g.enemies, ...this.allies].some((e) => distance(p, e.body.position) < TURF_SPACING))
         continue;
       if (
         Query.region(g.solidBodies, {
@@ -273,7 +273,7 @@ export class AreaEventSystem {
   }
   spawnTurf() {
     const g = this.game;
-    for (let i = 0; g.enemies.length < 22 && i < 22; i++) {
+    for (let i = 0; g.enemies.length < TURF_RED_COUNT && i < TURF_RED_COUNT; i++) {
       const preferred: AllyKind = i % 3 === 0 ? 'runner' : i % 3 === 1 ? 'shooter' : 'flyer';
       const spot = this.turfSpot(preferred);
       if (spot) this.spawn(preferred, spot);
@@ -283,7 +283,8 @@ export class AreaEventSystem {
         this.spawn('flyer', air);
       }
     }
-    for (const preferred of ['shooter', 'runner', 'runner', 'flyer', 'flyer'] as const) {
+    for (let i = 0; i < TURF_BLUE_COUNT; i++) {
+      const preferred = (['shooter', 'runner', 'flyer'] as const)[i % 3];
       const ground = this.turfSpot(preferred, true);
       const kind = ground ? preferred : 'flyer';
       const p = ground ?? this.turfSpot('flyer', true);

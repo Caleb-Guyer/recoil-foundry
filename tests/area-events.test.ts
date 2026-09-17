@@ -4,7 +4,8 @@ import Matter from 'matter-js';
 import { Game } from '../src/game.ts';
 import {
   AREA_EVENTS,
-  TURF_ENTRY_X,
+  TURF_RED_COUNT,
+  TURF_BLUE_COUNT,
   TURF_SPACING,
   eventTestFromUrl,
   planAreaEvent,
@@ -224,9 +225,9 @@ test('Turf War starts as a large simultaneous battle with blue allies on the lef
     save.seed = 'turf-density-' + i;
     const g = new Game();
     g.startTest(save);
-    assert.equal(g.enemies.length, 22, g.level.id);
-    assert.equal(g.areaEvents.allies.length, 5);
-    assert(g.areaEvents.allies.every((e) => e.allied && e.body.position.x <= 355));
+    assert.equal(g.enemies.length, TURF_RED_COUNT, g.level.id);
+    assert.equal(g.areaEvents.allies.length, TURF_BLUE_COUNT);
+    assert(g.areaEvents.allies.every((e) => e.allied && e.body.bounds.max.x <= g.worldWidth / 2));
     assert.equal(g.waves.doors.length, 0);
     assert(!g.waves.pending);
     for (const e of [...g.enemies, ...g.areaEvents.allies])
@@ -237,7 +238,7 @@ test('Turf War starts as a large simultaneous battle with blue allies on the lef
       );
   }
 });
-test('Turf War keeps the entire roster away from entry and spread across seeded areas and routes', () => {
+test('Turf War divides territory in half with 14 reds and 12 blues across seeded areas and routes', () => {
   for (let i = 0; i < 12; i++)
     for (const area of [1, 2, 3])
       for (const offset of [0, 1, 2]) {
@@ -253,12 +254,12 @@ test('Turf War keeps the entire roster away from entry and spread across seeded 
             g.route = route;
             g.loadRoom();
           }
-          assert.equal(g.enemies.length, 22, g.level.id);
-          assert.equal(g.areaEvents.allies.length, 5, g.level.id);
+          assert.equal(g.enemies.length, TURF_RED_COUNT, g.level.id);
+          assert.equal(g.areaEvents.allies.length, TURF_BLUE_COUNT, g.level.id);
           const kinds = new Set(g.areaEvents.allies.map((e) => e.kind));
           assert.deepEqual([...kinds].sort(), ['flyer', 'runner', 'shooter']);
           for (const [index, e] of g.enemies.entries()) {
-            assert(e.body.position.x >= TURF_ENTRY_X, g.level.id + ' crowded entry');
+            assert(e.body.bounds.min.x >= g.worldWidth / 2, g.level.id + ' red crossed midfield');
             assert(
               Math.hypot(
                 e.body.position.x - g.player.position.x,
@@ -275,16 +276,32 @@ test('Turf War keeps the entire roster away from entry and spread across seeded 
                 g.level.id + ' crowded pair',
               );
           }
-          for (const [min, max] of [
-            [620, 1050],
-            [1050, 1490],
-            [1490, 2000],
-          ])
-            assert(
-              g.enemies.filter((e) => e.body.position.x >= min && e.body.position.x < max).length >=
-                3,
-              g.level.id + ' empty lane',
-            );
+          assert.equal(g.enemies.length - g.areaEvents.allies.length, 2);
+          // Both teams occupy the rear, middle and front of their own half.
+          for (const [team, side] of [
+            [g.areaEvents.allies, 0],
+            [g.enemies, 1],
+          ] as const) {
+            const width = g.worldWidth / 2;
+            for (let lane = 0; lane < 3; lane++) {
+              const min = side * width + (lane * width) / 3,
+                max = min + width / 3;
+              assert(
+                team.filter((e) => e.body.position.x >= min && e.body.position.x < max).length >= 2,
+                g.level.id + ' empty territory ' + side + ':' + lane,
+              );
+            }
+            for (const [index, e] of team.entries())
+              for (const other of team.slice(index + 1))
+                assert(
+                  Math.hypot(
+                    e.body.position.x - other.body.position.x,
+                    e.body.position.y - other.body.position.y,
+                  ) >=
+                    TURF_SPACING - 0.1,
+                  'crowded formation',
+                );
+          }
           for (const e of [...g.enemies, ...g.areaEvents.allies])
             assert.equal(
               Matter.Query.collides(e.body, g.solidBodies).length,
@@ -292,7 +309,7 @@ test('Turf War keeps the entire roster away from entry and spread across seeded 
               g.level.id + ' overlap ' + e.kind,
             );
           for (const e of g.areaEvents.allies) {
-            assert(e.body.position.x <= 355);
+            assert(e.body.bounds.max.x <= g.worldWidth / 2);
             assert.equal(e.hp, enemyHealth(e.kind, g.stage));
             assert.equal(e.maxHp, e.hp);
             assert.equal(e.body.isStatic, e.kind === 'shooter');
