@@ -1,3 +1,4 @@
+import type { MutationKind } from './mutations.ts';
 import { PRESSURE_LAYOUTS, pressureLayout, type PressurePlacement } from './pressure-layouts.ts';
 import { DROPWORKS_LAYOUTS, dropworksLayout } from './dropworks-layouts.ts';
 import { LOADER_ARENA } from './loader-layout.ts';
@@ -56,6 +57,7 @@ export interface Solid {
   h: number;
 }
 export interface Spawn extends Vec {
+  mutation?: MutationKind;
   kind: EnemyKind;
   elite?: EliteKind;
   squad?: SquadTag;

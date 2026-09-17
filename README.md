@@ -6,6 +6,22 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Rare enemy mutations · 2.81.0
+
+Three uncommon mutations change familiar enemies without adding nameplates or increasing the opening troop count:
+
+- **Splitter:** a runner with a divided shell breaks into two smaller runners. Offspring have 32% of normal runner health and deal 9 contact damage. They cannot split again, and spawn with a short grace period in clear space.
+- **Volatile Gunner:** a shooter with an amber tank locks its aim for 0.8 seconds, then fires one slow explosive round. The blast hurts the player, red troops and blue allies; walls and cover block it. Baiting shots into red troops works. Hostile blasts and their fuel chains grant no player kill bonuses or healing.
+- **Blinker:** a bracketed flyer marks its destination for 0.8 seconds before a short teleport. Occupied destinations cancel the move. It stays vulnerable throughout the tell, then has 0.7 seconds of recovery and a fresh firing delay.
+
+Introductions are staged from rooms 3, 7 and 11 when compatible hosts are available. Other eligible rooms have a 24% mutation roll, with at most one mutated enemy; elite and squad members cannot stack mutations. Turf War can occasionally mutate one red while retaining its formation, 50/50 territory and 14-red/12-blue opening. Bosses, Practice, Workshop, detours, freight, Blackout, Lockdown and Overtime keep their existing encounters. Selection is seeded and survives Continue and retries; Daily uses **ruleset 70**.
+
+[**Test Splitter**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=splitter&v=2.81.0) · [**Test Volatile Gunner**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=gunner&v=2.81.0) · [**Test Blinker**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=blinker&v=2.81.0)
+
+Turf War variants: [**Splitter**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=splitter&arena=turf&v=2.81.0) · [**Volatile Gunner**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=gunner&arena=turf&v=2.81.0) · [**Blinker**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=blinker&arena=turf&v=2.81.0).
+
+Click the named test button. These are real rooms with normal health and four upgrades; **R** repeats the preset. Tests preserve campaign saves, discoveries, Daily records and Practice unlocks. Existing unrelated test presets remain focused on their own mechanics.
+
 ## Turf War battle formations · 2.80.0
 
 Turf War now chooses a formation that fits the room's actual free space. Every battle still starts with **12 blues in the left half and 14 reds in the right half**, using the existing runner, shooter and flyer enemies with their normal stats and attacks.

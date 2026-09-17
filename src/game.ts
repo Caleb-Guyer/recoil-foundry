@@ -1,3 +1,4 @@
+import { MutationSystem, type MutationKind, type MutationRig } from './mutations.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
@@ -158,6 +159,8 @@ export interface Enemy {
   body: Matter.Body;
   kind: EnemyKind;
   elite?: EliteKind;
+  mutation?: MutationRig;
+  splitChild?: boolean;
   facing: number;
   shieldFlash: number;
   hp: number;
@@ -186,6 +189,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  mutationShell?: { owner: number };
   allied?: boolean;
   damageCause?: DamageCause;
   id: number;
@@ -253,6 +257,7 @@ export class Game {
   level!: Level;
   terrain: Matter.Body[] = [];
   areaEvents = new AreaEventSystem(this);
+  mutations = new MutationSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   loaderArena = new LoaderArenaSystem(this);
@@ -452,6 +457,7 @@ export class Game {
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
       this.areaEvents.clear();
+      this.mutations.clear();
       this.loaderArena.stop();
       this.massDriver.reset();
       this.arcs.reset();
@@ -595,6 +601,7 @@ export class Game {
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
     this.areaEvents.clear();
+    this.mutations.clear();
     this.breachAt = -1;
     this.breachClears = 0;
     this.massDriver.reset();
@@ -759,6 +766,7 @@ export class Game {
     this.pressure.reset();
     this.workshop.reset();
     this.areaEvents.reset(clearedRoom);
+    this.mutations.reset(clearedRoom);
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active) return;
@@ -910,8 +918,13 @@ export class Game {
     elite?: EliteKind,
     attackDelay?: number,
     squad?: SquadTag,
+    variant?: MutationKind | 'split-child',
   ) {
-    if (this.enemies.length >= (this.areaEvents.encounter === 'turf' ? 24 : 14)) return;
+    if (
+      this.enemies.length >=
+      (this.areaEvents.encounter === 'turf' ? 24 : variant === 'split-child' ? 16 : 14)
+    )
+      return;
     const { w, h } = ENEMY_STATS[kind];
     const hp = Math.ceil(
       (this.overtime
@@ -975,7 +988,9 @@ export class Game {
       enemy.harpoon = createHarpooner();
       Body.setMass(body, this.player.mass * 1.6);
     }
+    if (variant) this.mutations.decorate(enemy, variant);
     this.destruction.releaseUnsupported();
+    return enemy;
   }
   feedback(amount: number, dir: Vec = { x: 0, y: 0 }) {
     this.shake = Math.min(12, this.shake + amount);
@@ -1122,6 +1137,7 @@ export class Game {
       this.fireBuffer = 0;
     }
     this.loaderArena.update();
+    this.mutations.update();
     for (const e of [...this.enemies]) {
       const slow = this.cryogenic.slow(e);
       this.updateEnemy(e, dt * slow);
@@ -1209,6 +1225,7 @@ export class Game {
     if (
       !this.enemies.length &&
       !this.areaEvents.waiting &&
+      !this.mutations.pending.length &&
       !this.waves.pending &&
       !this.clear &&
       (!this.freight.active || this.freight.arrived)
@@ -1574,6 +1591,7 @@ export class Game {
       return;
     }
     if (this.areaEvents.updateEnemy(e, dt)) return;
+    if (this.mutations.updateEnemy(e, dt)) return;
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *
@@ -1674,7 +1692,9 @@ export class Game {
             : 30
           : e.kind === 'charger' && e.state === 'rush'
             ? 22
-            : 15,
+            : e.splitChild
+              ? 9
+              : 15,
         p,
         { type: 'contact', enemy: e.kind },
       );
@@ -2224,6 +2244,9 @@ export class Game {
           } else {
             targets.push([this.player, undefined, true]);
             for (const e of this.areaEvents.allies) if (e.spawn <= 0) targets.push([e.body, e]);
+            if (s.mutationShell)
+              for (const e of this.enemies)
+                if (e.id !== s.mutationShell.owner && e.spawn <= 0) targets.push([e.body, e]);
           }
           if (s.allyBlock !== undefined)
             for (const e of this.enemies)
@@ -2349,6 +2372,11 @@ export class Game {
         s.waypoints = undefined;
         const impactDamage = this.massDriver.impactDamage(s);
         s.impactNormal = { ...nearest.normal };
+        if (s.mutationShell) {
+          this.mutations.explode(s);
+          if (this.mode !== 'playing') return;
+          continue;
+        }
         if (s.allied && !nearest.enemy) {
           // Allied rounds stop at scenery without detonating player-adjacent
           // canisters or cutting suspended cargo onto the player.
@@ -2686,6 +2714,7 @@ export class Game {
     clearKiln(e);
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
+    this.mutations.killed(e);
     if (e.kind === 'loader') this.loaderArena.stop();
     if (credited && e.eventRole !== 'relay') this.salvageEvolutions.killed(e, killEffects);
     if (
@@ -2762,7 +2791,7 @@ export class Game {
     }
   }
   openReward(enterDetour = false, route?: RouteChoice) {
-    if (this.areaEvents.waiting) return;
+    if (this.areaEvents.waiting || this.mutations.pending.length) return;
     if (this.practice || this.workshop.active || this.escape || this.mode !== 'playing') return;
     if (
       route &&

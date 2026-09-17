@@ -412,7 +412,7 @@ export class PropSystem {
       }
     }
   }
-  explode(prop: Prop) {
+  explode(prop: Prop, credited = true) {
     if (this.game.mode !== 'playing' || !this.items.includes(prop)) return;
     const g = this.game,
       p = { ...prop.body.position };
@@ -426,6 +426,11 @@ export class PropSystem {
     const props = this.items.filter(
       (other) => distance(p, other.body.position) < 160 && visible(other.body.position, other),
     );
+    const allies = credited
+      ? []
+      : g.areaEvents.allies.filter(
+          (e) => e.spawn <= 0 && distance(p, e.body.position) < 160 && visible(e.body.position),
+        );
     const hurtsPlayer = distance(p, g.player.position) < 140 && visible(g.player.position);
     const panels = g.breaches.targets(p, 160);
     const terrain = g.destruction.targets(p, 160);
@@ -445,7 +450,14 @@ export class PropSystem {
     g.hitStop = Math.max(g.hitStop, 0.04);
     g.onSound('explode');
     for (const e of enemies) {
-      g.hitEnemy(e, 105 * (1 - distance(p, e.body.position) / 220));
+      g.hitEnemy(
+        e,
+        105 * (1 - distance(p, e.body.position) / 220),
+        undefined,
+        true,
+        credited,
+        credited,
+      );
       if (e.hp > 0 && !e.body.isStatic) {
         const d = direction(p, e.body.position);
         Body.setVelocity(e.body, {
@@ -454,8 +466,10 @@ export class PropSystem {
         });
       }
     }
+    for (const ally of allies)
+      g.areaEvents.hitAlly(ally, 105 * (1 - distance(p, ally.body.position) / 220));
     for (const other of props) {
-      if (other.kind === 'canister') this.explode(other);
+      if (other.kind === 'canister') this.explode(other, credited);
       else this.hit(other, 80, direction(p, other.body.position));
       if (g.mode !== 'playing') return;
     }

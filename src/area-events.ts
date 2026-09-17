@@ -404,7 +404,7 @@ export class AreaEventSystem {
     const g = this.game;
     if (!this.active || g.mode !== 'playing') return;
     if (this.active === 'turf') {
-      if (!g.enemies.length && this.departingAt === null) {
+      if (!g.enemies.length && !g.mutations.pending.length && this.departingAt === null) {
         this.departingAt = g.time;
         this.cacheReady = true;
         g.shots = g.shots.filter((s) => !s.allied);
@@ -463,7 +463,7 @@ export class AreaEventSystem {
     );
     if (!other) return;
     this.contactAt.set(e.id, g.time + 0.65);
-    if (other.allied) this.hitAlly(other, 15);
+    if (other.allied) this.hitAlly(other, e.splitChild ? 9 : 15);
     else g.hitEnemy(other, 15, e.body.position, true, false, false);
   }
   combatTarget(e: Enemy): Vec {

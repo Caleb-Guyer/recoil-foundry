@@ -1,3 +1,5 @@
+import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
+import { SPLIT_SCALE } from './mutations.ts';
 import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
 import {
@@ -305,6 +307,7 @@ export class Renderer {
         size = ENEMY_STATS[e.kind].w;
       c.save();
       c.translate(p.x, p.y);
+      if (e.splitChild) c.scale(SPLIT_SCALE, SPLIT_SCALE);
       if (e.allied && g.areaEvents.departingAt !== null)
         c.globalAlpha = clamp(1 - (g.time - g.areaEvents.departingAt) / 3, 0, 1);
       if (e.spawn > 0) {
@@ -544,6 +547,7 @@ export class Renderer {
       }
       if (e.kind !== 'loader' && e.kind !== 'press' && e.elite !== 'volatile')
         this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
+      drawMutationBody(c, e);
       if (e.squad?.connected) {
         c.fillStyle =
           e.squad.kind === 'shield' ? '#c9b38a' : e.squad.kind === 'flank' ? '#b3c3ba' : '#d4a087';
@@ -689,9 +693,11 @@ export class Renderer {
       }
     }
     drawAreaEvent(c, g);
+    drawMutationTells(c, g);
     // Hostile projectiles stay above player shots and all cosmetic particles.
     for (const s of threats) {
-      if (s.blade) drawBlade(c, s, g.time, this.reduced);
+      if (s.mutationShell) drawMutationShell(c, s);
+      else if (s.blade) drawBlade(c, s, g.time, this.reduced);
       else if (s.enemyAmmo) drawRivalShot(c, s);
       else drawThreatRound(c, s);
     }

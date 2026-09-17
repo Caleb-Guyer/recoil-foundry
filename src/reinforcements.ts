@@ -251,7 +251,7 @@ export class ReinforcementSystem {
         if (door.timer > 0) continue;
         if (this.canEnter(door.spawn) && g.enemies.length < 14) {
           const s = door.spawn;
-          g.spawnEnemy(s.kind, s.x, s.y, s.elite, door.attackDelay, s.squad);
+          g.spawnEnemy(s.kind, s.x, s.y, s.elite, door.attackDelay, s.squad, s.mutation);
           g.enemies[g.enemies.length - 1].fromDoor = true;
           door.state = 'open';
           door.timer = REINFORCEMENT_ENTRY;
