@@ -1554,7 +1554,8 @@ export class Game {
     return shot;
   }
   updateEnemy(e: Enemy, dt: number) {
-    if (e.hp <= 0 || !this.enemies.includes(e)) return;
+    if (e.hp <= 0 || !(e.allied ? this.areaEvents.allies : this.enemies).includes(e)) return;
+    if (e.allied && !this.enemies.length) return;
     e.flash = Math.max(0, e.flash - dt);
     e.shieldFlash = Math.max(0, e.shieldFlash - dt);
     e.spawn = Math.max(0, e.spawn - dt);
@@ -1580,7 +1581,7 @@ export class Game {
         ? 1.12
         : 1);
     const p = e.body.position,
-      target = this.areaEvents.redTarget(e),
+      target = this.areaEvents.combatTarget(e),
       d = direction(p, target),
       dist = distance(p, target);
     if (e.elite === 'volatile') {
@@ -1610,7 +1611,8 @@ export class Game {
       else if (e.kind === 'interceptor') updateInterceptor(this, e, dt);
       else if (e.kind === 'runner') {
         const turning = e.elite === 'shielded' && this.updateShield(e);
-        if (!turning) this.updateRunner(e, d, dist);
+        if (!turning) this.updateRunner(e, d, dist, target);
+        if (e.allied) e.aim = d;
       } else if (e.kind === 'flyer') {
         Body.applyForce(e.body, p, { x: 0, y: -e.body.mass * 0.001 });
         const height = clamp(target.y - 190, this.worldTop + 220, 500);
@@ -1642,6 +1644,11 @@ export class Game {
       } else if (e.timer <= 0) e.timer = 0.8;
     }
     if (this.mode !== 'playing' || e.hp <= 0) return;
+    this.areaEvents.contact(e);
+    if (e.allied) {
+      if (p.y > 900) this.areaEvents.removeAlly(e);
+      return;
+    }
     if (
       !(
         (e.kind === 'charger' || e.kind === 'loader' || e.kind === 'kiln') &&
@@ -1673,7 +1680,7 @@ export class Game {
       );
     if (p.y > 900) this.hitEnemy(e, 9999);
   }
-  updateRunner(e: Enemy, d: Vec, dist: number) {
+  updateRunner(e: Enemy, d: Vec, dist: number, target = this.player.position) {
     const p = e.body.position;
     const speed = [3.1, 3.35, 3.6, 2.5, 3.9][areaIndex(this.stage)];
     Body.setVelocity(e.body, {
@@ -1700,9 +1707,7 @@ export class Game {
       e.timer <= 0 &&
       grounded &&
       dist > 60 &&
-      (blocked ||
-        Math.abs(e.body.velocity.x) < 0.7 ||
-        (this.player.position.y < p.y - 60 && dist < 280))
+      (blocked || Math.abs(e.body.velocity.x) < 0.7 || (target.y < p.y - 60 && dist < 280))
     ) {
       Body.setVelocity(e.body, { x: d.x * 4.5, y: -11.8 });
       e.timer = 0.9;

@@ -251,7 +251,7 @@ export class Renderer {
         );
     }
     c.globalAlpha = 1;
-    for (const e of g.enemies) {
+    for (const e of [...g.enemies, ...g.areaEvents.allies]) {
       if (drawEventEnemy(c, e)) continue;
       if (e.workshopTarget) {
         drawWorkshopTarget(c, e);
@@ -305,10 +305,12 @@ export class Renderer {
         size = ENEMY_STATS[e.kind].w;
       c.save();
       c.translate(p.x, p.y);
+      if (e.allied && g.areaEvents.departingAt !== null)
+        c.globalAlpha = clamp(1 - (g.time - g.areaEvents.departingAt) / 3, 0, 1);
       if (e.spawn > 0) {
         c.globalAlpha = clamp(1 - e.spawn / 0.65, 0.15, 1);
         if (!e.fromDoor) {
-          c.strokeStyle = '#ed735d';
+          c.strokeStyle = e.allied ? '#6bb7ff' : '#ed735d';
           c.lineWidth = 1.5;
           c.strokeRect(-size / 2 - 8, -size / 2 - 8, size + 16, size + 16);
         }
@@ -316,11 +318,13 @@ export class Renderer {
       const color =
         e.flash > 0
           ? '#fff5df'
-          : e.kind === 'sniper'
-            ? '#e9ac78'
-            : e.kind === 'boss' && e.phase === 2
-              ? '#ffbc83'
-              : '#ee7965';
+          : e.allied
+            ? '#6bb7ff'
+            : e.kind === 'sniper'
+              ? '#e9ac78'
+              : e.kind === 'boss' && e.phase === 2
+                ? '#ffbc83'
+                : '#ee7965';
       if (e.kind === 'loader') {
         c.save();
         c.scale(e.aim.x < 0 ? -1 : 1, 1);
@@ -449,13 +453,13 @@ export class Renderer {
               '#ffe1a6',
             );
         } else {
-          this.circle({ x: 0, y: 0 }, 18, '#392a2a');
+          this.circle({ x: 0, y: 0 }, 18, e.allied ? '#18344b' : '#392a2a');
           this.circle({ x: 0, y: 0 }, 18, color, false, 2.5);
           this.line({ x: -26, y: -5 }, { x: -18, y: 2 }, color, 3);
           this.line({ x: 18, y: 2 }, { x: 26, y: -5 }, color, 3);
         }
       } else {
-        c.fillStyle = e.flash > 0 ? '#fff5df' : '#33282a';
+        c.fillStyle = e.flash > 0 ? '#fff5df' : e.allied ? '#18344b' : '#33282a';
         c.fillRect(-size / 2, -(e.kind === 'boss' ? 38 : 16), size, e.kind === 'boss' ? 76 : 32);
         c.fillStyle = color;
         if (e.kind === 'runner') {
@@ -507,8 +511,9 @@ export class Renderer {
         }
         c.restore();
       }
-      const aim =
-        e.elite === 'shielded'
+      const aim = e.allied
+        ? e.aim
+        : e.elite === 'shielded'
           ? { x: e.facing, y: 0 }
           : e.kind === 'runner' || e.kind === 'hopper'
             ? direction(p, g.player.position)
@@ -548,12 +553,13 @@ export class Renderer {
       if (e.hp < e.maxHp) {
         const w = isBoss(e.kind) ? ENEMY_STATS[e.kind].w : 30;
         const y = -ENEMY_STATS[e.kind].h / 2 - 13;
-        c.fillStyle = '#493632';
+        c.fillStyle = e.allied ? '#18344b' : '#493632';
         c.fillRect(-w / 2, y, w, 3);
         c.fillStyle = color;
         c.fillRect(-w / 2, y, (w * e.hp) / e.maxHp, 3);
       }
       c.restore();
+      if (e.allied && g.areaEvents.departingAt !== null) continue;
       this.drawTell(e);
       drawSquadTell(c, g, e);
       if (
@@ -568,7 +574,7 @@ export class Renderer {
         this.line(
           p,
           squadLineEnd(g, e, p, { x: p.x + e.aim.x * length, y: p.y + e.aim.y * length }),
-          e.timer <= 0.35 ? '#d89b7f' : '#a56553',
+          e.allied ? '#83bdea' : e.timer <= 0.35 ? '#d89b7f' : '#a56553',
           1.25,
         );
         c.setLineDash([]);
@@ -578,7 +584,7 @@ export class Renderer {
             y: p.y + e.aim.y * 28,
           },
           3 + clamp(1 - e.timer / 0.4, 0, 1) * 1.5,
-          '#ffd7a0',
+          e.allied ? '#c4e5ff' : '#ffd7a0',
         );
       }
     }

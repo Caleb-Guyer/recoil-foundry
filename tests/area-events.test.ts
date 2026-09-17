@@ -4,12 +4,15 @@ import Matter from 'matter-js';
 import { Game } from '../src/game.ts';
 import {
   AREA_EVENTS,
+  TURF_ENTRY_X,
+  TURF_SPACING,
   eventTestFromUrl,
   planAreaEvent,
   validAreaEvent,
   type AreaEventKind,
 } from '../src/area-events.ts';
 import { loadCheckpoint, MOD_REQUIRES, rewardMods, seeded, type Checkpoint } from '../src/rules.ts';
+import { ENEMY_STATS, enemyHealth } from '../src/enemies.ts';
 import { todayDaily } from '../src/daily.ts';
 import { freightSelected } from '../src/freight-layout.ts';
 import { Body, Composite, fixture, round, target, wall } from './branches-fixture.ts';
@@ -223,7 +226,7 @@ test('Turf War starts as a large simultaneous battle with blue allies on the lef
     g.startTest(save);
     assert.equal(g.enemies.length, 22, g.level.id);
     assert.equal(g.areaEvents.allies.length, 5);
-    assert(g.areaEvents.allies.every((e) => e.allied && e.body.position.x <= 175));
+    assert(g.areaEvents.allies.every((e) => e.allied && e.body.position.x <= 355));
     assert.equal(g.waves.doors.length, 0);
     assert(!g.waves.pending);
     for (const e of [...g.enemies, ...g.areaEvents.allies])
@@ -233,6 +236,116 @@ test('Turf War starts as a large simultaneous battle with blue allies on the lef
         g.level.id + ' ' + e.kind,
       );
   }
+});
+test('Turf War keeps the entire roster away from entry and spread across seeded areas and routes', () => {
+  for (let i = 0; i < 12; i++)
+    for (const area of [1, 2, 3])
+      for (const offset of [0, 1, 2]) {
+        const save = preset('turf');
+        save.seed = 'turf-spread-' + i;
+        save.stage = area * 4 + offset;
+        save.areaEvent!.area = area;
+        const g = new Game();
+        g.startTest(save);
+        if (g.level.freight) continue;
+        for (const route of offset === 2 ? ([undefined, 'low', 'high'] as const) : [undefined]) {
+          if (route) {
+            g.route = route;
+            g.loadRoom();
+          }
+          assert.equal(g.enemies.length, 22, g.level.id);
+          assert.equal(g.areaEvents.allies.length, 5, g.level.id);
+          const kinds = new Set(g.areaEvents.allies.map((e) => e.kind));
+          assert.deepEqual([...kinds].sort(), ['flyer', 'runner', 'shooter']);
+          for (const [index, e] of g.enemies.entries()) {
+            assert(e.body.position.x >= TURF_ENTRY_X, g.level.id + ' crowded entry');
+            assert(
+              Math.hypot(
+                e.body.position.x - g.player.position.x,
+                e.body.position.y - g.player.position.y,
+              ) >= 480,
+            );
+            for (const other of g.enemies.slice(index + 1))
+              assert(
+                Math.hypot(
+                  e.body.position.x - other.body.position.x,
+                  e.body.position.y - other.body.position.y,
+                ) >=
+                  TURF_SPACING - 0.1,
+                g.level.id + ' crowded pair',
+              );
+          }
+          for (const [min, max] of [
+            [620, 1050],
+            [1050, 1490],
+            [1490, 2000],
+          ])
+            assert(
+              g.enemies.filter((e) => e.body.position.x >= min && e.body.position.x < max).length >=
+                3,
+              g.level.id + ' empty lane',
+            );
+          for (const e of [...g.enemies, ...g.areaEvents.allies])
+            assert.equal(
+              Matter.Query.collides(e.body, g.solidBodies).length,
+              0,
+              g.level.id + ' overlap ' + e.kind,
+            );
+          for (const e of g.areaEvents.allies) {
+            assert(e.body.position.x <= 355);
+            assert.equal(e.hp, enemyHealth(e.kind, g.stage));
+            assert.equal(e.maxHp, e.hp);
+            assert.equal(e.body.isStatic, e.kind === 'shooter');
+            if (e.kind !== 'flyer')
+              assert(
+                Matter.Query.ray(g.terrain, e.body.position, {
+                  x: e.body.position.x,
+                  y: e.body.position.y + ENEMY_STATS[e.kind].h / 2 + 3,
+                }).length,
+                'ground unit must have support',
+              );
+          }
+        }
+      }
+});
+test('allied shooters and flyers keep their original single-shot and three-shot attacks', () => {
+  for (const kind of ['shooter', 'flyer'] as const) {
+    const g = fixture([]);
+    g.areaEvents.active = 'turf';
+    const ally = target(g, 300, 300, kind);
+    ally.allied = true;
+    ally.timer = 0;
+    ally.aim = { x: 1, y: 0 };
+    g.enemies = [];
+    g.areaEvents.allies = [ally];
+    target(g, 800, 300);
+    g.areaEvents.beforeStep(1 / 60);
+    assert.equal(g.shots.length, kind === 'shooter' ? 1 : 3);
+    assert(g.shots.every((s) => s.allied && !s.friendly && s.damage === 14));
+    assert.equal(ally.timer, kind === 'shooter' ? 1.2 : 1.55);
+  }
+});
+test('allied runners use melee against red enemies without hurting the player or awarding kill effects', () => {
+  const g = fixture(['leech']);
+  g.hp = 40;
+  g.areaEvents.active = 'turf';
+  const ally = target(g, 400, 300, 'runner');
+  ally.allied = true;
+  g.enemies = [];
+  g.areaEvents.allies = [ally];
+  const red = target(g, 425, 300);
+  red.hp = 30;
+  Body.setPosition(g.player, { x: 400, y: 300 });
+  g.updateEnemy(ally, 1 / 60);
+  assert.equal(red.hp, 15);
+  g.updateEnemy(ally, 1 / 60);
+  assert.equal(red.hp, 15, 'contact has a recovery instead of damage every frame');
+  g.time += 0.66;
+  g.updateEnemy(ally, 1 / 60);
+  assert(red.hp <= 0);
+  assert.equal(g.hp, 40);
+  assert.equal(g.kills, 0);
+  assert.equal(g.shots.length, 0);
 });
 test('allied targeting chooses red enemies and never falls back to the player', () => {
   const g = game('turf');
@@ -321,14 +434,14 @@ test('red gunmen return fire at closer visible blue allies and respect cover', (
   g.enemies = g.enemies.filter((e) => e !== ally);
   g.areaEvents.allies = [ally];
   Body.setPosition(g.player, { x: 1200, y: 300 });
-  assert.equal(g.areaEvents.redTarget(red), ally.body.position);
+  assert.equal(g.areaEvents.combatTarget(red), ally.body.position);
   red.timer = 1;
   g.updateEnemy(red, 1 / 60);
   assert(red.aim.x < 0);
   wall(g, 720, 300, 25, 180);
-  assert.equal(g.areaEvents.redTarget(red), g.player.position);
+  assert.equal(g.areaEvents.combatTarget(red), g.player.position);
   g.areaEvents.active = null;
-  assert.equal(g.areaEvents.redTarget(red), g.player.position);
+  assert.equal(g.areaEvents.combatTarget(red), g.player.position);
 });
 test('blue shots cannot detonate canisters or damage cover beside the player', () => {
   for (const kind of ['canister', 'cover'] as const) {

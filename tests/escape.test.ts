@@ -310,6 +310,8 @@ test('daily timing includes escape traversal and excludes pauses and automatic d
   const challenge = dailyForDate('2026-09-06')!,
     g = new Game();
   g.start(challenge.seed);
+  // Skip event combat while advancing directly to the escape timing fixture.
+  g.areaEvents.state = null;
   for (let i = 0; i < STAGES - 1; i++) {
     g.openReward();
     assert.equal(g.offers.length, 1);

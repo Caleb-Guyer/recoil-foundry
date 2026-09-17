@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Turf War formations · 2.78.0
+
+Turf War still opens with **22 reds and five blue allies**, without a second wave. Every red spawn, including the room's original roster, now stays at least **480 world units from the player** and begins beyond the entrance lane. Units have at least **125 units of separation**, spread between the room's platforms, floor and airspace. Ground units spawn on clear support surfaces.
+
+The blue team uses the existing **runner, shooter and flyer** types, with their normal silhouettes, health, movement and attacks rendered in blue. Runners engage reds in melee, shooters fire single rounds, and flyers fire their normal three-round fans. Ground units leave along the floor and flyers depart through the air. Your weapons still pass through allies; their attacks cannot hurt you, and their kills never grant your healing or kill effects. Tight entry layouts substitute a flyer when a third ground position will not fit safely.
+
+[**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.78.0). Click **Test Turf War**; **R** repeats the preset. The test preserves your campaign save and discoveries. Daily uses **ruleset 67**.
+
 ## Reworked events · 2.77.0
 
 - **Blackout** affects exactly **one combat room**. The world is almost completely dark, with a small light around you and the electrical box. The exit stays invisible until you shoot the box. One hit restores the lights and releases the second wave. Restored power adds 6 health to ordinary room recovery for the rest of the run.

@@ -130,7 +130,7 @@ export class ReinforcementSystem {
   reset(level: Level) {
     this.clear();
     const g = this.game;
-    if (g.areaEvents.encounter === 'turf') return level.spawns.map((s) => ({ ...s }));
+    if (g.areaEvents.encounter === 'turf') return g.areaEvents.turfOpening(level);
     const [opening, final] =
       g.overtime && level.boss
         ? [level.spawns.slice(0, 1), level.spawns.slice(1)]

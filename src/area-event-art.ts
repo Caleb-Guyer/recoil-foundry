@@ -1,5 +1,5 @@
 import type { Enemy, Game } from './game.ts';
-import { clamp, distance, type Vec } from './rules.ts';
+import { distance, type Vec } from './rules.ts';
 const AMBER = '#e8bb76',
   BLUE = '#6bb7ff';
 export function drawEventEnemy(c: CanvasRenderingContext2D, e: Enemy): boolean {
@@ -27,25 +27,6 @@ export function drawAreaEvent(c: CanvasRenderingContext2D, g: Game) {
   const event = g.areaEvents;
   if (!event.active) return;
   c.save();
-  for (const e of event.allies) {
-    const p = e.body.position;
-    c.globalAlpha =
-      event.departingAt === null ? 1 : clamp(1 - (g.time - event.departingAt) / 3, 0, 1);
-    c.fillStyle = e.flash > 0 ? '#e7f6ff' : '#163c63';
-    c.strokeStyle = BLUE;
-    c.lineWidth = 2;
-    c.beginPath();
-    c.arc(p.x, p.y, 19, 0, Math.PI * 2);
-    c.fill();
-    c.stroke();
-    c.beginPath();
-    c.moveTo(p.x + e.aim.x * 11, p.y + e.aim.y * 11);
-    c.lineTo(p.x + e.aim.x * 28, p.y + e.aim.y * 28);
-    c.stroke();
-    c.fillStyle = '#b9e0ff';
-    c.fillRect(p.x - 3, p.y - 3, 6, 6);
-  }
-  c.globalAlpha = 1;
   for (const s of g.shots)
     if (s.allied && s.life > 0) {
       c.strokeStyle = '#6bb7ff';

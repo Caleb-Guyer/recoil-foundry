@@ -1,8 +1,14 @@
 import Matter from 'matter-js';
 import { freightSelected } from './freight-layout.ts';
 import type { Enemy, Game } from './game.ts';
+import type { Level, Spawn } from './levels.ts';
+import { ENEMY_STATS } from './enemies.ts';
 import { areaIndex, clamp, direction, distance, MOD_REQUIRES, seeded } from './rules.ts';
 import type { Checkpoint, Mod, Vec } from './rules.ts';
+
+export const TURF_ENTRY_X = 620;
+export const TURF_SPACING = 125;
+type AllyKind = 'runner' | 'shooter' | 'flyer';
 
 const { Body, Query, Composite } = Matter;
 export const AREA_EVENTS = {
@@ -101,7 +107,7 @@ export function eventTestFromUrl(url: URL): Checkpoint | null {
   if (!Object.hasOwn(AREA_EVENTS, kind)) return null;
   return {
     version: 6,
-    seed: 'EVENTS-77-' + kind,
+    seed: (kind === 'turf' ? 'EVENTS-78-' : 'EVENTS-77-') + kind,
     stage: 4,
     hp: 100,
     mods: ['magnum', 'ricochet', 'airshot', 'light'],
@@ -132,6 +138,7 @@ export class AreaEventSystem {
   pending = false;
   releaseAt = 0;
   powered = false;
+  contactAt = new Map<number, number>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -172,6 +179,7 @@ export class AreaEventSystem {
   clear() {
     for (const e of this.allies) Composite.remove(this.game.engine.world, e.body);
     this.allies = [];
+    this.contactAt.clear();
     this.departingAt = null;
     this.active = null;
     this.pending = false;
@@ -199,22 +207,93 @@ export class AreaEventSystem {
     } else if (this.active === 'lockdown') {
       g.waves.held = true;
     } else {
-      // The full authored roster is already present. Fill clear spaces up to a
-      // large, bounded opening battle; no doors or delayed reinforcement wave.
-      for (const p of this.battleSites()) {
-        if (g.enemies.length >= 22) break;
-        this.spawn('flyer', p);
+      this.spawnTurf();
+    }
+  }
+  turfOpening(level: Level): Spawn[] {
+    const result: Spawn[] = [];
+    for (const spawn of level.spawns) {
+      if (spawn.x < TURF_ENTRY_X || distance(spawn, this.game.player.position) < 480) continue;
+      if (result.some((other) => distance(other, spawn) < TURF_SPACING)) continue;
+      result.push({ ...spawn });
+    }
+    return result;
+  }
+  turfSites(kind: AllyKind, allied: boolean): Vec[] {
+    const g = this.game,
+      { w, h } = ENEMY_STATS[kind],
+      result: Vec[] = [];
+    const min = allied ? 55 : TURF_ENTRY_X,
+      max = allied ? 355 : g.worldWidth - 110;
+    const supports = g.terrain.filter(
+      (b) => b.bounds.max.x - b.bounds.min.x > 70 && b.bounds.min.y >= 100 && b.bounds.min.y <= 740,
+    );
+    const candidates: Vec[] = [];
+    for (let x = min; x <= max; x += allied ? 50 : 65) {
+      if (kind === 'flyer') {
+        for (let y = 140; y <= 660; y += 80) candidates.push({ x, y });
+      } else
+        for (const b of supports) {
+          if (x - w / 2 - 4 >= b.bounds.min.x && x + w / 2 + 4 <= b.bounds.max.x)
+            candidates.push({ x, y: b.bounds.min.y - h / 2 - 1 });
+        }
+    }
+    for (const p of candidates) {
+      if (distance(p, g.player.position) < (allied ? 55 : 480)) continue;
+      if (
+        [...g.enemies, ...this.allies].some(
+          (e) => distance(p, e.body.position) < (allied ? 75 : TURF_SPACING),
+        )
+      )
+        continue;
+      if (
+        Query.region(g.solidBodies, {
+          min: { x: p.x - w / 2 - 5, y: p.y - h / 2 - 5 },
+          max: { x: p.x + w / 2 + 5, y: p.y + h / 2 - 0.25 },
+        }).length
+      )
+        continue;
+      result.push(p);
+    }
+    return result;
+  }
+  turfSpot(kind: AllyKind, allied = false): Vec | undefined {
+    const g = this.game,
+      actors = allied ? this.allies : g.enemies;
+    // Farthest-point placement fills separate lanes and heights, rather than
+    // exhausting one row of a grid or crowding the nearest authored anchor.
+    return this.turfSites(kind, allied).sort((a, b) => {
+      const score = (p: Vec) =>
+        Math.min(
+          ...actors.map((e) => distance(p, e.body.position)),
+          distance(p, g.player.position),
+        );
+      return score(b) - score(a) || a.x - b.x || a.y - b.y;
+    })[0];
+  }
+  spawnTurf() {
+    const g = this.game;
+    for (let i = 0; g.enemies.length < 22 && i < 22; i++) {
+      const preferred: AllyKind = i % 3 === 0 ? 'runner' : i % 3 === 1 ? 'shooter' : 'flyer';
+      const spot = this.turfSpot(preferred);
+      if (spot) this.spawn(preferred, spot);
+      else {
+        const air = this.turfSpot('flyer');
+        if (!air) break;
+        this.spawn('flyer', air);
       }
-      for (const p of this.leftSites()) {
-        if (this.allies.length >= 5) break;
-        const ally = this.spawn('flyer', p);
-        if (!ally) break;
-        g.enemies = g.enemies.filter((e) => e !== ally);
-        ally.allied = true;
-        ally.hp = ally.maxHp = 220;
-        ally.timer = 0.8;
-        this.allies.push(ally);
-      }
+    }
+    for (const preferred of ['shooter', 'runner', 'runner', 'flyer', 'flyer'] as const) {
+      const ground = this.turfSpot(preferred, true);
+      const kind = ground ? preferred : 'flyer';
+      const p = ground ?? this.turfSpot('flyer', true);
+      if (!p) continue;
+      const ally = this.spawn(kind, p);
+      if (!ally) continue;
+      g.enemies = g.enemies.filter((e) => e !== ally);
+      ally.allied = true;
+      ally.aim = { x: 1, y: 0 };
+      this.allies.push(ally);
     }
   }
   findSite(): Vec {
@@ -245,13 +324,6 @@ export class AreaEventSystem {
       for (let x = 620; x <= 1820; x += 135) {
         const p = { x, y };
         if (this.free(p, 34)) yield p;
-      }
-  }
-  *leftSites() {
-    for (const y of [380, 260, 140, 500])
-      for (const x of [70, 175]) {
-        const p = { x, y };
-        if (this.free(p)) yield p;
       }
   }
   spawn(kind: 'shooter' | 'flyer' | 'runner', pos: Vec) {
@@ -315,47 +387,52 @@ export class AreaEventSystem {
   beforeStep(dt: number) {
     const g = this.game;
     for (const e of [...this.allies]) {
-      if (e.hp <= 0) continue;
-      e.spawn = Math.max(0, e.spawn - dt);
-      e.flash = Math.max(0, e.flash - dt);
-      Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
       if (this.departingAt !== null) {
-        Body.setVelocity(e.body, { x: -4, y: -5 });
+        if (e.body.isStatic) Body.setStatic(e.body, false);
+        if (e.kind === 'flyer')
+          Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
+        Body.setVelocity(e.body, { x: -4, y: e.kind === 'flyer' ? -5 : e.body.velocity.y });
         if (e.body.position.x < 28 || e.body.position.y < 28 || g.time - this.departingAt > 3)
           this.removeAlly(e);
-        continue;
-      }
-      if (e.spawn > 0) continue;
-      const visible = g.enemies.filter(
-        (enemy) =>
-          enemy.spawn <= 0 &&
-          enemy.hp > 0 &&
-          distance(g.lineEnd(e.body.position, enemy.body.position), enemy.body.position) < 1,
-      );
-      const target = [...(visible.length ? visible : g.enemies)].sort(
-        (a, b) =>
-          distance(a.body.position, e.body.position) - distance(b.body.position, e.body.position),
-      )[0];
-      if (!target) continue;
-      const p = e.body.position,
-        t = target.body.position,
-        d = direction(p, t);
-      const blocked = distance(g.lineEnd(p, t), t) > 1;
-      Body.setVelocity(e.body, {
-        x: clamp((t.x - d.x * 250 - p.x) * 0.01, -3.8, 3.8),
-        y: blocked ? -3 : clamp((clamp(t.y - 60 + (e.id % 3) * 45, 110, 660) - p.y) * 0.025, -3, 3),
-      });
-      e.aim = d;
-      e.timer -= dt;
-      if (!blocked && e.timer <= 0) {
-        g.enemyShot(e, Math.atan2(d.y, d.x), 11, 13 + this.state!.area * 2);
-        e.timer = 0.9;
-      }
+      } else g.updateEnemy(e, dt);
     }
   }
-  redTarget(e: Enemy): Vec {
+  contact(e: Enemy) {
+    if (
+      this.active !== 'turf' ||
+      this.departingAt !== null ||
+      this.game.time < (this.contactAt.get(e.id) ?? 0)
+    )
+      return;
     const g = this.game;
-    if (this.active !== 'turf' || e.squad || e.elite || !['flyer', 'shooter'].includes(e.kind))
+    const other = (e.allied ? g.enemies : this.allies).find(
+      (a) => a.hp > 0 && a.spawn <= 0 && Query.collides(e.body, [a.body]).length,
+    );
+    if (!other) return;
+    this.contactAt.set(e.id, g.time + 0.65);
+    if (other.allied) this.hitAlly(other, 15);
+    else g.hitEnemy(other, 15, e.body.position, true, false, false);
+  }
+  combatTarget(e: Enemy): Vec {
+    const g = this.game;
+    if (e.allied) {
+      const live = g.enemies.filter((a) => a.hp > 0 && a.spawn <= 0);
+      const visible = live.filter(
+        (a) => distance(g.lineEnd(e.body.position, a.body.position), a.body.position) < 1,
+      );
+      return (
+        [...(visible.length ? visible : live)].sort(
+          (a, b) =>
+            distance(e.body.position, a.body.position) - distance(e.body.position, b.body.position),
+        )[0]?.body.position ?? e.body.position
+      );
+    }
+    if (
+      this.active !== 'turf' ||
+      e.squad ||
+      e.elite ||
+      !['runner', 'flyer', 'shooter'].includes(e.kind)
+    )
       return g.player.position;
     // Ordinary gunmen return fire at closer, visible blue combatants. Other
     // enemy archetypes keep their authored player-facing attacks and tells.
