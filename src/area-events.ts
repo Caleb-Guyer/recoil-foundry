@@ -1,15 +1,21 @@
 import Matter from 'matter-js';
 import { freightSelected } from './freight-layout.ts';
 import type { Enemy, Game } from './game.ts';
-import type { Level, Spawn } from './levels.ts';
 import { ENEMY_STATS } from './enemies.ts';
 import { areaIndex, clamp, direction, distance, MOD_REQUIRES, seeded } from './rules.ts';
 import type { Checkpoint, Mod, Vec } from './rules.ts';
 
-export const TURF_RED_COUNT = 14;
-export const TURF_BLUE_COUNT = 12;
-export const TURF_SPACING = 125;
-type AllyKind = 'runner' | 'shooter' | 'flyer';
+import {
+  TURF_RED_COUNT,
+  TURF_BLUE_COUNT,
+  TURF_SPACING,
+  TURF_FORMATIONS,
+  planTurfFormation,
+  type TurfKind,
+  type TurfFormation,
+  type TurfSites,
+} from './turf-formations.ts';
+export { TURF_RED_COUNT, TURF_BLUE_COUNT, TURF_SPACING } from './turf-formations.ts';
 
 const { Body, Query, Composite } = Matter;
 export const AREA_EVENTS = {
@@ -91,11 +97,16 @@ export function validAreaEvent(value: unknown, stage: number, atReward: boolean)
     (!s.commander || (s.kind === 'lockdown' && stage >= s.area * 4))
   );
 }
+export const TURF_TEST_SEEDS: Record<TurfFormation, string> = {
+  ground: 'TURF-80-1',
+  crossfire: 'TURF-80-0',
+  air: 'TURF-80-10',
+};
 export function eventTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   let unknown = false;
   p.forEach((_, key) => {
-    if (!['test', 'event', 'v'].includes(key)) unknown = true;
+    if (!['test', 'event', 'formation', 'v'].includes(key)) unknown = true;
   });
   if (
     p.get('test') !== 'events' ||
@@ -106,9 +117,19 @@ export function eventTestFromUrl(url: URL): Checkpoint | null {
     return null;
   const kind = p.get('event') as AreaEventKind;
   if (!Object.hasOwn(AREA_EVENTS, kind)) return null;
+  const formation = p.get('formation') as TurfFormation | null;
+  if (
+    p.has('formation') &&
+    (kind !== 'turf' ||
+      p.getAll('formation').length !== 1 ||
+      !Object.hasOwn(TURF_FORMATIONS, formation ?? ''))
+  )
+    return null;
   return {
     version: 6,
-    seed: (kind === 'turf' ? 'EVENTS-78-' : 'EVENTS-77-') + kind,
+    seed: formation
+      ? TURF_TEST_SEEDS[formation]
+      : (kind === 'turf' ? 'EVENTS-78-' : 'EVENTS-77-') + kind,
     stage: 4,
     hp: 100,
     mods: ['magnum', 'ricochet', 'airshot', 'light'],
@@ -132,6 +153,7 @@ export class AreaEventSystem {
   active: AreaEventKind | null = null;
   site: Vec = { x: 1000, y: 724 };
   allies: Enemy[] = [];
+  formation: TurfFormation | null = null;
   departingAt: number | null = null;
   cacheReady = false;
   cacheTaken = false;
@@ -180,6 +202,7 @@ export class AreaEventSystem {
   clear() {
     for (const e of this.allies) Composite.remove(this.game.engine.world, e.body);
     this.allies = [];
+    this.formation = null;
     this.contactAt.clear();
     this.departingAt = null;
     this.active = null;
@@ -211,18 +234,7 @@ export class AreaEventSystem {
       this.spawnTurf();
     }
   }
-  turfOpening(level: Level): Spawn[] {
-    const result: Spawn[] = [];
-    for (const spawn of level.spawns) {
-      if (result.length >= TURF_RED_COUNT) break;
-      // Keep the whole hull inside red's half, including wide authored units.
-      if (spawn.x - ENEMY_STATS[spawn.kind].w / 2 < this.game.worldWidth / 2 + 4) continue;
-      if (result.some((other) => distance(other, spawn) < TURF_SPACING)) continue;
-      result.push({ ...spawn });
-    }
-    return result;
-  }
-  turfSites(kind: AllyKind, allied: boolean): Vec[] {
+  turfSites(kind: TurfKind, allied: boolean): Vec[] {
     const g = this.game,
       { w, h } = ENEMY_STATS[kind],
       result: Vec[] = [];
@@ -233,7 +245,7 @@ export class AreaEventSystem {
       (b) => b.bounds.max.x - b.bounds.min.x > 70 && b.bounds.min.y >= 100 && b.bounds.min.y <= 740,
     );
     const candidates: Vec[] = [];
-    for (let x = min; x <= max; x += 55) {
+    for (let x = min; x <= max; x += 25) {
       if (kind === 'flyer') {
         for (let y = 140; y <= 660; y += 80) candidates.push({ x, y });
       } else
@@ -257,7 +269,7 @@ export class AreaEventSystem {
     }
     return result;
   }
-  turfSpot(kind: AllyKind, allied = false): Vec | undefined {
+  turfSpot(kind: TurfKind, allied = false): Vec | undefined {
     const g = this.game,
       actors = allied ? this.allies : g.enemies;
     // Farthest-point placement fills separate lanes and heights, rather than
@@ -273,29 +285,69 @@ export class AreaEventSystem {
   }
   spawnTurf() {
     const g = this.game;
-    for (let i = 0; g.enemies.length < TURF_RED_COUNT && i < TURF_RED_COUNT; i++) {
-      const preferred: AllyKind = i % 3 === 0 ? 'runner' : i % 3 === 1 ? 'shooter' : 'flyer';
-      const spot = this.turfSpot(preferred);
-      if (spot) this.spawn(preferred, spot);
-      else {
-        const air = this.turfSpot('flyer');
-        if (!air) break;
-        this.spawn('flyer', air);
+    const sites = (allied: boolean): TurfSites => ({
+      runner: this.turfSites('runner', allied),
+      shooter: this.turfSites('shooter', allied),
+      flyer: this.turfSites('flyer', allied),
+    });
+    const redSites = sites(false),
+      blueSites = sites(true);
+    const seed = g.roomSeed + ':turf-formation:' + g.stage + ':' + (g.route ?? 'main');
+    const rng = seeded(seed);
+    const choices = (Object.keys(TURF_FORMATIONS) as TurfFormation[])
+      .flatMap((formation) => {
+        const red = planTurfFormation(formation, redSites, g.worldWidth, false, seed);
+        if (!red) return [];
+        const separated = Object.fromEntries(
+          Object.entries(blueSites).map(([kind, points]) => [
+            kind,
+            points.filter((p) => red.every((other) => distance(p, other) >= TURF_SPACING)),
+          ]),
+        ) as TurfSites;
+        const blue = planTurfFormation(formation, separated, g.worldWidth, true, seed);
+        if (!blue) return [];
+        // Favor ground pushes in low rooms, crossfire on layered perches, and
+        // air battles in open rooms. Only complete, safely placed rosters qualify.
+        const weight =
+          formation === 'ground'
+            ? 3 + redSites.runner.filter((p) => p.y >= 580).length / 25
+            : formation === 'crossfire'
+              ? 4 + redSites.shooter.filter((p) => p.y < 620).length / 25
+              : 0.5 + redSites.flyer.length / 800;
+        return [{ formation, red, blue, rank: -Math.log(Math.max(rng(), 0.000001)) / weight }];
+      })
+      .sort((a, b) => a.rank - b.rank);
+    const selected = choices[0];
+    if (selected) {
+      this.formation = selected.formation;
+      for (const unit of selected.red) this.spawn(unit.kind, unit);
+      for (const unit of selected.blue) this.spawnAlly(unit.kind, unit);
+      return;
+    }
+    // Future unusually crowded layouts still get a safe simultaneous battle.
+    // Supported units go first; free airspace supplies any remaining slots.
+    this.formation = 'air';
+    for (const allied of [false, true]) {
+      const count = allied ? TURF_BLUE_COUNT : TURF_RED_COUNT;
+      for (let i = 0; i < count; i++) {
+        const preferred: TurfKind = i < 2 ? 'shooter' : i < 4 ? 'runner' : 'flyer';
+        const spot = this.turfSpot(preferred, allied);
+        const kind = spot ? preferred : 'flyer';
+        const p = spot ?? this.turfSpot('flyer', allied);
+        if (p) {
+          if (allied) this.spawnAlly(kind, p);
+          else this.spawn(kind, p);
+        }
       }
     }
-    for (let i = 0; i < TURF_BLUE_COUNT; i++) {
-      const preferred = (['shooter', 'runner', 'flyer'] as const)[i % 3];
-      const ground = this.turfSpot(preferred, true);
-      const kind = ground ? preferred : 'flyer';
-      const p = ground ?? this.turfSpot('flyer', true);
-      if (!p) continue;
-      const ally = this.spawn(kind, p);
-      if (!ally) continue;
-      g.enemies = g.enemies.filter((e) => e !== ally);
-      ally.allied = true;
-      ally.aim = { x: 1, y: 0 };
-      this.allies.push(ally);
-    }
+  }
+  spawnAlly(kind: TurfKind, p: Vec) {
+    const ally = this.spawn(kind, p);
+    if (!ally) return;
+    this.game.enemies = this.game.enemies.filter((e) => e !== ally);
+    ally.allied = true;
+    ally.aim = { x: 1, y: 0 };
+    this.allies.push(ally);
   }
   findSite(): Vec {
     const g = this.game,

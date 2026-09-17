@@ -6,6 +6,20 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Turf War battle formations · 2.80.0
+
+Turf War now chooses a formation that fits the room's actual free space. Every battle still starts with **12 blues in the left half and 14 reds in the right half**, using the existing runner, shooter and flyer enemies with their normal stats and attacks.
+
+- **Ground Assault:** runner-heavy teams push from low positions, with shooters starting farther back.
+- **Crossfire:** shooter-heavy teams occupy multiple platform heights, with runners and flyers supporting them. Rooms without suitable elevated positions cannot roll this formation.
+- **Air Battle:** eight blue flyers face nine red flyers, backed by ground troops in supported positions.
+
+Both sides occupy the rear, middle and front of their half, with at least 105 world units between starting troops. Formation selection and placement follow the room seed, including route choices, so retries and Daily runs reproduce the same battle. There is one simultaneous fight, no extra waves, no friendly fire and no new gameplay labels. Surviving blues still leave after the reds fall. Daily uses **ruleset 69**.
+
+[**Test Ground Assault**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&formation=ground&v=2.80.0) · [**Test Crossfire**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&formation=crossfire&v=2.80.0) · [**Test Air Battle**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&formation=air&v=2.80.0)
+
+Click the named test button; **R** repeats the formation. Each preset uses normal health and four upgrades, and preserves campaign saves, discoveries, Daily records and Practice unlocks.
+
 ## Turf War territories · 2.79.0
 
 Turf War begins with **12 blue allies spread throughout the left half** and **14 red enemies spread throughout the right half**. The dividing point is the room's midpoint, with every unit's full body inside its starting territory. Both formations keep at least 125 units of spacing and use supported ground positions or clear airspace. The center remains open so both sides can advance once combat starts.

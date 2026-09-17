@@ -1,3 +1,4 @@
+import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
 import { torchTestFromUrl } from './practice.ts';
@@ -245,7 +246,9 @@ function updateTitle() {
   if (linkedRunTest?.areaEvent)
     $('play').innerHTML =
       'Test ' +
-      AREA_EVENTS[linkedRunTest.areaEvent.kind].name +
+      (linkedRunTest.areaEvent.kind === 'turf' && entryUrl.searchParams.has('formation')
+        ? TURF_FORMATIONS[entryUrl.searchParams.get('formation') as TurfFormation].name
+        : AREA_EVENTS[linkedRunTest.areaEvent.kind].name) +
       ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'RECLAMATION-20')
     $('play').innerHTML = 'Test Reclamation Works <span aria-hidden="true">↗</span>';

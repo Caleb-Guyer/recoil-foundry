@@ -12,6 +12,7 @@ import {
   validAreaEvent,
   type AreaEventKind,
 } from '../src/area-events.ts';
+import { TURF_FORMATIONS, planTurfFormation, type TurfFormation } from '../src/turf-formations.ts';
 import { loadCheckpoint, MOD_REQUIRES, rewardMods, seeded, type Checkpoint } from '../src/rules.ts';
 import { ENEMY_STATS, enemyHealth } from '../src/enemies.ts';
 import { todayDaily } from '../src/daily.ts';
@@ -92,6 +93,11 @@ test('all direct links are legal, reject mixed modes, and never write campaign s
     'event=turf&event=blackout',
     'event=turf&daily=2026-09-16',
     'event=turf&seed=foo',
+    'event=turf&formation=bogus',
+    'event=turf&formation=',
+    'event=turf&formation=air&formation=ground',
+    'event=blackout&formation=air',
+    'event=lockdown&formation=crossfire',
   ])
     assert.equal(eventTestFromUrl(new URL('https://example.test/?test=events&' + suffix)), null);
 });
@@ -238,7 +244,9 @@ test('Turf War starts as a large simultaneous battle with blue allies on the lef
       );
   }
 });
-test('Turf War divides territory in half with 14 reds and 12 blues across seeded areas and routes', () => {
+test('Turf War divides territory in half with layout-appropriate formations across seeded areas and routes', () => {
+  const seen = { ground: 0, crossfire: 0, air: 0 };
+  const mirrored = new Set<boolean>();
   for (let i = 0; i < 12; i++)
     for (const area of [1, 2, 3])
       for (const offset of [0, 1, 2]) {
@@ -256,6 +264,45 @@ test('Turf War divides territory in half with 14 reds and 12 blues across seeded
           }
           assert.equal(g.enemies.length, TURF_RED_COUNT, g.level.id);
           assert.equal(g.areaEvents.allies.length, TURF_BLUE_COUNT, g.level.id);
+          const formation = g.areaEvents.formation!;
+          seen[formation]++;
+          mirrored.add(g.level.mirrored);
+          for (const [team, side] of [
+            [g.areaEvents.allies, 'blue'],
+            [g.enemies, 'red'],
+          ] as const) {
+            const roster = ['runner', 'shooter', 'flyer'].map(
+              (kind) => team.filter((e) => e.kind === kind).length,
+            );
+            assert.deepEqual(
+              roster,
+              [...TURF_FORMATIONS[formation][side]],
+              g.level.id + ' ' + formation,
+            );
+            if (formation === 'crossfire') {
+              const elevated = team.filter((e) => e.kind === 'shooter' && e.body.position.y < 620);
+              assert(elevated.length >= 2, 'crossfire needs elevated shooters');
+              assert(
+                Math.max(...elevated.map((e) => e.body.position.y)) -
+                  Math.min(...elevated.map((e) => e.body.position.y)) >=
+                  60,
+                'crossfire uses different platform heights',
+              );
+            }
+            if (formation === 'ground') {
+              const runners = team.filter((e) => e.kind === 'runner');
+              const shooters = team.filter((e) => e.kind === 'shooter');
+              const front = (e: (typeof team)[number]) =>
+                side === 'blue' ? e.body.position.x : g.worldWidth - e.body.position.x;
+              const avg = (units: typeof team) =>
+                units.reduce((sum, e) => sum + front(e), 0) / units.length;
+              assert(avg(runners) > avg(shooters), 'runners push ahead of supporting shooters');
+              assert(
+                runners.filter((e) => e.body.position.y >= 580).length >=
+                  Math.ceil(runners.length / 2),
+              );
+            }
+          }
           const kinds = new Set(g.areaEvents.allies.map((e) => e.kind));
           assert.deepEqual([...kinds].sort(), ['flyer', 'runner', 'shooter']);
           for (const [index, e] of g.enemies.entries()) {
@@ -308,8 +355,17 @@ test('Turf War divides territory in half with 14 reds and 12 blues across seeded
               0,
               g.level.id + ' overlap ' + e.kind,
             );
-          for (const e of g.areaEvents.allies) {
-            assert(e.body.bounds.max.x <= g.worldWidth / 2);
+          for (const blue of g.areaEvents.allies)
+            for (const red of g.enemies)
+              assert(
+                Math.hypot(
+                  blue.body.position.x - red.body.position.x,
+                  blue.body.position.y - red.body.position.y,
+                ) >=
+                  TURF_SPACING - 0.1,
+              );
+          for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+            if (e.allied) assert(e.body.bounds.max.x <= g.worldWidth / 2);
             assert.equal(e.hp, enemyHealth(e.kind, g.stage));
             assert.equal(e.maxHp, e.hp);
             assert.equal(e.body.isStatic, e.kind === 'shooter');
@@ -324,7 +380,76 @@ test('Turf War divides territory in half with 14 reds and 12 blues across seeded
           }
         }
       }
+  assert.equal(mirrored.size, 2);
+  for (const [formation, count] of Object.entries(seen))
+    assert(count >= 10, formation + ' must appear regularly');
 });
+test('flat rooms reject crossfire and cramped terrain rejects ground-heavy rosters', () => {
+  const floor = Array.from({ length: 16 }, (_, i) => ({ x: 1040 + i * 55, y: 723 }));
+  const air = floor.flatMap(({ x }) => [140, 300, 460].map((y) => ({ x, y })));
+  assert.equal(
+    planTurfFormation(
+      'crossfire',
+      { runner: floor, shooter: floor, flyer: air },
+      2000,
+      false,
+      'flat',
+    ),
+    undefined,
+  );
+  assert.equal(
+    planTurfFormation(
+      'ground',
+      { runner: floor.slice(0, 2), shooter: floor.slice(0, 2), flyer: air },
+      2000,
+      false,
+      'cramped',
+    ),
+    undefined,
+  );
+});
+for (const formation of Object.keys(TURF_FORMATIONS) as TurfFormation[]) {
+  test(
+    formation + ' direct test is repeatable, isolated, and clears with ordinary combat input',
+    (t) => {
+      const save = eventTestFromUrl(
+        new URL('https://example.test/?test=events&event=turf&formation=' + formation),
+      )!;
+      assert(loadCheckpoint(save));
+      const common = Matter.Common as typeof Matter.Common & { _nextId: number; _seed: number };
+      common._nextId = common._seed = 0;
+      const random = Math.random;
+      Math.random = seeded('turf-formation-pilot');
+      t.after(() => {
+        Math.random = random;
+      });
+      const g = new Game();
+      let writes = 0;
+      g.onCheckpoint = () => writes++;
+      g.onBossDefeated = () => writes++;
+      g.startTest(save);
+      assert.equal(g.areaEvents.formation, formation);
+      const snapshot = () =>
+        [...g.enemies, ...g.areaEvents.allies].map((e) => [
+          e.kind,
+          e.allied,
+          e.body.position.x,
+          e.body.position.y,
+        ]);
+      const before = snapshot();
+      const result = playRoom(g, 90);
+      assert(result.clear && result.hp > 0, JSON.stringify(result));
+      assert(g.areaEvents.cacheReady);
+      g.openReward();
+      g.save();
+      g.startTest(g.testRun!);
+      assert.deepEqual(snapshot(), before, 'retry retains the formation and placement');
+      assert.equal(g.areaEvents.formation, formation);
+      assert.equal(writes, 0);
+      t.diagnostic(JSON.stringify({ formation, ...result }));
+    },
+  );
+}
 test('allied shooters and flyers keep their original single-shot and three-shot attacks', () => {
   for (const kind of ['shooter', 'flyer'] as const) {
     const g = fixture([]);

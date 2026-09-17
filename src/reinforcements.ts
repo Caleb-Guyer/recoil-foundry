@@ -130,7 +130,8 @@ export class ReinforcementSystem {
   reset(level: Level) {
     this.clear();
     const g = this.game;
-    if (g.areaEvents.encounter === 'turf') return g.areaEvents.turfOpening(level);
+    // Turf formations are placed after props and moving terrain are ready.
+    if (g.areaEvents.encounter === 'turf') return [];
     const [opening, final] =
       g.overtime && level.boss
         ? [level.spawns.slice(0, 1), level.spawns.slice(1)]
