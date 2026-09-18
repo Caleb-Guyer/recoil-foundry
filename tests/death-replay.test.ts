@@ -329,3 +329,16 @@ test('decode failure disables replay controls instead of retrying the failing fr
   assert.match(f.elements.get('#replay-status')!.textContent, /could not decode/);
   view.dispose();
 });
+
+test('a slow rendering frame cannot stretch the exported playback timeline', async (t) => {
+  const f = viewerFixture(t);
+  f.global('createImageBitmap', async () => ({ close() {} }));
+  const view = f.view();
+  f.elements.get('#replay-save')!.onclick();
+  await f.step(1000);
+  await f.step(9000);
+  await f.step(9050);
+  assert.equal(f.elements.get('#replay-play')!.textContent, 'Replay again');
+  view.dispose();
+  assert.equal(f.counts().recorderStops, 1);
+});

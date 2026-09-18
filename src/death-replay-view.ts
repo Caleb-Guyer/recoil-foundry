@@ -108,6 +108,7 @@ export class ReplayView {
   private stream: MediaStream | null = null;
   private download: string | null = null;
   private stopTimer = 0;
+  private exportTimeout = 0;
   private playButton: HTMLButtonElement;
   private saveButton: HTMLButtonElement;
   private status: HTMLElement;
@@ -154,7 +155,8 @@ export class ReplayView {
   }
   private tick(now: number) {
     if (this.closed || this.failed) return;
-    const dt = this.last ? Math.min((now - this.last) / 1000, 0.1) : 0;
+    // Playback uses wall time so a low frame rate cannot stretch a five-second clip.
+    const dt = this.last ? Math.max((now - this.last) / 1000, 0) : 0;
     this.last = now;
     // A hidden tab must not produce a truncated download. Viewing resumes where it paused.
     if (document.hidden && this.recorder)
@@ -253,6 +255,8 @@ export class ReplayView {
         if (this.closed || this.recorder !== recorder) return;
         this.stream?.getTracks().forEach((track) => track.stop());
         this.stream = this.recorder = null;
+        clearTimeout(this.exportTimeout);
+        this.exportTimeout = 0;
         this.stopTimer = 0;
         this.playButton.disabled = false;
         this.saveButton.disabled = false;
@@ -280,6 +284,10 @@ export class ReplayView {
       this.playButton.disabled = this.saveButton.disabled = true;
       this.playButton.textContent = 'Playing';
       this.status.textContent = 'Saving clip…';
+      this.exportTimeout = window.setTimeout(
+        () => this.cancelExport('Recording interrupted. Try saving again.'),
+        20_000,
+      );
       // Clear the previous impact before the stream captures its first frame.
       this.ctx.fillStyle = '#14181a';
       this.ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -295,6 +303,8 @@ export class ReplayView {
     this.stream = null;
     clearTimeout(this.stopTimer);
     this.stopTimer = 0;
+    clearTimeout(this.exportTimeout);
+    this.exportTimeout = 0;
     this.playButton.disabled = this.saveButton.disabled = false;
     this.status.textContent = message;
   }
