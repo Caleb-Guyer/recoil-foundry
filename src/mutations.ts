@@ -100,6 +100,7 @@ export class MutationSystem {
       (g.areaEvents.active && g.areaEvents.active !== 'turf') ||
       (g.areaEvents.active !== 'turf' &&
         (g.level.anglerIntro ||
+          g.level.fabricatorIntro ||
           g.level.crawlerIntro ||
           g.level.harpoonIntro ||
           g.level.sapperIntro))

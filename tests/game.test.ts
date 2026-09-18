@@ -758,6 +758,9 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     // Keep this weapon-progression battery on its original event-free course.
     // Area event combat, objectives and rewards have their own ordinary-input tests.
     g.areaEvents.state = null;
+    // Keep this weapon-progression battery on its pre-Fabricator roster.
+    // Dedicated ordinary-input room tests cover Fabricator combat and both layouts.
+    g.fabricators.enabled = false;
     if (overtimeRun)
       g.startTest(overtimeTestFromUrl(new URL('https://example.com/?test=overtime'))!);
     const extendedRewards = rewards && [...rewards];

@@ -2,6 +2,7 @@ import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
 import { reforgeTestFromUrl } from './reforge-rules.ts';
+import { fabricatorTestFromUrl } from './fabricator-layout.ts';
 import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
@@ -198,6 +199,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  fabricatorTestFromUrl(entryUrl) ??
   reforgeTestFromUrl(entryUrl) ??
   floodgateTestFromUrl(entryUrl) ??
   courierTestFromUrl(entryUrl) ??
@@ -253,6 +255,8 @@ function updateTitle() {
   if (linkedWorkshop) $('play').innerHTML = 'Open Workshop <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.reforge)
     $('play').innerHTML = 'Test Reforge <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
+    $('play').innerHTML = 'Test the Fabricator <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FLOODGATE-'))
     $('play').innerHTML = 'Test Floodgate <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('COURIER-'))
@@ -379,6 +383,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
   if (linkedRunTest?.reforgeRoom)
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
+  if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
+    $('title-hint').textContent = 'Interrupt the weld. Full health. R to retry.';
   if (linkedRunTest?.seed.startsWith('COURIER-') && linkedRunTest.reward)
     $('title-hint').textContent = 'Recovered cargo. 64 health. R to restart test.';
   else if (

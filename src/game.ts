@@ -2,6 +2,13 @@ import { MutationSystem, type MutationKind, type MutationRig } from './mutations
 import { CourierSystem } from './courier.ts';
 import { FloodgateSystem, type FloodValve } from './floodgate.ts';
 import { ReforgeSystem } from './reforge.ts';
+import {
+  FabricatorSystem,
+  createFabricator,
+  type FabricatorRig,
+  type SentryRig,
+} from './fabricator.ts';
+import { fabricatorLevel } from './fabricator-layout.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
@@ -155,6 +162,8 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  fabricator?: FabricatorRig;
+  sentry?: SentryRig;
   courier?: true;
   eventRole?: EventRole;
   allied?: boolean;
@@ -193,6 +202,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  sentryOwner?: number;
   mutationShell?: { owner: number };
   allied?: boolean;
   damageCause?: DamageCause;
@@ -265,6 +275,7 @@ export class Game {
   courier = new CourierSystem(this);
   floodgate = new FloodgateSystem(this);
   reforge = new ReforgeSystem(this);
+  fabricators = new FabricatorSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   loaderArena = new LoaderArenaSystem(this);
@@ -464,6 +475,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.fabricators.clear();
       this.courier.clear();
       this.areaEvents.clear();
       this.mutations.clear();
@@ -541,6 +553,7 @@ export class Game {
     this.courier.start(save);
     this.floodgate.start(save);
     this.reforge.start(save);
+    this.fabricators.enabled = save ? save.fabricators === true : true;
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
     this.missedUpgrades = save?.missedUpgrades ?? 0;
@@ -600,6 +613,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.fabricators.enabled ? { fabricators: true as const } : {}),
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
       ...(this.floodgate.stage !== null ? { floodgate: this.floodgate.stage } : {}),
       ...(this.reforge.state ? { reforge: { ...this.reforge.state } } : {}),
@@ -634,6 +648,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.fabricators.clear();
     this.floodgate.clear();
     this.courier.clear();
     this.areaEvents.clear();
@@ -741,6 +756,7 @@ export class Game {
     }
     if (!escapeRoom) this.level = this.courier.level(this.level);
     if (!escapeRoom) this.level = this.floodgate.level(this.level);
+    if (!escapeRoom) this.level = fabricatorLevel(this, this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1025,6 +1041,7 @@ export class Game {
     if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
     if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
+    if (kind === 'fabricator') enemy.fabricator = createFabricator();
     if (kind === 'angler') enemy.angler = createAngler();
     if (kind === 'sapper') enemy.sapper = createSapper();
     if (kind === 'wallcrawler') enemy.crawler = createWallcrawler(this, enemy);
@@ -1669,6 +1686,8 @@ export class Game {
       else if (e.kind === 'kiln') updateKiln(this, e, dt);
       else if (e.kind === 'hopper') this.updateHopper(e);
       else if (e.kind === 'scrapper') updateScrapper(this, e);
+      else if (e.kind === 'fabricator') this.fabricators.updateBuilder(e);
+      else if (e.kind === 'sentry') this.fabricators.updateSentry(e);
       else if (e.kind === 'harpooner') this.harpoons.updateEnemy(e);
       else if (e.kind === 'sapper') this.sappers.updateEnemy(e);
       else if (e.kind === 'angler') updateAngler(this, e, dt);
@@ -1725,6 +1744,7 @@ export class Game {
       ) &&
       !(
         (e.kind === 'scrapper' ||
+          e.kind === 'fabricator' ||
           e.kind === 'harpooner' ||
           e.kind === 'sapper' ||
           e.kind === 'wallcrawler' ||
@@ -1732,6 +1752,7 @@ export class Game {
         e.state === 'recover'
       ) &&
       (e.kind !== 'press' || e.state === 'rush') &&
+      e.kind !== 'sentry' &&
       e.kind !== 'crane' &&
       Query.collides(this.player, [e.body]).length &&
       !this.salvage.ram(e)
@@ -2225,6 +2246,7 @@ export class Game {
       friendly: false,
       ...(e.allied ? { allied: true } : {}),
       damageCause: { type: blade ? 'blade' : 'shot', enemy: e.kind },
+      ...(e.sentry ? { sentryOwner: e.sentry.owner } : {}),
       source: { ...e.body.position },
       ...(e.squad ? { allyBlock: e.id } : {}),
       radius: blade ? 11 : 5,
@@ -2520,7 +2542,8 @@ export class Game {
           this.ballistics.consumeFracture(e, s);
           this.ballistics.rivet(e, s);
           this.tethers.hit(e, s);
-          if (e.hp <= 0 && this.gun.deathBloom && !s.fragment) this.deathBloom(s, e.body.position);
+          if (e.hp <= 0 && e.kind !== 'sentry' && this.gun.deathBloom && !s.fragment)
+            this.deathBloom(s, e.body.position);
           this.splitShot(s);
           this.arcs.hit(e, s);
           if (this.mode !== 'playing') return;
@@ -2711,6 +2734,7 @@ export class Game {
     credited = true,
   ): boolean {
     if (e.hp <= 0 || e.allied) return false;
+    if (e.kind === 'sentry') credited = false;
     const incomingDamage = damage;
     const blocked =
       e.elite === 'shielded' && !!from && direction(e.body.position, from).x * e.facing > 0.45;
@@ -2733,6 +2757,7 @@ export class Game {
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
     e.hp -= damage;
+    if (damage > 0 && e.hp > 0 && e.fabricator) this.fabricators.interrupt(e);
     if (feedback) {
       const armored = blocked || damage < incomingDamage * 0.75;
       const directionToHit = from ? direction(e.body.position, from) : { x: 0, y: -1 };
@@ -2774,6 +2799,7 @@ export class Game {
     clearKiln(e);
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
+    this.fabricators.killed(e);
     this.mutations.killed(e);
     this.courier.killed(e);
     if (e.kind === 'loader') this.loaderArena.stop();

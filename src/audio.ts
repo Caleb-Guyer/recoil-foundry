@@ -222,7 +222,16 @@ export class Sound {
       ['crane-hit', 'kiln-impact', 'hurt', 'slam', 'cargo-release', 'cargo-impact'].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
-    if (kind === 'reforge-ready') {
+    if (kind === 'fabricator-build') {
+      this.crack(0.2, 0.06, 2300);
+      this.tone(130, 190, 0.4, 0.045, 'triangle');
+    } else if (kind === 'fabricator-ready') {
+      this.tone(350, 600, 0.18, 0.055, 'triangle');
+      this.crack(0.06, 0.07, 1400);
+    } else if (kind === 'fabricator-break' || kind === 'fabricator-down') {
+      this.tone(260, 70, 0.25, 0.055, 'triangle');
+      this.crack(0.09, 0.06, 2000);
+    } else if (kind === 'reforge-ready') {
       this.tone(220, 440, 0.25, 0.05, 'triangle');
       this.tone(660, 660, 0.15, 0.04, 'sine', 0.2);
     } else if (kind === 'reforge') {

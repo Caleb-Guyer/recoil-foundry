@@ -6,6 +6,20 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## The Fabricator · 2.85.0
+
+A tracked welder builds up to **two sentries** during a fight. It first appears alone in compatible Reclamation room 14 layouts; the remaining enemies wait until it is defeated. Later regular Reclamation rooms have a 35% replacement chance, and rooftops have a 55% chance. Each room has at most one Fabricator, replacing an ordinary enemy while preserving elites and coordinated pairs. Special machinery rooms, area events, bosses, Practice, Workshop, detours and New Game+ keep their encounters.
+
+An unfolding frame, a welding arm and sparks show its **2.2-second construction window**. Damage the Fabricator to interrupt it, or destroy the unfinished sentry. Moving either body, obstructing the weld or removing its support also cancels construction. Portals interrupt it immediately. A sentry needs clear supported ground and an initial firing lane, away from exits, door arrivals, coolant and magnet shafts. It remains a physical, damageable enemy; all normal gun types and prop impacts work.
+
+Completed sentries give a **0.85-second aiming warning**, locking their aim for the final 0.35 seconds, then fire one 17-damage round and recover for 1.25 seconds. Cover blocks their shots; moving a warned sentry cancels its attack. They never hurt you merely by touch. Destroying the Fabricator shuts down its sentries and their remaining hostile rounds. Reflected player shots remain yours. Sentries grant no kill count, healing or kill-triggered bonuses, and destroyed completed sentries still count toward the two-build limit.
+
+Continue and retry reconstruct the same encounter with a fresh construction budget. Older saved campaigns retain their original rosters; new runs save their Fabricator availability. Daily uses **ruleset 74**. No names, objective text or construction meters are added to the combat HUD.
+
+[**Test the Fabricator**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&v=2.85.0) · [**Mirrored room**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&mirror=1&v=2.85.0) · [**Beam build**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&build=beam&v=2.85.0) · [**Portal build**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&build=portal&v=2.85.0) · [**Starting gun**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&build=starter&v=2.85.0).
+
+Click **Test the Fabricator**; **R** restarts the full-health preset. Test links preserve campaign saves, discoveries, Daily records and Practice unlocks.
+
 ## Reforge · 2.84.0
 
 Fresh runs have a **35% chance of one Reforge station**, appearing near the exit after one of the first three bosses. Stand beside its lit machine and press **jump** to inspect three complete swaps: each shows the upgrade you give up and the replacement you receive. Choose one or walk away. The station works once per run, gives no healing, and leaves the ordinary room reward available. Its light goes out after use; combat has no new text or HUD prompts.

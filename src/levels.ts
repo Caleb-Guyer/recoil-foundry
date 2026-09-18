@@ -27,6 +27,8 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'fabricator'
+  | 'sentry'
   | 'angler'
   | 'wallcrawler'
   | 'sapper'
@@ -85,6 +87,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  fabricatorIntro?: boolean;
   floodgate?: true;
   courier?: true;
   routeChoice?: import('./rules.ts').RouteChoice;

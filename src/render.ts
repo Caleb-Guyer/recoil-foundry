@@ -62,6 +62,7 @@ import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
 import { drawAngler } from './angler-art.ts';
 import { drawWallcrawler } from './wallcrawler-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
+import { drawFabricator } from './fabricator-art.ts';
 import { drawHarpooner } from './harpooner-art.ts';
 import { drawSapper, drawCharge, drawSapperBlasts } from './sapper-art.ts';
 import { drawTethers } from './tether-art.ts';
@@ -283,6 +284,10 @@ export class Renderer {
       }
       if (e.kind === 'scrapper') {
         drawScrapper(c, g, e, this.reduced);
+        continue;
+      }
+      if (e.kind === 'fabricator' || e.kind === 'sentry') {
+        drawFabricator(c, g, e, this.reduced);
         continue;
       }
       if (e.kind === 'harpooner') {

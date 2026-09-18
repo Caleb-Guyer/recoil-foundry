@@ -285,6 +285,7 @@ export class PortalSystem {
       const travel = solid ? Math.max(0, solid.t - 0.01) : 1;
       const velocity = portalVector(body.velocity, entry, exit);
       disruptScrapperBody(g, body);
+      g.fabricators.disrupt(body);
       g.sappers.disrupt(body);
       g.tethers.disrupt(body);
       if (body === g.player) {

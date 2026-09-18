@@ -20,6 +20,11 @@ export interface ReinforcementDoor {
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
   if (level.freight) return [[], level.spawns.map((s) => ({ ...s }))];
   if (level.boss || level.spawns.length < 3) return [level.spawns.map((s) => ({ ...s })), []];
+  if (level.fabricatorIntro)
+    return [
+      level.spawns.filter((s) => s.kind === 'fabricator').map((s) => ({ ...s })),
+      level.spawns.filter((s) => s.kind !== 'fabricator').map((s) => ({ ...s })),
+    ];
   if (level.harpoonIntro)
     return [
       level.spawns.filter((s) => s.kind === 'harpooner').map((s) => ({ ...s })),
@@ -70,6 +75,8 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           scrapper: 8,
           harpooner: 9,
           sapper: 8,
+          fabricator: 9,
+          sentry: 0,
           angler: 7,
           wallcrawler: 8,
           condenser: 0,
@@ -214,6 +221,7 @@ export class ReinforcementSystem {
       if (g.level.freight) return;
       if (
         (g.level.harpoonIntro ||
+          g.level.fabricatorIntro ||
           g.level.sapperIntro ||
           g.level.crawlerIntro ||
           g.level.anglerIntro) &&
