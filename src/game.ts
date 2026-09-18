@@ -454,6 +454,7 @@ export class Game {
   courierReward = false;
   rewardRerolled = false;
   onChange: () => void = () => {};
+  onDeath: (origin?: Vec) => void = () => {};
   onSound: (kind: string) => void = () => {};
   onHaptic: (kind: 'shot' | 'land' | 'hurt', strength: number) => void = () => {};
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
@@ -2846,15 +2847,17 @@ export class Game {
       const d = direction(from, this.player.position);
       Body.setVelocity(this.player, { x: clamp(this.player.velocity.x + d.x * 4, -23, 23), y: -5 });
     }
-    if (this.hp <= 0) this.die(cause);
+    if (this.hp <= 0) this.die(cause, from);
   }
-  die(cause: DamageCause = { type: 'unknown' }) {
+  die(cause: DamageCause = { type: 'unknown' }, origin?: Vec) {
     if (this.mode === 'dead' || this.mode === 'won') return;
     if (this.workshop.active) {
       this.startWorkshop(this.workshop.discovered, this.mods);
       return;
     }
     this.deathCause = loadDamageCause(cause);
+    // Capture the lethal moment before mode cleanup removes attacks and machines.
+    this.onDeath(origin ? { ...origin } : undefined);
     this.setMode('dead');
     if (!this.practice && !this.testRun) this.onCheckpoint(null);
     this.onSound('dead');

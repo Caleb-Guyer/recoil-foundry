@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Last moments · 2.86.0
+
+**Watch replay** on the death screen plays up to the last five seconds of combat in the current room. The final 0.6 seconds slow to one-third speed, then briefly hold on the lethal hit, marking the player and damage origin and naming its cause. Pause, replay, go back, or press **R** / **Again** to retry immediately. Combat gets no extra HUD elements.
+
+**Save clip** exports a silent video with the slow-motion finish and impact highlight (WebM, or MP4 where supported). Keep the tab visible during export; the download link remains available afterward. Unsupported browsers still offer playback when image decoding is available. Clips remain in memory only until restarting, leaving the run, or reloading. Replay never simulates combat or changes campaign saves, discoveries, Daily results, Practice unlocks, or run recaps.
+
+Capture downsizes only the game canvas to an 854×480 letterboxed frame at up to 24 fps. A five-second / 122-frame / 16 MiB compressed buffer bounds memory; only the currently displayed image is decoded. Pauses and upgrade menus add no frames, changing rooms clears the buffer, and retry cancels pending playback/export. Existing recordings respect the screen-shake setting used during play.
+
+[**Test death replay**](https://caleb-guyer.github.io/recoil-foundry/?test=replay&v=2.86.0). Click **Test death replay**, stand still until an enemy hits you, then choose **Watch replay**. This isolated room starts at **one health** for a quick test and preserves your progress. **R** restarts it.
+
 ## The Fabricator · 2.85.0
 
 A tracked welder builds up to **two sentries** during a fight. It first appears alone in compatible Reclamation room 14 layouts; the remaining enemies wait until it is defeated. Later regular Reclamation rooms have a 35% replacement chance, and rooftops have a 55% chance. Each room has at most one Fabricator, replacing an ordinary enemy while preserving elites and coordinated pairs. Special machinery rooms, area events, bosses, Practice, Workshop, detours and New Game+ keep their encounters.

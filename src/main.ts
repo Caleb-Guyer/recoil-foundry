@@ -3,6 +3,9 @@ import { courierTestFromUrl } from './courier-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
 import { reforgeTestFromUrl } from './reforge-rules.ts';
 import { fabricatorTestFromUrl } from './fabricator-layout.ts';
+import { replayTestFromUrl } from './death-replay.ts';
+import { DeathReplay, ReplayView } from './death-replay-view.ts';
+import { damageCauseText } from './damage-cause.ts';
 import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
@@ -152,6 +155,9 @@ const game = new Game(),
   canvas = $<HTMLCanvasElement>('game'),
   renderer = new Renderer(canvas, game),
   sound = new Sound();
+const deathReplay = new DeathReplay();
+let replayView: ReplayView | null = null;
+let replayRoom = game.level;
 if (discovered.length) write(DISCOVERIES_KEY, discovered);
 const workshopTools = document.createElement('div');
 workshopTools.className = 'workshop-tools';
@@ -199,6 +205,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  replayTestFromUrl(entryUrl) ??
   fabricatorTestFromUrl(entryUrl) ??
   reforgeTestFromUrl(entryUrl) ??
   floodgateTestFromUrl(entryUrl) ??
@@ -257,6 +264,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test Reforge <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
     $('play').innerHTML = 'Test the Fabricator <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed === 'DEATH-REPLAY-86')
+    $('play').innerHTML = 'Test death replay <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FLOODGATE-'))
     $('play').innerHTML = 'Test Floodgate <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('COURIER-'))
@@ -385,6 +394,8 @@ function updateTitle() {
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
   if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
     $('title-hint').textContent = 'Interrupt the weld. Full health. R to retry.';
+  if (linkedRunTest?.seed === 'DEATH-REPLAY-86')
+    $('title-hint').textContent = 'One health. Let an enemy hit you, then watch the replay.';
   if (linkedRunTest?.seed.startsWith('COURIER-') && linkedRunTest.reward)
     $('title-hint').textContent = 'Recovered cargo. 64 health. R to restart test.';
   else if (
@@ -457,6 +468,8 @@ function clearInput(disarm = true) {
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
+  replayView?.dispose();
+  replayView = null;
   if (modal.open) modal.close();
   dialogKind = '';
   clearInput();
@@ -661,7 +674,29 @@ game.onBossDefeated = (kind) => {
   write(VICTORIES_KEY, encounters);
   updateTitle();
 };
+deathReplay.onReady = () => {
+  const button = document.getElementById('watch-replay');
+  if (button) button.hidden = !deathReplay.ready;
+};
+game.onDeath = (origin) => {
+  // This hook runs before transient combat objects are removed by setMode.
+  try {
+    renderer.draw(performance.now());
+    deathReplay.finish(canvas, game.elapsed, {
+      player: renderer.toCanvas(game.player.position),
+      ...(origin ? { origin: renderer.toCanvas(origin) } : {}),
+      label: damageCauseText(game.deathCause),
+    });
+  } catch {
+    // Optional replay capture must never block the result screen or saving.
+    deathReplay.reset();
+  }
+};
 game.onChange = () => {
+  if (replayRoom !== game.level || game.mode === 'title' || game.mode === 'won') {
+    replayRoom = game.level;
+    deathReplay.reset();
+  }
   captureFinishedRun();
   $('history').hidden = runHistory.length === 0;
   updateMusic();
@@ -808,6 +843,8 @@ function modMark(mod: Mod) {
   );
 }
 function showDialog(kind: string) {
+  replayView?.dispose();
+  replayView = null;
   if (game.mode === 'playing') game.setMode('paused');
   clearInput();
   dialogKind = kind;
@@ -817,8 +854,13 @@ function showDialog(kind: string) {
   modal.classList.toggle('single-upgrade', singleUpgrade);
   modal.classList.toggle('practice-dialog', kind === 'practice');
   modal.classList.toggle('workshop-dialog', kind === 'workshop');
+  modal.classList.toggle('replay-dialog', kind === 'replay');
   const content = $('dialog-content');
-  if (kind === 'history') {
+  if (kind === 'replay' && deathReplay.ready) {
+    replayView = new ReplayView(deathReplay, content);
+    $('retry').onclick = () => start(undefined, true);
+    $('back').onclick = () => showDialog('result');
+  } else if (kind === 'history') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     runHistory = loadRunHistory([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))]);
     content.innerHTML =
@@ -1270,11 +1312,21 @@ function showDialog(kind: string) {
     }
     if (paused) $('menu').onclick = menu;
   }
+  if (kind === 'result' && game.mode === 'dead') {
+    const watch = document.createElement('button');
+    watch.id = 'watch-replay';
+    watch.className = 'quiet';
+    watch.textContent = 'Watch replay';
+    watch.hidden = !deathReplay.ready;
+    watch.onclick = () => showDialog('replay');
+    content.querySelector('.actions')?.append(watch);
+  }
   if (!modal.open) modal.showModal();
   updateControlHints();
   if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
+  if (kind === 'replay') $('replay-play').focus();
   if (inputDevice === 'controller') focusControllerMenu(content);
 }
 function controllerOptions() {
@@ -1441,6 +1493,10 @@ $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (dialogKind === 'replay') {
+    showDialog('result');
+    return;
+  }
   if (game.mode === 'reforge') {
     closeDialog();
     game.reforge.close();
@@ -1473,6 +1529,11 @@ window.addEventListener('keydown', (e) => {
   )
     e.preventDefault();
   if (e.repeat) return;
+  if (e.code === 'KeyR' && game.mode === 'dead' && ['result', 'replay'].includes(dialogKind)) {
+    e.preventDefault();
+    start(undefined, true);
+    return;
+  }
   if (
     e.code === 'KeyR' &&
     (game.practice || game.testRun || game.workshop.active) &&
@@ -1658,6 +1719,7 @@ function frame(now: number) {
   } else accumulator = 0;
   updateMusic();
   renderer.draw(now);
+  if (game.mode === 'playing' && !game.workshop.active) deathReplay.capture(canvas, game.elapsed);
   if (now - hudAt > 80) {
     hudAt = now;
     $('portal-touch').hidden = !game.portals.canPlace;

@@ -91,6 +91,11 @@ export class Renderer {
   last = 0;
   clock = 0;
   portalRevision = 0;
+  private worldTransform = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  toCanvas(point: Vec): Vec {
+    const m = this.worldTransform;
+    return { x: m.a * point.x + m.c * point.y + m.e, y: m.b * point.x + m.d * point.y + m.f };
+  }
   constructor(canvas: HTMLCanvasElement, game: Game) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
@@ -181,6 +186,7 @@ export class Renderer {
     }
     c.scale(this.scale, this.scale);
     c.translate(-this.camera.x, -this.camera.y);
+    this.worldTransform = c.getTransform();
     this.drawBreachBackdrop();
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);

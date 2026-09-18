@@ -379,6 +379,33 @@ dialog.practice-dialog {
   flex-wrap: wrap;
   margin-top: 26px;
 }
+
+dialog.replay-dialog {
+  width: min(960px, calc(100vw - 32px));
+}
+.replay-dialog h2 {
+  margin-bottom: 16px;
+}
+.replay-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 50dvh;
+  object-fit: contain;
+  background: #14181a;
+  cursor: default;
+}
+.replay-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 0 20px;
+}
+#replay-status {
+  font-size: 12px;
+  color: var(--muted);
+}
 .reward-actions {
   margin-top: 18px;
   display: flex;
