@@ -1,5 +1,6 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
+import { floodgateTestFromUrl } from './floodgate-layout.ts';
 import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
@@ -196,6 +197,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  floodgateTestFromUrl(entryUrl) ??
   courierTestFromUrl(entryUrl) ??
   mutationTestFromUrl(entryUrl) ??
   eventTestFromUrl(entryUrl) ??
@@ -247,6 +249,8 @@ function updateTitle() {
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   if (linkedWorkshop) $('play').innerHTML = 'Open Workshop <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('FLOODGATE-'))
+    $('play').innerHTML = 'Test Floodgate <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('COURIER-'))
     $('play').innerHTML =
       (linkedRunTest.reward ? 'Test courier reward' : 'Test Scrap Courier') +

@@ -6,6 +6,18 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Floodgate · 2.83.0
+
+An uncommon Cooling Works encounter turns a two-wave fight into a climb. When reinforcements enter, scalding coolant rises over the low cover. Two staircases work with ordinary jumps; recoil skips steps and reaches firing positions faster. Three upper decks stay dry at maximum height. Ten enemies combine elevated gunners with flyers and skimmers.
+
+**Shoot either amber valve wheel** to open the drain for four seconds. Each wheel works once; opening both together does not bank a second drain cycle. Bullets, beams, rail shots and portal-routed fire work, and cover still blocks them. Sustained immersion deals 9 damage per 0.9 seconds after a short escape grace, without reducing movement or jump strength. Clearing the fight immediately ends coolant damage and drains the room completely. Pipes, intake grates, water, lamps and sound communicate the event without instructions or a countdown on the combat HUD.
+
+Fresh runs roll a **35% chance** when a compatible room 9 or 10 is available. Floodgate avoids Cooling area events, courier rooms, enemy introductions, bosses and freight machinery. The plan survives Continue; old saves, Practice, Workshop, detours and New Game+ keep their existing rooms. Daily selection is deterministic under **ruleset 72**.
+
+[**Test Floodgate**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&v=2.83.0) · [**Mirrored layout**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&mirror=1&v=2.83.0) · [**Beam build**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&build=beam&v=2.83.0) · [**Portal build**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&build=portal&v=2.83.0) · [**Starting gun challenge**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&build=starter&v=2.83.0).
+
+Click **Test Floodgate**. **R** restarts the preset. All tests begin at full health and preserve campaign saves, discoveries, Daily records and boss-practice unlocks.
+
 ## Scrap Courier · 2.82.0
 
 Fresh runs have a **35% chance of one Scrap Courier encounter**, after the first boss. A compact amber machine carries a visible case through Dispatch Lane, jumping low obstacles, pausing behind cover and using short boosts. Two obstacle arrangements leave upper shelves available as recoil shortcuts. Enemy rosters and courier health increase with the area. Ordinary jumps and the starting gun can complete the chase.

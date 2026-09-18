@@ -7,6 +7,7 @@ const ATTACK_WARNINGS = new Set([
   'charge',
   'machine',
   'pressure-warn',
+  'flood-warn',
   'reinforce',
   'crane-wind',
   'kiln-wind',
@@ -221,7 +222,16 @@ export class Sound {
       ['crane-hit', 'kiln-impact', 'hurt', 'slam', 'cargo-release', 'cargo-impact'].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
-    if (kind === 'courier-start') {
+    if (kind === 'flood-warn') {
+      this.tone(180, 110, 0.65, 0.09, 'triangle');
+      this.tone(520, 520, 0.18, 0.045, 'sine', 0.1);
+    } else if (kind === 'flood-rise') {
+      this.crack(0.6, 0.06, 380);
+      this.tone(75, 110, 0.65, 0.045, 'sawtooth');
+    } else if (kind === 'flood-valve' || kind === 'flood-drain') {
+      this.tone(240, 65, 0.42, 0.07, 'triangle');
+      this.crack(0.5, 0.07, 700);
+    } else if (kind === 'courier-start') {
       this.tone(95, 260, 0.4, 0.07, 'sawtooth');
       this.tone(520, 520, 0.1, 0.045, 'sine', 0.1);
       this.tone(780, 780, 0.1, 0.035, 'sine', 0.23);

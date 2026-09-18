@@ -41,6 +41,7 @@ const CAUSES = {
   fuel: 'Fuel canister',
   crusher: 'Crusher',
   train: 'Freight train',
+  coolant: 'Scalding coolant',
   fall: 'Fall',
   unknown: 'Cause unavailable',
 } as const;

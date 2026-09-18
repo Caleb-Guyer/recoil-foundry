@@ -7,6 +7,7 @@ import { clamp, direction, distance, segmentBox, type Vec } from './rules.ts';
 import { isBoss } from './enemies.ts';
 import { POCKET, pocketDirection } from './corner-pocket.ts';
 import type { PressureVent } from './pressure.ts';
+import type { FloodValve } from './floodgate.ts';
 
 export const TORCH = {
   range: 1100,
@@ -34,6 +35,7 @@ export interface TorchSegment {
   cable?: Prop;
   anchor?: Enemy;
   valve?: PressureVent;
+  floodValve?: FloodValve;
   ray?: number;
   muzzle?: boolean;
 }
@@ -99,8 +101,15 @@ export function traceTorch(
       cable = g.cargo.trace(from, end, radius),
       anchor = g.harpoons.trace(from, end, radius),
       valve = g.pressure.trace(from, end, radius),
+      floodValve = g.floodgate.trace(from, end, radius),
       portal = g.portals.trace(from, end, half);
-    const t = Math.min(hit?.t ?? 1, cable?.t ?? 1, anchor?.t ?? 1, valve?.t ?? 1),
+    const t = Math.min(
+        hit?.t ?? 1,
+        cable?.t ?? 1,
+        anchor?.t ?? 1,
+        valve?.t ?? 1,
+        floodValve?.t ?? 1,
+      ),
       through = portal && portal.t <= t + 1e-6,
       point = add(from, d, remaining * (through ? portal!.t : t));
     const segment: TorchSegment = {
@@ -132,6 +141,10 @@ export function traceTorch(
         radius,
       };
       continue;
+    }
+    if (floodValve && floodValve.t <= t && (!hit || floodValve.t < hit.t)) {
+      segment.floodValve = floodValve.valve;
+      break;
     }
     if (valve && valve.t <= t && (!hit || valve.t < hit.t)) {
       segment.valve = valve.vent;
@@ -510,6 +523,7 @@ export class TorchSystem {
       }
       const s = this.pulse!;
       if (segment.valve) g.pressure.trigger(segment.valve);
+      if (segment.floodValve) g.floodgate.trigger(segment.floodValve);
       s.pos = { ...segment.b };
       s.prev = { ...segment.a };
       s.vel = {

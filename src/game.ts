@@ -1,5 +1,6 @@
 import { MutationSystem, type MutationKind, type MutationRig } from './mutations.ts';
 import { CourierSystem } from './courier.ts';
+import { FloodgateSystem, type FloodValve } from './floodgate.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
@@ -261,6 +262,7 @@ export class Game {
   areaEvents = new AreaEventSystem(this);
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
+  floodgate = new FloodgateSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   loaderArena = new LoaderArenaSystem(this);
@@ -535,6 +537,7 @@ export class Game {
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.areaEvents.start(save);
     this.courier.start(save);
+    this.floodgate.start(save);
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
     this.missedUpgrades = save?.missedUpgrades ?? 0;
@@ -579,6 +582,7 @@ export class Game {
     this.onCheckpoint({
       version: 6,
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
+      ...(this.floodgate.stage !== null ? { floodgate: this.floodgate.stage } : {}),
       ...(this.areaEvents.state ? { areaEvent: structuredClone(this.areaEvents.state) } : {}),
       ...(this.legacyMods ? { legacyMods: [...this.legacyMods] } : {}),
       ...(this.legacyOffers ? { legacyOffers: [...this.legacyOffers] } : {}),
@@ -609,6 +613,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.floodgate.clear();
     this.courier.clear();
     this.areaEvents.clear();
     this.mutations.clear();
@@ -714,6 +719,7 @@ export class Game {
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
     if (!escapeRoom) this.level = this.courier.level(this.level);
+    if (!escapeRoom) this.level = this.floodgate.level(this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -781,6 +787,7 @@ export class Game {
     this.areaEvents.reset(clearedRoom);
     this.mutations.reset(clearedRoom);
     this.courier.reset(clearedRoom);
+    this.floodgate.reset(clearedRoom);
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active) return;
@@ -1238,6 +1245,8 @@ export class Game {
     this.areaEvents.update(dt);
     if (this.mode !== 'playing') return;
     this.waves.update(dt);
+    this.floodgate.update(dt);
+    if (this.mode !== 'playing') return;
     if (
       !this.combatEnemyCount &&
       !this.areaEvents.waiting &&
@@ -1411,6 +1420,7 @@ export class Game {
     );
     const valveOrigin = { x: this.player.position.x, y: this.player.position.y - 3 };
     if (this.pressure.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
+    if (this.floodgate.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (distance(spawn, pos) > 0.01) {
       spawn.x -= d.x * 0.5;
       spawn.y -= d.y * 0.5;
@@ -2236,6 +2246,7 @@ export class Game {
           enemy?: Enemy;
           anchor?: Enemy;
           valve?: PressureVent;
+          floodValve?: FloodValve;
           player?: boolean;
           caught?: boolean;
           prop?: Prop;
@@ -2296,6 +2307,9 @@ export class Game {
         const valve = s.friendly ? this.pressure.trace(s.pos, end, s.radius) : undefined;
         if (valve && (!nearest || valve.t < nearest.t))
           nearest = { t: valve.t, normal: valve.normal, valve: valve.vent };
+        const floodValve = s.friendly ? this.floodgate.trace(s.pos, end, s.radius) : undefined;
+        if (floodValve && (!nearest || floodValve.t < nearest.t))
+          nearest = { t: floodValve.t, normal: floodValve.normal, floodValve: floodValve.valve };
         if (s.recall?.returning) {
           const hit = segmentBox(s.pos, end, this.player.bounds.min, this.player.bounds.max);
           if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, caught: true };
@@ -2405,6 +2419,11 @@ export class Game {
           this.fusions.catch(s);
           s.life = 0;
           s.shell = undefined;
+        } else if (nearest.floodValve) {
+          this.floodgate.trigger(nearest.floodValve);
+          s.life = 0;
+          this.demolition.impact(s);
+          if (this.mode !== 'playing') return;
         } else if (nearest.valve) {
           this.pressure.trigger(nearest.valve);
           s.life = 0;

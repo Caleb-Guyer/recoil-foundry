@@ -1002,6 +1002,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  floodgate?: number;
   courier?: import('./courier-layout.ts').CourierSave;
   areaEvent?: import('./area-events.ts').AreaEventSave;
   version: 5 | 6;
@@ -1200,6 +1201,11 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
+    (d.floodgate === undefined ||
+      ([5, 6].includes(d.version) &&
+        [8, 9].includes(d.floodgate) &&
+        d.areaEvent?.area !== 2 &&
+        d.courier?.stage !== d.floodgate)) &&
     validCourier &&
     validAreaEvent(d.areaEvent, d.stage, !!d.reward || !!d.overtime) &&
     ([5, 6].includes(d.version) || previous || legacy) &&

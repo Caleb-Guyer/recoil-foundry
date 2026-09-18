@@ -1,5 +1,6 @@
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
+import { drawFloodgate, drawFloodwater } from './floodgate-art.ts';
 import { SPLIT_SCALE } from './mutations.ts';
 import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
@@ -217,6 +218,7 @@ export class Renderer {
     drawCounterweights(c, g);
     drawConveyors(c, g, this.reduced);
     drawCoolant(c, g, this.reduced);
+    drawFloodgate(c, g, this.reduced);
     drawMagnets(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
     this.drawProps();
@@ -614,6 +616,7 @@ export class Renderer {
       c.fill();
     }
     this.drawPlayer();
+    drawFloodwater(c, g, this.reduced);
     drawNewPaths(c, g);
     drawTethers(c, g, this.reduced);
     drawArcs(c, g, this.reduced);
