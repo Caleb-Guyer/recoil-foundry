@@ -1,4 +1,5 @@
 import { validAreaEvent } from './area-events.ts';
+import { validReforge } from './reforge-rules.ts';
 import {
   BRANCH_MODS,
   BRANCH_PATHS,
@@ -1002,6 +1003,8 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  reforge?: import('./reforge-rules.ts').ReforgeSave;
+  reforgeRoom?: import('./reforge-rules.ts').ReforgeRoomSave;
   floodgate?: number;
   courier?: import('./courier-layout.ts').CourierSave;
   areaEvent?: import('./area-events.ts').AreaEventSave;
@@ -1255,7 +1258,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (!!overtime ||
           d.mods.length === stages - 1 + completed.length - missed + courierBonus ||
           (oldEscape && completed.length === 0))));
-  if (!valid || !validRewardCheckpoint(d)) return null;
+  if (!valid || !validRewardCheckpoint(d) || !validReforge(d)) return null;
   if (!legacy && !previous)
     return oldOffers || (oldBuild && !validBuild(incoming.mods)) ? { ...d, version: 6 } : incoming;
   // Keep the same room, gun and health. Skipped new rooms are recorded so later

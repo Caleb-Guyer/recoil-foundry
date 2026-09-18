@@ -1,6 +1,7 @@
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
 import { drawFloodgate, drawFloodwater } from './floodgate-art.ts';
+import { drawReforge } from './reforge-art.ts';
 import { SPLIT_SCALE } from './mutations.ts';
 import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
@@ -208,6 +209,7 @@ export class Renderer {
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
     if (!g.workshop.active && !g.areaEvents.dark) this.drawExit();
     drawWorkshopMounts(c, g);
+    drawReforge(c, g, this.reduced);
     if (!g.areaEvents.dark) {
       drawDetourDoor(c, g);
       drawRouteExits(c, g);

@@ -243,9 +243,11 @@ test('cleared exits advance automatically and choices modify the same gun', () =
   g.start('progress');
   let saves = 0,
     rewardsSaved = 0,
+    reforgeSaves = 0,
     cleared = false;
   g.onCheckpoint = (s) => {
     if (s?.reward) rewardsSaved++;
+    else if (s?.reforgeRoom) reforgeSaves++;
     else if (s) saves++;
     else cleared = true;
   };
@@ -281,6 +283,7 @@ test('cleared exits advance automatically and choices modify the same gun', () =
   assert.equal(g.escape?.phase, 'route');
   assert.equal(g.mods.length, STAGES - 1);
   assert.equal(saves, STAGES);
+  assert.equal(reforgeSaves, g.reforge.state ? 1 : 0);
   assert.equal(rewardsSaved, STAGES - 1);
   assert(!cleared);
   Body.setPosition(g.player, { x: EXTRACTION.x, y: EXTRACTION.y - 18 });

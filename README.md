@@ -6,6 +6,18 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Reforge · 2.84.0
+
+Fresh runs have a **35% chance of one Reforge station**, appearing near the exit after one of the first three bosses. Stand beside its lit machine and press **jump** to inspect three complete swaps: each shows the upgrade you give up and the replacement you receive. Choose one or walk away. The station works once per run, gives no healing, and leaves the ordinary room reward available. Its light goes out after use; combat has no new text or HUD prompts.
+
+Swaps preserve your chosen path, all required parents and fusions, and the stage restrictions on advanced upgrades. A replacement cannot strand an existing evolution. Removed weapon effects are cleared immediately; keeping Fold preserves its portals and spent placement budget. Closing and reopening the menu cannot reroll offers. Continue remembers both the cleared room and whether the exchange was used.
+
+Daily has **one predetermined swap** under **ruleset 73**. Older saves retain their original rooms. Practice, Workshop, unrelated test presets, detours and New Game+ do not gain a station.
+
+[**Test Reforge**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&v=2.84.0) · [**Walk up to the station**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&phase=room&v=2.84.0) · [**Daily swap**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&daily=1&v=2.84.0) · [**Beam build**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&build=beam&v=2.84.0) · [**Portal build**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&build=portal&v=2.84.0).
+
+Click **Test Reforge**. The default preview opens the exchange menu at 64 health; **R** restarts it. Tests preserve campaign saves, discoveries, Daily records and Practice unlocks.
+
 ## Floodgate · 2.83.0
 
 An uncommon Cooling Works encounter turns a two-wave fight into a climb. When reinforcements enter, scalding coolant rises over the low cover. Two staircases work with ordinary jumps; recoil skips steps and reaches firing positions faster. Three upper decks stay dry at maximum height. Ten enemies combine elevated gunners with flyers and skimmers.

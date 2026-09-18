@@ -1,6 +1,7 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
+import { reforgeTestFromUrl } from './reforge-rules.ts';
 import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
@@ -197,6 +198,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  reforgeTestFromUrl(entryUrl) ??
   floodgateTestFromUrl(entryUrl) ??
   courierTestFromUrl(entryUrl) ??
   mutationTestFromUrl(entryUrl) ??
@@ -249,6 +251,8 @@ function updateTitle() {
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   if (linkedWorkshop) $('play').innerHTML = 'Open Workshop <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.reforge)
+    $('play').innerHTML = 'Test Reforge <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FLOODGATE-'))
     $('play').innerHTML = 'Test Floodgate <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('COURIER-'))
@@ -373,6 +377,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.reforgeRoom)
+    $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
   if (linkedRunTest?.seed.startsWith('COURIER-') && linkedRunTest.reward)
     $('title-hint').textContent = 'Recovered cargo. 64 health. R to restart test.';
   else if (
@@ -680,6 +686,7 @@ game.onChange = () => {
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
   updateTitle();
   if (game.mode === 'upgrade') showDialog('upgrade');
+  if (game.mode === 'reforge') showDialog('reforge');
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
 };
 function modMark(mod: Mod) {
@@ -798,7 +805,9 @@ function showDialog(kind: string) {
   if (game.mode === 'playing') game.setMode('paused');
   clearInput();
   dialogKind = kind;
-  const singleUpgrade = kind === 'upgrade' && game.offers.length === 1;
+  const singleUpgrade =
+    (kind === 'upgrade' && game.offers.length === 1) ||
+    (kind === 'reforge' && game.reforge.offers.length === 1);
   modal.classList.toggle('single-upgrade', singleUpgrade);
   modal.classList.toggle('practice-dialog', kind === 'practice');
   modal.classList.toggle('workshop-dialog', kind === 'workshop');
@@ -910,6 +919,56 @@ function showDialog(kind: string) {
       };
     });
     $('practice-back').onclick = backFromPractice;
+  } else if (kind === 'reforge') {
+    content.innerHTML =
+      '<p class="eyebrow">' +
+      (dailyFromSeed(game.seed) ? 'DAILY · ' : '') +
+      'ONE EXCHANGE</p><h2 id="dialog-title">Reforge.</h2><div class="choices">' +
+      game.reforge.offers
+        .map((swap, i) => {
+          const from = MODS.find((m) => m.id === swap.from)!,
+            to = MODS.find((m) => m.id === swap.to)!;
+          return (
+            '<button class="mod reforge-choice" data-swap="' +
+            i +
+            '"><span class="mod-top">' +
+            modMark(to) +
+            '<kbd>' +
+            (i + 1) +
+            '</kbd></span><span class="reforge-from">Give up ' +
+            from.name +
+            '</span><span class="reforge-loss">' +
+            modDescription(from, game.mods) +
+            '</span><span class="reforge-arrow" aria-hidden="true">↓</span><strong>' +
+            to.name +
+            '</strong><span class="mod-copy">' +
+            modDescription(
+              to,
+              game.mods.filter((id) => id !== swap.from),
+            ) +
+            '</span>' +
+            (modPathLabel(to.id)
+              ? '<span class="mod-path">' + modPathLabel(to.id) + '</span>'
+              : '') +
+            '</button>'
+          );
+        })
+        .join('') +
+      '</div><div class="dialog-actions"><button id="back" class="quiet">Walk away</button></div>';
+    content.querySelectorAll<HTMLButtonElement>('[data-swap]').forEach((button) => {
+      button.onclick = () => {
+        sound.unlock();
+        if (game.reforge.choose(Number(button.dataset.swap))) {
+          closeDialog();
+          canvas.focus();
+        }
+      };
+    });
+    $('back').onclick = () => {
+      closeDialog();
+      game.reforge.close();
+      canvas.focus();
+    };
   } else if (kind === 'upgrade') {
     content.innerHTML =
       '<p class="eyebrow">' +
@@ -1207,7 +1266,7 @@ function showDialog(kind: string) {
   }
   if (!modal.open) modal.showModal();
   updateControlHints();
-  if (kind === 'upgrade' || kind === 'practice' || kind === 'result')
+  if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (inputDevice === 'controller') focusControllerMenu(content);
@@ -1376,6 +1435,12 @@ $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (game.mode === 'reforge') {
+    closeDialog();
+    game.reforge.close();
+    canvas.focus();
+    return;
+  }
   if (dialogKind === 'history') {
     backFromHistory();
     return;
@@ -1411,6 +1476,17 @@ window.addEventListener('keydown', (e) => {
   ) {
     e.preventDefault();
     start(undefined, true);
+    return;
+  }
+  if (game.mode === 'reforge') {
+    const i = Number(e.key) - 1;
+    if (Number.isInteger(i) && i >= 0 && i < game.reforge.offers.length) {
+      sound.unlock();
+      if (game.reforge.choose(i)) {
+        closeDialog();
+        canvas.focus();
+      }
+    }
     return;
   }
   if (game.mode === 'upgrade') {

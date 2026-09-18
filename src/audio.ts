@@ -222,7 +222,14 @@ export class Sound {
       ['crane-hit', 'kiln-impact', 'hurt', 'slam', 'cargo-release', 'cargo-impact'].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
-    if (kind === 'flood-warn') {
+    if (kind === 'reforge-ready') {
+      this.tone(220, 440, 0.25, 0.05, 'triangle');
+      this.tone(660, 660, 0.15, 0.04, 'sine', 0.2);
+    } else if (kind === 'reforge') {
+      this.crack(0.12, 0.09, 1600);
+      this.tone(110, 55, 0.3, 0.08, 'triangle');
+      this.tone(440, 880, 0.25, 0.045, 'sine', 0.12);
+    } else if (kind === 'flood-warn') {
       this.tone(180, 110, 0.65, 0.09, 'triangle');
       this.tone(520, 520, 0.18, 0.045, 'sine', 0.1);
     } else if (kind === 'flood-rise') {

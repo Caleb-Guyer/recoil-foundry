@@ -348,6 +348,23 @@ dialog.practice-dialog {
   color: #b0bdb5;
   margin-top: 10px;
 }
+.reforge-from {
+  color: #d9b09b;
+  font-size: 13px;
+}
+.reforge-loss {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+.reforge-arrow {
+  color: var(--accent);
+  margin: 12px 0;
+}
+.reforge-choice .mod-top {
+  margin-bottom: 16px;
+}
 .mod-path {
   color: var(--accent);
   font-size: 11px;

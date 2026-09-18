@@ -1,6 +1,7 @@
 import { MutationSystem, type MutationKind, type MutationRig } from './mutations.ts';
 import { CourierSystem } from './courier.ts';
 import { FloodgateSystem, type FloodValve } from './floodgate.ts';
+import { ReforgeSystem } from './reforge.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
@@ -141,7 +142,7 @@ import {
 } from './escape-layout.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
-export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'dead' | 'won';
+export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'reforge' | 'dead' | 'won';
 export interface Input {
   left: boolean;
   right: boolean;
@@ -263,6 +264,7 @@ export class Game {
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
   floodgate = new FloodgateSystem(this);
+  reforge = new ReforgeSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   loaderArena = new LoaderArenaSystem(this);
@@ -538,6 +540,7 @@ export class Game {
     this.areaEvents.start(save);
     this.courier.start(save);
     this.floodgate.start(save);
+    this.reforge.start(save);
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
     this.missedUpgrades = save?.missedUpgrades ?? 0;
@@ -563,7 +566,17 @@ export class Game {
     this.hurtAt = -100;
     this.lastShot = -100;
     this.offers = [];
-    this.loadRoom(save?.escape === true, !!save?.reward);
+    this.loadRoom(save?.escape === true, !!save?.reward || !!save?.reforgeRoom);
+    if (save?.reforgeRoom) {
+      this.earnedSalvage = save.reforgeRoom.salvage ?? null;
+      if (this.reforge.site && !save.reward) {
+        Body.setPosition(this.player, {
+          x: this.reforge.site.x - 52,
+          y: this.reforge.site.floor - 18,
+        });
+        this.grounded = true;
+      }
+    }
     if (save?.reward) {
       this.offers = save.reward.offers.map((id) =>
         id === 'repair' ? REPAIR_REWARD : MODS.find((m) => m.id === id)!,
@@ -574,7 +587,13 @@ export class Game {
       this.enteringDetour = save.reward.enteringDetour === true;
       this.enteringRoute = save.reward.enteringRoute ?? null;
     }
-    this.setMode(save?.reward ? 'upgrade' : 'playing');
+    this.setMode(
+      save?.reward
+        ? 'upgrade'
+        : save?.reforgeRoom?.open && this.reforge.site
+          ? 'reforge'
+          : 'playing',
+    );
     this.save();
   }
   save() {
@@ -583,6 +602,8 @@ export class Game {
       version: 6,
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
       ...(this.floodgate.stage !== null ? { floodgate: this.floodgate.stage } : {}),
+      ...(this.reforge.state ? { reforge: { ...this.reforge.state } } : {}),
+      ...(this.reforge.roomSave ? { reforgeRoom: this.reforge.roomSave } : {}),
       ...(this.areaEvents.state ? { areaEvent: structuredClone(this.areaEvents.state) } : {}),
       ...(this.legacyMods ? { legacyMods: [...this.legacyMods] } : {}),
       ...(this.legacyOffers ? { legacyOffers: [...this.legacyOffers] } : {}),
@@ -788,6 +809,7 @@ export class Game {
     this.mutations.reset(clearedRoom);
     this.courier.reset(clearedRoom);
     this.floodgate.reset(clearedRoom);
+    this.reforge.reset();
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active) return;
@@ -1021,6 +1043,7 @@ export class Game {
   }
   tick(dt: number, input: Input) {
     if (this.mode !== 'playing') return;
+    if (input.jump && this.reforge.interact()) return;
     if (this.escape?.phase === 'extracting') {
       this.updateExtraction(dt);
       return;
@@ -1267,6 +1290,7 @@ export class Game {
       this.sappers.clear();
       this.shots = this.shots.filter((s) => s.friendly);
       this.onSound('clear');
+      this.reforge.arrive();
       this.onChange();
     }
     if (this.practice && this.clear) {
