@@ -6,6 +6,18 @@ import { fabricatorTestFromUrl } from './fabricator-layout.ts';
 import { replayTestFromUrl } from './death-replay.ts';
 import { DeathReplay, ReplayView } from './death-replay-view.ts';
 import { damageCauseText } from './damage-cause.ts';
+import {
+  LOGBOOK_KEY,
+  loadLogbook,
+  mergeLogbook,
+  migrateLogbook,
+  recordLogbook,
+  logbookEntries,
+  logbookPreviewEntries,
+  logbookLink,
+} from './logbook.ts';
+import { logbookMenu, type LogbookViewState } from './logbook-menu.ts';
+import type { EnemyKind } from './levels.ts';
 import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
@@ -135,6 +147,8 @@ let discovered = discoverBuild(
 );
 let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
 let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
+let logbookProgress = migrateLogbook(read(LOGBOOK_KEY), storedCheckpoint, runHistory, encounters);
+const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', query: '' };
 let finishedRun: RunRecap | null = null;
 let recapSaved = true;
 document.getElementById('app')!.innerHTML = `
@@ -147,7 +161,7 @@ document.getElementById('app')!.innerHTML = `
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button></div>
    <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
-  </div><div class="title-settings"><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
+  </div><div class="title-settings"><button id="logbook" class="quiet">Logbook</button><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
  </section>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
 </main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog><span id="save-status" class="sr-only" role="status"></span>`;
@@ -203,6 +217,13 @@ const input: Input = {
   aim: { x: 600, y: 550 },
 };
 const entryUrl = new URL(location.href);
+const linkedLogbook = logbookLink(entryUrl);
+let previewLogbook = linkedLogbook === 'preview';
+if (
+  linkedLogbook !== 'preview' &&
+  JSON.stringify(read(LOGBOOK_KEY)) !== JSON.stringify(logbookProgress)
+)
+  write(LOGBOOK_KEY, logbookProgress);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
   replayTestFromUrl(entryUrl) ??
@@ -643,6 +664,29 @@ function backFromHistory() {
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
   else resume();
 }
+function backFromLogbook() {
+  previewLogbook = false;
+  if (game.mode === 'paused') {
+    showDialog('pause');
+    $('back').focus();
+  } else if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
+  else {
+    resume();
+    if (game.mode === 'title') $('logbook').focus();
+  }
+}
+function updateLogbook(enemy?: EnemyKind) {
+  if (game.practice || game.testRun || game.workshop.active || game.mode === 'title') return;
+  const before = logbookProgress;
+  logbookProgress = recordLogbook(
+    mergeLogbook(before, loadLogbook(read(LOGBOOK_KEY))),
+    game,
+    enemy,
+  );
+  if (JSON.stringify(before) !== JSON.stringify(logbookProgress))
+    write(LOGBOOK_KEY, logbookProgress);
+}
+game.onEnemyDefeated = updateLogbook;
 game.onCheckpoint = (s) => {
   if (game.practice || game.testRun || game.workshop.active) return;
   if (s) {
@@ -693,6 +737,7 @@ game.onDeath = (origin) => {
   }
 };
 game.onChange = () => {
+  updateLogbook();
   if (replayRoom !== game.level || game.mode === 'title' || game.mode === 'won') {
     replayRoom = game.level;
     deathReplay.reset();
@@ -855,8 +900,20 @@ function showDialog(kind: string) {
   modal.classList.toggle('practice-dialog', kind === 'practice');
   modal.classList.toggle('workshop-dialog', kind === 'workshop');
   modal.classList.toggle('replay-dialog', kind === 'replay');
+  modal.classList.toggle('logbook-dialog', kind === 'logbook');
   const content = $('dialog-content');
-  if (kind === 'replay' && deathReplay.ready) {
+  if (kind === 'logbook') {
+    discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+    logbookProgress = mergeLogbook(logbookProgress, loadLogbook(read(LOGBOOK_KEY)));
+    logbookMenu(
+      content,
+      previewLogbook ? logbookPreviewEntries() : logbookEntries(discovered, logbookProgress),
+      logbookView,
+      modMark,
+      backFromLogbook,
+      previewLogbook,
+    );
+  } else if (kind === 'replay' && deathReplay.ready) {
     replayView = new ReplayView(deathReplay, content);
     $('retry').onclick = () => start(undefined, true);
     $('back').onclick = () => showDialog('result');
@@ -1267,7 +1324,9 @@ function showDialog(kind: string) {
           : paused && game.testRun
             ? '<button id="retry" class="quiet">Restart test</button>'
             : '') +
-      (paused ? '<button id="menu" class="quiet">Menu</button>' : '') +
+      (paused
+        ? '<button id="pause-logbook" class="quiet">Logbook</button><button id="menu" class="quiet">Menu</button>'
+        : '') +
       '</div>';
     $<HTMLInputElement>('sound').onchange = (e) => {
       sound.enabled = (e.target as HTMLInputElement).checked;
@@ -1310,7 +1369,10 @@ function showDialog(kind: string) {
       $('retry').onclick = () => start(undefined, true);
       if (game.practice) $('choose-fight').onclick = () => showDialog('practice');
     }
-    if (paused) $('menu').onclick = menu;
+    if (paused) {
+      $('menu').onclick = menu;
+      $('pause-logbook').onclick = () => showDialog('logbook');
+    }
   }
   if (kind === 'result' && game.mode === 'dead') {
     const watch = document.createElement('button');
@@ -1327,6 +1389,8 @@ function showDialog(kind: string) {
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (kind === 'replay') $('replay-play').focus();
+  if (kind === 'logbook')
+    content.querySelector<HTMLElement>('[data-section][aria-pressed="true"]')?.focus();
   if (inputDevice === 'controller') focusControllerMenu(content);
 }
 function controllerOptions() {
@@ -1484,6 +1548,7 @@ $('continue').onclick = () => {
 };
 $('settings').onclick = () => showDialog('settings');
 $('history').onclick = () => showDialog('history');
+$('logbook').onclick = () => showDialog('logbook');
 $('practice').onclick = () => {
   if (encounters.length) showDialog('practice');
 };
@@ -1493,6 +1558,10 @@ $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (dialogKind === 'logbook') {
+    backFromLogbook();
+    return;
+  }
   if (dialogKind === 'replay') {
     showDialog('result');
     return;
@@ -1539,7 +1608,8 @@ window.addEventListener('keydown', (e) => {
     (game.practice || game.testRun || game.workshop.active) &&
     game.mode !== 'title' &&
     dialogKind !== 'practice' &&
-    dialogKind !== 'workshop'
+    dialogKind !== 'workshop' &&
+    dialogKind !== 'logbook'
   ) {
     e.preventDefault();
     start(undefined, true);
@@ -1734,4 +1804,5 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 game.onChange();
+if (linkedLogbook) showDialog('logbook');
 requestAnimationFrame(frame);

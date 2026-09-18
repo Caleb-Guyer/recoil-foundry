@@ -411,6 +411,248 @@ dialog.replay-dialog {
   display: flex;
   justify-content: flex-end;
 }
+
+dialog.logbook-dialog {
+  width: min(1080px, calc(100vw - 32px));
+  padding: 30px;
+  height: min(800px, calc(100dvh - 40px));
+  overflow: hidden;
+}
+.logbook-dialog #dialog-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.logbook-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.logbook-header .eyebrow {
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 9px;
+  color: var(--muted);
+}
+.logbook-header h2 {
+  margin-bottom: 22px;
+}
+.logbook-header > button {
+  align-self: flex-start;
+}
+.logbook-preview {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 18px;
+}
+.logbook-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  border-bottom: 1px solid #35423f;
+  margin-bottom: 24px;
+}
+.logbook-sections button {
+  border-radius: 0;
+  padding: 12px 16px;
+  border-bottom: 2px solid transparent;
+}
+.logbook-sections button[aria-pressed='true'] {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+.logbook-layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  gap: 30px;
+  flex: 1;
+  min-height: 0;
+}
+.logbook-index {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+#logbook-search {
+  width: 100%;
+  background: #121a1c;
+  border: 1px solid #3b4643;
+  border-radius: 2px;
+  color: var(--ink);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.logbook-count {
+  font:
+    11px 'Courier New',
+    monospace;
+  color: var(--muted);
+  margin: 12px 0;
+}
+.logbook-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 2px 5px 5px 2px;
+}
+.logbook-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  text-align: left;
+  padding: 9px;
+  font-size: 14px;
+  color: #b3bfba;
+}
+.logbook-item:hover {
+  background: #202b2c;
+  color: var(--ink);
+}
+.logbook-item[aria-pressed='true'] {
+  background: #26322f;
+  border-color: #546258;
+  color: var(--ink);
+}
+.logbook-item .mod-mark,
+.logbook-item .logbook-file {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.logbook-file {
+  fill: none;
+  stroke: #a8b9ac;
+  stroke-width: 1.5;
+}
+.logbook-locked {
+  padding: 18px 10px;
+  margin: 12px 0 0;
+  border-top: 1px solid #35423f;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.logbook-locked span {
+  display: block;
+  margin-top: 5px;
+  color: #81908b;
+}
+.logbook-entry {
+  border-left: 1px solid #35423f;
+  padding: 12px 8px 10px 30px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.logbook-entry-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.logbook-entry-top svg {
+  width: 66px;
+  height: 66px;
+  flex-shrink: 0;
+}
+.logbook-entry h3 {
+  font-size: clamp(23px, 3vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.8px;
+  margin: 5px 0 0;
+}
+.logbook-entry:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+.logbook-entry-label {
+  color: var(--accent);
+  font:
+    11px 'Courier New',
+    monospace;
+  margin: 0;
+}
+.logbook-function {
+  color: #b7c6bd;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+.logbook-document {
+  border-top: 1px solid #35423f;
+  padding-top: 23px;
+  max-width: 62ch;
+}
+.logbook-document > p {
+  font:
+    18px/1.75 Georgia,
+    'Times New Roman',
+    serif;
+  color: #d6d9cb;
+  margin: 0 0 20px;
+}
+.logbook-document .logbook-source,
+.logbook-document .logbook-author {
+  font:
+    12px/1.6 'Courier New',
+    monospace;
+  color: #92a59a;
+}
+.logbook-document .logbook-author {
+  margin: 28px 0 0;
+}
+.logbook-empty {
+  padding: 40px 5px;
+}
+.logbook-empty p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+@media (max-width: 680px) {
+  dialog.logbook-dialog {
+    padding: 20px;
+    height: auto;
+    overflow: auto;
+  }
+  .logbook-dialog #dialog-content {
+    height: auto;
+  }
+  .logbook-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .logbook-list {
+    max-height: 150px;
+    min-height: 0;
+  }
+  .logbook-entry {
+    border-left: 0;
+    border-top: 1px solid #35423f;
+    padding: 24px 0 0;
+    max-height: none;
+    overflow: visible;
+  }
+  .logbook-sections {
+    gap: 0;
+    margin-bottom: 18px;
+  }
+  .logbook-sections button {
+    padding: 11px 10px;
+    font-size: 13px;
+  }
+  .logbook-document > p {
+    font-size: 17px;
+  }
+}
 .reward-actions .quiet {
   padding: 10px 0;
 }

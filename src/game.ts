@@ -459,6 +459,7 @@ export class Game {
   onHaptic: (kind: 'shot' | 'land' | 'hurt', strength: number) => void = () => {};
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
   onBossDefeated: (kind: EnemyKind) => void = () => {};
+  onEnemyDefeated: (kind: EnemyKind) => void = () => {};
   constructor() {
     Matter.Events.on(this.engine, 'beforeSolve', () => {
       this.counterweights.afterIntegrate();
@@ -2800,6 +2801,16 @@ export class Game {
     clearKiln(e);
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
+    if (
+      !this.practice &&
+      !this.testRun &&
+      !this.workshop.active &&
+      this.mode === 'playing' &&
+      this.hp > 0 &&
+      e.spawn <= 0 &&
+      e.eventRole !== 'relay'
+    )
+      this.onEnemyDefeated(e.kind);
     this.fabricators.killed(e);
     this.mutations.killed(e);
     this.courier.killed(e);

@@ -9,6 +9,11 @@ import {
 // Minimal layout adapter: unlike a DOM emulation library, this explicitly models the
 // browser quirk where closed-details children still have non-empty layout rectangles.
 class Element {
+  dataset: { controllerScroll?: string } = {};
+  scrollTop = 0;
+  scrollHeight = 40;
+  clientHeight = 40;
+  dialog: Element | null = null;
   parentElement: Element | null = null;
   disabled = false;
   hidden = false;
@@ -41,7 +46,8 @@ class Element {
   querySelector() {
     return this.children[0];
   }
-  closest() {
+  closest(selector?: string) {
+    if (selector === 'dialog') return this.dialog;
     return this.hidden ? this : null;
   }
   focus() {
@@ -155,4 +161,37 @@ test('upgrade grids navigate spatially and never confirm an unfocused or disable
   focusControllerMenu(page);
   assert.equal(dom.activeElement, first);
   assert(reroll.scrolled);
+});
+
+test('controller can enter and scroll a logbook document, then return to its index', () => {
+  const entry = new Element(0, 100, 200, 50);
+  const article = new Element(240, 80, 500, 300);
+  article.dataset.controllerScroll = 'true';
+  article.clientHeight = 300;
+  article.scrollHeight = 900;
+  const page = root(entry, article);
+  entry.focus();
+  navigateControllerMenu(page, 'right');
+  assert.equal(dom.activeElement, article);
+  navigateControllerMenu(page, 'down');
+  assert.equal(article.scrollTop, 90);
+  assert.equal(dom.activeElement, article);
+  navigateControllerMenu(page, 'up');
+  assert.equal(article.scrollTop, 0);
+  navigateControllerMenu(page, 'left');
+  assert.equal(dom.activeElement, entry);
+});
+
+test('on a narrow layout the controller scrolls the enclosing logbook dialog', () => {
+  const article = new Element(0, 250, 300, 700);
+  article.dataset.controllerScroll = 'true';
+  article.dialog = new Element();
+  article.dialog.clientHeight = 500;
+  article.dialog.scrollHeight = 1100;
+  const page = root(article);
+  article.focus();
+  navigateControllerMenu(page, 'down');
+  assert.equal(article.dialog.scrollTop, 150);
+  navigateControllerMenu(page, 'up');
+  assert.equal(article.dialog.scrollTop, 0);
 });

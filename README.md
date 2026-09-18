@@ -6,6 +6,18 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## The Logbook · 2.87.0
+
+Open **Logbook** from the title screen or pause menu. Its **135 original records** cover all **100 upgrades**, the service tool, **25 machines**, **five areas**, and **four recovered documents**. Every entry has individually written lore: maintenance notes, lab observations, dispatch correspondence, safety reports, and personal messages. Recurring writers gradually reveal what the Foundry makes, what happened to its workers, and why the line keeps running. Mechanical upgrade descriptions remain separate from the fiction.
+
+Equipment records unlock when upgrades are collected; machine records require defeating that machine in a real run; place records unlock on arrival. Some documents require reaching their area, and the departure record requires completing an escape. Undiscovered entries reveal no names, icons, descriptions or searchable text. The book adds no combat notifications or HUD text.
+
+Existing collected upgrades, reached areas from saved campaigns/recent runs, and earned boss victories carry over. Reaching an area never invents a victory over a particular boss variant. New discoveries survive death and retries. Normal, Daily, detour and Overtime runs contribute; Practice, Workshop and test presets grant no records. The Logbook does not alter builds, rewards, run seeds, Daily rules, or boss Practice unlocks.
+
+Search recovered entries by name or path. Keyboard users can Tab into the document to scroll it. Controller users move right from the entry list into the document, use up/down to read, and move left to return. Back/Escape from a paused run returns to the pause menu. On narrow screens the index sits above the document.
+
+[**Open your Logbook**](https://caleb-guyer.github.io/recoil-foundry/?logbook=1&v=2.87.0) · [**Preview sample records**](https://caleb-guyer.github.io/recoil-foundry/?test=logbook&v=2.87.0). The preview contains a small early-game collection only; it never grants those discoveries or changes your saved collection.
+
 ## Last moments · 2.86.0
 
 **Watch replay** on the death screen plays up to the last five seconds of combat in the current room. The final 0.6 seconds slow to one-third speed, then briefly hold on the lethal hit, marking the player and damage origin and naming its cause. Pause, replay, go back, or press **R** / **Again** to retry immediately. Combat gets no extra HUD elements.

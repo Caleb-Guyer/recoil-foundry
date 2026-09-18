@@ -3,7 +3,7 @@ import type { MenuDirection } from './controller.ts';
 function controls(root: HTMLElement): HTMLElement[] {
   return Array.from(
     root.querySelectorAll<HTMLElement>(
-      'button:not(:disabled), input[type="checkbox"], input[type="range"], summary',
+      'button:not(:disabled), input[type="checkbox"], input[type="range"], summary, [data-controller-scroll]',
     ),
   ).filter((el) => {
     if (
@@ -35,6 +35,19 @@ export function navigateControllerMenu(root: HTMLElement, direction: MenuDirecti
     return;
   }
   const horizontal = direction === 'left' || direction === 'right';
+  if (!horizontal && current.dataset?.controllerScroll) {
+    const scroller =
+      current.scrollHeight > current.clientHeight ? current : current.closest('dialog');
+    if (scroller) {
+      const before = scroller.scrollTop;
+      const step = Math.max(60, scroller.clientHeight * 0.3) * (direction === 'down' ? 1 : -1);
+      scroller.scrollTop = Math.max(
+        0,
+        Math.min(scroller.scrollHeight - scroller.clientHeight, before + step),
+      );
+      if (scroller.scrollTop !== before) return;
+    }
+  }
   if (horizontal && current instanceof HTMLInputElement && current.type === 'range') {
     if (direction === 'right') current.stepUp();
     else current.stepDown();
