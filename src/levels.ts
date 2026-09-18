@@ -85,6 +85,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  courier?: true;
   routeChoice?: import('./rules.ts').RouteChoice;
   anglerIntro?: boolean;
   crawlerIntro?: boolean;

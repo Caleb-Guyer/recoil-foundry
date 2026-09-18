@@ -221,7 +221,23 @@ export class Sound {
       ['crane-hit', 'kiln-impact', 'hurt', 'slam', 'cargo-release', 'cargo-impact'].includes(kind)
     )
       this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
-    if (kind === 'aim-warn') {
+    if (kind === 'courier-start') {
+      this.tone(95, 260, 0.4, 0.07, 'sawtooth');
+      this.tone(520, 520, 0.1, 0.045, 'sine', 0.1);
+      this.tone(780, 780, 0.1, 0.035, 'sine', 0.23);
+    } else if (kind === 'courier-boost') {
+      this.tone(110, 230, 0.22, 0.035, 'sawtooth');
+      this.crack(0.12, 0.025, 650);
+    } else if (kind === 'courier-door') {
+      this.tone(190, 95, 0.6, 0.055, 'triangle');
+      this.crack(0.18, 0.04, 550);
+    } else if (kind === 'courier-pickup') {
+      this.tone(540, 540, 0.1, 0.06, 'sine');
+      this.tone(810, 810, 0.17, 0.06, 'sine', 0.1);
+    } else if (kind === 'courier-drop' || kind === 'courier-exit') {
+      this.tone(330, 95, 0.15, 0.06, 'triangle');
+      this.crack(0.06, 0.04, 1100);
+    } else if (kind === 'aim-warn') {
       this.tone(760, 1050, 0.085, 0.028, 'sine');
     } else if (kind === 'armor') {
       this.tone(1650, 950, 0.055, 0.035, 'sine');

@@ -94,6 +94,7 @@ export class MutationSystem {
       g.overtime ||
       g.level.boss ||
       g.level.freight ||
+      g.level.courier ||
       (g.testRun && !g.seed.startsWith('MUTATION-')) ||
       (g.areaEvents.active && g.areaEvents.active !== 'turf') ||
       (g.areaEvents.active !== 'turf' &&

@@ -1,4 +1,5 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
+import { courierTestFromUrl } from './courier-layout.ts';
 import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
@@ -195,6 +196,7 @@ const input: Input = {
 const entryUrl = new URL(location.href);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  courierTestFromUrl(entryUrl) ??
   mutationTestFromUrl(entryUrl) ??
   eventTestFromUrl(entryUrl) ??
   dropworksTestFromUrl(entryUrl) ??
@@ -245,6 +247,10 @@ function updateTitle() {
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
   if (linkedWorkshop) $('play').innerHTML = 'Open Workshop <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.seed.startsWith('COURIER-'))
+    $('play').innerHTML =
+      (linkedRunTest.reward ? 'Test courier reward' : 'Test Scrap Courier') +
+      ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('MUTATION-')) {
     const kind = Object.keys(MUTATIONS).find((key) =>
       linkedRunTest!.seed.endsWith('-' + key),
@@ -363,6 +369,13 @@ function updateTitle() {
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.seed.startsWith('COURIER-') && linkedRunTest.reward)
+    $('title-hint').textContent = 'Recovered cargo. 64 health. R to restart test.';
+  else if (
+    linkedRunTest?.seed.startsWith('COURIER-') &&
+    entryUrl.searchParams.get('build') === 'starter'
+  )
+    $('title-hint').textContent = 'Full health. Starting gun. R to restart test.';
   if (linkedRunTest?.seed === 'EXITS-73')
     $('title-hint').textContent = 'Up: New Game+. Right: finish. R to restart test.';
   if (linkedRunTest?.seed.startsWith('DROPWORKS-64-'))
@@ -898,11 +911,13 @@ function showDialog(kind: string) {
       '<p class="eyebrow">' +
       (activeDaily ? 'DAILY · ' : '') +
       (game.overtime ? 'OVERTIME · ' : '') +
-      (game.detour
-        ? 'BONUS UPGRADE · NO HEALING'
-        : game.enteringDetour
-          ? 'ROOM CLEAR · CHALLENGE NEXT'
-          : 'ROOM CLEAR') +
+      (game.courierReward
+        ? 'RECOVERED CARGO · NO HEALING'
+        : game.detour
+          ? 'BONUS UPGRADE · NO HEALING'
+          : game.enteringDetour
+            ? 'ROOM CLEAR · CHALLENGE NEXT'
+            : 'ROOM CLEAR') +
       '</p><h2 id="dialog-title">' +
       (game.offers[0]?.id === 'repair'
         ? 'Keep going.'
@@ -929,7 +944,7 @@ function showDialog(kind: string) {
         )
         .join('') +
       '</div>' +
-      (!activeDaily && !game.practice && game.offers[0]?.id !== 'repair'
+      (!activeDaily && !game.practice && !game.courierReward && game.offers[0]?.id !== 'repair'
         ? '<div class="reward-actions"><button id="reroll" class="quiet"' +
           (game.canReroll ? '' : ' disabled') +
           ' title="' +

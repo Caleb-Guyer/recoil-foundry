@@ -994,6 +994,7 @@ export const isDetourStage = (stage: number) =>
   stage !== 14 &&
   stage % ROOMS_PER_AREA === 2;
 export interface RewardCheckpoint {
+  courier?: true;
   offers: string[];
   rerolled: boolean;
   salvage?: string;
@@ -1001,6 +1002,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  courier?: import('./courier-layout.ts').CourierSave;
   areaEvent?: import('./area-events.ts').AreaEventSave;
   version: 5 | 6;
   legacyMods?: string[];
@@ -1033,6 +1035,13 @@ function validRewardCheckpoint(d: Checkpoint) {
   const daily = /^RF-D\d+-/.test(d.seed);
   if (
     typeof r.rerolled !== 'boolean' ||
+    (r.courier !== undefined &&
+      (r.courier !== true ||
+        r.rerolled ||
+        r.salvage !== undefined ||
+        d.courier?.status !== 'collected' ||
+        d.courier.stage !== d.stage)) ||
+    (d.courier?.status === 'collected' && r.courier !== true) ||
     (daily && r.rerolled) ||
     !Array.isArray(r.offers) ||
     r.offers.length < 1 ||
@@ -1114,6 +1123,22 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const stages = legacy ? 12 : previous ? 16 : STAGES;
   const rooms = legacy ? 3 : ROOMS_PER_AREA;
   const missed = d.missedUpgrades ?? 0;
+  const courierBonus = d.courier?.status === 'claimed' ? 1 : 0;
+  const validCourier =
+    d.courier === undefined ||
+    (d.version === 6 &&
+      !!d.courier &&
+      typeof d.courier === 'object' &&
+      [4, 5, 8, 9, 12, 13, 16, 17].includes(d.courier.stage) &&
+      ['pending', 'lost', 'collected', 'claimed'].includes(d.courier.status) &&
+      (d.courier.status !== 'pending' || (!d.overtime && d.stage <= d.courier.stage)) &&
+      (d.courier.status !== 'lost' || d.overtime || d.stage >= d.courier.stage) &&
+      (d.courier.status !== 'collected' ||
+        (!!d.reward?.courier && !d.detour && !d.overtime && d.stage === d.courier.stage)) &&
+      (d.courier.status !== 'claimed' ||
+        d.overtime ||
+        d.stage > d.courier.stage ||
+        (d.stage === d.courier.stage && !!d.reward && !d.reward.courier && !d.detour)));
   const oldEscape =
     legacy &&
     d.escape === true &&
@@ -1129,7 +1154,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       typeof overtime === 'object' &&
       Array.isArray(completed) &&
       Number.isInteger(overtime.baseMods) &&
-      overtime.baseMods === STAGES - 1 + completed.length - missed &&
+      overtime.baseMods === STAGES - 1 + completed.length - missed + courierBonus &&
       Number.isInteger(overtime.repairs) &&
       overtime.repairs >= 0 &&
       overtime.repairs <= d.stage &&
@@ -1175,6 +1200,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
+    validCourier &&
     validAreaEvent(d.areaEvent, d.stage, !!d.reward || !!d.overtime) &&
     ([5, 6].includes(d.version) || previous || legacy) &&
     typeof d.seed === 'string' &&
@@ -1210,7 +1236,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (!/^RF-D\d+-/.test(d.seed) || d.route === dailyRoute(d.seed, d.stage)))) &&
     (!!overtime ||
       (d.detour === undefined && d.detours === undefined) ||
-      d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length - missed) &&
+      d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length - missed + courierBonus) &&
     (d.detour === undefined ||
       (d.detour === true &&
         d.stage % rooms === rooms - 2 &&
@@ -1221,7 +1247,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       (d.escape === true &&
         (d.stage === stages - 1 || oldEscape) &&
         (!!overtime ||
-          d.mods.length === stages - 1 + completed.length - missed ||
+          d.mods.length === stages - 1 + completed.length - missed + courierBonus ||
           (oldEscape && completed.length === 0))));
   if (!valid || !validRewardCheckpoint(d)) return null;
   if (!legacy && !previous)

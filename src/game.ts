@@ -1,4 +1,5 @@
 import { MutationSystem, type MutationKind, type MutationRig } from './mutations.ts';
+import { CourierSystem } from './courier.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
@@ -152,6 +153,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  courier?: true;
   eventRole?: EventRole;
   allied?: boolean;
   workshopTarget?: WorkshopTarget;
@@ -258,6 +260,7 @@ export class Game {
   terrain: Matter.Body[] = [];
   areaEvents = new AreaEventSystem(this);
   mutations = new MutationSystem(this);
+  courier = new CourierSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   loaderArena = new LoaderArenaSystem(this);
@@ -433,6 +436,7 @@ export class Game {
   offers: Mod[] = [];
   rng = seeded('run');
   rewardTaken = false;
+  courierReward = false;
   rewardRerolled = false;
   onChange: () => void = () => {};
   onSound: (kind: string) => void = () => {};
@@ -456,6 +460,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.courier.clear();
       this.areaEvents.clear();
       this.mutations.clear();
       this.loaderArena.stop();
@@ -529,6 +534,7 @@ export class Game {
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.areaEvents.start(save);
+    this.courier.start(save);
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
     this.missedUpgrades = save?.missedUpgrades ?? 0;
@@ -560,6 +566,7 @@ export class Game {
         id === 'repair' ? REPAIR_REWARD : MODS.find((m) => m.id === id)!,
       );
       this.rewardRerolled = save.reward.rerolled;
+      this.courierReward = save.reward.courier === true;
       this.earnedSalvage = save.reward.salvage ?? null;
       this.enteringDetour = save.reward.enteringDetour === true;
       this.enteringRoute = save.reward.enteringRoute ?? null;
@@ -571,6 +578,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
       ...(this.areaEvents.state ? { areaEvent: structuredClone(this.areaEvents.state) } : {}),
       ...(this.legacyMods ? { legacyMods: [...this.legacyMods] } : {}),
       ...(this.legacyOffers ? { legacyOffers: [...this.legacyOffers] } : {}),
@@ -591,6 +599,7 @@ export class Game {
             reward: {
               offers: this.offers.map((m) => m.id),
               rerolled: this.rewardRerolled,
+              ...(this.courierReward ? { courier: true as const } : {}),
               ...(this.earnedSalvage ? { salvage: this.earnedSalvage } : {}),
               ...(this.enteringDetour ? { enteringDetour: true as const } : {}),
               ...(this.enteringRoute ? { enteringRoute: this.enteringRoute } : {}),
@@ -600,6 +609,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.courier.clear();
     this.areaEvents.clear();
     this.mutations.clear();
     this.breachAt = -1;
@@ -657,6 +667,7 @@ export class Game {
     this.jumpAt = -100;
     this.grounded = false;
     this.rewardTaken = false;
+    this.courierReward = false;
     this.rewardRerolled = false;
     this.offers = [];
     this.shake = 0;
@@ -702,6 +713,7 @@ export class Game {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
+    if (!escapeRoom) this.level = this.courier.level(this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -716,6 +728,7 @@ export class Game {
       restitution: 0,
       chamfer: { radius: 4 },
       label: 'player',
+      collisionFilter: { mask: 0x7fff },
     });
     Composite.add(this.engine.world, this.player);
     this.counterweights.reset();
@@ -767,6 +780,7 @@ export class Game {
     this.workshop.reset();
     this.areaEvents.reset(clearedRoom);
     this.mutations.reset(clearedRoom);
+    this.courier.reset(clearedRoom);
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active) return;
@@ -921,7 +935,7 @@ export class Game {
     variant?: MutationKind | 'split-child',
   ) {
     if (
-      this.enemies.length >=
+      this.combatEnemyCount >=
       (this.areaEvents.encounter === 'turf' ? 24 : variant === 'split-child' ? 16 : 14)
     )
       return;
@@ -951,6 +965,7 @@ export class Game {
       !this.counterweights.movingPerch(body)
     )
       Body.setStatic(body, true);
+    body.collisionFilter.mask = 0x7fff;
     if (squad?.kind === 'shield' && squad.role === 'support') Body.setStatic(body, false);
     Composite.add(this.engine.world, body);
     const enemy: Enemy = {
@@ -1219,11 +1234,12 @@ export class Game {
       this.workshop.update(dt);
       return;
     }
+    this.courier.update(dt);
     this.areaEvents.update(dt);
     if (this.mode !== 'playing') return;
     this.waves.update(dt);
     if (
-      !this.enemies.length &&
+      !this.combatEnemyCount &&
       !this.areaEvents.waiting &&
       !this.mutations.pending.length &&
       !this.waves.pending &&
@@ -1591,6 +1607,7 @@ export class Game {
       return;
     }
     if (this.areaEvents.updateEnemy(e, dt)) return;
+    if (this.courier.updateEnemy(e, dt)) return;
     if (this.mutations.updateEnemy(e, dt)) return;
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
@@ -2715,6 +2732,7 @@ export class Game {
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);
     this.mutations.killed(e);
+    this.courier.killed(e);
     if (e.kind === 'loader') this.loaderArena.stop();
     if (credited && e.eventRole !== 'relay') this.salvageEvolutions.killed(e, killEffects);
     if (
@@ -2790,6 +2808,9 @@ export class Game {
       });
     }
   }
+  get combatEnemyCount() {
+    return this.enemies.filter((e) => !e.courier).length;
+  }
   openReward(enterDetour = false, route?: RouteChoice) {
     if (this.areaEvents.waiting || this.mutations.pending.length) return;
     if (this.practice || this.workshop.active || this.escape || this.mode !== 'playing') return;
@@ -2798,25 +2819,39 @@ export class Game {
       (enterDetour ||
         !this.routeChoices.includes(route) ||
         !this.clear ||
-        this.enemies.length ||
+        this.combatEnemyCount ||
         this.waves.pending)
     )
       return;
     if (
       enterDetour &&
-      (!this.canDetour || !this.clear || this.enemies.length || this.waves.pending)
+      (!this.canDetour || !this.clear || this.combatEnemyCount || this.waves.pending)
     )
       return;
     if (this.detour && (!this.clear || this.enemies.length || this.waves.pending)) return;
     this.enteringDetour = enterDetour;
     this.enteringRoute = this.canChooseRoute ? (route ?? this.routeChoices[0]) : null;
+    this.courier.leave();
+    this.courierReward = this.courier.state?.status === 'collected';
     this.offers = rewardMods(
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
-      seeded(this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage),
-      { stage: this.stage, overtime: !!this.overtime, salvage: this.earnedSalvage },
+      seeded(
+        this.layoutSeed +
+          (this.courierReward
+            ? ':courier-rewards:'
+            : this.detour
+              ? ':detour-rewards:'
+              : ':rewards:') +
+          this.stage,
+      ),
+      {
+        stage: this.stage,
+        overtime: !!this.overtime,
+        salvage: this.courierReward ? null : this.earnedSalvage,
+      },
     );
-    if (this.areaEvents.clearance)
+    if (!this.courierReward && this.areaEvents.clearance)
       this.offers = this.areaEvents.preferRewards(
         this.offers,
         rewardMods(
@@ -2859,6 +2894,7 @@ export class Game {
   get canReroll() {
     return (
       !this.workshop.active &&
+      !this.courierReward &&
       this.mode === 'upgrade' &&
       !this.practice &&
       !dailyFromSeed(this.seed) &&
@@ -2903,6 +2939,13 @@ export class Game {
     if (this.legacyOffers?.includes(id)) this.legacyMods = [...this.mods];
     this.legacyOffers = undefined;
     this.gun = getGun(this.mods);
+    if (this.courierReward) {
+      if (this.courier.state) this.courier.state.status = 'claimed';
+      this.mode = 'playing';
+      this.openReward(this.enteringDetour, this.enteringRoute ?? undefined);
+      this.onSound('upgrade');
+      return;
+    }
     this.route = this.enteringRoute;
     if (this.detour) {
       this.detours.push(areaIndex(this.stage));

@@ -6,6 +6,20 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Scrap Courier · 2.82.0
+
+Fresh runs have a **35% chance of one Scrap Courier encounter**, after the first boss. A compact amber machine carries a visible case through Dispatch Lane, jumping low obstacles, pausing behind cover and using short boosts. Two obstacle arrangements leave upper shelves available as recoil shortcuts. Enemy rosters and courier health increase with the area. Ordinary jumps and the starting gun can complete the chase.
+
+The courier must physically reach its service hatch and spend **three seconds opening it** before escaping. The moving shutter, engine cues and carried case communicate the encounter without a timer, nameplate or instruction banner. Cold, knockback, tethers and portals use their usual rules. The courier is optional: it does not hold up reinforcements or the room exit, and escaping grants no kill or reward.
+
+Destroy it and **touch the dropped case** to bank an extra legal upgrade choice at the room exit. The cargo choice gives **no healing**, followed by the ordinary room reward and its normal recovery. Leaving a case behind forfeits it. Daily has one predetermined compatible choice for each reward. The chase plan, collected reward and claimed bonus survive the appropriate Continue checkpoints; detours, escape and New Game+ accept the extra upgrade without duplication. Mid-fight Continue still restarts the room from its entrance.
+
+The encounter never replaces enemy introductions, trains, freight lifts, bosses or an area-event area. Practice, Workshop, existing focused tests and New Game+ do not gain a courier. Older saved campaigns keep their original rooms. Daily uses **ruleset 71**.
+
+[**Test Scrap Courier**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&v=2.82.0) · [**Alternate layout**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&mirror=1&v=2.82.0) · [**Starting gun**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&build=starter&v=2.82.0) · [**Beam**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&build=beam&v=2.82.0) · [**Portals**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&build=portal&v=2.82.0) · [**Recovered reward**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&phase=reward&v=2.82.0).
+
+Click the named test button. **R** repeats the preset; tests preserve campaign saves, discoveries, Daily records and Practice unlocks. Combat presets have 100 health. The reward preview begins at 64 health so its no-healing bonus is easy to check.
+
 ## Rare enemy mutations · 2.81.0
 
 Three uncommon mutations change familiar enemies without adding nameplates or increasing the opening troop count:

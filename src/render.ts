@@ -1,4 +1,5 @@
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
+import { drawCourier, drawCourierWorld } from './courier-art.ts';
 import { SPLIT_SCALE } from './mutations.ts';
 import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
@@ -253,7 +254,12 @@ export class Renderer {
         );
     }
     c.globalAlpha = 1;
+    drawCourierWorld(c, g);
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (e.courier) {
+        drawCourier(c, g, e, this.reduced);
+        continue;
+      }
       if (drawEventEnemy(c, e)) continue;
       if (e.workshopTarget) {
         drawWorkshopTarget(c, e);

@@ -227,11 +227,11 @@ export class ReinforcementSystem {
           ? 1
           : Math.ceil(this.openingCount / 2);
       if (
-        g.enemies.length === 0 ||
+        g.combatEnemyCount === 0 ||
         this.openingTime >=
           (g.overtime ? (g.level.boss ? 9 : 4.5) : reinforcementDeadline(g.stage)) ||
         (g.overtime && g.level.boss && g.enemies.some((e) => e.hp < e.maxHp * 0.65)) ||
-        ((g.stage >= 1 || g.detour) && this.openingCount >= 2 && g.enemies.length <= overlap)
+        ((g.stage >= 1 || g.detour) && this.openingCount >= 2 && g.combatEnemyCount <= overlap)
       ) {
         this.phase = 'warning';
         for (const door of this.doors) {
@@ -249,7 +249,7 @@ export class ReinforcementSystem {
       } else if (door.state === 'warning') {
         door.timer = Math.max(0, door.timer - dt);
         if (door.timer > 0) continue;
-        if (this.canEnter(door.spawn) && g.enemies.length < 14) {
+        if (this.canEnter(door.spawn) && g.combatEnemyCount < 14) {
           const s = door.spawn;
           g.spawnEnemy(s.kind, s.x, s.y, s.elite, door.attackDelay, s.squad, s.mutation);
           g.enemies[g.enemies.length - 1].fromDoor = true;
