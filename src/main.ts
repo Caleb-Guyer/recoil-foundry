@@ -917,6 +917,7 @@ function showDialog(kind: string) {
   modal.classList.toggle('workshop-dialog', kind === 'workshop');
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
+  modal.classList.toggle('ending-dialog', kind === 'result' && game.shutdown.complete);
   const content = $('dialog-content');
   if (kind === 'logbook') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
@@ -1247,7 +1248,7 @@ function showDialog(kind: string) {
       game.kills +
       ' kills</p>' +
       (win && game.shutdown.complete
-        ? '<p class="result-line">For the first time, the factory has nothing left to ask.</p>'
+        ? '<p class="ending-note">For the first time, the factory has nothing left to ask.</p>'
         : '') +
       (dailyResult?.best !== undefined
         ? '<p class="daily-best">' +

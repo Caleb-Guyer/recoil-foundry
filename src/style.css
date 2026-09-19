@@ -664,11 +664,19 @@ dialog.logbook-dialog {
 .result-line {
   color: #b5c3b9;
   font-size: 16px;
-  margin: -6px 0 0;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
 }
 .result-line span {
   padding: 0 9px;
   color: #677c72;
+}
+.ending-note {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.55;
 }
 .daily-best {
   color: var(--accent);
@@ -913,6 +921,15 @@ body[data-input='controller'] canvas {
   }
   h2 {
     margin-bottom: 22px;
+  }
+  .ending-dialog #dialog-content > .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .ending-dialog #dialog-content > .actions > .primary {
+    grid-column: 1 / -1;
+    min-width: 0;
   }
   .choices {
     grid-template-columns: 1fr;
