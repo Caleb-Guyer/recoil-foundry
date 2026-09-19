@@ -1,24 +1,14 @@
 # Full browser release checklist
 
-Updated 19 September 2026 against 2.92.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
+Updated 19 September 2026 against 2.93.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
 
-**When work is completed, remove it from this list.** Keep its evidence in a linked report or commit, not a checked-off entry. Section numbers stay stable so references to remaining work do not change. Item 1 is closed and removed; its tuning, measurements, follow-up decisions and validation are archived in the [balance closeout](balance-closeout-2.92.0.md). Human acceptance belongs to the external playtest gate below.
+**When work is completed, remove it from this list.** Keep its evidence in a linked report or commit, not a checked-off entry. Section numbers stay stable so references to remaining work do not change. Completed balance work is archived in the [balance closeout](balance-closeout-2.92.0.md); first-session implementation and the five-scenario self-audit are archived in the [clarity report](first-session-2.93.0.md). Those implementation sections are removed. Actual first-time-player observation and human acceptance remain explicitly open in section 7.
 
 ## Scope
 
 The launch scope is frozen after the Auditor: the twenty-room campaign across five areas, 100 upgrades and branching builds, boss variants, optional challenges and events, Daily runs, Overtime, Practice, Workshop, run recaps, death replay, the Logbook, a secret ending, and cosmetic commendations. Remaining changes are fixes, tuning and essential usability work. The [balance closeout](balance-closeout-2.92.0.md#design-targets) defines the intended difficulty and duration for external validation.
 
 - [ ] Publish the supported browser/device/input list. Prioritize ordinary desktop/laptop play; advertise touch play only after it passes its own checks.
-
-## 2. First-session clarity — release blocker
-
-- [ ] Watch at least five first-time players start without verbal coaching. Record where they hesitate, misread an interaction, die without understanding why, or quit.
-- [ ] Ensure the opening teaches moving, jumping, aiming, recoil flight, room completion and upgrade selection through safe situations and brief contextual guidance.
-- [ ] Verify that normal exits, optional routes, the extraction lift and Overtime lift are distinguishable. Preserve hidden future encounters and lore.
-- [ ] Check new mechanics such as sealed cases, relays and terminals for consistent visual language and useful feedback, without permanent objective text.
-- [ ] Make controls easy to reopen and audio state easy to understand. Keep restarting fast.
-
-Acceptance: new players can leave the first room, recognize a reward and explain recoil movement without assistance. They can find controls and settings when needed.
 
 ## 3. Progress and recovery — release blocker
 
@@ -69,7 +59,7 @@ Acceptance: every supported screen is readable, the audio mix serves combat, and
 
 ## 7. External playtest and release packaging — final gate
 
-- [ ] Recruit a small group (suggested 8–12 players, mixing newcomers and experienced roguelike players). Ask them to play naturally and report confusing deaths, favorite builds, repetitive sections, technical issues and whether they want another run.
+- [ ] Recruit a small group (suggested 8–12 players, mixing newcomers and experienced roguelike players). Observe at least five first-time players without coaching: record hesitation, misunderstood interactions/deaths and quitting; verify they can leave room one, recognize a reward, explain recoil movement and find controls/settings. Use the [observation sheet](first-session-playtest.md). Ask the group about favorite builds, repetitive sections, technical issues and whether they want another run. The agent's five-scenario audit does not satisfy this human-observation check.
 - [ ] Validate the documented difficulty and duration targets in real sessions across all five areas, with weak, ordinary and strong builds. Include Storm Cell against mobile bosses, short-range Recall at Crane/Press, dense effects and recovery after damage; measure first wins, run duration and reward quality.
 - [ ] Include complete detour, Auditor, secret-ending and Overtime routes in those sessions, with awkward builds and low-health entrances. Judge combined difficulty, readable deaths and access to rewards; automated encounter checks do not replace this feedback.
 - [ ] Triage and fix blockers, then retest affected routes/builds. Keep minor known issues in a visible list.

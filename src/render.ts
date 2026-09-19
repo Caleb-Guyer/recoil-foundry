@@ -81,6 +81,7 @@ import { drawOutfit } from './cosmetics.ts';
 import { drawMassRound } from './mass-driver-art.ts';
 import { drawBallistics } from './ballistics-art.ts';
 import { drawFusions } from './fusions-art.ts';
+import { drawInteractionCues } from './interaction-cues.ts';
 import { drawNewPaths, drawStoredRound } from './new-paths-art.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
@@ -728,6 +729,7 @@ export class Renderer {
       }
     }
     drawAreaEvent(c, g);
+    drawInteractionCues(c, g);
     drawMutationTells(c, g);
     // Hostile projectiles stay above player shots and all cosmetic particles.
     for (const s of threats) {

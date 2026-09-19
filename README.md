@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## First-session clarity · 2.93.0
+
+**Controls** is available from the title, Pause, or **H**. **Try controls** opens a harmless warm-up with the starting gun: movement, jumps, recoil flight and targets, without changing your campaign save or saved Workshop build. New players can also use brief, dismissible hints in the opening room and a one-line explanation on their first upgrade screen.
+
+Nearby ready cases and electrical controls share a target-bracket cue; a ready terminal uses an upward arrow. Sound and Music show their actual On/Off/Muted state. Existing challenge and exit signs keep later encounters hidden.
+
+[Try the controls warm-up](https://caleb-guyer.github.io/recoil-foundry/?help=controls&v=2.93.0) · [Play](https://caleb-guyer.github.io/recoil-foundry/?v=2.93.0) · [First-session audit](docs/first-session-2.93.0.md). Completed implementation checks are removed from the [release checklist](docs/browser-release-checklist.md); the external first-time-player observation remains an explicit release gate.
+
 ## Browser balance pass · 2.92.0
 
 Early rewards now keep a shared firepower option available until you take one. Daily still offers exactly one card, with a safeguard before its first boss if the gun has no shared power upgrade. **Shaped Charge** gains 30% blast damage; **Cluster Shell** keeps a stronger initial impact and adds 25% total blast payload. Boss tells, room healing and the twenty-room length stay intact. Daily now uses **ruleset 78**.

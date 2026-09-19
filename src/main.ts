@@ -71,6 +71,13 @@ import {
 } from './controller-menu.ts';
 import { controllerPortalTarget } from './controller-target.ts';
 import { musicScene } from './music-score.ts';
+import {
+  FirstSessionGuide,
+  FIRST_SESSION_KEY,
+  audioState,
+  controlsIntro,
+  type ControlDevice,
+} from './first-session.ts';
 import { AREAS } from './areas.ts';
 import {
   MODS,
@@ -173,11 +180,12 @@ document.getElementById('app')!.innerHTML = `
  <section id="title-screen">
   <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
-   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button></div>
+   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button><button id="learn" class="quiet" hidden>Learn to play</button></div>
    <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
-  </div><div class="title-settings"><button id="logbook" class="quiet">Logbook</button><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
+  </div><div class="title-settings"><button id="controls" class="quiet">Controls</button><button id="logbook" class="quiet">Logbook</button><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
  </section>
+ <div id="first-session-tip" class="first-session-tip" hidden><span id="first-session-copy" role="status"></span><button id="dismiss-tip" class="quiet" aria-label="Hide first-run tips">×</button></div>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
 </main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog><span id="save-status" class="sr-only" role="status"></span>`;
 const game = new Game(),
@@ -185,6 +193,15 @@ const game = new Game(),
   renderer = new Renderer(canvas, game),
   sound = new Sound();
 const deathReplay = new DeathReplay();
+const firstSession = new FirstSessionGuide();
+let needsGuidance =
+  read(FIRST_SESSION_KEY) !== true &&
+  !storedCheckpoint &&
+  !runHistory.length &&
+  !discovered.length &&
+  !encounters.length;
+let firstRewardHelp = needsGuidance;
+let controlsParent = '';
 game.cosmetics = { ...equippedCosmetics };
 let replayView: ReplayView | null = null;
 let replayRoom = game.level;
@@ -195,6 +212,12 @@ workshopTools.hidden = true;
 workshopTools.innerHTML =
   '<button id="workshop-edit" class="quiet">Build</button><button id="workshop-reset" class="icon" aria-label="Reset Workshop" title="Reset room · R">↻</button>';
 document.querySelector('.run-info')!.prepend(workshopTools);
+const warmupTools = document.createElement('div');
+warmupTools.className = 'workshop-tools';
+warmupTools.hidden = true;
+warmupTools.innerHTML =
+  '<button id="warmup-controls" class="quiet">Controls</button><button id="warmup-done" class="quiet">Done</button>';
+document.querySelector('.run-info')!.prepend(warmupTools);
 const rawSettings = read('rf-settings-v2');
 const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}) as {
   sound?: boolean;
@@ -543,6 +566,59 @@ function persistSettings() {
     reduced: renderer.reduced,
     controller: controller.settings,
   });
+  updateAudioState();
+}
+function controlDevice(): ControlDevice {
+  return inputDevice === 'controller'
+    ? 'controller'
+    : matchMedia('(pointer: coarse)').matches
+      ? 'touch'
+      : 'keyboard';
+}
+function updateAudioState() {
+  const state = audioState(sound.enabled, sound.musicEnabled);
+  $('settings').textContent = state.settings;
+  for (const [id, text] of [
+    ['sound-state', state.sound],
+    ['music-state', state.music],
+    ['audio-note', state.note],
+  ]) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = text;
+      if (id === 'audio-note') el.hidden = !text;
+    }
+  }
+}
+function finishGuidance() {
+  needsGuidance = false;
+  write(FIRST_SESSION_KEY, true);
+  $('learn').hidden = true;
+}
+function updateFirstSession() {
+  if (firstSession.active && (firstSession.complete || (!firstSession.warmup && game.stage > 0))) {
+    if (needsGuidance) finishGuidance();
+    if (!firstSession.warmup && game.stage > 0) firstSession.stop();
+  }
+  const text = firstSession.message(game, controlDevice());
+  $('first-session-tip').hidden = !text;
+  if ($('first-session-copy').textContent !== text) $('first-session-copy').textContent = text;
+  $('dismiss-tip').hidden = firstSession.warmup;
+  warmupTools.hidden = !firstSession.warmup || game.mode !== 'playing';
+  workshopTools.hidden = !game.workshop.active || firstSession.warmup;
+  if (firstSession.warmup) $('stage').textContent = 'WARM-UP';
+}
+function openControls() {
+  if (!['title', 'playing', 'paused'].includes(game.mode)) return;
+  controlsParent = modal.open && ['pause', 'settings'].includes(dialogKind) ? dialogKind : '';
+  showDialog('controls');
+}
+function backFromControls() {
+  if (controlsParent) showDialog(controlsParent);
+  else {
+    resume();
+    if (game.mode === 'title') $('controls').focus();
+  }
 }
 function updateMusic(active = pageActive && document.hasFocus() && !document.hidden) {
   sound.updateMusic(musicScene(game), active);
@@ -560,7 +636,7 @@ function newSeed(previous?: string) {
 }
 function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   if (retry && game.workshop.active) {
-    startWorkshop(game.mods);
+    startWorkshop(game.mods, firstSession.warmup);
     return;
   }
   if (retry && game.testRun) {
@@ -572,6 +648,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     return;
   }
   finishedRun = null;
+  firstSession.stop();
   runCommendations = [];
   linkedTest = null;
   linkedRunTest = null;
@@ -612,6 +689,8 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   }
   dailyResult = null;
   game.start(seed, save);
+  if (needsGuidance && !save && !activeDaily) firstSession.start(game);
+  updateFirstSession();
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -624,6 +703,7 @@ function startPractice(encounter: Encounter) {
     )
   )
     return;
+  firstSession.stop();
   finishedRun = null;
   runCommendations = [];
   sound.unlock();
@@ -638,6 +718,7 @@ function startPractice(encounter: Encounter) {
   canvas.focus();
 }
 function startRunTest(save: Checkpoint) {
+  firstSession.stop();
   finishedRun = null;
   runCommendations = [];
   sound.unlock();
@@ -651,7 +732,8 @@ function startRunTest(save: Checkpoint) {
   pointer.y = canvas.clientHeight * 0.6;
   if (game.mode === 'playing') canvas.focus();
 }
-function startWorkshop(mods: readonly string[] = workshopMods) {
+function startWorkshop(mods: readonly string[] = workshopMods, warmup = false) {
+  firstSession.stop();
   finishedRun = null;
   runCommendations = [];
   sound.unlock();
@@ -659,15 +741,20 @@ function startWorkshop(mods: readonly string[] = workshopMods) {
   closeDialog();
   activeDaily = null;
   dailyResult = null;
-  workshopMods = workshopBuild(mods, discovered);
-  if (!previewCommendations) write(WORKSHOP_BUILD_KEY, workshopMods);
-  game.startWorkshop(discovered, workshopMods);
+  if (!warmup) {
+    workshopMods = workshopBuild(mods, discovered);
+    if (!previewCommendations) write(WORKSHOP_BUILD_KEY, workshopMods);
+  }
+  game.startWorkshop(discovered, warmup ? [] : workshopMods);
+  if (warmup) firstSession.start(game, true);
+  updateFirstSession();
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
 }
 function menu() {
+  firstSession.stop();
   closeDialog();
   game.setMode('title');
 }
@@ -833,6 +920,7 @@ game.onChange = () => {
     ? PRACTICE_BOSSES[game.practice.kind].name
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
   updateTitle();
+  updateFirstSession();
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'reforge') showDialog('reforge');
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
@@ -964,13 +1052,29 @@ function showDialog(kind: string) {
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle('ending-dialog', kind === 'result' && game.shutdown.complete);
+  modal.classList.toggle('controls-dialog', kind === 'controls');
   const content = $('dialog-content');
   if (kind === 'logbook' || kind === 'workshop')
     commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   const visibleCommendations = previewCommendations
     ? COMMENDATIONS.map((c) => c.id)
     : commendations;
-  if (kind === 'logbook') {
+  if (kind === 'controls') {
+    content.innerHTML =
+      '<h2 id="dialog-title">Controls.</h2><div id="controls-grid">' +
+      controlsIntro(controlDevice()) +
+      '</div>' +
+      '<div class="recoil-demo"><svg viewBox="0 0 100 100" aria-hidden="true"><path class="recoil-rise" d="M24 57V17m-8 9 8-9 8 9"/><rect x="44" y="24" width="22" height="30" rx="4"/><path d="M59 43v24m0 10v7m0 8v4"/><path class="recoil-floor" d="M12 98h75"/></svg><div><strong>Shoot down. Go up.</strong><p>Jump first. Recoil pushes you opposite your shots, much harder in the air.</p></div></div>' +
+      '<p class="controls-flow">Clear the room → take the lit right door → choose one upgrade.<br>Your gun keeps its upgrades for the run.</p>' +
+      '<div id="equipped-controls" class="controls-copy"></div><div class="actions"><button id="back" class="primary">Back</button>' +
+      (game.mode === 'title'
+        ? '<button id="try-controls" class="quiet">Try controls</button>'
+        : '') +
+      '</div>';
+    $('back').onclick = backFromControls;
+    const practiceControls = document.getElementById('try-controls');
+    if (practiceControls) practiceControls.onclick = () => startWorkshop([], true);
+  } else if (kind === 'logbook') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     logbookProgress = mergeLogbook(logbookProgress, loadLogbook(read(LOGBOOK_KEY)));
     logbookMenu(
@@ -1208,7 +1312,11 @@ function showDialog(kind: string) {
           : singleUpgrade
             ? 'Next upgrade.'
             : 'Make it kick.') +
-      '</h2><div class="choices">' +
+      '</h2>' +
+      (firstRewardHelp && game.stage === 0 && !game.testRun && !game.practice
+        ? '<p class="first-reward-note">Choose one. It stays on your gun for this run.</p>'
+        : '') +
+      '<div class="choices">' +
       game.offers
         .map(
           (m, i) =>
@@ -1269,6 +1377,7 @@ function showDialog(kind: string) {
       (b) =>
         (b.onclick = () => {
           const id = b.dataset.mod!;
+          firstRewardHelp = false;
           sound.unlock();
           closeDialog();
           game.chooseMod(id);
@@ -1419,13 +1528,13 @@ function showDialog(kind: string) {
       '<h2 id="dialog-title">' +
       (paused ? 'Paused.' : 'Settings.') +
       '</h2>' +
-      '<div class="settings-list"><label>Sound<input id="sound" type="checkbox" ' +
+      '<div class="settings-list"><label>Sound<span class="setting-value"><span id="sound-state"></span><input id="sound" type="checkbox" ' +
       (sound.enabled ? 'checked' : '') +
-      ' /></label><label>Music<input id="music" type="checkbox" ' +
+      ' /></span></label><label>Music<span class="setting-value"><span id="music-state"></span><input id="music" type="checkbox" ' +
       (sound.musicEnabled ? 'checked' : '') +
-      ' /></label><label>Screen shake<input id="shake" type="checkbox" ' +
+      ' /></span></label><label>Screen shake<input id="shake" type="checkbox" ' +
       (!renderer.reduced ? 'checked' : '') +
-      ' /></label></div>' +
+      ' /></label></div><p id="audio-note" class="controller-note" role="status" hidden></p>' +
       controllerOptions() +
       '<div class="controls-copy"><div id="device-controls">' +
       (game.portals.equipped
@@ -1437,7 +1546,9 @@ function showDialog(kind: string) {
         : '') +
       '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p></div><p>' +
       (game.workshop.active
-        ? 'Targets reset automatically. R restores the room. Build changes your gun.'
+        ? firstSession.warmup
+          ? 'Targets reset automatically. R restarts the warm-up. Done returns to the menu.'
+          : 'Targets reset automatically. R restores the room. Build changes your gun.'
         : game.practice
           ? 'Defeat the boss. Press R to retry.'
           : game.testRun
@@ -1464,8 +1575,11 @@ function showDialog(kind: string) {
       '<div class="actions"><button id="back" class="primary">' +
       (paused ? 'Resume' : 'Back') +
       '</button>' +
+      '<button id="pause-controls" class="quiet">Controls</button>' +
       (paused && game.workshop.active
-        ? '<button id="workshop-pause-build" class="quiet">Build</button><button id="workshop-pause-reset" class="quiet">Reset room</button>'
+        ? firstSession.warmup
+          ? '<button id="workshop-pause-reset" class="quiet">Reset warm-up</button>'
+          : '<button id="workshop-pause-build" class="quiet">Build</button><button id="workshop-pause-reset" class="quiet">Reset room</button>'
         : paused && game.practice
           ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet"' +
             (encounters.length ? '' : ' hidden') +
@@ -1510,9 +1624,12 @@ function showDialog(kind: string) {
       slider.onchange = persistSettings;
     }
     $('back').onclick = resume;
+    $('pause-controls').onclick = openControls;
+    updateAudioState();
     if (paused && game.workshop.active) {
-      $('workshop-pause-build').onclick = () => showDialog('workshop');
-      $('workshop-pause-reset').onclick = () => startWorkshop(game.mods);
+      const edit = document.getElementById('workshop-pause-build');
+      if (edit) edit.onclick = () => showDialog('workshop');
+      $('workshop-pause-reset').onclick = () => startWorkshop(game.mods, firstSession.warmup);
     }
     if (paused && (game.practice || game.testRun)) {
       $('retry').onclick = () => start(undefined, true);
@@ -1534,6 +1651,7 @@ function showDialog(kind: string) {
   }
   if (!modal.open) modal.showModal();
   updateControlHints();
+  if (['pause', 'settings', 'controls'].includes(kind)) $('back').focus();
   if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
@@ -1593,6 +1711,23 @@ function updateControlHints() {
       : 'Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb.',
   );
   const copy = document.getElementById('device-controls');
+  const grid = document.getElementById('controls-grid');
+  if (grid) grid.innerHTML = controlsIntro(controlDevice());
+  const equipped = document.getElementById('equipped-controls');
+  if (equipped)
+    equipped.innerHTML =
+      (game.portals.equipped
+        ? '<p>' +
+          (pad
+            ? 'LT / L2'
+            : controlDevice() === 'touch'
+              ? '◎, then tap a surface'
+              : 'Right-click or E') +
+          ': place a portal. ' +
+          (game.mods.includes('rewire') ? 'Reposition freely.' : 'One pair per room.') +
+          '</p>'
+        : '') +
+      (game.mods.includes('charge-lens') ? '<p>Hold fire to charge. Release to shoot.</p>' : '');
   if (copy)
     copy.innerHTML =
       (game.portals.equipped
@@ -1696,6 +1831,16 @@ $('continue').onclick = () => {
   if (checkpoint) start(checkpoint);
 };
 $('settings').onclick = () => showDialog('settings');
+$('controls').onclick = openControls;
+$('learn').onclick = () => startWorkshop([], true);
+$('learn').hidden = !needsGuidance;
+$('warmup-controls').onclick = openControls;
+$('warmup-done').onclick = menu;
+$('dismiss-tip').onclick = () => {
+  finishGuidance();
+  firstSession.stop();
+  updateFirstSession();
+};
 $('history').onclick = () => showDialog('history');
 $('logbook').onclick = () => showDialog('logbook');
 $('practice').onclick = () => {
@@ -1707,6 +1852,10 @@ $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (dialogKind === 'controls') {
+    backFromControls();
+    return;
+  }
   if (dialogKind === 'logbook') {
     backFromLogbook();
     return;
@@ -1751,6 +1900,15 @@ window.addEventListener('keydown', (e) => {
   )
     e.preventDefault();
   if (e.repeat) return;
+  if (
+    e.code === 'KeyH' &&
+    (!modal.open || ['pause', 'settings'].includes(dialogKind)) &&
+    ['title', 'playing', 'paused'].includes(game.mode)
+  ) {
+    e.preventDefault();
+    openControls();
+    return;
+  }
   if (e.code === 'KeyR' && game.mode === 'dead' && ['result', 'replay'].includes(dialogKind)) {
     e.preventDefault();
     start(undefined, true);
@@ -1783,6 +1941,7 @@ window.addEventListener('keydown', (e) => {
     const i = Number(e.key) - 1;
     if (i >= 0 && i < game.offers.length) {
       const id = game.offers[i].id;
+      firstRewardHelp = false;
       sound.unlock();
       closeDialog();
       game.chooseMod(id);
@@ -1932,6 +2091,7 @@ function frame(now: number) {
           y: game.player.position.y + padAim.y * 400,
         };
       game.tick(1 / 60, input);
+      firstSession.observe(game, input);
       input.jump = false;
       input.firePressed = false;
       input.portal = undefined;
@@ -1945,6 +2105,7 @@ function frame(now: number) {
   if (game.mode === 'playing' && !game.workshop.active) deathReplay.capture(canvas, game.elapsed);
   if (now - hudAt > 80) {
     hudAt = now;
+    updateFirstSession();
     $('portal-touch').hidden = !game.portals.canPlace;
     if (!game.portals.canPlace && portalTouch) {
       portalTouch = false;
@@ -1957,5 +2118,14 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 game.onChange();
+updateAudioState();
+if (
+  entryUrl.searchParams.get('help') === 'controls' &&
+  !linkedRunTest &&
+  !linkedTest &&
+  !linkedDaily &&
+  !linkedWorkshop
+)
+  openControls();
 if (linkedLogbook || previewCommendations) showDialog('logbook');
 requestAnimationFrame(frame);
