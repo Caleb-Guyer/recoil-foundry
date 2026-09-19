@@ -1261,11 +1261,15 @@ function showDialog(kind: string) {
           '</p>'
         : '') +
       '<div class="actions"><button id="retry" class="primary">Again ↗</button><button id="menu" class="quiet">Menu</button>' +
+      (win && game.shutdown.complete
+        ? '<button id="ending-logbook" class="quiet">Logbook</button>'
+        : '') +
       (activeDaily ? '<button id="share" class="quiet">Copy challenge link</button>' : '') +
       '</div>' +
       (activeDaily
         ? '<div id="share-fallback" class="share-fallback" hidden><label for="challenge-link">Copy this link</label><input id="challenge-link" class="share-link" readonly spellcheck="false" /></div><span id="share-status" class="sr-only" role="status"></span>'
         : '');
+    if (win && game.shutdown.complete) $('ending-logbook').onclick = () => showDialog('logbook');
     if (activeDaily) {
       const link = dailyLink(activeDaily, location.href);
       $('share').onclick = async () => {
