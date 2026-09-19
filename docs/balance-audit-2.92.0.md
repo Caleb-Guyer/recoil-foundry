@@ -58,13 +58,9 @@ Existing checks cover:
 - Optional event combat and objectives, the secret chamber's three combat waves, and reachable controls.
 - Auditor arrival spacing, full tells, pursuit persistence, retreat, encounter exclusions, extra rewards and ending/Overtime transitions.
 
-## Still needed before balance sign-off
+## Closeout
 
-1. Human runs with weak, ordinary and strong builds through every area; agree a first-win difficulty and run-duration target. A bot's low natural-reward clear count must not be read as a human win-rate estimate.
-2. Compare Shaped Charge, Cluster Shell and Storm Cell against mobile bosses. Their generic-pilot final-boss cases still reach the 90-second cap; the buffs improve their measured payload but do not establish equal practical kill times. Test deliberate positioning and trap placement.
-3. Revisit short-range Recall builds against the Crane and Press. Two natural-run cases timed out while the pilot failed to sustain useful firing positions. Other builds and the existing boss tests clear those arenas; this is an unresolved pilot limitation and a human usability check, not evidence of a progression softlock.
-4. Play optional detours, the Auditor pursuit and secret route within complete runs, including poor health and awkward builds. Automated route and encounter checks do not replace judging the combined difficulty or readability.
-5. Check dense max-build effects on real hardware and ask players which rooms feel repetitive. These remain separate from passing the simulation limits.
+The [follow-up report](balance-closeout-2.92.0.md) resolves the engineering follow-ups, records longer demolition fights and Recall positioning, and adds low-health optional-route measurements and a full secret-finale input regression. It also defines difficulty and duration targets. Item 1 has been removed from the active checklist. Human balance acceptance is consolidated under section 7, and hardware/readability checks remain under sections 5–7; neither is claimed as automated proof.
 
 ## Reproduce and play
 

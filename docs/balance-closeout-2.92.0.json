@@ -1,0 +1,1897 @@
+[
+  {
+    "suite": "branches",
+    "build": "storm",
+    "room": "boss",
+    "mods": [
+      "shellshock",
+      "cluster-shell",
+      "arc-coil",
+      "storm-cell",
+      "aftershock",
+      "blast-surf",
+      "airshot",
+      "light",
+      "leech",
+      "rapid",
+      "magnum",
+      "scatter",
+      "ricochet",
+      "pierce",
+      "split",
+      "kick",
+      "burst",
+      "backblast",
+      "banker"
+    ],
+    "clear": false,
+    "mode": "dead",
+    "seconds": 109.22,
+    "startHp": 100,
+    "endHp": 0,
+    "taken": 100,
+    "healed": 0,
+    "peakShots": 55,
+    "peakParticles": 218,
+    "peakEnemies": 1,
+    "remaining": [
+      {
+        "kind": "interceptor",
+        "hp": 1156.5,
+        "max": 5850
+      }
+    ],
+    "cause": {
+      "type": "shot",
+      "enemy": "interceptor"
+    }
+  },
+  {
+    "suite": "branches",
+    "build": "shaped",
+    "room": "boss",
+    "mods": [
+      "shellshock",
+      "shaped-charge",
+      "fuse",
+      "linked-fuse",
+      "aftershock",
+      "shockfront",
+      "blast-surf",
+      "airshot",
+      "light",
+      "leech",
+      "magnum",
+      "scatter",
+      "rapid",
+      "ricochet",
+      "pierce",
+      "split",
+      "kick",
+      "burst",
+      "backblast"
+    ],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 108,
+    "startHp": 100,
+    "endHp": 34,
+    "taken": 68,
+    "healed": 2,
+    "peakShots": 56,
+    "peakParticles": 216,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null
+  },
+  {
+    "suite": "branches",
+    "build": "cluster",
+    "room": "boss",
+    "mods": [
+      "shellshock",
+      "cluster-shell",
+      "fuse",
+      "linked-fuse",
+      "aftershock",
+      "shockfront",
+      "blast-surf",
+      "airshot",
+      "light",
+      "leech",
+      "magnum",
+      "scatter",
+      "rapid",
+      "ricochet",
+      "pierce",
+      "split",
+      "kick",
+      "burst",
+      "backblast"
+    ],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 107.55,
+    "startHp": 100,
+    "endHp": 86,
+    "taken": 16,
+    "healed": 2,
+    "peakShots": 51,
+    "peakParticles": 216,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null
+  },
+  {
+    "suite": "campaign",
+    "seed": "path-run-65",
+    "policy": "precision",
+    "startStage": 0,
+    "mode": "dead",
+    "stage": 7,
+    "seconds": 328.83,
+    "hp": 0,
+    "cause": {
+      "type": "slam",
+      "enemy": "press"
+    },
+    "position": {
+      "x": 257.0542839406202,
+      "y": 721.9999999999994
+    },
+    "rooms": [
+      {
+        "stage": 0,
+        "layout": "overpass",
+        "detour": false,
+        "event": null,
+        "mods": [],
+        "seconds": 15.5,
+        "startHp": 100,
+        "endHp": 98,
+        "taken": 14,
+        "healed": 12,
+        "peakEnemies": 2,
+        "clear": true
+      },
+      {
+        "stage": 1,
+        "layout": "terraces",
+        "detour": false,
+        "event": null,
+        "mods": ["rapid"],
+        "seconds": 20.08,
+        "startHp": 98,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 2,
+        "peakEnemies": 3,
+        "clear": true
+      },
+      {
+        "stage": 2,
+        "layout": "docks-low-road",
+        "detour": false,
+        "event": null,
+        "mods": ["rapid", "mass-driver"],
+        "seconds": 10.37,
+        "startHp": 100,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 0,
+        "peakEnemies": 5,
+        "clear": true
+      },
+      {
+        "stage": 3,
+        "layout": "loader-bay",
+        "detour": false,
+        "event": null,
+        "mods": ["rapid", "mass-driver", "ricochet"],
+        "seconds": 21.83,
+        "startHp": 100,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 0,
+        "peakEnemies": 1,
+        "clear": true
+      },
+      {
+        "stage": 4,
+        "layout": "pillars",
+        "detour": false,
+        "event": null,
+        "mods": ["rapid", "mass-driver", "ricochet", "ramjet"],
+        "seconds": 27.82,
+        "startHp": 100,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 0,
+        "peakEnemies": 5,
+        "clear": true
+      },
+      {
+        "stage": 5,
+        "layout": "fortress",
+        "detour": false,
+        "event": null,
+        "mods": ["rapid", "mass-driver", "ricochet", "ramjet", "recall"],
+        "seconds": 75.57,
+        "startHp": 100,
+        "endHp": 48,
+        "taken": 64,
+        "healed": 12,
+        "peakEnemies": 6,
+        "clear": true
+      },
+      {
+        "stage": 6,
+        "layout": "furnace-low-road",
+        "detour": false,
+        "event": null,
+        "mods": ["rapid", "mass-driver", "ricochet", "ramjet", "recall", "grindshot"],
+        "seconds": 72.33,
+        "startHp": 48,
+        "endHp": 20,
+        "taken": 40,
+        "healed": 12,
+        "peakEnemies": 9,
+        "clear": true
+      },
+      {
+        "stage": 7,
+        "layout": "press-hall",
+        "detour": false,
+        "event": null,
+        "mods": ["rapid", "mass-driver", "ricochet", "ramjet", "recall", "grindshot", "leech"],
+        "seconds": 85.33,
+        "startHp": 20,
+        "endHp": 0,
+        "taken": 20,
+        "healed": 0,
+        "peakEnemies": 1,
+        "clear": false
+      }
+    ],
+    "choices": [
+      {
+        "stage": 0,
+        "offers": ["mass-driver", "deadeye", "rapid"],
+        "chosen": "rapid"
+      },
+      {
+        "stage": 1,
+        "offers": ["mass-driver", "vector", "landing"],
+        "chosen": "mass-driver"
+      },
+      {
+        "stage": 2,
+        "offers": ["ricochet", "kick", "banker"],
+        "chosen": "ricochet"
+      },
+      {
+        "stage": 3,
+        "offers": ["ramjet", "recall", "arc-coil"],
+        "chosen": "ramjet"
+      },
+      {
+        "stage": 4,
+        "offers": ["recall", "shellshock", "tripwire"],
+        "chosen": "recall"
+      },
+      {
+        "stage": 5,
+        "offers": ["grindshot", "coolant-rounds", "pierce"],
+        "chosen": "grindshot"
+      },
+      {
+        "stage": 6,
+        "offers": ["pierce", "vector", "leech"],
+        "chosen": "leech"
+      }
+    ],
+    "remaining": [
+      {
+        "kind": "press",
+        "hp": 306,
+        "state": "rush",
+        "position": {
+          "x": 187.88756311852876,
+          "y": 667.4000030458536
+        },
+        "velocity": {
+          "x": 0,
+          "y": 19.399999999999977
+        },
+        "target": {
+          "x": 187.88756311852876,
+          "y": 740
+        },
+        "timer": 0.5333333333333322
+      }
+    ]
+  },
+  {
+    "suite": "campaign",
+    "seed": "RF-D78-2026-09-19",
+    "policy": "daily",
+    "startStage": 0,
+    "mode": "dead",
+    "stage": 3,
+    "seconds": 91.78,
+    "hp": 0,
+    "cause": {
+      "type": "slam",
+      "enemy": "crane"
+    },
+    "position": {
+      "x": 976.4174862867604,
+      "y": 697.410230434718
+    },
+    "rooms": [
+      {
+        "stage": 0,
+        "layout": "overpass",
+        "detour": false,
+        "event": null,
+        "mods": [],
+        "seconds": 17.27,
+        "startHp": 100,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 0,
+        "peakEnemies": 2,
+        "clear": true
+      },
+      {
+        "stage": 1,
+        "layout": "staggered",
+        "detour": false,
+        "event": null,
+        "mods": ["recall"],
+        "seconds": 27.27,
+        "startHp": 100,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 0,
+        "peakEnemies": 3,
+        "clear": true
+      },
+      {
+        "stage": 2,
+        "layout": "docks-low-road",
+        "detour": false,
+        "event": null,
+        "mods": ["recall", "airshot"],
+        "seconds": 19.15,
+        "startHp": 100,
+        "endHp": 88,
+        "taken": 24,
+        "healed": 12,
+        "peakEnemies": 5,
+        "clear": true
+      },
+      {
+        "stage": 3,
+        "layout": "crane-bay",
+        "detour": false,
+        "event": null,
+        "mods": ["recall", "airshot", "scatter"],
+        "seconds": 28.1,
+        "startHp": 88,
+        "endHp": 0,
+        "taken": 88,
+        "healed": 0,
+        "peakEnemies": 1,
+        "clear": false
+      }
+    ],
+    "choices": [
+      {
+        "stage": 0,
+        "offers": ["recall"],
+        "chosen": "recall"
+      },
+      {
+        "stage": 1,
+        "offers": ["airshot"],
+        "chosen": "airshot"
+      },
+      {
+        "stage": 2,
+        "offers": ["scatter"],
+        "chosen": "scatter"
+      }
+    ],
+    "remaining": [
+      {
+        "kind": "crane",
+        "hp": 475,
+        "state": "rush",
+        "position": {
+          "x": 863.0084914947837,
+          "y": 150
+        },
+        "velocity": {
+          "x": 0,
+          "y": 0
+        },
+        "target": {
+          "x": 1450,
+          "y": 150
+        },
+        "timer": 1.7000000000000015
+      }
+    ]
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "hunt",
+    "build": "standard",
+    "mods": ["magnum", "kick", "light", "airshot", "ricochet", "rapid"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 15.78,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 61,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 1,
+      "room": 5
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "hunt",
+    "build": "standard",
+    "mods": ["magnum", "kick", "light", "airshot", "ricochet", "rapid"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 15.78,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 61,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 1,
+      "room": 5
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "hunt",
+    "build": "beam",
+    "mods": ["magnum", "kick", "light", "cutting-torch", "ricochet", "rapid"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 20.58,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 5,
+    "peakParticles": 53,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 1,
+      "room": 5
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "hunt",
+    "build": "beam",
+    "mods": ["magnum", "kick", "light", "cutting-torch", "ricochet", "rapid"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 20.58,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 5,
+    "peakParticles": 53,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 1,
+      "room": 5
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "hunt",
+    "build": "portal",
+    "mods": ["magnum", "kick", "light", "fold", "ricochet", "rapid"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 19.4,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 59,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 1,
+      "room": 5
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "hunt",
+    "build": "portal",
+    "mods": ["magnum", "kick", "light", "fold", "ricochet", "rapid"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 19.4,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 59,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 1,
+      "room": 5
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "damaged",
+    "build": "standard",
+    "mods": ["magnum", "kick", "light", "airshot", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 11.9,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 63,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 2,
+      "room": 9
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "damaged",
+    "build": "standard",
+    "mods": ["magnum", "kick", "light", "airshot", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 11.9,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 63,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 2,
+      "room": 9
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "damaged",
+    "build": "beam",
+    "mods": ["magnum", "kick", "light", "cutting-torch", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 14.78,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 5,
+    "peakParticles": 48,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 2,
+      "room": 9
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "damaged",
+    "build": "beam",
+    "mods": ["magnum", "kick", "light", "cutting-torch", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 14.78,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 5,
+    "peakParticles": 48,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 2,
+      "room": 9
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "damaged",
+    "build": "portal",
+    "mods": ["magnum", "kick", "light", "fold", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 14.22,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 59,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 2,
+      "room": 9
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "damaged",
+    "build": "portal",
+    "mods": ["magnum", "kick", "light", "fold", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 14.22,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 59,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 2,
+      "room": 9
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "final",
+    "build": "standard",
+    "mods": ["magnum", "kick", "light", "airshot", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 8.03,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 4,
+    "peakParticles": 60,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 3,
+      "room": 17
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "final",
+    "build": "standard",
+    "mods": ["magnum", "kick", "light", "airshot", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 8.03,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 4,
+    "peakParticles": 60,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 3,
+      "room": 17
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "final",
+    "build": "beam",
+    "mods": ["magnum", "kick", "light", "cutting-torch", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 11.78,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 5,
+    "peakParticles": 52,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 3,
+      "room": 17
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "final",
+    "build": "beam",
+    "mods": ["magnum", "kick", "light", "cutting-torch", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 11.78,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 5,
+    "peakParticles": 52,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 3,
+      "room": 17
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "final",
+    "build": "portal",
+    "mods": ["magnum", "kick", "light", "fold", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 9.78,
+    "startHp": 100,
+    "endHp": 100,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 60,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 3,
+      "room": 17
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "auditor",
+    "phase": "final",
+    "build": "portal",
+    "mods": ["magnum", "kick", "light", "fold", "ricochet", "rapid", "landing"],
+    "clear": true,
+    "mode": "playing",
+    "seconds": 9.78,
+    "startHp": 60,
+    "endHp": 60,
+    "taken": 0,
+    "healed": 0,
+    "peakShots": 7,
+    "peakParticles": 60,
+    "peakEnemies": 1,
+    "remaining": [],
+    "cause": null,
+    "pursuit": {
+      "caseStage": 4,
+      "rooms": [5, 9, 17],
+      "status": "defeated",
+      "hp": 0,
+      "visits": 3,
+      "room": 17
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 2,
+    "build": "utility",
+    "hp": 100,
+    "mods": ["light", "fold", "countershot"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 15.78,
+      "startHp": 100,
+      "endHp": 72,
+      "taken": 28,
+      "healed": 0,
+      "peakShots": 11,
+      "peakParticles": 48,
+      "peakEnemies": 6,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["arc-coil", "suspension", "airshot"],
+    "chosen": "arc-coil",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 20.73,
+      "startHp": 72,
+      "endHp": 72,
+      "taken": 0,
+      "healed": 0,
+      "peakShots": 12,
+      "peakParticles": 63,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 2,
+    "build": "utility",
+    "hp": 60,
+    "mods": ["light", "fold", "countershot"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 15.78,
+      "startHp": 60,
+      "endHp": 32,
+      "taken": 28,
+      "healed": 0,
+      "peakShots": 11,
+      "peakParticles": 48,
+      "peakEnemies": 6,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["arc-coil", "suspension", "airshot"],
+    "chosen": "arc-coil",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 20.73,
+      "startHp": 32,
+      "endHp": 32,
+      "taken": 0,
+      "healed": 0,
+      "peakShots": 12,
+      "peakParticles": 63,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 2,
+    "build": "balanced",
+    "hp": 100,
+    "mods": ["magnum", "light", "kick"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 16.43,
+      "startHp": 100,
+      "endHp": 86,
+      "taken": 14,
+      "healed": 0,
+      "peakShots": 7,
+      "peakParticles": 47,
+      "peakEnemies": 6,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["grindshot", "wallrunner", "crossfire"],
+    "chosen": "grindshot",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 15.35,
+      "startHp": 86,
+      "endHp": 68,
+      "taken": 18,
+      "healed": 0,
+      "peakShots": 8,
+      "peakParticles": 65,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 2,
+    "build": "balanced",
+    "hp": 60,
+    "mods": ["magnum", "light", "kick"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 16.43,
+      "startHp": 60,
+      "endHp": 46,
+      "taken": 14,
+      "healed": 0,
+      "peakShots": 7,
+      "peakParticles": 47,
+      "peakEnemies": 6,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["grindshot", "wallrunner", "crossfire"],
+    "chosen": "grindshot",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 15.35,
+      "startHp": 46,
+      "endHp": 28,
+      "taken": 18,
+      "healed": 0,
+      "peakShots": 8,
+      "peakParticles": 65,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 6,
+    "build": "utility",
+    "hp": 100,
+    "mods": ["light", "fold", "countershot", "ricochet", "pierce", "split", "leech"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 20.4,
+      "startHp": 100,
+      "endHp": 88,
+      "taken": 16,
+      "healed": 4,
+      "peakShots": 14,
+      "peakParticles": 66,
+      "peakEnemies": 7,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["banker", "reprisal", "crossfire"],
+    "chosen": "banker",
+    "boss": {
+      "clear": false,
+      "mode": "dead",
+      "seconds": 10.5,
+      "startHp": 88,
+      "endHp": 0,
+      "taken": 88,
+      "healed": 0,
+      "peakShots": 14,
+      "peakParticles": 120,
+      "peakEnemies": 1,
+      "remaining": [
+        {
+          "kind": "press",
+          "hp": 1083.8,
+          "max": 1625
+        }
+      ],
+      "cause": {
+        "type": "slam",
+        "enemy": "press"
+      }
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 6,
+    "build": "utility",
+    "hp": 60,
+    "mods": ["light", "fold", "countershot", "ricochet", "pierce", "split", "leech"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 20.4,
+      "startHp": 60,
+      "endHp": 64,
+      "taken": 16,
+      "healed": 20,
+      "peakShots": 14,
+      "peakParticles": 66,
+      "peakEnemies": 7,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["banker", "reprisal", "crossfire"],
+    "chosen": "banker",
+    "boss": {
+      "clear": false,
+      "mode": "dead",
+      "seconds": 10.5,
+      "startHp": 64,
+      "endHp": 0,
+      "taken": 64,
+      "healed": 0,
+      "peakShots": 14,
+      "peakParticles": 120,
+      "peakEnemies": 1,
+      "remaining": [
+        {
+          "kind": "press",
+          "hp": 1083.8,
+          "max": 1625
+        }
+      ],
+      "cause": {
+        "type": "slam",
+        "enemy": "press"
+      }
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 6,
+    "build": "balanced",
+    "hp": 100,
+    "mods": ["magnum", "light", "kick", "rapid", "airshot", "leech", "pierce"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 13.58,
+      "startHp": 100,
+      "endHp": 100,
+      "taken": 16,
+      "healed": 16,
+      "peakShots": 8,
+      "peakParticles": 48,
+      "peakEnemies": 6,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["landing", "tether", "deadeye"],
+    "chosen": "landing",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 17.1,
+      "startHp": 100,
+      "endHp": 42,
+      "taken": 60,
+      "healed": 2,
+      "peakShots": 8,
+      "peakParticles": 83,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 6,
+    "build": "balanced",
+    "hp": 60,
+    "mods": ["magnum", "light", "kick", "rapid", "airshot", "leech", "pierce"],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 13.58,
+      "startHp": 60,
+      "endHp": 64,
+      "taken": 16,
+      "healed": 20,
+      "peakShots": 8,
+      "peakParticles": 48,
+      "peakEnemies": 6,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["landing", "tether", "deadeye"],
+    "chosen": "landing",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 17.1,
+      "startHp": 64,
+      "endHp": 6,
+      "taken": 60,
+      "healed": 2,
+      "peakShots": 8,
+      "peakParticles": 83,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 10,
+    "build": "utility",
+    "hp": 100,
+    "mods": [
+      "light",
+      "fold",
+      "countershot",
+      "ricochet",
+      "pierce",
+      "split",
+      "leech",
+      "landing",
+      "vector",
+      "tether",
+      "capacitor"
+    ],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 30.87,
+      "startHp": 100,
+      "endHp": 38,
+      "taken": 78,
+      "healed": 16,
+      "peakShots": 18,
+      "peakParticles": 70,
+      "peakEnemies": 10,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["airshot", "burst", "backblast"],
+    "chosen": "airshot",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 70.77,
+      "startHp": 38,
+      "endHp": 22,
+      "taken": 18,
+      "healed": 2,
+      "peakShots": 17,
+      "peakParticles": 89,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 10,
+    "build": "utility",
+    "hp": 60,
+    "mods": [
+      "light",
+      "fold",
+      "countershot",
+      "ricochet",
+      "pierce",
+      "split",
+      "leech",
+      "landing",
+      "vector",
+      "tether",
+      "capacitor"
+    ],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 30.87,
+      "startHp": 60,
+      "endHp": 6,
+      "taken": 78,
+      "healed": 24,
+      "peakShots": 18,
+      "peakParticles": 70,
+      "peakEnemies": 10,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["airshot", "burst", "backblast"],
+    "chosen": "airshot",
+    "boss": {
+      "clear": false,
+      "mode": "dead",
+      "seconds": 6.88,
+      "startHp": 6,
+      "endHp": 0,
+      "taken": 6,
+      "healed": 0,
+      "peakShots": 17,
+      "peakParticles": 89,
+      "peakEnemies": 1,
+      "remaining": [
+        {
+          "kind": "turbine",
+          "hp": 2956.3,
+          "max": 3480
+        }
+      ],
+      "cause": {
+        "type": "fuel"
+      }
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 10,
+    "build": "balanced",
+    "hp": 100,
+    "mods": [
+      "magnum",
+      "light",
+      "kick",
+      "rapid",
+      "airshot",
+      "leech",
+      "pierce",
+      "ricochet",
+      "scatter",
+      "countershot",
+      "shellshock"
+    ],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 21.5,
+      "startHp": 100,
+      "endHp": 100,
+      "taken": 18,
+      "healed": 18,
+      "peakShots": 25,
+      "peakParticles": 144,
+      "peakEnemies": 10,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["banker", "fold", "blast-surf"],
+    "chosen": "banker",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 112.82,
+      "startHp": 100,
+      "endHp": 80,
+      "taken": 22,
+      "healed": 2,
+      "peakShots": 31,
+      "peakParticles": 154,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 10,
+    "build": "balanced",
+    "hp": 60,
+    "mods": [
+      "magnum",
+      "light",
+      "kick",
+      "rapid",
+      "airshot",
+      "leech",
+      "pierce",
+      "ricochet",
+      "scatter",
+      "countershot",
+      "shellshock"
+    ],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 21.5,
+      "startHp": 60,
+      "endHp": 66,
+      "taken": 18,
+      "healed": 24,
+      "peakShots": 25,
+      "peakParticles": 144,
+      "peakEnemies": 10,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["banker", "fold", "blast-surf"],
+    "chosen": "banker",
+    "boss": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 112.82,
+      "startHp": 66,
+      "endHp": 46,
+      "taken": 22,
+      "healed": 2,
+      "peakShots": 31,
+      "peakParticles": 154,
+      "peakEnemies": 1,
+      "remaining": [],
+      "cause": null
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 18,
+    "build": "utility",
+    "hp": 100,
+    "mods": [
+      "light",
+      "fold",
+      "countershot",
+      "ricochet",
+      "pierce",
+      "split",
+      "leech",
+      "landing",
+      "vector",
+      "tether",
+      "capacitor",
+      "reserve-cell",
+      "tripwire",
+      "rewire",
+      "burst",
+      "recall",
+      "airshot",
+      "shellshock",
+      "cluster-shell"
+    ],
+    "challenge": {
+      "clear": false,
+      "mode": "dead",
+      "seconds": 18.83,
+      "startHp": 100,
+      "endHp": 0,
+      "taken": 108,
+      "healed": 8,
+      "peakShots": 23,
+      "peakParticles": 136,
+      "peakEnemies": 12,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 13,
+          "max": 211
+        },
+        {
+          "kind": "shooter",
+          "hp": 149.3,
+          "max": 205
+        },
+        {
+          "kind": "charger",
+          "hp": 183.1,
+          "max": 211
+        },
+        {
+          "kind": "sniper",
+          "hp": 158.6,
+          "max": 249
+        },
+        {
+          "kind": "runner",
+          "hp": 204.6,
+          "max": 251
+        },
+        {
+          "kind": "skimmer",
+          "hp": 136,
+          "max": 222
+        },
+        {
+          "kind": "skimmer",
+          "hp": 163,
+          "max": 222
+        },
+        {
+          "kind": "flyer",
+          "hp": 62.9,
+          "max": 141
+        }
+      ],
+      "cause": {
+        "type": "shot",
+        "enemy": "shooter"
+      }
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 18,
+    "build": "utility",
+    "hp": 60,
+    "mods": [
+      "light",
+      "fold",
+      "countershot",
+      "ricochet",
+      "pierce",
+      "split",
+      "leech",
+      "landing",
+      "vector",
+      "tether",
+      "capacitor",
+      "reserve-cell",
+      "tripwire",
+      "rewire",
+      "burst",
+      "recall",
+      "airshot",
+      "shellshock",
+      "cluster-shell"
+    ],
+    "challenge": {
+      "clear": false,
+      "mode": "dead",
+      "seconds": 11.28,
+      "startHp": 60,
+      "endHp": 0,
+      "taken": 68,
+      "healed": 8,
+      "peakShots": 17,
+      "peakParticles": 136,
+      "peakEnemies": 12,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 21,
+          "max": 211
+        },
+        {
+          "kind": "shooter",
+          "hp": 205,
+          "max": 205
+        },
+        {
+          "kind": "charger",
+          "hp": 211,
+          "max": 211
+        },
+        {
+          "kind": "sniper",
+          "hp": 158.6,
+          "max": 249
+        },
+        {
+          "kind": "sniper",
+          "hp": 145.3,
+          "max": 175
+        },
+        {
+          "kind": "runner",
+          "hp": 210.1,
+          "max": 251
+        },
+        {
+          "kind": "skimmer",
+          "hp": 136,
+          "max": 222
+        },
+        {
+          "kind": "skimmer",
+          "hp": 218.8,
+          "max": 222
+        },
+        {
+          "kind": "skimmer",
+          "hp": 202.9,
+          "max": 222
+        },
+        {
+          "kind": "flyer",
+          "hp": 129,
+          "max": 141
+        }
+      ],
+      "cause": {
+        "type": "contact",
+        "enemy": "skimmer"
+      }
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 18,
+    "build": "balanced",
+    "hp": 100,
+    "mods": [
+      "magnum",
+      "light",
+      "kick",
+      "rapid",
+      "airshot",
+      "leech",
+      "pierce",
+      "ricochet",
+      "scatter",
+      "countershot",
+      "shellshock",
+      "capacitor",
+      "tripwire",
+      "redline",
+      "blast-surf",
+      "fuse",
+      "banker",
+      "recall",
+      "cluster-shell"
+    ],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 54.92,
+      "startHp": 100,
+      "endHp": 100,
+      "taken": 20,
+      "healed": 20,
+      "peakShots": 23,
+      "peakParticles": 204,
+      "peakEnemies": 12,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["reserve-cell", "homecoming", "split"],
+    "chosen": "reserve-cell",
+    "boss": {
+      "clear": false,
+      "mode": "dead",
+      "seconds": 96.27,
+      "startHp": 100,
+      "endHp": 0,
+      "taken": 100,
+      "healed": 0,
+      "peakShots": 21,
+      "peakParticles": 123,
+      "peakEnemies": 1,
+      "remaining": [
+        {
+          "kind": "interceptor",
+          "hp": 1385.6,
+          "max": 5850
+        }
+      ],
+      "cause": {
+        "type": "shot",
+        "enemy": "interceptor"
+      }
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "detour",
+    "stage": 18,
+    "build": "balanced",
+    "hp": 60,
+    "mods": [
+      "magnum",
+      "light",
+      "kick",
+      "rapid",
+      "airshot",
+      "leech",
+      "pierce",
+      "ricochet",
+      "scatter",
+      "countershot",
+      "shellshock",
+      "capacitor",
+      "tripwire",
+      "redline",
+      "blast-surf",
+      "fuse",
+      "banker",
+      "recall",
+      "cluster-shell"
+    ],
+    "challenge": {
+      "clear": true,
+      "mode": "playing",
+      "seconds": 54.92,
+      "startHp": 60,
+      "endHp": 68,
+      "taken": 20,
+      "healed": 28,
+      "peakShots": 23,
+      "peakParticles": 204,
+      "peakEnemies": 12,
+      "remaining": [],
+      "cause": null
+    },
+    "offers": ["reserve-cell", "homecoming", "split"],
+    "chosen": "reserve-cell",
+    "boss": {
+      "clear": false,
+      "mode": "dead",
+      "seconds": 64.2,
+      "startHp": 68,
+      "endHp": 0,
+      "taken": 68,
+      "healed": 0,
+      "peakShots": 21,
+      "peakParticles": 123,
+      "peakEnemies": 1,
+      "remaining": [
+        {
+          "kind": "interceptor",
+          "hp": 2589.6,
+          "max": 5850
+        }
+      ],
+      "cause": {
+        "type": "shot",
+        "enemy": "interceptor"
+      }
+    }
+  },
+  {
+    "suite": "optional",
+    "route": "shutdown",
+    "startHp": 100,
+    "endHp": 86,
+    "mode": "won",
+    "waves": [
+      {
+        "cycle": 0,
+        "clear": true,
+        "mode": "playing",
+        "seconds": 7.1,
+        "startHp": 100,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 0,
+        "peakShots": 118,
+        "peakParticles": 217,
+        "peakEnemies": 5,
+        "remaining": [],
+        "cause": null,
+        "control": true,
+        "position": {
+          "x": 633.417645592713,
+          "y": 535.5984794789367
+        }
+      },
+      {
+        "cycle": 1,
+        "clear": true,
+        "mode": "playing",
+        "seconds": 8.67,
+        "startHp": 100,
+        "endHp": 100,
+        "taken": 0,
+        "healed": 0,
+        "peakShots": 141,
+        "peakParticles": 214,
+        "peakEnemies": 7,
+        "remaining": [],
+        "cause": null,
+        "control": true,
+        "position": {
+          "x": 1654.960441824033,
+          "y": 538.0787417877527
+        }
+      },
+      {
+        "cycle": 2,
+        "clear": true,
+        "mode": "playing",
+        "seconds": 17.92,
+        "startHp": 100,
+        "endHp": 86,
+        "taken": 22,
+        "healed": 8,
+        "peakShots": 130,
+        "peakParticles": 220,
+        "peakEnemies": 8,
+        "remaining": [],
+        "cause": null,
+        "control": true,
+        "position": {
+          "x": 815.8768274905958,
+          "y": 387.9015605803969
+        }
+      }
+    ]
+  },
+  {
+    "suite": "optional",
+    "route": "shutdown",
+    "startHp": 60,
+    "endHp": 80,
+    "mode": "won",
+    "waves": [
+      {
+        "cycle": 0,
+        "clear": true,
+        "mode": "playing",
+        "seconds": 7.1,
+        "startHp": 60,
+        "endHp": 72,
+        "taken": 0,
+        "healed": 12,
+        "peakShots": 118,
+        "peakParticles": 217,
+        "peakEnemies": 5,
+        "remaining": [],
+        "cause": null,
+        "control": true,
+        "position": {
+          "x": 633.417645592713,
+          "y": 535.5984794789367
+        }
+      },
+      {
+        "cycle": 1,
+        "clear": true,
+        "mode": "playing",
+        "seconds": 8.67,
+        "startHp": 72,
+        "endHp": 86,
+        "taken": 0,
+        "healed": 14,
+        "peakShots": 141,
+        "peakParticles": 214,
+        "peakEnemies": 7,
+        "remaining": [],
+        "cause": null,
+        "control": true,
+        "position": {
+          "x": 1654.960441824033,
+          "y": 538.0787417877527
+        }
+      },
+      {
+        "cycle": 2,
+        "clear": true,
+        "mode": "playing",
+        "seconds": 17.92,
+        "startHp": 86,
+        "endHp": 80,
+        "taken": 22,
+        "healed": 16,
+        "peakShots": 130,
+        "peakParticles": 220,
+        "peakEnemies": 8,
+        "remaining": [],
+        "cause": null,
+        "control": true,
+        "position": {
+          "x": 815.8768274905958,
+          "y": 387.9015605803969
+        }
+      }
+    ]
+  }
+]

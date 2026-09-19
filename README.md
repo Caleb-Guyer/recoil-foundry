@@ -12,7 +12,7 @@ Early rewards now keep a shared firepower option available until you take one. D
 
 [Test Shaped Charge](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&room=boss&v=2.92.0) · [Test Cluster Shell](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&room=boss&v=2.92.0). These isolated presets preserve real progress; **R** restarts the fight.
 
-The [balance report](docs/balance-audit-2.92.0.md) records 232 measured cases, full-run reward/health data and the remaining human playtests. The [release checklist](docs/browser-release-checklist.md) now marks the automated balance pass and tuning complete while retaining human balance acceptance as a release requirement. Run `npm run balance -- campaign` to repeat the natural-reward audit, or use `bosses`, `branches`, `max` and `areas` for the other suites.
+The [balance report](docs/balance-audit-2.92.0.md) records 232 measured cases and full-run reward/health data. The [balance closeout](docs/balance-closeout-2.92.0.md) adds longer boss fights, low-health optional routes and design targets. Completed item 1 has been removed from the [release checklist](docs/browser-release-checklist.md), which now contains unfinished work only; human acceptance remains in the external playtest gate. Run `npm run balance -- campaign` to repeat the natural-reward audit, or use `bosses`, `branches`, `max`, `areas` and `optional` for the other suites.
 
 ## The Auditor · 2.91.0
 

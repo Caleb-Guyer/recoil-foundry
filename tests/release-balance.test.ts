@@ -8,11 +8,69 @@ import {
   seeded,
   validBuild,
   availableMods,
+  loadCheckpoint,
 } from '../src/rules.ts';
 import { dailyForDate } from '../src/daily.ts';
 import { fixture, target, Body, advance } from './branches-fixture.ts';
 import { CLUSTER_LIMIT } from '../src/demolition.ts';
 import { playCampaign } from './campaign-pilot.ts';
+import { playRoom } from './room-pilot.ts';
+import { shootShutdownControl } from './shutdown-pilot.ts';
+import { shutdownTestFromUrl } from '../src/shutdown-layout.ts';
+import { branchTestFromUrl } from '../src/branch-builds.ts';
+
+function deterministic(t: { after: (fn: () => void) => void }) {
+  const random = Math.random;
+  Math.random = seeded('balance-particles');
+  t.after(() => {
+    Math.random = random;
+  });
+  const common = Matter.Common as typeof Matter.Common & { _nextId: number; _seed: number };
+  common._nextId = common._seed = 0;
+}
+
+for (const build of ['shaped', 'cluster'])
+  test(`${build} defeats the moving final boss within the extended fight budget`, (t) => {
+    deterministic(t);
+    const preset = branchTestFromUrl(
+      new URL(`https://test/?test=branches&build=${build}&room=boss`),
+    )!;
+    assert(loadCheckpoint(preset));
+    const g = new Game();
+    g.startTest(preset);
+    const result = playRoom(g, 150);
+    assert(g.clear && g.hp > 0 && g.enemies.length === 0, JSON.stringify(result));
+  });
+
+test('low-health secret finale carries real combat damage and healing through all controls to its ending', (t) => {
+  deterministic(t);
+  const preset = shutdownTestFromUrl(new URL('https://test/?test=shutdown&scene=finale'))!;
+  preset.hp = 60;
+  assert(loadCheckpoint(preset));
+  const g = new Game();
+  g.startTest(preset);
+  for (let cycle = 0; cycle < 3; cycle++) {
+    const result = playRoom(g, 150);
+    assert(g.clear && g.hp > 0, JSON.stringify({ cycle, ...result }));
+    const carriedHealth = g.hp,
+      mods = [...g.mods];
+    assert(shootShutdownControl(g), JSON.stringify({ cycle, pos: g.player.position }));
+    assert.equal(g.shutdown.state?.cycle, cycle + 1);
+    assert.equal(g.hp, carriedHealth, 'controls must not grant hidden healing');
+    assert.deepEqual(g.mods, mods);
+  }
+  for (let frame = 0; frame < 300 && g.mode === 'playing'; frame++)
+    g.tick(1 / 60, {
+      left: false,
+      right: false,
+      jump: false,
+      jumpHeld: false,
+      fire: false,
+      aim: g.aim,
+    });
+  assert.equal(g.mode, 'won');
+  assert(g.hp > 0);
+});
 
 test('early real rewards offer shared firepower without forcing a path or changing Daily card count', () => {
   for (let i = 0; i < 300; i++) {

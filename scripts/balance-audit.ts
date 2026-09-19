@@ -4,11 +4,21 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
-import { MODS, rewardMods, seeded, validBuild, type Checkpoint } from '../src/rules.ts';
+import {
+  MODS,
+  rewardMods,
+  seeded,
+  validBuild,
+  loadCheckpoint,
+  type Checkpoint,
+} from '../src/rules.ts';
 import { BRANCH_TEST_BUILDS, branchTestFromUrl, maxCombos } from '../src/branch-builds.ts';
 import { playRoom } from '../tests/room-pilot.ts';
 import { playCampaign } from '../tests/campaign-pilot.ts';
 import { dailyForDate } from '../src/daily.ts';
+import { auditorTestFromUrl } from '../src/auditor-layout.ts';
+import { shutdownTestFromUrl } from '../src/shutdown-layout.ts';
+import { shootShutdownControl } from '../tests/shutdown-pilot.ts';
 
 export const BALANCE_BUILDS: Record<string, string[]> = {
   utility: [
@@ -133,6 +143,9 @@ export function buildAt(name: string, stage: number, seed: string) {
   return mods;
 }
 export function measure(g: Game, seconds = 90) {
+  if (process.env.BALANCE_SECONDS !== undefined) seconds = Number(process.env.BALANCE_SECONDS);
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 600)
+    throw Error('BALANCE_SECONDS must be between 0 and 600 seconds');
   let taken = 0,
     peakShots = 0,
     peakParticles = 0,
@@ -385,6 +398,101 @@ if (suite === 'bosses') {
       );
       save({ suite, build, room, mods: g.mods, ...measure(g) });
     }
+} else if (suite === 'optional') {
+  for (const phase of ['hunt', 'damaged', 'final'])
+    for (const build of ['standard', 'beam', 'portal'])
+      for (const hp of [100, 60]) {
+        if (!filter.test(`auditor:${phase}:${build}:${hp}`)) continue;
+        resetPhysics();
+        const g = new Game();
+        const preset = auditorTestFromUrl(
+          new URL(`https://audit/?test=auditor&phase=${phase}&build=${build}`),
+        )!;
+        preset.hp = hp;
+        if (!loadCheckpoint(preset)) throw Error('Invalid Auditor checkpoint');
+        g.startTest(preset);
+        save({
+          suite,
+          route: 'auditor',
+          phase,
+          build,
+          mods: g.mods,
+          ...measure(g, 150),
+          pursuit: g.auditor.state,
+        });
+      }
+  for (const stage of [2, 6, 10, 18])
+    for (const build of ['utility', 'balanced'])
+      for (const hp of [100, 60]) {
+        if (!filter.test(`detour:${stage}:${build}:${hp}`)) continue;
+        resetPhysics();
+        const g = new Game();
+        const seed = 'path-run-65';
+        const preset: Checkpoint = {
+          version: 6,
+          seed,
+          stage,
+          hp,
+          mods: buildAt(build, stage + 1, seed),
+          detour: true,
+          kills: 0,
+          elapsed: 0,
+        };
+        if (!loadCheckpoint(preset)) throw Error('Invalid detour checkpoint');
+        g.startTest(preset);
+        const challenge = measure(g, 150);
+        let boss;
+        let offers: string[] | undefined;
+        let chosen: string | undefined;
+        if (g.clear && g.mode === 'playing') {
+          const before = g.hp;
+          g.openReward();
+          offers = g.offers.map((m) => m.id);
+          chosen = BALANCE_BUILDS[build].find((id) => offers!.includes(id)) ?? offers[0];
+          g.chooseMod(chosen);
+          if (g.hp !== before) throw Error('Detour rewarded unexpected healing');
+          boss = measure(g, 150);
+        }
+        save({
+          suite,
+          route: 'detour',
+          stage,
+          build,
+          hp,
+          mods: preset.mods,
+          challenge,
+          offers,
+          chosen,
+          boss,
+        });
+      }
+  for (const hp of [100, 60]) {
+    if (!filter.test(`shutdown:${hp}`)) continue;
+    resetPhysics();
+    const g = new Game();
+    const preset = shutdownTestFromUrl(new URL('https://audit/?test=shutdown&scene=finale'))!;
+    preset.hp = hp;
+    g.startTest(preset);
+    const waves = [];
+    for (let cycle = 0; cycle < 3; cycle++) {
+      const result = measure(g, 150);
+      const health = g.hp;
+      const control = g.clear && shootShutdownControl(g);
+      waves.push({ cycle, ...result, control, position: { ...g.player.position } });
+      if (g.hp !== health) throw Error('Control changed carried health');
+      if (!control || g.mode !== 'playing') break;
+    }
+    for (let frame = 0; g.shutdown.complete && g.mode === 'playing' && frame < 300; frame++)
+      g.tick(1 / 60, {
+        left: false,
+        right: false,
+        jump: false,
+        jumpHeld: false,
+        fire: false,
+        aim: g.aim,
+      });
+    save({ suite, route: 'shutdown', startHp: hp, endHp: g.hp, mode: g.mode, waves });
+  }
 } else if (suite === 'max') {
   // Cover every branch choice and weapon/path pair without mistaking impossible
   // 47+ upgrade stress builds for ordinary nineteen-pick campaign builds.

@@ -587,6 +587,16 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
       firing = false;
       aim = recharge.aim ?? aim;
     }
+    // Returning rounds cannot reach the overhead motor from the floor. Treat
+    // recoil ascent as a firing option instead of replacing it with boss aim.
+    if (firing && e && ['crane', 'press'].includes(e.kind) && g.mods.includes('recall')) {
+      const reach = g.gun.projectileSpeed * 60 * (g.mods.includes('vector') ? 0.5 : 0.24) * 0.9;
+      if (Math.abs(dx) > reach * 0.45) move = Math.sign(dx);
+      if (dy > reach * 0.6) {
+        jump ||= g.grounded;
+        aim = { x: p.x, y: p.y + 500 };
+      }
+    }
     if (g.mods.includes('charge-lens')) firing &&= g.torch.chargeProgress < 1;
     if (g.mods.includes('suspension') && !g.mods.includes('tripline')) firing &&= i % 48 < 32;
     tick(g, 1, {
