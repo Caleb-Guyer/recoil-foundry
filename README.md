@@ -6,6 +6,28 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## End of shift · 2.89.0
+
+An optional secret route spans a fresh campaign. Maintenance marks and recovered writing connect three old safety disconnects to the factory's continuity system. There is no objective HUD or mandatory detour. The normal extraction and Overtime elevators remain available.
+
+<details>
+<summary>Shutdown route testing and implementation details (spoilers)</summary>
+
+The loading, furnace and reclamation boss bays contain marked disconnects. Their covers release after the boss is defeated. Approach and shoot the exposed contact; bullets, beams, rail spikes, backblast, nearby explosions and moving props use the same interaction. Each sabotage adds another elite security reinforcement to later eligible ordinary rooms, using the existing warned doors and occupancy checks. They never overlap story rooms, area events or special delivery/flood encounters.
+
+With all three contacts broken, clear the final boss and return to the marked service door at the left wall. The control chamber has three combat waves and three physical disconnects. Each opens only after its defenders are gone. Cutting the last contact powers down the machinery and ends the run with **Shift complete**, its own recap location and a final recovered document. No permanent stat bonus or extra upgrade is awarded.
+
+- [First disconnect](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=relay&v=2.89.0): cleared loading bay. Shoot the marked cabinet above the left end of the floor.
+- [Security response](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=retaliation&v=2.89.0): Rooftops with all three disconnects broken.
+- [Secret entrance](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=entrance&v=2.89.0): final boss already defeated. Walk left into the marked door, or take the normal exit to the right.
+- [Control chamber](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=finale&v=2.89.0): full three-wave sequence. After each wave, approach and shoot the lit cabinet.
+
+Test links preserve the campaign save, discoveries, Daily results, boss records and recaps. **R** restarts the preset. Test-only recovered documents are readable through Pause → Logbook and disappear when leaving the test. `scene=ending` previews only the completed shutdown and result screen.
+
+Checkpoints preserve the broken contacts and current control-chamber cycle; a resumed unfinished cycle restarts its combat, while a defeated and sabotaged boss bay stays clear. Old checkpoints do not acquire new route machinery. Daily runs use ruleset 76 and have the same optional route available to everyone sharing that seed.
+
+</details>
+
 ## Traces of the shift · 2.88.0
 
 Four rare story rooms connect the factory to its Logbook. About half of fresh campaigns receive one eligible room; the seed fixes its type, stage and orientation. They preserve the twenty-stage route and ordinary combat rewards, and avoid boss arenas, introductions, route choices, area events, couriers and Floodgates. Existing saves keep their layouts. Daily challenges use ruleset 75 for the new room pool.

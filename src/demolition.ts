@@ -246,6 +246,8 @@ export class DemolitionSystem {
       .map((piece) => ({ piece, amount: strength(piece.body, piece.body) }))
       .filter((hit) => hit.amount > 0);
     g.harpoons.blast(pos, damage, radius, inCone);
+    const disconnect = g.shutdown.target;
+    if (disconnect && inCone(disconnect)) g.shutdown.blast(pos, radius);
     const showEffect = !this.effects.some(
       (e) => e.kind === blast.kind && g.time - e.at < 0.055 && distance(e.pos, pos) < 14,
     );

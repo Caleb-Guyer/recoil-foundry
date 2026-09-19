@@ -36,6 +36,7 @@ export interface TorchSegment {
   anchor?: Enemy;
   valve?: PressureVent;
   floodValve?: FloodValve;
+  disconnect?: object;
   ray?: number;
   muzzle?: boolean;
 }
@@ -102,6 +103,7 @@ export function traceTorch(
       anchor = g.harpoons.trace(from, end, radius),
       valve = g.pressure.trace(from, end, radius),
       floodValve = g.floodgate.trace(from, end, radius),
+      disconnect = g.shutdown.trace(from, end, radius),
       portal = g.portals.trace(from, end, half);
     const t = Math.min(
         hit?.t ?? 1,
@@ -109,6 +111,7 @@ export function traceTorch(
         anchor?.t ?? 1,
         valve?.t ?? 1,
         floodValve?.t ?? 1,
+        disconnect?.t ?? 1,
       ),
       through = portal && portal.t <= t + 1e-6,
       point = add(from, d, remaining * (through ? portal!.t : t));
@@ -141,6 +144,10 @@ export function traceTorch(
         radius,
       };
       continue;
+    }
+    if (disconnect && disconnect.t <= t && (!hit || disconnect.t < hit.t)) {
+      segment.disconnect = g.shutdown;
+      break;
     }
     if (floodValve && floodValve.t <= t && (!hit || floodValve.t < hit.t)) {
       segment.floodValve = floodValve.valve;
@@ -524,6 +531,7 @@ export class TorchSystem {
       const s = this.pulse!;
       if (segment.valve) g.pressure.trigger(segment.valve);
       if (segment.floodValve) g.floodgate.trigger(segment.floodValve);
+      if (segment.disconnect) g.shutdown.trigger();
       s.pos = { ...segment.b };
       s.prev = { ...segment.a };
       s.vel = {

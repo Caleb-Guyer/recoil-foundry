@@ -211,6 +211,16 @@ export class Sound {
     if (c.currentTime - previous < cooldown) return;
     this.played.set(kind, c.currentTime);
     this.priorityCue = warning || kind === 'hurt';
+    if (kind === 'shutdown-break') {
+      this.crack(0.16, 0.08, 900);
+      this.tone(270, 90, 0.35, 0.06, 'triangle');
+      return;
+    }
+    if (kind === 'shutdown-stop') {
+      this.tone(110, 25, 2.6, 0.06, 'sine');
+      this.crack(0.8, 0.03, 400);
+      return;
+    }
     if (kind === 'story-found') {
       this.tone(390, 520, 0.12, 0.035);
       this.tone(650, 780, 0.2, 0.025, 'sine', 0.09);

@@ -166,6 +166,49 @@ export const TOOL_LORE: Lore = [
 
 export const RECORDS = [
   {
+    id: 'isolation-loading',
+    name: 'Outside the circuit',
+    unlock: 'disconnect',
+    stage: 3,
+    lore: [
+      'Loading disconnect, folded service slip',
+      'M. Vale · maintenance',
+      'That noise was the contact opening. It was supposed to be the most ordinary sound in the building.\n\nThe safety line runs through loading, heat, and reclamation. Each drive has its own cover. Wait for the drive to stop, get close, then break the contact. The circle is mine.\n\nSecurity is on a separate supply. They will hear it too.',
+    ],
+  },
+  {
+    id: 'isolation-heat',
+    name: 'No remote reset',
+    unlock: 'disconnect',
+    stage: 7,
+    lore: [
+      'Thermal disconnect, carbon copy',
+      'E. Holt · safety office',
+      'The request was to replace the physical breaks with a software permission. I refused. A stop that requires approval from the thing being stopped is a request.\n\nThey have removed my name from the inspection schedule. The copper links are still there.\n\nVale asked whether a service tool would open them. I told her that was not an approved procedure, then gave her the cabinet key.',
+    ],
+  },
+  {
+    id: 'isolation-reclaim',
+    name: 'The last order',
+    unlock: 'disconnect',
+    stage: 15,
+    lore: [
+      'Reclamation disconnect, routing correction',
+      'T. Orr · dispatch',
+      'Three lines crossed out. The terminal has printed a return address that is not my desk. Continuity control. Above the production floors.\n\nVale says there is a service entrance behind the final security bay. Go back to the wall with the broken circle once the last machine is quiet. The three lamps should be green.\n\nI asked what we were delivering this time. Nothing, she said. That is the point.',
+    ],
+  },
+  {
+    id: 'end-of-shift',
+    name: 'End of shift',
+    unlock: 'shutdown',
+    lore: [
+      'Dispatch ledger, final page',
+      'T. Orr · dispatch',
+      'The belts stopped in sections. First the lower return, then the upper run. The parcel with the blue thread stayed halfway through the turn.\n\nFor a while we could hear the pipes cooling. Then someone pulled a chair out at the table. Four cups, still exactly where we left them.\n\nI checked the terminal before going upstairs. No outstanding orders. No replacement request.\n\nI entered the time by hand.',
+    ],
+  },
+  {
     id: 'last-break',
     name: 'Five minutes',
     unlock: 'found',
@@ -173,7 +216,7 @@ export const RECORDS = [
     lore: [
       'Note under the fourth cup',
       'T. Orr · dispatch',
-      'The bell went while Holt was telling us about her daughter. Nobody got up. Five minutes, Vale said. Let her finish.\n\nThe wall speaker repeated our numbers. Anik unplugged it. That is why the cable is hanging down beside the door. It was not damaged in an incident. We wanted to hear the end of a story.\n\nThere are dressings in the green tin. Vale keeps replacing them, which means she is still coming back. Leave the cups where they are.',
+      'The bell went while Holt was telling us about her daughter. Nobody got up. Five minutes, Vale said. Let her finish.\n\nThe wall speaker repeated our numbers. Anik unplugged it. That is why the cable is hanging down beside the door. It was not damaged in an incident. We wanted to hear the end of a story.\n\nThere are dressings in the green tin. Vale keeps replacing them, which means she is still coming back. Leave the cups where they are.\n\nVale has scratched the same broken circle onto the table and the old safety cabinets. She says the cabinets are the only part of this place that still remembers how to stop.',
     ],
   },
   {
@@ -195,7 +238,7 @@ export const RECORDS = [
     lore: [
       'Cooling trial 17, handwritten amendment',
       'Dr. S. Anik · development',
-      'The regulator no longer accepts a stop command. It fills, vents, and fills again. Five seconds is all it remembers of the operating schedule.\n\nThe inspection heads slow when they cross the discharge. With enough exposure their joints seize briefly. Vale suggested we put the broken machine between ourselves and the working ones. I objected to using an uncontrolled result.\n\nShe asked whether I had a controlled way out.\n\nKeep the trial running.',
+      'The regulator no longer accepts a stop command. It fills, vents, and fills again. Five seconds is all it remembers of the operating schedule.\n\nThe inspection heads slow when they cross the discharge. With enough exposure their joints seize briefly. Vale suggested we put the broken machine between ourselves and the working ones. I objected to using an uncontrolled result.\n\nShe asked whether I had a controlled way out.\n\nThe broken circle on the casing is Vale’s. She marked three old disconnects: loading, heat, and reclamation. They were wired before the continuity order. She thinks the order cannot restore what it cannot reach.\n\nKeep the trial running.',
     ],
   },
   {
@@ -216,7 +259,7 @@ export const RECORDS = [
     lore: [
       'Loose page inside a tool locker',
       'M. Vale · maintenance',
-      'The wall clock has stopped at 06:00. Do not use it to decide how long you have been here.\n\nI have left copies of the useful records in the equipment housings. They cannot recall a document if they do not know which machine it is screwed into. Some of it is repair advice. Some of it is just what happened. I would like there to be a difference.\n\nOrr is trying the loading gate. Anik went back for her notes. I am going up.\n\nKeep the tool.',
+      'The wall clock has stopped at 06:00. Do not use it to decide how long you have been here.\n\nI have left copies of the useful records in the equipment housings. They cannot recall a document if they do not know which machine it is screwed into. Some of it is repair advice. Some of it is just what happened. I would like there to be a difference.\n\nOrr is trying the loading gate. Anik went back for her notes. I am going up.\n\nIf you see my broken-circle mark beside a machine bay, wait until the machinery stops. The old safety covers release when the drive goes quiet. Nobody thought to remove them.\n\nKeep the tool.',
     ],
   },
   {

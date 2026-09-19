@@ -2,6 +2,7 @@ import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
 import { reforgeTestFromUrl } from './reforge-rules.ts';
+import { shutdownTestFromUrl } from './shutdown-layout.ts';
 import { STORY_ROOMS, storyTestFromUrl } from './story-layout.ts';
 import { fabricatorTestFromUrl } from './fabricator-layout.ts';
 import { replayTestFromUrl } from './death-replay.ts';
@@ -227,6 +228,7 @@ if (
   write(LOGBOOK_KEY, logbookProgress);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  shutdownTestFromUrl(entryUrl) ??
   storyTestFromUrl(entryUrl) ??
   replayTestFromUrl(entryUrl) ??
   fabricatorTestFromUrl(entryUrl) ??
@@ -333,6 +335,8 @@ function updateTitle() {
       ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.overtime)
     $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.shutdown)
+    $('play').innerHTML = 'Test shutdown route <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'EXITS-73')
     $('play').innerHTML = 'Test exit elevators <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
@@ -419,6 +423,9 @@ function updateTitle() {
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
   if (linkedRunTest?.reforgeRoom)
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
+  if (linkedRunTest?.shutdown)
+    $('title-hint').textContent =
+      'Isolated route test. Your save and discoveries stay untouched. R to retry.';
   if (linkedRunTest?.story)
     $('title-hint').textContent =
       'Explore the room. Test discoveries stay in this run. R to retry.';
@@ -920,13 +927,19 @@ function showDialog(kind: string) {
         ? logbookPreviewEntries()
         : logbookEntries(
             discovered,
-            game.mode !== 'title' && game.testRun?.story && game.story.state?.recovered
+            game.mode !== 'title' &&
+              game.testRun &&
+              (game.story.state?.recovered || game.testRun.shutdown)
               ? mergeLogbook(logbookProgress, {
                   version: 1,
                   enemies: [],
                   areas: [],
                   escaped: false,
-                  stories: [game.story.state.kind],
+                  stories: game.story.state?.recovered ? [game.story.state.kind] : [],
+                  disconnects: game.shutdown.state?.disabled ?? [],
+                  ...(game.mode === 'won' && game.shutdown.complete
+                    ? { shutdown: true as const }
+                    : {}),
                 })
               : logbookProgress,
           ),
@@ -1221,12 +1234,21 @@ function showDialog(kind: string) {
               'ROOM ' +
               String(game.stage + 1).padStart(2, '0')) +
       '</p><h2 id="dialog-title">' +
-      (win ? (game.overtime ? 'Overtime complete.' : 'Clean escape.') : 'One more run?') +
+      (win
+        ? game.shutdown.complete
+          ? 'Shift complete.'
+          : game.overtime
+            ? 'Overtime complete.'
+            : 'Clean escape.'
+        : 'One more run?') +
       '</h2><p class="result-line">' +
       (activeDaily ? formatDailyTime(game.elapsed * 100) : formatTime(game.elapsed)) +
       ' <span>·</span> ' +
       game.kills +
       ' kills</p>' +
+      (win && game.shutdown.complete
+        ? '<p class="result-line">For the first time, the factory has nothing left to ask.</p>'
+        : '') +
       (dailyResult?.best !== undefined
         ? '<p class="daily-best">' +
           (!dailyResult.saved

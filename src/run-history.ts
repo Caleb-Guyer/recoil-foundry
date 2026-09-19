@@ -25,6 +25,7 @@ export interface RunRecap {
   elapsed: number;
   mods: string[];
   legacyMods?: string[];
+  shutdown?: true;
   cause: DamageCause | null;
 }
 const text = (value: unknown, max: number): value is string =>
@@ -76,6 +77,9 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       seed: raw.seed,
       ruleset: raw.ruleset,
       outcome: raw.outcome,
+      ...(raw.shutdown === true && raw.stage === 19 && !raw.overtime && !raw.escape
+        ? { shutdown: true }
+        : {}),
       mode: raw.mode,
       stage: raw.stage,
       area: raw.area as AreaId,
@@ -120,6 +124,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
         overtime: !!game.overtime,
         detour: game.detour,
         escape: !!game.escape,
+        ...(game.shutdown.chamber ? { shutdown: true } : {}),
         kills: game.kills,
         elapsed: game.elapsed,
         mods: game.mods,
@@ -147,8 +152,10 @@ export function canPracticeRunBuild(run: RunRecap, known: readonly string[]) {
 export function reachedRoom(run: RunRecap) {
   return (
     (run.overtime ? 'Overtime · ' : '') +
-    (run.escape
-      ? 'Escape'
-      : (run.detour ? 'Challenge · ' : '') + 'Room ' + String(run.stage + 1).padStart(2, '0'))
+    (run.shutdown
+      ? 'Continuity control'
+      : run.escape
+        ? 'Escape'
+        : (run.detour ? 'Challenge · ' : '') + 'Room ' + String(run.stage + 1).padStart(2, '0'))
   );
 }

@@ -434,6 +434,7 @@ export class PropSystem {
     const hurtsPlayer = distance(p, g.player.position) < 140 && visible(g.player.position);
     const panels = g.breaches.targets(p, 160);
     const terrain = g.destruction.targets(p, 160);
+    g.shutdown.blast(p, 160);
     g.harpoons.blast(p, 105, 160);
     g.burst(p, 30, '#ffd28a', 7);
     if (g.particles.length < 220)

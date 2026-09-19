@@ -2,6 +2,7 @@ import { MutationSystem, type MutationKind, type MutationRig } from './mutations
 import { CourierSystem } from './courier.ts';
 import { FloodgateSystem, type FloodValve } from './floodgate.ts';
 import { ReforgeSystem } from './reforge.ts';
+import { ShutdownSystem } from './shutdown.ts';
 import { StorySystem } from './story-rooms.ts';
 import {
   FabricatorSystem,
@@ -277,6 +278,7 @@ export class Game {
   floodgate = new FloodgateSystem(this);
   reforge = new ReforgeSystem(this);
   story = new StorySystem(this);
+  shutdown = new ShutdownSystem(this);
   fabricators = new FabricatorSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
@@ -400,7 +402,7 @@ export class Game {
     );
   }
   get canBranch() {
-    return this.canDetour || this.routeChoices.length === 2;
+    return !this.shutdown.chamber && (this.canDetour || this.routeChoices.length === 2);
   }
   get branchDoor() {
     return {
@@ -558,6 +560,7 @@ export class Game {
     this.floodgate.start(save);
     this.reforge.start(save);
     this.story.start(save);
+    this.shutdown.start(save);
     this.fabricators.enabled = save ? save.fabricators === true : true;
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
@@ -584,8 +587,23 @@ export class Game {
     this.hurtAt = -100;
     this.lastShot = -100;
     this.offers = [];
+    const shutdownInspection =
+      !!this.testRun?.shutdown && ['SHUTDOWN-89-RELAY', 'SHUTDOWN-89-ENTRANCE'].includes(this.seed);
     const storyInspection = !!this.testRun?.story && this.testRun.seed.endsWith('-INSPECT');
-    this.loadRoom(save?.escape === true, !!save?.reward || !!save?.reforgeRoom || storyInspection);
+    const disabledRoom =
+      !!save?.shutdown?.disabled.includes(this.stage) &&
+      !save.shutdown.chamber &&
+      !save.overtime &&
+      !save.escape &&
+      !save.detour;
+    this.loadRoom(
+      save?.escape === true,
+      !!save?.reward ||
+        !!save?.reforgeRoom ||
+        storyInspection ||
+        shutdownInspection ||
+        disabledRoom,
+    );
     if (storyInspection && this.story.note) {
       Body.setPosition(this.player, { x: this.story.note.x - 35, y: this.story.note.y + 16 });
       Body.setVelocity(this.player, { x: 0, y: 0 });
@@ -627,6 +645,7 @@ export class Game {
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
       ...(this.floodgate.stage !== null ? { floodgate: this.floodgate.stage } : {}),
       ...(this.reforge.state ? { reforge: { ...this.reforge.state } } : {}),
+      ...(this.shutdown.state ? { shutdown: structuredClone(this.shutdown.state) } : {}),
       ...(this.story.state ? { story: { ...this.story.state } } : {}),
       ...(this.reforge.roomSave ? { reforgeRoom: this.reforge.roomSave } : {}),
       ...(this.areaEvents.state ? { areaEvent: structuredClone(this.areaEvents.state) } : {}),
@@ -769,6 +788,7 @@ export class Game {
     if (!escapeRoom) this.level = this.floodgate.level(this.level);
     if (!escapeRoom) this.level = this.story.level(this.level);
     if (!escapeRoom) this.level = fabricatorLevel(this, this.level);
+    this.level = this.shutdown.level(this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -839,9 +859,10 @@ export class Game {
     this.floodgate.reset(clearedRoom);
     this.reforge.reset();
     this.story.reset();
+    this.shutdown.reset();
   }
   startEscape() {
-    if (this.practice || this.detour || this.workshop.active) return;
+    if (this.practice || this.detour || this.workshop.active || this.shutdown.chamber) return;
     if (this.escape || this.stage !== STAGES - 1 || !this.clear || this.mode !== 'playing') return;
     this.loadRoom(true);
     this.save();
@@ -1073,6 +1094,17 @@ export class Game {
   }
   tick(dt: number, input: Input) {
     if (this.mode !== 'playing') return;
+    if (this.shutdown.complete)
+      input = {
+        ...input,
+        left: false,
+        right: false,
+        jump: false,
+        jumpHeld: false,
+        fire: false,
+        firePressed: false,
+        portal: undefined,
+      };
     if (input.jump && this.reforge.interact()) return;
     if (this.escape?.phase === 'extracting') {
       this.updateExtraction(dt);
@@ -1328,6 +1360,8 @@ export class Game {
       this.setMode('won');
       return;
     }
+    this.shutdown.update(dt);
+    if (this.shutdown.chamber || this.mode !== 'playing') return;
     this.extendDetourSteps();
     if (
       this.clear &&
@@ -1370,7 +1404,7 @@ export class Game {
     Body.setVelocity(this.player, { x: vx, y: vy });
   }
   fire() {
-    if (this.escape?.phase === 'extracting') return;
+    if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.burstRemaining > 0) return;
     this.shootAt = this.time + this.gun.interval * (this.gun.burstCount === 3 ? 3.1 : 1);
     this.burstRemaining = this.gun.burstCount - 1;
@@ -1476,6 +1510,7 @@ export class Game {
     const valveOrigin = { x: this.player.position.x, y: this.player.position.y - 3 };
     if (this.pressure.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (this.floodgate.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
+    if (this.shutdown.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (distance(spawn, pos) > 0.01) {
       spawn.x -= d.x * 0.5;
       spawn.y -= d.y * 0.5;
@@ -1595,6 +1630,11 @@ export class Game {
       const d = direction(p, target);
       return rear.x * d.x + rear.y * d.y >= Math.SQRT1_2;
     });
+    const disconnect = this.shutdown.target;
+    if (disconnect) {
+      const d = direction(p, disconnect);
+      if (rear.x * d.x + rear.y * d.y >= Math.SQRT1_2) this.shutdown.blast(p, 130);
+    }
     const targets = this.props.items.filter((prop) => {
       const target = prop.body.position,
         d = direction(p, target);
@@ -2307,6 +2347,7 @@ export class Game {
           anchor?: Enemy;
           valve?: PressureVent;
           floodValve?: FloodValve;
+          disconnect?: true;
           player?: boolean;
           caught?: boolean;
           prop?: Prop;
@@ -2367,6 +2408,10 @@ export class Game {
         const valve = s.friendly ? this.pressure.trace(s.pos, end, s.radius) : undefined;
         if (valve && (!nearest || valve.t < nearest.t))
           nearest = { t: valve.t, normal: valve.normal, valve: valve.vent };
+        const disconnect =
+          s.friendly && !s.allied ? this.shutdown.trace(s.pos, end, s.radius) : null;
+        if (disconnect && (!nearest || disconnect.t < nearest.t))
+          nearest = { ...disconnect, disconnect: true };
         const floodValve = s.friendly ? this.floodgate.trace(s.pos, end, s.radius) : undefined;
         if (floodValve && (!nearest || floodValve.t < nearest.t))
           nearest = { t: floodValve.t, normal: floodValve.normal, floodValve: floodValve.valve };
@@ -2479,6 +2524,11 @@ export class Game {
           this.fusions.catch(s);
           s.life = 0;
           s.shell = undefined;
+        } else if (nearest.disconnect) {
+          this.shutdown.trigger();
+          s.life = 0;
+          this.demolition.impact(s);
+          if (this.mode !== 'playing') return;
         } else if (nearest.floodValve) {
           this.floodgate.trigger(nearest.floodValve);
           s.life = 0;
@@ -2857,7 +2907,7 @@ export class Game {
   }
   damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }) {
     if (this.workshop.active) return;
-    if (this.escape?.phase === 'extracting') return;
+    if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     this.hp = Math.max(0, this.hp - amount);
     this.hurtAt = this.time;
@@ -2908,7 +2958,14 @@ export class Game {
   }
   openReward(enterDetour = false, route?: RouteChoice) {
     if (this.areaEvents.waiting || this.mutations.pending.length) return;
-    if (this.practice || this.workshop.active || this.escape || this.mode !== 'playing') return;
+    if (
+      this.practice ||
+      this.workshop.active ||
+      this.escape ||
+      this.shutdown.chamber ||
+      this.mode !== 'playing'
+    )
+      return;
     if (
       route &&
       (enterDetour ||

@@ -2,6 +2,7 @@ import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutati
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
 import { drawFloodgate, drawFloodwater } from './floodgate-art.ts';
 import { drawReforge } from './reforge-art.ts';
+import { drawShutdown, drawShutdownBackdrop } from './shutdown-art.ts';
 import { drawStoryBackdrop, drawStoryDetails } from './story-art.ts';
 import { SPLIT_SCALE } from './mutations.ts';
 import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
@@ -190,6 +191,7 @@ export class Renderer {
     this.worldTransform = c.getTransform();
     this.drawBreachBackdrop();
     drawStoryBackdrop(c, g, this.reduced);
+    drawShutdownBackdrop(c, g);
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);
     const palette = AREAS[g.level.area];
@@ -216,7 +218,7 @@ export class Renderer {
     }
     drawLoaderSupports(c, g, this.reduced);
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
-    if (!g.workshop.active && !g.areaEvents.dark) this.drawExit();
+    if (!g.workshop.active && !g.areaEvents.dark && !g.shutdown.chamber) this.drawExit();
     drawWorkshopMounts(c, g);
     drawReforge(c, g, this.reduced);
     if (!g.areaEvents.dark) {
@@ -234,6 +236,7 @@ export class Renderer {
     drawPressure(c, g, this.reduced);
     this.drawProps();
     drawStoryDetails(c, g, this.reduced);
+    drawShutdown(c, g, this.reduced);
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced, this.portalAim);
     drawTripwires(c, g, this.reduced);
@@ -777,7 +780,11 @@ export class Renderer {
           1 / this.scale,
         );
       }
-      if (g.clear && (g.escape ? EXTRACTION.x : 1870) > this.camera.x + viewW - 80) {
+      if (
+        g.clear &&
+        !g.shutdown.chamber &&
+        (g.escape ? EXTRACTION.x : 1870) > this.camera.x + viewW - 80
+      ) {
         const x = this.camera.x + viewW - 45,
           y = this.camera.y + viewH / 2;
         this.line({ x: x - 12, y: y - 8 }, { x, y }, '#96d4c2', 2);

@@ -42,6 +42,7 @@ export class FusionSystem {
     const pos = g.lineEnd(origin, muzzle, radius);
     if (g.pressure.trace(origin, pos, radius)) Object.assign(pos, origin);
     if (g.floodgate.trace(origin, pos, radius)) Object.assign(pos, origin);
+    if (g.shutdown.trace(origin, pos, radius)) Object.assign(pos, origin);
     if (distance(pos, muzzle) > 0.01) {
       pos.x -= d.x * 0.5;
       pos.y -= d.y * 0.5;

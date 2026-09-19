@@ -75,7 +75,7 @@ export class ResonatorSystem {
       const hit = new Set<object>();
       for (const s of segments) {
         if (g.mode !== 'playing') return;
-        const body = s.body ?? s.cable ?? s.anchor ?? s.valve ?? s.floodValve;
+        const body = s.body ?? s.cable ?? s.anchor ?? s.valve ?? s.floodValve ?? s.disconnect;
         if (!body || hit.has(body)) continue;
         hit.add(body);
         const damage = (p.damage + (s.enemy?.id === p.target ? p.heatDamage : 0)) * s.gain;
@@ -89,6 +89,7 @@ export class ResonatorSystem {
         else if (s.anchor) g.harpoons.hitAnchor(s.anchor, damage);
         else if (s.valve) g.pressure.trigger(s.valve);
         else if (s.floodValve) g.floodgate.trigger(s.floodValve);
+        else if (s.disconnect) g.shutdown.trigger();
         else if (s.body) {
           g.counterweights.hit(s.body, s.b, s.dir, damage);
           g.breaches.hitBody(s.body, damage, s.dir);

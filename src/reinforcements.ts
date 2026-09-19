@@ -159,6 +159,7 @@ export class ReinforcementSystem {
           .map(({ elite: _elite, squad: _squad, ...s }) => ({ ...s })),
       );
     }
+    final.push(...g.shutdown.reinforcements(level));
     this.openingCount = opening.length;
     const random = seeded(this.game.roomSeed + ':reinforcement-timers:' + this.game.stage);
     this.doors = final.map((spawn) => ({

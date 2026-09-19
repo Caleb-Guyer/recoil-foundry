@@ -1,3 +1,4 @@
+import { shutdownMark } from './shutdown-art.ts';
 import type { Game } from './game.ts';
 import { COLD_RIG, STORY_ROOMS } from './story-layout.ts';
 
@@ -202,6 +203,7 @@ export function drawStoryDetails(c: CanvasRenderingContext2D, g: Game, reduced: 
     note = s.note;
   if (!s.active || !note) return;
   c.save();
+  shutdownMark(c, note.x - 38, note.y + 9, '#76846a');
   if (s.state!.kind === 'experiment' && !g.clear) {
     const p = s.rig,
       warning = s.phase < COLD_RIG.warning;
