@@ -1,25 +1,16 @@
 # Full browser release checklist
 
-Updated 19 September 2026 against 2.93.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
+Updated 19 September 2026 against 2.94.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
 
 **When work is completed, remove it from this list.** Keep its evidence in a linked report or commit, not a checked-off entry. Section numbers stay stable so references to remaining work do not change. Completed balance work is archived in the [balance closeout](balance-closeout-2.92.0.md); first-session implementation and the five-scenario self-audit are archived in the [clarity report](first-session-2.93.0.md). Those implementation sections are removed. Actual first-time-player observation and human acceptance remain explicitly open in section 7.
+
+Completed progress/recovery item 3 is archived in the [recovery report](progress-recovery-2.94.0.md), covering backups, atomic restore, visible saving failures, older saves, competing tabs and isolated modes.
 
 ## Scope
 
 The launch scope is frozen after the Auditor: the twenty-room campaign across five areas, 100 upgrades and branching builds, boss variants, optional challenges and events, Daily runs, Overtime, Practice, Workshop, run recaps, death replay, the Logbook, a secret ending, and cosmetic commendations. Remaining changes are fixes, tuning and essential usability work. The [balance closeout](balance-closeout-2.92.0.md#design-targets) defines the intended difficulty and duration for external validation.
 
 - [ ] Publish the supported browser/device/input list. Prioritize ordinary desktop/laptop play; advertise touch play only after it passes its own checks.
-
-## 3. Progress and recovery — release blocker
-
-Current persistence uses browser local storage. Checkpoint validation and migration exist; a user-facing backup/import flow is not present.
-
-- [ ] Add a validated progress export/import covering the campaign checkpoint, collected upgrades, Logbook, commendations, equipped cosmetics, Practice victories and relevant personal records. Invalid imports must leave existing progress untouched.
-- [ ] Explain that progress is local to this browser. Surface failed writes; do not silently imply progress was saved.
-- [ ] Test Continue, death, fresh-seed retry, Daily retry, refresh during reward selection, tab closure, multi-tab changes, older saves and unavailable storage.
-- [ ] Verify that all test links, Workshop and Practice remain isolated from real progress.
-
-Acceptance: the player can back up and restore progress, update the game without losing valid records, and recover safely from a failed or invalid import.
 
 ## 4. Settings and accessibility — release blocker for advertised controls
 
@@ -73,7 +64,7 @@ Acceptance: the release candidate passes the checklist, a fresh player can start
 ## Work order
 
 1. Run first-session playtests and start collecting the external balance feedback.
-2. Address those findings alongside progress backup and settings gaps.
+2. Address those findings alongside the remaining settings and accessibility gaps.
 3. Complete browser/hardware checks and presentation/audio polish.
 4. Finish external release acceptance, fix blockers, tag and publish the full browser release.
 

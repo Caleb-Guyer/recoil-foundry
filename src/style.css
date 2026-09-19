@@ -1436,3 +1436,79 @@ dialog.workshop-dialog {
     gap: 5px;
   }
 }
+.save-warning {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  max-width: calc(100% - 36px);
+  padding: 9px 13px;
+  color: #eed4a0;
+  background: #192021;
+  border: 1px solid #796c4c;
+  font-size: 12px;
+  z-index: 8;
+}
+.modal-save-warning {
+  position: static;
+  margin-top: 20px;
+  max-width: 100%;
+}
+.progress-dialog {
+  max-width: 680px;
+}
+.progress-intro,
+.progress-detail,
+.progress-state,
+.progress-feedback,
+.import-preview p {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.progress-intro {
+  margin: 18px 0;
+  color: var(--muted, #aebdb6);
+}
+.progress-summary {
+  line-height: 1.6;
+}
+.progress-detail {
+  font-size: 13px;
+  color: #aebdb6;
+  margin: 8px 0 20px;
+}
+.progress-state {
+  font-size: 14px;
+  margin: 14px 0;
+}
+.progress-feedback {
+  font-size: 13px;
+  color: #eed4a0;
+  margin: 15px 0;
+}
+.progress-feedback:empty {
+  display: none;
+}
+.import-preview {
+  border: 1px solid #66796e;
+  padding: 18px;
+  margin-top: 20px;
+}
+.import-preview p {
+  margin: 10px 0;
+  font-size: 14px;
+}
+.progress-dialog .actions {
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+@media (max-width: 450px) {
+  .progress-dialog {
+    padding: 23px;
+  }
+  .progress-intro {
+    font-size: 14px;
+  }
+  .import-preview {
+    padding: 13px;
+  }
+}

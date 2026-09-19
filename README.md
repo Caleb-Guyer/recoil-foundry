@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Progress backups and recovery · 2.94.0
+
+Open **Settings → Progress** to export a backup or restore one. Backups include your campaign checkpoint and gun, discovered upgrades, Logbook, commendations, equipped appearance, Practice victories, recent runs, Daily records and saved Workshop build. Imports show a preview, validate every section and replace the profile in one operation; **Undo restore** keeps the previous profile recoverable. Return to the title before importing; you can export while paused.
+
+Progress is local to this browser and device. Saving failures now show a visible **Progress not saved · Backup** button. Export keeps this tab's progress even when saving is unavailable. A conflicting change from another tab blocks stale writes and offers reload. Existing checkpoint versions migrate without removing their original records; old Daily identities remain unchanged.
+
+[Open Progress](https://caleb-guyer.github.io/recoil-foundry/?progress=1&v=2.94.0) · [Recovery verification](docs/progress-recovery-2.94.0.md). Completed item 3 is removed from the [release checklist](docs/browser-release-checklist.md).
+
 ## First-session clarity · 2.93.0
 
 **Controls** is available from the title, Pause, or **H**. **Try controls** opens a harmless warm-up with the starting gun: movement, jumps, recoil flight and targets, without changing your campaign save or saved Workshop build. New players can also use brief, dismissible hints in the opening room and a one-line explanation on their first upgrade screen.

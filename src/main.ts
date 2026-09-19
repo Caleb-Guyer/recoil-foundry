@@ -71,6 +71,9 @@ import {
 } from './controller-menu.ts';
 import { controllerPortalTarget } from './controller-target.ts';
 import { musicScene } from './music-score.ts';
+import { ProgressStore, PROGRESS_KEY, CHECKPOINT_KEY, mergeDailyRecords } from './progress.ts';
+import { progressMenu } from './progress-menu.ts';
+import { newSeed, retrySeed } from './run-seed.ts';
 import {
   FirstSessionGuide,
   FIRST_SESSION_KEY,
@@ -135,7 +138,17 @@ import {
   todayDaily,
 } from './daily.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const progress = new ProgressStore(
+  () => localStorage,
+  (action) =>
+    navigator.locks
+      ? navigator.locks.request('rf-progress-write', action)
+      : Promise.resolve().then(action),
+);
+let settingsSaveFailed = false;
 function read(key: string): unknown {
+  if (progress.owns(key)) return progress.read(key);
+  if (['rf-checkpoint-v4', 'rf-checkpoint-v3'].includes(key)) return null;
   try {
     return JSON.parse(localStorage.getItem(key) ?? 'null');
   } catch {
@@ -143,14 +156,18 @@ function read(key: string): unknown {
   }
 }
 function write(key: string, value: unknown) {
+  if (progress.owns(key)) {
+    void progress.write(key, value);
+    return;
+  }
   try {
     if (value === null) localStorage.removeItem(key);
     else localStorage.setItem(key, JSON.stringify(value));
-    return true;
+    settingsSaveFailed = false;
   } catch {
-    $('save-status').textContent = 'Saving unavailable in this browser.';
-    return false;
+    settingsSaveFailed = true;
   }
+  updateSaveStatus();
 }
 const storedCheckpoint = loadCheckpoint(
   read('rf-checkpoint-v5') ?? read('rf-checkpoint-v4') ?? read('rf-checkpoint-v3'),
@@ -172,7 +189,6 @@ let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
 let logbookProgress = migrateLogbook(read(LOGBOOK_KEY), storedCheckpoint, runHistory, encounters);
 const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', query: '' };
 let finishedRun: RunRecap | null = null;
-let recapSaved = true;
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
@@ -185,9 +201,10 @@ document.getElementById('app')!.innerHTML = `
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><div class="title-settings"><button id="controls" class="quiet">Controls</button><button id="logbook" class="quiet">Logbook</button><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
  </section>
+ <button id="save-warning" data-save-warning class="save-warning" hidden></button>
  <div id="first-session-tip" class="first-session-tip" hidden><span id="first-session-copy" role="status"></span><button id="dismiss-tip" class="quiet" aria-label="Hide first-run tips">×</button></div>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
-</main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog><span id="save-status" class="sr-only" role="status"></span>`;
+</main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div><button data-save-warning class="save-warning modal-save-warning" hidden></button></dialog><span id="save-status" class="sr-only" role="status"></span>`;
 const game = new Game(),
   canvas = $<HTMLCanvasElement>('game'),
   renderer = new Renderer(canvas, game),
@@ -202,10 +219,12 @@ let needsGuidance =
   !encounters.length;
 let firstRewardHelp = needsGuidance;
 let controlsParent = '';
+let progressParent = '';
+let updateProgressPanel: (() => void) | undefined;
+let allowProgressReload = false;
 game.cosmetics = { ...equippedCosmetics };
 let replayView: ReplayView | null = null;
 let replayRoom = game.level;
-if (discovered.length) write(DISCOVERIES_KEY, discovered);
 const workshopTools = document.createElement('div');
 workshopTools.className = 'workshop-tools';
 workshopTools.hidden = true;
@@ -260,12 +279,6 @@ let previewCommendations = commendationPreviewLink(entryUrl);
 if (previewCommendations) logbookView.section = 'commendations';
 const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
-if (
-  linkedLogbook !== 'preview' &&
-  !previewCommendations &&
-  JSON.stringify(read(LOGBOOK_KEY)) !== JSON.stringify(logbookProgress)
-)
-  write(LOGBOOK_KEY, logbookProgress);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
   auditorTestFromUrl(entryUrl) ??
@@ -590,6 +603,65 @@ function updateAudioState() {
     }
   }
 }
+function updateSaveStatus() {
+  const failed =
+    settingsSaveFailed || ['unavailable', 'unreadable', 'conflict'].includes(progress.state);
+  const message =
+    progress.state === 'conflict'
+      ? 'Progress changed in another tab · Review'
+      : settingsSaveFailed && progress.state === 'saved'
+        ? 'Settings not saved · Details'
+        : 'Progress not saved · Backup';
+  document.querySelectorAll<HTMLButtonElement>('[data-save-warning]').forEach((button) => {
+    button.hidden = !failed || (button.closest('dialog') !== null && dialogKind === 'progress');
+    button.textContent = message;
+  });
+  if (failed) $('save-status').textContent = message;
+  if (dialogKind === 'progress') {
+    updateProgressPanel?.();
+    if (settingsSaveFailed) {
+      const status = document.getElementById('progress-state');
+      if (status) status.textContent += ' Settings changes could not be saved.';
+    }
+  }
+  if (dailyResult?.best !== undefined) {
+    const row = document.querySelector('.daily-best');
+    if (row)
+      row.textContent =
+        (failed
+          ? 'Time not saved · '
+          : progress.state === 'saving'
+            ? 'Saving time · '
+            : dailyResult.newBest
+              ? 'New best · '
+              : 'Personal best · ') + formatDailyTime(dailyResult.best);
+  }
+  if (
+    progress.state === 'conflict' &&
+    game.mode === 'playing' &&
+    !game.testRun &&
+    !game.practice &&
+    !game.workshop.active
+  ) {
+    queueMicrotask(() => {
+      if (game.mode === 'playing') openProgress();
+    });
+  }
+}
+function openProgress() {
+  progressParent = modal.open && dialogKind !== 'progress' ? dialogKind : '';
+  showDialog('progress');
+}
+function backFromProgress() {
+  if (progress.restoring) return;
+  if (progressParent) showDialog(progressParent);
+  else resume();
+}
+function reloadProgress() {
+  // Leave test, seed and Daily links behind when restoring the saved profile.
+  allowProgressReload = true;
+  location.assign(location.pathname + '?progress=1');
+}
 function finishGuidance() {
   needsGuidance = false;
   write(FIRST_SESSION_KEY, true);
@@ -627,14 +699,13 @@ function updateMusic(active = pageActive && document.hasFocus() && !document.hid
     game.torch.heat,
   );
 }
-function newSeed(previous?: string) {
-  let seed: string;
-  do {
-    seed = crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
-  } while (seed === previous);
-  return seed;
-}
 function start(save?: Checkpoint, retry = false, seedOverride?: string) {
+  if (progress.restoring) return;
+  progress.checkExternal();
+  if (progress.state === 'conflict') {
+    openProgress();
+    return;
+  }
   if (retry && game.workshop.active) {
     startWorkshop(game.mods, firstSession.warmup);
     return;
@@ -662,9 +733,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   closeDialog();
   const seed =
     save?.seed ??
-    (retry
-      ? (dailyFromSeed(game.seed)?.seed ?? newSeed(game.seed))
-      : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? newSeed()));
+    (retry ? retrySeed(game.seed) : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? newSeed()));
   activeDaily = dailyFromSeed(seed);
   linkedDaily = activeDaily;
   invalidDailyLink = false;
@@ -778,7 +847,7 @@ function captureFinishedRun() {
   finishedRun = snapshotRun(game, id);
   if (!finishedRun) return;
   runHistory = addRun([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))], finishedRun);
-  recapSaved = write(RUN_HISTORY_KEY, runHistory);
+  write(RUN_HISTORY_KEY, runHistory);
 }
 function replayFinishedRun(run: RunRecap) {
   if (!canReplayRun(run)) return;
@@ -850,10 +919,7 @@ game.onCheckpoint = (s) => {
     }
   }
   checkpoint = s;
-  if (write('rf-checkpoint-v5', s)) {
-    write('rf-checkpoint-v4', null);
-    write('rf-checkpoint-v3', null);
-  }
+  write(CHECKPOINT_KEY, s);
 };
 game.onSound = (kind) => sound.play(kind);
 game.onHaptic = (kind, strength) => {
@@ -861,6 +927,7 @@ game.onHaptic = (kind, strength) => {
     controller.rumble(kind, strength, performance.now());
 };
 game.onBossDefeated = (kind) => {
+  if (game.practice || game.testRun || game.workshop.active) return;
   const victory = loadEncounters([{ kind, seed: game.layoutSeed }])[0];
   if (!victory || encounters.some((record) => record.kind === kind)) return;
   encounters.push(victory);
@@ -1053,13 +1120,22 @@ function showDialog(kind: string) {
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle('ending-dialog', kind === 'result' && game.shutdown.complete);
   modal.classList.toggle('controls-dialog', kind === 'controls');
+  modal.classList.toggle('progress-dialog', kind === 'progress');
   const content = $('dialog-content');
   if (kind === 'logbook' || kind === 'workshop')
     commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   const visibleCommendations = previewCommendations
     ? COMMENDATIONS.map((c) => c.id)
     : commendations;
-  if (kind === 'controls') {
+  if (kind === 'progress') {
+    updateProgressPanel = progressMenu(
+      content,
+      progress,
+      game.mode === 'title',
+      backFromProgress,
+      reloadProgress,
+    );
+  } else if (kind === 'controls') {
     content.innerHTML =
       '<h2 id="dialog-title">Controls.</h2><div id="controls-grid">' +
       controlsIntro(controlDevice()) +
@@ -1117,11 +1193,7 @@ function showDialog(kind: string) {
   } else if (kind === 'history') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     runHistory = loadRunHistory([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))]);
-    content.innerHTML =
-      runHistoryMenu(runHistory, discovered) +
-      (!recapSaved
-        ? '<p class="recap-note" role="status">History could not be saved. New recaps remain available until this page closes.</p>'
-        : '');
+    content.innerHTML = runHistoryMenu(runHistory, discovered);
     bindRecapActions(content, runHistory, discovered, replayFinishedRun, workshopFromRun);
     $('back').onclick = backFromHistory;
   } else if (kind === 'workshop') {
@@ -1409,9 +1481,10 @@ function showDialog(kind: string) {
         ? {
             best: record.best,
             newBest: record.newBest,
-            saved: !record.newBest || write(DAILY_BESTS_KEY, record.bests),
+            saved: true,
           }
         : { best: loadDailyBests(stored)[activeDaily.seed], newBest: false, saved: true };
+      if (record?.newBest) write(DAILY_BESTS_KEY, mergeDailyRecords(stored, record.bests));
     }
     content.innerHTML =
       '<p class="eyebrow">' +
@@ -1505,13 +1578,7 @@ function showDialog(kind: string) {
       };
     }
     if (finishedRun) {
-      content.insertAdjacentHTML(
-        'beforeend',
-        resultRecap(finishedRun, discovered) +
-          (!recapSaved
-            ? '<p class="recap-note" role="status">Recap could not be saved. It remains available until this page closes.</p>'
-            : ''),
-      );
+      content.insertAdjacentHTML('beforeend', resultRecap(finishedRun, discovered));
       bindRecapActions(content, [finishedRun], discovered, replayFinishedRun, workshopFromRun);
       $('recap-history').onclick = () => showDialog('history');
     }
@@ -1576,6 +1643,7 @@ function showDialog(kind: string) {
       (paused ? 'Resume' : 'Back') +
       '</button>' +
       '<button id="pause-controls" class="quiet">Controls</button>' +
+      '<button id="progress" class="quiet">Progress</button>' +
       (paused && game.workshop.active
         ? firstSession.warmup
           ? '<button id="workshop-pause-reset" class="quiet">Reset warm-up</button>'
@@ -1625,6 +1693,7 @@ function showDialog(kind: string) {
     }
     $('back').onclick = resume;
     $('pause-controls').onclick = openControls;
+    $('progress').onclick = openProgress;
     updateAudioState();
     if (paused && game.workshop.active) {
       const edit = document.getElementById('workshop-pause-build');
@@ -1651,7 +1720,8 @@ function showDialog(kind: string) {
   }
   if (!modal.open) modal.showModal();
   updateControlHints();
-  if (['pause', 'settings', 'controls'].includes(kind)) $('back').focus();
+  updateSaveStatus();
+  if (['pause', 'settings', 'controls', 'progress'].includes(kind)) $('back').focus();
   if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
@@ -1796,6 +1866,7 @@ function pollController(now: number) {
   return sample;
 }
 function resume() {
+  if (progress.restoring) return;
   sound.unlock();
   closeDialog();
   if (game.mode === 'paused') game.setMode('playing');
@@ -1831,6 +1902,9 @@ $('continue').onclick = () => {
   if (checkpoint) start(checkpoint);
 };
 $('settings').onclick = () => showDialog('settings');
+document.querySelectorAll<HTMLButtonElement>('[data-save-warning]').forEach((button) => {
+  button.onclick = openProgress;
+});
 $('controls').onclick = openControls;
 $('learn').onclick = () => startWorkshop([], true);
 $('learn').hidden = !needsGuidance;
@@ -1852,6 +1926,10 @@ $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (dialogKind === 'progress') {
+    backFromProgress();
+    return;
+  }
   if (dialogKind === 'controls') {
     backFromControls();
     return;
@@ -2118,6 +2196,18 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 game.onChange();
+progress.onChange = updateSaveStatus;
+updateSaveStatus();
+window.addEventListener('storage', (e) => {
+  if (e.key === PROGRESS_KEY || e.key === null) progress.checkExternal();
+});
+window.addEventListener('focus', () => progress.checkExternal());
+window.addEventListener('beforeunload', (e) => {
+  if (!allowProgressReload && (progress.dirty || progress.state === 'saving')) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 updateAudioState();
 if (
   entryUrl.searchParams.get('help') === 'controls' &&
@@ -2128,4 +2218,12 @@ if (
 )
   openControls();
 if (linkedLogbook || previewCommendations) showDialog('logbook');
+if (
+  entryUrl.searchParams.get('progress') === '1' &&
+  !linkedRunTest &&
+  !linkedTest &&
+  !linkedDaily &&
+  !linkedWorkshop
+)
+  openProgress();
 requestAnimationFrame(frame);
