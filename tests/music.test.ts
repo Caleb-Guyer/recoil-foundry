@@ -231,6 +231,13 @@ test('attack warnings stay audible when gunfire fills the effect voice budget', 
   const warned = context.sources.length;
   sound.play('interceptor-lock');
   assert.equal(context.sources.length, warned, 'A volley should not duplicate its warning sound');
+  sound.play('story-found');
+  sound.play('story-cold');
+  assert.equal(
+    context.sources.length,
+    warned,
+    'Story cues must not borrow reserved warning voices',
+  );
   context.advance(1);
   assert.equal(sound.voices, 0);
   assert(context.sources.every((source) => source.disconnected));

@@ -2,6 +2,7 @@ import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
 import { reforgeTestFromUrl } from './reforge-rules.ts';
+import { STORY_ROOMS, storyTestFromUrl } from './story-layout.ts';
 import { fabricatorTestFromUrl } from './fabricator-layout.ts';
 import { replayTestFromUrl } from './death-replay.ts';
 import { DeathReplay, ReplayView } from './death-replay-view.ts';
@@ -226,6 +227,7 @@ if (
   write(LOGBOOK_KEY, logbookProgress);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  storyTestFromUrl(entryUrl) ??
   replayTestFromUrl(entryUrl) ??
   fabricatorTestFromUrl(entryUrl) ??
   reforgeTestFromUrl(entryUrl) ??
@@ -283,6 +285,10 @@ function updateTitle() {
   if (linkedWorkshop) $('play').innerHTML = 'Open Workshop <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.reforge)
     $('play').innerHTML = 'Test Reforge <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.story)
+    $('play').textContent =
+      (linkedRunTest.seed.endsWith('-INSPECT') ? 'Explore ' : 'Test ') +
+      STORY_ROOMS[linkedRunTest.story.kind].name;
   if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
     $('play').innerHTML = 'Test the Fabricator <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'DEATH-REPLAY-86')
@@ -413,6 +419,9 @@ function updateTitle() {
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
   if (linkedRunTest?.reforgeRoom)
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
+  if (linkedRunTest?.story)
+    $('title-hint').textContent =
+      'Explore the room. Test discoveries stay in this run. R to retry.';
   if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
     $('title-hint').textContent = 'Interrupt the weld. Full health. R to retry.';
   if (linkedRunTest?.seed === 'DEATH-REPLAY-86')
@@ -907,7 +916,20 @@ function showDialog(kind: string) {
     logbookProgress = mergeLogbook(logbookProgress, loadLogbook(read(LOGBOOK_KEY)));
     logbookMenu(
       content,
-      previewLogbook ? logbookPreviewEntries() : logbookEntries(discovered, logbookProgress),
+      previewLogbook
+        ? logbookPreviewEntries()
+        : logbookEntries(
+            discovered,
+            game.mode !== 'title' && game.testRun?.story && game.story.state?.recovered
+              ? mergeLogbook(logbookProgress, {
+                  version: 1,
+                  enemies: [],
+                  areas: [],
+                  escaped: false,
+                  stories: [game.story.state.kind],
+                })
+              : logbookProgress,
+          ),
       logbookView,
       modMark,
       backFromLogbook,

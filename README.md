@@ -6,6 +6,21 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Traces of the shift · 2.88.0
+
+Four rare story rooms connect the factory to its Logbook. About half of fresh campaigns receive one eligible room; the seed fixes its type, stage and orientation. They preserve the twenty-stage route and ordinary combat rewards, and avoid boss arenas, introductions, route choices, area events, couriers and Floodgates. Existing saves keep their layouts. Daily challenges use ruleset 75 for the new room pool.
+
+- **Abandoned break room:** four cups, a stopped clock, an unplugged speaker and one overturned chair. Reach the note beside the medicine cabinet to recover **Five minutes** and restore 10 health, once.
+- **Dispatch office:** a blue-threaded package circles behind the glass on a closed return loop. Opposing conveyor decks carry players, enemies and loose crates. The desk holds **Return address**.
+- **Failed experiment:** a damaged cooling rig warns for a second, then vents every 5.2 seconds. Lure exposed enemies into its 225-unit field for a brief freeze and lingering chill; terrain and props block it, and bosses resist it. Existing cold/thermal upgrade interactions still work. The bench holds **Control sample**.
+- **Maintenance hideout:** a sleeping mat, mugs and tally marks sit behind physical, breakable barricades. A live cylinder can catch pursuing enemies. The workbench holds **Someone was here**.
+
+Walk close to the softly lit paper to recover it. A small sound and disappearing page acknowledge the find; there is no reading popup, objective panel or new input. Open **Pause → Logbook → Records** to read afterward. Discoveries survive death; saved rooms remember spent pickups. The book now holds **139 records**. Practice, Workshop and test links never grant permanent discoveries.
+
+Fight through the rooms: [**Break room**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=breakroom&v=2.88.0) · [**Dispatch**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=dispatch&v=2.88.0) · [**Experiment**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=experiment&v=2.88.0) · [**Hideout**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=hideout&v=2.88.0).
+
+For a quiet look at the scenery and writing: [**Break room**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=breakroom&phase=inspect&v=2.88.0) · [**Dispatch**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=dispatch&phase=inspect&v=2.88.0) · [**Experiment**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=experiment&phase=inspect&v=2.88.0) · [**Hideout**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=hideout&phase=inspect&v=2.88.0). Inspection starts beside the document in a cleared room; its temporary Logbook entry disappears when leaving the test. **R** retries. Add `&mirror=1` to test the reverse layout.
+
 ## The Logbook · 2.87.0
 
 Open **Logbook** from the title screen or pause menu. Its **135 original records** cover all **100 upgrades**, the service tool, **25 machines**, **five areas**, and **four recovered documents**. Every entry has individually written lore: maintenance notes, lab observations, dispatch correspondence, safety reports, and personal messages. Recurring writers gradually reveal what the Foundry makes, what happened to its workers, and why the line keeps running. Mechanical upgrade descriptions remain separate from the fiction.

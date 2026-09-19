@@ -2,6 +2,7 @@ import { MutationSystem, type MutationKind, type MutationRig } from './mutations
 import { CourierSystem } from './courier.ts';
 import { FloodgateSystem, type FloodValve } from './floodgate.ts';
 import { ReforgeSystem } from './reforge.ts';
+import { StorySystem } from './story-rooms.ts';
 import {
   FabricatorSystem,
   createFabricator,
@@ -275,6 +276,7 @@ export class Game {
   courier = new CourierSystem(this);
   floodgate = new FloodgateSystem(this);
   reforge = new ReforgeSystem(this);
+  story = new StorySystem(this);
   fabricators = new FabricatorSystem(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
@@ -555,6 +557,7 @@ export class Game {
     this.courier.start(save);
     this.floodgate.start(save);
     this.reforge.start(save);
+    this.story.start(save);
     this.fabricators.enabled = save ? save.fabricators === true : true;
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
@@ -581,7 +584,12 @@ export class Game {
     this.hurtAt = -100;
     this.lastShot = -100;
     this.offers = [];
-    this.loadRoom(save?.escape === true, !!save?.reward || !!save?.reforgeRoom);
+    const storyInspection = !!this.testRun?.story && this.testRun.seed.endsWith('-INSPECT');
+    this.loadRoom(save?.escape === true, !!save?.reward || !!save?.reforgeRoom || storyInspection);
+    if (storyInspection && this.story.note) {
+      Body.setPosition(this.player, { x: this.story.note.x - 35, y: this.story.note.y + 16 });
+      Body.setVelocity(this.player, { x: 0, y: 0 });
+    }
     if (save?.reforgeRoom) {
       this.earnedSalvage = save.reforgeRoom.salvage ?? null;
       if (this.reforge.site && !save.reward) {
@@ -619,6 +627,7 @@ export class Game {
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
       ...(this.floodgate.stage !== null ? { floodgate: this.floodgate.stage } : {}),
       ...(this.reforge.state ? { reforge: { ...this.reforge.state } } : {}),
+      ...(this.story.state ? { story: { ...this.story.state } } : {}),
       ...(this.reforge.roomSave ? { reforgeRoom: this.reforge.roomSave } : {}),
       ...(this.areaEvents.state ? { areaEvent: structuredClone(this.areaEvents.state) } : {}),
       ...(this.legacyMods ? { legacyMods: [...this.legacyMods] } : {}),
@@ -758,6 +767,7 @@ export class Game {
     }
     if (!escapeRoom) this.level = this.courier.level(this.level);
     if (!escapeRoom) this.level = this.floodgate.level(this.level);
+    if (!escapeRoom) this.level = this.story.level(this.level);
     if (!escapeRoom) this.level = fabricatorLevel(this, this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
@@ -828,6 +838,7 @@ export class Game {
     this.courier.reset(clearedRoom);
     this.floodgate.reset(clearedRoom);
     this.reforge.reset();
+    this.story.reset();
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active) return;
@@ -1086,6 +1097,7 @@ export class Game {
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
     this.cryogenic.update(dt);
+    this.story.update(dt);
     this.stasis.input(input.fire);
     this.ballistics.charge(dt, input.fire || !!input.firePressed || this.fireBuffer > 0);
     if (this.portalRequest) {

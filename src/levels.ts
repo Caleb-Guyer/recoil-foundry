@@ -87,6 +87,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  story?: import('./story-layout.ts').StoryKind;
   fabricatorIntro?: boolean;
   floodgate?: true;
   courier?: true;

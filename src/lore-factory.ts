@@ -166,6 +166,50 @@ export const TOOL_LORE: Lore = [
 
 export const RECORDS = [
   {
+    id: 'last-break',
+    name: 'Five minutes',
+    unlock: 'found',
+    story: 'breakroom',
+    lore: [
+      'Note under the fourth cup',
+      'T. Orr · dispatch',
+      'The bell went while Holt was telling us about her daughter. Nobody got up. Five minutes, Vale said. Let her finish.\n\nThe wall speaker repeated our numbers. Anik unplugged it. That is why the cable is hanging down beside the door. It was not damaged in an incident. We wanted to hear the end of a story.\n\nThere are dressings in the green tin. Vale keeps replacing them, which means she is still coming back. Leave the cups where they are.',
+    ],
+  },
+  {
+    id: 'return-address',
+    name: 'Return address',
+    unlock: 'found',
+    story: 'dispatch',
+    lore: [
+      'Consignment 0001, seventh label',
+      'T. Orr · dispatch',
+      'I put a blue thread under the tape before sending this one through. I wanted a mark the scanner would not think to change.\n\nIt came back on the lower belt before my tea had cooled. New label. Same thread. The destination was my own desk, listed as an external customer.\n\nI have stopped signing for it. The belts are still running. Watch it make the turn and you will understand why I have left my stamp in the drawer.',
+    ],
+  },
+  {
+    id: 'cold-control',
+    name: 'Control sample',
+    unlock: 'found',
+    story: 'experiment',
+    lore: [
+      'Cooling trial 17, handwritten amendment',
+      'Dr. S. Anik · development',
+      'The regulator no longer accepts a stop command. It fills, vents, and fills again. Five seconds is all it remembers of the operating schedule.\n\nThe inspection heads slow when they cross the discharge. With enough exposure their joints seize briefly. Vale suggested we put the broken machine between ourselves and the working ones. I objected to using an uncontrolled result.\n\nShe asked whether I had a controlled way out.\n\nKeep the trial running.',
+    ],
+  },
+  {
+    id: 'still-here',
+    name: 'Someone was here',
+    unlock: 'found',
+    story: 'hideout',
+    lore: [
+      'Service panel, inside face',
+      'M. Vale · maintenance',
+      'The first marks counted shifts. The second row counted nights, after I found the crack where the light changes. The short row is how many times Orr knocked on the pipe.\n\nThe covers will hold for a while. The cylinder in the aisle is live; wait until they are beside it. I have moved the sleeping mat away from the wall because the wall gets warm just before the freight starts.\n\nIf this place is empty, look up. I did not spend all that time fixing lifts to leave through the loading gate.',
+    ],
+  },
+  {
     id: 'handover',
     name: 'Last handover',
     unlock: 'always',

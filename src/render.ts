@@ -2,6 +2,7 @@ import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutati
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
 import { drawFloodgate, drawFloodwater } from './floodgate-art.ts';
 import { drawReforge } from './reforge-art.ts';
+import { drawStoryBackdrop, drawStoryDetails } from './story-art.ts';
 import { SPLIT_SCALE } from './mutations.ts';
 import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
@@ -188,6 +189,7 @@ export class Renderer {
     c.translate(-this.camera.x, -this.camera.y);
     this.worldTransform = c.getTransform();
     this.drawBreachBackdrop();
+    drawStoryBackdrop(c, g, this.reduced);
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);
     const palette = AREAS[g.level.area];
@@ -231,6 +233,7 @@ export class Renderer {
     drawMagnets(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
     this.drawProps();
+    drawStoryDetails(c, g, this.reduced);
     this.drawBreaches();
     drawPortals(c, g, this.clock, this.reduced, this.portalAim);
     drawTripwires(c, g, this.reduced);

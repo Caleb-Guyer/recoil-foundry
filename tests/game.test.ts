@@ -761,6 +761,9 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     // Keep this weapon-progression battery on its pre-Fabricator roster.
     // Dedicated ordinary-input room tests cover Fabricator combat and both layouts.
     g.fabricators.enabled = false;
+    // Keep this scripted weapon-progression course stable. Story rooms have
+    // separate ordinary-input clears in both orientations and traversal tests.
+    g.story.state = null;
     if (overtimeRun)
       g.startTest(overtimeTestFromUrl(new URL('https://example.com/?test=overtime'))!);
     const extendedRewards = rewards && [...rewards];

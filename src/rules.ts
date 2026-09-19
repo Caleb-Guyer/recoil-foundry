@@ -1,5 +1,6 @@
 import { validAreaEvent } from './area-events.ts';
 import { validReforge } from './reforge-rules.ts';
+import { validStory } from './story-layout.ts';
 import {
   BRANCH_MODS,
   BRANCH_PATHS,
@@ -1003,6 +1004,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  story?: import('./story-layout.ts').StorySave;
   fabricators?: true;
   reforge?: import('./reforge-rules.ts').ReforgeSave;
   reforgeRoom?: import('./reforge-rules.ts').ReforgeRoomSave;
@@ -1263,6 +1265,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     !valid ||
     !validRewardCheckpoint(d) ||
     !validReforge(d) ||
+    !validStory(d) ||
     (d.fabricators !== undefined && d.fabricators !== true)
   )
     return null;

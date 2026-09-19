@@ -7,6 +7,7 @@ import type { RunRecap } from './run-history.ts';
 import { PRACTICE_BOSSES, type Encounter } from './practice.ts';
 import { UPGRADE_LORE, type Lore } from './lore-upgrades.ts';
 import { MACHINE_LORE, PLACE_LORE, RECORDS, TOOL_LORE } from './lore-factory.ts';
+import { STORY_KINDS, type StoryKind } from './story-layout.ts';
 
 export const LOGBOOK_KEY = 'rf-logbook-v1';
 export const LOGBOOK_SECTIONS = ['equipment', 'machines', 'places', 'records'] as const;
@@ -16,17 +17,22 @@ export interface LogbookProgress {
   enemies: EnemyKind[];
   areas: AreaId[];
   escaped: boolean;
+  stories?: StoryKind[];
 }
 const areaIds = Object.keys(AREAS) as AreaId[];
 const enemyIds = Object.keys(ENEMY_NAMES) as EnemyKind[];
 export function loadLogbook(raw: unknown): LogbookProgress {
   const value = raw as Partial<LogbookProgress> | null;
   if (!value || value.version !== 1) return { version: 1, enemies: [], areas: [], escaped: false };
+  const stories = STORY_KINDS.filter(
+    (id) => Array.isArray(value.stories) && value.stories.includes(id),
+  );
   return {
     version: 1,
     enemies: enemyIds.filter((id) => Array.isArray(value.enemies) && value.enemies.includes(id)),
     areas: areaIds.filter((id) => Array.isArray(value.areas) && value.areas.includes(id)),
     escaped: value.escaped === true,
+    ...(stories.length ? { stories } : {}),
   };
 }
 export function mergeLogbook(a: LogbookProgress, b: LogbookProgress): LogbookProgress {
@@ -35,6 +41,7 @@ export function mergeLogbook(a: LogbookProgress, b: LogbookProgress): LogbookPro
     enemies: [...a.enemies, ...b.enemies],
     areas: [...a.areas, ...b.areas],
     escaped: a.escaped || b.escaped,
+    stories: [...(a.stories ?? []), ...(b.stories ?? [])],
   });
 }
 export function migrateLogbook(
@@ -54,6 +61,7 @@ export function migrateLogbook(
     enemies: victories.map((victory) => victory.kind),
     areas: stages.length ? areaIds.slice(0, areaIndex(Math.max(...stages)) + 1) : [],
     escaped: history.some((run) => run.outcome === 'won'),
+    stories: checkpoint?.story?.recovered ? [checkpoint.story.kind] : [],
   });
 }
 export function recordLogbook(progress: LogbookProgress, game: Game, enemy?: EnemyKind) {
@@ -69,6 +77,7 @@ export function recordLogbook(progress: LogbookProgress, game: Game, enemy?: Ene
     enemies: enemy ? [enemy] : [],
     areas: [game.level.area],
     escaped: game.mode === 'won',
+    stories: game.story.state?.recovered ? [game.story.state.kind] : [],
   });
 }
 
@@ -123,7 +132,11 @@ export function logbookEntries(
     ...RECORDS.filter(
       (record) =>
         record.unlock === 'always' ||
-        (record.unlock === 'escaped' ? safe.escaped : safe.areas.includes(record.unlock)),
+        (record.unlock === 'found'
+          ? !!safe.stories?.includes(record.story)
+          : record.unlock === 'escaped'
+            ? safe.escaped
+            : safe.areas.includes(record.unlock)),
     ).map((record) => ({
       id: 'record:' + record.id,
       name: record.name,
