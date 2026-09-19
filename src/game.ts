@@ -45,6 +45,8 @@ import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
+import { CommendationTracker, type CommendationId, type KillSource } from './commendations.ts';
+import type { Cosmetics } from './cosmetics.ts';
 import { CryogenicSystem } from './cryogenic.ts';
 import { StasisSystem, suspended, type StasisFlight } from './stasis.ts';
 import { MobilitySystem } from './mobility.ts';
@@ -344,6 +346,8 @@ export class Game {
   particles: Particle[] = [];
   trail: Vec[] = [];
   mode: Mode = 'title';
+  cosmetics: Cosmetics = { gun: 'standard', outfit: 'standard' };
+  commendations = new CommendationTracker(this);
   practice: Encounter | null = null;
   workshop = new WorkshopSystem(this);
   seed = '';
@@ -464,6 +468,7 @@ export class Game {
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
   onBossDefeated: (kind: EnemyKind) => void = () => {};
   onEnemyDefeated: (kind: EnemyKind) => void = () => {};
+  onCommendation: (id: CommendationId) => void = () => {};
   constructor() {
     Matter.Events.on(this.engine, 'beforeSolve', () => {
       this.counterweights.afterIntegrate();
@@ -604,6 +609,7 @@ export class Game {
         shutdownInspection ||
         disabledRoom,
     );
+    if (save) this.commendations.cleanBoss = save.cleanBoss === true;
     if (storyInspection && this.story.note) {
       Body.setPosition(this.player, { x: this.story.note.x - 35, y: this.story.note.y + 16 });
       Body.setVelocity(this.player, { x: 0, y: 0 });
@@ -641,6 +647,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.level.boss && !this.escape ? { cleanBoss: this.commendations.cleanBoss } : {}),
       ...(this.fabricators.enabled ? { fabricators: true as const } : {}),
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
       ...(this.floodgate.stage !== null ? { floodgate: this.floodgate.stage } : {}),
@@ -678,6 +685,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.commendations.resetRoom();
     this.fabricators.clear();
     this.floodgate.clear();
     this.courier.clear();
@@ -999,6 +1007,7 @@ export class Game {
         this.startOvertime();
         return;
       }
+      this.commendations.extracted();
       this.setMode('won');
       if (!this.testRun) this.onCheckpoint(null);
       this.onSound('win');
@@ -2584,10 +2593,18 @@ export class Game {
               this.ballistics.fracture(e, s) *
               (this.gun.execute && s.friendly && !s.fragment && e.hp < e.maxHp * 0.3 ? 1.6 : 1),
           );
-          const blocked = this.hitEnemy(e, damage, {
-            x: e.body.position.x - s.vel.x,
-            y: e.body.position.y - s.vel.y,
-          });
+          const blocked = this.hitEnemy(
+            e,
+            damage,
+            {
+              x: e.body.position.x - s.vel.x,
+              y: e.body.position.y - s.vel.y,
+            },
+            true,
+            true,
+            true,
+            s.reflected ? 'reflection' : undefined,
+          );
           if (blocked) {
             if (s.massDriver && !s.shell) {
               this.massDriver.bounce(s, nearest.normal, e.body, false);
@@ -2796,6 +2813,7 @@ export class Game {
     feedback = true,
     killEffects = true,
     credited = true,
+    source?: KillSource,
   ): boolean {
     if (e.hp <= 0 || e.allied) return false;
     if (e.kind === 'sentry') credited = false;
@@ -2842,6 +2860,7 @@ export class Game {
       if (e.hp > 0) this.onSound(armored ? 'armor' : 'hit');
     }
     if (e.hp > 0) return blocked;
+    if (credited) this.commendations.defeated(e, source);
     if (
       isBoss(e.kind) &&
       !this.practice &&
@@ -2902,7 +2921,9 @@ export class Game {
         kind: 'ring',
       });
     this.onSound('kill');
-    if (isBoss(e.kind)) for (const other of [...this.enemies]) this.hitEnemy(other, 9999);
+    if (isBoss(e.kind))
+      for (const other of [...this.enemies])
+        this.hitEnemy(other, 9999, undefined, true, true, true, 'cleanup');
     return blocked;
   }
   damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }) {
@@ -2910,6 +2931,7 @@ export class Game {
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     this.hp = Math.max(0, this.hp - amount);
+    if (amount > 0) this.commendations.damaged();
     this.hurtAt = this.time;
     this.feedback(8);
     this.hitStop = 0.045;

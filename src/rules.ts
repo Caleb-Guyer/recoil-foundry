@@ -1005,6 +1005,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  cleanBoss?: boolean;
   shutdown?: import('./shutdown-layout.ts').ShutdownSave;
   story?: import('./story-layout.ts').StorySave;
   fabricators?: true;
@@ -1269,6 +1270,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     !validReforge(d) ||
     !validStory(d) ||
     !validShutdown(d) ||
+    (d.cleanBoss !== undefined && typeof d.cleanBoss !== 'boolean') ||
     (d.fabricators !== undefined && d.fabricators !== true)
   )
     return null;

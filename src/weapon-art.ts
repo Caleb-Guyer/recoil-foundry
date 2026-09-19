@@ -1,4 +1,5 @@
 import { drawTorchWeapon } from './torch-art.ts';
+import { GUN_FINISHES, drawFinishMark } from './cosmetics.ts';
 import type { Game } from './game.ts';
 import { clamp } from './rules.ts';
 import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
@@ -167,14 +168,16 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   c.restore();
 
   const half = burst ? 6 : 5;
-  c.fillStyle = '#819b89';
+  const finish = GUN_FINISHES[g.cosmetics.gun];
+  c.fillStyle = finish.shell;
   c.beginPath();
   c.roundRect(5, -half, 21, half * 2, 2);
   c.fill();
-  c.fillStyle = '#e1e5d0';
+  c.fillStyle = finish.face;
   c.fillRect(8, -half + 1, 16, half * 2 - 3);
-  c.fillStyle = '#556e5c';
+  c.fillStyle = finish.trim;
   c.fillRect(7, half - 1.5, 16, 1.5);
+  drawFinishMark(c, g.cosmetics.gun);
   if (burst) {
     c.fillStyle = '#3b5243';
     c.fillRect(7, -4, 17, 5);
@@ -187,7 +190,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillStyle = '#c1d3b3';
     c.fillRect(12 - punch * 3.5 * motion, 2, 7, 2);
   } else {
-    c.fillStyle = '#adbea3';
+    c.fillStyle = finish.light;
     c.fillRect(10, -3, 11, 2);
     c.fillStyle = '#637e68';
     c.fillRect(9, 1, 6, 2);

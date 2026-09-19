@@ -9,9 +9,16 @@ import { UPGRADE_LORE, type Lore } from './lore-upgrades.ts';
 import { MACHINE_LORE, PLACE_LORE, RECORDS, TOOL_LORE } from './lore-factory.ts';
 import { DISCONNECT_STAGES } from './shutdown-layout.ts';
 import { STORY_KINDS, type StoryKind } from './story-layout.ts';
+import { COMMENDATIONS, type CommendationId } from './commendations.ts';
 
 export const LOGBOOK_KEY = 'rf-logbook-v1';
-export const LOGBOOK_SECTIONS = ['equipment', 'machines', 'places', 'records'] as const;
+export const LOGBOOK_SECTIONS = [
+  'equipment',
+  'machines',
+  'places',
+  'records',
+  'commendations',
+] as const;
 export type LogbookSection = (typeof LOGBOOK_SECTIONS)[number];
 export interface LogbookProgress {
   version: 1;
@@ -103,10 +110,13 @@ export interface LogbookEntry {
   description: string;
   lore: Lore;
   mod?: Mod;
+  earned?: boolean;
+  reward?: string;
 }
 export function logbookEntries(
   known: readonly string[],
   progress: LogbookProgress,
+  commendations: readonly CommendationId[] = [],
 ): LogbookEntry[] {
   const safe = loadLogbook(progress);
   return [
@@ -163,6 +173,16 @@ export function logbookEntries(
       description: '',
       lore: record.lore,
     })),
+    ...COMMENDATIONS.map((c) => ({
+      id: 'commendation:' + c.id,
+      name: c.name,
+      section: 'commendations' as const,
+      label: commendations.includes(c.id) ? 'Commendation earned' : 'Commendation · Pending',
+      description: c.objective,
+      earned: commendations.includes(c.id),
+      reward: c.reward + ' · ' + c.slot,
+      lore: c.lore,
+    })),
   ];
 }
 export const LOGBOOK_TOTALS: Record<LogbookSection, number> = {
@@ -170,6 +190,7 @@ export const LOGBOOK_TOTALS: Record<LogbookSection, number> = {
   machines: enemyIds.length,
   places: areaIds.length,
   records: RECORDS.length,
+  commendations: COMMENDATIONS.length,
 };
 export function logbookMatches(
   entries: readonly LogbookEntry[],

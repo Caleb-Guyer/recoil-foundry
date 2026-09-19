@@ -22,6 +22,7 @@ export interface CargoRig {
   hits: Map<number, number>;
   tell?: number;
   disabled?: boolean;
+  dropEndedAt?: number;
 }
 
 export class CargoSystem {
@@ -127,13 +128,32 @@ export class CargoSystem {
   impact(prop: Prop, other: Matter.Body, speed: number) {
     const g = this.game,
       rig = prop.cargo;
-    if (rig?.state !== 'loose' || speed < 6 || Math.hypot(prop.velocity.x, prop.velocity.y) < 6)
-      return false;
+    if (rig?.state !== 'loose') return false;
+    const enemy = g.enemies.find((e) => e.body === other || e.crane?.body === other);
+    if (
+      !enemy &&
+      other !== g.player &&
+      other.bounds.min.y >= prop.body.position.y &&
+      rig.dropEndedAt === undefined
+    )
+      rig.dropEndedAt = g.time;
+    if (speed < 6 || Math.hypot(prop.velocity.x, prop.velocity.y) < 6) return false;
     if (g.time - (rig.hits.get(other.id) ?? -10) < 0.8) return true;
     rig.hits.set(other.id, g.time);
-    const enemy = g.enemies.find((e) => e.body === other || e.crane?.body === other);
     if (enemy && enemy.spawn <= 0 && enemy.hp > 0)
-      g.hitEnemy(enemy, Math.min(isBoss(enemy.kind) ? CARGO_BOSS_DAMAGE : 240, speed * 18));
+      g.hitEnemy(
+        enemy,
+        Math.min(isBoss(enemy.kind) ? CARGO_BOSS_DAMAGE : 240, speed * 18),
+        undefined,
+        true,
+        true,
+        true,
+        prop.velocity.y >= 6 &&
+          !rig.disabled &&
+          (rig.dropEndedAt === undefined || rig.dropEndedAt === g.time)
+          ? { cargo: prop.body.id }
+          : undefined,
+      );
     else if (other === g.player) {
       if (!rig.disabled) g.damagePlayer(24, prop.body.position, { type: 'cargo' });
     } else {

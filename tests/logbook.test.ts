@@ -21,6 +21,7 @@ import {
   logbookPreviewEntries,
 } from '../src/logbook.ts';
 import { escapeLogbook, logbookArticle } from '../src/logbook-menu.ts';
+import { COMMENDATIONS } from '../src/commendations.ts';
 
 test('every upgrade, enemy and area has a complete, distinct authored record', () => {
   assert.deepEqual(Object.keys(UPGRADE_LORE).sort(), MODS.map((mod) => mod.id).sort());
@@ -32,6 +33,7 @@ test('every upgrade, enemy and area has a complete, distinct authored record', (
     ...Object.values(MACHINE_LORE),
     ...Object.values(PLACE_LORE),
     ...RECORDS.map((record) => record.lore),
+    ...COMMENDATIONS.map((c) => c.lore),
   ];
   assert.equal(new Set(lore.map((entry) => entry[2])).size, lore.length);
   for (const [source, author, text] of lore) {
@@ -49,7 +51,7 @@ test('every upgrade, enemy and area has a complete, distinct authored record', (
 test('new players see only their service tool and handover, including search and HTML', () => {
   const entries = logbookEntries([], loadLogbook(null));
   assert.deepEqual(
-    entries.map((entry) => entry.id),
+    entries.filter((entry) => entry.section !== 'commendations').map((entry) => entry.id),
     ['tool', 'record:handover'],
   );
   for (const section of ['equipment', 'machines', 'places', 'records'] as const)
@@ -222,13 +224,16 @@ test('preview links are strict, return fresh data and expose only a small early-
   ])
     assert.equal(logbookLink(new URL('https://test/?' + query)), null);
   const preview = logbookPreviewEntries();
-  assert.ok(preview.length > 5 && preview.length < 15);
+  assert.ok(
+    preview.filter((entry) => entry.section !== 'commendations').length > 5 &&
+      preview.length < 15 + COMMENDATIONS.length,
+  );
   assert.ok(
     !preview.some((entry) => entry.id === 'enemy:interceptor' || entry.id === 'area:rooftops'),
   );
   preview.pop();
   assert.equal(logbookPreviewEntries().length, preview.length + 1);
-  assert.equal(logbookEntries([], loadLogbook(null)).length, 2);
+  assert.equal(logbookEntries([], loadLogbook(null)).length, 2 + COMMENDATIONS.length);
 });
 
 test('record rendering escapes names, descriptions, signatures and recovered prose', () => {

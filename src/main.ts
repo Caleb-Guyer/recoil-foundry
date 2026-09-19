@@ -31,6 +31,14 @@ import { wallcrawlerTestFromUrl } from './practice.ts';
 import { counterweightTestFromUrl } from './practice.ts';
 import { grindshotTestFromUrl, interceptorGrindTestFromUrl } from './practice.ts';
 import './style.css';
+import {
+  COMMENDATIONS,
+  COMMENDATIONS_KEY,
+  loadCommendations,
+  mergeCommendations,
+  commendationPreviewLink,
+} from './commendations.ts';
+import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
 import { Game } from './game.ts';
 import {
   DISCOVERIES_KEY,
@@ -148,6 +156,10 @@ let discovered = discoverBuild(
   storedCheckpoint?.legacyMods,
 );
 let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
+let commendations = loadCommendations(read(COMMENDATIONS_KEY));
+let runCommendations: typeof commendations = [];
+let equippedCosmetics = loadCosmetics(read(COSMETICS_KEY), commendations);
+let logbookFromWorkshop = false;
 let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
 let logbookProgress = migrateLogbook(read(LOGBOOK_KEY), storedCheckpoint, runHistory, encounters);
 const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', query: '' };
@@ -172,6 +184,7 @@ const game = new Game(),
   renderer = new Renderer(canvas, game),
   sound = new Sound();
 const deathReplay = new DeathReplay();
+game.cosmetics = { ...equippedCosmetics };
 let replayView: ReplayView | null = null;
 let replayRoom = game.level;
 if (discovered.length) write(DISCOVERIES_KEY, discovered);
@@ -219,10 +232,13 @@ const input: Input = {
   aim: { x: 600, y: 550 },
 };
 const entryUrl = new URL(location.href);
+let previewCommendations = commendationPreviewLink(entryUrl);
+if (previewCommendations) logbookView.section = 'commendations';
 const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 if (
   linkedLogbook !== 'preview' &&
+  !previewCommendations &&
   JSON.stringify(read(LOGBOOK_KEY)) !== JSON.stringify(logbookProgress)
 )
   write(LOGBOOK_KEY, logbookProgress);
@@ -547,9 +563,14 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     return;
   }
   finishedRun = null;
+  runCommendations = [];
   linkedTest = null;
   linkedRunTest = null;
   linkedWorkshop = false;
+  previewCommendations = false;
+  commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
+  equippedCosmetics = loadCosmetics(equippedCosmetics, commendations);
+  game.cosmetics = { ...equippedCosmetics };
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -595,6 +616,7 @@ function startPractice(encounter: Encounter) {
   )
     return;
   finishedRun = null;
+  runCommendations = [];
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -608,6 +630,7 @@ function startPractice(encounter: Encounter) {
 }
 function startRunTest(save: Checkpoint) {
   finishedRun = null;
+  runCommendations = [];
   sound.unlock();
   sound.resetMusic();
   closeDialog();
@@ -621,13 +644,14 @@ function startRunTest(save: Checkpoint) {
 }
 function startWorkshop(mods: readonly string[] = workshopMods) {
   finishedRun = null;
+  runCommendations = [];
   sound.unlock();
   sound.resetMusic();
   closeDialog();
   activeDaily = null;
   dailyResult = null;
   workshopMods = workshopBuild(mods, discovered);
-  write(WORKSHOP_BUILD_KEY, workshopMods);
+  if (!previewCommendations) write(WORKSHOP_BUILD_KEY, workshopMods);
   game.startWorkshop(discovered, workshopMods);
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
@@ -681,6 +705,12 @@ function backFromHistory() {
   else resume();
 }
 function backFromLogbook() {
+  if (logbookFromWorkshop) {
+    logbookFromWorkshop = false;
+    showDialog('workshop');
+    document.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
+    return;
+  }
   previewLogbook = false;
   if (game.mode === 'paused') {
     showDialog('pause');
@@ -703,6 +733,13 @@ function updateLogbook(enemy?: EnemyKind) {
     write(LOGBOOK_KEY, logbookProgress);
 }
 game.onEnemyDefeated = updateLogbook;
+game.onCommendation = (id) => {
+  if (!game.commendations.eligible) return;
+  commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
+  if (!commendations.includes(id)) runCommendations.push(id);
+  commendations = mergeCommendations(commendations, [id]);
+  write(COMMENDATIONS_KEY, commendations);
+};
 game.onCheckpoint = (s) => {
   if (game.practice || game.testRun || game.workshop.active) return;
   if (s) {
@@ -919,6 +956,11 @@ function showDialog(kind: string) {
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle('ending-dialog', kind === 'result' && game.shutdown.complete);
   const content = $('dialog-content');
+  if (kind === 'logbook' || kind === 'workshop')
+    commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
+  const visibleCommendations = previewCommendations
+    ? COMMENDATIONS.map((c) => c.id)
+    : commendations;
   if (kind === 'logbook') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     logbookProgress = mergeLogbook(logbookProgress, loadLogbook(read(LOGBOOK_KEY)));
@@ -943,11 +985,17 @@ function showDialog(kind: string) {
                     : {}),
                 })
               : logbookProgress,
+            visibleCommendations,
           ),
       logbookView,
       modMark,
       backFromLogbook,
-      previewLogbook,
+      previewLogbook || previewCommendations,
+      () => {
+        logbookFromWorkshop = false;
+        showDialog('workshop');
+        content.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
+      },
     );
   } else if (kind === 'replay' && deathReplay.ready) {
     replayView = new ReplayView(deathReplay, content);
@@ -971,7 +1019,26 @@ function showDialog(kind: string) {
       game.workshop.active ? game.mods : workshopMods,
       game.workshop.active,
       startWorkshop,
-      resume,
+      backFromHistory,
+      {
+        game,
+        earned: visibleCommendations,
+        preview: previewCommendations,
+        equip: (selection) => {
+          game.cosmetics = selection;
+          if (!previewCommendations) {
+            equippedCosmetics = selection;
+            write(COSMETICS_KEY, selection);
+          }
+        },
+        logbook: () => {
+          logbookFromWorkshop = true;
+          logbookView.section = 'commendations';
+          logbookView.query = '';
+          logbookView.selected = '';
+          showDialog('logbook');
+        },
+      },
     );
   } else if (kind === 'layout-test') {
     const descriptions = [
@@ -1270,6 +1337,22 @@ function showDialog(kind: string) {
       (activeDaily
         ? '<div id="share-fallback" class="share-fallback" hidden><label for="challenge-link">Copy this link</label><input id="challenge-link" class="share-link" readonly spellcheck="false" /></div><span id="share-status" class="sr-only" role="status"></span>'
         : '');
+    if (runCommendations.length) {
+      content.querySelector('.actions')!.insertAdjacentHTML(
+        'beforebegin',
+        '<div class="result-commendations"><span>Commendation earned</span><button class="quiet" id="earned-commendations">' +
+          COMMENDATIONS.filter((c) => runCommendations.includes(c.id))
+            .map((c) => c.name)
+            .join(' · ') +
+          ' ↗</button></div>',
+      );
+      $('earned-commendations').onclick = () => {
+        logbookView.section = 'commendations';
+        logbookView.query = '';
+        logbookView.selected = 'commendation:' + runCommendations[0];
+        showDialog('logbook');
+      };
+    }
     if (win && game.shutdown.complete) $('ending-logbook').onclick = () => showDialog('logbook');
     if (activeDaily) {
       const link = dailyLink(activeDaily, location.href);
@@ -1611,6 +1694,10 @@ modal.addEventListener('cancel', (e) => {
     backFromLogbook();
     return;
   }
+  if (dialogKind === 'workshop') {
+    backFromHistory();
+    return;
+  }
   if (dialogKind === 'replay') {
     showDialog('result');
     return;
@@ -1853,5 +1940,5 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 game.onChange();
-if (linkedLogbook) showDialog('logbook');
+if (linkedLogbook || previewCommendations) showDialog('logbook');
 requestAnimationFrame(frame);

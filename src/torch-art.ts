@@ -1,3 +1,4 @@
+import { GUN_FINISHES, drawFinishMark } from './cosmetics.ts';
 import type { Game } from './game.ts';
 import { distance } from './rules.ts';
 import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
@@ -52,10 +53,12 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
 
 export function drawTorchWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
   c.save();
-  c.fillStyle = '#719084';
+  const finish = GUN_FINISHES[g.cosmetics.gun];
+  c.fillStyle = g.cosmetics.gun === 'standard' ? '#719084' : finish.shell;
   c.fillRect(5, -5, 22, 10);
-  c.fillStyle = '#e0e4cf';
+  c.fillStyle = g.cosmetics.gun === 'standard' ? '#e0e4cf' : finish.face;
   c.fillRect(8, -4, 15, 6);
+  drawFinishMark(c, g.cosmetics.gun);
   c.fillStyle = '#405c51';
   c.fillRect(9, 4, 10, 3);
   c.fillStyle = '#958e75';

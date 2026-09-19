@@ -7,12 +7,14 @@ const names = {
   machines: 'Machines',
   places: 'Places',
   records: 'Records',
+  commendations: 'Commendations',
 };
 const hints = {
   equipment: 'Collect upgrades to recover their records.',
   machines: 'Defeat machines during runs to recover their records.',
   places: 'Reach new areas to recover their records.',
   records: 'Explore the Foundry to recover more documents.',
+  commendations: 'Earn commendations in campaign or Daily runs.',
 };
 export const escapeLogbook = (text: string) =>
   text.replace(
@@ -21,6 +23,18 @@ export const escapeLogbook = (text: string) =>
   );
 const fileMark =
   '<svg class="logbook-file" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 6h18l7 7v29H12zM30 6v9h7M18 23h13M18 29h13M18 35h7"/></svg>';
+const commendationMark = (earned: boolean) =>
+  '<svg class="logbook-file commendation-mark' +
+  (earned ? ' earned' : '') +
+  '" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 7h18v17l-9 7-9-7zM19 30l-3 11 8-4 8 4-3-11"/>' +
+  (earned ? '<path d="m19 18 4 4 7-8"/>' : '') +
+  '</svg>';
+const entryMark = (entry: LogbookEntry, mark: (mod: Mod) => string) =>
+  entry.mod
+    ? mark(entry.mod)
+    : entry.earned !== undefined
+      ? commendationMark(entry.earned)
+      : fileMark;
 export interface LogbookViewState {
   section: LogbookSection;
   selected: string;
@@ -29,7 +43,7 @@ export interface LogbookViewState {
 export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) {
   return (
     '<div class="logbook-entry-top">' +
-    (entry.mod ? mark(entry.mod) : fileMark) +
+    entryMark(entry, mark) +
     '<div><p class="logbook-entry-label">' +
     escapeLogbook(entry.label) +
     '</p><h3 id="logbook-entry-title" tabindex="-1">' +
@@ -38,16 +52,28 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
     (entry.description
       ? '<p class="logbook-function">' + escapeLogbook(entry.description) + '</p>'
       : '') +
-    '<div class="logbook-document"><p class="logbook-source">' +
-    escapeLogbook(entry.lore[0]) +
-    '</p>' +
-    entry.lore[2]
-      .split('\n\n')
-      .map((paragraph) => '<p>' + escapeLogbook(paragraph) + '</p>')
-      .join('') +
-    '<p class="logbook-author">' +
-    escapeLogbook(entry.lore[1]) +
-    '</p></div>'
+    (entry.reward
+      ? '<p class="commendation-reward">' +
+        escapeLogbook(entry.reward) +
+        '<span>' +
+        (entry.earned
+          ? 'Available in Workshop → Appearance'
+          : 'Complete the challenge to unlock.') +
+        '</span></p>'
+      : '') +
+    (entry.earned ? '<button class="quiet commendation-equip">Open Appearance ↗</button>' : '') +
+    (entry.earned === false
+      ? '<p class="logbook-locked">Report not yet filed.<br><span>Campaign and Daily runs count. Practice, Workshop and test runs do not.</span></p>'
+      : '<div class="logbook-document"><p class="logbook-source">' +
+        escapeLogbook(entry.lore[0]) +
+        '</p>' +
+        entry.lore[2]
+          .split('\n\n')
+          .map((paragraph) => '<p>' + escapeLogbook(paragraph) + '</p>')
+          .join('') +
+        '<p class="logbook-author">' +
+        escapeLogbook(entry.lore[1]) +
+        '</p></div>')
   );
 }
 export function logbookMenu(
@@ -57,6 +83,7 @@ export function logbookMenu(
   mark: (mod: Mod) => string,
   back: () => void,
   preview = false,
+  appearance?: () => void,
 ) {
   content.innerHTML =
     '<div class="logbook-header"><div><p class="eyebrow">FOUNDRY ARCHIVE</p><h2 id="dialog-title">Logbook.</h2></div>' +
@@ -89,7 +116,12 @@ export function logbookMenu(
     state.selected = selected?.id ?? '';
     content.querySelector<HTMLElement>('#logbook-count')!.textContent = state.query.trim()
       ? matches.length + ' matching records'
-      : sectionEntries.length + ' / ' + LOGBOOK_TOTALS[state.section] + ' recovered';
+      : (state.section === 'commendations'
+          ? sectionEntries.filter((entry) => entry.earned).length
+          : sectionEntries.length) +
+        ' / ' +
+        LOGBOOK_TOTALS[state.section] +
+        (state.section === 'commendations' ? ' earned' : ' recovered');
     content
       .querySelectorAll<HTMLButtonElement>('[data-section]')
       .forEach((button) =>
@@ -104,7 +136,7 @@ export function logbookMenu(
             '" aria-pressed="' +
             (entry.id === state.selected) +
             '">' +
-            (entry.mod ? mark(entry.mod) : fileMark) +
+            entryMark(entry, mark) +
             '<span>' +
             escapeLogbook(entry.name) +
             '</span></button>',
@@ -125,6 +157,11 @@ export function logbookMenu(
         (state.query.trim() ? 'Try another name or clear the search.' : hints[state.section]) +
         '</p></div>';
     detail.scrollTop = 0;
+    const equip = detail.querySelector<HTMLButtonElement>('.commendation-equip');
+    if (equip) {
+      equip.hidden = !appearance;
+      if (appearance) equip.onclick = appearance;
+    }
     list.querySelectorAll<HTMLButtonElement>('[data-entry]').forEach((button) => {
       button.onclick = () => {
         state.selected = button.dataset.entry!;

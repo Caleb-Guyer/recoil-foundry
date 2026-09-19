@@ -6,6 +6,23 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Factory commendations · 2.90.0
+
+Four skill challenges unlock permanent cosmetic rewards and original factory reports in **Logbook → Commendations**:
+
+| Commendation     | Challenge                                       | Reward               |
+| ---------------- | ----------------------------------------------- | -------------------- |
+| Clean Work       | Defeat a boss without taking damage in its room | Inspector gun finish |
+| Heavy Equipment  | Crush three enemies with one falling cargo load | Rigger outfit        |
+| Return to Sender | Finish a boss with a reflected projectile       | Mirror gun finish    |
+| After Hours      | Complete Overtime and extract                   | Night Shift outfit   |
+
+Equip earned rewards in **Workshop → Appearance**, with a live equipment preview. Gun finishes work with ordinary weapons, heavy/rail configurations and the beam. Outfits preserve the player's silhouette and bright visor. Everything is cosmetic: no stat bonuses or changes to Daily balance. New commendations appear on the result screen; the combat HUD stays unchanged.
+
+Campaign and Daily runs count. Practice, Workshop and test presets do not. Unlocks survive death and retries in this browser; clean-fight evidence survives checkpoint reloads. Existing saves without that evidence become eligible for Clean Work at the next boss room. Heavy Equipment counts direct crushes from the same initial falling load, excluding later pushes and secondary explosions. Return to Sender requires the reflected round itself to deliver the killing blow.
+
+[**Preview all four reports and rewards**](https://caleb-guyer.github.io/recoil-foundry/?test=commendations&v=2.90.0). Choose **Open Appearance**, select an outfit/finish, then **Enter Workshop** to try it. The preview grants no real commendations and saves no cosmetic selections; starting a campaign restores your actual equipped rewards.
+
 ## End of shift · 2.89.0
 
 An optional secret route spans a fresh campaign. Maintenance marks and recovered writing connect three old safety disconnects to the factory's continuity system. There is no objective HUD or mandatory detour. The normal extraction and Overtime elevators remain available.

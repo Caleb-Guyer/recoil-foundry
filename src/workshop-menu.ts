@@ -8,6 +8,7 @@ import {
 } from './rules.ts';
 import { workshopBuild } from './workshop-build.ts';
 import { BRANCH_PARENTS } from './upgrade-branches.ts';
+import { appearanceMenu, type AppearanceOptions } from './appearance-menu.ts';
 
 export function workshopMenu(
   content: HTMLElement,
@@ -16,11 +17,16 @@ export function workshopMenu(
   active: boolean,
   apply: (mods: string[]) => void,
   back: () => void,
+  appearance?: AppearanceOptions,
 ) {
   let draft = workshopBuild(initial, known);
   const discovered = MODS.filter((mod) => known.includes(mod.id));
   content.innerHTML =
     '<h2 id="dialog-title">The Workshop</h2>' +
+    (appearance
+      ? '<nav class="workshop-tabs" aria-label="Workshop sections"><button class="quiet" data-workshop-tab="build" aria-pressed="true">Build</button><button class="quiet" data-workshop-tab="appearance" aria-pressed="false">Appearance</button></nav>'
+      : '') +
+    '<div id="workshop-build">' +
     '<p class="practice-note">' +
     (discovered.length
       ? 'Build with upgrades you’ve collected. Normal path rules apply.'
@@ -29,7 +35,8 @@ export function workshopMenu(
     (discovered.length > 12
       ? '<label class="sr-only" for="workshop-search">Find a collected upgrade</label><input id="workshop-search" class="workshop-search" type="search" placeholder="Find an upgrade" autocomplete="off">'
       : '') +
-    '<div id="workshop-list" class="workshop-list"></div>' +
+    '<div id="workshop-list" class="workshop-list"></div></div>' +
+    '<div id="workshop-appearance" hidden></div>' +
     '<div class="workshop-actions"><p id="workshop-status" class="workshop-status" role="status"></p><button id="workshop-apply" class="primary">' +
     (active ? 'Apply & reset' : 'Enter Workshop') +
     '</button><button id="workshop-clear" class="quiet">Clear build</button><button id="workshop-back" class="quiet">Back</button></div>';
@@ -110,4 +117,20 @@ export function workshopMenu(
   content.querySelector<HTMLButtonElement>('#workshop-apply')!.onclick = () => apply(draft);
   content.querySelector<HTMLButtonElement>('#workshop-back')!.onclick = back;
   render();
+  if (appearance) {
+    appearanceMenu(content.querySelector<HTMLElement>('#workshop-appearance')!, appearance);
+    content.querySelectorAll<HTMLButtonElement>('[data-workshop-tab]').forEach((button) => {
+      button.onclick = () => {
+        const build = button.dataset.workshopTab === 'build';
+        content.querySelector<HTMLElement>('#workshop-build')!.hidden = !build;
+        content.querySelector<HTMLElement>('#workshop-appearance')!.hidden = build;
+        for (const id of ['workshop-status', 'workshop-clear'])
+          content.querySelector<HTMLElement>('#' + id)!.hidden = !build;
+        button.focus();
+        content
+          .querySelectorAll<HTMLButtonElement>('[data-workshop-tab]')
+          .forEach((tab) => tab.setAttribute('aria-pressed', String(tab === button)));
+      };
+    });
+  }
 }
