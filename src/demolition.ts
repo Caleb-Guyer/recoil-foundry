@@ -41,6 +41,8 @@ export interface Bomblet {
   last: number;
 }
 export const CLUSTER_LIMIT = 48;
+export const SHAPED_DAMAGE = 1.3;
+export const CLUSTER_DAMAGE = 1.25;
 export interface PendingBlast extends DemolitionBlast {
   at: number;
 }
@@ -177,6 +179,7 @@ export class DemolitionSystem {
       blast = {
         ...blast,
         shaped: true,
+        damage: blast.damage * SHAPED_DAMAGE,
         radius: blast.radius * 1.5,
         direction: blast.direction ?? direction(g.player.position, g.aim),
       };
@@ -208,7 +211,7 @@ export class DemolitionSystem {
       // A saturated field merges excess payload into the parent, never drops it.
       blast = {
         ...blast,
-        damage: blast.damage * (1 - emitted * 0.2),
+        damage: blast.damage * (CLUSTER_DAMAGE - emitted * 0.2),
         launch: blast.launch * (1 - emitted * 0.2),
       };
     }

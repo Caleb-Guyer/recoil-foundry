@@ -2,6 +2,8 @@
 
 Planning baseline: 2.91.0, 19 September 2026. This records proposed release requirements, not completed sign-off. Future content updates remain possible. The Unity/Steam remake is separate.
 
+Latest update: **2.92.0 — balance engineering pass completed**. Checked items below have supporting automated evidence; human playtesting and release acceptance remain open. See the [balance report and measurements](balance-audit-2.92.0.md).
+
 ## Scope
 
 The browser game already has a twenty-room campaign across five areas, 100 upgrades and branching builds, boss variants, optional challenges and events, Daily runs, Overtime, Practice, Workshop, run recaps, death replay, the Logbook, a secret ending, and cosmetic commendations. Finish and stabilize these systems before adding another major path or area.
@@ -12,11 +14,14 @@ The browser game already has a twenty-room campaign across five areas, 100 upgra
 
 ## 1. Complete-run balance and pacing — release blocker
 
-- [ ] Play opening, middle and late areas with weak, ordinary and strong legal builds. Check damage, health recovery, rewards, enemy density, room duration and boss difficulty together.
-- [ ] Audit every upgrade family and maximum combination for dead effects, excessive visual obstruction, dominant defensive loops and damage that trivializes encounters. Keep exceptional builds exciting while preserving reasons to move and react.
-- [ ] Repeat the known exploit tests with current builds: camping above bosses, corners, cover, Countershot spam, portal funnels, and pinning moving machinery with players, crates or explosions.
-- [ ] Play complete campaign, Daily, detour, optional-pursuit, secret-ending and Overtime routes. Check that optional encounters do not create unreasonable difficulty stacks or inaccessible rewards.
-- [ ] Adjust repetitive rooms and abrupt spikes; do not add mandatory length simply to make the release seem larger.
+- [x] Measure legal utility-heavy, ordinary and damage-focused profiles across the five areas and all boss variants. Record damage, effective healing, rewards, density, duration, deaths and timeouts: 232 cases and 368 room/escape visits are archived in the balance report.
+- [x] Run upgrade compatibility and mechanic regressions, every branch preset, and finite-physics/effect-budget checks for all 1,024 maximum combinations. Add realistic charged-weapon input to the pilots.
+- [x] Repeat automated known-exploit checks: overhead/corner/cover camps, Countershot and Breach spam, portal budgets/collisions, and moving machinery pinned by players, crates, steel balls or explosions.
+- [x] Complete normal and Daily combat runs using actual offered upgrades with current encounters enabled. Keep the fifteen scripted campaign/Overtime combat regressions and event, detour, secret-chamber and Auditor progression/encounter tests passing.
+- [x] Apply measured, targeted tuning: preserve a shared firepower option in early rewards, strengthen Shaped Charge and Cluster Shell, retain bounded echoes/children and advance Daily to ruleset 78. Preserve the twenty-room campaign and existing boss warning windows.
+- [ ] Human-play weak, ordinary and strong builds through every area; choose first-win difficulty and successful-run duration targets. Judge recovery, reward quality, readable deaths and dominant strategies in real sessions.
+- [ ] Human-play complete detour, optional-pursuit, secret-ending and Overtime routes, including awkward builds and low-health entrances. Judge combined encounter difficulty and access to rewards.
+- [ ] Resolve the report's human follow-ups: demolition/Storm Cell kill times against mobile bosses, short-range Recall positioning at Crane/Press, dense-build readability, and repetitive rooms. Change difficulty or layouts where that evidence calls for it.
 
 Acceptance: multiple builds can finish; weak builds still have viable decisions; powerful builds have distinct strengths without automatic wins; failures are avoidable and understandable. Automated pilots supplement human sessions.
 
@@ -91,7 +96,7 @@ Acceptance: the release candidate passes the checklist, a fresh player can start
 ## Work order
 
 1. Finish the Auditor and freeze major additions.
-2. Run complete-game balance and first-session playtests; capture the concrete problems.
+2. Complete human balance acceptance from the 2.92.0 report and first-session playtests; the automated balance/tuning pass is complete.
 3. Address those findings alongside progress backup and settings gaps.
 4. Complete browser/hardware checks and presentation/audio polish.
 5. Run a final external playtest, fix blockers, tag and publish the full browser release.

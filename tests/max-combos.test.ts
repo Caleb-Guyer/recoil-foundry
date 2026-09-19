@@ -15,7 +15,11 @@ test('every maximal build fires in the actual Workshop with finite physics and b
     for (let frame = 0; frame < 180; frame++) {
       const target = g.enemies.filter((e) => e.spawn <= 0)[frame < 90 ? 0 : 1];
       const aim = target ? { ...target.body.position } : { x: 1100, y: 550 };
-      const fire = g.mods.includes('charge-lens') ? frame % 120 < 90 : frame % 90 < 75;
+      const fire = g.mods.includes('charge-lens')
+        ? g.torch.chargeProgress < 1
+        : g.mods.includes('rail-spike')
+          ? g.ballistics.charges > 0 || g.burstRemaining > 0
+          : frame % 90 < 75;
       g.tick(1 / 60, {
         left: frame > 120,
         right: frame < 30,

@@ -71,7 +71,9 @@ export function playRoom(g: Game, seconds: number, stop: () => boolean = () => f
         };
       }
     } else climbX = undefined;
-    if (g.mods.includes('charge-lens')) input.fire = !!input.fire && frame % 72 < 48;
+    if (g.mods.includes('charge-lens')) input.fire = !!input.fire && g.torch.chargeProgress < 1;
+    if (g.mods.includes('rail-spike'))
+      input.fire = !!input.fire && (g.ballistics.charges > 0 || g.burstRemaining > 0);
     if (g.mods.includes('suspension') && !g.mods.includes('tripline'))
       input.fire = !!input.fire && frame % 48 < 32;
     // Traps and returning rounds have finite reach. Stop thrusting downward

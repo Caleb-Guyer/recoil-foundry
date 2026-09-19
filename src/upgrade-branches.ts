@@ -33,13 +33,14 @@ export const BRANCH_MODS = [
   {
     id: 'shaped-charge',
     name: 'Shaped Charge',
-    description: 'Shell blasts cut a longer cone in the impact direction. Less side coverage.',
+    description: 'Shell blasts hit 30% harder in a longer, narrow cone. Less side coverage.',
     mark: 'shaped-charge',
   },
   {
     id: 'cluster-shell',
     name: 'Cluster Shell',
-    description: 'Shells split their blast between the impact and three short-lived bomblets.',
+    description:
+      '25% more blast damage, split between a solid impact and three short-lived bomblets.',
     mark: 'cluster-shell',
   },
   {

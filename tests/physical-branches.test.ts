@@ -340,7 +340,7 @@ test('attached shaped charges preserve their incoming direction through host rot
   );
 });
 
-test('Cluster Shell has a conserved finite payload, physical children and a shared Aftershock budget', () => {
+test('Cluster Shell adds one finite damage bonus, physical children and a shared Aftershock budget', () => {
   const g = fixture(['shellshock', 'cluster-shell', 'aftershock', 'shockfront']);
   g.demolition.detonate({
     pos: { x: 600, y: 400 },
@@ -353,7 +353,7 @@ test('Cluster Shell has a conserved finite payload, physical children and a shar
   assert.equal(g.demolition.bomblets.length, 3);
   near(
     g.demolition.effects[0].damage + g.demolition.bomblets.reduce((sum, b) => sum + b.damage, 0),
-    100,
+    125,
   );
   assert(g.demolition.bomblets.every((b) => b.vel.y < 0));
   const y = g.demolition.bomblets[0].pos.y;
@@ -363,7 +363,7 @@ test('Cluster Shell has a conserved finite payload, physical children and a shar
   assert.equal(g.demolition.bomblets.length, 0);
   near(
     g.demolition.pending.reduce((sum, b) => sum + b.damage, 0),
-    40,
+    50,
   );
   advance(g, 50);
   assert.equal(g.demolition.bomblets.length, 0);

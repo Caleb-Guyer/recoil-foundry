@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Browser balance pass · 2.92.0
+
+Early rewards now keep a shared firepower option available until you take one. Daily still offers exactly one card, with a safeguard before its first boss if the gun has no shared power upgrade. **Shaped Charge** gains 30% blast damage; **Cluster Shell** keeps a stronger initial impact and adds 25% total blast payload. Boss tells, room healing and the twenty-room length stay intact. Daily now uses **ruleset 78**.
+
+[Test Shaped Charge](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&room=boss&v=2.92.0) · [Test Cluster Shell](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&room=boss&v=2.92.0). These isolated presets preserve real progress; **R** restarts the fight.
+
+The [balance report](docs/balance-audit-2.92.0.md) records 232 measured cases, full-run reward/health data and the remaining human playtests. The [release checklist](docs/browser-release-checklist.md) now marks the automated balance pass and tuning complete while retaining human balance acceptance as a release requirement. Run `npm run balance -- campaign` to repeat the natural-reward audit, or use `bosses`, `branches`, `max` and `areas` for the other suites.
+
 ## The Auditor · 2.91.0
 
 A rare sealed company case offers one extra upgrade after its room is cleared. Approach and shoot it to break the seal, or leave it alone. Taking its contents summons **the Auditor**, a physical recovery unit that pursues you through three later ordinary rooms. Amber service-door lights and heavy footsteps announce it; there is no new combat HUD. Boss arenas, introductions, area events and special delivery/story encounters remain separate.

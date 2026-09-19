@@ -730,6 +730,18 @@ export function availableMods(
     );
   });
 }
+// These shared upgrades improve direct output without forcing a path or a new
+// trigger mechanic. Early rewards should offer a way to strengthen the gun,
+// even after the much larger utility pool has diluted the original cards.
+export const OPENING_POWER_MODS: readonly string[] = [
+  'magnum',
+  'rapid',
+  'kick',
+  'airshot',
+  'scatter',
+  'backblast',
+  'burst',
+];
 // A small preference for the chosen path, sampled without replacement.
 export function rewardMods(
   mods: readonly string[],
@@ -763,6 +775,21 @@ export function rewardMods(
     let index = 0;
     while (index < pool.length - 1 && roll >= weight(pool[index])) roll -= weight(pool[index++]);
     offers.push(pool.splice(index, 1)[0]);
+  }
+  // Normal runs retain two unrestricted choices. A one-card Daily gets this
+  // safeguard only on its last pre-boss reward, if it has no shared power yet.
+  // Full-pool queries, later rewards, Overtime and exclusions keep their rules.
+  if (
+    !context.overtime &&
+    context.stage >= 0 &&
+    context.stage <= 2 &&
+    (count === 3 || (count === 1 && context.stage === 2)) &&
+    !mods.some((id) => OPENING_POWER_MODS.includes(id)) &&
+    !offers.some((mod) => OPENING_POWER_MODS.includes(mod.id))
+  ) {
+    const power = pool.filter((mod) => OPENING_POWER_MODS.includes(mod.id));
+    if (power.length && offers.length)
+      offers[offers.length - 1] = power[Math.floor(rng() * power.length)];
   }
   return offers;
 }
