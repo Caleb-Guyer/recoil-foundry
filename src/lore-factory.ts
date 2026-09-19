@@ -3,6 +3,11 @@ import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 export const MACHINE_LORE = {
+  auditor: [
+    'Asset recovery · field inspection',
+    'E. Holt · safety office',
+    'The case was marked COMPANY PROPERTY. So were the fitting inside it, the floor beneath it, and the person assigned to carry it. Only the first two had replacement values.\n\nThe recovery unit folds its shoulder plates over the damaged parts before it returns. It remembers every missing piece. Whoever wrote that instruction understood repair perfectly well.\n\nI asked why it could not extend the same consideration to the people it was following. My question has been entered as a request for another unit.',
+  ],
   runner: [
     'Floor service ticket',
     'M. Vale · maintenance',

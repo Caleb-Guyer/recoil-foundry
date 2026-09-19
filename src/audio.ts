@@ -267,6 +267,27 @@ export class Sound {
     } else if (kind === 'flood-valve' || kind === 'flood-drain') {
       this.tone(240, 65, 0.42, 0.07, 'triangle');
       this.crack(0.5, 0.07, 700);
+    } else if (kind === 'audit-arrive') {
+      for (const delay of [0, 0.55, 1.1]) {
+        this.tone(82, 48, 0.18, 0.065, 'triangle', delay);
+        this.tone(220, 150, 0.1, 0.03, 'square', delay + 0.07);
+      }
+    } else if (kind === 'audit-step') {
+      this.tone(75, 40, 0.1, 0.032, 'triangle');
+      this.crack(0.04, 0.018, 550);
+    } else if (kind === 'audit-tell') {
+      this.tone(270, 620, 0.4, 0.055, 'triangle');
+    } else if (kind === 'audit-fire') {
+      this.tone(125, 65, 0.18, 0.06, 'sawtooth');
+      this.crack(0.1, 0.05, 1000);
+    } else if (kind === 'audit-recall') {
+      this.tone(180, 720, 1.1, 0.05, 'sine');
+    } else if (kind === 'audit-leave' || kind === 'audit-seal') {
+      this.crack(0.18, 0.055, 700);
+      this.tone(460, 95, 0.28, 0.065, 'triangle');
+    } else if (kind === 'audit-defeat') {
+      this.tone(260, 35, 0.7, 0.085, 'sawtooth');
+      this.crack(0.4, 0.08, 500);
     } else if (kind === 'courier-start') {
       this.tone(95, 260, 0.4, 0.07, 'sawtooth');
       this.tone(520, 520, 0.1, 0.045, 'sine', 0.1);

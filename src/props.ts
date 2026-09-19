@@ -19,6 +19,7 @@ export const PROP_STATS = {
   rubble: { w: 26, h: 18, hp: 24 },
 };
 export interface Prop {
+  auditCase?: true;
   kind: PropKind;
   body: Matter.Body;
   hp: number;
@@ -258,7 +259,12 @@ export class PropSystem {
     Composite.remove(this.game.engine.world, prop.body);
     this.items = this.items.filter((p) => p !== prop);
   }
-  hit(prop: Prop, damage: number, velocity: Vec, source?: Shot) {
+  hit(prop: Prop, damage: number, velocity: Vec, source?: Shot, directFire = false) {
+    if (
+      prop.auditCase &&
+      (!this.game.auditor.caseReady || !(directFire || (source?.friendly && !source.allied)))
+    )
+      return;
     if (prop.charge) {
       this.game.sappers.knock(prop, damage, velocity);
       return;
@@ -301,6 +307,10 @@ export class PropSystem {
   }
   break(prop: Prop, source?: Shot) {
     if (!this.items.includes(prop)) return;
+    if (prop.auditCase) {
+      if (prop.hp <= 0 && this.game.auditor.openCase()) this.remove(prop);
+      return;
+    }
     this.remove(prop);
     if (prop.kind === 'crate' || prop.kind === 'cover') this.game.scrap.collect(source);
     if (prop.charge) return;

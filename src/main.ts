@@ -1,5 +1,6 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
+import { auditorTestFromUrl } from './auditor-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
 import { reforgeTestFromUrl } from './reforge-rules.ts';
 import { shutdownTestFromUrl } from './shutdown-layout.ts';
@@ -244,6 +245,7 @@ if (
   write(LOGBOOK_KEY, logbookProgress);
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
   storyTestFromUrl(entryUrl) ??
   replayTestFromUrl(entryUrl) ??
@@ -353,6 +355,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test Overtime <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.shutdown)
     $('play').innerHTML = 'Test shutdown route <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.auditor)
+    $('play').innerHTML = 'Test the Auditor <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'EXITS-73')
     $('play').innerHTML = 'Test exit elevators <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
@@ -445,6 +449,11 @@ function updateTitle() {
   if (linkedRunTest?.story)
     $('title-hint').textContent =
       'Explore the room. Test discoveries stay in this run. R to retry.';
+  if (linkedRunTest?.auditor)
+    $('title-hint').textContent =
+      linkedRunTest.auditor.status === 'sealed'
+        ? 'Approach and shoot the sealed case on the left. R to retry.'
+        : 'Watch the amber door. Full health. R to retry.';
   if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
     $('title-hint').textContent = 'Interrupt the weld. Full health. R to retry.';
   if (linkedRunTest?.seed === 'DEATH-REPLAY-86')
@@ -1182,19 +1191,23 @@ function showDialog(kind: string) {
       '<p class="eyebrow">' +
       (activeDaily ? 'DAILY · ' : '') +
       (game.overtime ? 'OVERTIME · ' : '') +
-      (game.courierReward
-        ? 'RECOVERED CARGO · NO HEALING'
-        : game.detour
-          ? 'BONUS UPGRADE · NO HEALING'
-          : game.enteringDetour
-            ? 'ROOM CLEAR · CHALLENGE NEXT'
-            : 'ROOM CLEAR') +
+      (game.auditorReward
+        ? 'COMPANY PROPERTY · NO HEALING'
+        : game.courierReward
+          ? 'RECOVERED CARGO · NO HEALING'
+          : game.detour
+            ? 'BONUS UPGRADE · NO HEALING'
+            : game.enteringDetour
+              ? 'ROOM CLEAR · CHALLENGE NEXT'
+              : 'ROOM CLEAR') +
       '</p><h2 id="dialog-title">' +
-      (game.offers[0]?.id === 'repair'
-        ? 'Keep going.'
-        : singleUpgrade
-          ? 'Next upgrade.'
-          : 'Make it kick.') +
+      (game.auditorReward
+        ? 'Break the seal.'
+        : game.offers[0]?.id === 'repair'
+          ? 'Keep going.'
+          : singleUpgrade
+            ? 'Next upgrade.'
+            : 'Make it kick.') +
       '</h2><div class="choices">' +
       game.offers
         .map(
@@ -1215,7 +1228,11 @@ function showDialog(kind: string) {
         )
         .join('') +
       '</div>' +
-      (!activeDaily && !game.practice && !game.courierReward && game.offers[0]?.id !== 'repair'
+      (!activeDaily &&
+      !game.practice &&
+      !game.courierReward &&
+      !game.auditorReward &&
+      game.offers[0]?.id !== 'repair'
         ? '<div class="reward-actions"><button id="reroll" class="quiet"' +
           (game.canReroll ? '' : ' disabled') +
           ' title="' +

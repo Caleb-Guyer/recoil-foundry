@@ -6,6 +6,20 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## The Auditor · 2.91.0
+
+A rare sealed company case offers one extra upgrade after its room is cleared. Approach and shoot it to break the seal, or leave it alone. Taking its contents summons **the Auditor**, a physical recovery unit that pursues you through three later ordinary rooms. Amber service-door lights and heavy footsteps announce it; there is no new combat HUD. Boss arenas, introductions, area events and special delivery/story encounters remain separate.
+
+The first two visits last eighteen seconds before a vulnerable recall warning. Its remaining health carries into later visits and survives Continue. Broken armor exposes more of its chassis, and later encounters add fans and sweeping bursts to its gunfire and charge. All attacks have aiming warnings, real cover blocks rounds, and its body collides with terrain and crates. Kill it during any visit, including recall, to end the pursuit. On its third visit it stays until defeated.
+
+Defeating it in a real campaign or Daily run earns **Closed Account**, the **Red Ledger** gun finish, its machine Logbook record, and an original incident report. The case grants no healing and does not replace the ordinary room reward. Daily uses ruleset **77**, with one deterministic case upgrade. Old saves do not gain an unplanned pursuit; Overtime does not repeat it.
+
+[**Open the case**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=case&v=2.91.0) · [**First pursuit**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=hunt&v=2.91.0) · [**Damaged return**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=damaged&v=2.91.0) · [**Final stand**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=final&v=2.91.0).
+
+The test yard preserves campaign saves, discoveries, commendations, Daily results and Practice unlocks. **R** restarts the preset. Add `&build=beam` or `&build=portal` for alternate weapons. [Preview all commendation reports and cosmetics](https://caleb-guyer.github.io/recoil-foundry/?test=commendations&v=2.91.0) without unlocking them permanently.
+
+The [browser release checklist](docs/browser-release-checklist.md) defines the remaining release work and acceptance criteria. It is a plan, not a claim that every release check has passed.
+
 ## Factory commendations · 2.90.0
 
 Four skill challenges unlock permanent cosmetic rewards and original factory reports in **Logbook → Commendations**:

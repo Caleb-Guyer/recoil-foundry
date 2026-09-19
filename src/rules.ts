@@ -2,6 +2,7 @@ import { validAreaEvent } from './area-events.ts';
 import { validReforge } from './reforge-rules.ts';
 import { validShutdown } from './shutdown-layout.ts';
 import { validStory } from './story-layout.ts';
+import { auditorBonus, validAuditor } from './auditor-layout.ts';
 import {
   BRANCH_MODS,
   BRANCH_PATHS,
@@ -997,6 +998,7 @@ export const isDetourStage = (stage: number) =>
   stage !== 14 &&
   stage % ROOMS_PER_AREA === 2;
 export interface RewardCheckpoint {
+  auditor?: true;
   courier?: true;
   offers: string[];
   rerolled: boolean;
@@ -1005,6 +1007,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  auditor?: import('./auditor-layout.ts').AuditorSave;
   cleanBoss?: boolean;
   shutdown?: import('./shutdown-layout.ts').ShutdownSave;
   story?: import('./story-layout.ts').StorySave;
@@ -1045,6 +1048,15 @@ function validRewardCheckpoint(d: Checkpoint) {
   const daily = /^RF-D\d+-/.test(d.seed);
   if (
     typeof r.rerolled !== 'boolean' ||
+    (r.auditor !== undefined &&
+      (r.auditor !== true ||
+        r.rerolled ||
+        r.courier ||
+        r.salvage ||
+        r.enteringDetour ||
+        r.enteringRoute ||
+        d.auditor?.status !== 'offered' ||
+        d.auditor.caseStage !== d.stage)) ||
     (r.courier !== undefined &&
       (r.courier !== true ||
         r.rerolled ||
@@ -1072,7 +1084,7 @@ function validRewardCheckpoint(d: Checkpoint) {
         d.detours?.includes(areaIndex(d.stage))))
   )
     return false;
-  if (!d.detour && isRouteStage(d.stage + 1)) {
+  if (!r.auditor && !d.detour && isRouteStage(d.stage + 1)) {
     if (
       (r.enteringRoute !== 'low' && r.enteringRoute !== 'high') ||
       (daily && r.enteringRoute !== dailyRoute(d.seed, d.stage + 1))
@@ -1133,7 +1145,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const stages = legacy ? 12 : previous ? 16 : STAGES;
   const rooms = legacy ? 3 : ROOMS_PER_AREA;
   const missed = d.missedUpgrades ?? 0;
-  const courierBonus = d.courier?.status === 'claimed' ? 1 : 0;
+  const courierBonus = (d.courier?.status === 'claimed' ? 1 : 0) + auditorBonus(d.auditor);
   const validCourier =
     d.courier === undefined ||
     (d.version === 6 &&
@@ -1270,6 +1282,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     !validReforge(d) ||
     !validStory(d) ||
     !validShutdown(d) ||
+    !validAuditor(d) ||
     (d.cleanBoss !== undefined && typeof d.cleanBoss !== 'boolean') ||
     (d.fabricators !== undefined && d.fabricators !== true)
   )

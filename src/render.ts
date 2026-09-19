@@ -1,5 +1,6 @@
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
+import { drawAuditor, drawAuditDoor, drawCompanyCase } from './auditor-art.ts';
 import { drawFloodgate, drawFloodwater } from './floodgate-art.ts';
 import { drawReforge } from './reforge-art.ts';
 import { drawShutdown, drawShutdownBackdrop } from './shutdown-art.ts';
@@ -273,7 +274,12 @@ export class Renderer {
     }
     c.globalAlpha = 1;
     drawCourierWorld(c, g);
+    drawAuditDoor(c, g, this.reduced);
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (e.kind === 'auditor') {
+        drawAuditor(c, g, e, this.reduced);
+        continue;
+      }
       if (e.courier) {
         drawCourier(c, g, e, this.reduced);
         continue;
@@ -1297,6 +1303,10 @@ export class Renderer {
       g = this.game;
     drawCargoCables(c, g, this.reduced);
     for (const prop of g.props.items) {
+      if (prop.auditCase) {
+        drawCompanyCase(c, g, prop);
+        continue;
+      }
       if (prop.charge) {
         drawCharge(c, g, prop, this.reduced);
         continue;

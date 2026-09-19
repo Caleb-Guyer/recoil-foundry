@@ -5,6 +5,18 @@ import { isBoss } from './enemies.ts';
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
   {
+    id: 'closed-account',
+    name: 'Closed Account',
+    objective: 'Defeat the pursuer summoned by a sealed company case.',
+    reward: 'Red Ledger',
+    slot: 'Gun finish',
+    lore: [
+      'LOSS PREVENTION · INCIDENT 000 / CLOSED',
+      'T. Orr · Dispatch',
+      'The case contained a tool fitting. The recovery order consumed three departments, six authorisations and a machine worth more than the entire loading bay.\n\nI put the totals side by side. There is no column for what you were worth. There never was.\n\nVale saved a strip of copper from the machine’s chest plate. It fits your receiver. I have entered that under “recovered property” and closed the account before anyone can open it again.',
+    ] as Lore,
+  },
+  {
     id: 'clean-work',
     name: 'Clean Work',
     objective: 'Defeat a boss without taking damage in its room.',

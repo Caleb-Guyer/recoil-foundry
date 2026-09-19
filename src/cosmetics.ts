@@ -26,6 +26,14 @@ export const GUN_FINISHES = {
     light: '#ffffff',
     unlock: 'return-to-sender',
   },
+  ledger: {
+    name: 'Red Ledger',
+    shell: '#424440',
+    face: '#bb9176',
+    trim: '#563b33',
+    light: '#efd2a4',
+    unlock: 'closed-account',
+  },
 } as const;
 export const OUTFITS = {
   standard: { name: 'Workwear', body: '#e7e8db', boots: '#a6b4ae', trim: '#9bcfc1', unlock: null },
@@ -100,7 +108,13 @@ export function drawFinishMark(c: CanvasRenderingContext2D, id: Cosmetics['gun']
   if (id === 'standard') return;
   const p = GUN_FINISHES[id];
   c.fillStyle = p.trim;
-  if (id === 'inspector') {
+  if (id === 'ledger') {
+    c.strokeStyle = p.light;
+    c.lineWidth = 1;
+    c.strokeRect(11, -3, 11, 5);
+    c.fillRect(14, -2, 2, 3);
+    c.fillRect(18, -2, 1, 3);
+  } else if (id === 'inspector') {
     c.fillRect(17, -3, 1.5, 5);
     c.fillRect(21, -3, 1.5, 5);
   } else {

@@ -86,6 +86,7 @@ export class MutationSystem {
     const g = this.game;
     if (
       cleared ||
+      g.auditor.scheduled ||
       g.stage < 2 ||
       g.practice ||
       g.workshop.active ||

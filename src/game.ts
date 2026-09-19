@@ -45,6 +45,8 @@ import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
 import Matter from 'matter-js';
+import { AuditorSystem, type AuditorRig } from './auditor.ts';
+import { auditorTestLevel } from './auditor-layout.ts';
 import { CommendationTracker, type CommendationId, type KillSource } from './commendations.ts';
 import type { Cosmetics } from './cosmetics.ts';
 import { CryogenicSystem } from './cryogenic.ts';
@@ -166,6 +168,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  auditor?: AuditorRig;
   fabricator?: FabricatorRig;
   sentry?: SentryRig;
   courier?: true;
@@ -206,6 +209,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  auditorOwner?: number;
   sentryOwner?: number;
   mutationShell?: { owner: number };
   allied?: boolean;
@@ -348,6 +352,8 @@ export class Game {
   mode: Mode = 'title';
   cosmetics: Cosmetics = { gun: 'standard', outfit: 'standard' };
   commendations = new CommendationTracker(this);
+  auditor = new AuditorSystem(this);
+  auditorReward = false;
   practice: Encounter | null = null;
   workshop = new WorkshopSystem(this);
   seed = '';
@@ -478,6 +484,7 @@ export class Game {
     this.loadRoom();
   }
   setMode(mode: Mode) {
+    if (mode === 'paused' && this.auditor.enemy) this.save();
     if (mode !== 'playing') {
       this.stasis.held = false;
       this.mobility.pause();
@@ -566,6 +573,7 @@ export class Game {
     this.reforge.start(save);
     this.story.start(save);
     this.shutdown.start(save);
+    this.auditor.start(save);
     this.fabricators.enabled = save ? save.fabricators === true : true;
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
@@ -592,6 +600,7 @@ export class Game {
     this.hurtAt = -100;
     this.lastShot = -100;
     this.offers = [];
+    this.auditorReward = false;
     const shutdownInspection =
       !!this.testRun?.shutdown && ['SHUTDOWN-89-RELAY', 'SHUTDOWN-89-ENTRANCE'].includes(this.seed);
     const storyInspection = !!this.testRun?.story && this.testRun.seed.endsWith('-INSPECT');
@@ -607,7 +616,10 @@ export class Game {
         !!save?.reforgeRoom ||
         storyInspection ||
         shutdownInspection ||
-        disabledRoom,
+        disabledRoom ||
+        (!!save?.auditor &&
+          save.auditor.caseStage === this.stage &&
+          (save.auditor.status !== 'sealed' || !!this.testRun?.auditor)),
     );
     if (save) this.commendations.cleanBoss = save.cleanBoss === true;
     if (storyInspection && this.story.note) {
@@ -630,6 +642,7 @@ export class Game {
       );
       this.rewardRerolled = save.reward.rerolled;
       this.courierReward = save.reward.courier === true;
+      this.auditorReward = save.reward.auditor === true;
       this.earnedSalvage = save.reward.salvage ?? null;
       this.enteringDetour = save.reward.enteringDetour === true;
       this.enteringRoute = save.reward.enteringRoute ?? null;
@@ -647,6 +660,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.auditor.state ? { auditor: structuredClone(this.auditor.state) } : {}),
       ...(this.level.boss && !this.escape ? { cleanBoss: this.commendations.cleanBoss } : {}),
       ...(this.fabricators.enabled ? { fabricators: true as const } : {}),
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
@@ -676,6 +690,7 @@ export class Game {
               offers: this.offers.map((m) => m.id),
               rerolled: this.rewardRerolled,
               ...(this.courierReward ? { courier: true as const } : {}),
+              ...(this.auditorReward ? { auditor: true as const } : {}),
               ...(this.earnedSalvage ? { salvage: this.earnedSalvage } : {}),
               ...(this.enteringDetour ? { enteringDetour: true as const } : {}),
               ...(this.enteringRoute ? { enteringRoute: this.enteringRoute } : {}),
@@ -685,6 +700,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.auditor.clear();
     this.commendations.resetRoom();
     this.fabricators.clear();
     this.floodgate.clear();
@@ -747,6 +763,7 @@ export class Game {
     this.grounded = false;
     this.rewardTaken = false;
     this.courierReward = false;
+    this.auditorReward = false;
     this.rewardRerolled = false;
     this.offers = [];
     this.shake = 0;
@@ -797,6 +814,8 @@ export class Game {
     if (!escapeRoom) this.level = this.story.level(this.level);
     if (!escapeRoom) this.level = fabricatorLevel(this, this.level);
     this.level = this.shutdown.level(this.level);
+    if (this.testRun?.auditor && !escapeRoom && !this.detour)
+      this.level = auditorTestLevel(this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -868,6 +887,7 @@ export class Game {
     this.reforge.reset();
     this.story.reset();
     this.shutdown.reset();
+    this.auditor.reset();
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active || this.shutdown.chamber) return;
@@ -1340,6 +1360,8 @@ export class Game {
     this.areaEvents.update(dt);
     if (this.mode !== 'playing') return;
     this.waves.update(dt);
+    this.auditor.update(dt);
+    if (this.mode !== 'playing') return;
     this.floodgate.update(dt);
     if (this.mode !== 'playing') return;
     if (
@@ -1347,6 +1369,7 @@ export class Game {
       !this.areaEvents.waiting &&
       !this.mutations.pending.length &&
       !this.waves.pending &&
+      !this.auditor.pending &&
       !this.clear &&
       (!this.freight.active || this.freight.arrived)
     ) {
@@ -1661,7 +1684,7 @@ export class Game {
       const d = direction(p, target);
       return rear.x * d.x + rear.y * d.y >= Math.SQRT1_2;
     });
-    for (const prop of targets) this.props.hit(prop, damage, rear);
+    for (const prop of targets) this.props.hit(prop, damage, rear, undefined, true);
     for (const panel of panels) this.breaches.hit(panel, damage, rear);
     for (const piece of terrain) this.destruction.hitBody(piece.body, damage, rear);
   }
@@ -1718,6 +1741,10 @@ export class Game {
     if (this.massDriver.staggered(e)) return;
     if (e.workshopTarget) {
       this.workshop.move(e);
+      return;
+    }
+    if (e.kind === 'auditor') {
+      this.auditor.updateEnemy(e, dt);
       return;
     }
     if (this.areaEvents.updateEnemy(e, dt)) return;
@@ -2816,8 +2843,12 @@ export class Game {
     source?: KillSource,
   ): boolean {
     if (e.hp <= 0 || e.allied) return false;
+    if (e.kind === 'auditor' && e.spawn > 0) return true;
     if (e.kind === 'sentry') credited = false;
     const incomingDamage = damage;
+    if (e.kind === 'auditor')
+      damage *=
+        e.state === 'recover' ? 1 : e.hp > (e.maxHp * 2) / 3 ? 0.6 : e.hp > e.maxHp / 3 ? 0.8 : 1;
     const blocked =
       e.elite === 'shielded' && !!from && direction(e.body.position, from).x * e.facing > 0.45;
     if (blocked) {
@@ -2839,6 +2870,7 @@ export class Game {
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
     e.hp -= damage;
+    this.auditor.damaged(e);
     if (damage > 0 && e.hp > 0 && e.fabricator) this.fabricators.interrupt(e);
     if (feedback) {
       const armored = blocked || damage < incomingDamage * 0.75;
@@ -2860,6 +2892,7 @@ export class Game {
       if (e.hp > 0) this.onSound(armored ? 'armor' : 'hit');
     }
     if (e.hp > 0) return blocked;
+    this.auditor.killed(e, credited && source !== 'cleanup');
     if (credited) this.commendations.defeated(e, source);
     if (
       isBoss(e.kind) &&
@@ -2906,7 +2939,7 @@ export class Game {
       this.hp > 0 &&
       e.spawn <= 0
     )
-      this.onBossDefeated(e.kind);
+      if (e.kind !== 'auditor') this.onBossDefeated(e.kind);
     this.feedback(isBoss(e.kind) ? 10 : 4);
     this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);
     this.burst(e.body.position, isBoss(e.kind) ? 45 : 16, '#f28371', isBoss(e.kind) ? 8 : 4);
@@ -2921,7 +2954,7 @@ export class Game {
         kind: 'ring',
       });
     this.onSound('kill');
-    if (isBoss(e.kind))
+    if (isBoss(e.kind) && e.kind !== 'auditor')
       for (const other of [...this.enemies])
         this.hitEnemy(other, 9999, undefined, true, true, true, 'cleanup');
     return blocked;
@@ -2979,6 +3012,7 @@ export class Game {
     return this.enemies.filter((e) => !e.courier).length;
   }
   openReward(enterDetour = false, route?: RouteChoice) {
+    if (this.auditor.pending || this.auditor.enemy) return;
     if (this.areaEvents.waiting || this.mutations.pending.length) return;
     if (
       this.practice ||
@@ -3004,6 +3038,7 @@ export class Game {
       return;
     if (this.detour && (!this.clear || this.enemies.length || this.waves.pending)) return;
     this.enteringDetour = enterDetour;
+    this.auditorReward = false;
     this.enteringRoute = this.canChooseRoute ? (route ?? this.routeChoices[0]) : null;
     this.courier.leave();
     this.courierReward = this.courier.state?.status === 'collected';
@@ -3069,6 +3104,7 @@ export class Game {
     return (
       !this.workshop.active &&
       !this.courierReward &&
+      !this.auditorReward &&
       this.mode === 'upgrade' &&
       !this.practice &&
       !dailyFromSeed(this.seed) &&
@@ -3113,6 +3149,10 @@ export class Game {
     if (this.legacyOffers?.includes(id)) this.legacyMods = [...this.mods];
     this.legacyOffers = undefined;
     this.gun = getGun(this.mods);
+    if (this.auditorReward) {
+      this.auditor.claim();
+      return;
+    }
     if (this.courierReward) {
       if (this.courier.state) this.courier.state.status = 'claimed';
       this.mode = 'playing';

@@ -78,6 +78,7 @@ export class ShutdownSystem {
       !this.eligible ||
       this.chamber ||
       !this.state!.disabled.length ||
+      g.auditor.scheduled ||
       level.boss ||
       level.freight ||
       g.areaEvents.encounter ||

@@ -57,6 +57,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
     spawn.elite
       ? 20
       : {
+          auditor: 0,
           borer: 8,
           sifter: 8,
           sorter: 0,

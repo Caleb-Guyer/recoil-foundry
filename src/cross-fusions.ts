@@ -84,7 +84,7 @@ export class ResonatorSystem {
             x: s.enemy.body.position.x - s.dir.x * 30,
             y: s.enemy.body.position.y - s.dir.y * 30,
           });
-        else if (s.prop) g.props.hit(s.prop, damage, s.dir);
+        else if (s.prop) g.props.hit(s.prop, damage, s.dir, undefined, true);
         else if (s.cable) g.cargo.cut(s.cable, damage);
         else if (s.anchor) g.harpoons.hitAnchor(s.anchor, damage);
         else if (s.valve) g.pressure.trigger(s.valve);
