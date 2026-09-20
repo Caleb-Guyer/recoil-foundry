@@ -1672,6 +1672,34 @@ dialog.workshop-dialog {
   line-height: 1.5;
   margin: 12px 0;
 }
+.settings-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+}
+.issue-label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 20px 0 8px;
+}
+.issue-details {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: clamp(130px, 32vh, 300px);
+  resize: vertical;
+  padding: 14px;
+  background: #0b1417;
+  color: var(--ink);
+  border: 1px solid #40524f;
+  border-radius: 3px;
+  font: 13px/1.6 ui-monospace, monospace;
+}
+.issue-details:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
 .ending-dialog .ending-note {
   max-width: 48ch;
 }

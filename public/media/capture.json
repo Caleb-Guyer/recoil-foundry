@@ -1,0 +1,49 @@
+{
+  "version": "2.98.0-rc.1",
+  "method": "Actual Game / Renderer; scripted inputs; preset checkpoints; no invulnerability; silent",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "scenes": [
+    {
+      "name": "loading-docks",
+      "seed": "MEDIA-DOCKS-3",
+      "stage": 1,
+      "mods": [
+        "magnum"
+      ],
+      "finalHealth": 100,
+      "seconds": 6
+    },
+    {
+      "name": "furnace-halls",
+      "seed": "MEDIA-FURNACE-4",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "airshot"
+      ],
+      "finalHealth": 84,
+      "seconds": 6
+    },
+    {
+      "name": "cooling-works",
+      "seed": "MEDIA-COOLING-7",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "airshot",
+        "scatter",
+        "ricochet",
+        "pierce",
+        "light"
+      ],
+      "finalHealth": 76,
+      "seconds": 6
+    }
+  ]
+}

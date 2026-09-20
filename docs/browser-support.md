@@ -1,15 +1,15 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. This page describes the evidence for build 2.96.1 and the limits accepted for this browser release.
+Release target: **Windows desktop/laptop with keyboard and mouse**. The current candidate is **2.98.0-rc.1**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. Later presentation and release-packaging checks are recorded in their reports.
 
-| Browser or input | Status |
-| --- | --- |
-| Microsoft Edge on Windows | Most thoroughly checked: owner-supplied Quick, twelve-minute Soak and Reduced effects reports, replay export/playback, keyboard/mouse, focus/fullscreen and basic run transitions. The inspected installed version was 153.0.4234.32. |
-| Google Chrome on Windows | Owner confirmed basic gameplay, Quick-test completion and replay export/playback. The inspected installed version was 153.0.8010.50. Longer measurements and individual lifecycle checks were waived. |
-| Firefox on Windows | Owner confirmed basic gameplay. The running version was not provided. Longer measurements, replay export/playback and individual lifecycle checks were waived. |
-| Controllers and rumble | Implemented, with automated input/failure/reconnection checks. Physical hardware verification was unavailable; treat this as experimental support. |
-| Touchscreens and mobile browsers | Controls exist, but real-device acceptance was not completed. Experimental; not an advertised mobile release. |
-| Safari, macOS and Linux | Not verified for this release. |
+| Browser or input                 | Status                                                                                                                                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Microsoft Edge on Windows        | Most thoroughly checked: owner-supplied Quick, twelve-minute Soak and Reduced effects reports, replay export/playback, keyboard/mouse, focus/fullscreen and basic run transitions. The inspected installed version was 153.0.4234.32. |
+| Google Chrome on Windows         | Owner confirmed basic gameplay, Quick-test completion and replay export/playback. The inspected installed version was 153.0.8010.50. Longer measurements and individual lifecycle checks were waived.                                 |
+| Firefox on Windows               | Owner confirmed basic gameplay. The running version was not provided. Longer measurements, replay export/playback and individual lifecycle checks were waived.                                                                        |
+| Controllers and rumble           | Implemented, with automated input/failure/reconnection checks. Physical hardware verification was unavailable; treat this as experimental support.                                                                                    |
+| Touchscreens and mobile browsers | Controls exist, but real-device acceptance was not completed. Experimental; not an advertised mobile release.                                                                                                                         |
+| Safari, macOS and Linux          | Not verified for this release.                                                                                                                                                                                                        |
 
 Browser versions above came from installed executables, not independently inspected About screens. Owner reports and agent-controlled embedded-browser measurements are distinguished in the [performance report](performance-stability-2.96.0.md), [Chrome receipt](qa/performance-2.96.1/chrome-owner-check.json) and [gameplay confirmation](qa/performance-2.96.1/browser-owner-gameplay-check.json).
 
@@ -21,6 +21,7 @@ Reduced effects is available in Settings. It reduces camera shake, cosmetic part
 
 ## Known limitations
 
+- External first-time-player observations, human balance/duration acceptance and physical headphone/laptop-speaker listening were unavailable for the release candidate. They remain unverified. See the [remaining release checks](browser-release-checklist.md).
 - The Edge stress reports contain occasional frame stalls, including a 141.7 ms maximum in the Soak run. Reduced effects did not remove every hitch. These remain known performance limitations, not fixed results.
 - Extended tests in the embedded browser developed severe frame-delivery slowdowns. Their cause remains unresolved. The independently supplied Edge Soak did not reproduce that one-frame-per-second pattern. See the [investigation](stability-follow-up-2026-09-20.md).
 - Physical controller reconnect/rumble behavior and low-end performance remain unverified. Additional browser stress and lifecycle tests were waived by the owner; unavailable hardware checks were deferred during [item 5 closeout](performance-closeout-2.96.1.md).

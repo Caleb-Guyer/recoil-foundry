@@ -1,0 +1,1162 @@
+# Development history through 2.97.0
+
+Archived development notes. This document includes spoilers and historical values that may no longer describe the current game. Start with the [player README](../README.md) for current information.
+
+# Recoil Foundry
+
+**One gun. All recoil.**
+
+[Play in your browser](https://caleb-guyer.github.io/recoil-foundry/)
+
+A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
+
+The browser release targets **Windows desktop/laptop with keyboard and mouse**. Edge has the most complete test coverage; basic gameplay is also owner-confirmed in Chrome and Firefox. Controller and touch support are experimental, and minimum hardware requirements are not established. [Browser support and known limitations](browser-support.md).
+
+## Presentation polish · 2.97.0
+
+Cleaner reward and Reforge cards, protected Workshop controls on short screens, and consistent endings with Logbook and Credits access. **Settings → About & credits** shows the running version. Newer threats now keep their warning sounds clear through dense effects, and the original procedural score is retained for the browser release.
+
+[Presentation report and test links](presentation-2.97.0.md) · [Remaining release checklist](browser-release-checklist.md). Physical speaker/headphone listening remains part of external playtest acceptance.
+
+## Stability checks · 2.96.1
+
+Replay JPEG encoding now runs in a worker on supported browsers, keeping expensive image readback off the game thread without lowering clip quality. Rapid retries keep encoding bounded across old runs, and unsupported worker features fall back safely. Unavailable video export and failed browser recorders leave the replay viewer usable and release their resources. The fallback clip download also supports controller menu focus.
+
+A separate [stability test](https://caleb-guyer.github.io/recoil-foundry/diagnostics.html?v=2.96.1) exercises heavy builds, portals, explosions, boss attacks and Overtime, with optional reduced effects and downloadable measurements. **It contains late-game spoilers.** It never saves progress or preferences and adds no diagnostic clutter to normal play. Reports now correlate delayed frames with preceding game/audio/report work and optional browser long-task observations; live output stays compact so the report itself does not grow during a run.
+
+[Item 5 closeout](performance-closeout-2.96.1.md) · [Verification report](performance-stability-2.96.0.md) · [Frame-stall follow-up](frame-stall-investigation-2.96.1.md) · [Optional test procedure](performance-testing.md). Item 5 is closed under the owner's requested scope and removed from the [release checklist](browser-release-checklist.md). Unavailable hardware tests and additional browser checks are recorded as deferred or waived; known performance limitations remain documented.
+
+## Controls and accessibility · 2.95.0
+
+**Settings → Keyboard & mouse** now saves individual key bindings, rejects conflicting keys and offers Restore default keys. Movement, alternate jump keys, keyboard fire, the equipped secondary action, pause, Controls and retry/reset can be rebound. Mouse aim, left/right click and Escape remain available. On-screen hints follow your chosen keys; defaults retain the old controls and add **F** as an alternative to holding left click.
+
+Separate **Effects volume** and **Music volume** sliders include a true zero-volume mute. Sound still mutes both channels, and Music enabled keeps its independent switch. Existing preferences are preserved. **Reduced effects** removes camera shake, lowers cosmetic particles and reduces hit flashes while retaining attack warnings. Turf War allies have a steady shield symbol as well as their blue color.
+
+Settings now scroll inside the panel with Back/Resume always visible. Resizing or changing fullscreen pauses active play and clears held inputs; returning focus never automatically resumes a run. No gameplay balance or Daily identity changes.
+
+[Open Settings](https://caleb-guyer.github.io/recoil-foundry/?help=settings&v=2.95.0) · [Try the controls](https://caleb-guyer.github.io/recoil-foundry/?help=controls&v=2.95.0) · [Verification report](settings-accessibility-2.95.0.md). Completed item 4 is removed from the [release checklist](browser-release-checklist.md).
+
+## Progress backups and recovery · 2.94.0
+
+Open **Settings → Progress** to export a backup or restore one. Backups include your campaign checkpoint and gun, discovered upgrades, Logbook, commendations, equipped appearance, Practice victories, recent runs, Daily records and saved Workshop build. Imports show a preview, validate every section and replace the profile in one operation; **Undo restore** keeps the previous profile recoverable. Return to the title before importing; you can export while paused.
+
+Progress is local to this browser and device. Saving failures now show a visible **Progress not saved · Backup** button. Export keeps this tab's progress even when saving is unavailable. A conflicting change from another tab blocks stale writes and offers reload. Existing checkpoint versions migrate without removing their original records; old Daily identities remain unchanged.
+
+[Open Progress](https://caleb-guyer.github.io/recoil-foundry/?progress=1&v=2.94.0) · [Recovery verification](progress-recovery-2.94.0.md). Completed item 3 is removed from the [release checklist](browser-release-checklist.md).
+
+## First-session clarity · 2.93.0
+
+**Controls** is available from the title, Pause, or **H**. **Try controls** opens a harmless warm-up with the starting gun: movement, jumps, recoil flight and targets, without changing your campaign save or saved Workshop build. New players can also use brief, dismissible hints in the opening room and a one-line explanation on their first upgrade screen.
+
+Nearby ready cases and electrical controls share a target-bracket cue; a ready terminal uses an upward arrow. Sound and Music show their actual On/Off/Muted state. Existing challenge and exit signs keep later encounters hidden.
+
+[Try the controls warm-up](https://caleb-guyer.github.io/recoil-foundry/?help=controls&v=2.93.0) · [Play](https://caleb-guyer.github.io/recoil-foundry/?v=2.93.0) · [First-session audit](first-session-2.93.0.md). Completed implementation checks are removed from the [release checklist](browser-release-checklist.md); the external first-time-player observation remains an explicit release gate.
+
+## Browser balance pass · 2.92.0
+
+Early rewards now keep a shared firepower option available until you take one. Daily still offers exactly one card, with a safeguard before its first boss if the gun has no shared power upgrade. **Shaped Charge** gains 30% blast damage; **Cluster Shell** keeps a stronger initial impact and adds 25% total blast payload. Boss tells, room healing and the twenty-room length stay intact. Daily now uses **ruleset 78**.
+
+[Test Shaped Charge](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=shaped&room=boss&v=2.92.0) · [Test Cluster Shell](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=cluster&room=boss&v=2.92.0). These isolated presets preserve real progress; **R** restarts the fight.
+
+The [balance report](balance-audit-2.92.0.md) records 232 measured cases and full-run reward/health data. The [balance closeout](balance-closeout-2.92.0.md) adds longer boss fights, low-health optional routes and design targets. Completed item 1 has been removed from the [release checklist](browser-release-checklist.md), which now contains unfinished work only; human acceptance remains in the external playtest gate. Run `npm run balance -- campaign` to repeat the natural-reward audit, or use `bosses`, `branches`, `max`, `areas` and `optional` for the other suites.
+
+## The Auditor · 2.91.0
+
+A rare sealed company case offers one extra upgrade after its room is cleared. Approach and shoot it to break the seal, or leave it alone. Taking its contents summons **the Auditor**, a physical recovery unit that pursues you through three later ordinary rooms. Amber service-door lights and heavy footsteps announce it; there is no new combat HUD. Boss arenas, introductions, area events and special delivery/story encounters remain separate.
+
+The first two visits last eighteen seconds before a vulnerable recall warning. Its remaining health carries into later visits and survives Continue. Broken armor exposes more of its chassis, and later encounters add fans and sweeping bursts to its gunfire and charge. All attacks have aiming warnings, real cover blocks rounds, and its body collides with terrain and crates. Kill it during any visit, including recall, to end the pursuit. On its third visit it stays until defeated.
+
+Defeating it in a real campaign or Daily run earns **Closed Account**, the **Red Ledger** gun finish, its machine Logbook record, and an original incident report. The case grants no healing and does not replace the ordinary room reward. Daily uses ruleset **77**, with one deterministic case upgrade. Old saves do not gain an unplanned pursuit; Overtime does not repeat it.
+
+[**Open the case**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=case&v=2.91.0) · [**First pursuit**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=hunt&v=2.91.0) · [**Damaged return**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=damaged&v=2.91.0) · [**Final stand**](https://caleb-guyer.github.io/recoil-foundry/?test=auditor&phase=final&v=2.91.0).
+
+The test yard preserves campaign saves, discoveries, commendations, Daily results and Practice unlocks. **R** restarts the preset. Add `&build=beam` or `&build=portal` for alternate weapons. [Preview all commendation reports and cosmetics](https://caleb-guyer.github.io/recoil-foundry/?test=commendations&v=2.91.0) without unlocking them permanently.
+
+The [browser release checklist](browser-release-checklist.md) defines the remaining release work and acceptance criteria. It is a plan, not a claim that every release check has passed.
+
+## Factory commendations · 2.90.0
+
+Four skill challenges unlock permanent cosmetic rewards and original factory reports in **Logbook → Commendations**:
+
+| Commendation     | Challenge                                       | Reward               |
+| ---------------- | ----------------------------------------------- | -------------------- |
+| Clean Work       | Defeat a boss without taking damage in its room | Inspector gun finish |
+| Heavy Equipment  | Crush three enemies with one falling cargo load | Rigger outfit        |
+| Return to Sender | Finish a boss with a reflected projectile       | Mirror gun finish    |
+| After Hours      | Complete Overtime and extract                   | Night Shift outfit   |
+
+Equip earned rewards in **Workshop → Appearance**, with a live equipment preview. Gun finishes work with ordinary weapons, heavy/rail configurations and the beam. Outfits preserve the player's silhouette and bright visor. Everything is cosmetic: no stat bonuses or changes to Daily balance. New commendations appear on the result screen; the combat HUD stays unchanged.
+
+Campaign and Daily runs count. Practice, Workshop and test presets do not. Unlocks survive death and retries in this browser; clean-fight evidence survives checkpoint reloads. Existing saves without that evidence become eligible for Clean Work at the next boss room. Heavy Equipment counts direct crushes from the same initial falling load, excluding later pushes and secondary explosions. Return to Sender requires the reflected round itself to deliver the killing blow.
+
+[**Preview all four reports and rewards**](https://caleb-guyer.github.io/recoil-foundry/?test=commendations&v=2.90.0). Choose **Open Appearance**, select an outfit/finish, then **Enter Workshop** to try it. The preview grants no real commendations and saves no cosmetic selections; starting a campaign restores your actual equipped rewards.
+
+## End of shift · 2.89.0
+
+An optional secret route spans a fresh campaign. Maintenance marks and recovered writing connect three old safety disconnects to the factory's continuity system. There is no objective HUD or mandatory detour. The normal extraction and Overtime elevators remain available.
+
+<details>
+<summary>Shutdown route testing and implementation details (spoilers)</summary>
+
+The loading, furnace and reclamation boss bays contain marked disconnects. Their covers release after the boss is defeated. Approach and shoot the exposed contact; bullets, beams, rail spikes, backblast, nearby explosions and moving props use the same interaction. Each sabotage adds another elite security reinforcement to later eligible ordinary rooms, using the existing warned doors and occupancy checks. They never overlap story rooms, area events or special delivery/flood encounters.
+
+With all three contacts broken, clear the final boss and return to the marked service door at the left wall. The control chamber has three combat waves and three physical disconnects. Each opens only after its defenders are gone. Cutting the last contact powers down the machinery and ends the run with **Shift complete**, its own recap location and a final recovered document. No permanent stat bonus or extra upgrade is awarded.
+
+- [First disconnect](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=relay&v=2.89.0): cleared loading bay. Shoot the marked cabinet above the left end of the floor.
+- [Security response](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=retaliation&v=2.89.0): Rooftops with all three disconnects broken.
+- [Secret entrance](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=entrance&v=2.89.0): final boss already defeated. Walk left into the marked door, or take the normal exit to the right.
+- [Control chamber](https://caleb-guyer.github.io/recoil-foundry/?test=shutdown&scene=finale&v=2.89.0): full three-wave sequence. After each wave, approach and shoot the lit cabinet.
+
+Test links preserve the campaign save, discoveries, Daily results, boss records and recaps. **R** restarts the preset. Test-only recovered documents are readable through Pause → Logbook and disappear when leaving the test. `scene=ending` previews only the completed shutdown and result screen.
+
+Checkpoints preserve the broken contacts and current control-chamber cycle; a resumed unfinished cycle restarts its combat, while a defeated and sabotaged boss bay stays clear. Old checkpoints do not acquire new route machinery. Daily runs use ruleset 76 and have the same optional route available to everyone sharing that seed.
+
+</details>
+
+## Traces of the shift · 2.88.0
+
+Four rare story rooms connect the factory to its Logbook. About half of fresh campaigns receive one eligible room; the seed fixes its type, stage and orientation. They preserve the twenty-stage route and ordinary combat rewards, and avoid boss arenas, introductions, route choices, area events, couriers and Floodgates. Existing saves keep their layouts. Daily challenges use ruleset 75 for the new room pool.
+
+- **Abandoned break room:** four cups, a stopped clock, an unplugged speaker and one overturned chair. Reach the note beside the medicine cabinet to recover **Five minutes** and restore 10 health, once.
+- **Dispatch office:** a blue-threaded package circles behind the glass on a closed return loop. Opposing conveyor decks carry players, enemies and loose crates. The desk holds **Return address**.
+- **Failed experiment:** a damaged cooling rig warns for a second, then vents every 5.2 seconds. Lure exposed enemies into its 225-unit field for a brief freeze and lingering chill; terrain and props block it, and bosses resist it. Existing cold/thermal upgrade interactions still work. The bench holds **Control sample**.
+- **Maintenance hideout:** a sleeping mat, mugs and tally marks sit behind physical, breakable barricades. A live cylinder can catch pursuing enemies. The workbench holds **Someone was here**.
+
+Walk close to the softly lit paper to recover it. A small sound and disappearing page acknowledge the find; there is no reading popup, objective panel or new input. Open **Pause → Logbook → Records** to read afterward. Discoveries survive death; saved rooms remember spent pickups. The book now holds **139 records**. Practice, Workshop and test links never grant permanent discoveries.
+
+Fight through the rooms: [**Break room**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=breakroom&v=2.88.0) · [**Dispatch**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=dispatch&v=2.88.0) · [**Experiment**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=experiment&v=2.88.0) · [**Hideout**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=hideout&v=2.88.0).
+
+For a quiet look at the scenery and writing: [**Break room**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=breakroom&phase=inspect&v=2.88.0) · [**Dispatch**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=dispatch&phase=inspect&v=2.88.0) · [**Experiment**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=experiment&phase=inspect&v=2.88.0) · [**Hideout**](https://caleb-guyer.github.io/recoil-foundry/?test=story&room=hideout&phase=inspect&v=2.88.0). Inspection starts beside the document in a cleared room; its temporary Logbook entry disappears when leaving the test. **R** retries. Add `&mirror=1` to test the reverse layout.
+
+## The Logbook · 2.87.0
+
+Open **Logbook** from the title screen or pause menu. Its **135 original records** cover all **100 upgrades**, the service tool, **25 machines**, **five areas**, and **four recovered documents**. Every entry has individually written lore: maintenance notes, lab observations, dispatch correspondence, safety reports, and personal messages. Recurring writers gradually reveal what the Foundry makes, what happened to its workers, and why the line keeps running. Mechanical upgrade descriptions remain separate from the fiction.
+
+Equipment records unlock when upgrades are collected; machine records require defeating that machine in a real run; place records unlock on arrival. Some documents require reaching their area, and the departure record requires completing an escape. Undiscovered entries reveal no names, icons, descriptions or searchable text. The book adds no combat notifications or HUD text.
+
+Existing collected upgrades, reached areas from saved campaigns/recent runs, and earned boss victories carry over. Reaching an area never invents a victory over a particular boss variant. New discoveries survive death and retries. Normal, Daily, detour and Overtime runs contribute; Practice, Workshop and test presets grant no records. The Logbook does not alter builds, rewards, run seeds, Daily rules, or boss Practice unlocks.
+
+Search recovered entries by name or path. Keyboard users can Tab into the document to scroll it. Controller users move right from the entry list into the document, use up/down to read, and move left to return. Back/Escape from a paused run returns to the pause menu. On narrow screens the index sits above the document.
+
+[**Open your Logbook**](https://caleb-guyer.github.io/recoil-foundry/?logbook=1&v=2.87.0) · [**Preview sample records**](https://caleb-guyer.github.io/recoil-foundry/?test=logbook&v=2.87.0). The preview contains a small early-game collection only; it never grants those discoveries or changes your saved collection.
+
+## Last moments · 2.86.0
+
+**Watch replay** on the death screen plays up to the last five seconds of combat in the current room. The final 0.6 seconds slow to one-third speed, then briefly hold on the lethal hit, marking the player and damage origin and naming its cause. Pause, replay, go back, or press **R** / **Again** to retry immediately. Combat gets no extra HUD elements.
+
+**Save clip** exports a silent video with the slow-motion finish and impact highlight (WebM, or MP4 where supported). Keep the tab visible during export; the download link remains available afterward. Unsupported browsers still offer playback when image decoding is available. Clips remain in memory only until restarting, leaving the run, or reloading. Replay never simulates combat or changes campaign saves, discoveries, Daily results, Practice unlocks, or run recaps.
+
+Capture downsizes only the game canvas to an 854×480 letterboxed frame at up to 24 fps. A five-second / 122-frame / 16 MiB compressed buffer bounds memory; only the currently displayed image is decoded. Pauses and upgrade menus add no frames, changing rooms clears the buffer, and retry cancels pending playback/export. Existing recordings respect the screen-shake setting used during play.
+
+[**Test death replay**](https://caleb-guyer.github.io/recoil-foundry/?test=replay&v=2.86.0). Click **Test death replay**, stand still until an enemy hits you, then choose **Watch replay**. This isolated room starts at **one health** for a quick test and preserves your progress. **R** restarts it.
+
+## The Fabricator · 2.85.0
+
+A tracked welder builds up to **two sentries** during a fight. It first appears alone in compatible Reclamation room 14 layouts; the remaining enemies wait until it is defeated. Later regular Reclamation rooms have a 35% replacement chance, and rooftops have a 55% chance. Each room has at most one Fabricator, replacing an ordinary enemy while preserving elites and coordinated pairs. Special machinery rooms, area events, bosses, Practice, Workshop, detours and New Game+ keep their encounters.
+
+An unfolding frame, a welding arm and sparks show its **2.2-second construction window**. Damage the Fabricator to interrupt it, or destroy the unfinished sentry. Moving either body, obstructing the weld or removing its support also cancels construction. Portals interrupt it immediately. A sentry needs clear supported ground and an initial firing lane, away from exits, door arrivals, coolant and magnet shafts. It remains a physical, damageable enemy; all normal gun types and prop impacts work.
+
+Completed sentries give a **0.85-second aiming warning**, locking their aim for the final 0.35 seconds, then fire one 17-damage round and recover for 1.25 seconds. Cover blocks their shots; moving a warned sentry cancels its attack. They never hurt you merely by touch. Destroying the Fabricator shuts down its sentries and their remaining hostile rounds. Reflected player shots remain yours. Sentries grant no kill count, healing or kill-triggered bonuses, and destroyed completed sentries still count toward the two-build limit.
+
+Continue and retry reconstruct the same encounter with a fresh construction budget. Older saved campaigns retain their original rosters; new runs save their Fabricator availability. Daily uses **ruleset 74**. No names, objective text or construction meters are added to the combat HUD.
+
+[**Test the Fabricator**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&v=2.85.0) · [**Mirrored room**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&mirror=1&v=2.85.0) · [**Beam build**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&build=beam&v=2.85.0) · [**Portal build**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&build=portal&v=2.85.0) · [**Starting gun**](https://caleb-guyer.github.io/recoil-foundry/?test=fabricator&build=starter&v=2.85.0).
+
+Click **Test the Fabricator**; **R** restarts the full-health preset. Test links preserve campaign saves, discoveries, Daily records and Practice unlocks.
+
+## Reforge · 2.84.0
+
+Fresh runs have a **35% chance of one Reforge station**, appearing near the exit after one of the first three bosses. Stand beside its lit machine and press **jump** to inspect three complete swaps: each shows the upgrade you give up and the replacement you receive. Choose one or walk away. The station works once per run, gives no healing, and leaves the ordinary room reward available. Its light goes out after use; combat has no new text or HUD prompts.
+
+Swaps preserve your chosen path, all required parents and fusions, and the stage restrictions on advanced upgrades. A replacement cannot strand an existing evolution. Removed weapon effects are cleared immediately; keeping Fold preserves its portals and spent placement budget. Closing and reopening the menu cannot reroll offers. Continue remembers both the cleared room and whether the exchange was used.
+
+Daily has **one predetermined swap** under **ruleset 73**. Older saves retain their original rooms. Practice, Workshop, unrelated test presets, detours and New Game+ do not gain a station.
+
+[**Test Reforge**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&v=2.84.0) · [**Walk up to the station**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&phase=room&v=2.84.0) · [**Daily swap**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&daily=1&v=2.84.0) · [**Beam build**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&build=beam&v=2.84.0) · [**Portal build**](https://caleb-guyer.github.io/recoil-foundry/?test=reforge&build=portal&v=2.84.0).
+
+Click **Test Reforge**. The default preview opens the exchange menu at 64 health; **R** restarts it. Tests preserve campaign saves, discoveries, Daily records and Practice unlocks.
+
+## Floodgate · 2.83.0
+
+An uncommon Cooling Works encounter turns a two-wave fight into a climb. When reinforcements enter, scalding coolant rises over the low cover. Two staircases work with ordinary jumps; recoil skips steps and reaches firing positions faster. Three upper decks stay dry at maximum height. Ten enemies combine elevated gunners with flyers and skimmers.
+
+**Shoot either amber valve wheel** to open the drain for four seconds. Each wheel works once; opening both together does not bank a second drain cycle. Bullets, beams, rail shots and portal-routed fire work, and cover still blocks them. Sustained immersion deals 9 damage per 0.9 seconds after a short escape grace, without reducing movement or jump strength. Clearing the fight immediately ends coolant damage and drains the room completely. Pipes, intake grates, water, lamps and sound communicate the event without instructions or a countdown on the combat HUD.
+
+Fresh runs roll a **35% chance** when a compatible room 9 or 10 is available. Floodgate avoids Cooling area events, courier rooms, enemy introductions, bosses and freight machinery. The plan survives Continue; old saves, Practice, Workshop, detours and New Game+ keep their existing rooms. Daily selection is deterministic under **ruleset 72**.
+
+[**Test Floodgate**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&v=2.83.0) · [**Mirrored layout**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&mirror=1&v=2.83.0) · [**Beam build**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&build=beam&v=2.83.0) · [**Portal build**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&build=portal&v=2.83.0) · [**Starting gun challenge**](https://caleb-guyer.github.io/recoil-foundry/?test=floodgate&build=starter&v=2.83.0).
+
+Click **Test Floodgate**. **R** restarts the preset. All tests begin at full health and preserve campaign saves, discoveries, Daily records and boss-practice unlocks.
+
+## Scrap Courier · 2.82.0
+
+Fresh runs have a **35% chance of one Scrap Courier encounter**, after the first boss. A compact amber machine carries a visible case through Dispatch Lane, jumping low obstacles, pausing behind cover and using short boosts. Two obstacle arrangements leave upper shelves available as recoil shortcuts. Enemy rosters and courier health increase with the area. Ordinary jumps and the starting gun can complete the chase.
+
+The courier must physically reach its service hatch and spend **three seconds opening it** before escaping. The moving shutter, engine cues and carried case communicate the encounter without a timer, nameplate or instruction banner. Cold, knockback, tethers and portals use their usual rules. The courier is optional: it does not hold up reinforcements or the room exit, and escaping grants no kill or reward.
+
+Destroy it and **touch the dropped case** to bank an extra legal upgrade choice at the room exit. The cargo choice gives **no healing**, followed by the ordinary room reward and its normal recovery. Leaving a case behind forfeits it. Daily has one predetermined compatible choice for each reward. The chase plan, collected reward and claimed bonus survive the appropriate Continue checkpoints; detours, escape and New Game+ accept the extra upgrade without duplication. Mid-fight Continue still restarts the room from its entrance.
+
+The encounter never replaces enemy introductions, trains, freight lifts, bosses or an area-event area. Practice, Workshop, existing focused tests and New Game+ do not gain a courier. Older saved campaigns keep their original rooms. Daily uses **ruleset 71**.
+
+[**Test Scrap Courier**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&v=2.82.0) · [**Alternate layout**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&mirror=1&v=2.82.0) · [**Starting gun**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&build=starter&v=2.82.0) · [**Beam**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&build=beam&v=2.82.0) · [**Portals**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&build=portal&v=2.82.0) · [**Recovered reward**](https://caleb-guyer.github.io/recoil-foundry/?test=courier&phase=reward&v=2.82.0).
+
+Click the named test button. **R** repeats the preset; tests preserve campaign saves, discoveries, Daily records and Practice unlocks. Combat presets have 100 health. The reward preview begins at 64 health so its no-healing bonus is easy to check.
+
+## Rare enemy mutations · 2.81.0
+
+Three uncommon mutations change familiar enemies without adding nameplates or increasing the opening troop count:
+
+- **Splitter:** a runner with a divided shell breaks into two smaller runners. Offspring have 32% of normal runner health and deal 9 contact damage. They cannot split again, and spawn with a short grace period in clear space.
+- **Volatile Gunner:** a shooter with an amber tank locks its aim for 0.8 seconds, then fires one slow explosive round. The blast hurts the player, red troops and blue allies; walls and cover block it. Baiting shots into red troops works. Hostile blasts and their fuel chains grant no player kill bonuses or healing.
+- **Blinker:** a bracketed flyer marks its destination for 0.8 seconds before a short teleport. Occupied destinations cancel the move. It stays vulnerable throughout the tell, then has 0.7 seconds of recovery and a fresh firing delay.
+
+Introductions are staged from rooms 3, 7 and 11 when compatible hosts are available. Other eligible rooms have a 24% mutation roll, with at most one mutated enemy; elite and squad members cannot stack mutations. Turf War can occasionally mutate one red while retaining its formation, 50/50 territory and 14-red/12-blue opening. Bosses, Practice, Workshop, detours, freight, Blackout, Lockdown and Overtime keep their existing encounters. Selection is seeded and survives Continue and retries; Daily uses **ruleset 70**.
+
+[**Test Splitter**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=splitter&v=2.81.0) · [**Test Volatile Gunner**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=gunner&v=2.81.0) · [**Test Blinker**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=blinker&v=2.81.0)
+
+Turf War variants: [**Splitter**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=splitter&arena=turf&v=2.81.0) · [**Volatile Gunner**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=gunner&arena=turf&v=2.81.0) · [**Blinker**](https://caleb-guyer.github.io/recoil-foundry/?test=mutations&mutation=blinker&arena=turf&v=2.81.0).
+
+Click the named test button. These are real rooms with normal health and four upgrades; **R** repeats the preset. Tests preserve campaign saves, discoveries, Daily records and Practice unlocks. Existing unrelated test presets remain focused on their own mechanics.
+
+## Turf War battle formations · 2.80.0
+
+Turf War now chooses a formation that fits the room's actual free space. Every battle still starts with **12 blues in the left half and 14 reds in the right half**, using the existing runner, shooter and flyer enemies with their normal stats and attacks.
+
+- **Ground Assault:** runner-heavy teams push from low positions, with shooters starting farther back.
+- **Crossfire:** shooter-heavy teams occupy multiple platform heights, with runners and flyers supporting them. Rooms without suitable elevated positions cannot roll this formation.
+- **Air Battle:** eight blue flyers face nine red flyers, backed by ground troops in supported positions.
+
+Both sides occupy the rear, middle and front of their half, with at least 105 world units between starting troops. Formation selection and placement follow the room seed, including route choices, so retries and Daily runs reproduce the same battle. There is one simultaneous fight, no extra waves, no friendly fire and no new gameplay labels. Surviving blues still leave after the reds fall. Daily uses **ruleset 69**.
+
+[**Test Ground Assault**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&formation=ground&v=2.80.0) · [**Test Crossfire**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&formation=crossfire&v=2.80.0) · [**Test Air Battle**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&formation=air&v=2.80.0)
+
+Click the named test button; **R** repeats the formation. Each preset uses normal health and four upgrades, and preserves campaign saves, discoveries, Daily records and Practice unlocks.
+
+## Turf War territories · 2.79.0
+
+Turf War begins with **12 blue allies spread throughout the left half** and **14 red enemies spread throughout the right half**. The dividing point is the room's midpoint, with every unit's full body inside its starting territory. Both formations keep at least 125 units of spacing and use supported ground positions or clear airspace. The center remains open so both sides can advance once combat starts.
+
+Allies retain the existing runner, shooter and flyer types. There is still one simultaneous battle, no second wave, no friendly fire, and surviving allies leave when the reds are defeated. Daily uses **ruleset 68**.
+
+[**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.79.0). Click the named test button; **R** restarts it without affecting your campaign save.
+
+## Turf War formations · 2.78.0
+
+Turf War still opens with **22 reds and five blue allies**, without a second wave. Every red spawn, including the room's original roster, now stays at least **480 world units from the player** and begins beyond the entrance lane. Units have at least **125 units of separation**, spread between the room's platforms, floor and airspace. Ground units spawn on clear support surfaces.
+
+The blue team uses the existing **runner, shooter and flyer** types, with their normal silhouettes, health, movement and attacks rendered in blue. Runners engage reds in melee, shooters fire single rounds, and flyers fire their normal three-round fans. Ground units leave along the floor and flyers depart through the air. Your weapons still pass through allies; their attacks cannot hurt you, and their kills never grant your healing or kill effects. Tight entry layouts substitute a flyer when a third ground position will not fit safely.
+
+[**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.78.0). Click **Test Turf War**; **R** repeats the preset. The test preserves your campaign save and discoveries. Daily uses **ruleset 67**.
+
+## Reworked events · 2.77.0
+
+- **Blackout** affects exactly **one combat room**. The world is almost completely dark, with a small light around you and the electrical box. The exit stays invisible until you shoot the box. One hit restores the lights and releases the second wave. Restored power adds 6 health to ordinary room recovery for the rest of the run.
+- **Turf War** opens with **22 red enemies and five blue allies entering from the left**, with no second wave. Blue units target red enemies; your weapons pass through the blue team, and their fire cannot hurt you or set off nearby explosives. Ordinary red gunmen return fire at closer visible allies. Surviving allies leave when every red enemy is defeated. The salvage case then opens for one free reroll, or 16 health in Daily.
+- **Lockdown** holds its reserve until the opening enemies are defeated and you **jump beside the lit terminal**. This summons the commander and its forces; defeating them opens the exit. Each affected combat room has its own terminal fight. Commander clearance still favors legal follow-up upgrades during the area.
+
+No event instruction banners or reward notices. Light, color, an upward terminal symbol and enemy behavior communicate the encounters. Turf War and Lockdown affect the area's ordinary combat rooms; Blackout covers only one. The freight shaft keeps its separate lift encounter, with Blackout scheduled in another room. Daily uses **ruleset 66**.
+
+[**Test Blackout**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=blackout&v=2.77.0) · [**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.77.0) · [**Test Lockdown**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=lockdown&v=2.77.0)
+
+Click the named test button. **R** restarts the preset. Tests preserve your campaign save, discoveries, Daily records and Practice unlocks.
+
+## Area events · 2.76.0 (original release; revised above)
+
+Fresh runs have a **75% chance of one area event**, selected by the run seed. It changes all three combat rooms in either the Furnace Halls, Cooling Works, or Reclamation Works. The full twenty-stage campaign, bosses, routes, and optional detours remain available.
+
+- **Blackout:** dimmed scenery and an exposed emergency relay in each room. Its locked beam warns for a full second and stops at cover; it can also hit enemies. Break all three relays to restore reserve power, adding **6 health to ordinary room recovery** for the rest of the run.
+- **Turf War:** amber and teal crews fight one another and still attack you. Two rival flyers join each room. Your second crew kill unlocks a salvage case; reach it to bank **one free upgrade reroll**. Rival kills cannot trigger your healing or kill effects. Daily salvage restores 16 health instead, preserving its single fixed reward.
+- **Lockdown:** one warned patrol can arrive per room. After clearing the room, **jump beside the terminal** to voluntarily summon its commander. Defeating it cancels later patrols in that area and favors **a legal follow-up upgrade** in remaining area rewards, while preserving boss salvage and all build restrictions.
+
+Brief arrival and reward notices fade away. Objectives sit on open floor; faction markers use both color and one/two stripes. Event progress and banked rerolls survive Continue. Older saved runs keep their original event-free course. Practice, Workshop, detours, and New Game+ do not receive event encounters; event perks end on entering New Game+. Daily now uses **ruleset 65**.
+
+[**Test Blackout**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=blackout&v=2.76.0) · [**Test Turf War**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=turf&v=2.76.0) · [**Test Lockdown**](https://caleb-guyer.github.io/recoil-foundry/?test=events&event=lockdown&v=2.76.0)
+
+Click the named test button. Each link starts at the beginning of the affected area with full health and four upgrades; continue through the area to see the event develop. **R** restarts the preset. These tests never write your campaign save, discoveries, Daily record, or Practice unlocks.
+
+## Grapnel, Convoy and workshop follow-ups · 2.75.0
+
+Five additions bring the catalog to **100 upgrades**:
+
+- **Grapnel:** a Tether rounds alternative to Snapback. An airborne wall hit anchors a short-lived swing cable; recoil builds momentum and jumping detaches. One anchor per airtime. Moving hosts remain free to move.
+- **Convoy:** a Crosshatch alternative to Thread the Needle. Fifteen stored rounds follow your movement trail, then converge from their current positions when released. Cover blocks the formation and teleportation clears it.
+- **Thermal Shock:** Coolant Rounds + Cinder fusion. Flames consume cold for a bounded steam blast, pushing ordinary enemies and loose debris. Boss armor applies and bosses cannot be stunned. Steam cannot trigger more steam or Flashpoint.
+- **Corner Pocket:** follows Banker. The first wall bank redirects toward a nearby enemy through clear space. Direct hits before the bank are 20% weaker. Beams, steel balls and rails share the same rules; returning rounds keep their spent allowance.
+- **Scrap Feed:** follows Splinter. Your rounds and their Splinter fragments load one seven-fragment blast when they destroy crates or cover. Rubble, explosions and the extra scrap shrapnel cannot reload it. A small gun indicator shows the charge.
+
+Daily uses **ruleset 64**, with one predetermined legal reward. Continue and older New Game+ builds remain compatible. No extra controls or combat HUD panels.
+
+[Try Grapnel](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=grapnel&v=2.75.0) · [Convoy](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=convoy&v=2.75.0) · [Thermal Shock](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=thermal&v=2.75.0) · [Corner Pocket](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=pocket&v=2.75.0) · [Scrap Feed](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=scrap&v=2.75.0).
+
+Click the named test button; **R** repeats the preset. Test runs preserve your normal saves and discoveries. [Build instructions](new-upgrade-builds.md) include controls, mirrored rooms and boss tests. [All 1,024 maxed combinations](max-upgrade-combos.md) and [their CSV](max-upgrade-combos.csv) list complete legal acquisition orders.
+
+## Cryogenic, Stasis and movement branches · 2.74.0
+
+Thirteen new upgrades bring the catalog to **95**, across **five paths**:
+
+- **Cryogenic:** Coolant Rounds → Deep Freeze → Icebreaker, or Cold Snap → Cold Front. Cold trades some direct damage for slowing, shatters and chain setups. Bosses build a capped bonus hit; they cannot be frozen or repeatedly interrupted.
+- **Stasis:** Suspension → Crosshatch → Thread the Needle, or Tripline → Chain Release. Hold fire to park rounds, then release a converging volley, or place proximity traps farther toward your aim. Recoil remains immediate. Thirty rounds maximum; traps check cover and expire. Enemy attacks continue normally.
+- **Shared:** Recall → Retrace follows actual banks and unchanged portal crossings back. Light Frame → Wallrunner adds brief recoil wall grips and wall jumps. Kickback → Air Brake adds one midair trigger-release brake and a stronger next launch.
+
+Each fork allows one choice. Rewards, Daily, Workshop, saves and upgrade discovery use the same prerequisites. The new follow-ups can appear after their parents; earlier stage-gated specializations keep their gate. Daily now uses **ruleset 63**. Older ordinary runs, including exhausted New Game+ saves, retain their builds and can earn compatible additions. No extra controls or HUD panels.
+
+[Try Icebreaker](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=icebreaker&v=2.74.0) · [Cold Front](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=coldfront&v=2.74.0) · [Crosshatch](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=crosshatch&v=2.74.0) · [Tripline](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=tripline&v=2.74.0) · [Retrace](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=retrace&v=2.74.0) · [Wallrunner](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=wallrunner&v=2.74.0) · [Air Brake](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=airbrake&v=2.74.0).
+
+Click the named test button; **R** repeats the preset. Test runs preserve Continue, discoveries, Daily records and Practice unlocks. [Build instructions](new-upgrade-builds.md) include mirrored rooms and boss tests. [All 464 fully maxed combinations](max-upgrade-combos.md) and [their CSV](max-upgrade-combos.csv) include every legal upgrade in acquisition order; these are stress-test builds beyond ordinary run rewards.
+
+## New Game+ elevator · 2.73.0
+
+The escape route now ends at a shared departure bay. Follow the amber steps **up to NEW GAME+** to carry your current gun and health into the harder second lap. The green **EXIT** lift on the lower floor finishes your run. Both lifts have physical decks and closing gates, and carry you upward before their destination loads. New Game+ requires a deliberate landing inside the raised car. Ordinary jumps reach it; recoil is optional.
+
+The old New Game+ door is removed from the final boss arena. Continue rebuilds the escape entrance with the appropriate elevators. Daily and completed New Game+ runs have only the finishing lift; their gameplay and Daily ruleset 62 are unchanged.
+
+[Test the exit elevators](https://caleb-guyer.github.io/recoil-foundry/?test=exits&v=2.73.0) starts beside the steps with the full end-of-run gun. Click **Test exit elevators**, then climb to continue or walk right to finish. **R** returns to the departure bay. The test preserves your real save, discoveries and Daily records.
+
+## Three new fusions · 2.72.0
+
+**Resonator** combines Pulse Chamber with Relay Gate: the third pulse repeats from a portal exit at 60% power, while the first two pulses are 25% lighter. **Flywheel** combines Skid Plate with Crosscut: rolling distance charges the final saw pair up to double damage, costing two ball banks. **Storm Cell** combines Cluster Shell with Arc Coil: landed bomblets form brief electrical traps, with 28% smaller shell blast radii and a three-cell limit.
+
+All three require both parents and share the existing rare, late-run fusion offers. Only one fusion can be fitted. Repeats check real cover, saw charge excludes teleport gaps and platform carrying, and each cell can hit an enemy only once. No new controls or combat HUD text. Daily uses **ruleset 62**; ordinary Continue saves remain compatible.
+
+[Test Resonator](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=resonator&v=2.72.0) · [Test Flywheel](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=flywheel&v=2.72.0) · [Test Storm Cell](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=storm&v=2.72.0). Click the title-screen test button. **R** repeats the preset. These tests preserve your saves and discoveries. For Resonator, right-click/E or LT/L2 to place both portals, then fire through the entrance.
+
+[All focused builds and controls](new-upgrade-builds.md) · [All fully maxed combinations](max-upgrade-combos.md) · [Every build as CSV](max-upgrade-combos.csv).
+
+## Upgrade branches · 2.71.0
+
+Twelve new specializations make local choices within the existing three paths. Cutting Torch can become **Pulse Chamber**, **Charge Lens** or **Prism Array**. Other families gain **Pinwheel**, **Follow-through**, **Shaped Charge**, **Cluster Shell**, **Skid Plate**, **Relay Gate**, **Short Circuit**, **Triphammer** and **Crosscut**. Specializations appear from reward stage 7 after their parents; each local fork allows one choice. Daily still gives one predetermined legal card under **ruleset 61**.
+
+[Every new upgrade, complete builds and test links](new-upgrade-builds.md). The complete-build catalog above includes these twelve specializations and the newer fusions.
+
+Rail spike now fires a real rear rail with Backfire and can leave a surface saw. Rail spike and Vector are alternatives for new builds; existing owned legacy saves and recaps survive. Returning steel balls may hit each enemy once per flight leg. Guided echoes replay recorded turns and can leave saws. Breach has a shared clearance budget and cannot erase heavy ammunition. Cards describe these adaptations without adding combat HUD text.
+
+[Try Charge Lens](https://caleb-guyer.github.io/recoil-foundry/?test=branches&build=charge&v=2.71.0): click **Test Charge Lens**, hold fire, then release. These explicit tests preserve Continue, discoveries, Daily records and Practice unlocks. Press **R** to repeat the preset. Normal runs still retry with a fresh seed.
+
+## The Loader's changing arena
+
+The Loader's bay has two marked steel barriers, each connected to a suspended load. Charges smash the barriers at real contact and retain the exposed crash window. Gunfire can also break a barrier or cut its cable. The damaged support then turns amber, outlines the barrier and marks the cargo's landing area for **1.35 seconds** before failing. The falling load creates new, low cover beside the opened charge lane.
+
+At **65% and 30% health**, remaining supports begin to fail. Automatic failures are staggered, including when a powerful volley crosses both thresholds at once. Each support can fail only once. Loose cargo can damage the Loader through physical impacts, can be pushed with your gun, and breaks under one committed ram. The permanent floor and upper shelves remain intact; ordinary jumps cross both orientations before and after collapse. The boss keeps its existing health, attack warnings and armor rules.
+
+Pause and hitstop freeze the sequence. Player death, leaving the run or defeating the Loader cancels pending failures. Completed-fight cargo stays physical but cannot damage the player. Retry and Continue rebuild the entrance with both supports intact. The arrangement also appears in Daily and Overtime when their seed selects the Loader. Normal saves remain compatible; **Daily ruleset 59** identifies the changed encounter. No controls or HUD elements are added, and reduced motion keeps steady warning outlines.
+
+[Test the Loader](https://caleb-guyer.github.io/recoil-foundry/?test=loader) or [its mirrored arena](https://caleb-guyer.github.io/recoil-foundry/?test=loader&mirror=1). Click **Test the Loader** to start with 100 health and three upgrades. **R** retries the fight. These isolated tests preserve Continue, Daily records, run history and earned Practice victories. Ordinary Practice still unlocks only after defeating the boss in a run.
+
+## Run recaps
+
+After losing or escaping, expand **Run recap** to see the fatal hit, room and layout reached, time, kills, seed and every upgrade on your final gun. **Recent runs** on the title screen keeps the last ten finished normal and Daily runs on this device, newest first. Recording starts with this update; earlier runs cannot be recovered. Recaps stay collapsed by default and reveal only the build, location and attacker from that run.
+
+**Try build in Workshop** loads the archived gun into the range using your discovered collection, without replacing Continue. **Replay seed** starts that seed again from room one with the starting gun; choices can change the route and build. Ordinary **Again** still generates a fresh normal seed. Daily retries keep their shared challenge and predetermined upgrades. Seed replay is disabled for records from older game rules.
+
+Practice, test presets and Workshop sessions never enter this history. Failed browser storage leaves recaps available for the current page session and displays a short notice. Existing saves and Daily ruleset 58 remain compatible.
+
+## Controller
+
+Connect a controller and press a button. Left stick moves, right stick aims, **LB / L1** jumps, **RT / R2** fires, and **LT / L2** places an equipped portal on the surface you aim at. The dashed portal preview shows a valid placement. Fold still allows one pair per room; Rewire allows replacement. Aim keeps its last direction when you release the stick. Partial movement gives a slower pace without cutting airborne recoil momentum.
+
+**A / ✕** also jumps, and confirms in menus. **B / ○** goes back; **Start / Options** pauses or resumes. Use the D-pad or left stick to navigate upgrades, Workshop and settings. Left and right adjust a focused slider. Under **Settings → Controller**, adjust the movement and aim deadzones or disable rumble. Recoil, hard landings and damage produce brief pulses. Controller hints and focus outlines appear when you use the pad; keyboard, mouse and touch switch back automatically.
+
+Disconnecting or leaving the page pauses play and stops rumble. Release held buttons before continuing after a menu or reconnect. The game uses the browser's [standard controller mapping](https://www.w3.org/TR/gamepad/#remapping); unmapped devices leave keyboard and mouse controls available. [Rumble support](https://developer.mozilla.org/en-US/docs/Web/API/GamepadHapticActuator/playEffect) varies by controller and browser and is optional. The Workshop is a safe place to tune your sticks. Existing saves and Daily ruleset 58 remain compatible.
+
+## The Workshop
+
+Open **Workshop** from the title screen to build a gun using upgrades you have actually collected. Only discovered upgrades appear; path locks, prerequisites, transformation exclusions and the one-fusion rule still apply. Removing a prerequisite also removes its dependent upgrades. Search your collection, clear the build, or return to the range with **Apply & reset**. Your Workshop gun is remembered separately from your run.
+
+The range has neutral physical targets, a moving target, a directional shield dummy, loose crates, two loaded breakable ledges, and a tall recoil practice shaft. Targets use the normal projectile, armor, knockback, portal and upgrade systems. Destroyed targets return after a short delay, waiting if their mount is occupied. They never attack. The player cannot take damage here. **R** or the reset button restores the entire room and your selected gun. **Build** reopens the compact editor; **Esc** pauses. Normal movement, firing and portal controls remain the same.
+
+Collected upgrades persist through lost and completed runs. Normal runs, Daily Runs, detours and Overtime all contribute; Practice and test presets do not. The current saved gun is imported on first launch. Earlier completed or lost runs did not store their individual upgrade history, so those older collections cannot be recovered. Workshop sessions never overwrite Continue, grant rewards or boss victories, or submit Daily times. Storage failures leave the current session usable. Daily ruleset 58 is unchanged because this range does not alter run generation or balance.
+
+[Open The Workshop](https://caleb-guyer.github.io/recoil-foundry/?workshop=1). The link uses your own collection and never unlocks upgrades. New players can enter with the starting gun.
+
+## The Dropworks
+
+**The Dropworks** can appear in Cooling Works' second room. Two permanent stairways climb to a narrow central perch, with open firing gaps between platforms. Crack the two loaded shelves to drop their crates onto enemies below. The load shelves are optional: breaking both still leaves an ordinary jumping route across the room. Falling loads use physical collisions, and the broken support does not spawn solid rubble directly beneath them.
+
+**Dropworks Roof** can appear in Rooftops' second room. It adds two lifts in clear vertical shafts, a second Wallcrawler, more overhead shooters and the area's tougher enemy variants. Both rooms have three seeded rosters and mirrored layouts. Upper guards, flying enemies and Wallcrawlers keep the highest perch under pressure. The existing controls and compact HUD are unchanged. Daily ruleset 58 identifies the expanded room pool; existing saves remain compatible.
+
+[Test The Dropworks](https://caleb-guyer.github.io/recoil-foundry/?test=dropworks) or [test Dropworks Roof](https://caleb-guyer.github.io/recoil-foundry/?test=dropworks&area=rooftops). These start at full health with a legal, stage-appropriate Drop Forge build. Add `&build=standard`, `&build=bank` or `&build=portal` for another gun, `&variant=2` or `&variant=3` for another roster, or `&mirror=1` to reverse the room. **R** restarts the isolated test; ordinary saves, Daily records and Practice victories remain untouched.
+
+Checks cover every roster and mirror, supported crates, empty lift sweeps, traversal with no upgrades after both shelves collapse, real damaging crate drops, full lift cycles, pressure on the highest perch and normal-health combat clears in both rooms and orientations.
+
+## Drop Forge
+
+**Drop Forge** requires Mass Driver. Gravity builds up to 75% extra direct impact damage while a steel ball descends. Shooting straight down from close range starts uncharged; a longer fall earns the bonus. Powerful falling rounds develop an amber rim and drive loose crates and small enemies downward with a heavy impact sound. The shove uses real collisions and capped velocity; bosses, heavy machines, frontal shields and armed volatile enemies retain their resistance.
+
+Rising shots lose the bonus. Banks, portals and Orbit releases start a fresh fall. Damage is calculated at contact, so the bonus never compounds into Banker, piercing, fragments, arcs or explosive payloads. The ordinary damage, penetration and shell rules still apply. Reduced motion uses a steady amber outline without the soft glow. No control or HUD element is added. Existing saves remain compatible; Daily ruleset 57 identifies the new pool.
+
+[Test Drop Forge](https://caleb-guyer.github.io/recoil-foundry/?test=mass-driver&build=forge) starts a Furnace encounter with the cannon and follow-up equipped. Add `&room=train` or `&room=boss` for those encounters, or `&mirror=1` to reverse the layout. **R** retries; ordinary saves, Daily records and Practice unlocks are preserved.
+
+## Mass Driver
+
+**Mass Driver** is a shared upgrade that fires heavy steel balls. It gives 2.4 times the damage, 2.5 times the shot delay, 65% more recoil, 40% slower rounds and four additional bounces. Gravity bends each flight; impacts lose speed, while moving decks transfer their motion into the rebound. A wider steel barrel, a deep report and short metallic impact sounds identify the gun without adding a control or HUD.
+
+Loose crates take reduced structural damage and receive momentum, letting you launch them into other enemies. Small enemies can be knocked off their perches. Heavy enemies, bosses, frontal shields and armed volatile enemies resist the shove. Each ball damages a given enemy only once; piercing passes through its allotted targets, and rebounds cannot repeatedly grind the same enemy or prop. Balls break after 3.2 seconds or when spent, with at most 48 active. Their swept hulls interact with real cover and props without adding bodies that could wedge under machinery.
+
+Bank shot, Banker, pellets, rear volleys, charged shots, fragments, Recall, Vector, echoes and portals retain their behavior. Shellshock balls detonate or stick on their terminal impact; surviving explosive balls also spend their payload when they expire. Cutting Torch and Rail spike are alternative gun transformations and cannot be offered alongside Mass Driver. Existing saves remain compatible; Daily ruleset 56 identifies the expanded upgrade pool.
+
+[Test Mass Driver](https://caleb-guyer.github.io/recoil-foundry/?test=mass-driver) starts a Furnace room at full health with six upgrades. Add `&build=bank`, `&build=volley`, `&build=shell` or `&build=portal` for other builds, `&room=train` for Freight Crossing, or `&room=boss` for the final fight. `&mirror=1` reverses the arena. **R** restarts the isolated test; normal saves, Daily records and earned Practice victories are preserved.
+
+## Risky reroll
+
+Once per reward, **Reroll · −12 health** replaces every card with a different legal upgrade. It keeps path weighting, prerequisites, transformation exclusions and fusion rules. Rerolling a boss reward also gives up its salvage card. The button disables after use, at 12 health or less, or when there are too few fresh upgrades to replace the full set. Field repair cannot be rerolled. Daily Runs retain their single predetermined upgrade and have no reroll button.
+
+The cost is immediate; choosing an upgrade still gives the usual 12-health room refill. At 64 health, rerolling leaves 52, then choosing leaves 64 instead of 76. Bonus detour upgrades still give no healing. Pending cards, spent health, the used reroll and the selected route or detour are saved together. Continue returns directly to that reward without replaying the cleared room or charging again.
+
+[Test the reroll](https://caleb-guyer.github.io/recoil-foundry/?test=reroll) opens the first reward at 64 health. Reroll, choose a card, and play the next room. **R** restarts this isolated test; normal saves, Daily records and Practice unlocks are preserved.
+
+## Countershot balance
+
+Countershot deflects one small hostile bullet on contact with your fire. After a successful deflection, release fire for **0.8 uninterrupted seconds** to recharge; a quiet click confirms it is ready. Pellets, bursts, rear shots, echoes, returning rounds and Cutting Torch share that one charge. Holding fire, rapid taps and queued burst rounds cannot recharge it. Missing does not spend the charge.
+
+A small hinged fin on the gun folds down when that charge is spent, rises as it recharges, and briefly glints when ready. Firing before the recharge finishes folds it down again. It fits both the ordinary gun and Cutting Torch, alongside Capacitor cells. Reduced motion uses distinct folded and ready poses with no glint. The cue follows simulation time, including pause and hitstop.
+
+Returned rounds retain their original damage, capped at **24**, with no damage multiplier. Reprisal still adds two enemy penetrations. Blades and large boss ammunition remain undeflectable; walls, props, enemies, cables and portals still take precedence. Pause and hitstop freeze recovery, and room entrances and retries restore the charge.
+
+[Test Countershot against the final boss](https://caleb-guyer.github.io/recoil-foundry/?test=countershot) with a full nineteen-upgrade gun. Add `&build=precision` or `&build=torch` for other builds, or `&mirror=1` for the mirrored arena. **R** retries. This test preserves ordinary saves, Daily results and earned Practice victories.
+
+## Pressure vents
+
+**Pressure Chamber** in Furnace introduces two upward jets beneath open launch shafts. **Pump Room** in Cooling Works uses opposing sideways jets, a raised firing lane, and staggered cover. Each layout has three seeded enemy arrangements and a mirrored version, and can appear in its area's second room. Existing freight, physics, and counterweight selections retain their priority.
+
+A recessed grille and a nearby valve identify each vent. The wheel's rim refills during its 4.2-second recharge. Once ready, shooting the wheel starts a full one-second warning: a rattle, a hiss, and faint lines along the exposed jet. It then bursts for 0.42 seconds. Ready valves also fire automatically after 1.8 seconds during combat; shooting never skips the warning or recharge. After clearing the room, only manual triggers start new bursts.
+
+Jets give each exposed body one bounded impulse per burst. Ride an upward jet, then fire to redirect your recoil flight. Loose crates become physical projectiles; cover and tilted machinery block the jet at their actual surfaces. Small enemies can be knocked off perches and briefly lose steering. Heavy ground enemies resist the lift; bosses, pinned enemies, and armed volatile enemies retain their anchors. Jets deal no direct damage. Ordinary jumps cross both layouts without using the machinery.
+
+Normal rounds, close muzzle shots, ricochets, portal-routed projectiles, and Cutting Torch can operate a valve. Shots must physically reach its wheel; cover and intervening enemies intercept them. Warnings, bursts, and recharge freeze during pause and hitstop. Room entrances and retries reconstruct the original machinery, including in Daily and Overtime. No new controls or HUD are added.
+
+[Test Pressure Chamber](https://caleb-guyer.github.io/recoil-foundry/?test=pressure) or [test Pump Room](https://caleb-guyer.github.io/recoil-foundry/?test=pressure&area=cooling). Add `&mirror=1`, `&variant=2` or `&variant=3` for another arrangement. Use `&build=torch`, `&build=tripwire`, or `&build=portal` to try a different preset gun. **R** retries at full health. Tests preserve saves, Daily results, and earned Practice victories.
+
+## Tripwire
+
+**Tripwire** is a Demolition upgrade. Shoot two fixed surfaces to connect their impact points with a thin explosive wire. An enemy touching the wire triggers a blast at the crossing and consumes the trap. You can keep two wires active; completing a third replaces the oldest. No new controls or HUD.
+
+Place anchors 80–720 world units apart with clear space between them. A short dashed line becomes solid when the trap arms after 0.22 seconds. Repeated shots at one spot retain the first pin. A blocked or out-of-range second anchor becomes your new starting point. Floors, walls, ceilings and intact breakable terrain work; loose props and moving machinery cannot hold anchors. Destroyed anchors and cover sweeping through a wire break it harmlessly.
+
+**Tension** requires Tripwire. Longer wires gain up to 75% extra blast damage, reaching full strength at 600 units. The base blast deals 2.4 times the average combined shot damage used to place its two anchors, capped at 260 before Tension, with a 104-unit radius and ordinary blast falloff. Boss armor and shields still apply. Aftershock and Blast surfing work with the trap blast. The player never takes damage from it.
+
+Only the forward center round places a pin: pellets, rear volleys, repeated ricochets, fragments, echoes and reflected bullets cannot flood the map with traps. Enemy crossings use their swept hulls, so fast charges cannot tunnel through. Portal travel has no invisible crossing between its entry and exit. Wires add no physical bodies or constraints that could jam a train.
+
+[Test Tripwire and Tension](https://caleb-guyer.github.io/recoil-foundry/?test=tripwire). Shoot two points on an exposed stretch of floor, then lure a runner across it. Use `&build=base` without Tension, `&build=bank` for ricochets, `&build=portal` for reusable portals, or `&build=demolition` for Aftershock and Blast surfing. **R** retries at full health. Tests preserve saves, Daily records and Practice unlocks.
+
+## Cutting Torch
+
+**Cutting Torch** is a Precision upgrade that replaces your gun's primary rounds with one continuous beam. Hold the normal fire control to cut. Output is 78% of the gun's combined damage per second. Recoil becomes steady thrust, stronger in the air: jump and aim down to climb, then sweep sideways while drifting. Release fire to stop immediately.
+
+**Scattershot** concentrates its five pellets into a visibly wider beam with a wider physical hitbox and 28% more sustained damage. Its full width stops on real cover, including glancing edges. **Burst fire** instead delivers three concentrated laser pulses, each carrying one discharge's damage and recoil, followed by recovery. Aim can change between pulses. The normal 10% lighter hits remain; damage arrives in short bursts instead of being averaged into a weaker continuous beam. Combining them gives three wide pulses. Releasing cancels unfinished pulses while preserving recovery, so tapping cannot skip the delay.
+
+Upgrade cards and the Workshop describe these laser effects, including the actual sustained-output changes from Heavy hitter, Hair trigger and Deadeye. Existing builds work in either acquisition order and Continue preserves their upgrades. **Daily ruleset 60** identifies the changed laser behavior.
+
+**Thermal Runaway** requires Cutting Torch. Stay on the first enemy in the beam to build up to 75% extra damage over 1.5 seconds of beam contact. Intentional burst gaps preserve heat while you continue aiming at the same exposed target; they add no heat or damage. Releasing fire, losing the line, changing targets, or player portal travel resets that heat. Pierced targets do not inherit it. A brighter contact point marks the heat; there is no meter or extra control.
+
+Cover stops the beam at its actual shape. Breakable terrain gradually gives way, and the beam can reach the opening on its next simulation step. Bank shot and Banker reflect it; Punch through penetrates enemies with the usual falloff; linked portals redirect it without drawing a line across the intervening map. Boss armor and shields remain effective.
+
+Capacitor, Landing shot and Slingshot empower one short pulse, not an entire trigger hold. On-hit effects and Countershot operate at the gun's firing cadence rather than once per frame. Backfire adds a rear beam while retaining forward recoil. Recall, Vector rounds, Grindshot and Rail Spike are alternative transformations: owning one prevents the torch from being offered, and vice versa. Existing saved builds remain valid.
+
+[Test the combined wide, pulsing laser](https://caleb-guyer.github.io/recoil-foundry/?test=torch&build=combined), [Scattershot](https://caleb-guyer.github.io/recoil-foundry/?test=torch&build=scatter), or [Burst fire](https://caleb-guyer.github.io/recoil-foundry/?test=torch&build=burst). [Test Cutting Torch and Thermal Runaway](https://caleb-guyer.github.io/recoil-foundry/?test=torch) keeps the continuous beam. Use `&build=base` for the torch alone, `&build=bank` for bank shots, `&build=portal` for reusable portals, or `&build=precision` for penetration and pinning. **R** retries at full health. Test links preserve saves, Daily records and earned Practice victories.
+
+## Angler
+
+The **Angler** is a mobile ricochet gunner that begins appearing in Furnace. It traces a single bank off a real surface to reach around cover. Its thin, dashed warning shows both legs, then turns solid for the final 0.6 seconds of its 1.2-second tell. Once locked, the shot never corrects toward you. Step away from the outgoing line or put cover in its path.
+
+Break its chosen wall or tilt its chosen counterweight before the round banks to interrupt the attack. The Angler opens its armor for 1.25 seconds and takes 50% extra damage. Its body still collides normally. Rounds stop at crates, other enemies and intervening cover; Countershot can reflect them, and a portal redirects them without giving them another bank.
+
+Rooms contain at most one Angler. Furnace's introduction brings it out before the remaining enemies; later rooms combine it with existing enemies, elites and coordinated pairs. Rooftop Anglers fire faster, harder rounds and can appear among the counterweight platforms. Boss rooms and the other enemy introductions retain their own rosters.
+
+[Test the Angler in Furnace](https://caleb-guyer.github.io/recoil-foundry/?test=angler) or [on the rooftops](https://caleb-guyer.github.io/recoil-foundry/?test=angler&area=rooftops). Add `&mirror=1` to reverse the layout or `&build=vector` for Vector rounds and Afterburner. **R** retries with full health. These links preserve saves, Daily records and earned Practice victories.
+
+## Vector rounds
+
+**Vector rounds** lets your mouse aim bend primary rounds in flight. Rounds travel 25% slower and keep their muzzle direction for 0.05 seconds, then can steer for 0.7 seconds through a total of 135 degrees. The cursor guides the shot; enemies do not attract it. Aim around a wall, or fire downward while airborne and curve those rounds toward an enemy. Cover, props, enemies and moving machinery still stop the actual flight path.
+
+**Afterburner** requires Vector rounds. Bend a round at least about 10 degrees, then hold it on a steady line for 0.1 seconds: it commits to that direction with 35% more speed and 30% more damage. The boost applies once, including to its shell payload. Straight shots do not earn it. A short amber trail marks the boosted round; neither upgrade adds a control or HUD element.
+
+Both upgrades are shared by all paths. Scattershot, Crossfire, Burst fire and Backfire keep their firing patterns. Convergence finishes its shape before guidance begins, and Recall takes control on the return. Banks and portals preserve their exit direction briefly without refilling steering or Afterburner. Rail spikes, fragments, reflected bullets, echoes and Orbit releases keep their own behavior. Piercing, armor, ricochets, Fuse and Grindshot retain their normal rules.
+
+[Test Vector rounds and Afterburner](https://caleb-guyer.github.io/recoil-foundry/?test=vector) in Furnace's low route. Use `&build=base` for guidance alone, `&build=volley` for Crossfire and Scattershot, `&build=shell` for sticky shells, or `&build=portal` for reusable portals. **R** retries with full health. Test links preserve saves, Daily records and earned Practice victories.
+
+## Counterweight platforms
+
+Balance House in Cooling Works introduces a steel deck on a fixed bearing. Counterweight Roof adds two decks at different heights, crossfire and the rooftop elite pair. Each room has three seeded rosters and mirrored arrangements, and can appear in the second room of its area. Existing physics rooms keep their own selection. Daily and Overtime reconstruct the same machinery from their seeds.
+
+Players, enemies and loose props supply real weight and impact forces. Shoot a crate across the axle to reverse the loaded side; hard landings tip the deck faster. Jumping from a rising end preserves its upward momentum, and airborne shots keep their ordinary recoil. Gunners and cover on the deck can slide or fall. Tilting a Wallcrawler's perch releases its grip and interrupts its burst.
+
+The bearing limits tilt to about 18 degrees, damps violent rotation, and gently recenters an empty platform. Shots, ricochets and warning lines follow the visible tilted surface. Grindshot follows the moving deck; Fold uses the existing fixed surfaces. The floor stays open below the machinery, and permanent side ledges remain crossable with ordinary jumps at either tilt. No controls or HUD are added.
+
+[Test counterweights in Cooling Works](https://caleb-guyer.github.io/recoil-foundry/?test=counterweights) or [try the rooftop layout](https://caleb-guyer.github.io/recoil-foundry/?test=counterweights&area=rooftops). Add `&variant=2` or `&variant=3` for another roster and `&mirror=1` for the opposite orientation. **R** restarts with full health and the preset gun. These isolated tests preserve saves, Daily records and earned Practice victories.
+
+## Wallcrawler
+
+A maintenance robot clings to floors, walls and ceilings, walking around exposed corners with four gripping legs. It stops before firing three rounds. The 0.95-second warning tracks early, then locks all three lanes for the last half second; the burst never follows you after that commitment. It uses ordinary hostile bullets, so cover, reflection and portals work normally.
+
+Shoot its cracked perch loose to interrupt the burst and make it fall. Its exposed hull takes 50% extra damage for 1.5 seconds, then it can grip terrain again. Crates block its path, hard impacts can dislodge it, and moving or losing its support cancels the old firing position. Its body remains solid throughout.
+
+Sparse encounters begin in Cooling Works, where the first room introduces it before the other enemies enter. Later rooms can replace one ordinary enemy with a crawler while preserving elites and squads. Rooftop crawlers prefer upper undersides, move faster and fire harder rounds. Normal runs, route branches, Daily and Overtime use seeded placements. No controls or HUD are added.
+
+[Test the Wallcrawler](https://caleb-guyer.github.io/recoil-foundry/?test=wallcrawler) starts a real Cooling Works encounter with a cracked perch and a preset gun. Use [the rooftop version](https://caleb-guyer.github.io/recoil-foundry/?test=wallcrawler&area=rooftops) for a tougher room, or add `&mirror=1` for the other orientation. **R** retries. These isolated tests preserve ordinary saves, Daily records and earned Practice victories.
+
+## Boss salvage
+
+Boss victories can offer a modification recovered from their machinery. One card is salvage and the other two are ordinary upgrades. Daily Runs take the single fixed salvage card. Owned salvage is replaced by ordinary choices; it never appears in random upgrade draws before a victory. The final encounter keeps its extraction ending.
+
+- **Ramjet** comes from Docks machinery and the Sorter. An airborne recoil launch briefly lets fast impacts damage enemies, with damage based on closing speed. Small enemies bounce you away. Boss armor, directional shields and active charges retain their danger.
+- **Cinder rounds** come from Furnace machinery and the Reclaimer. Direct impacts leave small surface fires for 1.3 seconds. Burns deal 24 damage per second before armor, cannot stack on one target, and can ignite exposed fuel. Patches move with their supporting surface and disappear when it breaks.
+- **Crosswind** comes from Cooling Works machinery. Rounds leave faint, brief gusts that push loose props and bend ordinary hostile bullets by at most 16 degrees across their lifetime. Cover blocks the wind; heavy rounds and the Interceptor's special ammunition retain their trajectories.
+
+[Test boss salvage](https://caleb-guyer.github.io/recoil-foundry/?test=salvage) starts Reclamation Works with all three equipped. Shoot away from enemies while airborne to launch into them. Add `&build=ramjet`, `&build=cinder`, or `&build=crosswind` to isolate one. **R** retries. Tests preserve normal saves, Daily records and earned Practice unlocks.
+
+The three salvage upgrades now have evolutions in later reward pools. Each requires its parent and works with any gun path:
+
+- **Wrecking Ball** upgrades Ramjet. Small enemies become physical projectiles for up to 0.75 seconds, including when the ram kills them. Their first hard collision deals speed-based damage. Bosses, chargers, scrappers, harpooners and borers resist the throw; directional shields still block rams. Wrecks can hit cover, ignite fuel, and pass through Fold portals.
+- **Flashpoint** upgrades Cinder rounds. Killing an enemy touching your fire triggers a small fireburst. It consumes visible nearby flames and respects cover, boss armor and shields. Burst kills cannot create another burst.
+- **Slipstream** upgrades Crosswind. Gusts last 0.7 seconds and carry you when you enter their path. One gust affects you at a time, acceleration is bounded, and fresh muzzle gusts leave recoil intact. Faint arrows show each current's direction.
+
+[Test salvage evolutions](https://caleb-guyer.github.io/recoil-foundry/?test=salvage&evolved=1) equips all three parents and evolutions. Add `&build=ramjet`, `&build=cinder`, or `&build=crosswind` to isolate one pair. Press **R** to retry. Normal saves, Daily records and Practice unlocks remain untouched by test runs.
+
+## Play
+
+| Input                  | Action                     |
+| ---------------------- | -------------------------- |
+| A / D or arrows        | Move                       |
+| Space / W / up arrow   | Jump; hold for more height |
+| Mouse                  | Aim                        |
+| Left click / hold      | Fire                       |
+| Right click / E (Fold) | Place the next portal      |
+| Escape / P             | Pause                      |
+| 1–3 during upgrades    | Choose a modification      |
+
+Shoot downward in the air to climb. Shoot sideways to launch yourself the other way. Recoil is almost five times stronger in the air; steering preserves speed above the normal running limit. Clear every enemy, then walk through the door on the right. Each area ends with a boss.
+
+You always carry **one gun**. Fifty-nine possible modifications change its shots, recoil, handling, or healing. Choose one of three between main rooms; these rewards also restore 12 health. The direct route gives nineteen picks. Taking all four optional detours extends the run to twenty-four fights and twenty-three picks; bonus rewards give no healing.
+
+Bloodwork restores 2 health per kill. Hidden salvage still restores 18 health, so exploring a passage can save a damaged run. Scattershot fires five pellets at 32% base damage each; landing the spread up close rewards the risk without overwhelming every boss window.
+
+Your gun's shape reflects its build: Heavy hitter adds a thick sliding barrel, Scattershot widens the muzzle, and Burst fire cycles a bolt and three recessed chambers. These parts combine on the same weapon. Banked rounds leave short mint trails along their actual bounce paths; piercing rounds leave thin pale-blue streaks. Combined rounds keep both cues. Screen-shake settings also reduce the weapon animation and muzzle flash. These visual changes preserve the gun’s stats.
+
+## Grindshot
+
+**Grindshot** is shared by every path. Direct hits deal 20% less damage. After a primary round spends its bounces and Recall return, its final terrain impact becomes a small saw that skims the struck surface. Aim diagonally into the floor to sweep ground enemies, or into a wall to climb toward a perch. A straight wall shot climbs upward. Each saw lasts 1.2 seconds and can hit each enemy only once; at most eight exist at a time.
+
+**Corner Cutter** requires Grindshot and lets saws follow exposed corners onto the next face of the same surface. Ordinary saws end at the edge. Both follow moving terrain and disappear when their supporting material breaks. Other cover stops them, even when that impact destroys it. Directional shields stop the blade, boss armor keeps its protection, and kills grant ordinary Bloodwork healing.
+
+Banker damage and piercing attenuation carry into the saw. Shells still detonate or leave their fuse at the impact; the saw keeps only the direct-hit payload. Saw hits cannot trigger secondary upgrade chains, and fragments, echoes, reflected rounds, and rails cannot create saws. Fired rounds still travel through Fold normally; saws stay on their surface. No new control or HUD is added.
+
+[Test Grindshot](https://caleb-guyer.github.io/recoil-foundry/?test=grindshot) equips the pair in Furnace's low road. Add `&build=base` to test ordinary edges, `&build=bank` for ricochets, or `&build=shell` for sticky explosives. **R** retries. The pair also appears in the upgrade test picker. These isolated tests preserve normal saves, Daily records, and earned Practice victories.
+
+## Interceptor surface saws
+
+The Interceptor can now fire Grindshot into a nearby floor or wall. Red lines and directional arrows mark the complete surface route for 1.35 seconds before firing. The entry rounds must actually reach that surface. The first phase sends one saw that ends at exposed edges; later phases can send two corner-wrapping saws and three separately marked bullets. Each saw deals 18 damage once, lasts at most 1.35 seconds, and can be cleared with an ordinary jump. The attack leaves a 1.7-second recovery with the boss's usual exposed armor.
+
+Routes stay fixed after the warning begins. Crates intercept entry rounds and travelling blades; moving or destroying a marked support cancels its saw. Reflected or redirected entry rounds cannot create an unmarked blade elsewhere. Phase changes, death, and retries clear the attack. Enemy saws are red; player saws keep their pale color. No control or HUD is added.
+
+[Test the Interceptor's saws](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor-grindshot&phase=3) starts an isolated final-phase fight with a full-health boss and a preset gun and repeats the new attack between recoil moves. Use `&phase=1` for the single-saw introduction, `&phase=2` for the middle phase, or `&mirror=1` for the mirrored arena. **R** retries. These tests preserve normal saves, Daily records and earned Practice victories. The ordinary final boss uses the full arsenal.
+
+## Freight Crossing
+
+Edge compression now breaks pinned props immediately, detonates trapped Sapper charges through their own blast system, and removes crushed wrecks. The train rebuilds its movement sweep after a break or explosion, so a removed hull cannot keep it blocked. Loose cargo is still pushed, roof riders are carried, and jumping onto the roof remains safe.
+
+At most once per lap, passing cargo cars occasionally cut through the second room of Docks or Reclamation Works. A horn, rising rumble and amber track signals give 2.4 seconds of warning. The two solid cars block shots, carry riders and stacked crates, shove loose props, ignite fuel, and slam enemies at their leading bumpers. Jumping off preserves the train's momentum. Being pinned against solid cover during combat is a lethal crush, including during damage grace from a previous hit. Jump clear before the bumper closes the gap; no special upgrade is needed.
+
+The floor lane, car roofs, and permanent upper catwalk provide different fighting positions. Ordinary jumps reach the upper route from either end. Reclamation uses a larger, tougher roster; selection, rosters and direction repeat in Daily and Overtime. No new trains arrive after the room clears.
+
+[Test Freight Crossing](https://caleb-guyer.github.io/recoil-foundry/?test=crossing) starts in Docks. Use [the Reclamation version](https://caleb-guyer.github.io/recoil-foundry/?test=crossing&area=reclamation) for a later build and tougher enemies. Add `&mirror=1` for the opposite initial direction. **R** retries the same room. These isolated tests preserve saves, Daily records and Practice victories.
+
+## Physics rooms
+
+Three occasional layouts appear in the second room of their area, each with three enemy arrangements and a mirrored version:
+
+- **Demolition Lane — Furnace:** low cracked barriers, fuel beside cover, and a Sapper. Explosions weaken the barriers; follow-up shots open new firing lanes.
+- **Cable Yard — Cooling Works:** staggered platforms with ground and flying enemies in connecting lanes. Tether builds can pull enemies together; ordinary guns can use the same open angles.
+- **Suspension Hall — Rooftops:** two hanging loads above enemy positions, with stepped perches and exposed upper platforms. Shoot the cables to drop cargo, then use the fallen loads as cover.
+
+Every room remains crossable with ordinary jumps, including after its cover breaks or cargo falls. Recoil gives access to higher positions. Room selection, arrangements, props and mirrors repeat by seed in ordinary runs, Daily Runs and Overtime. The existing freight elevator retains its chance to appear in Furnace.
+
+[Test the three layouts](https://caleb-guyer.github.io/recoil-foundry/?test=layouts): click **Test new layouts**, then choose a room. Each starts with full health and an appropriate preset gun; Cable Yard includes Tether rounds and Snapback. **R** retries the same room. Add `&variant=2` or `&variant=3` for another arrangement and `&mirror=1` to flip it. These tests preserve ordinary saves, Daily records and earned Practice victories.
+
+## Branching routes
+
+After the second room of each area, two physical exits open. The ground exit leads to the **Low road**: close quarters, more ground attackers, and extra breakable cover. Climb the two steps to the **High road** for exposed platforms and more aerial enemies. Small passage and platform symbols above the doors identify the terrain without revealing encounters. No extra menu or input is needed.
+
+Five pairs of layouts give every area its own choice. Both roads advance one room and give the same normal upgrade reward, with 12 health. They rejoin before the boss; the existing optional challenge door can still appear after the chosen room. High routes have recovery steps and a safe floor beneath them. Recoil opens faster routes across the upper platforms. The freight elevator's fork sits at its upper dock.
+
+Daily Runs use a single exit with a terrain symbol for that day's fixed route. They still give one predetermined upgrade. Overtime keeps both exits and strengthens the chosen room with extra elites and reinforcements. Continue reconstructs the selected road, gun and health; existing ordinary saves without a route choice keep their saved layout.
+
+[Test branching routes](https://caleb-guyer.github.io/recoil-foundry/?test=routes) starts just before the first fork. Clear the room, then choose an exit. Add `&route=low` or `&route=high` to start directly inside that road, and `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` for a later area. `&mode=overtime` tests the second lap. Press **R** to retry the same test. These links preserve ordinary saves, Daily records, and Practice unlocks.
+
+## Destructible terrain
+
+Cracked low walls and optional ledges can break under gunfire, explosions, fast crates, and heavy enemy attacks. Cracks spread as the material weakens; there are no terrain health bars or extra controls. Walls open new firing angles, while destroyed ledges drop perched gunners and cover. The base gun breaks a wall in five direct hits or a ledge in three. Boss charges and slams can smash either at the point of contact, then enter their normal recovery.
+
+Each destroyed piece releases up to three small physical chunks. Gunfire pushes them, they collide with the world, and they fade away after 2.4 seconds of active play. At most twelve chunks exist at once. Rubble cannot produce additional Chain reaction explosions. Essential floors, stairs, high-route recovery steps, machinery supports, the freight elevator, and extraction remain intact. Explosions respect the cover present when they begin.
+
+Portals on destroyed surfaces disappear without refunding their placements. Attached fuses keep their last position and timer; rivet pins release. Continue and retries rebuild the same intact room from its entrance, preserving the saved route and build. Weak-material selection repeats in Daily Runs and uses the separate Overtime layout seed on the second lap.
+
+[Test destructible terrain](https://caleb-guyer.github.io/recoil-foundry/?test=destruction): click **Test destructible terrain** to start inside the Docks low road with full health and two upgrades. Shoot the cracked obstacles and ledges; **R** restarts the test. Add `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` to try a later area. These tests preserve ordinary saves, Daily records, and earned Practice victories.
+
+## Overtime
+
+After clearing the Interceptor's arena in an ordinary run, leave through its ground door and cross the escape route. Both elevators wait in the final departure bay: climb the amber steps to **NEW GAME+** to keep your exact gun, health, kills, and elapsed time for a second twenty-room lap, or board the lower green **EXIT** lift to finish. The selected lift closes and rises before the transition. There is no entry heal. This is one optional second lap; its final boss leads to extraction.
+
+Overtime uses its own repeatable layout and roster seed. Ground attackers mix Chargers, Hoppers and Borers; aerial threats mix Flyers, Skimmers and Sifters. Rooms have more elites and extra reinforcements, with a 4.5-second deadline before the second wave. Occupied entrances wait or relocate and keep their full warning. Ordinary gunfire becomes faster and more damaging as the lap progresses.
+
+Bosses have health appropriate for an assembled build, start with later-phase attacks, and have shorter downtime between attacks. At nine seconds or 65% health, a separate wave of three flying supports receives the normal entrance warning. Three-phase bosses reach their final phase at half health. The Interceptor starts using its expanded arsenal immediately. Aim locks, attack tells, and spawn grace retain their usual duration.
+
+Each of the first nineteen rooms gives another legal upgrade pick and the usual 12 health. Paths and prerequisites still apply. Once every legal upgrade has been taken, the reward becomes **Field repair**: 24 health and passage to the next room. Repairs never add duplicate upgrades or change the gun. Optional challenge detours belong to the first lap. Continue preserves the Overtime room, build, repairs, and total run time; its HUD uses a compact **OT** prefix and the result counts both laps.
+
+Daily challenges retain a fixed twenty-room finish and do not offer Overtime.
+
+[Test Overtime](https://caleb-guyer.github.io/recoil-foundry/?test=overtime) starts the second lap with full health and a nineteen-upgrade gun. Add `&area=furnace`, `&area=cooling`, `&area=reclamation`, or `&area=rooftops` to test a later area with its earned upgrade count. These tests preserve saves, Daily records, and Practice unlocks. Press **R** to restart the test.
+
+## Daily run
+
+Choose **Daily run** on the title screen for a shared twenty-room challenge. A new challenge starts at midnight UTC. Players taking the same route get the same layouts, enemy and prop setup, and predetermined upgrade sequence. After each of the first nineteen rooms, a single card shows your next upgrade: click it or press 1 to take it and continue, with the usual 12-health recovery. Optional detours also give exactly one predetermined bonus card, without healing. Choosing a detour can change later upgrades because your build changes. There are no alternative upgrades in a Daily Run. Regular runs keep their three choices. The gun, movement, and combat HUD are unchanged.
+
+Finish all twenty rooms and reach the extraction lift to save your fastest successful time for that challenge in this browser. The timer counts active simulation time through the escape route, excluding pauses, upgrade screens, and the automatic lift departure. Continue keeps the elapsed time saved at the room or escape entrance; Again restarts the same challenge, even after midnight. Starting a new run replaces the existing checkpoint.
+
+The room counter marks active challenges with **DAILY**, and Pause shows the challenge date. Starting a daily updates its URL and keeps **Play daily** selected when returning to the menu; choose **Random run** to leave the daily. Saves from an unsupported daily ruleset cannot continue as an ordinary run. Their saved data stays untouched until you start another run.
+
+The result screen's **Copy challenge link** button lets a friend play that exact day, including past challenges. If automatic copying is unavailable, the link appears for manual copying. Records stay on this device; no account or leaderboard is needed. Up to 365 challenge records are kept. Blocking browser storage prevents saving but does not prevent play.
+
+Daily links include a ruleset version (`?daily=2026-09-13&dv=55`). Version 55 rebalances Countershot; its best times are separate from earlier rulesets. Weak terrain, route, Sapper, Harpooner, Scrapper and crate placement, freight selection, belt placement and direction, squad selection, boss selection, passage placement, cargo, and pickups repeat for everyone playing the same challenge. The Interceptor's attack decks and final escape route are the same for every player. Bump `DAILY_RULESET` in `src/daily.ts` when changing layouts, upgrade pools, or gameplay balance. Unsupported or invalid daily links show a short notice and leave ordinary play available; they never silently launch a different daily challenge.
+
+## Expanded-run test
+
+[Try the new rooms](https://caleb-guyer.github.io/recoil-foundry/?test=expanded). Click **Test new rooms** to begin in room 3 with full health and two upgrades, then play onward normally. Add `&area=furnace`, `&area=cooling`, or `&area=rooftops` to begin at that area's new third room with an appropriate preset build. **R** or **Restart test** in Pause returns to the test entrance. These links preserve ordinary saves, Daily records, and earned Practice victories.
+
+Ordinary saves from the twelve- and sixteen-room versions migrate to the same area and encounter with their health, gun, optional rewards, and elapsed time intact. They skip any newly inserted rooms behind that checkpoint. The migration records those missed upgrade picks so later detours and escape checkpoints remain valid. New runs use all twenty rooms. Daily rulesets start fresh when their route or gameplay changes.
+
+## Build paths
+
+Specialization happens through ordinary upgrade choices. **Crossfire** commits the run to **Bullet hell** and unlocks **Death bloom** and **Convergence**. **Deadeye** commits the run to **Precision** and unlocks **Executioner** and **Deadlock**. **Shellshock** commits the run to **Demolition** and unlocks **Blast surfing**, **Aftershock**, and **Chain reaction**. Choosing an entry locks the other paths for that run. Cards show only the path name; follow-ups can appear in later rewards. Shared upgrades remain available to every path. After committing, eligible upgrades on your path get 1.5 times the normal selection weight, sampled without duplicates. This slightly improves their chance without guaranteeing them, including in the deterministic Daily sequence.
+
+| Path        | Upgrade     | Effect                                                                                                                                                         |
+| ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bullet hell | Crossfire   | Three firing lanes, each carrying the gun's pellet pattern at 55% damage. Shot delays are 20% longer; recoil still happens once per discharge.                 |
+| Bullet hell | Death bloom | Requires Crossfire. Unblocked bullet kills release six radial fragments, each dealing 35% of the killing round's damage. Fragments cannot trigger more blooms. |
+| Precision   | Deadeye     | 30% more damage, 50% faster projectiles, and half the pellet spread. Shot delays are 20% longer.                                                               |
+| Precision   | Executioner | Requires Deadeye. Main projectiles deal 60% more damage to enemies below 30% health. Health is checked separately at each impact, before armor.                |
+
+Crossfire works with Scattershot, Burst fire, Backfire, and the existing projectile modifications. Deadeye keeps those shared options too, tightening Scattershot rather than removing it. Death bloom fragments respect walls and remain separate from Splinter; fragments receive neither Executioner's bonus nor recursive fragmentation. All paths keep the same shot and particle limits.
+
+Normal rewards still show three available choices. Daily Runs still force one predetermined legal upgrade per room, including any path commitment. Continuing preserves the selected path; starting a fresh run clears it. The pause screen's existing gun summary shows the current path. Existing ordinary checkpoints keep their saved room number, gun, health, and time. A saved room 7–9 now resumes in Cooling Works. A previously completed nine-room escape resumes its escape route with its original eight upgrades.
+
+## Demolition
+
+A third path built around explosive impacts and movement. Taking **Shellshock** makes later Demolition upgrades eligible. **Shockfront** requires **Aftershock**; the other follow-ups require Shellshock.
+
+| Upgrade        | Effect and tradeoff                                                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shellshock     | Rounds deal 55% of their usual direct damage, then explode on their final impact for up to another 85% in a 96-unit radius. Shot delays are 35% longer.                      |
+| Blast surfing  | Your shell, aftershock, and chain blasts push you away from their center. Shoot the floor to launch upward, or a nearby wall to gain sideways speed.                         |
+| Aftershock     | Each shell or chain blast repeats once after 0.38 seconds, at 40% damage and launch strength. A quiet amber ring marks the pending blast. Echoes cannot repeat themselves.   |
+| Chain reaction | Destroying a crate, movable cover, or cracked passage panel schedules one 48-damage blast after 0.12 seconds, within a 110-unit radius. Nearby props can continue the chain. |
+
+Explosion damage falls with distance from the target's visible hull, to 35% at the edge. Terrain and intact props block blasts. Cover is checked before each explosion destroys anything, so a chain can open a firing lane without the first blast leaking through it. Shields and boss armor still reduce damage, and bosses resist knockback. Your own Demolition blasts never cost health; Blast surfing adds the launch. Fuel canisters remain dangerous and use their existing arming and explosion rules.
+
+Shared upgrades combine with the same gun: Scattershot distributes the payload across pellets, Burst fire sends three explosive discharges, and Backfire fires explosive rounds in both directions. Punch through postpones detonation until the final hit and attenuates both damage portions. Bank shot and Banker preserve the payload through reflections; Banker increases both portions. Splinter fragments do not explode. Fold transports the intact shell, which detonates only when it later strikes something. Rounds that expire in flight disappear without an explosion.
+
+Airshot and Landing shot strengthen both direct and blast damage. Blast surfing's launch budget is shared across a discharge's pellets and forward/rear volleys, keeping dense builds controllable. Player speeds stay bounded. Overlapping effects are grouped visually, and short flashes, restrained sparks, and low impact sounds preserve combat visibility. Reduced-motion settings soften the effects.
+
+Delayed blasts freeze on pause, upgrade screens, and impact pauses. Room changes, retries, death, and boarding the extraction lift clear them. Ordinary checkpoints preserve the build and reconstruct transient effects at the entrance. Daily Runs offer a single predetermined legal card, using the same modest preference for the chosen path.
+
+## Fold portals
+
+**Fold** is a shared, unique upgrade available to every path. Right-click a permanent wall, floor, or ceiling to place the blue opening, then right-click another surface to place orange. You can place each opening only once per room: after orange is placed, the pair stays fixed until the next room. Invalid attempts do not spend a placement. A dashed surface preview shows the next opening until both are placed; the touch placement button then disappears. Further placement attempts give a brief rejection cue. **E** places at the mouse aim point; on touch devices, select the small portal button, then tap a surface.
+
+Walk or fall into either linked opening to emerge from the other. Momentum rotates with the exit: falling into a floor can launch you sideways from a wall. Friendly and hostile projectiles, smaller mobile enemies, crates, and canisters can pass through. Shots keep their damage, ownership, piercing, and bounce charges; teleporting is not a bounce. Enemies can follow you, and their bullets can come back through your own portals. Heavy bosses and anchored machines do not fit the opening.
+
+Each opening needs 80 units of exposed permanent surface. Moving hazards, props, and destructible walls cannot host one. A single unlinked opening remains solid, and a blocked or undersized exit prevents travel. Portals reset at each room entrance, on retry, and when continuing a checkpoint; the Fold upgrade stays equipped. Opening the pause screen clears pending placement input. Portal travel cuts trails and snaps the camera to the destination instead of drawing or panning across the intervening map.
+
+Rewire removes the placement limit while retaining exactly two portals. Its preview and touch placement button remain available after the first pair. Slingshot rewards player travel; enemy and projectile speeds are unchanged.
+
+## New firing mechanics
+
+Six mechanics and six dedicated follow-ups use the existing firing controls; charge lights, small fuse ticks, and faint gun silhouettes keep the HUD unchanged.
+
+| Upgrade                  | Behavior                                                                                                                                                                                                                                                                                                                                              | Follow-up                                                                                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recall · Shared          | 25% lighter rounds gain one penetration, reverse after 0.24 seconds, and steer toward your current position. They can hit enemies again on the return and are caught harmlessly. A final wall hit starts the return early; solid cover still blocks it.                                                                                               | **Homecoming:** two additional penetrations on the return, with no further damage attenuation on that leg.                                  |
+| Capacitor · Shared       | Releasing fire for 0.85 seconds stores one double-damage discharge. It applies to every pellet and rear round, with ordinary recoil. Burst fire spends a charge per discharge.                                                                                                                                                                        | **Reserve cell:** another 0.85-second pause stores a second discharge. Holding fire cannot replenish them.                                  |
+| Countershot · Shared     | Reflect one small hostile bullet on direct contact, then release fire for 0.8 uninterrupted seconds to recharge. All rounds and beams share the charge. The return travels toward its firing position at speed 24 with its original damage, capped at 24. Cover and nearer contacts take precedence; blades and large ammunition cannot be reflected. | **Reprisal:** reflected bullets penetrate two additional enemies. They cannot generate more reflections, explosions, or fragments.          |
+| Rivet · Precision        | Requires Deadeye. A hit shoves a small enemy up to 64 units through clear space. Reaching static cover deals 30% round damage and pins it for 0.65 seconds. Pins have a two-second cooldown; bosses and frontal shields resist.                                                                                                                       | **Fracture:** the next unblocked primary hit during the pin deals 60% extra damage, once per pin.                                           |
+| Fuse · Demolition        | Requires Shellshock. Shells stick to their final impact surface or actor, then explode after 0.72 seconds with 40% more blast damage. Attachments follow movement, rotation, and portal travel; destroyed hosts leave their charges at the last position. Bank growth, penetration, Aftershock, and Blast surfing still work.                         | **Linked fuse:** a detonation ignites attached charges within 140 units through clear space, after 0.06 seconds. Each charge explodes once. |
+| Afterimage · Bullet hell | Requires Crossfire. Every fourth discharge leaves its entire volley at the old firing position. It fires once after 0.42 seconds at 60% damage, including rear rounds and lane geometry. Echoes apply no player recoil, spend no charges, and cannot create more echoes. New cover can obstruct them.                                                 | **Parallax:** the stored volley turns toward your current aim when it fires.                                                                |
+
+[Test upgrade builds](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades): click **Test new upgrades**, then choose a card. Each starts in room 7 with full health, the mechanic, its follow-up, and a legal six-upgrade build. **R** retries the entrance; **Menu → Test new upgrades** switches builds. Normal saves, Daily records, and earned Practice victories stay intact. The test menu is available only through the explicit test link.
+
+Transient charge, pin, fuse, and echo state freezes during pauses and impact pauses, and resets on room entry, retry, death, or extraction. Pending effects and projectile counts are bounded. Ordinary checkpoints retain their builds when the upgrade pool changes.
+
+## Arc Coil
+
+**Arc Coil** is a shared upgrade with 10% lighter rounds. Each unblocked primary hit charges that enemy for four seconds; the third hit releases an arc to the nearest visible enemy or metal prop within 240 units, including when that hit kills the charged enemy. The first arc deals 40% of the three rounds' combined damage. Brief sparks mark the hits without another meter or control.
+
+**Daisy Chain** requires Arc Coil and adds two more jumps. Each jump retains 70% of the previous arc's damage, and a discharge visits each target at most once. Crates, cover, hanging cargo and fuel can conduct. Fuel gains a short ignition fuse; its usual physical explosion remains dangerous. Electricity damages cargo without cutting its cable. Terrain, machinery and intervening props block the path; a conducting prop can relay from its own body. Directional shields stop the chain and boss armor retains its normal protection.
+
+Fragments, echoes, reflected bullets and secondary electrical damage cannot charge enemies or generate recursive arcs. Electrical kills still grant Bloodwork healing. Pause and hitstop preserve charges; room changes and retries clear them. Enemy portal travel carries the charge to its new position, where the next discharge checks nearby targets again.
+
+[Test Arc Coil](https://caleb-guyer.github.io/recoil-foundry/?test=arc): click **Test Arc Coil** to enter Cable Yard with both upgrades and full health. Hit an enemy three times while another enemy or metal prop is nearby. **R** retries the same room. Add `&build=base` to try Arc Coil without Daisy Chain. These links preserve ordinary saves, Daily records and earned Practice victories.
+
+## Tether rounds
+
+**Tether rounds** is a shared upgrade. A direct bullet hit hooks a surviving enemy for three seconds; hitting another within 400 units connects them for four seconds. Their movement pulls against the cable, with momentum divided by mass. A rushing enemy can drag a flyer away from its firing position. Bosses, fixed gunners, and pinned enemies act as anchors. Shots keep their usual damage, firing rate, and recoil.
+
+Only one cable exists at a time. Repeated hits cannot refresh or replace it. Walls and moving cover break it, and hitting a target too far away or behind cover moves the waiting hook to that target. Killing or teleporting either endpoint releases the cable. Piercing and returning primary rounds can create a link; fragments, reflected bullets, echoes, explosions, and blocked shield hits cannot.
+
+**Snapback** requires Tether rounds. Stretching the cable by 25% of its original length, with a minimum of 48 units, snaps it and yanks mobile endpoints inward. The pull does not move bosses or fixed machines. A brief stagger preserves the launched enemies' momentum; their first hard collision with terrain or another enemy within 0.8 seconds deals 28–64 base damage, respecting shields, boss armor, and recovery vulnerabilities. Each launched enemy can trigger only one such collision, and a mutual impact hits each target once. Loose props retain their existing impact damage and fuel ignition. A new cable can begin after 0.8 seconds. A cable cut by cover, death, expiry, or portal travel produces no yank.
+
+A small hook mark and one thin cable show the mechanic; tension straightens the cable and warms its color before Snapback. No extra input or combat HUD is added. Pause and hitstop freeze its timers. Death, retries, room changes, and extraction clear all temporary hooks and collision effects. Ordinary saves retain the upgrades, and Daily Runs still provide one predetermined reward.
+
+[Test Tether rounds](https://caleb-guyer.github.io/recoil-foundry/?test=tether): click **Test Tether rounds** to start in Furnace with both upgrades and a six-upgrade gun. Hit two different enemies, then let their movement stretch the cable. **R** retries without changing ordinary saves, Daily records, or earned Practice victories. The pair is also available in the existing [upgrade test picker](https://caleb-guyer.github.io/recoil-foundry/?test=upgrades&build=tether).
+
+## Rare fusions
+
+Fusions combine two owned upgrades. A run can carry **one fusion**, including its Overtime lap. Eligible fusions can appear in the reward after the second boss and later rewards. They use 0.18 times an ordinary upgrade's selection weight on the first lap and 0.65 times in Overtime, with the existing path preference applied to both. Daily Runs use the same legal pool and still give exactly one predetermined card. Cards add only **Fusion** beside the existing path label.
+
+| Fusion     | Requires            | Behavior                                                                                                                                                                                                                                                      |
+| ---------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rail spike | Deadeye + Capacitor | A charged discharge merges all forward and backward pellets into one fast round with their combined damage, four extra penetrations, and 65% more recoil. Penetration does not reduce its damage. Uncharged discharges keep their normal pattern.             |
+| Orbit      | Crossfire + Recall  | Caught primary rounds orbit harmlessly for up to 1.25 seconds. The next discharge launches the stored rounds toward the current aim with a narrow fan. Up to 24 rounds can wait; each gets exactly one additional flight.                                     |
+| Implosion  | Shellshock + Fuse   | Attached shells pull nearby mobile enemies and loose props inward through clear space before their existing explosion. The pull reaches 170 units and grows toward detonation. Bosses and anchored machines resist it, but a pulled crate can still hit them. |
+
+Rail spike keeps bank growth, Recall, Countershot, Splinter, and existing damage bonuses. Reserve cell spends one charge per burst discharge; Backblast still creates its rear cone. Armor and solid cover retain their collision and damage rules. Its pale trail follows actual bounces and portals, and the charge lamp changes color.
+
+Orbit preserves the caught damage and remaining bank and counterfire charges. Homecoming contributes its additional return penetrations. Released rounds can pierce, bank, split, and trigger Death bloom, but cannot return again or create an Afterimage. Echoes and fragments cannot be stored. The release adds no recoil or charge cost. Storage expires in active game time and follows player portal travel without drawing trails across the map. Cover clips storage positions, and releases respect the shared 180-projectile cap.
+
+Implosion uses physical velocity, so walls and other actors still collide with pulled bodies. Only the strongest visible charge pulls a body; stacked pellets cannot multiply the force. Suspended cargo, held crates, the player, and a shell's own host are not pulled. Rotating and teleported hosts carry their attached charges. Linked fuse shortens the remaining pull, and Aftershock preserves its existing outward blast.
+
+Continue preserves the fusion with the gun. Room changes, retries, death, and extraction clear temporary orbiting rounds and attached charges; pauses and hitstop freeze them. Older Overtime saves with Field repairs remain valid and can receive their newly eligible fusion before returning to repairs.
+
+[Test the fusions](https://caleb-guyer.github.io/recoil-foundry/?test=fusions) opens a three-build picker. Choose Rail spike, Orbit, or Implosion to start in Cooling Works with full health and eight legal upgrades. Links also accept `&build=rail-spike`, `&build=orbit`, or `&build=implosion`. **R** restarts the selected test. Saves, Daily records, and earned Practice victories stay untouched.
+
+## Follow-up upgrades
+
+Follow-ups enter the ordinary reward pool only after their prerequisite has been taken. Shared follow-ups stay available to every build path; Convergence, Deadlock, and Shockfront inherit their respective paths and their existing selection weight. A card needs no extra lock text or new menu. Checkpoints and Daily rewards validate the same prerequisite order.
+
+| Upgrade     | Requires   | Effect                                                                                                                                                                                                                                                                                                                   |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Rewire      | Fold       | Unlimited alternating blue/orange replacements. Exactly two active portals; invalid attempts do not switch color.                                                                                                                                                                                                        |
+| Slingshot   | Fold       | Player portal travel boosts velocity by 25%, within the normal movement caps, and grants 50% more damage to the next discharge. Repeated travel cannot stack or refresh either boost until firing.                                                                                                                       |
+| Redline     | Kickback   | Damage scales with speed before recoil is applied, from no bonus at rest to 50% at speed 18. All pellets, rear rounds, and shell payloads share that discharge's bonus.                                                                                                                                                  |
+| Breach      | Backblast  | The rear cone destroys visible hostile bullets within its existing 130-unit range. Cover blocks it even when that blast breaks the cover. Bombs, warned hazards, and machinery remain dangerous.                                                                                                                         |
+| Shatter     | Splinter   | A first solid impact creates six outward fragments at 30% round damage, speed 20, and 0.6-second lifetime. Ordinary enemy hits still produce three fragments at 20%. No recursive splitting.                                                                                                                             |
+| Convergence | Crossfire  | Outer lanes fan out, then turn inward halfway to the aim point fixed when firing. They cross and continue beyond it. Each pellet keeps its spread; Backfire mirrors the pattern. Near-muzzle aim has a minimum focus distance of 32 units. Cover stops shots; banks and portal travel cancel the old convergence target. |
+| Deadlock    | Deadeye    | Each accurate discharge adds 12% damage to later discharges, capped at 60%. At least one direct, unblocked enemy hit qualifies, regardless of pellet or piercing count. A discharge whose main rounds all miss resets the streak. Results resolve in firing order; fragments and rear blasts cannot build it.            |
+| Shockfront  | Aftershock | Echo radius grows by 50%, keeping 40% damage and adding stronger outward knockback. Cover and boss knockback resistance still apply. Echoes cannot create more echoes.                                                                                                                                                   |
+| Backfire    | Backblast  | Adds a matching backward volley and another 20% firing delay. The aimed shot still applies the only recoil impulse.                                                                                                                                                                                                      |
+
+Slingshot's ready charge appears as a blue strip on the gun. Redline warms the gun's lower edge as speed increases; Deadlock lights up to five tiny receiver marks. No extra HUD text is added. Charges and streaks survive pauses but reset on a new room, retry, death, or checkpoint reconstruction.
+
+## Gun builds
+
+| Modification | Effect and tradeoff                                                                                                                                |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Burst fire   | Three committed shots in quick succession, then recovery. Each round deals 10% less damage and has 20% less recoil. Aim can change between rounds. |
+| Kickback     | 20% more damage and 40% more recoil, with no firing delay penalty. The damage bonus stacks with other modifications.                               |
+| Backblast    | 25% more damage, plus a short rear cone for 80% of total pellet damage. Shot delays are 20% longer. Backward rounds require Backfire.              |
+| Banker       | One additional bounce and 35% more damage after each reflection, starting with 20% less damage. Works on its own; Bank shot adds two more bounces. |
+| Landing shot | A hard landing doubles the next discharge's damage and adds 25% recoil. Base damage is 10% lower. The gun glows when ready.                        |
+
+Burst fire plus Scattershot fires three five-pellet volleys. Landing shot boosts all pellets of the next discharge, then the rest of a burst returns to ordinary damage. The boost lasts until your next shot or room change, so you can jump again and combine it with Airshot. Repeated landings do not stack charges.
+
+Banked rounds change color as they gain damage. Punch through retains its damage reduction after each enemy, and Splinter only creates fragments on the first impact. Backblast fires its cone once per discharge, regardless of pellet count. Backfire unlocks a rear volley that mirrors the forward pellets, including airborne damage, Landing shot, bouncing, piercing, and Splinter; Burst fire sends all three discharges both ways. Both muzzles respect solid cover. The aimed shot applies recoil once, so the backward volley does not cancel your movement. At the base firing rate, Backblast increases the shot delay from 0.22 to 0.264 seconds. Backfire adds another 20%, bringing it to 0.3168 seconds. Pause cancels an unfinished burst while preserving its recovery time.
+
+Existing modifications remain: Heavy hitter, Scattershot, Hair trigger, Bank shot, Punch through, Splinter, Airshot, Kickback, Bloodwork, and Light frame. No extra weapon slots or controls are needed.
+
+## Levels
+
+Escape through five areas, each with its own scenery, lighting, and layout pool:
+
+- **Loading docks, rooms 1–4:** cold overhead lights, cargo shutters, low cover, and wide firing lanes. Two layouts drawn from loading bays, overpasses, staggered cargo, and terraces, then the Cargo switchyard and either The Loader in its loading bay or The Crane among raised shelves and cargo stacks.
+- **Furnace halls, rooms 5–8:** warm boiler light, tall machinery, and tighter routes. Two layouts drawn from pillars, underpasses, a central chimney, a fortress, and slalom passages, then the Stamping line and The Press in its machine hall or The Kiln among low stacks and raised shelves.
+- **Cooling Works, rooms 9–12:** teal tanks, overhead pipes, and shallow coolant channels. Two layouts drawn from settling tanks, a pump gallery, and a return channel, then the Spillway and either the Condenser hall or the Turbine gallery. Low stacks support ordinary jumping routes; higher shelves reward recoil movement. Coolant preserves sliding momentum without dealing damage or reducing steering. Lifts and crushers reuse their familiar warnings.
+- **Reclamation Works, rooms 13–16:** three layouts built around overhead magnets, moving crates, and two new enemy behaviors. The area ends with either the Sorter or the Reclaimer, the former rooftop boss. Each Practice entry stays hidden until you defeat that boss.
+- **Rooftops, rooms 17–20:** open sky, a distant skyline, and steel walkways. Two layouts drawn from split decks, gantries, and broken bridges, then Antenna crossing and the Interceptor on the Relay roof. All three regular rooms contain two distinct elites and multiple snipers, with Borers and Sifters joining the roster. Rooftop shooters fire faster bolts more often; the finale uses a broad arsenal based on the player's weapon upgrades.
+
+Each run has fifteen regular rooms and five boss arenas. Seeded mirrored variants change the approach, and enemies use spawn anchors matched to the actual terrain. Background machinery is scenery; solid surfaces have brighter top edges. Area changes happen at room entrances without extra prompts or HUD elements.
+
+Climb stacks, fight from ledges, take lower routes, and use solid cover to break firing lines. The ground beneath raised gaps is safe. Every main route can be crossed with ordinary jumps; airborne recoil lets you skip steps and reach higher firing positions. The controls and HUD stay the same throughout the run.
+
+Touch controls provide left, right, and jump buttons. Hold the arena to aim and fire. Keyboard and mouse offer the most precise control.
+
+## The Interceptor
+
+Room 20 always ends with **The Interceptor**, a rival gunner on the Relay roof. Its arena has low cover, separated high shelves, a mirrored variant, and a route traversable with ordinary jumps. Defeating it leads into the existing escape sequence.
+
+The Interceptor fires opposite its travel direction to recoil between firing positions. A 0.56-second warning marks its launch volley and travel direction; physical walls, crates, fuel, and player portals affect its hull normally. It flanks sheltered players instead of firing through cover. Its first two gun attacks establish aimed volleys and a heavy blast, then independently seeded phase decks introduce fifteen distinct weapon moves alongside the recoil vault:
+
+- Aimed follow-up volleys, heavy blasts, four-round bursts, wide Scattershot, and front-and-rear Crossfire.
+- Bank shots with the rebound marked, fast precision rounds that can break loose cover, and Shatter rounds with one delayed split.
+- Sticky Fuse charges, a warned Aftershock, a charged Capacitor round, and a physical landing attack followed by a warned shockwave.
+- Recall rounds that pause before reversing, Afterimage guns at previous firing positions, and a Countershot guard that catches up to three rounds before locking its return fan.
+- A Fold blink with both ends marked before the gunner moves. It cancels if a crate or the player blocks the destination and leaves the player's own portal pair intact.
+
+Each gun move has a 0.92–1.5-second tell, a final aim lock, and an exposed recovery window of 1.05–1.75 seconds. Echo guns and planted charges carry their own warnings. Later phases add more complex combinations; a phase change, defeat, or player-portal teleport cancels pending attacks and the gunner's remaining hostile rounds. Open armor takes 130% damage; closed armor takes 35%. The boss retains 5,850 health.
+
+The compact silhouette, colored aiming lines, split armor, muzzle flash, and distinct gun sounds communicate the fight without adding controls or HUD panels. Practice unlocks only after defeating it in an ordinary or Daily Run. An explicit [Interceptor test link](https://caleb-guyer.github.io/recoil-foundry/?test=interceptor) starts an isolated fight with 100 health and nineteen upgrades; it preserves saves and records and grants no Practice unlocks. Press **R** to retry.
+
+## The Reclaimer
+
+The original final boss now appears as a Reclamation variant in room 16, with an equal seeded chance against the Sorter. Its two arenas and their mirrors use Reclamation's setting and ordinary jumping routes. It retains its cover-seeking movement, locked follow-up fans, and rotated rings. Its 4,480 health and 1.1, 1.0, or 0.9-second recovery windows account for meeting a fifteen-upgrade gun four rooms earlier. Clearing either Reclamation boss awards the normal upgrade and continues to the rooftops.
+
+Previously earned victories against the original boss remain unlocked under **The Reclaimer**; earned Sorter victories remain available regardless of the new seeded variant. The [Reclaimer test link](https://caleb-guyer.github.io/recoil-foundry/?test=reclaimer) starts its isolated fifteen-upgrade fight without changing saves, records, or Practice unlocks.
+
+## The Turbine
+
+Cooling Works ends with either the Condenser or **The Turbine**, selected independently from other rooms. The Turbine gallery has low stacks, separated shelves, and two coolant channels, with a mirrored variant and an ordinary jumping route.
+
+The rotor moves around cover to find an angle wide enough for its blades. Gusts have a 1.15-second warning; blade sweeps have a 1.05-second warning. Both track early, then lock their entire marked fan for the final 0.45 seconds. Gusts push much harder in the air, adding to existing recoil momentum within the movement limits. Exposed crates and fuel move too; solid cover blocks the airflow.
+
+A committed gust lasts 1.8 seconds and sends two blade passes through the marked lanes, 0.95 seconds apart. Sweeps release a wider fan. Each blade deals 22 damage, collides with scenery and props across its full width, and can travel through Fold portals. Wind itself deals no damage. Later phases widen the fan from three lanes to five; the final phase reverses the release order. Phase changes cancel unreleased blades and active wind.
+
+After an attack, the center opens for 1.1, 1.0, or 0.9 seconds as the fight progresses. The exposed rotor takes 135% damage; closed armor takes 32%. The boss has 3,480 health. No new controls, meters, or encounter previews are added. Practice lists the Turbine only after a normal-run defeat. Previously earned Condenser victories retain their original practice arena even if their seed now selects the Turbine.
+
+## Optional challenges
+
+After clearing room 3, 7, 11, or 19, take the ordinary ground exit to continue or climb the two suspended steps to the upper **CHALLENGE** door. Its amber warning frame and small +1 symbol identify the risk and reward without revealing the encounter. The steps extend after combat and keep the ground exit clear. Both doors work by walking through them; there is no route menu.
+
+The upper door gives the main room's earned upgrade and usual 12-health recovery, then enters an extra fight in the current area. Each area has its own authored challenge layout with mirrored variants, obstacles, active machinery, and larger coordinated waves. Regular enemies have 15% more health than at the same stage. Reinforcements arrive with two opening enemies still alive, keeping their full warning and emergence grace period.
+
+Survive and take one bonus upgrade, with **no reward healing**, before rejoining the main route at the area's boss. Bloodwork can still heal from kills. Each detour can be taken once; a full run therefore contains 20–24 fights and 19–23 upgrades. The main room counter and final escape remain unchanged.
+
+Continue remembers whether you entered a challenge, its starting health and gun, and completed detours. It restarts the saved fight without repaying the entrance reward. Fold gets its normal fresh placement allowance on entering and leaving a challenge. Daily Runs use the same doors and force one legal card at every reward, including bonuses. Practice has no detours.
+
+## Reinforcements
+
+Regular rooms have two overlapping waves. From room 2 onward, roughly half the enemies start active; Reclamation retains its smaller opening groups while introducing its machinery. The final group keeps coordinated pairs together and reserves tougher enemies when space allows. Both waves share the room’s fixed roster. Reinforcements do not add extra enemies or healing opportunities.
+
+Regular enemies gain 8.5% of their base health per room after the first, including elites. Outside Reclamation, ordinary gunners fire about 17–25% more often than before, their bolts travel faster, and ground pursuers close distance faster. Their aim locks, damage, and health remain unchanged in this difficulty pass. Arriving reinforcements still get a full door warning and emergence grace period before attacking.
+
+Service-door lights turn amber and a short mechanical cue warns of the next group for 0.75 seconds. Clearing the opening group starts the warning immediately. After room 1, the warning also begins when half the opening group remains; Reclamation waits until its last opening enemy, and detours wait until two remain. Stalling calls the same finite wave after 12 seconds in room 1, then 9 seconds in the docks, 7 in the furnace, 6 in Cooling Works, 8 in Reclamation, and 5 on the rooftops. Freight arrivals remain tied to the elevator. Each door opens as its enemy emerges. The exit unlocks only after both groups are defeated. Main-room rewards give the usual single upgrade and 12-health recovery; challenge bonuses give only the upgrade.
+
+Doors wait if you, another enemy, or a moved prop block the entry. When another suitable authored entrance is free, that door gets its own full warning before the delayed enemy arrives. Shots and explosions do not damage enemies still behind sealed doors. Boss rooms and the final escape keep their existing encounters.
+
+Wave composition and initial attack delays repeat from the seed, including Daily Runs. Continue and retry rebuild both groups at the room entrance. Pauses and impact pauses freeze arrivals. Door lights and sound carry the information without a wave counter or additional controls.
+
+## Moving rooms
+
+Regular rooms introduce one moving feature at a time. Room 2 introduces freight lifts, room 5 introduces crushers, and room 13 introduces collapsing platforms. Later regular rooms mix familiar features. The opening room and boss arenas stay clear of them. Placement follows the seed, including Daily Runs, with space around enemy entrances and safe ground underneath.
+
+- **Freight lifts** travel smoothly between two heights. Ride them to reach ledges, or jump and fire downward to launch ahead. Crates can ride too; the deck blocks shots and provides moving cover.
+- **Factory crushers** mark their strike lane when you approach. A 1.1-second warning gives you time to move out before the slab drops. It rests briefly, then slowly rises. A hit deals 24 damage and knocks you clear; enemies and props can also be crushed. The top is safe to stand on.
+- **Collapsing platforms** crack under your feet for 0.7 seconds before giving way. Jump or recoil away, or drop to the floor below. They rebuild after 3.5 seconds, waiting until their space is clear before becoming solid again.
+
+Rails, warning lights, floor markings, and cracks explain each feature in the arena. Pause and impact pauses freeze their timing. Continuing or retrying resets their state at the room entrance, with the same placement and lift cycle.
+
+## Hidden routes
+
+Look above the main path in the second room of each area for a recessed maintenance vent. Its cracked floor hatch and side panel break after two ordinary rounds, opening a passage to a higher perch. Shoot the hatch from below, then fire downward in the air to climb through. You can also open the side panel from outside. Crowded rooms omit the vent so the ordinary route remains clear.
+
+Some vents contain a small mint health pickup. Touch it to recover 18 health, capped at 100; it stays available while you are at full health. Panels and walls block collection, bullets, aiming lines, and blasts until opened. Breaking metal flies in the shot's direction as harmless debris, with flight hidden when screen shake is disabled.
+
+Passages and pickups follow the run seed, including Daily Runs. Continuing restores the room entrance with its original panels, pickup, and saved health. Boss arenas and the final escape contain none.
+
+## Physics props
+
+Rooms contain up to three small props, placed away from enemy entrances and the exit. Selected third rooms also contain one hanging load. Tall breakable panels stay off the main traversal route. Some furnace rooms contain a pair of canisters for a chain reaction.
+
+- **Loose crates** can be pushed, stood on, or launched with gunfire. A fast crate impact damages enemies; ordinary pushing is harmless. Repeated shots eventually break the crate. Hard enemy body impacts damage crates; committed charges and heavy slams smash them.
+- **Fuel canisters** launch and light up when shot. A hard impact detonates them, damaging nearby enemies and triggering nearby canisters. Hard enemy body impacts and direct charges or hammer slams detonate even unlit canisters. Charges stop in recovery on contact, including tipped props. Solid cover blocks the blast. Stay clear: close explosions can also hurt you.
+- **Breakable panels** stop bullets and aiming lines. Three ordinary rounds break one, opening a new firing lane. Cracks show damage without a health bar.
+
+Every enemy hull is solid against props, and the resting Crane hammer can support them. Swept charges and slams stop at the first solid object, respecting rotated prop surfaces and anything protected behind a wall. Props block enemy fire and rear blasts as well as ordinary shots. Banked rounds reflect from their actual rotated surfaces; gun modifications still combine on the same weapon. Surviving props do not prevent a room from clearing. Continuing a run restores its props at the room entrance, like enemies.
+
+## Hanging cargo
+
+Shoot the suspension cable to drop a heavy load. Two ordinary hits sever it; stronger rounds can cut it sooner. An amber outline, floor mark, and metal release sound give 0.65 seconds of warning before it falls. Enemy shots can cut cables too. No extra controls or HUD text are needed.
+
+Fast impacts crush enemies and detonate even unlit fuel canisters, allowing nearby fuel chains. A direct hit costs the player 24 health. Boss damage is capped at 90 before the boss's usual armor or recovery multiplier. Resting contact is harmless. The 400-health load stays upright after landing: push it, stand on it, or use it as cover. Sustained gunfire can break it. Its wide hull does not fit portals, although bullets fired through portals can cut its cable.
+
+Cargo appears sparsely in selected third-room layouts and on freight-shaft maintenance ledges, with clear falling lanes away from exits and moving machinery. Placement follows the run seed and repeats on Continue and in Daily Runs. Pausing freezes the warning. Boss arenas, detours, and the final escape contain no hanging cargo.
+
+[Test hanging cargo](https://caleb-guyer.github.io/recoil-foundry/?test=cargo): click **Test hanging cargo** to enter a room with a suspended load, full health, and two upgrades. Shoot the cable; press **R** to restart the room. This isolated test preserves ordinary saves, Daily records, and earned Practice victories.
+
+## Conveyor belts
+
+Moving rollers and amber arrows mark belts set flush into selected floors and platforms. They start slowly in the furnace, with faster belts and occasional pairs in Cooling Works and the rooftops. Ordinary ground remains at both ends, and placement avoids coolant, fixed cover, and moving machinery. Boss arenas, detours, docks, and the final escape contain no belts.
+
+Belts carry grounded players, enemies, crates, unlit fuel canisters, and fallen cargo. Supported stacks move together, so a crate can become moving cover. Gun emplacements on belts become physical bodies after their entrance warning; their attack warnings and aim locks remain intact. Fixed panels and suspended cargo stay anchored.
+
+Walking against a belt overcomes its pull. Jumping carries your horizontal momentum into the air, where recoil works normally and the belt stops affecting you. Walls still stop every hull; belts cannot accelerate cargo into damaging impacts by themselves or ignite unlit fuel. Portals work with carried players, enemies, and small props. Pauses and hitstop freeze transport, and Continue restores the same room entrance.
+
+Try the [furnace belts](https://caleb-guyer.github.io/recoil-foundry/?test=conveyors) or [faster rooftop belts](https://caleb-guyer.github.io/recoil-foundry/?test=conveyors&area=rooftops). Click **Test conveyor belts**; **R** restarts the room. Both tests provide full health and a preset gun while preserving ordinary saves, Daily records, and earned Practice victories.
+
+## Freight elevator
+
+A rare furnace encounter replaces room 6 with a vertical freight shaft. Ride the broad lift past maintenance ledges while three small groups attack from opposite sides. Doors keep their full arrival warnings. Runners and hoppers can board the deck, and two hanging loads can be dropped onto the ledges below them.
+
+Jump onto a side ledge for a firing angle, then use recoil to catch the lift. It brakes if you fall behind and stops beside any unfinished fight, keeping enemies reachable. The deck carries crates and supported stacks; overhead cover stops its motion. Clear the final group and dock at the top to reach the exit and earn the room's usual single upgrade. No extra controls or HUD are added.
+
+The room has a 22% seeded chance to appear, with the same layout and waves on Continue and in Daily Runs. It leaves the twenty-room route and boss schedule intact. Pauses and impact freezes stop the lift, doors, and cargo together. Portals work on permanent shaft surfaces, including above the ordinary room ceiling; the moving deck cannot host one.
+
+[Test the freight elevator](https://caleb-guyer.github.io/recoil-foundry/?test=freight). Click **Test freight elevator** to start with full health and five upgrades. **R** or **Restart test** returns to the entrance. The test preserves ordinary saves, Daily records, and earned Practice victories.
+
+## Enemies
+
+New behaviors appear gradually as the run advances:
+
+- **Chargers** brace, then rush in a fixed direction. Bait one into cover: the crash leaves it stunned, harmless to touch, and vulnerable to extra damage.
+- **Snipers** track with a thin aiming line. The line becomes solid when their aim locks; move before the fast shot follows. Solid cover stops both the aiming line and the shot.
+- **Hoppers** crouch before jumping toward a landing spot. They climb ledges to follow you and pause after landing.
+
+- **Skimmers** first appear in Cooling Works. These compact flying rotors navigate around cover, warn for 0.82 seconds, and fire three narrow jets. Aim locks for the final 0.34 seconds. Rooftop Skimmers recover faster and fire stronger bolts.
+
+- **Scrappers** use an articulated claw to lift a loose crate, lock a throw toward your position, and release it after a visible 0.8-second warning. Move after the lock, take cover, or shoot the held crate to break the grip and stun the machine.
+
+## The Sapper
+
+The first Furnace room opens with a lone Sapper; defeat it to bring in the remaining enemies with their usual entrance warning. Later rooms can mix one into the roster, more often on the rooftops, and Overtime can use it throughout the second lap. It replaces an ordinary enemy while preserving elites, coordinated pairs, and rooftop sniper pressure. Boss arenas, freight elevators, detours, and the Harpooner's introduction keep their existing encounters.
+
+Its small mortar arm traces a lob for 0.95 seconds and locks for the final 0.45 seconds. Charges stick to walls, ledges, and movable cover. A shrinking fuse ring, accelerating beeps, and a final flash warn of the blast. At most two charges can exist at once. Shoot a charge to knock it loose and bat it toward enemies; it keeps its remaining fuse and stays dangerous to everyone. Wall-mounted charges bounce outward when hit, so a shot cannot push them through cover.
+
+Explosions damage enemies, ignite fuel, and break weakened terrain within 132 units. Solid cover blocks the blast even when that explosion destroys it. Charges travel through portals with their fuse intact. Destroying or teleporting their host drops them; loose charges obey normal physics. Pauses and hitstop freeze the fuse, while room changes, retries, and death clear it. All warnings appear in the world, with no new controls or combat HUD.
+
+[Test the Sapper](https://caleb-guyer.github.io/recoil-foundry/?test=sapper): click **Test the Sapper** to start its Furnace introduction with full health and four upgrades. Shoot the charges back; **R** restarts the test. Ordinary saves, Daily records, and earned Practice victories stay intact.
+
+## The Scrapper
+
+Selected early Cooling Works and rooftop rooms can replace one ordinary enemy with a Scrapper. At most one appears in a room, with a nearby crate and clear lifting space. Rooftops select it more often. Existing enemy counts, elites, bosses, and upgrade rewards stay intact. The crate replaces the room's ordinary crate rather than creating an endless supply of ammunition.
+
+The 0.6-second grab uses a physical tether: the crate stays solid, lifts into the claw, and remains shootable. The throw then locks its target for the entire 0.8-second warning. A short mechanical cue, joint indicator, and thin arc show the attack without extra HUD text. The arc ends at solid cover. Throws obey gravity and collide with walls, props, enemies, and the player; a fast direct hit costs 18 health. A dangerous thrown crate has a warm outline. Slow contact and ordinary player-pushed crates remain harmless to the player.
+
+Any hit on a held crate breaks the grip, preserves the shot's push, and stuns the Scrapper for 1.15 seconds. It is harmless to touch during recovery. Crates can strike other enemies, damage cover, or ignite fuel through real contact. The Scrapper can retrieve an intact crate after it settles; without a usable crate it approaches on foot. It cannot lift cargo, fuel, fixed cover, occupied crates, or a crate held by another Scrapper, and it cannot pull one through a wall.
+
+Bullets and small bodies keep their existing portal behavior. Teleporting the Scrapper or its held crate immediately breaks the grip; an already thrown crate can travel through a portal with its velocity and impact danger preserved. Death and room changes remove the tether, while pause and hitstop freeze the grab and warning. Continue reconstructs the same fresh entrance, crate, and roster. Reduced-motion settings keep the attack warning readable.
+
+Try the [Cooling Works Scrapper](https://caleb-guyer.github.io/recoil-foundry/?test=scrapper) or its [rooftop encounter](https://caleb-guyer.github.io/recoil-foundry/?test=scrapper&area=rooftops). Click **Test the Scrapper** and clear the opening group to meet it in the second wave. **R** or **Restart test** returns to the entrance with full health and the preset gun. Both tests preserve ordinary saves, Daily records, and earned Practice victories.
+
+## The Harpooner
+
+The first Reclamation room introduces a single Harpooner before its remaining enemies arrive. Selected Overtime rooms mix one into their ordinary waves. It replaces a ground enemy at an existing spawn point, preserving elites and the room's total roster. Boss arenas and freight elevators do not add Harpooners.
+
+Its forked winch gives a 0.95-second warning and locks aim for the final 0.55 seconds. Dodge after the lock or put cover in the firing lane. A hit deals 12 damage once and reels for up to 3.4 seconds. The cable pulls both bodies, so airborne recoil can drag the Harpooner off a ledge. Both still collide with crates, platforms, and machinery. Only one harpoon can aim, fly, or pull at a time.
+
+Shoot the bright winch at the enemy's muzzle to break the tether: it takes 18 damage, so a baseline round is enough. Kickback, explosive shells, and fuel blasts can also break it when exposed. Cover blocks these hits. The machine is harmless to touch during its recovery.
+
+Loose crates and fuel can catch the hook; fuel arms on impact. Fixed cover, anchored cargo, and other enemies stop it. A wall crossing the cable breaks it. Teleporting either endpoint or sending the hook into a portal snaps the cable. Death, room changes, and retries remove it; pause and hitstop freeze it. Its warning, weak point, and attachment are drawn in the world, with no extra combat HUD.
+
+Try the [Harpooner introduction](https://caleb-guyer.github.io/recoil-foundry/?test=harpooner) or a [mixed Overtime room](https://caleb-guyer.github.io/recoil-foundry/?test=harpooner&mode=overtime). Click **Test the Harpooner**; **R** restarts with full health and the preset gun. These tests preserve ordinary saves, Daily records, and earned Practice victories.
+
+## Enemy squads
+
+Selected rooms pair two existing enemies in the second reinforcement wave. Squads add no enemies, health, or damage bonuses. Both members use the usual warned entrances. Small matching chassis marks identify an active pair without labels or connecting lines.
+
+- **Shield pushes**, available from room 5: a shield carrier advances while a mobile gunner follows behind. The gunner climbs low obstacles and steps off ledges to keep up. Its raised mount fires single rounds after a 0.85-second warning, locking direction for the final 0.35 seconds. It waits for a clear firing lane and cannot shoot through its carrier. The carrier retains its ordinary directional shield and slow turn.
+- **Flanking pairs**, available from room 7: a gunner or sniper pressures you while a flyer physically routes around cover to your other side. The flyer keeps its usual three-shot volley and attack interval, holding position during its final aiming lock.
+- **Sniper–hopper ambushes**, available from room 9: a hopper starts its full jump warning after the sniper locks aim. The sniper fires before the leap, then waits for the hopper to land before starting another warning. Landing targets and aiming lines keep their existing visual cues.
+
+At most one pair forms in a room, and only when its roster contains suitable partners. Killing or teleporting either member breaks the formation. Members separated by a large distance also disengage; survivors use their ordinary behavior. Fuel blasts and falling cargo can break a pair. Squad rounds stop on other enemies without damaging them, so positioning an enemy between you and its partner blocks fire. Terrain, crates, portals, and moving machinery retain their normal physical rules. Boss rooms, detours, and the escape contain no squads.
+
+Test each formation: [Shield push](https://caleb-guyer.github.io/recoil-foundry/?test=squads), [Flanking pair](https://caleb-guyer.github.io/recoil-foundry/?test=squads&formation=flank), or [Sniper–hopper](https://caleb-guyer.github.io/recoil-foundry/?test=squads&formation=ambush). Click **Test enemy squads** and clear the opening group to meet the pair in the second wave. **R** restarts the test entrance. These links preserve ordinary saves, Daily records, and earned Practice victories.
+
+## Rare elites
+
+Each direct run contains fifteen elites: one in every regular furnace, Cooling Works, and Reclamation room, then two distinct elite types in each regular rooftop room. Later areas select a different elite type from the first seeded furnace encounter when possible. An elite replaces an ordinary enemy at a safe existing spawn point. Docks and boss arenas contain none. The seed determines these encounters, including in Daily Runs and restored checkpoints.
+
+- **Shielded runners** carry a visible front plate that absorbs 90% of direct shot damage. Blocked shots stop, including piercing rounds and fragments. Recoil overhead or behind them for full damage: they commit to a 0.65-second turn before moving the shield. Crates and explosions can crush through their guard.
+- **Twin-shot snipers** have paired barrels and fire twice. The second shot has its own 0.65-second warning; its aim locks for the last 0.4 seconds. Keep moving or get behind cover, then attack during the longer recovery.
+- **Volatile flyers** have a spiked body and slowly chase you. Close contact starts a 0.9-second fuse and locks them in place. Leave the marked blast area or destroy them to defuse it. Cover blocks the blast, which can also damage nearby enemies and ignite fuel canisters. They do not shoot or deal contact damage.
+
+Silhouettes, shields, aiming lines, and fuse rings carry the information in the arena. There are no additional controls or elite menus.
+
+## Area bosses
+
+- **Room 4 — The Loader:** a tracked ram that braces for 0.9 seconds before charging in a fixed direction. Jump over its charge or bait it into the low bumpers. A crash leaves it harmless to touch for 1.25 seconds and taking 25% extra damage. Its armor reduces incoming damage by 60% while active. It hops obstacles and uses an aimed turret volley against players hovering overhead or camping a corner.
+- **Room 4 — The Crane:** an overhead motor carries a suspended hammer. Its sweeps warn for 0.95 seconds and slams for 1.1 seconds; both lock their marked path for the final 0.45 seconds. Jump or recoil over a sweep and step out of a locked slam. The hammer stops on solid cover and smashes loose crates. A missed strike opens the motor shutters for 1.05 seconds, taking 40% extra damage. Closed shutters reduce incoming damage by 65%. Aim at the motor: the hammer blocks shots. A moving turret finds a clear firing lane when the hammer cannot reach you, including overhead hovering and protected corners.
+- **Room 8 — The Press:** an overhead machine that marks a landing column before dropping. The final 0.65 seconds of the warning are locked, giving you time to dodge or recoil upward beside it. Platforms stop the slam; its 0.8-second recovery takes 25% extra damage before it rises again. Active armor reduces incoming damage by 60%. Its turret pressures players above it, behind a protected slam column, or camping a corner; it moves into position before attacking.
+- **Room 8 — The Kiln:** a mobile boiler that lobs three molten shells over low cover, or four below half health. Curved warnings show their actual paths and landing surfaces for 1.1 seconds, locking for the final 0.5 seconds. Impacts leave short hot strips that glow for 0.4 seconds before burning for 1.8 seconds. Move out of the marked landing, then jump or recoil across the heat. Its cooling vents open for 1.15 seconds after each mortar volley, taking 35% extra damage; closed armor reduces incoming damage by 60%. It physically advances and hops stacks to find a turret firing lane against overhead or sheltered players. Cover blocks shells and turret shots.
+- **Room 12 — The Condenser:** a floating cooling machine with twin aimed jet volleys and rotating radial purges. The follow-up has its own 0.72-second warning, with aim locked for the last 0.34 seconds. Purges show four wider gaps and keep their orientation once warned. Every purge follows with a second ring after a fresh 0.95-second warning, filling the previous gaps. Its rotor opens for 0.9 seconds after the sequence, taking 30% extra damage; closed armor reduces damage by 75%. It physically routes around cover to find a firing lane. Phase changes widen the jets and pause attacks briefly.
+- **Room 20 — Rooftop boss:** physically flies around cover to find a clear firing lane. Its attacks change at two-thirds and one-third health: aimed volleys and wider fans, then radial patterns. Aimed attacks and fans always fire a second fully warned volley before recovery. Each pattern locks its aim for the final 0.3 seconds. Closed armor reduces damage by 70% during both warnings, then opens for 0.8, 0.7, or 0.6 seconds as the fight progresses. Phase changes reduce incoming damage by 65% for 0.75 seconds. Lights on its body show the phase.
+
+Turret volleys warn for 0.85 seconds and lock their aim for the final 0.38 seconds. Dashed amber lines track you, then turn solid: move across the firing direction once they lock. Below half health, a new volley contains five bolts instead of three; the complete spread is shown before firing. Cover still blocks every projectile. Bosses resist bullet knockback. The longer route gives the Loader and Crane 920 health, the Press and Kiln 1,625, the Condenser 3,770, the Turbine 3,480, the Sorter 4,640, the rooftop boss 6,240, and the Interceptor 5,850. Boss health grows to match the extra upgrades; their existing warning and dodge windows stay intact.
+
+Each boss has its own arena and silhouette. Separate seeded draws select the loading-docks, furnace, Cooling Works, and rooftop bosses, including in Daily Runs, and replaying or continuing that seed keeps the same selections. The docks, furnace, and Cooling Works bosses lead to the usual gun upgrade and 12-health recovery. Either final rooftop exit leads to the escape route. No extra controls or HUD panels are needed.
+
+## Boss practice
+
+Practice appears on the title screen after you defeat a boss in a normal or Daily Run. Its menu lists only bosses you have beaten, without locked entries, silhouettes, or a total count. Victories stay in this browser. Previous encounter-only unlocks do not carry over, because they did not record whether you won; defeat those bosses again to unlock them.
+
+Choose a defeated boss to replay its arena with 100 health and a preset gun containing three, seven, eleven, fifteen, or nineteen upgrades for that stage. Defeating the boss ends the practice fight. Retry from the result screen, or press **R** during a fight to restart immediately. Pause also offers Retry and Choose fight. The usual Your gun list shows the preset upgrades.
+
+Practice preserves your normal checkpoint, Daily selection, and best times. Returning to the menu and choosing Continue restores your saved room with its original health and gun. Practice cannot unlock other encounters or advance into another room. Ordinary and Daily gameplay rules remain unchanged.
+
+[Test the Turbine directly](https://caleb-guyer.github.io/recoil-foundry/?test=turbine): select **Test the Turbine** to start its isolated fight with 100 health and eight upgrades. Press **R** to retry. This explicit playtest link works before earning the boss, preserves your saved run and Daily records, and grants no Practice unlocks. The regular Practice menu still lists only bosses you have beaten during a run.
+
+## Final escape
+
+After defeating the last boss, leave through its exit to begin a continuous rooftop escape. Three clusters of failing machinery form a short traversal finale, with ordinary jumps along the lower route and faster recoil shortcuts above. Lights fade, debris falls in the background, and collapsing platforms crack before dropping away permanently. The ground stays safe, and there is no fatal countdown.
+
+Follow the green direction marks to the extraction lift and land on its deck. Its gates close and it carries you away before the results appear. Your gun, health, upgrades, and elapsed time carry over from the boss fight. The room counter simply changes to **ESCAPE**; no extra weapon, upgrade, or panel is added. The rooftop score builds during the run and settles as the lift departs.
+
+The escape entrance is saved automatically. Continue rebuilds the same route from that entrance, with the same gun and accumulated time; Again starts the complete run over. Pause and focus loss freeze both traversal and departure. Boarding stops the run timer, and the 2.6-second departure animation cannot cause damage or fire queued shots.
+
+## Feel
+
+Combat readability: hostile rounds have a dark separation stroke, a coral hollow outline and a pale core; fast rounds use pointed silhouettes. Interceptor ammunition keeps its additional weapon-specific markings, and returned turbine blades switch to the player's pale green. Hostile shots render above player gunfire and cosmetic particles. Sparks, blast rings and friendly bullet trails fade locally near incoming rounds while physical debris and active hazards remain visible.
+
+The final part of an enemy's windup gains a small closing brace, with a steady version when screen shake is disabled. Ordinary shooters and flyers give a short aiming sound; existing boss and specialist tells retain their timing. Warning sounds briefly lower gunfire and explosions, have reserved audio voices, and still respect the master mute. Armor produces a metallic ping and outward pale sparks, exposed hits a dry impact, and kills a lower break sound. Damage and attack timing are unchanged.
+
+Newly fired offscreen shots aimed near the player briefly mark their direction at the screen edge. Missed shots, visible attackers, reflected bullets and shots obstructed by current solid geometry produce no cue. Nearby volley indicators merge, with at most four on screen; cues expire after 0.42 seconds and stay fixed against screen shake. No enemy names, permanent radar or additional text appears. This is a presentation update, so Daily ruleset 58 and existing saves remain compatible.
+
+- Buffered jumps, coyote time, variable jump height, and quick ground acceleration.
+- Strong airborne recoil, preserved momentum, and bounded speeds.
+- Directional camera kick and short screen shake, muzzle flashes, casings, impact sparks, kill pauses, and landing squash.
+- Layered procedural gunfire and impact audio.
+- A single health bar and room counter during play. Gun details and settings stay in the pause screen.
+
+Screen shake can be disabled in Settings or Pause and initially respects the device's reduced-motion preference. Audio starts after a player interaction. The game pauses when the tab loses focus.
+
+## Soundtrack
+
+Each area has an original, quiet four-bar score synthesized in the browser: low mechanical beats in the docks, heavier percussion and bass in the furnace, and sparse airy melodies on the rooftops. Nearby enemies, active attacks, and sustained firing gradually add layers. Boss fights add rhythmic accents; cleared rooms and upgrade screens settle into soft harmony.
+
+The music dips beneath attack warnings and damage sounds. It fades out on pause, results, the title screen, or loss of browser focus. Returning to play starts a fresh phrase; new runs and room entrances reset the arrangement. No audio files are downloaded, and the score never uses the gameplay random generator or changes Daily Run rules.
+
+**Music** in Settings or Pause switches only the soundtrack. **Sound** is the master switch for both effects and music. Both preferences are saved in this browser, and an existing muted setting stays muted. Audio begins only after a player interaction; unsupported or blocked audio does not prevent playing.
+
+Checkpoints save at room entrances. Continue reconstructs that room and area with its modified gun and saved health. Death clears the checkpoint. **Again** starts a fresh seed after a normal loss or win, including runs initially opened through a custom seed link. Daily Runs retry the same challenge; Practice, test presets and Workshop resets keep their selected setup. Existing version 3 saves remain compatible; their room number now selects from the new area pools. Saves stay in this browser. A `?seed=YOURSEED` URL starts that seed's room layouts and upgrade selection within this version; retrying a normal run clears the custom seed from the URL.
+
+## Develop
+
+[Upgrade compatibility audit and branching roadmap](upgrade-roadmap.md) documents all 67 current upgrades, the complete pair inventory, proposed interaction fixes and twelve proposed new specializations. It is a design document; the proposed gameplay changes are not yet implemented.
+
+Node.js 24 and npm:
+
+```sh
+npm ci
+npm run dev
+```
+
+```sh
+npm test
+npm run build
+npm run preview
+```
+
+| File                      | Responsibility                                                                            |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/evolutions.ts`       | Per-discharge accuracy streaks, speed damage, and portal travel charges                   |
+| `src/game.ts`             | Matter.js simulation, movement, recoil, combat, and room progression                      |
+| `src/enemies.ts`          | Enemy dimensions, health, attack timing, and boss patterns                                |
+| `src/kiln-ai.ts`          | Mortar planning, swept shell collisions, surface heat, and boiler movement                |
+| `src/kiln-art.ts`         | Boiler silhouette, cooling vents, arc warnings, and molten shell effects                  |
+| `src/expanded-layouts.ts` | Four additional third-room layouts, obstacles, spawn anchors, and traversal routes        |
+| `src/levels.ts`           | Authored obstacle layouts, spawn anchors, traversal routes, and seeded level selection    |
+| `src/areas.ts`            | Area palettes, parallax scenery, and surface details                                      |
+| `src/props.ts`            | Sparse prop placement, rotated hit detection, impact damage, and explosions               |
+| `src/cargo.ts`            | Shootable suspension cables, delayed drops, and heavy impact interactions                 |
+| `src/cargo-layout.ts`     | Seeded cargo placement with clear cables and falling lanes                                |
+| `src/cargo-art.ts`        | Suspension cables and restrained drop warnings                                            |
+| `src/conveyors.ts`        | Ground transport, momentum, supported stacks, and physical enemy carriage                 |
+| `src/conveyor-layout.ts`  | Sparse seeded belt inserts with clear approaches and mirrored directions                  |
+| `src/conveyor-art.ts`     | Moving rollers, tread marks, and direction arrows                                         |
+| `src/freight.ts`          | Lift boarding, ascent, three warned waves, recovery stops, and docking                    |
+| `src/freight-layout.ts`   | Rare seeded room replacement and vertical maintenance ledges                              |
+| `src/freight-art.ts`      | Shaft rails, cables, lift structure, and integrated status lamps                          |
+| `src/scrapper.ts`         | Physical crate grabs, locked throws, counterfire interruption, and tether cleanup         |
+| `src/scrapper-layout.ts`  | Sparse enemy substitutions with a nearby crate and clear lifting space                    |
+| `src/scrapper-art.ts`     | Tracked chassis, articulated claw, and restrained throw warnings                          |
+| `src/harpooner.ts`        | Locked hooks, physical reeling, breakable winches, and cable cleanup                      |
+| `src/harpooner-layout.ts` | Solo Reclamation introduction and sparse Overtime substitutions                           |
+| `src/harpooner-art.ts`    | Forked winch, aim warning, hook head, and cable                                           |
+| `src/squads.ts`           | Seeded pairs, escort movement, flank goals, staggered attacks, and formation breakup      |
+| `src/squad-art.ts`        | Escort aiming warnings using the actual projectile origin and blocked firing lane         |
+| `src/demolition.ts`       | Explosive shell payloads, cover-aware blasts, launch impulses, and delayed chains         |
+| `src/demolition-art.ts`   | Restrained blast outlines, delayed warnings, and reduced-motion effects                   |
+| `src/rules.ts`            | Gun modifications, seeded choices, swept collisions, and checkpoint validation            |
+| `src/ballistics.ts`       | Returning rounds, stored charges, counterfire, wall pins, sticky shells, and echo volleys |
+| `src/ballistics-art.ts`   | Small charge lamps, attached fuse ticks, pins, and delayed gun silhouettes                |
+| `src/fusions.ts`          | Charged rail volleys, bounded orbit storage, and physical implosion pulls                 |
+| `src/fusions-art.ts`      | Orbit rounds and grouped inward charge ticks                                              |
+| `src/daily.ts`            | UTC challenge identity, versioned links, and validated local best times                   |
+| `src/practice.ts`         | Validated boss victory storage and stage-appropriate practice builds                      |
+| `src/render.ts`           | Canvas world, camera feedback, character animation, and effects                           |
+| `src/main.ts`             | Minimal UI, keyboard/pointer/touch input, pause, saves, and frame loop                    |
+| `src/audio.ts`            | Shared Web Audio output, effects, and audio preferences                                   |
+| `src/music.ts`            | Bounded music scheduling, synthesis, fades, and warning ducking                           |
+| `src/music-score.ts`      | Original area phrases and read-only combat intensity                                      |
+| `src/style.css`           | Game menus and compact HUD                                                                |
+
+Simulation runs at 60 Hz with a maximum of five catch-up steps per rendered frame. Projectiles use swept bounding-box intersections; piercing and bouncing consume the remaining travel within the current tick. Fragments never split again. Per-frame effects, projectile counts, and audio voices are bounded.
+
+The test suite covers actual movement, recoil flight, extreme builds, projectiles, saves, twenty-stage combat runs, layout variety, spawn clearances, and traversal in both directions. Enemy checks cover charge telegraphs and wall stuns, sniper aim locks and close cover, hopper landings and low ceilings, boss transitions and attack cycles, and frozen warnings during pause or hitstop. Upgrade checks cover burst timing and cancellation, rear-cone cover, compounded bounces, piercing and fragments, real hard landings, recoil braking, charge consumption, and checkpoint reconstruction.
+
+Cargo checks cover deterministic placement, clear cables and falling lanes, fast bullets, full warning timing, real enemy and player collisions, fuel chains, every boss's resistance, landed cover, portal interactions, pause and death cleanup, saved entrances, isolated test links, and ordinary traversal with hanging and landed loads in all four areas and both mirrors.
+
+Conveyor checks cover mirrored placement, clear approaches and machinery spacing, both travel directions, running against the fastest belt, airborne momentum and recoil, stacked cover, harmless fuel transport, anchored and airborne exclusions, enemy entrances and aim locks, walls, ledges, restored friction, bounded cargo speed, actual portal travel, pause and hitstop, Continue, Daily, and isolated test links. Full combat playthroughs use ordinary movement, normal health, and legal upgrades, with direct-fire builds jumping off belts during combat.
+
+Freight checks cover rare deterministic selection, full departure and door warnings, physical enemy boarding, lift carriage and ceiling stops, jumping back from both side ledges, recoil recovery after a floor fall, cargo impacts, shots and portals above the old ceiling, pause and hitstop, saved entrances, isolated retries, docking, and exactly one reward. An ordinary-input pilot clears all three waves with normal health and the legal five-upgrade test build; complete combat runs also traverse the event.
+
+Scrapper checks cover sparse seeded placement, reserved crate clearance, real grabs in both directions and authored rooms, full aim locks, ordinary-input dodges, counterfire, recovery contact, death cleanup, physical crate impacts against cover, enemies, fuel and the player, blocked pulls, occupied crates, exclusive grips, actual portal travel, pause and hitstop, saved and Daily entrances, and isolated retries. Existing enemy-contact tests include its hull; full combat runs reach extraction through Scrapper rooms with normal health and earned upgrades.
+
+Harpooner checks cover seeded introductions and Overtime rosters, full warnings, movement-only dodges, one active tether, rotated crate catches, fuel arming, cover, shootable winches, blasts, real portal crossings, recoil pulling a machine off a ledge, equal momentum, finite duration, pause, death, and isolated retries. Shared enemy-contact checks also exercise its physical hull against crates and fuel.
+
+Sapper checks cover the solo introduction, seeded mixed rosters, locked ballistic throws, blocked launches, thin-wall catches, shooting charges off walls and floors, rotating and destroyed hosts, actual portal travel, blast occlusion, terrain destruction, enemy friendly fire, spawn grace, bounded charge count, frozen fuses, cleanup, isolated saves, and clearing the introduction with normal controls. A physical return-shot test knocks a charge across the room and kills its owner with the original fuse.
+
+Tether checks cover actual bullet hooks, shared reward prerequisites, boss and pinned anchors, equal momentum, cover breaks, real portal travel, pause and cleanup, projectile exclusions, dense builds, a charger dragging a flyer under normal AI, naturally triggered Snapback, and physical collisions with armor and no duplicate damage. A complete twenty-room combat run earns both upgrades, uses the cable, and reaches extraction with ordinary health and controls.
+
+Squad checks cover unchanged rosters, gradual introductions, paired reinforcement entrances, physical escort and flank movement around obstacles, full warnings and aim locks, allied projectile occlusion, staggered sniper/hopper cycles, cargo and fuel counterplay, portal breakup, delayed doorways, pause and hitstop, deterministic normal and Daily entrances, and isolated test links.
+
+Prop checks cover sparse placement, baseline route clearance, real crate impacts, safe slow contact, standing and jumping from crates, fuel launch and impact arming, rotated projectile hits, breakable firing lanes, blast occlusion and chains, immediate freezing on death, and fresh prop reconstruction from checkpoints.
+
+Hidden-route checks cover panel collision and destruction, fast and close-muzzle shots, blast cover, physical passage after breaking, health collection and occlusion, harmless bounded debris, daily reproduction, and room-entrance restoration. Placement checks cover mirrored geometry, enemy and hazard clearances, baseline traversal, and actual recoil ascent through the hatch.
+
+Shot-trail checks cover real collision corners, bounded path history, persistent styling after bounces or piercing, fragment exclusions, pause/reset cleanup, and unchanged projectile physics and combat randomness.
+
+Reinforcement checks cover deterministic composition, full arrival warnings, blocked entries, room completion, one reward per room, pause and death, and fresh checkpoint reconstruction.
+
+Area boss checks cover locked attack warnings, airborne camping versus reactive dodging, corner pressure, shotgun knockback resistance, transition armor, and physical flanking across both rooftop arenas and their mirrors. They also cover wide-body crashes, platform-edge landings, returning from beneath shelves, safe recovery windows, recoil escapes, pause and death cleanup, and exactly one upgrade after each intermediate boss.
+
+Loader fuel checks cover direct contact in both directions, upright and rotated canisters, a complete warned charge, closing the braking gap before detonation, nearer walls shielding fuel, overhead misses, pause, and exactly one explosion.
+
+Kiln checks cover seeded arena selection, unchanged non-furnace rooms, locked mortar plans, live collisions with cover and props, hot-strip warnings and expiry, vent armor, displaced-muzzle cancellation, and reactive combat in both mirrors. Shells and hot strips reset when restarting or leaving the room.
+
+Practice checks cover victory-only unlocks, excluded practice wins and losses, malformed storage, every boss arena in both mirrors, fresh retry state, and resuming an untouched normal or Daily checkpoint.
+
+Elite checks cover sparse deterministic placement, checkpoint reconstruction, directional shielding and flanking, piercing and rear blasts, the sniper's second aim lock, fuse timing and defusing, blast cover and chains, and immediate cancellation on death.
+
+Moving-room checks cover seeded safe placement and traversal, lift riding and recoil escapes, moving cover, crusher warnings and swept damage, collapsing-platform timing and safe rebuilding, and pause, death, and checkpoint resets.
+
+Escape checks cover final-boss entry, ordinary traversal and faster recoil routes, full-width physics and projectiles, permanent platform collapse, safe boarding and departure, checkpoint reconstruction, Daily Run timing, and exactly one victory after extraction.
+
+Music checks cover area phrases and combat intensity, independence from gameplay state and RNG, scheduling after frame stalls, voice cleanup, pause and focus loss, warning ducking, independent music and master switches, and unavailable browser audio.
+
+Daily checks cover UTC rollover and real calendar dates, versioned links, reproducible room and upgrade sequences, continued elapsed time, and corrupt or slower personal records. Browser checks also exercise title and result actions, retries, blocked storage, and both clipboard outcomes.
+
+Enemy collision checks exercise all eleven enemy types with fast crates and gentle contact, hard impacts into stationary props, both ram directions, low tipped crates, Press and Crane slams, blocked impacts, the solid resting hammer, and props entering the motor rail. Complete combat runs retain normal health, earned upgrades, and real input, using solid-object navigation and two fighting distances.
+
+Upgrade balance checks cover Kickback damage and unchanged firing cadence, full-range backward hits, mirrored scatter and burst volleys, one landing charge across both directions, rear bounce/pierce/splinter interactions, blocked rear muzzles, and fuel impacts. Boss camping checks still fail for the passive player; the complete combat runs reach extraction with normal health and earned upgrades.
+
+Path tests cover entry and follow-up eligibility, concise path labels, incompatible-save rejection, replayed and continued rewards, 120 complete random/daily upgrade sequences, mirrored Crossfire bursts, Deadeye collision safety, Executioner thresholds and piercing, nonrecursive Death bloom kills, and sustained projectile limits. Full combat runs exercise Precision, Bullet hell, and Demolition builds with normal health and earned upgrades.
+
+Portal checks cover grounded walking under normal gravity in both directions, raised supports, linking while already pressing against a wall, walking enemies, surface fitting, one fixed pair per room, all velocity orientations, swept high-speed travel, blocked exits, enemy rushes, close hostile muzzles, preserved projectile modifiers, props, pause/reset handling, and prevention of idle floor-to-floor loops. Path odds are checked over 40,000 deterministic draws. Seven full combat runs use fixed, legal earned-build offers to isolate combat from pool changes: four established builds and three incorporating all twelve new upgrades. Actual weighted normal and Daily offers retain separate progression, eligibility, replay, and save checks. Browser checks cover real right clicks, player travel, invalid placement, desktop and phone-width cards, the isolated upgrade picker, and console errors.
+
+Demolition checks cover direct and area damage, falloff, shield and boss armor, terrain and rotated-prop occlusion, real floor-shot launches, per-volley launch limits, bank and pierce payloads, air and landing bonuses, delayed and finite chains, escape boarding, checkpoint legality, deterministic path odds, portal travel, and sustained dense builds.
+
+## Publish
+
+Fusion checks cover both prerequisites, rarity across seeded rewards, one-per-run selection, saved repairs, charged volley consolidation, burst costs, cover, finite orbit releases, portals, physical crate impacts, bounded pulls, pause, cleanup, and isolated test links. Three additional full combat runs earn and use Rail spike, Orbit, and Implosion with normal health before reaching extraction.
+
+GitHub Pages uses the included GitHub Actions workflow. Pushes to `main` run tests and a production build before deploying the static `dist/` directory. Relative assets also support other static hosts. No server or external game service is needed.
+
+Physics: [Matter.js](https://brm.io/matter-js/) (MIT). Build: [Vite](https://vite.dev/) and [TypeScript](https://www.typescriptlang.org/). Artwork and sound are generated by the game's rendering and audio code. Game source is MIT licensed; dependencies retain their own licenses.
+
+Cooling Works regression checks cover coolant momentum, locked jet volleys, separately warned follow-ups, rotating purge gaps, armor, physical cover navigation, pause and death cleanup, save migration, and final-area rosters. Full-run pilots use ordinary movement and firing inputs, with short trajectory prediction for the new ranged fights; they retain normal health and earn all nineteen upgrades before extraction. A rooftop placement regression keeps collapsing platforms away from the launch space beside steps.
+
+Follow-up checks cover prerequisite rewards and saves, repeated portal replacement, capped travel and movement bonuses, defensive rear cones, wall fragment fans, converging lanes through cover and portals, firing-order accuracy streaks, enlarged echoes, and combined projectile/effect limits.
+
+Detour tests cover both exit routes with ordinary movement, four mirrored challenge layouts, warned reinforcement entrances, direct and extended run progression, bonus healing rules, deterministic Daily routes, and continued challenge/escape checkpoints.
+
+Turbine tests cover full warning and lock timing, both marked blade passes, airborne versus grounded wind, recoil preservation, solid cover and prop interactions, blade portals, pause and phase cancellation, saved entrances, earned Practice unlocks, and both mirrored fights. Reactive pilots win with normal health and eleven upgrades; passive overhead, corner, and cover camps lose.
+
+Interceptor tests cover deterministic boss selection, full aiming locks and follow-up tells, physical recoil travel, cover and prop collisions, portal projectiles and hulls, cancellation after teleport or phase change, earned Practice unlocks, legacy rooftop victories, and the final escape. Reactive pilots win both mirrors with normal health and nineteen upgrades; tested overhead, corner, and cover camps lose. Its direct test link preserves normal saves and grants no victories.
+
+## Reclamation Works
+
+[Test the new area](https://caleb-guyer.github.io/recoil-foundry/?test=reclamation). Choose **Test Reclamation Works** to start at room 13 with 100 health and twelve legal upgrades. The test continues through the new area and rooftops. **R** returns to the beginning of the test; saves, Daily records, and earned Practice victories stay untouched.
+
+Sorting floor, Gantry walk, and Scrap channels each have a distinct arrangement of platforms and open magnet shafts, with mirrored variants. Magnets show a one-second warning, lift an existing crate, hold it, and release it into a marked lane. Crates remain physical cover: shoot one loose, push it out of range, or let falling debris hit an enemy. They collide with platforms and actors and can be destroyed. There are only two or three crates in these rooms; magnets never manufacture replacements.
+
+Borers use nearby crates for cover and fire a locked, tight burst that can break that cover. Sifters fly around obstacles and flank before firing a warned fan. Both share the ordinary projectile, portal, damage, and prop collision systems. Reclamation starts with smaller mixed waves and uses at most one Borer and one Sifter per room. Reclamation adds no new controls or HUD panels. It also has its own muted green scenery and music phrase.
+
+The area adds four regular upgrade rewards. The direct run now has **20 rooms and 19 picks**; the four existing optional detours allow **24 fights and 23 picks**. Reclamation has no additional detour. Checkpoint version 5 moves old rooftop entrances forward four rooms, preserving their actual build and recording the skipped picks. Existing boss victories still select their original arenas.
+
+Reclamation checks cover all eight layout orientations, clear magnet shafts, real crate lifts and damaging drops, interruption by shots and terrain, frozen timers, save migration, isolated playtest state, locked boss warnings, normal-health victories, and corner/overhead pressure.

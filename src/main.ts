@@ -1,5 +1,6 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { creditsMarkup } from './credits.ts';
+import { issueReportMenu } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
@@ -196,6 +197,15 @@ let logbookProgress = migrateLogbook(read(LOGBOOK_KEY), storedCheckpoint, runHis
 const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', query: '' };
 let finishedRun: RunRecap | null = null;
 let creditsParent = 'settings';
+let reportParent = 'settings';
+function openReport() {
+  reportParent = dialogKind;
+  showDialog('issue');
+}
+function backFromReport() {
+  showDialog(reportParent);
+  $('open-report').focus();
+}
 function openCredits() {
   creditsParent = dialogKind;
   showDialog('credits');
@@ -1194,6 +1204,8 @@ function showDialog(kind: string) {
   if (kind === 'credits') {
     content.innerHTML = creditsMarkup();
     $('back').onclick = backFromCredits;
+  } else if (kind === 'issue') {
+    issueReportMenu(content, game, backFromReport);
   } else if (kind === 'progress') {
     updateProgressPanel = progressMenu(
       content,
@@ -1703,7 +1715,7 @@ function showDialog(kind: string) {
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
           '</ul></details>'
         : '') +
-      '<button id="open-credits" class="quiet settings-credits">About & credits</button></div><div class="actions"><button id="back" class="primary">' +
+      '<div class="settings-links"><button id="open-credits" class="quiet settings-credits">About & credits</button><button id="open-report" class="quiet settings-credits">Report an issue</button></div></div><div class="actions"><button id="back" class="primary">' +
       (paused ? 'Resume' : 'Back') +
       '</button>' +
       '<button id="pause-controls" class="quiet">Controls</button>' +
@@ -1724,6 +1736,7 @@ function showDialog(kind: string) {
         : '') +
       '</div>';
     $('open-credits').onclick = openCredits;
+    $('open-report').onclick = openReport;
     $<HTMLInputElement>('sound').onchange = (e) => {
       sound.enabled = (e.target as HTMLInputElement).checked;
       if (sound.enabled) sound.unlock();
@@ -1804,7 +1817,7 @@ function showDialog(kind: string) {
   } else if (kind === 'pause') {
     $('back').focus({ preventScroll: true });
     modal.scrollTop = 0;
-  } else if (['controls', 'progress', 'credits'].includes(kind)) $('back').focus();
+  } else if (['controls', 'progress', 'credits', 'issue'].includes(kind)) $('back').focus();
   if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
@@ -2026,6 +2039,10 @@ modal.addEventListener('cancel', (e) => {
   if (!bindingEditor?.cancel()) cancelDialog();
 });
 function cancelDialog() {
+  if (dialogKind === 'issue') {
+    backFromReport();
+    return;
+  }
   if (dialogKind === 'credits') {
     backFromCredits();
     return;
@@ -2074,7 +2091,8 @@ window.addEventListener('keydown', (e) => {
     e.ctrlKey ||
     e.metaKey ||
     e.altKey ||
-    (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox')
+    (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox') ||
+    e.target instanceof HTMLTextAreaElement
   )
     return;
   if (

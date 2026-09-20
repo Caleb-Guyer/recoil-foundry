@@ -5,3 +5,5 @@ dist/
 .env*
 coverage/
 balance-results/
+.media-tools/
+.release-assets/
