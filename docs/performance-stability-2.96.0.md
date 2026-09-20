@@ -65,7 +65,9 @@ During the first worker viewer check no new video file appeared in Downloads aft
 
 A subsequent public-build recheck on 19 September at 22:05 CDT **did deliver a new video file** through the ordinary Save clip action. The browser tool's download event timed out after 15 seconds, but a later filesystem check established a fresh 324,782-byte WebM with a matching creation time. The viewer reached Clip ready without console warnings or errors. The [download receipt](qa/performance-2.96/replay-download-recheck.json) records its timestamp, size, SHA-256 and WebM header. A missing tool event therefore cannot be treated as proof of failed delivery. This recheck used no direct blob navigation or workaround.
 
-**Downloaded-video playback remains unverified.** A container header and successful download do not establish video decoding or playback. The owner has confirmed availability to perform standalone-browser checks on this laptop; those results have not yet been supplied. Independent Chrome/Edge/Firefox, physical input and baseline-device acceptance remain in item 5.
+**Standalone Chrome replay export and downloaded playback passed the owner's manual check.** The owner followed the public death/replay/export test in Chrome, explicitly confirmed that the newly downloaded video plays correctly, and supplied that new file. The [Chrome playback receipt](qa/performance-2.96/replay-chrome-playback.json) records its creation time, 252,411-byte size and SHA-256. Chrome's installed executable reports **153.0.8010.50**; its running About screen was not independently inspected. Playback is owner-observed evidence, rather than an agent-controlled browser or header-only check.
+
+Chrome stress and full physical-input acceptance, independent Edge/Firefox checks and baseline-device acceptance remain in item 5. The owner has started the manual verification handoff for the available laptop; no stress-run or physical-input result is inferred from the successful video check.
 
 ## Automated verification
 

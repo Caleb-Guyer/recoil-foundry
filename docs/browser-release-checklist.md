@@ -18,7 +18,7 @@ The launch scope is frozen after the Auditor: the twenty-room campaign across fi
 
 Completed software fixes, automated lifecycle checks and available-browser measurements are archived in the [performance/stability report](performance-stability-2.96.0.md). Use the [repeatable test page and acceptance procedure](performance-testing.md) for the remaining checks. These results do not establish performance on a low-end laptop or compatibility with independent browser installations.
 
-- [ ] Test production builds in current Chrome, Edge and Firefox on Windows, plus Safari if it will be advertised. Include downloading and playing exported replay videos. Record actual versions, device specs and results.
+- [ ] Complete production-build stress and gameplay checks in current Chrome, Edge and Firefox on Windows, plus Safari if it will be advertised. Include downloading and playing exported replay videos in Edge and Firefox. Record actual versions, device specs and results.
 - [ ] On those browsers, verify physical keyboard/mouse and supported controllers, including disconnect/reconnect, rumble, tab switching and native fullscreen transitions. Test real touch hardware before advertising touch support. Automated input/event tests and the in-app browser audit do not establish hardware support.
 - [ ] Profile on a representative low-end laptop at its normal screen resolution. Use dense late-game builds, boss attacks, portals, explosions, replay recording and Overtime.
 - [ ] Target stable 60 fps on the chosen baseline; investigate long frame stalls and sustained memory growth. If necessary, offer reduced visual effects that preserve physics and tells.
