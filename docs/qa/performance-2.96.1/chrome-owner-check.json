@@ -1,0 +1,17 @@
+{
+  "buildRequested": "2.96.1",
+  "localDate": "2026-09-19",
+  "browser": "Standalone Chrome on the owner's Windows laptop",
+  "installedChromeVersion": "153.0.8010.50",
+  "source": "https://caleb-guyer.github.io/recoil-foundry/diagnostics.html?v=2.96.1",
+  "ownerReply": "Chrome works.",
+  "verification": "Owner confirmation in response to the request to run Quick with Audio and Replay capture enabled, review the clip, save it and verify downloaded video playback in standalone Chrome.",
+  "passedByOwnerConfirmation": [
+    "Quick stability test completed without a reported problem",
+    "Replay review, export and downloaded playback"
+  ],
+  "evidenceType": "Owner observation, interpreted in the scope of the immediately preceding test request",
+  "benchmarkReportReceived": false,
+  "replayFileReceived": false,
+  "limits": "No FPS, frame-stall, memory or error-count measurements are inferred. Soak, Reduced effects, normal-game physical input, focus/fullscreen transitions and full campaign play remain unverified in Chrome. The version comes from the installed executable inspected before the reply, not a running browser About screen; the build is the requested URL, not an inspected report. This provides no Firefox, controller, touch or low-end-device acceptance."
+}
