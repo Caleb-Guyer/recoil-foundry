@@ -1,0 +1,1934 @@
+{
+  "version": "2.96.0",
+  "generatedAt": "2026-09-20T03:34:16.741Z",
+  "status": "complete",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+    "logicalCores": 24,
+    "deviceMemoryGiB": 32,
+    "viewport": {
+      "width": 1699,
+      "height": 935,
+      "pixelRatio": 1.5
+    },
+    "canvas": {
+      "width": 2549,
+      "height": 1403
+    }
+  },
+  "options": {
+    "reduced": false,
+    "replay": true,
+    "audio": true
+  },
+  "secondsPerCase": 120,
+  "activeSeconds": 720,
+  "methodology": "Real game simulation/render/audio/replay. Automatic preset retries after death/clear. First 2 seconds of each scenario excluded from timings. No CPU/GPU throttling. Heap is optional browser-reported JS heap, not total process memory.",
+  "results": [
+    {
+      "scenario": "volley",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 238.176,
+      "frameIntervals": {
+        "samples": 28105,
+        "meanMs": 4.2,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 4.3,
+        "maxMs": 25,
+        "over20": 6,
+        "over34": 0,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 28105,
+        "meanMs": 0.25,
+        "p50Ms": 0,
+        "p95Ms": 1.5,
+        "p99Ms": 2.2,
+        "maxMs": 4.9,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 28105,
+        "meanMs": 0.35,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 0.7,
+        "maxMs": 2.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 28105,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 7,
+        "meanMs": 6.07,
+        "p50Ms": 5.5,
+        "p95Ms": 9,
+        "p99Ms": 9,
+        "maxMs": 9,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 6,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 180,
+        "particles": 215,
+        "enemies": 7,
+        "props": 8
+      }
+    },
+    {
+      "scenario": "explosions",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 236.525,
+      "frameIntervals": {
+        "samples": 27910,
+        "meanMs": 4.23,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 4.3,
+        "maxMs": 79.1,
+        "over20": 20,
+        "over34": 10,
+        "over50": 5
+      },
+      "simulation": {
+        "samples": 27910,
+        "meanMs": 0.18,
+        "p50Ms": 0,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 2.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 27910,
+        "meanMs": 0.28,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.6,
+        "maxMs": 1.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 27910,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.5,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 8,
+        "meanMs": 5.56,
+        "p50Ms": 5.5,
+        "p95Ms": 6.1,
+        "p99Ms": 6.1,
+        "maxMs": 6.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 7,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 109,
+        "particles": 213,
+        "enemies": 7,
+        "props": 6
+      }
+    },
+    {
+      "scenario": "portals",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 237.949,
+      "frameIntervals": {
+        "samples": 28078,
+        "meanMs": 4.2,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 4.3,
+        "maxMs": 29.2,
+        "over20": 2,
+        "over34": 0,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 28078,
+        "meanMs": 0.25,
+        "p50Ms": 0,
+        "p95Ms": 1.5,
+        "p99Ms": 2.3,
+        "maxMs": 5.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 28078,
+        "meanMs": 0.37,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 0.8,
+        "maxMs": 1.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 28078,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 3,
+        "meanMs": 5.37,
+        "p50Ms": 5.3,
+        "p95Ms": 5.6,
+        "p99Ms": 5.6,
+        "maxMs": 5.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 2,
+      "droppedSteps": 0,
+      "portalPairs": 3,
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 180,
+        "particles": 219,
+        "enemies": 10,
+        "props": 10
+      }
+    },
+    {
+      "scenario": "beam",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 238.89,
+      "frameIntervals": {
+        "samples": 28189,
+        "meanMs": 4.19,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 4.3,
+        "maxMs": 29.2,
+        "over20": 3,
+        "over34": 0,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 28189,
+        "meanMs": 0.1,
+        "p50Ms": 0,
+        "p95Ms": 0.5,
+        "p99Ms": 0.9,
+        "maxMs": 2.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 28189,
+        "meanMs": 0.19,
+        "p50Ms": 0.2,
+        "p95Ms": 0.3,
+        "p99Ms": 0.5,
+        "maxMs": 1.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 28189,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.1,
+        "maxMs": 0.5,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 13,
+        "meanMs": 4.92,
+        "p50Ms": 4.9,
+        "p95Ms": 5.3,
+        "p99Ms": 5.3,
+        "maxMs": 5.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 12,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 26,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 19,
+        "particles": 124,
+        "enemies": 9,
+        "props": 10
+      }
+    },
+    {
+      "scenario": "boss",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 227.288,
+      "frameIntervals": {
+        "samples": 26821,
+        "meanMs": 4.4,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 12.5,
+        "maxMs": 29.2,
+        "over20": 30,
+        "over34": 0,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 26821,
+        "meanMs": 0.09,
+        "p50Ms": 0,
+        "p95Ms": 0.4,
+        "p99Ms": 0.7,
+        "maxMs": 4.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 26821,
+        "meanMs": 0.2,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.5,
+        "maxMs": 1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 26821,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.7,
+        "maxMs": 1.5,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 5,
+        "meanMs": 0.86,
+        "p50Ms": 0.8,
+        "p95Ms": 1.2,
+        "p99Ms": 1.2,
+        "maxMs": 1.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 4,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 13,
+        "constraints": 0,
+        "pairs": 5,
+        "shots": 33,
+        "particles": 147,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "scenario": "overtime",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 231.966,
+      "frameIntervals": {
+        "samples": 27372,
+        "meanMs": 4.31,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 8.4,
+        "maxMs": 141.7,
+        "over20": 27,
+        "over34": 7,
+        "over50": 1
+      },
+      "simulation": {
+        "samples": 27372,
+        "meanMs": 0.12,
+        "p50Ms": 0,
+        "p95Ms": 0.6,
+        "p99Ms": 0.9,
+        "maxMs": 2.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 27372,
+        "meanMs": 0.25,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.5,
+        "maxMs": 1.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 27372,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.1,
+        "maxMs": 0.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 15,
+        "meanMs": 1.57,
+        "p50Ms": 1.5,
+        "p95Ms": 2.6,
+        "p99Ms": 2.6,
+        "maxMs": 2.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 14,
+      "droppedSteps": 3,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 20,
+        "constraints": 0,
+        "pairs": 6,
+        "shots": 95,
+        "particles": 215,
+        "enemies": 7,
+        "props": 5
+      }
+    }
+  ],
+  "timingWarning": null,
+  "peaksSampledEveryMs": 1000,
+  "memorySamples": [
+    {
+      "seconds": 0,
+      "heapBytes": 20184115,
+      "replayBytes": 0,
+      "effects": 0,
+      "music": 0,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 0,
+      "heapBytes": 20184115,
+      "replayBytes": 0,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 5,
+      "heapBytes": 23452120,
+      "replayBytes": 2341356,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 10,
+      "heapBytes": 28852834,
+      "replayBytes": 2382219,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 15,
+      "heapBytes": 29445908,
+      "replayBytes": 2251020,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 20,
+      "heapBytes": 21570585,
+      "replayBytes": 2213683,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 25,
+      "heapBytes": 25338241,
+      "replayBytes": 2262484,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 30,
+      "heapBytes": 20977908,
+      "replayBytes": 2218825,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 35,
+      "heapBytes": 22377497,
+      "replayBytes": 659177,
+      "effects": 2,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 40,
+      "heapBytes": 37254531,
+      "replayBytes": 2465652,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 45,
+      "heapBytes": 40653711,
+      "replayBytes": 2425747,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 50,
+      "heapBytes": 22745574,
+      "replayBytes": 1170212,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 55,
+      "heapBytes": 25892781,
+      "replayBytes": 2485489,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 60,
+      "heapBytes": 40524756,
+      "replayBytes": 2490839,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 65,
+      "heapBytes": 25865513,
+      "replayBytes": 213299,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 70,
+      "heapBytes": 34976546,
+      "replayBytes": 2482046,
+      "effects": 3,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 75,
+      "heapBytes": 24277527,
+      "replayBytes": 2337470,
+      "effects": 8,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 80,
+      "heapBytes": 23271362,
+      "replayBytes": 856433,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 85,
+      "heapBytes": 44289736,
+      "replayBytes": 2371271,
+      "effects": 13,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 90,
+      "heapBytes": 19082537,
+      "replayBytes": 2465495,
+      "effects": 2,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 95,
+      "heapBytes": 27674850,
+      "replayBytes": 2182015,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 100,
+      "heapBytes": 36805090,
+      "replayBytes": 2245541,
+      "effects": 3,
+      "music": 0,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 105,
+      "heapBytes": 21638058,
+      "replayBytes": 2554531,
+      "effects": 0,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 110,
+      "heapBytes": 26858092,
+      "replayBytes": 608066,
+      "effects": 2,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 115,
+      "heapBytes": 24810466,
+      "replayBytes": 2466558,
+      "effects": 1,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 120,
+      "heapBytes": 37493649,
+      "replayBytes": 19556,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 125,
+      "heapBytes": 36029706,
+      "replayBytes": 2200621,
+      "effects": 5,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 130,
+      "heapBytes": 24075868,
+      "replayBytes": 2779035,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 135,
+      "heapBytes": 24710976,
+      "replayBytes": 2271411,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 140,
+      "heapBytes": 19503919,
+      "replayBytes": 1921329,
+      "effects": 7,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 145,
+      "heapBytes": 35945097,
+      "replayBytes": 2748746,
+      "effects": 4,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 150,
+      "heapBytes": 32991791,
+      "replayBytes": 2420101,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 155,
+      "heapBytes": 26651595,
+      "replayBytes": 1618001,
+      "effects": 3,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 160,
+      "heapBytes": 27313791,
+      "replayBytes": 2647088,
+      "effects": 3,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 165,
+      "heapBytes": 39723268,
+      "replayBytes": 2584363,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 170,
+      "heapBytes": 39450116,
+      "replayBytes": 1344594,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 175,
+      "heapBytes": 21423855,
+      "replayBytes": 2558194,
+      "effects": 12,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 180,
+      "heapBytes": 22544316,
+      "replayBytes": 2673321,
+      "effects": 4,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 185,
+      "heapBytes": 38979948,
+      "replayBytes": 1046907,
+      "effects": 10,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 190,
+      "heapBytes": 25934411,
+      "replayBytes": 2509572,
+      "effects": 5,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 195,
+      "heapBytes": 24078573,
+      "replayBytes": 2666476,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 200,
+      "heapBytes": 46817223,
+      "replayBytes": 765112,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 205,
+      "heapBytes": 45130298,
+      "replayBytes": 2454781,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 210,
+      "heapBytes": 46627673,
+      "replayBytes": 2665097,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 215,
+      "heapBytes": 25380239,
+      "replayBytes": 499440,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 220,
+      "heapBytes": 26957846,
+      "replayBytes": 2423487,
+      "effects": 2,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 225,
+      "heapBytes": 28479002,
+      "replayBytes": 2690088,
+      "effects": 1,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 230,
+      "heapBytes": 30886706,
+      "replayBytes": 191547,
+      "effects": 6,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 235,
+      "heapBytes": 34995077,
+      "replayBytes": 2370782,
+      "effects": 5,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 240,
+      "heapBytes": 23882554,
+      "replayBytes": 41543,
+      "effects": 8,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 245,
+      "heapBytes": 43071818,
+      "replayBytes": 2460703,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 250,
+      "heapBytes": 44894141,
+      "replayBytes": 2390688,
+      "effects": 18,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 255,
+      "heapBytes": 29244467,
+      "replayBytes": 2487171,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 260,
+      "heapBytes": 36927305,
+      "replayBytes": 1126764,
+      "effects": 2,
+      "music": 1,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 265,
+      "heapBytes": 25819867,
+      "replayBytes": 2442681,
+      "effects": 7,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 270,
+      "heapBytes": 33773523,
+      "replayBytes": 2704489,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 275,
+      "heapBytes": 28199032,
+      "replayBytes": 2395956,
+      "effects": 9,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 280,
+      "heapBytes": 42665577,
+      "replayBytes": 2541533,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 285,
+      "heapBytes": 19318795,
+      "replayBytes": 2287492,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 290,
+      "heapBytes": 24630996,
+      "replayBytes": 2234151,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 295,
+      "heapBytes": 25662567,
+      "replayBytes": 2160212,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 300,
+      "heapBytes": 31581129,
+      "replayBytes": 2394439,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 305,
+      "heapBytes": 22846365,
+      "replayBytes": 491108,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 310,
+      "heapBytes": 38215653,
+      "replayBytes": 2462475,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 315,
+      "heapBytes": 44639771,
+      "replayBytes": 2577270,
+      "effects": 6,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 320,
+      "heapBytes": 30546974,
+      "replayBytes": 2491323,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 325,
+      "heapBytes": 27651270,
+      "replayBytes": 2226426,
+      "effects": 5,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 330,
+      "heapBytes": 41574391,
+      "replayBytes": 2230484,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 335,
+      "heapBytes": 42244235,
+      "replayBytes": 2207729,
+      "effects": 3,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 340,
+      "heapBytes": 23415129,
+      "replayBytes": 2254249,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 345,
+      "heapBytes": 28056466,
+      "replayBytes": 2338493,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 350,
+      "heapBytes": 34546186,
+      "replayBytes": 2214755,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 355,
+      "heapBytes": 36098110,
+      "replayBytes": 2449667,
+      "effects": 2,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 360,
+      "heapBytes": 41968435,
+      "replayBytes": 45118,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 365,
+      "heapBytes": 23621134,
+      "replayBytes": 2556224,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 370,
+      "heapBytes": 19063556,
+      "replayBytes": 259092,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 375,
+      "heapBytes": 38052692,
+      "replayBytes": 2731148,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 380,
+      "heapBytes": 45145244,
+      "replayBytes": 484528,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 385,
+      "heapBytes": 35514154,
+      "replayBytes": 2775892,
+      "effects": 0,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 390,
+      "heapBytes": 20881956,
+      "replayBytes": 634875,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 395,
+      "heapBytes": 20904937,
+      "replayBytes": 2729947,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 400,
+      "heapBytes": 35636860,
+      "replayBytes": 842534,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 405,
+      "heapBytes": 21798106,
+      "replayBytes": 2722848,
+      "effects": 3,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 410,
+      "heapBytes": 20535926,
+      "replayBytes": 1013764,
+      "effects": 4,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 415,
+      "heapBytes": 25932664,
+      "replayBytes": 2673949,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 420,
+      "heapBytes": 30497015,
+      "replayBytes": 1200133,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 425,
+      "heapBytes": 26066990,
+      "replayBytes": 2606520,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 430,
+      "heapBytes": 31725814,
+      "replayBytes": 1379845,
+      "effects": 8,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 435,
+      "heapBytes": 20719536,
+      "replayBytes": 2624687,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 440,
+      "heapBytes": 20613384,
+      "replayBytes": 1605318,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 445,
+      "heapBytes": 26552714,
+      "replayBytes": 2585697,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 450,
+      "heapBytes": 27470449,
+      "replayBytes": 1795956,
+      "effects": 4,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 455,
+      "heapBytes": 20746888,
+      "replayBytes": 2572327,
+      "effects": 1,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 460,
+      "heapBytes": 30816635,
+      "replayBytes": 1999438,
+      "effects": 2,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 465,
+      "heapBytes": 40318320,
+      "replayBytes": 2536839,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 470,
+      "heapBytes": 37526122,
+      "replayBytes": 2181125,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 475,
+      "heapBytes": 31787329,
+      "replayBytes": 2507770,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 480,
+      "heapBytes": 23641314,
+      "replayBytes": 26481,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 485,
+      "heapBytes": 18226919,
+      "replayBytes": 1532962,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 490,
+      "heapBytes": 18299241,
+      "replayBytes": 1602113,
+      "effects": 2,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 495,
+      "heapBytes": 18362673,
+      "replayBytes": 1488857,
+      "effects": 4,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 500,
+      "heapBytes": 18722597,
+      "replayBytes": 1629324,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 505,
+      "heapBytes": 18708129,
+      "replayBytes": 1606178,
+      "effects": 3,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 510,
+      "heapBytes": 18780704,
+      "replayBytes": 1456545,
+      "effects": 4,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 515,
+      "heapBytes": 18555467,
+      "replayBytes": 1602450,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 520,
+      "heapBytes": 19758232,
+      "replayBytes": 1486100,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 525,
+      "heapBytes": 18723524,
+      "replayBytes": 1615786,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 530,
+      "heapBytes": 25457062,
+      "replayBytes": 1596349,
+      "effects": 3,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 535,
+      "heapBytes": 22175198,
+      "replayBytes": 1363924,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 540,
+      "heapBytes": 23110470,
+      "replayBytes": 1611777,
+      "effects": 2,
+      "music": 7,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 545,
+      "heapBytes": 25237170,
+      "replayBytes": 1478960,
+      "effects": 0,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 550,
+      "heapBytes": 23959802,
+      "replayBytes": 1603703,
+      "effects": 5,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 555,
+      "heapBytes": 23321358,
+      "replayBytes": 1596128,
+      "effects": 1,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 560,
+      "heapBytes": 19475706,
+      "replayBytes": 1279378,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 565,
+      "heapBytes": 24649654,
+      "replayBytes": 1617947,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 570,
+      "heapBytes": 22300399,
+      "replayBytes": 1468794,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 575,
+      "heapBytes": 25509926,
+      "replayBytes": 1602931,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 580,
+      "heapBytes": 20865802,
+      "replayBytes": 1585357,
+      "effects": 0,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 585,
+      "heapBytes": 19665455,
+      "replayBytes": 1198061,
+      "effects": 0,
+      "music": 7,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 590,
+      "heapBytes": 20652471,
+      "replayBytes": 1625287,
+      "effects": 5,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 595,
+      "heapBytes": 20295841,
+      "replayBytes": 1471743,
+      "effects": 4,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 600,
+      "heapBytes": 22694666,
+      "replayBytes": 60889,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 605,
+      "heapBytes": 24408175,
+      "replayBytes": 2229539,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 610,
+      "heapBytes": 21194485,
+      "replayBytes": 768022,
+      "effects": 8,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 615,
+      "heapBytes": 23675634,
+      "replayBytes": 2346462,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 620,
+      "heapBytes": 21735621,
+      "replayBytes": 1459554,
+      "effects": 5,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 625,
+      "heapBytes": 21343630,
+      "replayBytes": 2350981,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 630,
+      "heapBytes": 28515582,
+      "replayBytes": 2184140,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 635,
+      "heapBytes": 20142166,
+      "replayBytes": 693628,
+      "effects": 5,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 640,
+      "heapBytes": 20437370,
+      "replayBytes": 2352822,
+      "effects": 0,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 645,
+      "heapBytes": 20852610,
+      "replayBytes": 1437748,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 650,
+      "heapBytes": 31171165,
+      "replayBytes": 2351329,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 655,
+      "heapBytes": 26720763,
+      "replayBytes": 2138467,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 660,
+      "heapBytes": 26876150,
+      "replayBytes": 668265,
+      "effects": 10,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 665,
+      "heapBytes": 22400650,
+      "replayBytes": 2345953,
+      "effects": 4,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 670,
+      "heapBytes": 21297053,
+      "replayBytes": 1370366,
+      "effects": 4,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 675,
+      "heapBytes": 23769221,
+      "replayBytes": 2362415,
+      "effects": 3,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 680,
+      "heapBytes": 26944293,
+      "replayBytes": 2041177,
+      "effects": 3,
+      "music": 0,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 685,
+      "heapBytes": 22695446,
+      "replayBytes": 616092,
+      "effects": 9,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 690,
+      "heapBytes": 20646754,
+      "replayBytes": 2342997,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 695,
+      "heapBytes": 28764013,
+      "replayBytes": 1326377,
+      "effects": 8,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 700,
+      "heapBytes": 23771337,
+      "replayBytes": 2370062,
+      "effects": 3,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 705,
+      "heapBytes": 31177741,
+      "replayBytes": 2044321,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 710,
+      "heapBytes": 22937135,
+      "replayBytes": 546215,
+      "effects": 10,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 715,
+      "heapBytes": 29297662,
+      "replayBytes": 2329566,
+      "effects": 7,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    }
+  ],
+  "errors": [],
+  "cleanup": {
+    "replayFrames": 55,
+    "replayBytes": 1228529,
+    "effects": 0,
+    "music": 0
+  }
+}
