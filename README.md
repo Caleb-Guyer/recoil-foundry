@@ -6,13 +6,15 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+The browser release targets **Windows desktop/laptop with keyboard and mouse**. Edge has the most complete test coverage; basic gameplay is also owner-confirmed in Chrome and Firefox. Controller and touch support are experimental, and minimum hardware requirements are not established. [Browser support and known limitations](docs/browser-support.md).
+
 ## Stability checks · 2.96.1
 
 Replay JPEG encoding now runs in a worker on supported browsers, keeping expensive image readback off the game thread without lowering clip quality. Rapid retries keep encoding bounded across old runs, and unsupported worker features fall back safely. Unavailable video export and failed browser recorders leave the replay viewer usable and release their resources. The fallback clip download also supports controller menu focus.
 
 A separate [stability test](https://caleb-guyer.github.io/recoil-foundry/diagnostics.html?v=2.96.1) exercises heavy builds, portals, explosions, boss attacks and Overtime, with optional reduced effects and downloadable measurements. **It contains late-game spoilers.** It never saves progress or preferences and adds no diagnostic clutter to normal play. Reports now correlate delayed frames with preceding game/audio/report work and optional browser long-task observations; live output stays compact so the report itself does not grow during a run.
 
-[Verification report](docs/performance-stability-2.96.0.md) · [Frame-stall follow-up](docs/frame-stall-investigation-2.96.1.md) · [Hardware test procedure](docs/performance-testing.md). Finished software checks are removed from the [release checklist](docs/browser-release-checklist.md); low-end hardware and independent browser/device acceptance remain open.
+[Item 5 closeout](docs/performance-closeout-2.96.1.md) · [Verification report](docs/performance-stability-2.96.0.md) · [Frame-stall follow-up](docs/frame-stall-investigation-2.96.1.md) · [Optional test procedure](docs/performance-testing.md). Item 5 is closed under the owner's requested scope and removed from the [release checklist](docs/browser-release-checklist.md). Unavailable hardware tests and additional browser checks are recorded as deferred or waived; known performance limitations remain documented.
 
 ## Controls and accessibility · 2.95.0
 

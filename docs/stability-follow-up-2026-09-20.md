@@ -1,5 +1,7 @@
 # Stability follow-up — 20 September 2026
 
+**Closeout update:** item 5 is now [closed under the owner's revised scope](performance-closeout-2.96.1.md). The investigation below remains evidence of unresolved behavior; it is not an outstanding request to repeat skipped tests.
+
 Build 2.96.1. Attempted the remaining extended browser checks. **No long-run or hardware acceptance pass is claimed.** The owner later [confirmed basic gameplay in Chrome and Firefox](qa/performance-2.96.1/browser-owner-gameplay-check.json), explicitly saying longer tests were not done. Game code, saves, balance and rendering quality are unchanged.
 
 ## Access and conditions

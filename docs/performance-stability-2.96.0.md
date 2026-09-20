@@ -1,5 +1,7 @@
 # Performance and stability — 2.96.0
 
+**Closeout update:** item 5 is now [closed under the owner's requested scope](performance-closeout-2.96.1.md). Open-work statements below describe the original audit status; unavailable checks are now deferred and further browser testing is waived. Recorded measurements and their limits are unchanged.
+
 19 September 2026. Software verification for release checklist item 5. Daily remains ruleset 78. Combat simulation, upgrade balance and save formats are unchanged.
 
 ## Fixes and repeatable checks

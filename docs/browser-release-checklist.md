@@ -6,23 +6,13 @@ Updated 20 September 2026 against 2.96.1. This is the **unfinished work list** f
 
 Completed progress/recovery item 3 is archived in the [recovery report](progress-recovery-2.94.0.md), covering backups, atomic restore, visible saving failures, older saves, competing tabs and isolated modes.
 
-Completed settings/accessibility item 4 is archived in the [settings report](settings-accessibility-2.95.0.md), covering saved key bindings, separate volumes, menu focus/scrolling, reduced effects, non-color ally markers and input safety. Remaining device/performance work and the owner's browser-testing decision are recorded in section 5.
+Completed settings/accessibility item 4 is archived in the [settings report](settings-accessibility-2.95.0.md), covering saved key bindings, separate volumes, menu focus/scrolling, reduced effects, non-color ally markers and input safety.
+
+Item 5 is closed under the owner's requested scope in the [performance/stability closeout](performance-closeout-2.96.1.md). Available software checks passed; unavailable hardware tests and further browser checks are explicitly deferred or waived. The [support list and known limitations](browser-support.md) are published. This records release scope and evidence without claiming that skipped tests passed or unresolved performance issues were fixed.
 
 ## Scope
 
 The launch scope is frozen after the Auditor: the twenty-room campaign across five areas, 100 upgrades and branching builds, boss variants, optional challenges and events, Daily runs, Overtime, Practice, Workshop, run recaps, death replay, the Logbook, a secret ending, and cosmetic commendations. Remaining changes are fixes, tuning and essential usability work. The [balance closeout](balance-closeout-2.92.0.md#design-targets) defines the intended difficulty and duration for external validation.
-
-- [ ] Publish the supported browser/device/input list. Prioritize ordinary desktop/laptop play; advertise touch play only after it passes its own checks.
-
-## 5. Performance and stability — release blocker
-
-Completed software fixes, automated lifecycle checks and available-browser measurements are archived in the [performance/stability report](performance-stability-2.96.0.md), including the owner's Edge Quick, Soak and Reduced effects runs, replay export/playback, keyboard/mouse, focus/fullscreen, and retry/reward/room/menu checks. The [2.96.1 frame-stall follow-up](frame-stall-investigation-2.96.1.md) adds bounded per-frame/browser timing and compact live reporting. The owner's [Chrome confirmation](qa/performance-2.96.1/chrome-owner-check.json) covers the requested Quick test and replay review/export/playback. The later [Chrome and Firefox gameplay confirmation](qa/performance-2.96.1/browser-owner-gameplay-check.json) completes basic normal-gameplay checks in both browsers; the owner explicitly said longer tests were not done. The owner then [waived further browser testing](stability-follow-up-2026-09-20.md#owner-decision); the remaining Chrome/Firefox stress, replay and lifecycle checks have been removed as release requirements. This is a scope decision, not additional test evidence. The [test procedure](performance-testing.md) remains available for future investigations. Existing results do not establish low-end performance or full browser/input acceptance.
-
-- [ ] Verify supported physical controllers on supported browsers, including disconnect/reconnect, rumble and recovery after tab/fullscreen changes. Test real touch hardware before advertising touch support. Automated input/event tests and the in-app browser audit do not establish hardware support. The owner currently has no controller available for this check.
-- [ ] Profile on a representative low-end laptop at its normal screen resolution. Use dense late-game builds, boss attacks, portals, explosions, replay recording and Overtime. The owner currently has no lower-end laptop available; the high-end laptop results do not close this requirement.
-- [ ] Target stable 60 fps on the chosen baseline; investigate long frame stalls and sustained memory growth. Include the isolated stalls documented in the [Edge benchmark reports](performance-stability-2.96.0.md#owner-supplied-edge-reduced-effects-run); Reduced effects completed without dropped steps, but did not eliminate all frame stalls. The [20 September follow-up](stability-follow-up-2026-09-20.md) reproduced a persistent one-Hz slowdown during attempted in-app-browser soaks; those interrupted runs do not establish a pass or a root cause. If necessary, offer reduced visual effects that preserve physics and tells.
-
-Acceptance: no known reproducible crash, progress-loss or softlock bugs; baseline hardware remains playable in stress scenes; unsupported optional features fail gracefully.
 
 ## 6. Presentation, sound and endings — final polish
 
@@ -51,8 +41,8 @@ Acceptance: the release candidate passes the checklist, a fresh player can start
 ## Work order
 
 1. Run first-session playtests and start collecting the external balance feedback.
-2. Address findings from the playtests and input/device acceptance checks.
-3. Complete browser/hardware checks and presentation/audio polish.
+2. Address findings from the playtests within the published release support scope.
+3. Complete presentation/audio polish.
 4. Finish external release acceptance, fix blockers, tag and publish the full browser release.
 
 Cloud accounts, online leaderboards, multiplayer, more areas, more upgrade trees, a longer campaign, commissioned music and the Steam remake can remain future work. None is required to call this browser game complete.

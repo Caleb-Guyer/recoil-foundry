@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { performance } from 'node:perf_hooks';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.ts';
@@ -118,7 +118,7 @@ for (let retry = 0; retry < 60; retry++) {
 }
 assert.equal(saved, 0, 'Diagnostics must not write campaign progress');
 const report = {
-  version: '2.96.0',
+  version: JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version,
   runtime: process.version,
   platform: process.platform,
   cycles,

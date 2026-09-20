@@ -1,5 +1,7 @@
 # Frame-stall investigation — 2.96.1
 
+**Closeout update:** item 5 is [closed under the owner's requested scope](performance-closeout-2.96.1.md). Verification gaps below remain documented limitations; unavailable checks are deferred and additional browser testing is waived.
+
 Follow-up to [item 5 evidence](performance-stability-2.96.0.md). This patch changes the separate diagnostic page and version metadata. Ordinary combat, rendering, replay encoding, input, balance and Daily ruleset 78 are unchanged. The owner's completed Edge gameplay checks remain valid for those unchanged systems.
 
 Subsequent extended-run attempts and the reproduced frame-delivery slowdown are recorded in the [20 September follow-up](stability-follow-up-2026-09-20.md). Its failed runs qualify the earlier short-run observations below; the cause remains unresolved.

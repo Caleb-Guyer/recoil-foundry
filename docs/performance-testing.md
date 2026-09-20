@@ -1,5 +1,7 @@
 # Browser performance acceptance
 
+This procedure is retained for optional future testing. Release item 5 is closed under the [owner-approved scope](performance-closeout-2.96.1.md); it does not require reopening skipped tests. The [support list](browser-support.md) distinguishes observed results from waived or unavailable checks.
+
 Use the production [stability test](https://caleb-guyer.github.io/recoil-foundry/diagnostics.html) on each browser/device being considered for support. This separate diagnostic page contains late-game encounter spoilers. It does not save a run, unlock content, change preferences or upload its report.
 
 ## Capture a comparable result
