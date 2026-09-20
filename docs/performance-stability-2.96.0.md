@@ -57,6 +57,27 @@ The final [1920×1080, full-effects worker run](qa/performance-2.96/browser-work
 
 Capture's measured maximum was **0.5 ms**. One explosion-scene frame reached 79.3 ms; one portal simulation step was dropped (the dropped-step counter includes warm-up/transitions while timing histograms exclude initial warm-up). Those outliers remain in the report. JS heap ranged from 13.4 to 41.6 MiB; replay storage peaked at 2.50 MiB, and effects/music voices returned to zero. Off-thread encoding still consumes resources: these timings measure main-thread calls, not total GPU/worker time. Runs are single observations on the available high-end machine, not minimum-spec certification or a controlled hardware benchmark.
 
+## Owner-supplied Edge Quick run
+
+The owner supplied the [original three-minute report](qa/performance-2.96/browser-edge-owner-quick.json), generated **20 September 2026 at 03:14:22 UTC** (19 September, 22:14 CDT). Its user agent identifies **Edge 153**, not Chrome, despite containing the Chromium `Chrome/153` token. The exact running patch version is not exposed by this report; the earlier installed Edge executable reported 153.0.4234.32. The report records 24 logical cores, 32 GiB device memory, and a **2552×1308** canvas at pixel ratio 1. Full effects, audio and replay were enabled. Power mode, active GPU and background load were not recorded.
+
+All six scenarios completed, with **zero application errors**, eight clears, and the document visible/focused at every five-second memory sample. This is a completed load test with unresolved frame stalls, rather than final Edge acceptance:
+
+| Scenario     | Mean frame delivery | Frame interval p95 | Longest frame | Frames over 50 ms | Dropped steps |
+| ------------ | ------------------: | -----------------: | ------------: | ----------------: | ------------: |
+| Volley       |           239.8 fps |             4.3 ms |       16.7 ms |                 0 |             0 |
+| Explosions   |           233.4 fps |             4.3 ms |       45.9 ms |                 0 |             0 |
+| Portals      |           214.7 fps |             8.3 ms |      121.0 ms |                 5 |             7 |
+| Beam         |           183.5 fps |            12.4 ms |      104.2 ms |                 1 |             3 |
+| Boss arsenal |           197.1 fps |            12.4 ms |       20.8 ms |                 0 |             0 |
+| Overtime     |           205.9 fps |            12.4 ms |       20.9 ms |                 0 |             0 |
+
+The six measured frames above 50 ms and ten dropped simulation steps remain open for investigation. Dropped-step totals include warm-up/transitions; the timing table excludes each scenario's first two seconds. The report's `timingWarning` is null because that field only flags intervals over 250 ms, not because this was stall-free. Synchronous replay capture p95 stayed at 0.1 ms, with a 0.4 ms maximum; measured simulation and rendering maxima were 7.8 ms and 2.3 ms. These separate histograms do not identify the cause of the longer frame intervals or rule out asynchronous encoding, GPU, browser scheduling or other work.
+
+Sampled JS heap varied between **14.9 and 42.7 MiB**, falling repeatedly between peaks; the last sample was 31.4 MiB. Replay retention peaked at **2.63 MiB**. Effects and music voices returned to zero at cleanup, with 96 replay frames retained for review. This short run shows no monotonic sampled heap growth, but does not establish long-term/native-memory stability. A twelve-minute Soak and a Reduced effects Quick run in the same browser/device remain necessary to check persistence and compare load. If stalls repeat, compare a Quick run with replay capture off to help isolate the cost; the acceptance run still requires capture on.
+
+The raw attachment is preserved without edits (SHA-256 `fefc6f91666072cd3a0b7278f1387d6635ed9dd11306864d27612ec8dd7aa100`). This report supplies Edge Quick evidence only; it does not establish Chrome performance, physical input, exported-video playback in Edge, or minimum-device acceptance.
+
 ## Playback and export checks
 
 The real replay viewer opened the worker-generated clip, paused/resumed, and encoded a video through MediaRecorder to **Clip ready** with the fallback Download clip link and no console errors. Closing the viewer restored the diagnostic controls. The later 1080p run retained 98 replay frames and a valid report download completed.
@@ -67,7 +88,7 @@ A subsequent public-build recheck on 19 September at 22:05 CDT **did deliver a n
 
 **Standalone Chrome replay export and downloaded playback passed the owner's manual check.** The owner followed the public death/replay/export test in Chrome, explicitly confirmed that the newly downloaded video plays correctly, and supplied that new file. The [Chrome playback receipt](qa/performance-2.96/replay-chrome-playback.json) records its creation time, 252,411-byte size and SHA-256. Chrome's installed executable reports **153.0.8010.50**; its running About screen was not independently inspected. Playback is owner-observed evidence, rather than an agent-controlled browser or header-only check.
 
-Chrome stress and full physical-input acceptance, independent Edge/Firefox checks and baseline-device acceptance remain in item 5. The owner has started the manual verification handoff for the available laptop; no stress-run or physical-input result is inferred from the successful video check.
+Chrome stress and full physical-input acceptance, the remaining Edge checks, independent Firefox checks and baseline-device acceptance remain in item 5. The Edge Quick report is analyzed above; no other stress-run or physical-input result is inferred from the successful video check.
 
 ## Automated verification
 
