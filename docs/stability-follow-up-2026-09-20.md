@@ -1,10 +1,10 @@
 # Stability follow-up — 20 September 2026
 
-Build 2.96.1. Attempted the remaining extended browser checks. **No new browser/device acceptance pass is claimed.** Game code, saves, balance and rendering quality are unchanged.
+Build 2.96.1. Attempted the remaining extended browser checks. **No long-run or hardware acceptance pass is claimed.** The owner later [confirmed basic gameplay in Chrome and Firefox](qa/performance-2.96.1/browser-owner-gameplay-check.json), explicitly saying longer tests were not done. Game code, saves, balance and rendering quality are unchanged.
 
 ## Access and conditions
 
-Opening standalone Chrome through the available browser tool returned `Browser is not available: chrome`. The available controlled browser remains Codex's Chromium-based in-app browser. The owner's earlier Chrome Quick/replay confirmation remains valid; it does not provide a measured long run. Firefox, physical controllers and a representative lower-end laptop remain unavailable for these checks.
+Opening standalone Chrome through the available browser tool returned `Browser is not available: chrome`. The available controlled browser remains Codex's Chromium-based in-app browser. The owner's earlier Chrome Quick/replay confirmation remains valid; it does not provide a measured long run. Firefox has no connected automation surface. Physical controllers and a representative lower-end laptop remain unavailable for these checks.
 
 The laptop reported the **High performance** power scheme, Win32 battery status 2 and 76% charge. Intel and NVIDIA adapters reported 240 Hz displays at 2560×1440 and 2560×1600; the active browser GPU was not identified. No local build or automated test suite ran during the measurements. Other user workloads were not controlled. No power, security or browser settings were changed.
 
@@ -31,7 +31,7 @@ Finally, [disabling audio and replay and enabling Reduced effects](qa/performanc
 
 ## Evidence limits and next decision
 
-Only the first new run produced a retrieved download. Later download requests produced no file in the inspected Downloads location; an explicit download-event wait also timed out. The later JSON artifacts clearly identify themselves as selected values read from the visible page report, not complete raw downloads. The unsupported tab-content-export capability was not used to claim an export. Histories remained bounded, and discarded-entry counters are preserved where observed.
+Initially, only the first new run produced a retrieved download; later requests produced no file in the inspected Downloads location, and an explicit download-event wait timed out. During the subsequent evidence check, `recoil-foundry-stability (12).json` was found and verified against the recorded 385-second local run. Its [complete report](qa/performance-2.96.1/browser-local-stall-full.json) is now archived unchanged, with SHA-256 `11676e356f116a5428637d4bcb5275e2914051185f531984afc8bb637e79114b`. The other observation artifacts remain clearly labeled as selected values read from the visible page, not complete raw downloads. Histories remained bounded, and discarded-entry counters are preserved where observed.
 
 The slowdown is reproducible in this testing session, but its cause is **unresolved**. Browser/host scheduling, native/GPU work, asynchronous encoding and interaction with other workloads are not separated by these measurements. The normal animation-only control and initially normal local game prevent a blanket attribution to the entire browser or only the public host. Short synchronous callbacks do not rule out work outside those callbacks.
 

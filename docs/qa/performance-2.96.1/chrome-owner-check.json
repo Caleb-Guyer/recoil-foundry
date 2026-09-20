@@ -13,5 +13,6 @@
   "evidenceType": "Owner observation, interpreted in the scope of the immediately preceding test request",
   "benchmarkReportReceived": false,
   "replayFileReceived": false,
-  "limits": "No FPS, frame-stall, memory or error-count measurements are inferred. Soak, Reduced effects, normal-game physical input, focus/fullscreen transitions and full campaign play remain unverified in Chrome. The version comes from the installed executable inspected before the reply, not a running browser About screen; the build is the requested URL, not an inspected report. This provides no Firefox, controller, touch or low-end-device acceptance."
+  "laterGameplayConfirmation": "browser-owner-gameplay-check.json",
+  "limits": "No FPS, frame-stall, memory or error-count measurements are inferred. Soak, Reduced effects, focus/fullscreen transitions and full campaign play remain unverified in Chrome; basic normal gameplay was confirmed separately in the linked follow-up. The version comes from the installed executable inspected before the reply, not a running browser About screen; the build is the requested URL, not an inspected report. This original receipt provides no Firefox, controller, touch or low-end-device acceptance."
 }

@@ -1,0 +1,13 @@
+{
+  "localDate": "2026-09-20",
+  "buildContext": "2.96.1",
+  "buildIndependentlyVerified": false,
+  "initialOwnerReply": "Both work.",
+  "ownerClarification": "Chrome and Firefox gameplay works; longer tests not done",
+  "passedByOwnerConfirmation": [
+    "Basic normal gameplay in standalone Chrome",
+    "Basic normal gameplay in standalone Firefox"
+  ],
+  "evidenceType": "Owner observation with an explicit clarification of scope",
+  "limits": "No longer performance tests, measured FPS/stalls/memory, full campaign, or individual pause/retry/reward/menu/focus/fullscreen checks are inferred. Firefox replay export/playback remains unconfirmed. The earlier Chrome Quick/replay confirmation is preserved separately. Running browser versions and test conditions were not provided with this reply. Controller, touch and lower-end-device acceptance are not covered."
+}

@@ -1,5 +1,6 @@
 {
-  "evidenceType": "Selected values read from the diagnostic page's visible JSON report; download event timed out",
+  "evidenceType": "Selected values read from the diagnostic page's visible JSON report; download event timed out, but the full report was subsequently found and archived",
+  "subsequentlyRetrievedFullReport": "browser-local-stall-full.json",
   "localDate": "2026-09-20",
   "version": "2.96.1",
   "browser": "Codex in-app browser, Chromium UA 153.0.0.0",
