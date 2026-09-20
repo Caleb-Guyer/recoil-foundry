@@ -43,6 +43,8 @@ All **1,552 automated tests passed**. Six focused diagnostic/statistics tests al
 
 ## Remaining acceptance
 
+The later [owner decision](stability-follow-up-2026-09-20.md#owner-decision) waives further Chrome/Firefox browser checks. The verification gaps described below document evidence limits and are no longer requests to repeat those browser tests.
+
 The owner subsequently replied **"Chrome works."** to the request to run Quick with Audio and Replay capture on, review/export the clip and play the downloaded video in standalone Chrome. The [Chrome receipt](qa/performance-2.96.1/chrome-owner-check.json) records this as functional acceptance of that requested flow. No Chrome JSON report or replay file has been supplied, so this confirmation establishes no measured FPS, stall count or memory result. The owner later [confirmed basic gameplay in Chrome and Firefox](qa/performance-2.96.1/browser-owner-gameplay-check.json), explicitly excluding longer tests. Chrome Soak, Reduced effects and the specific lifecycle/window-transition checks still need verification. The installed Chrome executable was version 153.0.8010.50; the running About screen was not independently inspected.
 
 The owner confirmed that neither a physical controller nor a lower-end laptop is currently available. Those checks remain open. Current automation exposes only the Codex in-app browser; standalone Chrome is not independently controllable, and Firefox has no connected browser surface. Full Firefox acceptance beyond basic gameplay, controller, touch and low-end-device acceptance remain unverified. The owner's separate Edge reports and manual confirmations remain the evidence for Edge.
