@@ -14,6 +14,8 @@ Also used for stable 2.98.0, which preserves the candidate's combat and visuals.
 
 The title page provides Open Graph and Twitter card metadata, an absolute public image URL and descriptive alternative text. Platforms control their own caches and previews.
 
+The [itch.io launch kit](itch-io/README.md) includes a 1260 × 1000 cover and 1600 × 450 header using the same wordmark and Loading Docks engine capture. These store assets live in the documentation folder and are not added to the playable site's download.
+
 ## Capture method
 
 `scripts/release-media.ts` drives the actual `Game` and `Renderer` using fixed seeds, legal isolated checkpoints and scripted controls. Health, recoil, enemies and collisions remain active. No player invulnerability, enemy freezing or invented combat effects. The browser's small HTML HUD is drawn from current game values for the offline render. These are engine captures, not evidence of human playtests or browser performance. The clip is silent and cannot verify audio.

@@ -2,7 +2,7 @@
 
 **One gun. All recoil.**
 
-[Play free in your browser](https://caleb-guyer.github.io/recoil-foundry/) · [Watch gameplay](https://caleb-guyer.github.io/recoil-foundry/media/gameplay.mp4)
+[Play free on itch.io](https://caleb-guyer.itch.io/recoil-foundry) · [GitHub mirror](https://caleb-guyer.github.io/recoil-foundry/) · [Watch gameplay](https://caleb-guyer.github.io/recoil-foundry/media/gameplay.mp4)
 
 A physics roguelike set inside a hostile factory. Build one gun between fights, use its kick to throw yourself through the air, and survive twenty rooms across five areas. Shoot down. Go up.
 
@@ -33,7 +33,7 @@ Shooting downward while airborne lifts you up. Shooting sideways pushes you the 
 
 ## Saves, settings and help
 
-Progress stays in this browser on this device. **Settings → Progress** exports a backup or restores one. Moving to another browser does not move your save automatically.
+Progress stays in this browser on this device. **Settings → Progress** exports a backup or restores one. Moving to another browser or between itch.io and the GitHub mirror does not move your save automatically; export from the old location, then import at the new one.
 
 If the game is silent, check **Sound**, **Music enabled**, and both volume sliders in Settings. **Reduced effects** lowers shake, flashes and particles while keeping attack warnings visible.
 
@@ -52,6 +52,6 @@ npm run dev
 
 `npm test` runs the automated checks. `npm run build` creates the static site in `dist/`. Pushing `main` runs tests, builds and deploys to GitHub Pages.
 
-[Release completion](docs/browser-release-checklist.md) · [Media kit](docs/release-media.md) · [Development history](docs/development-history.md)
+[Release completion](docs/browser-release-checklist.md) · [Media kit](docs/release-media.md) · [itch.io launch](docs/itch-io/README.md) · [Development history](docs/development-history.md)
 
 A game by Caleb Guyer. Built with TypeScript, Vite and Matter.js. [MIT license](LICENSE) · [Third-party notices](public/third-party-notices.txt).
