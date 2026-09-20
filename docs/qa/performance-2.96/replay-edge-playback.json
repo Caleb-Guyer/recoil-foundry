@@ -1,0 +1,20 @@
+{
+  "build": "2.96.0",
+  "localDate": "2026-09-19",
+  "browser": "Standalone Edge on the owner's Windows laptop",
+  "installedEdgeVersion": "153.0.4234.32",
+  "source": "https://caleb-guyer.github.io/recoil-foundry/?test=replay&v=2.96.0",
+  "verification": "The owner performed the death/replay/export test and explicitly confirmed that the newly downloaded video plays correctly, then supplied that file. After submitting the Reduced effects report, the owner clarified that the replay test was in Edge.",
+  "browserCorrection": "Initially attributed to Chrome from the wording of the test request. The owner's explicit clarification establishes Edge; this receipt provides no Chrome acceptance evidence.",
+  "fileDeliveryVerified": true,
+  "downloadedVideoPlaybackVerified": true,
+  "playbackEvidence": "Owner observation; not agent-controlled browser playback",
+  "file": {
+    "name": "recoil-foundry-last-moments (2).webm",
+    "createdAtUtc": "2026-09-20T03:07:46.1645675Z",
+    "bytes": 252411,
+    "sha256": "da718abb73d719d3f024f65e6bb0f302351326004417042f0f543c9bf3735b29",
+    "ebmlHeaderHex": "1a45dfa3"
+  },
+  "limits": "This receipt confirms the Edge replay export/playback flow only. Separate reports cover Edge benchmarks and basic keyboard/mouse checks. Chrome/Firefox, physical controllers and a representative low-end laptop remain pending. The version is from the installed executable, not a browser About screen."
+}

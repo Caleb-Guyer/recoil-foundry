@@ -74,7 +74,7 @@ All six scenarios completed, with **zero application errors**, eight clears, and
 
 The six measured frames above 50 ms and ten dropped simulation steps remain open for investigation. Dropped-step totals include warm-up/transitions; the timing table excludes each scenario's first two seconds. The report's `timingWarning` is null because that field only flags intervals over 250 ms, not because this was stall-free. Synchronous replay capture p95 stayed at 0.1 ms, with a 0.4 ms maximum; measured simulation and rendering maxima were 7.8 ms and 2.3 ms. These separate histograms do not identify the cause of the longer frame intervals or rule out asynchronous encoding, GPU, browser scheduling or other work.
 
-Sampled JS heap varied between **14.9 and 42.7 MiB**, falling repeatedly between peaks; the last sample was 31.4 MiB. Replay retention peaked at **2.63 MiB**. Effects and music voices returned to zero at cleanup, with 96 replay frames retained for review. This short run shows no monotonic sampled heap growth, but does not establish long-term/native-memory stability. It prompted the twelve-minute Soak analyzed below. A Reduced effects Quick run remains pending to compare load. If stalls repeat there, compare a Quick run with replay capture off to help isolate the cost; the acceptance run still requires capture on.
+Sampled JS heap varied between **14.9 and 42.7 MiB**, falling repeatedly between peaks; the last sample was 31.4 MiB. Replay retention peaked at **2.63 MiB**. Effects and music voices returned to zero at cleanup, with 96 replay frames retained for review. This short run shows no monotonic sampled heap growth, but does not establish long-term/native-memory stability. It prompted the twelve-minute Soak and Reduced effects Quick runs analyzed below. If further profiling is needed to attribute the remaining stalls, a replay-disabled comparison can help isolate capture overhead; such a comparison cannot replace acceptance with capture enabled.
 
 The raw attachment is preserved without edits (SHA-256 `fefc6f91666072cd3a0b7278f1387d6635ed9dd11306864d27612ec8dd7aa100`). This report supplies Edge Quick evidence only; it does not establish Chrome performance, physical input, exported-video playback in Edge, or minimum-device acceptance.
 
@@ -97,7 +97,26 @@ The Quick run's portal/beam frames over 50 ms did not recur during their longer 
 
 All **145 memory samples** reported the document visible/focused and audio running. Sampled JS heap ranged from **17.4 to 44.7 MiB**, with repeated drops: per-scenario minima were 18.2, 18.6, 18.4, 18.2, 17.4 and 19.2 MiB. The first and last samples were 19.2 and 27.9 MiB. This is evidence against sustained sampled-JS-heap growth during this run, not a total native/GPU-memory measurement or proof of absence of leaks. Replay retention peaked at **2.65 MiB**; cleanup left **zero effects/music voices**, with 55 replay frames (1.17 MiB) intentionally retained for review.
 
-The twelve-minute execution check is complete and removed from the unfinished checklist. Reduced effects, remaining hitch investigation, physical input/gameplay, Edge replay playback, other browsers and a representative low-end laptop remain open. No additional identical Soak is required unless follow-up findings or changes justify it. The raw attachment is preserved without edits (SHA-256 `846daa36d37c25abff36f082a31a9183a84b2daa2cd5f8b2489b401afe5d5015`).
+The twelve-minute execution check is complete and removed from the unfinished checklist. Reduced effects, Edge replay playback and basic keyboard/mouse checks are covered below. Remaining hitch investigation, full browser/input acceptance and a representative low-end laptop remain open. No additional identical Soak is required unless follow-up findings or changes justify it. The raw attachment is preserved without edits (SHA-256 `846daa36d37c25abff36f082a31a9183a84b2daa2cd5f8b2489b401afe5d5015`).
+
+## Owner-supplied Edge Reduced effects run
+
+The [original Reduced effects Quick report](qa/performance-2.96/browser-edge-owner-reduced.json) was generated **20 September 2026 at 03:52:10 UTC** (19 September, 22:52 CDT) in **Edge 153**, build **2.96.0**. Reduced effects was enabled; audio and replay capture remained enabled. All six 30-second scenarios completed with **zero application errors**, **zero dropped simulation steps**, nine clears and one linked-portal setup. The **2552×1308** canvas, pixel ratio 1 and viewport match the original full-effects Quick run. Power mode, active GPU and competing load remain uncontrolled.
+
+| Scenario     | Mean frame delivery | Frame interval p95 | Longest frame | Frames over 50 ms |
+| ------------ | ------------------: | -----------------: | ------------: | ----------------: |
+| Volley       |           231.1 fps |             4.3 ms |       20.9 ms |                 0 |
+| Explosions   |           227.8 fps |             4.3 ms |       37.5 ms |                 0 |
+| Portals      |           219.6 fps |             4.3 ms |       54.2 ms |                 1 |
+| Beam         |           235.5 fps |             4.3 ms |       21.0 ms |                 0 |
+| Boss arsenal |           234.3 fps |             4.3 ms |       25.4 ms |                 0 |
+| Overtime     |           232.8 fps |             4.3 ms |       58.4 ms |                 1 |
+
+There were **two frames over 50 ms among 38,673 measured intervals**, compared with six in the earlier full-effects Quick run. The longest interval fell from 121.0 to 58.4 ms and every scenario's p95 was 4.3 ms. These observations do not establish that Reduced effects caused the change or eliminates stalls: mean FPS did not improve in every scene, and the intervening full-effects Soak also delivered a 4.3 ms p95 in every scene. No measured interval crossed the 250 ms warning threshold. Synchronous simulation, rendering and replay-capture maxima were 4.9, 4.4 and 0.5 ms respectively; their aggregate histograms do not identify the source of the two longer intervals.
+
+All **37 memory samples** reported visible/focused and audio running. Sampled JS heap ranged from **14.9 to 45.2 MiB**, repeatedly returning to approximately 20–22 MiB after warm-up; the last sample was 35.1 MiB. Replay retention peaked at **2.58 MiB**. Effects and music voices returned to zero at cleanup, with 96 replay frames (2,092,854 bytes) retained for review. This short run shows no monotonically accumulating sampled heap or audio-voice backlog; native/GPU memory was not measured.
+
+The requested Edge full-effects Quick, twelve-minute Soak and Reduced effects Quick executions are now complete. The Reduced effects execution check is removed from the unfinished list. This completes the benchmark set on the available laptop, not all of item 5: isolated hitch attribution, remaining browser/input checks and low-end-device acceptance remain open. Do not repeat the same benchmark set without a concrete new finding or change to verify. The original attachment is preserved without edits (SHA-256 `62ca9d2f8f35332727083fdf07b9d6a6d3a7f033519cbe28561e04dfecc259de`).
 
 ## Playback and export checks
 
@@ -107,9 +126,13 @@ During the first worker viewer check no new video file appeared in Downloads aft
 
 A subsequent public-build recheck on 19 September at 22:05 CDT **did deliver a new video file** through the ordinary Save clip action. The browser tool's download event timed out after 15 seconds, but a later filesystem check established a fresh 324,782-byte WebM with a matching creation time. The viewer reached Clip ready without console warnings or errors. The [download receipt](qa/performance-2.96/replay-download-recheck.json) records its timestamp, size, SHA-256 and WebM header. A missing tool event therefore cannot be treated as proof of failed delivery. This recheck used no direct blob navigation or workaround.
 
-**Standalone Chrome replay export and downloaded playback passed the owner's manual check.** The owner followed the public death/replay/export test in Chrome, explicitly confirmed that the newly downloaded video plays correctly, and supplied that new file. The [Chrome playback receipt](qa/performance-2.96/replay-chrome-playback.json) records its creation time, 252,411-byte size and SHA-256. Chrome's installed executable reports **153.0.8010.50**; its running About screen was not independently inspected. Playback is owner-observed evidence, rather than an agent-controlled browser or header-only check.
+**Standalone Edge replay export and downloaded playback passed the owner's manual check.** The owner performed the public death/replay/export test, explicitly confirmed that the newly downloaded video plays correctly, and supplied that new file. The [Edge playback receipt](qa/performance-2.96/replay-edge-playback.json) records its creation time, 252,411-byte size and SHA-256. The owner subsequently clarified that this was **Edge**, correcting the earlier attribution to Chrome from the question's wording. This test provides no Chrome acceptance evidence. Edge's installed executable reports **153.0.4234.32**; its running About screen was not independently inspected. Playback is owner-observed evidence, rather than an agent-controlled browser or header-only check.
 
-Chrome stress and full physical-input acceptance, the remaining Edge checks, independent Firefox checks and baseline-device acceptance remain in item 5. The Edge Quick and Soak reports are analyzed above; no other stress-run or physical-input result is inferred from the successful video check.
+## Owner-confirmed Edge input checks
+
+After the Reduced effects run, the owner explicitly confirmed that **movement, aiming, shooting, pause/resume, switching away and returning, and entering/exiting fullscreen all work in Edge**. The [manual input receipt](qa/performance-2.96/edge-owner-input-check.json) records this as owner-observed physical keyboard/mouse and browser-window evidence. Those specific acceptance checks are complete and removed from the unfinished list. This does not separately attest to retry/reward/room-transition UI flows, a whole-campaign playthrough, physical controllers, rumble or touch.
+
+The Edge benchmark set, basic keyboard/mouse/window checks and replay export/playback are complete. Remaining isolated hitch investigation, Edge retry/room-transition/menu smoke checks, independent Chrome/Firefox testing, controller acceptance and baseline-device acceptance remain in item 5. No unperformed browser or device check is inferred from these results.
 
 ## Automated verification
 
