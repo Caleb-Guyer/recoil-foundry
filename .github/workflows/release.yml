@@ -1,7 +1,7 @@
-name: Package browser release candidate
+name: Package browser release
 on:
   push:
-    tags: ['v*-rc.*']
+    tags: ['v*']
 permissions:
   contents: read
 concurrency:
@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     env:
       RELEASE_TAG: ${{ github.ref_name }}
     steps:
@@ -20,20 +21,31 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Validate candidate and prepare notes
-        run: node scripts/release-notes.mjs "$RELEASE_TAG" > candidate-notes.md
+      - name: Validate version and prepare notes
+        run: node scripts/release-notes.mjs "$RELEASE_TAG" > release-notes.md
+      - name: Require the same commit to have passed Pages CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/runs" \
+            --raw-field head_sha="$GITHUB_SHA" --raw-field per_page=100 \
+            | node scripts/verify-release-deployment.mjs "$GITHUB_SHA"
       - run: npm ci
-      - run: npm test
       - run: npm run build
       - name: Package static site
         working-directory: dist
         run: zip -qr "../recoil-foundry-$RELEASE_TAG-site.zip" .
-      - name: Publish prerelease
+      - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create "$RELEASE_TAG"
-          "recoil-foundry-$RELEASE_TAG-site.zip"
-          --verify-tag --prerelease
-          --title "Recoil Foundry $RELEASE_TAG"
-          --notes-file candidate-notes.md
+        run: |
+          if [[ "$RELEASE_TAG" == *-rc.* ]]; then
+            release_flags=(--prerelease)
+          else
+            release_flags=(--latest)
+          fi
+          gh release create "$RELEASE_TAG" \
+            "recoil-foundry-$RELEASE_TAG-site.zip" \
+            --verify-tag "${release_flags[@]}" \
+            --title "Recoil Foundry $RELEASE_TAG" \
+            --notes-file release-notes.md

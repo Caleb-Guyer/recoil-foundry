@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The current candidate is **2.98.0-rc.1**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. Later presentation and release-packaging checks are recorded in their reports.
+Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **2.98.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [final release closeout](browser-release-closeout-2.98.0.md) records subsequent software and browser smoke checks.
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,7 +21,7 @@ Reduced effects is available in Settings. It reduces camera shake, cosmetic part
 
 ## Known limitations
 
-- External first-time-player observations, human balance/duration acceptance and physical headphone/laptop-speaker listening were unavailable for the release candidate. They remain unverified. See the [remaining release checks](browser-release-checklist.md).
+- External first-time-player observations, human balance/duration acceptance and physical headphone/laptop-speaker listening remain unverified. They are accepted release limitations under the owner's best-effort final-release direction, with optional future feedback welcome. See the [release closeout](browser-release-closeout-2.98.0.md).
 - The Edge stress reports contain occasional frame stalls, including a 141.7 ms maximum in the Soak run. Reduced effects did not remove every hitch. These remain known performance limitations, not fixed results.
 - Extended tests in the embedded browser developed severe frame-delivery slowdowns. Their cause remains unresolved. The independently supplied Edge Soak did not reproduce that one-frame-per-second pattern. See the [investigation](stability-follow-up-2026-09-20.md).
 - Physical controller reconnect/rumble behavior and low-end performance remain unverified. Additional browser stress and lifecycle tests were waived by the owner; unavailable hardware checks were deferred during [item 5 closeout](performance-closeout-2.96.1.md).

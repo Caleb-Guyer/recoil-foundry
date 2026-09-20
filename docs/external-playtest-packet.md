@@ -1,6 +1,6 @@
 # External session packet
 
-**Status: prepared, no participants or listening sessions recorded.** Use anonymous IDs; do not collect names, email addresses or personal files. This packet is for the moderator, not an in-game checklist or a list of spoilers to give new players.
+**Status: optional post-release feedback; no participants or listening sessions recorded.** The owner accepted these unavailable checks as launch limitations in the [final release closeout](browser-release-closeout-2.98.0.md). Use anonymous IDs; do not collect names, email addresses or personal files. This packet is for the moderator, not an in-game checklist or a list of spoilers to give new players.
 
 ## First sessions
 
@@ -26,4 +26,4 @@ Use a comfortable listening level. Check whether a warning can be identified thr
 
 ## Findings
 
-Record each finding as an issue with version/mode/seed/room, steps, expected and observed behavior. Remove personal details before sharing. Apply the [triage procedure](release-operations.md); retest fixes with the affected flow or build. Only then update the remaining acceptance checks. Unavailable sessions stay unverified.
+Record each finding as an issue with version/mode/seed/room, steps, expected and observed behavior. Remove personal details before sharing. Apply the [triage procedure](release-operations.md); retest fixes with the affected flow or build. Unavailable sessions stay unverified; this optional packet does not reopen the closed launch checklist.

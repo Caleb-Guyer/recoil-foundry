@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-The full browser content is available in **2.98.0-rc.1**, a release candidate. External first-time-player feedback and physical headphone/speaker listening are still unverified. [Release notes](docs/releases/2.98.0-rc.1.md).
+**The full browser release is complete: 2.98.0.** Future fixes and updates can continue. [Release notes](docs/releases/2.98.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v2.98.0).
 
 ## Controls
 
@@ -52,6 +52,6 @@ npm run dev
 
 `npm test` runs the automated checks. `npm run build` creates the static site in `dist/`. Pushing `main` runs tests, builds and deploys to GitHub Pages.
 
-[Remaining release checks](docs/browser-release-checklist.md) · [Media kit](docs/release-media.md) · [Development history](docs/development-history.md)
+[Release completion](docs/browser-release-checklist.md) · [Media kit](docs/release-media.md) · [Development history](docs/development-history.md)
 
 A game by Caleb Guyer. Built with TypeScript, Vite and Matter.js. [MIT license](LICENSE) · [Third-party notices](public/third-party-notices.txt).

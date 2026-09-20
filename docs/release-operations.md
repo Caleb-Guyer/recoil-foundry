@@ -1,28 +1,31 @@
 # Browser release operations
 
-## Candidate and rollback point
+## Stable release and rollback points
 
-- Candidate tag: `v2.98.0-rc.1`.
-- Previous deployed version: 2.97.0 at `9f5707fa7a6c3f9fab507f48ad026d37da2b8e02`.
-- Rollback tag: `browser-rollback-2.97.0`.
+- Stable tag: `v2.98.0`.
+- Previous verified candidate: `v2.98.0-rc.1` at `ce13cc258e26c13f5504856e76b458a17d3cdb1a`.
+- Earlier rollback tag: `browser-rollback-2.97.0` at `9f5707fa7a6c3f9fab507f48ad026d37da2b8e02`.
 - Deployment: [GitHub Actions](https://github.com/Caleb-Guyer/recoil-foundry/actions/workflows/deploy.yml), tests and build before Pages publication.
 
 ## Triage
 
 Use [GitHub issues](https://github.com/Caleb-Guyer/recoil-foundry/issues). Record version, mode, seed, room, build, exact steps, expected and observed behavior. Ask for browser/device details only when relevant. Never require a whole browser profile or private information.
 
-Stop final promotion for repeatable crashes, lost saves, progression blocks, inaccessible core controls or a broken deployed build. Fix the smallest cause, add a meaningful regression check, retest the affected flow and rerun the required suite/build. Keep lesser problems in [known limitations](browser-support.md) with a workaround and evidence. No human feedback has been collected yet; an empty feedback queue does not establish that the game has no bugs.
+Prioritize repeatable crashes, lost saves, progression blocks, inaccessible core controls or a broken deployed build. Fix the smallest cause, add a meaningful regression check, retest the affected flow and run required tests/build. Keep lesser problems in [known limitations](browser-support.md) with a workaround and evidence. An empty feedback queue does not establish that the game has no bugs.
 
-## Publish
+## Publish an update
 
-1. Run `npm ci`, `npm test`, `npm run build` on the candidate source. Review the diff and release notes.
+1. Set the package/lockfile version and write `docs/releases/<version>.md`. Run tests and build; review the diff and notes.
 2. Commit and push `main`. Wait for that exact commit's Pages workflow to succeed.
-3. Open the public base URL, verify the version in About & credits, start a fresh run, check Settings → Report an issue and inspect production logs. Verify sharing assets resolve.
-4. Create an annotated version tag for the verified commit. Publish GitHub release notes with prerelease status for an RC. Preserve the prior source tag.
-5. Close only completed checklist work; record deferred tests accurately. Publish the announcement only when ready, using wording matching the release status.
+3. Open the public base URL, verify About & credits, startup, Settings → Report an issue and browser logs. Preserve existing player saves during smoke tests.
+4. Create and push an annotated `v<version>` tag. The release workflow rejects malformed or mismatched versions and requires a successful Pages run for the exact commit on main before packaging.
+5. The workflow rebuilds the already-tested source and publishes the static-site ZIP and notes. `-rc.N` versions are prereleases; plain versions are stable and marked latest. This avoids rerunning the full suite a third time while retaining the same-commit test/deployment gate.
+6. Verify the GitHub release and ZIP contents. Keep prior tags immutable and retain their rollback points. Match any announcement to the actual release status.
+
+The API uses GitHub's [workflow-run endpoint](https://docs.github.com/en/rest/actions/workflow-runs#list-workflow-runs-for-a-workflow) and checks commit, branch and successful completion. Tagged builds are not accepted merely because a different commit passed.
 
 ## Roll back without rewriting history
 
-Back up local work and inspect `git status` first. For this one-commit candidate, `git revert v2.98.0-rc.1` restores the previous tracked source with a new commit. If later commits exist, identify the failing change and review its revert rather than blindly reverting a range. Run tests/build and push `main`; the existing Pages workflow redeploys the restored source. Verify the public game afterward. Do not force-push, move a published version tag, or overwrite player storage. The candidate adds no save migration.
+Back up local work and inspect `git status` first. For this single-commit stable promotion, `git revert v2.98.0` restores the previous release candidate with a new commit. If later commits exist, identify the failing change and review its revert rather than blindly reverting a range. Run tests/build and push `main`; the Pages workflow redeploys the restored source. Verify the public game afterward.
 
-If the source is healthy and only Pages failed, retry its failed workflow rather than changing game files. The last successful deployment stays the reference until a new deployment succeeds.
+Do not force-push, move a published version tag, or overwrite player storage. The stable promotion adds no save migration. If only Pages failed, retry the failed workflow rather than changing game files; the last successful deployment remains the reference.
