@@ -1,0 +1,5211 @@
+{
+  "version": "2.96.1",
+  "diagnosticSchema": 2,
+  "generatedAt": "2026-09-20T04:23:26.912Z",
+  "status": "stopped",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "logicalCores": 24,
+    "deviceMemoryGiB": 32,
+    "viewport": {
+      "width": 1280,
+      "height": 720,
+      "pixelRatio": 1.5
+    },
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "options": {
+    "reduced": false,
+    "replay": true,
+    "audio": true
+  },
+  "secondsPerCase": 30,
+  "activeSeconds": 59,
+  "methodology": "Real game simulation/render/audio/replay. Automatic preset retries after death/clear. First 2 seconds of each scenario excluded from timings. No CPU/GPU throttling. Heap is optional browser-reported JS heap, not total process memory.",
+  "results": [
+    {
+      "scenario": "volley",
+      "scenarioSeconds": 30.1,
+      "measuredSeconds": 28.1,
+      "fps": 158.052,
+      "frameIntervals": {
+        "samples": 4436,
+        "meanMs": 6.33,
+        "p50Ms": 4.2,
+        "p95Ms": 20.8,
+        "p99Ms": 41.6,
+        "maxMs": 120.8,
+        "over20": 254,
+        "over34": 67,
+        "over50": 23
+      },
+      "simulation": {
+        "samples": 4436,
+        "meanMs": 0.49,
+        "p50Ms": 0,
+        "p95Ms": 2.2,
+        "p99Ms": 4.4,
+        "maxMs": 11.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 4436,
+        "meanMs": 0.51,
+        "p50Ms": 0.5,
+        "p95Ms": 0.9,
+        "p99Ms": 1.3,
+        "maxMs": 2.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 4436,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.2,
+        "p99Ms": 0.3,
+        "maxMs": 3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 4436,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 1.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 4436,
+        "meanMs": 1.05,
+        "p50Ms": 0.6,
+        "p95Ms": 3,
+        "p99Ms": 5.4,
+        "maxMs": 15.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 4436,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0.1,
+        "maxMs": 1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 3,
+        "meanMs": 9.4,
+        "p50Ms": 8.3,
+        "p95Ms": 13.3,
+        "p99Ms": 13.3,
+        "maxMs": 13.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 2,
+      "droppedSteps": 2,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 180,
+        "particles": 213,
+        "enemies": 7,
+        "props": 8
+      }
+    },
+    {
+      "scenario": "explosions",
+      "scenarioSeconds": 29.3,
+      "measuredSeconds": 27.3,
+      "fps": 65.934,
+      "frameIntervals": {
+        "samples": 1800,
+        "meanMs": 15.17,
+        "p50Ms": 4.3,
+        "p95Ms": 58.4,
+        "p99Ms": 91.6,
+        "maxMs": 141.6,
+        "over20": 408,
+        "over34": 272,
+        "over50": 140
+      },
+      "simulation": {
+        "samples": 1800,
+        "meanMs": 1.06,
+        "p50Ms": 0,
+        "p95Ms": 4.4,
+        "p99Ms": 7.5,
+        "maxMs": 10.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 1800,
+        "meanMs": 0.71,
+        "p50Ms": 0.7,
+        "p95Ms": 1.2,
+        "p99Ms": 1.5,
+        "maxMs": 4.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 1800,
+        "meanMs": 0.05,
+        "p50Ms": 0,
+        "p95Ms": 0.3,
+        "p99Ms": 0.4,
+        "maxMs": 3.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 1800,
+        "meanMs": 0.04,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.4,
+        "maxMs": 1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 1800,
+        "meanMs": 1.92,
+        "p50Ms": 1.1,
+        "p95Ms": 5.9,
+        "p99Ms": 8.8,
+        "maxMs": 11.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 1800,
+        "meanMs": 0.04,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 2.5,
+        "maxMs": 4.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 2,
+        "meanMs": 7.75,
+        "p50Ms": 7.6,
+        "p95Ms": 7.9,
+        "p99Ms": 7.9,
+        "maxMs": 7.9,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 1,
+      "droppedSteps": 19,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 83,
+        "particles": 187,
+        "enemies": 7,
+        "props": 6
+      }
+    }
+  ],
+  "timingWarning": null,
+  "peaksSampledEveryMs": 1000,
+  "memorySamples": [
+    {
+      "seconds": 0,
+      "heapBytes": 12652395,
+      "replayBytes": 0,
+      "effects": 0,
+      "music": 0,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 0,
+      "heapBytes": 12652395,
+      "replayBytes": 0,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 5,
+      "heapBytes": 18506500,
+      "replayBytes": 2268660,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 10,
+      "heapBytes": 14469686,
+      "replayBytes": 2245497,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 15,
+      "heapBytes": 23258696,
+      "replayBytes": 2117365,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 20,
+      "heapBytes": 20306614,
+      "replayBytes": 1397435,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 25,
+      "heapBytes": 19740038,
+      "replayBytes": 2306707,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 30,
+      "heapBytes": 24868936,
+      "replayBytes": 633171,
+      "effects": 2,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 35,
+      "heapBytes": 19954981,
+      "replayBytes": 1699595,
+      "effects": 11,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 40,
+      "heapBytes": 32460864,
+      "replayBytes": 2162463,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 45,
+      "heapBytes": 33409181,
+      "replayBytes": 1730241,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 50,
+      "heapBytes": 41651407,
+      "replayBytes": 1023035,
+      "effects": 12,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 55,
+      "heapBytes": 35342769,
+      "replayBytes": 1882010,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    }
+  ],
+  "frameDiagnostics": {
+    "limitPerHistory": 120,
+    "slowFrameCount": 175,
+    "browserEntryCount": 220,
+    "discardedSlowFrames": 55,
+    "discardedBrowserEntries": 100,
+    "supportedObservers": [
+      "longtask",
+      "long-animation-frame"
+    ],
+    "unavailableObservers": [],
+    "slowFrames": [
+      {
+        "startMs": 37052.6,
+        "endMs": 37107.8,
+        "intervalMs": 54.3,
+        "callbackSpacingMs": 55.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 37122.3,
+        "endMs": 37177.1,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 54.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0.09999999403953552,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.6
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 37293.4,
+        "endMs": 37347.4,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 54,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.8
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 37612.9,
+        "endMs": 37673,
+        "intervalMs": 62.5,
+        "callbackSpacingMs": 60.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.800000011920929,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.8
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 37844.2,
+        "endMs": 37901.8,
+        "intervalMs": 58.2,
+        "callbackSpacingMs": 57.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 38083.2,
+        "endMs": 38141.4,
+        "intervalMs": 58.4,
+        "callbackSpacingMs": 58.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 38202.4,
+        "endMs": 38265.4,
+        "intervalMs": 62.5,
+        "callbackSpacingMs": 63,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.8999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 38281.4,
+        "endMs": 38339.9,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 58.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.3999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 38536.5,
+        "endMs": 38601.9,
+        "intervalMs": 66.6,
+        "callbackSpacingMs": 65.4,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 1.2999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.4
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 38781.7,
+        "endMs": 38835.1,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 53.4,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 38847.6,
+        "endMs": 38937.6,
+        "intervalMs": 87.5,
+        "callbackSpacingMs": 90,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.8
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 39042.5,
+        "endMs": 39089.9,
+        "intervalMs": 50.1,
+        "callbackSpacingMs": 47.4,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.1
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 39283.5,
+        "endMs": 39334.8,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 51.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 1.0999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.1
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 39353.6,
+        "endMs": 39410.7,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 57.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 2.9000000059604645,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.9000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 3.9
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 39484.7,
+        "endMs": 39626.5,
+        "intervalMs": 141.6,
+        "callbackSpacingMs": 141.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.5,
+          "audioMs": 0,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.3
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 39753,
+        "endMs": 39807.8,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 54.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 1.2999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.4
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 39820.4,
+        "endMs": 39886.7,
+        "intervalMs": 66.7,
+        "callbackSpacingMs": 66.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.6000000089406967,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.6
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 39893.5,
+        "endMs": 39959.9,
+        "intervalMs": 66.6,
+        "callbackSpacingMs": 66.4,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.8999999910593033,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.5
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 40132.7,
+        "endMs": 40180.8,
+        "intervalMs": 50.1,
+        "callbackSpacingMs": 48.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.9000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 40418.4,
+        "endMs": 40472.5,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 54.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 40784.8,
+        "endMs": 40838.9,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 54.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 40785.6,
+            "durationMs": 55.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 41194.5,
+        "endMs": 41272.6,
+        "intervalMs": 79.1,
+        "callbackSpacingMs": 78.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.7999999970197678,
+          "audioMs": 0,
+          "renderMs": 0.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 41195.9,
+            "durationMs": 78.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 1.7,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 41294.5,
+        "endMs": 41349,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 54.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 41296.3,
+            "durationMs": 55.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 41472.7,
+        "endMs": 41535.2,
+        "intervalMs": 62.6,
+        "callbackSpacingMs": 62.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.5,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 41474.1,
+            "durationMs": 80.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 19.5,
+            "styleAndLayoutMs": 14.3,
+            "scriptMs": 5.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 41614.3,
+        "endMs": 41678.2,
+        "intervalMs": 62.5,
+        "callbackSpacingMs": 63.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 41615.2,
+            "durationMs": 68.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.4,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 5.3,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 41693.2,
+        "endMs": 41753.2,
+        "intervalMs": 58.2,
+        "callbackSpacingMs": 60,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.0999999940395355,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 41695.6,
+            "durationMs": 61.9,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.5,
+            "styleAndLayoutMs": 0.3,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 41760.4,
+        "endMs": 41827.2,
+        "intervalMs": 66.6,
+        "callbackSpacingMs": 66.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 41762.4,
+            "durationMs": 68.9,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.2,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 41901.4,
+        "endMs": 41955.9,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 54.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.1000000089406967,
+          "audioMs": 0,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 41903.6,
+            "durationMs": 57.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.6,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 5.4,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 42203.2,
+        "endMs": 42258.5,
+        "intervalMs": 54,
+        "callbackSpacingMs": 55.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 42204.5,
+            "durationMs": 61.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.2,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 7.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 42334.7,
+        "endMs": 42388.9,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 54.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.8999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 42335.9,
+            "durationMs": 60.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.2,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 7.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 42672.8,
+        "endMs": 42727.3,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 54.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 1.2000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.3
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 42674.5,
+            "durationMs": 59.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 6.7,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 6.6,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 42868.8,
+        "endMs": 42990.4,
+        "intervalMs": 120.8,
+        "callbackSpacingMs": 121.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 2.5999999940395355,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 3.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 42872.5,
+            "durationMs": 125.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.4,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 7.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43007.8,
+        "endMs": 43072.7,
+        "intervalMs": 66.6,
+        "callbackSpacingMs": 64.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.7000000029802322,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43010.8,
+            "durationMs": 67.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.4,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 5.3,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43087.6,
+        "endMs": 43168.9,
+        "intervalMs": 83.4,
+        "callbackSpacingMs": 81.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.9000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43089,
+            "durationMs": 87.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.7,
+            "styleAndLayoutMs": 0.6,
+            "scriptMs": 7.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43194.5,
+        "endMs": 43287.5,
+        "intervalMs": 91.7,
+        "callbackSpacingMs": 93,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.3999999910593033,
+          "audioMs": 0,
+          "renderMs": 0.800000011920929,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43197.4,
+            "durationMs": 96.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 6.7,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 6.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43305.7,
+        "endMs": 43385.8,
+        "intervalMs": 79.1,
+        "callbackSpacingMs": 80.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.3999999910593033,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0.09999999403953552,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.1
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43308.1,
+            "durationMs": 81.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.9,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43395.1,
+        "endMs": 43460.3,
+        "intervalMs": 66.7,
+        "callbackSpacingMs": 65.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43396.3,
+            "durationMs": 66.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.8,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43477.7,
+        "endMs": 43536,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 58.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43479.7,
+            "durationMs": 61.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 5,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43551.5,
+        "endMs": 43625.1,
+        "intervalMs": 70.8,
+        "callbackSpacingMs": 73.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.5999999940395355,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0.19999998807907104,
+          "housekeepingMs": 3.5,
+          "transitionMs": 0,
+          "callbackMs": 5.9
+        },
+        "overlappingBrowserEntries": 0,
+        "browserWork": []
+      },
+      {
+        "startMs": 43734.7,
+        "endMs": 43807.6,
+        "intervalMs": 70.8,
+        "callbackSpacingMs": 72.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43735.7,
+            "durationMs": 74.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.8,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43815,
+        "endMs": 43873.8,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 58.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43815.8,
+            "durationMs": 60.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.3,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43887.9,
+        "endMs": 43943.5,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 55.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43888.9,
+            "durationMs": 56.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 1.9,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 43958.1,
+        "endMs": 44055.9,
+        "intervalMs": 100,
+        "callbackSpacingMs": 97.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.9000000059604645,
+          "audioMs": 0,
+          "renderMs": 0.3999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.3
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 43959.8,
+            "durationMs": 98.1,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.1,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 44118.6,
+        "endMs": 44194.9,
+        "intervalMs": 75.1,
+        "callbackSpacingMs": 76.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 44119.4,
+            "durationMs": 77,
+            "blockingMs": 0,
+            "renderPhaseMs": 1.5,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 44987.2,
+        "endMs": 45041.3,
+        "intervalMs": 54,
+        "callbackSpacingMs": 54.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.3999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 44987.8,
+            "durationMs": 55.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 1.7,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 45160.5,
+        "endMs": 45257.6,
+        "intervalMs": 95.9,
+        "callbackSpacingMs": 97.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.3999999910593033,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 45161.8,
+            "durationMs": 97.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 1.5,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 45268.3,
+        "endMs": 45373,
+        "intervalMs": 104.3,
+        "callbackSpacingMs": 104.7,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 45269,
+            "durationMs": 105.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 1.7,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 45439.3,
+        "endMs": 45510.9,
+        "intervalMs": 70.9,
+        "callbackSpacingMs": 71.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 45440.4,
+            "durationMs": 73.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.4,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 45522.5,
+        "endMs": 45599.4,
+        "intervalMs": 75.1,
+        "callbackSpacingMs": 76.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 45523.5,
+            "durationMs": 105.1,
+            "blockingMs": 0,
+            "renderPhaseMs": 29.3,
+            "styleAndLayoutMs": 21.7,
+            "scriptMs": 7.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 45676.1,
+        "endMs": 45728.2,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 52.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 45677,
+            "durationMs": 53.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 45847.5,
+        "endMs": 45972.7,
+        "intervalMs": 125,
+        "callbackSpacingMs": 125.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 45848.4,
+            "durationMs": 128.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.2,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 45989.4,
+        "endMs": 46045.5,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 56.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.7000000029802322,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 45992.2,
+            "durationMs": 54.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 0.9,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 46118.2,
+        "endMs": 46199.3,
+        "intervalMs": 79.1,
+        "callbackSpacingMs": 81.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.5999999940395355,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0.10000000894069672,
+          "transitionMs": 0,
+          "callbackMs": 1.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 46120,
+            "durationMs": 82.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.3,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 46205.8,
+        "endMs": 46266.7,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 60.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 46206.5,
+            "durationMs": 63.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 46326.5,
+        "endMs": 46383.1,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 56.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 46327.2,
+            "durationMs": 58.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.5,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 46394.7,
+        "endMs": 46473.8,
+        "intervalMs": 79.1,
+        "callbackSpacingMs": 79.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.699999988079071,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 46396,
+            "durationMs": 83.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 6,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 5.7,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 46489,
+        "endMs": 46580.6,
+        "intervalMs": 91.7,
+        "callbackSpacingMs": 91.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.5999999940395355,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 46491.8,
+            "durationMs": 93,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.2,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 46597.9,
+        "endMs": 46683.5,
+        "intervalMs": 83.3,
+        "callbackSpacingMs": 85.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.9000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 46599.4,
+            "durationMs": 113.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 29.4,
+            "styleAndLayoutMs": 20.3,
+            "scriptMs": 9.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 46938.9,
+        "endMs": 46989.1,
+        "intervalMs": 50.1,
+        "callbackSpacingMs": 50.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.4000000059604645,
+          "renderMs": 1.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 46941.6,
+            "durationMs": 54.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.2,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 7.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47008,
+        "endMs": 47061.5,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 53.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 1.0999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.1
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47009.4,
+            "durationMs": 60.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 8.7,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 8.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47303.5,
+        "endMs": 47386.4,
+        "intervalMs": 83.4,
+        "callbackSpacingMs": 82.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.8999999910593033,
+          "audioMs": 0,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47307.2,
+            "durationMs": 84.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.4,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 5.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47393.3,
+        "endMs": 47464,
+        "intervalMs": 70.9,
+        "callbackSpacingMs": 70.7,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47394,
+            "durationMs": 76.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 6.6,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 6.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47476.5,
+        "endMs": 47554.1,
+        "intervalMs": 75,
+        "callbackSpacingMs": 77.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47477.3,
+            "durationMs": 82.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.6,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 5.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47570.6,
+        "endMs": 47627.8,
+        "intervalMs": 58.4,
+        "callbackSpacingMs": 57.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47571.4,
+            "durationMs": 61.9,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.6,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 5.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47635.9,
+        "endMs": 47718.1,
+        "intervalMs": 83.3,
+        "callbackSpacingMs": 82.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.2000000029802322,
+          "audioMs": 0,
+          "renderMs": 1.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47638.9,
+            "durationMs": 110,
+            "blockingMs": 0,
+            "renderPhaseMs": 30.8,
+            "styleAndLayoutMs": 22.5,
+            "scriptMs": 8.3,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47764,
+        "endMs": 47827.2,
+        "intervalMs": 62.5,
+        "callbackSpacingMs": 63.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.2999999970197678,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47766.2,
+            "durationMs": 66.1,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.2,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47835.2,
+        "endMs": 47893.5,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 58.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47836.1,
+            "durationMs": 62.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.8,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47901.4,
+        "endMs": 47968.7,
+        "intervalMs": 66.7,
+        "callbackSpacingMs": 67.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47902.3,
+            "durationMs": 71.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 5,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 47977.7,
+        "endMs": 48056,
+        "intervalMs": 79.2,
+        "callbackSpacingMs": 78.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 47978.5,
+            "durationMs": 81.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.4,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48064,
+        "endMs": 48149,
+        "intervalMs": 83.4,
+        "callbackSpacingMs": 85,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48064.9,
+            "durationMs": 90.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 6.3,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 6.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48159.9,
+        "endMs": 48237.2,
+        "intervalMs": 75,
+        "callbackSpacingMs": 77.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.5,
+          "renderMs": 0.9000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48161.7,
+            "durationMs": 80.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.9,
+            "styleAndLayoutMs": 0.7,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48243.5,
+        "endMs": 48328,
+        "intervalMs": 83.2,
+        "callbackSpacingMs": 84.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48244.1,
+            "durationMs": 88,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.2,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48335.2,
+        "endMs": 48420.3,
+        "intervalMs": 83.3,
+        "callbackSpacingMs": 85.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48335.9,
+            "durationMs": 88.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.3,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48426.7,
+        "endMs": 48501.6,
+        "intervalMs": 75,
+        "callbackSpacingMs": 74.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.3999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48427.2,
+            "durationMs": 79.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.1,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 5.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48528.7,
+        "endMs": 48622.8,
+        "intervalMs": 95.8,
+        "callbackSpacingMs": 94.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 2.199999988079071,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0.10000000894069672,
+          "callbackMs": 3
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48532.1,
+            "durationMs": 94.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.9,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48630.8,
+        "endMs": 48706.2,
+        "intervalMs": 75,
+        "callbackSpacingMs": 75.4,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48631.6,
+            "durationMs": 79,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.4,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48732.2,
+        "endMs": 48825.1,
+        "intervalMs": 91.4,
+        "callbackSpacingMs": 92.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.5,
+          "audioMs": 0,
+          "renderMs": 0.699999988079071,
+          "captureMs": 0,
+          "housekeepingMs": 4,
+          "transitionMs": 0,
+          "callbackMs": 6.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48776.4,
+            "durationMs": 53.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.8,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48851.4,
+        "endMs": 48938.9,
+        "intervalMs": 87.5,
+        "callbackSpacingMs": 87.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.7000000029802322,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48853.1,
+            "durationMs": 89.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.9,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 48947.3,
+        "endMs": 49027.8,
+        "intervalMs": 79.2,
+        "callbackSpacingMs": 80.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 48948.3,
+            "durationMs": 83.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.7,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49035,
+        "endMs": 49093.9,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 58.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.29999999701976776,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.3
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49035.5,
+            "durationMs": 61.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 3,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49155.8,
+        "endMs": 49224,
+        "intervalMs": 66.7,
+        "callbackSpacingMs": 68.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49156.7,
+            "durationMs": 69.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.4,
+            "styleAndLayoutMs": 0.3,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49235.2,
+        "endMs": 49298,
+        "intervalMs": 62.4,
+        "callbackSpacingMs": 62.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49236.2,
+            "durationMs": 65,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.3,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49305.9,
+        "endMs": 49377.5,
+        "intervalMs": 70.8,
+        "callbackSpacingMs": 71.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49306.8,
+            "durationMs": 76.2,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.6,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 5.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49385,
+        "endMs": 49472.2,
+        "intervalMs": 87.5,
+        "callbackSpacingMs": 87.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.29999999701976776,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49385.5,
+            "durationMs": 90.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.9,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49480.7,
+        "endMs": 49556.8,
+        "intervalMs": 74.9,
+        "callbackSpacingMs": 76.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.699999988079071,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49481.9,
+            "durationMs": 77.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.9,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49578.2,
+        "endMs": 49652.4,
+        "intervalMs": 74.8,
+        "callbackSpacingMs": 74.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.7999999970197678,
+          "audioMs": 0,
+          "renderMs": 0.3999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49579.8,
+            "durationMs": 75,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.5,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49714.2,
+        "endMs": 49786.8,
+        "intervalMs": 70.9,
+        "callbackSpacingMs": 72.6,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49715.2,
+            "durationMs": 101.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 29.8,
+            "styleAndLayoutMs": 23.2,
+            "scriptMs": 6.6,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49885.1,
+        "endMs": 49964.4,
+        "intervalMs": 79.2,
+        "callbackSpacingMs": 79.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49886,
+            "durationMs": 82,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.7,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 49972.3,
+        "endMs": 50026.5,
+        "intervalMs": 54.1,
+        "callbackSpacingMs": 54.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 49973.3,
+            "durationMs": 57.9,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.8,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50044.5,
+        "endMs": 50134.8,
+        "intervalMs": 91.7,
+        "callbackSpacingMs": 90.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 1.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50046.4,
+            "durationMs": 92.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 4,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50216.7,
+        "endMs": 50287,
+        "intervalMs": 70.9,
+        "callbackSpacingMs": 70.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.8999999910593033,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50218.7,
+            "durationMs": 75.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 6.9,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50305.7,
+        "endMs": 50398.5,
+        "intervalMs": 91.6,
+        "callbackSpacingMs": 92.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.5,
+          "audioMs": 0.19999998807907104,
+          "renderMs": 1.2000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50309,
+            "durationMs": 97.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 8.4,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 8.3,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50423,
+        "endMs": 50520.2,
+        "intervalMs": 95.8,
+        "callbackSpacingMs": 97.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 2.5,
+          "audioMs": 0,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 3.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50427.2,
+            "durationMs": 99,
+            "blockingMs": 0,
+            "renderPhaseMs": 6,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 5.9,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50530.6,
+        "endMs": 50611.3,
+        "intervalMs": 79.2,
+        "callbackSpacingMs": 80.7,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.699999988079071,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.8
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50531.7,
+            "durationMs": 88.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 9.2,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 9,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50630.7,
+        "endMs": 50724.8,
+        "intervalMs": 91.6,
+        "callbackSpacingMs": 94.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.7999999970197678,
+          "audioMs": 0,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.8
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50634.1,
+            "durationMs": 98,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.3,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 7.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50743.7,
+        "endMs": 50806.1,
+        "intervalMs": 62.5,
+        "callbackSpacingMs": 62.4,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.699999988079071,
+          "audioMs": 0,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50746.9,
+            "durationMs": 88.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 29.6,
+            "styleAndLayoutMs": 20.2,
+            "scriptMs": 9.3,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50848,
+        "endMs": 50929.1,
+        "intervalMs": 79.1,
+        "callbackSpacingMs": 81.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50848.7,
+            "durationMs": 86,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.7,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 5.4,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 50972.4,
+        "endMs": 51043.1,
+        "intervalMs": 70.8,
+        "callbackSpacingMs": 70.7,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.7000000029802322,
+          "audioMs": 0,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 50975.8,
+            "durationMs": 75.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 8.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 7.9,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 51060.2,
+        "endMs": 51152.7,
+        "intervalMs": 91.6,
+        "callbackSpacingMs": 92.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 2.2999999970197678,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 1.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 4.1
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 51064.8,
+            "durationMs": 96.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 9,
+            "styleAndLayoutMs": 0.3,
+            "scriptMs": 8.6,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 51164.9,
+        "endMs": 51253.6,
+        "intervalMs": 87.6,
+        "callbackSpacingMs": 88.7,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.8
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 51166,
+            "durationMs": 96.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 9.3,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 9.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 51269.9,
+        "endMs": 51343.1,
+        "intervalMs": 75,
+        "callbackSpacingMs": 73.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 2.300000011920929,
+          "audioMs": 0,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 3.2
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 51273.6,
+            "durationMs": 75.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 6,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 5.9,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 51352.8,
+        "endMs": 51436.8,
+        "intervalMs": 83.4,
+        "callbackSpacingMs": 84,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.2000000029802322,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 51355.1,
+            "durationMs": 88.9,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.2,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 7,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 51453.9,
+        "endMs": 51546.6,
+        "intervalMs": 91.6,
+        "callbackSpacingMs": 92.7,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.8999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 51455.4,
+            "durationMs": 98.1,
+            "blockingMs": 0,
+            "renderPhaseMs": 7,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 6.8,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 51568.3,
+        "endMs": 51618.2,
+        "intervalMs": 50.1,
+        "callbackSpacingMs": 49.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.5,
+          "audioMs": 0,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 51571.3,
+            "durationMs": 52.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.9,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 5.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 51720.4,
+        "endMs": 51776.9,
+        "intervalMs": 58.5,
+        "callbackSpacingMs": 56.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.10000000894069672,
+          "renderMs": 0.8999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 51721.6,
+            "durationMs": 64.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 9.5,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 9.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 52068.1,
+        "endMs": 52145.2,
+        "intervalMs": 75,
+        "callbackSpacingMs": 77.1,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 52069.1,
+            "durationMs": 85.1,
+            "blockingMs": 0,
+            "renderPhaseMs": 9.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 8.9,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 52308.5,
+        "endMs": 52368.4,
+        "intervalMs": 62.4,
+        "callbackSpacingMs": 59.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.8999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 52309.7,
+            "durationMs": 63.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 4.8,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 52421,
+        "endMs": 52510,
+        "intervalMs": 91.7,
+        "callbackSpacingMs": 89,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 1.5999999940395355,
+          "audioMs": 0,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 52424,
+            "durationMs": 95.5,
+            "blockingMs": 0,
+            "renderPhaseMs": 9.6,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 9.4,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 52523.7,
+        "endMs": 52622.7,
+        "intervalMs": 100,
+        "callbackSpacingMs": 99,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 52525,
+            "durationMs": 108.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 10.7,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 10.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 52645.1,
+        "endMs": 52735,
+        "intervalMs": 91.6,
+        "callbackSpacingMs": 89.9,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 2.1000000089406967,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 2.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 52648.6,
+            "durationMs": 95.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 9.2,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 9.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 52880.3,
+        "endMs": 52970.1,
+        "intervalMs": 99.9,
+        "callbackSpacingMs": 89.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 3.5,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 1,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 4.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 52885.6,
+            "durationMs": 91.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 7.3,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 7.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 53047.4,
+        "endMs": 53103.9,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 56.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 53048,
+            "durationMs": 60.9,
+            "blockingMs": 0,
+            "renderPhaseMs": 5,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 53168.4,
+        "endMs": 53218.6,
+        "intervalMs": 50.1,
+        "callbackSpacingMs": 50.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.9000000059604645,
+          "audioMs": 0,
+          "renderMs": 0.7000000029802322,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 53170.4,
+            "durationMs": 50.7,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.5,
+            "styleAndLayoutMs": 0,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 53238.9,
+        "endMs": 53302.7,
+        "intervalMs": 62.6,
+        "callbackSpacingMs": 63.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.800000011920929,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.4
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 53240.7,
+            "durationMs": 65.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.6,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 53376.5,
+        "endMs": 53436.8,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 60.3,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.5999999940395355,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 53377.5,
+            "durationMs": 64.4,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.1,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 53493.4,
+        "endMs": 53552.4,
+        "intervalMs": 58.3,
+        "callbackSpacingMs": 59,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.6000000089406967,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.6
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 53494.2,
+            "durationMs": 61,
+            "blockingMs": 0,
+            "renderPhaseMs": 2.9,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 53730.9,
+        "endMs": 53789.3,
+        "intervalMs": 58.4,
+        "callbackSpacingMs": 58.4,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0.9000000059604645,
+          "audioMs": 0,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.7
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 53733.1,
+            "durationMs": 59.6,
+            "blockingMs": 0,
+            "renderPhaseMs": 3.5,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 0,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 53797.5,
+        "endMs": 53851.7,
+        "intervalMs": 54.2,
+        "callbackSpacingMs": 54.2,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0,
+          "renderMs": 0.8999999910593033,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 53798.8,
+            "durationMs": 81,
+            "blockingMs": 0,
+            "renderPhaseMs": 28.2,
+            "styleAndLayoutMs": 21,
+            "scriptMs": 7.1,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 54345.5,
+        "endMs": 54393.3,
+        "intervalMs": 50.1,
+        "callbackSpacingMs": 47.8,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 1.4000000059604645,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 1.5
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 54347.4,
+            "durationMs": 51.3,
+            "blockingMs": 0,
+            "renderPhaseMs": 5.4,
+            "styleAndLayoutMs": 0.2,
+            "scriptMs": 5.2,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "startMs": 54443.2,
+        "endMs": 54511.7,
+        "intervalMs": 66.6,
+        "callbackSpacingMs": 68.5,
+        "scenario": "explosions",
+        "measured": true,
+        "previous": {
+          "scenario": "explosions",
+          "measured": true,
+          "simulationMs": 0,
+          "audioMs": 0.09999999403953552,
+          "renderMs": 0.7999999970197678,
+          "captureMs": 0,
+          "housekeepingMs": 0,
+          "transitionMs": 0,
+          "callbackMs": 0.9
+        },
+        "overlappingBrowserEntries": 1,
+        "browserWork": [
+          {
+            "type": "long-animation-frame",
+            "startMs": 54444.5,
+            "durationMs": 76.8,
+            "blockingMs": 0,
+            "renderPhaseMs": 9.7,
+            "styleAndLayoutMs": 0.1,
+            "scriptMs": 9.5,
+            "forcedStyleAndLayoutMs": 0
+          }
+        ]
+      }
+    ],
+    "browserWork": [
+      {
+        "type": "long-animation-frame",
+        "startMs": 40785.6,
+        "durationMs": 55.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41131.5,
+        "durationMs": 50.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.6,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41195.9,
+        "durationMs": 78.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.7,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41296.3,
+        "durationMs": 55.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41474.1,
+        "durationMs": 80.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 19.5,
+        "styleAndLayoutMs": 14.3,
+        "scriptMs": 5.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41615.2,
+        "durationMs": 68.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.4,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 5.3,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41695.6,
+        "durationMs": 61.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.5,
+        "styleAndLayoutMs": 0.3,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41762.4,
+        "durationMs": 68.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.2,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41903.6,
+        "durationMs": 57.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.6,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 5.4,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 41969.4,
+        "durationMs": 50.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42069.2,
+        "durationMs": 56.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 7.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42135.8,
+        "durationMs": 57.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 8.3,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 8.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42204.5,
+        "durationMs": 61.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.2,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 7.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42276.4,
+        "durationMs": 51.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 9.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42335.9,
+        "durationMs": 60.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.2,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 7.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42508.2,
+        "durationMs": 67.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 27.4,
+        "styleAndLayoutMs": 20.6,
+        "scriptMs": 6.8,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42674.5,
+        "durationMs": 59.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 6.7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 6.6,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 42872.5,
+        "durationMs": 125.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.4,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 7.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43010.8,
+        "durationMs": 67.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.4,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 5.3,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43089,
+        "durationMs": 87.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.7,
+        "styleAndLayoutMs": 0.6,
+        "scriptMs": 7.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43197.4,
+        "durationMs": 96.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 6.7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 6.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43308.1,
+        "durationMs": 81.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.9,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43396.3,
+        "durationMs": 66.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.8,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43479.7,
+        "durationMs": 61.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 5,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43631.3,
+        "durationMs": 54.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43735.7,
+        "durationMs": 74.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.8,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43815.8,
+        "durationMs": 60.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43888.9,
+        "durationMs": 56.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.9,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 43959.8,
+        "durationMs": 98.1,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.1,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 44119.4,
+        "durationMs": 77,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.5,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 44377.8,
+        "durationMs": 51.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.9,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 44539.9,
+        "durationMs": 60.1,
+        "blockingMs": 0,
+        "renderPhaseMs": 23.5,
+        "styleAndLayoutMs": 18.6,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 44987.8,
+        "durationMs": 55.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.7,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45098.1,
+        "durationMs": 53,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45161.8,
+        "durationMs": 97.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.5,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45269,
+        "durationMs": 105.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.7,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45382.1,
+        "durationMs": 50.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.5,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45440.4,
+        "durationMs": 73.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.4,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45523.5,
+        "durationMs": 105.1,
+        "blockingMs": 0,
+        "renderPhaseMs": 29.3,
+        "styleAndLayoutMs": 21.7,
+        "scriptMs": 7.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45677,
+        "durationMs": 53.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45738.4,
+        "durationMs": 50.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.6,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45848.4,
+        "durationMs": 128.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.2,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 45992.2,
+        "durationMs": 54.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 0.9,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46120,
+        "durationMs": 82.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.3,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46206.5,
+        "durationMs": 63.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46273.2,
+        "durationMs": 50.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.2,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46327.2,
+        "durationMs": 58.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.5,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46396,
+        "durationMs": 83.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 6,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 5.7,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46491.8,
+        "durationMs": 93,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.2,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46599.4,
+        "durationMs": 113.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 29.4,
+        "styleAndLayoutMs": 20.3,
+        "scriptMs": 9.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46791.8,
+        "durationMs": 53.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 6.1,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 5.9,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 46941.6,
+        "durationMs": 54.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.2,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 7.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47009.4,
+        "durationMs": 60.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 8.7,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 8.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47307.2,
+        "durationMs": 84.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.4,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 5.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47394,
+        "durationMs": 76.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 6.6,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 6.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47477.3,
+        "durationMs": 82.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.6,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 5.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47571.4,
+        "durationMs": 61.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.6,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 5.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47638.9,
+        "durationMs": 110,
+        "blockingMs": 0,
+        "renderPhaseMs": 30.8,
+        "styleAndLayoutMs": 22.5,
+        "scriptMs": 8.3,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47766.2,
+        "durationMs": 66.1,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.2,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47836.1,
+        "durationMs": 62.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.8,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47902.3,
+        "durationMs": 71.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 5,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 47978.5,
+        "durationMs": 81.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.4,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48064.9,
+        "durationMs": 90.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 6.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 6.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48161.7,
+        "durationMs": 80.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.9,
+        "styleAndLayoutMs": 0.7,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48244.1,
+        "durationMs": 88,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.2,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48335.9,
+        "durationMs": 88.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48427.2,
+        "durationMs": 79.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.1,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 5.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48532.1,
+        "durationMs": 94.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.9,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48631.6,
+        "durationMs": 79,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.4,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48776.4,
+        "durationMs": 53.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.8,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48853.1,
+        "durationMs": 89.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.9,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 48948.3,
+        "durationMs": 83.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49035.5,
+        "durationMs": 61.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49098.6,
+        "durationMs": 51.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49156.7,
+        "durationMs": 69.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.4,
+        "styleAndLayoutMs": 0.3,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49236.2,
+        "durationMs": 65,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49306.8,
+        "durationMs": 76.2,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.6,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 5.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49385.5,
+        "durationMs": 90.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.9,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49481.9,
+        "durationMs": 77.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.9,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49579.8,
+        "durationMs": 75,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.5,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49715.2,
+        "durationMs": 101.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 29.8,
+        "styleAndLayoutMs": 23.2,
+        "scriptMs": 6.6,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49886,
+        "durationMs": 82,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 49973.3,
+        "durationMs": 57.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.8,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50046.4,
+        "durationMs": 92.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 4,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50218.7,
+        "durationMs": 75.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 6.9,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50309,
+        "durationMs": 97.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 8.4,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 8.3,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50427.2,
+        "durationMs": 99,
+        "blockingMs": 0,
+        "renderPhaseMs": 6,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 5.9,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50531.7,
+        "durationMs": 88.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.2,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 9,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50634.1,
+        "durationMs": 98,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.3,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 7.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50746.9,
+        "durationMs": 88.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 29.6,
+        "styleAndLayoutMs": 20.2,
+        "scriptMs": 9.3,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50848.7,
+        "durationMs": 86,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.7,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 5.4,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 50975.8,
+        "durationMs": 75.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 8.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 7.9,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51064.8,
+        "durationMs": 96.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 9,
+        "styleAndLayoutMs": 0.3,
+        "scriptMs": 8.6,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51166,
+        "durationMs": 96.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 9.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51273.6,
+        "durationMs": 75.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 6,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 5.9,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51355.1,
+        "durationMs": 88.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.2,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 7,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51455.4,
+        "durationMs": 98.1,
+        "blockingMs": 0,
+        "renderPhaseMs": 7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 6.8,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51571.3,
+        "durationMs": 52.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.9,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 5.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51721.6,
+        "durationMs": 64.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.5,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 9.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 51796.6,
+        "durationMs": 67.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 29.3,
+        "styleAndLayoutMs": 21,
+        "scriptMs": 8.3,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52069.1,
+        "durationMs": 85.1,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 8.9,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52309.7,
+        "durationMs": 63.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.8,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52424,
+        "durationMs": 95.5,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.6,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 9.4,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52525,
+        "durationMs": 108.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 10.7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 10.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52648.6,
+        "durationMs": 95.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.2,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 9.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52794.4,
+        "durationMs": 74.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 26,
+        "styleAndLayoutMs": 19.6,
+        "scriptMs": 6.3,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52885.6,
+        "durationMs": 91.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 7.3,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 7.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 52992.8,
+        "durationMs": 52.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 4.8,
+        "styleAndLayoutMs": 0.3,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53048,
+        "durationMs": 60.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 5,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53170.4,
+        "durationMs": 50.7,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.5,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53240.7,
+        "durationMs": 65.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.6,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53315.4,
+        "durationMs": 52.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.8,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53377.5,
+        "durationMs": 64.4,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53494.2,
+        "durationMs": 61,
+        "blockingMs": 0,
+        "renderPhaseMs": 2.9,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53562,
+        "durationMs": 50.9,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.1,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53733.1,
+        "durationMs": 59.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.5,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 53798.8,
+        "durationMs": 81,
+        "blockingMs": 0,
+        "renderPhaseMs": 28.2,
+        "styleAndLayoutMs": 21,
+        "scriptMs": 7.1,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 54347.4,
+        "durationMs": 51.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 5.4,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 5.2,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 54444.5,
+        "durationMs": 76.8,
+        "blockingMs": 0,
+        "renderPhaseMs": 9.7,
+        "styleAndLayoutMs": 0.1,
+        "scriptMs": 9.5,
+        "forcedStyleAndLayoutMs": 0
+      },
+      {
+        "type": "long-animation-frame",
+        "startMs": 56570,
+        "durationMs": 53.6,
+        "blockingMs": 0,
+        "renderPhaseMs": 3.5,
+        "styleAndLayoutMs": 0.2,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      }
+    ],
+    "interpretation": "Times are milliseconds since test start. Delayed intervals include warm-up; measured marks intervals included in scenario histograms. Previous callback work precedes the gap; current catch-up work is not its cause. Browser entries overlap in time, not necessarily causally. Unobserved time can include rendering, scheduling, other tasks or native work. Missing/unsupported entries do not prove browser idleness. Histories retain the latest 120 items and report discarded counts."
+  },
+  "errors": [],
+  "cleanup": {
+    "replayFrames": 98,
+    "replayBytes": 2473395,
+    "effects": 0,
+    "music": 0
+  }
+}

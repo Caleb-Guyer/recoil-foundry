@@ -1,0 +1,1080 @@
+{
+  "version": "2.96.1",
+  "diagnosticSchema": 2,
+  "generatedAt": "2026-09-20T04:28:44.865Z",
+  "status": "complete",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "logicalCores": 24,
+    "deviceMemoryGiB": 32,
+    "viewport": {
+      "width": 1280,
+      "height": 720,
+      "pixelRatio": 1.5
+    },
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "options": {
+    "reduced": false,
+    "replay": true,
+    "audio": true
+  },
+  "secondsPerCase": 30,
+  "activeSeconds": 180,
+  "methodology": "Real game simulation/render/audio/replay. Automatic preset retries after death/clear. First 2 seconds of each scenario excluded from timings. No CPU/GPU throttling. Heap is optional browser-reported JS heap, not total process memory.",
+  "results": [
+    {
+      "scenario": "volley",
+      "scenarioSeconds": 30,
+      "measuredSeconds": 28,
+      "fps": 183.025,
+      "frameIntervals": {
+        "samples": 5127,
+        "meanMs": 5.46,
+        "p50Ms": 4.2,
+        "p95Ms": 12.6,
+        "p99Ms": 20.8,
+        "maxMs": 41.6,
+        "over20": 110,
+        "over34": 1,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 5127,
+        "meanMs": 0.52,
+        "p50Ms": 0,
+        "p95Ms": 2.5,
+        "p99Ms": 3.5,
+        "maxMs": 8.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 5127,
+        "meanMs": 0.5,
+        "p50Ms": 0.5,
+        "p95Ms": 0.8,
+        "p99Ms": 1,
+        "maxMs": 3.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 5127,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 5127,
+        "meanMs": 0.03,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 1.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 5127,
+        "meanMs": 1.08,
+        "p50Ms": 0.6,
+        "p95Ms": 3.3,
+        "p99Ms": 4.5,
+        "maxMs": 13.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 5127,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 2,
+        "meanMs": 9.75,
+        "p50Ms": 8.3,
+        "p95Ms": 11.2,
+        "p99Ms": 11.2,
+        "maxMs": 11.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 1,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 8,
+        "shots": 179,
+        "particles": 201,
+        "enemies": 7,
+        "props": 8
+      }
+    },
+    {
+      "scenario": "explosions",
+      "scenarioSeconds": 30,
+      "measuredSeconds": 28,
+      "fps": 195.863,
+      "frameIntervals": {
+        "samples": 5485,
+        "meanMs": 5.11,
+        "p50Ms": 4.2,
+        "p95Ms": 12.5,
+        "p99Ms": 20.8,
+        "maxMs": 50,
+        "over20": 70,
+        "over34": 1,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 5485,
+        "meanMs": 0.37,
+        "p50Ms": 0,
+        "p95Ms": 1.9,
+        "p99Ms": 2.5,
+        "maxMs": 4.9,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 5485,
+        "meanMs": 0.39,
+        "p50Ms": 0.4,
+        "p95Ms": 0.7,
+        "p99Ms": 0.8,
+        "maxMs": 1.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 5485,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 5485,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 5485,
+        "meanMs": 0.81,
+        "p50Ms": 0.5,
+        "p95Ms": 2.5,
+        "p99Ms": 3.2,
+        "maxMs": 8.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 5485,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0.1,
+        "maxMs": 0.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 2,
+        "meanMs": 7.4,
+        "p50Ms": 6.9,
+        "p95Ms": 7.9,
+        "p99Ms": 7.9,
+        "maxMs": 7.9,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 1,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 83,
+        "particles": 200,
+        "enemies": 7,
+        "props": 6
+      }
+    },
+    {
+      "scenario": "portals",
+      "scenarioSeconds": 30,
+      "measuredSeconds": 28,
+      "fps": 218.5,
+      "frameIntervals": {
+        "samples": 6118,
+        "meanMs": 4.58,
+        "p50Ms": 4.2,
+        "p95Ms": 8.3,
+        "p99Ms": 12.6,
+        "maxMs": 33.3,
+        "over20": 25,
+        "over34": 0,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 6118,
+        "meanMs": 0.37,
+        "p50Ms": 0,
+        "p95Ms": 2.1,
+        "p99Ms": 3.1,
+        "maxMs": 5.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 6118,
+        "meanMs": 0.42,
+        "p50Ms": 0.4,
+        "p95Ms": 0.7,
+        "p99Ms": 0.8,
+        "maxMs": 2.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 6118,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 6118,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.5,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 6118,
+        "meanMs": 0.83,
+        "p50Ms": 0.5,
+        "p95Ms": 2.6,
+        "p99Ms": 3.8,
+        "maxMs": 6.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 6118,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 1,
+        "meanMs": 6.4,
+        "p50Ms": 6.4,
+        "p95Ms": 6.4,
+        "p99Ms": 6.4,
+        "maxMs": 6.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 0,
+      "droppedSteps": 0,
+      "portalPairs": 1,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 13,
+        "shots": 172,
+        "particles": 220,
+        "enemies": 9,
+        "props": 8
+      }
+    },
+    {
+      "scenario": "beam",
+      "scenarioSeconds": 30,
+      "measuredSeconds": 28,
+      "fps": 213.269,
+      "frameIntervals": {
+        "samples": 5976,
+        "meanMs": 4.69,
+        "p50Ms": 4.2,
+        "p95Ms": 8.3,
+        "p99Ms": 16.7,
+        "maxMs": 29.2,
+        "over20": 23,
+        "over34": 0,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 5976,
+        "meanMs": 0.22,
+        "p50Ms": 0,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 3.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 5976,
+        "meanMs": 0.29,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.7,
+        "maxMs": 1.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 5976,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 5976,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 5976,
+        "meanMs": 0.55,
+        "p50Ms": 0.4,
+        "p95Ms": 1.4,
+        "p99Ms": 1.9,
+        "maxMs": 7.5,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 5976,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 4,
+        "meanMs": 5.65,
+        "p50Ms": 5.6,
+        "p95Ms": 6,
+        "p99Ms": 6,
+        "maxMs": 6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 3,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 16,
+        "particles": 81,
+        "enemies": 8,
+        "props": 9
+      }
+    },
+    {
+      "scenario": "boss",
+      "scenarioSeconds": 30,
+      "measuredSeconds": 28,
+      "fps": 204.036,
+      "frameIntervals": {
+        "samples": 5713,
+        "meanMs": 4.9,
+        "p50Ms": 4.2,
+        "p95Ms": 8.4,
+        "p99Ms": 20.9,
+        "maxMs": 37.5,
+        "over20": 95,
+        "over34": 3,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 5713,
+        "meanMs": 0.14,
+        "p50Ms": 0,
+        "p95Ms": 0.6,
+        "p99Ms": 1,
+        "maxMs": 3.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 5713,
+        "meanMs": 0.27,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.6,
+        "maxMs": 1.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 5713,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 5713,
+        "meanMs": 0.02,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 1.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 5713,
+        "meanMs": 0.44,
+        "p50Ms": 0.3,
+        "p95Ms": 1,
+        "p99Ms": 1.4,
+        "maxMs": 4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 5713,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 2,
+        "meanMs": 0.85,
+        "p50Ms": 0.8,
+        "p95Ms": 0.9,
+        "p99Ms": 0.9,
+        "maxMs": 0.9,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 1,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 13,
+        "constraints": 0,
+        "pairs": 5,
+        "shots": 30,
+        "particles": 110,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "scenario": "overtime",
+      "scenarioSeconds": 30,
+      "measuredSeconds": 28,
+      "fps": 154.834,
+      "frameIntervals": {
+        "samples": 4336,
+        "meanMs": 6.46,
+        "p50Ms": 4.2,
+        "p95Ms": 20.9,
+        "p99Ms": 29.2,
+        "maxMs": 37.6,
+        "over20": 310,
+        "over34": 12,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 4336,
+        "meanMs": 0.29,
+        "p50Ms": 0,
+        "p95Ms": 1.3,
+        "p99Ms": 1.9,
+        "maxMs": 3.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 4336,
+        "meanMs": 0.35,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 0.7,
+        "maxMs": 1.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 4336,
+        "meanMs": 0.01,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "audio": {
+        "samples": 4336,
+        "meanMs": 0.03,
+        "p50Ms": 0,
+        "p95Ms": 0.1,
+        "p99Ms": 0.2,
+        "maxMs": 0.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "callback": {
+        "samples": 4336,
+        "meanMs": 0.69,
+        "p50Ms": 0.4,
+        "p95Ms": 1.8,
+        "p99Ms": 2.5,
+        "maxMs": 5,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "housekeeping": {
+        "samples": 4336,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 4,
+        "meanMs": 2.22,
+        "p50Ms": 1.9,
+        "p95Ms": 2.8,
+        "p99Ms": 2.8,
+        "maxMs": 2.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 3,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 20,
+        "constraints": 0,
+        "pairs": 6,
+        "shots": 80,
+        "particles": 214,
+        "enemies": 7,
+        "props": 5
+      }
+    }
+  ],
+  "timingWarning": null,
+  "peaksSampledEveryMs": 1000,
+  "memorySamples": [
+    {
+      "seconds": 0,
+      "heapBytes": 14399585,
+      "replayBytes": 0,
+      "effects": 0,
+      "music": 0,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 0,
+      "heapBytes": 14399585,
+      "replayBytes": 0,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 5,
+      "heapBytes": 19707288,
+      "replayBytes": 2266746,
+      "effects": 4,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 10,
+      "heapBytes": 21226006,
+      "replayBytes": 2272151,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 15,
+      "heapBytes": 19685685,
+      "replayBytes": 2139926,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 20,
+      "heapBytes": 21333230,
+      "replayBytes": 2106749,
+      "effects": 7,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 25,
+      "heapBytes": 17303269,
+      "replayBytes": 2169230,
+      "effects": 0,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 30,
+      "heapBytes": 23736241,
+      "replayBytes": 18924,
+      "effects": 3,
+      "music": 9,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 35,
+      "heapBytes": 27075042,
+      "replayBytes": 2103998,
+      "effects": 6,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 40,
+      "heapBytes": 34651491,
+      "replayBytes": 2612015,
+      "effects": 6,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 45,
+      "heapBytes": 21792007,
+      "replayBytes": 2174428,
+      "effects": 0,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 50,
+      "heapBytes": 29826356,
+      "replayBytes": 1836171,
+      "effects": 8,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 55,
+      "heapBytes": 19308304,
+      "replayBytes": 2585692,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 60,
+      "heapBytes": 16010008,
+      "replayBytes": 18849,
+      "effects": 7,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 65,
+      "heapBytes": 18136480,
+      "replayBytes": 2387070,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 70,
+      "heapBytes": 36223764,
+      "replayBytes": 2354656,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 75,
+      "heapBytes": 27787336,
+      "replayBytes": 2419237,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 80,
+      "heapBytes": 23461488,
+      "replayBytes": 2045167,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 85,
+      "heapBytes": 36351556,
+      "replayBytes": 2395448,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 90,
+      "heapBytes": 16806791,
+      "replayBytes": 42697,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 95,
+      "heapBytes": 28084276,
+      "replayBytes": 2399735,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 100,
+      "heapBytes": 16192000,
+      "replayBytes": 218436,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 105,
+      "heapBytes": 17307445,
+      "replayBytes": 2578572,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 110,
+      "heapBytes": 16567418,
+      "replayBytes": 444550,
+      "effects": 1,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 115,
+      "heapBytes": 24167844,
+      "replayBytes": 2622713,
+      "effects": 0,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 120,
+      "heapBytes": 37768122,
+      "replayBytes": 10685,
+      "effects": 2,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 125,
+      "heapBytes": 29730914,
+      "replayBytes": 1289315,
+      "effects": 2,
+      "music": 3,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 130,
+      "heapBytes": 15898578,
+      "replayBytes": 1346536,
+      "effects": 2,
+      "music": 1,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 135,
+      "heapBytes": 16530207,
+      "replayBytes": 1270307,
+      "effects": 0,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 140,
+      "heapBytes": 39116580,
+      "replayBytes": 1376951,
+      "effects": 0,
+      "music": 6,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 145,
+      "heapBytes": 23042580,
+      "replayBytes": 1377353,
+      "effects": 3,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 150,
+      "heapBytes": 26799621,
+      "replayBytes": 19252,
+      "effects": 5,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 155,
+      "heapBytes": 21781152,
+      "replayBytes": 2084882,
+      "effects": 3,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 160,
+      "heapBytes": 41055650,
+      "replayBytes": 728666,
+      "effects": 4,
+      "music": 4,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 165,
+      "heapBytes": 22361939,
+      "replayBytes": 2239292,
+      "effects": 1,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 170,
+      "heapBytes": 15902150,
+      "replayBytes": 1398822,
+      "effects": 5,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    },
+    {
+      "seconds": 175,
+      "heapBytes": 30732179,
+      "replayBytes": 2235990,
+      "effects": 5,
+      "music": 5,
+      "visibility": "visible",
+      "focused": true,
+      "audioState": "running"
+    }
+  ],
+  "frameDiagnostics": {
+    "limitPerHistory": 120,
+    "slowFrameCount": 0,
+    "browserEntryCount": 1,
+    "discardedSlowFrames": 0,
+    "discardedBrowserEntries": 0,
+    "supportedObservers": [
+      "longtask",
+      "long-animation-frame"
+    ],
+    "unavailableObservers": [],
+    "slowFrames": [],
+    "browserWork": [
+      {
+        "type": "long-animation-frame",
+        "startMs": 44660.6,
+        "durationMs": 52.3,
+        "blockingMs": 0,
+        "renderPhaseMs": 1.9,
+        "styleAndLayoutMs": 0,
+        "scriptMs": 0,
+        "forcedStyleAndLayoutMs": 0
+      }
+    ],
+    "interpretation": "Times are milliseconds since test start. Delayed intervals include warm-up; measured marks intervals included in scenario histograms. Previous callback work precedes the gap; current catch-up work is not its cause. Browser entries overlap in time, not necessarily causally. Unobserved time can include rendering, scheduling, other tasks or native work. Missing/unsupported entries do not prove browser idleness. Histories retain the latest 120 items and report discarded counts."
+  },
+  "detail": "Full report",
+  "errors": [],
+  "cleanup": {
+    "replayFrames": 97,
+    "replayBytes": 2095288,
+    "effects": 0,
+    "music": 0
+  }
+}

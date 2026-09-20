@@ -5,6 +5,7 @@ import { Sound } from './audio.ts';
 import { musicScene } from './music-score.ts';
 import { DeathReplay, ReplayView } from './death-replay-view.ts';
 import { TimingStats } from './performance-stats.ts';
+import { FrameDiagnostics } from './frame-diagnostics.ts';
 import {
   STABILITY_CASES,
   startStabilityCase,
@@ -24,6 +25,7 @@ const game = new Game(),
   renderer = new Renderer(canvas, game),
   sound = new Sound(),
   replay = new DeathReplay();
+const frameDiagnostics = new FrameDiagnostics();
 sound.effectsVolume = sound.musicVolume = 0.25;
 game.onSound = (kind) => sound.play(kind);
 let view: ReplayView | null = null;
@@ -48,6 +50,9 @@ let intervals = new TimingStats(),
   simulation = new TimingStats(),
   drawing = new TimingStats(),
   capture = new TimingStats(),
+  audioWork = new TimingStats(),
+  callbackWork = new TimingStats(),
+  housekeeping = new TimingStats(),
   transitions = new TimingStats();
 let peaks = stabilityCounts(game);
 let samples: {
@@ -98,6 +103,9 @@ function result() {
     simulation: simulation.report(),
     render: drawing.report(),
     replayCapture: capture.report(),
+    audio: audioWork.report(),
+    callback: callbackWork.report(),
+    housekeeping: housekeeping.report(),
     roomTransitions: transitions.report(),
     retries,
     clears,
@@ -106,9 +114,11 @@ function result() {
     peaks,
   };
 }
-function report() {
+function report(detailed = true) {
+  const rows = running ? [...results, result()] : results;
   return {
-    version: '2.96.0',
+    version: '2.96.1',
+    diagnosticSchema: 2,
     generatedAt: new Date().toISOString(),
     status: running
       ? paused
@@ -125,13 +135,26 @@ function report() {
     activeSeconds: Math.round(activeMs / 1000),
     methodology:
       'Real game simulation/render/audio/replay. Automatic preset retries after death/clear. First 2 seconds of each scenario excluded from timings. No CPU/GPU throttling. Heap is optional browser-reported JS heap, not total process memory.',
-    results: running ? [...results, result()] : results,
+    results: detailed
+      ? rows
+      : rows.map((row) => ({
+          scenario: row.scenario,
+          fps: row.fps,
+          frameP95Ms: row.frameIntervals.p95Ms,
+          frameMaxMs: row.frameIntervals.maxMs,
+          framesOver50: row.frameIntervals.over50,
+          droppedSteps: row.droppedSteps,
+        })),
     timingWarning:
       results.some((row) => row.frameIntervals.maxMs > 250) || (running && intervals.max > 250)
         ? 'Frame gaps over 250 ms recorded. Inspect frame delivery against work timings, focus, visibility and audio state before making performance claims. No slow samples were discarded.'
         : null,
     peaksSampledEveryMs: 1000,
-    memorySamples: samples,
+    memorySamples: detailed ? samples : samples.slice(-1),
+    frameDiagnostics: frameDiagnostics.report(detailed),
+    detail: detailed
+      ? 'Full report'
+      : 'Live summary; full measurements appear when paused/stopped or downloaded.',
     errors,
     cleanup: running
       ? null
@@ -144,7 +167,9 @@ function report() {
   };
 }
 function refresh() {
-  $('report').textContent = JSON.stringify(report(), null, 2);
+  // Re-laying out a growing trace every second can disturb the very timings
+  // being measured. Keep live output compact; preserve full data for export.
+  $('report').textContent = JSON.stringify(report(!running || paused), null, 2);
 }
 function resetRoom() {
   const before = performance.now();
@@ -161,6 +186,9 @@ function nextCase() {
   simulation = new TimingStats();
   drawing = new TimingStats();
   capture = new TimingStats();
+  audioWork = new TimingStats();
+  callbackWork = new TimingStats();
+  housekeeping = new TimingStats();
   transitions = new TimingStats();
   sceneMs = 0;
   retries = clears = droppedSteps = portalCases = 0;
@@ -174,6 +202,7 @@ function finish(failed = false) {
   if (failed || sceneMs < secondsPerCase * 1000) results.push(result());
   running = false;
   paused = false;
+  frameDiagnostics.stop();
   if (record)
     replay.finish(canvas, game.elapsed, {
       player: renderer.toCanvas(game.player.position),
@@ -200,10 +229,12 @@ function setPaused(value: boolean) {
   last = performance.now();
   $('pause-test').textContent = paused ? 'Resume' : 'Pause';
   if (paused) {
+    frameDiagnostics.stop();
     sound.silenceMusic();
     sound.updateTorch(false);
     $('status').textContent = 'Paused. Resume with this tab visible; hidden time is excluded.';
   } else {
+    frameDiagnostics.start(performance.now());
     sound.unlock();
     $('status').textContent = `${caseIndex + 1} / 6 · ${STABILITY_CASES[caseIndex].name}`;
   }
@@ -229,6 +260,8 @@ $('start').onclick = () => {
   paused = false;
   activeMs = accumulator = caseIndex = nextSample = 0;
   last = performance.now();
+  frameDiagnostics.reset(last);
+  frameDiagnostics.start(last);
   environment.viewport = { width: innerWidth, height: innerHeight, pixelRatio: devicePixelRatio };
   environment.canvas = { width: canvas.width, height: canvas.height };
   for (const id of ['start', 'duration', 'reduced', 'record', 'audio', 'export', 'clip'])
@@ -298,6 +331,7 @@ new ResizeObserver(([entry]) => {
   renderer.resize();
 }).observe(canvas);
 function frame(now: number) {
+  const callbackStart = performance.now();
   const elapsed = last ? now - last : 0;
   last = now;
   if (running && !paused) {
@@ -305,6 +339,7 @@ function frame(now: number) {
       activeMs += elapsed;
       sceneMs += elapsed;
       const measured = sceneMs > 2000;
+      const scenario = STABILITY_CASES[caseIndex].id;
       if (measured) intervals.add(elapsed);
       let before = performance.now();
       droppedSteps += Math.floor(Math.max(0, elapsed / 1000 - 0.1) * 60);
@@ -319,18 +354,25 @@ function frame(now: number) {
         droppedSteps += Math.floor(accumulator * 60);
         accumulator = 0;
       }
-      if (measured) simulation.add(performance.now() - before);
+      const simulationMs = performance.now() - before;
+      if (measured) simulation.add(simulationMs);
+      before = performance.now();
       sound.updateMusic(musicScene(game), true);
       sound.updateTorch(
         game.mode === 'playing' && game.torch.active && game.hitStop <= 0,
         game.torch.heat,
       );
+      const audioMs = performance.now() - before;
+      if (measured) audioWork.add(audioMs);
       before = performance.now();
       renderer.draw(now);
-      if (measured) drawing.add(performance.now() - before);
+      const renderMs = performance.now() - before;
+      if (measured) drawing.add(renderMs);
       before = performance.now();
       if (record && game.mode === 'playing') replay.capture(canvas, game.elapsed);
-      if (measured) capture.add(performance.now() - before);
+      const captureMs = performance.now() - before;
+      if (measured) capture.add(captureMs);
+      before = performance.now();
       if (now - hudAt > 1000) {
         hudAt = now;
         assertFiniteWorld(game);
@@ -343,11 +385,17 @@ function frame(now: number) {
         sample();
         nextSample = activeMs + 5000;
       }
+      const housekeepingMs = performance.now() - before;
+      if (measured) housekeeping.add(housekeepingMs);
+      const frameCallbackStats = callbackWork;
+      let finishedResult: ReturnType<typeof result> | null = null;
+      let shouldFinish = false;
+      before = performance.now();
       if (sceneMs >= secondsPerCase * 1000) {
-        results.push(result());
+        finishedResult = result();
         if (caseIndex === STABILITY_CASES.length - 1) {
           completed = true;
-          finish();
+          shouldFinish = true;
         } else {
           caseIndex++;
           nextCase();
@@ -357,6 +405,27 @@ function frame(now: number) {
         else clears++;
         resetRoom();
       }
+      const transitionMs = performance.now() - before;
+      const callbackEnd = performance.now();
+      if (measured) frameCallbackStats.add(callbackEnd - callbackStart);
+      frameDiagnostics.frame({
+        at: now,
+        start: callbackStart,
+        end: callbackEnd,
+        scenario,
+        measured,
+        simulationMs,
+        audioMs,
+        renderMs,
+        captureMs,
+        housekeepingMs,
+        transitionMs,
+      });
+      if (finishedResult) {
+        finishedResult.callback = frameCallbackStats.report();
+        results.push(finishedResult);
+      }
+      if (shouldFinish) finish();
     } catch (error) {
       errors.push(String(error));
       finish(true);
