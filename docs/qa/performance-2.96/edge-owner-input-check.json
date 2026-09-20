@@ -3,7 +3,7 @@
   "localDate": "2026-09-19",
   "browser": "Standalone Edge on the owner's Windows laptop",
   "installedEdgeVersion": "153.0.4234.32",
-  "verification": "Owner explicitly answered 'All work' when asked whether the following normal-game keyboard/mouse and window transitions work in Edge.",
+  "verification": "Owner explicitly answered 'All work' for normal-game keyboard/mouse and window transitions in Edge, then 'All works.' for retry after death, choosing an upgrade/entering the next room, and returning to the main menu.",
   "passed": [
     "Movement",
     "Aiming",
@@ -11,8 +11,12 @@
     "Pause and resume",
     "Switching away from the game and returning",
     "Entering fullscreen",
-    "Exiting fullscreen"
+    "Exiting fullscreen",
+    "Retrying after death using Again",
+    "Choosing an upgrade after clearing a room",
+    "Entering the next room",
+    "Returning to the main menu"
   ],
   "evidenceType": "Owner observation of physical keyboard/mouse and normal browser controls",
-  "limits": "This is a basic gameplay/input check, not a full campaign playthrough or controller/touch certification. It does not separately attest to retry, reward or room-transition UI flows. The recorded version comes from the installed executable, not an independently inspected running About screen."
+  "limits": "This is a basic gameplay/input and lifecycle check, not a full campaign playthrough or controller/touch certification. The recorded version comes from the installed executable, not an independently inspected running About screen."
 }

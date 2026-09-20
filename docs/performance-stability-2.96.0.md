@@ -130,9 +130,9 @@ A subsequent public-build recheck on 19 September at 22:05 CDT **did deliver a n
 
 ## Owner-confirmed Edge input checks
 
-After the Reduced effects run, the owner explicitly confirmed that **movement, aiming, shooting, pause/resume, switching away and returning, and entering/exiting fullscreen all work in Edge**. The [manual input receipt](qa/performance-2.96/edge-owner-input-check.json) records this as owner-observed physical keyboard/mouse and browser-window evidence. Those specific acceptance checks are complete and removed from the unfinished list. This does not separately attest to retry/reward/room-transition UI flows, a whole-campaign playthrough, physical controllers, rumble or touch.
+After the Reduced effects run, the owner explicitly confirmed that **movement, aiming, shooting, pause/resume, switching away and returning, and entering/exiting fullscreen all work in Edge**. In a subsequent confirmation, the owner also verified **retrying after death, choosing an upgrade and entering the next room, and returning to the main menu**. The [manual input receipt](qa/performance-2.96/edge-owner-input-check.json) records these as owner-observed keyboard/mouse, browser-window and gameplay lifecycle checks. Those specific acceptance checks are complete and removed from the unfinished list. This does not establish a whole-campaign playthrough, physical controller support, rumble or touch.
 
-The Edge benchmark set, basic keyboard/mouse/window checks and replay export/playback are complete. Remaining isolated hitch investigation, Edge retry/room-transition/menu smoke checks, independent Chrome/Firefox testing, controller acceptance and baseline-device acceptance remain in item 5. No unperformed browser or device check is inferred from these results.
+The Edge benchmark set, basic keyboard/mouse/window checks, retry/reward/room/menu flow and replay export/playback are complete. Remaining isolated hitch investigation, independent Chrome/Firefox testing, controller acceptance and baseline-device acceptance remain in item 5. No unperformed browser or device check is inferred from these results.
 
 ## Automated verification
 
