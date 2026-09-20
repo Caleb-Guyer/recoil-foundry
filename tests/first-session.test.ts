@@ -97,6 +97,10 @@ test('audio state explains the master mute even when Music remains checked', () 
   assert.equal(audioState(true, false).sound, 'On');
   assert.equal(audioState(true, false).music, 'Off');
   assert.equal(audioState(true, true).note, '');
+  assert.equal(audioState(true, true, 0, 0).settings, 'Settings · Muted');
+  assert.match(audioState(true, true, 0, 0).note, /Raise a volume/);
+  assert.equal(audioState(true, true, 0, 0.4).settings, 'Settings');
+  assert.equal(audioState(true, true, 1, 0).music, 'Muted');
   for (const device of ['keyboard', 'controller', 'touch'] as const) {
     const copy = controlsIntro(device);
     assert(copy.includes('Move') && copy.includes('Jump') && copy.includes('Pause'));

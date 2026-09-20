@@ -254,7 +254,9 @@ export class Renderer {
       c.globalAlpha = 1;
     }
     for (const p of g.particles) {
+      if (this.reduced && p.kind === 'shell') continue;
       c.globalAlpha =
+        (this.reduced ? 0.3 : 1) *
         clamp(p.life / p.max, 0, 1) *
         effectOpacity(p.pos, p.kind === 'ring' ? p.size * (1 - p.life / p.max) : p.size, threats);
       if (p.kind === 'ring') this.circle(p.pos, p.size * (1 - p.life / p.max), p.color, false, 1.5);
@@ -354,7 +356,7 @@ export class Renderer {
         }
       }
       const color =
-        e.flash > 0
+        e.flash > 0 && !this.reduced
           ? '#fff5df'
           : e.allied
             ? '#6bb7ff'
@@ -366,7 +368,7 @@ export class Renderer {
       if (e.kind === 'loader') {
         c.save();
         c.scale(e.aim.x < 0 ? -1 : 1, 1);
-        c.fillStyle = e.flash > 0 ? '#fff5df' : '#393237';
+        c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : '#393237';
         c.fillRect(-56, -23, 112, 57);
         c.fillRect(-31, -34, 58, 18);
         c.fillStyle = '#171f25';
@@ -393,7 +395,7 @@ export class Renderer {
         c.fillStyle = '#564a43';
         c.fillRect(-41, -65, 10, 36);
         c.fillRect(31, -65, 10, 36);
-        c.fillStyle = e.flash > 0 ? '#fff5df' : '#352b2b';
+        c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : '#352b2b';
         c.fillRect(-60, -31, 120, 62);
         c.fillStyle = color;
         c.fillRect(-60, -31, 120, 6);
@@ -497,7 +499,7 @@ export class Renderer {
           this.line({ x: 18, y: 2 }, { x: 26, y: -5 }, color, 3);
         }
       } else {
-        c.fillStyle = e.flash > 0 ? '#fff5df' : e.allied ? '#18344b' : '#33282a';
+        c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : e.allied ? '#18344b' : '#33282a';
         c.fillRect(-size / 2, -(e.kind === 'boss' ? 38 : 16), size, e.kind === 'boss' ? 76 : 32);
         c.fillStyle = color;
         if (e.kind === 'runner') {

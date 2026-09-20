@@ -62,7 +62,10 @@ import {
 import { bindRecapActions, resultRecap, runHistoryMenu } from './run-history-menu.ts';
 import type { Input } from './game.ts';
 import { Renderer } from './render.ts';
-import { Sound } from './audio.ts';
+import { Sound, volumeLevel } from './audio.ts';
+import { loadBindings, matches, held, keyLabel, bindingLabel } from './keyboard.ts';
+import { keyboardMenu } from './keyboard-menu.ts';
+import { DisplaySafety, watchSessionEvents } from './display-safety.ts';
 import { Controller, controllerSettings } from './controller.ts';
 import {
   confirmControllerMenu,
@@ -243,12 +246,19 @@ const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}
   music?: boolean;
   reduced?: boolean;
   controller?: unknown;
+  bindings?: unknown;
+  effectsVolume?: unknown;
+  musicVolume?: unknown;
 };
 const controller = new Controller(controllerSettings(prefs.controller));
+const bindings = loadBindings(prefs.bindings);
+let bindingEditor: ReturnType<typeof keyboardMenu> | null = null;
 let inputDevice: 'pointer' | 'controller' = 'pointer';
 let padAim = { x: 1, y: 0 };
 sound.enabled = prefs.sound !== false;
 sound.musicEnabled = prefs.music !== false;
+sound.effectsVolume = volumeLevel(prefs.effectsVolume);
+sound.musicVolume = volumeLevel(prefs.musicVolume);
 renderer.reduced =
   typeof prefs.reduced === 'boolean'
     ? prefs.reduced
@@ -258,6 +268,7 @@ const modal = $<HTMLDialogElement>('modal'),
   touch = { left: false, right: false, jump: false },
   pointer = { x: 500, y: 400 };
 let portalTouch = false;
+let pointerArmed = false;
 let mouseButtons = 0,
   touchAim = new Set<number>(),
   dialogKind = '',
@@ -550,11 +561,16 @@ function updateTitle() {
     const hint = hints[entryUrl.searchParams.get('build') ?? ''];
     if (hint) $('title-hint').textContent = hint;
   }
+  $('title-hint').textContent = $('title-hint').textContent!.replace(
+    /\bR to /g,
+    bindingLabel(bindings, 'retry') + ' to ',
+  );
 }
 function clearInput(disarm = true) {
   if (disarm) controller.disarm();
   keys.clear();
   mouseButtons = 0;
+  pointerArmed = false;
   touchAim.clear();
   touch.left = touch.right = touch.jump = false;
   input.left = input.right = input.jump = input.jumpHeld = input.fire = false;
@@ -566,6 +582,8 @@ function clearInput(disarm = true) {
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
+  bindingEditor?.cancel();
+  bindingEditor = null;
   replayView?.dispose();
   replayView = null;
   if (modal.open) modal.close();
@@ -578,8 +596,13 @@ function persistSettings() {
     music: sound.musicEnabled,
     reduced: renderer.reduced,
     controller: controller.settings,
+    bindings,
+    effectsVolume: sound.effectsVolume,
+    musicVolume: sound.musicVolume,
   });
   updateAudioState();
+  updateTitle();
+  updateControlHints();
 }
 function controlDevice(): ControlDevice {
   return inputDevice === 'controller'
@@ -589,7 +612,12 @@ function controlDevice(): ControlDevice {
       : 'keyboard';
 }
 function updateAudioState() {
-  const state = audioState(sound.enabled, sound.musicEnabled);
+  const state = audioState(
+    sound.enabled,
+    sound.musicEnabled,
+    sound.effectsVolume,
+    sound.musicVolume,
+  );
   $('settings').textContent = state.settings;
   for (const [id, text] of [
     ['sound-state', state.sound],
@@ -601,6 +629,17 @@ function updateAudioState() {
       el.textContent = text;
       if (id === 'audio-note') el.hidden = !text;
     }
+  }
+  for (const channel of ['effects', 'music'] as const) {
+    const level = channel === 'effects' ? sound.effectsVolume : sound.musicVolume;
+    const muted = !sound.enabled || level === 0 || (channel === 'music' && !sound.musicEnabled);
+    const slider = document.getElementById(channel + '-volume') as HTMLInputElement | null;
+    const output = document.getElementById(channel + '-volume-value');
+    if (output) output.textContent = muted ? 'Muted' : `${Math.round(level * 100)}%`;
+    slider?.setAttribute(
+      'aria-valuetext',
+      `${Math.round(level * 100)} percent${muted ? ', muted' : ''}`,
+    );
   }
 }
 function updateSaveStatus() {
@@ -672,7 +711,7 @@ function updateFirstSession() {
     if (needsGuidance) finishGuidance();
     if (!firstSession.warmup && game.stage > 0) firstSession.stop();
   }
-  const text = firstSession.message(game, controlDevice());
+  const text = firstSession.message(game, controlDevice(), bindings);
   $('first-session-tip').hidden = !text;
   if ($('first-session-copy').textContent !== text) $('first-session-copy').textContent = text;
   $('dismiss-tip').hidden = firstSession.warmup;
@@ -1105,6 +1144,8 @@ function modMark(mod: Mod) {
   );
 }
 function showDialog(kind: string) {
+  bindingEditor?.cancel();
+  bindingEditor = null;
   replayView?.dispose();
   replayView = null;
   if (game.mode === 'playing') game.setMode('paused');
@@ -1121,6 +1162,7 @@ function showDialog(kind: string) {
   modal.classList.toggle('ending-dialog', kind === 'result' && game.shutdown.complete);
   modal.classList.toggle('controls-dialog', kind === 'controls');
   modal.classList.toggle('progress-dialog', kind === 'progress');
+  modal.classList.toggle('settings-dialog', kind === 'settings' || kind === 'pause');
   const content = $('dialog-content');
   if (kind === 'logbook' || kind === 'workshop')
     commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
@@ -1138,7 +1180,7 @@ function showDialog(kind: string) {
   } else if (kind === 'controls') {
     content.innerHTML =
       '<h2 id="dialog-title">Controls.</h2><div id="controls-grid">' +
-      controlsIntro(controlDevice()) +
+      controlsIntro(controlDevice(), bindings) +
       '</div>' +
       '<div class="recoil-demo"><svg viewBox="0 0 100 100" aria-hidden="true"><path class="recoil-rise" d="M24 57V17m-8 9 8-9 8 9"/><rect x="44" y="24" width="22" height="30" rx="4"/><path d="M59 43v24m0 10v7m0 8v4"/><path class="recoil-floor" d="M12 98h75"/></svg><div><strong>Shoot down. Go up.</strong><p>Jump first. Recoil pushes you opposite your shots, much harder in the air.</p></div></div>' +
       '<p class="controls-flow">Clear the room → take the lit right door → choose one upgrade.<br>Your gun keeps its upgrades for the run.</p>' +
@@ -1594,32 +1636,27 @@ function showDialog(kind: string) {
           : '') +
       '<h2 id="dialog-title">' +
       (paused ? 'Paused.' : 'Settings.') +
-      '</h2>' +
+      '</h2><div class="settings-scroll">' +
       '<div class="settings-list"><label>Sound<span class="setting-value"><span id="sound-state"></span><input id="sound" type="checkbox" ' +
       (sound.enabled ? 'checked' : '') +
-      ' /></span></label><label>Music<span class="setting-value"><span id="music-state"></span><input id="music" type="checkbox" ' +
+      ' /></span></label>' +
+      volumeControl('effects', sound.effectsVolume) +
+      volumeControl('music', sound.musicVolume) +
+      '<label>Music enabled<span class="setting-value"><span id="music-state"></span><input id="music" type="checkbox" ' +
       (sound.musicEnabled ? 'checked' : '') +
-      ' /></span></label><label>Screen shake<input id="shake" type="checkbox" ' +
-      (!renderer.reduced ? 'checked' : '') +
-      ' /></label></div><p id="audio-note" class="controller-note" role="status" hidden></p>' +
+      ' /></span></label><label>Reduced effects<input id="shake" type="checkbox" aria-describedby="reduced-note" ' +
+      (renderer.reduced ? 'checked' : '') +
+      ' /></label></div><p id="reduced-note" class="controller-note">Less shake, flashes and particles. Attack warnings stay visible.</p><p id="audio-note" class="controller-note" role="status" hidden></p><details id="keyboard-settings" class="controller-settings"></details>' +
       controllerOptions() +
-      '<div class="controls-copy"><div id="device-controls">' +
-      (game.portals.equipped
-        ? game.mods.includes('rewire')
-          ? '<p>Right-click or <kbd>E</kbd> to place or move either portal.</p>'
-          : game.portals.canPlace
-            ? '<p>Right-click or <kbd>E</kbd> on two surfaces. One portal pair per room.</p>'
-            : '<p>Portals are fixed until the next room.</p>'
-        : '') +
-      '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire. Shoot down in the air to climb.</p></div><p>' +
+      `<div class="controls-copy" ${paused ? '' : 'hidden'}><div id="device-controls"></div><p>` +
       (game.workshop.active
         ? firstSession.warmup
-          ? 'Targets reset automatically. R restarts the warm-up. Done returns to the menu.'
-          : 'Targets reset automatically. R restores the room. Build changes your gun.'
+          ? 'Targets reset automatically. Reset warm-up starts over. Done returns to the menu.'
+          : 'Targets reset automatically. Reset room starts over. Build changes your gun.'
         : game.practice
-          ? 'Defeat the boss. Press R to retry.'
+          ? 'Defeat the boss. Retry starts over.'
           : game.testRun
-            ? 'Preset test. Press R to restart the test.'
+            ? 'Preset test. Restart test starts over.'
             : game.escape
               ? game.canOvertime
                 ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
@@ -1639,7 +1676,7 @@ function showDialog(kind: string) {
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
           '</ul></details>'
         : '') +
-      '<div class="actions"><button id="back" class="primary">' +
+      '</div><div class="actions"><button id="back" class="primary">' +
       (paused ? 'Resume' : 'Back') +
       '</button>' +
       '<button id="pause-controls" class="quiet">Controls</button>' +
@@ -1672,9 +1709,21 @@ function showDialog(kind: string) {
       updateMusic();
     };
     $<HTMLInputElement>('shake').onchange = (e) => {
-      renderer.reduced = !(e.target as HTMLInputElement).checked;
+      renderer.reduced = (e.target as HTMLInputElement).checked;
       persistSettings();
     };
+    for (const channel of ['effects', 'music'] as const) {
+      const slider = $<HTMLInputElement>(channel + '-volume');
+      slider.oninput = () => {
+        if (channel === 'effects') sound.effectsVolume = slider.valueAsNumber / 100;
+        else sound.musicVolume = slider.valueAsNumber / 100;
+        sound.unlock();
+        updateAudioState();
+        updateMusic();
+      };
+      slider.onchange = persistSettings;
+    }
+    bindingEditor = keyboardMenu($('keyboard-settings'), bindings, persistSettings);
     $<HTMLInputElement>('rumble').onchange = (e) => {
       controller.settings.rumble = (e.target as HTMLInputElement).checked;
       if (!controller.settings.rumble) controller.stopRumble();
@@ -1721,14 +1770,24 @@ function showDialog(kind: string) {
   if (!modal.open) modal.showModal();
   updateControlHints();
   updateSaveStatus();
-  if (['pause', 'settings', 'controls', 'progress'].includes(kind)) $('back').focus();
+  if (kind === 'settings') {
+    $('sound').focus({ preventScroll: true });
+    modal.scrollTop = 0;
+  } else if (kind === 'pause') {
+    $('back').focus({ preventScroll: true });
+    modal.scrollTop = 0;
+  } else if (['controls', 'progress'].includes(kind)) $('back').focus();
   if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (kind === 'replay') $('replay-play').focus();
   if (kind === 'logbook')
     content.querySelector<HTMLElement>('[data-section][aria-pressed="true"]')?.focus();
-  if (inputDevice === 'controller') focusControllerMenu(content);
+  if (inputDevice === 'controller') focusControllerMenu(modal);
+}
+function volumeControl(channel: 'effects' | 'music', level: number) {
+  const value = Math.round(level * 100);
+  return `<label for="${channel}-volume">${channel === 'effects' ? 'Effects' : 'Music'} volume<span class="controller-slider volume-slider"><input id="${channel}-volume" type="range" min="0" max="100" step="1" value="${value}"><output id="${channel}-volume-value" for="${channel}-volume">${value}%</output></span></label>`;
 }
 function controllerOptions() {
   return (
@@ -1773,16 +1832,16 @@ function updateControlHints() {
   document.body.dataset.input = inputDevice;
   $('title-controls').innerHTML = pad
     ? 'Left stick move <i>·</i> Right stick aim <i>·</i> LB jump <i>·</i> RT fire'
-    : '<kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire';
+    : `<kbd>${keyLabel(bindings.left[0])}</kbd><kbd>${keyLabel(bindings.right[0])}</kbd> move <i>·</i> <kbd>${keyLabel(bindings.jump[0])}</kbd> jump <i>·</i> Mouse fire`;
   canvas.setAttribute(
     'aria-label',
     pad
       ? 'Recoil Foundry. Left stick to move. Right stick to aim. Left bumper to jump. Right trigger to fire. Left trigger to place a portal. Start to pause.'
-      : 'Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb.',
+      : `Recoil Foundry. ${bindingLabel(bindings, 'left')} to move left. ${bindingLabel(bindings, 'right')} to move right. ${bindingLabel(bindings, 'jump')} to jump. Mouse to aim. Left click or ${bindingLabel(bindings, 'fire')} to fire. Escape to pause. Shoot down in the air to climb.`,
   );
   const copy = document.getElementById('device-controls');
   const grid = document.getElementById('controls-grid');
-  if (grid) grid.innerHTML = controlsIntro(controlDevice());
+  if (grid) grid.innerHTML = controlsIntro(controlDevice(), bindings);
   const equipped = document.getElementById('equipped-controls');
   if (equipped)
     equipped.innerHTML =
@@ -1792,7 +1851,7 @@ function updateControlHints() {
             ? 'LT / L2'
             : controlDevice() === 'touch'
               ? '◎, then tap a surface'
-              : 'Right-click or E') +
+              : 'Right-click or ' + bindingLabel(bindings, 'portal')) +
           ': place a portal. ' +
           (game.mods.includes('rewire') ? 'Reposition freely.' : 'One pair per room.') +
           '</p>'
@@ -1803,7 +1862,9 @@ function updateControlHints() {
       (game.portals.equipped
         ? '<p>' +
           (game.portals.canPlace
-            ? (pad ? 'Aim at a surface and press LT / L2.' : 'Right-click or E on a surface.') +
+            ? (pad
+                ? 'Aim at a surface and press LT / L2.'
+                : `Right-click or ${bindingLabel(bindings, 'portal')} on a surface.`) +
               (game.mods.includes('rewire')
                 ? ' Place or move either portal.'
                 : ' One portal pair per room.')
@@ -1812,13 +1873,16 @@ function updateControlHints() {
         : '') +
       (pad
         ? '<p>Left stick: move · Right stick: aim</p><p>LB / L1: jump · RT / R2: fire</p>'
-        : '<p><kbd>A</kbd> <kbd>D</kbd> Move <span>·</span> <kbd>Space</kbd> Jump</p><p>Mouse to aim and fire.</p>') +
+        : `<p><kbd>${keyLabel(bindings.left[0])}</kbd> <kbd>${keyLabel(bindings.right[0])}</kbd> Move <span>·</span> <kbd>${keyLabel(bindings.jump[0])}</kbd> Jump</p><p>Mouse to aim. Left click or ${bindingLabel(bindings, 'fire')} to fire.</p>`) +
       (game.mods.includes('charge-lens')
         ? '<p>Hold ' +
-          (pad ? 'RT / R2' : 'left click') +
+          (pad ? 'RT / R2' : 'left click or ' + bindingLabel(bindings, 'fire')) +
           ' to charge. Release to fire.</p><p>Release downward in the air to climb.</p>'
         : '<p>Shoot down in the air to climb.</p>');
   const status = document.getElementById('controller-status');
+  $('workshop-reset').title = 'Reset room · ' + bindingLabel(bindings, 'retry');
+  const retry = document.getElementById('retry');
+  if (retry) retry.title = 'Retry · ' + bindingLabel(bindings, 'retry');
   if (status)
     status.textContent = controller.pad
       ? 'Controller connected.'
@@ -1835,7 +1899,7 @@ function useInputDevice(device: 'pointer' | 'controller') {
   updateControlHints();
   if (device === 'controller') {
     sound.unlock();
-    if (modal.open) focusControllerMenu($('dialog-content'));
+    if (modal.open) focusControllerMenu(modal);
     else if (game.mode === 'title') focusControllerMenu($('title-screen'));
   }
 }
@@ -1852,15 +1916,19 @@ function pollController(now: number) {
   if (sample.activity) useInputDevice('controller');
   if (inputDevice !== 'controller') return null;
   if (sample.pause) {
+    if (bindingEditor?.cancel()) return null;
     if (!modal.open || dialogKind === 'pause') pause();
     return null;
   }
   if (modal.open || game.mode === 'title') {
-    const root = modal.open ? $('dialog-content') : $('title-screen');
+    const root = modal.open ? modal : $('title-screen');
     if (sample.navigation) navigateControllerMenu(root, sample.navigation);
-    if (sample.back && modal.open)
-      root.querySelector<HTMLElement>('#practice-back, #workshop-back, #back, #menu')?.click();
-    else if (sample.confirm) confirmControllerMenu(root);
+    if (sample.back && modal.open) {
+      if (!bindingEditor?.cancel()) {
+        if (dialogKind === 'result' && ['dead', 'won'].includes(game.mode)) menu();
+        else cancelDialog();
+      }
+    } else if (sample.confirm) confirmControllerMenu(root);
     return null;
   }
   return sample;
@@ -1870,7 +1938,8 @@ function resume() {
   sound.unlock();
   closeDialog();
   if (game.mode === 'paused') game.setMode('playing');
-  canvas.focus();
+  if (game.mode === 'title') $('settings').focus();
+  else canvas.focus();
 }
 function pause() {
   if (game.mode === 'playing') showDialog('pause');
@@ -1926,6 +1995,9 @@ $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
 modal.addEventListener('cancel', (e) => {
   e.preventDefault();
+  if (!bindingEditor?.cancel()) cancelDialog();
+});
+function cancelDialog() {
   if (dialogKind === 'progress') {
     backFromProgress();
     return;
@@ -1962,8 +2034,9 @@ modal.addEventListener('cancel', (e) => {
   }
   if (game.mode === 'upgrade' || game.mode === 'dead' || game.mode === 'won') return;
   resume();
-});
+}
 window.addEventListener('keydown', (e) => {
+  if (bindingEditor?.handleKey(e)) return;
   useInputDevice('pointer');
   if (
     e.ctrlKey ||
@@ -1974,12 +2047,32 @@ window.addEventListener('keydown', (e) => {
     return;
   if (
     game.mode === 'playing' &&
-    ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)
+    (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) ||
+      Object.values(bindings).some((codes) => codes.includes(e.code)))
   )
     e.preventDefault();
   if (e.repeat) return;
+  // Let native buttons, checkboxes, sliders and scrolling keep their menu keys,
+  // even when those physical keys have also been assigned to gameplay actions.
   if (
-    e.code === 'KeyH' &&
+    (modal.open || game.mode === 'title') &&
+    [
+      'Space',
+      'Enter',
+      'Tab',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+      'Home',
+      'End',
+      'PageUp',
+      'PageDown',
+    ].includes(e.code)
+  )
+    return;
+  if (
+    matches(bindings, 'controls', e.code) &&
     (!modal.open || ['pause', 'settings'].includes(dialogKind)) &&
     ['title', 'playing', 'paused'].includes(game.mode)
   ) {
@@ -1987,18 +2080,20 @@ window.addEventListener('keydown', (e) => {
     openControls();
     return;
   }
-  if (e.code === 'KeyR' && game.mode === 'dead' && ['result', 'replay'].includes(dialogKind)) {
+  if (
+    matches(bindings, 'retry', e.code) &&
+    game.mode === 'dead' &&
+    ['result', 'replay'].includes(dialogKind)
+  ) {
     e.preventDefault();
     start(undefined, true);
     return;
   }
   if (
-    e.code === 'KeyR' &&
+    matches(bindings, 'retry', e.code) &&
     (game.practice || game.testRun || game.workshop.active) &&
     game.mode !== 'title' &&
-    dialogKind !== 'practice' &&
-    dialogKind !== 'workshop' &&
-    dialogKind !== 'logbook'
+    (!modal.open || dialogKind === 'pause')
   ) {
     e.preventDefault();
     start(undefined, true);
@@ -2028,17 +2123,23 @@ window.addEventListener('keydown', (e) => {
     }
     return;
   }
-  if (e.code === 'Escape' || e.code === 'KeyP') {
-    if (!modal.open || e.code === 'KeyP') {
+  if (e.code === 'Escape' || matches(bindings, 'pause', e.code)) {
+    if (!modal.open || e.code !== 'Escape') {
       e.preventDefault();
-      pause();
+      if (modal.open) cancelDialog();
+      else pause();
     }
     return;
   }
   if (game.mode !== 'playing') return;
+  if (Object.values(bindings).some((codes) => codes.includes(e.code))) e.preventDefault();
   keys.add(e.code);
-  if (e.code === 'KeyE') input.portal = renderer.toWorld(pointer.x, pointer.y);
-  if (['Space', 'KeyW', 'ArrowUp'].includes(e.code)) input.jump = true;
+  if (matches(bindings, 'portal', e.code)) input.portal = renderer.toWorld(pointer.x, pointer.y);
+  if (matches(bindings, 'jump', e.code)) input.jump = true;
+  if (matches(bindings, 'fire', e.code)) {
+    input.firePressed = true;
+    sound.unlock();
+  }
 });
 window.addEventListener('keyup', (e) => keys.delete(e.code));
 window.addEventListener('pointerdown', () => useInputDevice('pointer'), { capture: true });
@@ -2056,6 +2157,7 @@ function updatePointer(e: PointerEvent) {
 }
 canvas.onpointerdown = (e) => {
   if (game.mode !== 'playing') return;
+  pointerArmed = true;
   sound.unlock();
   canvas.focus();
   canvas.setPointerCapture(e.pointerId);
@@ -2072,15 +2174,19 @@ canvas.onpointerdown = (e) => {
 };
 canvas.onpointermove = (e) => {
   updatePointer(e);
-  if (e.pointerType !== 'touch') mouseButtons = e.buttons;
+  if (e.pointerType !== 'touch' && pointerArmed) mouseButtons = e.buttons;
 };
 window.addEventListener('pointerup', (e) => {
   if (e.pointerType === 'touch') touchAim.delete(e.pointerId);
-  else mouseButtons = e.buttons;
+  else {
+    if (e.buttons === 0) pointerArmed = true;
+    mouseButtons = pointerArmed ? e.buttons : 0;
+  }
 });
 canvas.onpointercancel = (e) => {
   touchAim.delete(e.pointerId);
   mouseButtons = 0;
+  pointerArmed = false;
 };
 canvas.oncontextmenu = (e) => e.preventDefault();
 $('portal-touch').onpointerdown = (e) => {
@@ -2103,34 +2209,42 @@ document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((b) => {
   b.onpointercancel = release;
 });
 function loseFocus() {
+  bindingEditor?.cancel();
   pageActive = false;
   updateMusic(false);
   clearInput();
   if (game.mode === 'playing') showDialog('pause');
 }
-window.addEventListener('blur', loseFocus);
-window.addEventListener('pagehide', loseFocus);
 function regainFocus() {
   pageActive = document.hasFocus() && !document.hidden;
   updateMusic();
 }
-window.addEventListener('focus', regainFocus);
-window.addEventListener('pageshow', regainFocus);
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) loseFocus();
-  else regainFocus();
+function pauseForDisplayChange() {
+  clearInput();
+  if (game.mode === 'playing') showDialog('pause');
+}
+const displaySafety = new DisplaySafety();
+new ResizeObserver(([entry]) => {
+  if (displaySafety.resized(entry.contentRect.width, entry.contentRect.height))
+    pauseForDisplayChange();
+  renderer.resize();
+}).observe($('arena'));
+watchSessionEvents(window, document, {
+  hidden: () => document.hidden,
+  loseFocus,
+  regainFocus,
+  displayChanged: pauseForDisplayChange,
 });
-new ResizeObserver(() => renderer.resize()).observe($('arena'));
 function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   const pad = pollController(now);
   if (game.mode === 'playing') {
     accumulator += dt;
-    input.left = keys.has('KeyA') || keys.has('ArrowLeft') || touch.left;
-    input.right = keys.has('KeyD') || keys.has('ArrowRight') || touch.right;
-    input.jumpHeld = keys.has('Space') || keys.has('KeyW') || keys.has('ArrowUp') || touch.jump;
-    input.fire = (mouseButtons & 1) !== 0 || touchAim.size > 0;
+    input.left = held(bindings, 'left', keys) || touch.left;
+    input.right = held(bindings, 'right', keys) || touch.right;
+    input.jumpHeld = held(bindings, 'jump', keys) || touch.jump;
+    input.fire = held(bindings, 'fire', keys) || (mouseButtons & 1) !== 0 || touchAim.size > 0;
     input.aim = renderer.toWorld(pointer.x, pointer.y);
     input.move = undefined;
     if (inputDevice === 'controller') {
@@ -2209,6 +2323,15 @@ window.addEventListener('beforeunload', (e) => {
   }
 });
 updateAudioState();
+updateControlHints();
+if (
+  entryUrl.searchParams.get('help') === 'settings' &&
+  !linkedRunTest &&
+  !linkedTest &&
+  !linkedDaily &&
+  !linkedWorkshop
+)
+  showDialog('settings');
 if (
   entryUrl.searchParams.get('help') === 'controls' &&
   !linkedRunTest &&

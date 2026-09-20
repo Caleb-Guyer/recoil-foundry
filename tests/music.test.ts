@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Music, MUSIC_LOOKAHEAD, MUSIC_VOICES } from '../src/music.ts';
-import { Sound } from '../src/audio.ts';
+import { Sound, volumeLevel } from '../src/audio.ts';
 import type { MusicScene } from '../src/music-score.ts';
 
 type Automation = { kind: string; value?: number; time: number };
@@ -201,6 +201,67 @@ function assertCancelled(context: AudioContextMock, sources: SourceNodeMock[]) {
     assert(source.disconnected, 'A cancelled source stayed connected to the audio graph');
   }
 }
+
+test('separate volumes apply before unlock, scale warning sounds, and survive ducking and master mute', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.effectsVolume = 0.4;
+  sound.musicVolume = 0.25;
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  assert.equal(sound.effectsOutput!.gain.value, 0.4);
+  assert.equal(sound.musicOutput!.gain.value, 0.25);
+  sound.play('interceptor-lock');
+  const reaches = (node: AudioNodeMock, target: unknown): boolean =>
+    node === target || node.connections.some((next) => reaches(next, target));
+  assert(
+    context.sources.every((node) => reaches(node, sound.effectsOutput)),
+    'warnings must obey the effects volume',
+  );
+  assert(context.sources.every((node) => !reaches(node, sound.musicOutput)));
+  assert.equal(
+    sound.effectsOutput!.gain.value,
+    0.4,
+    'warning ducking cannot reset the user volume',
+  );
+  const beforeMusic = context.sources.length;
+  sound.updateMusic(scene());
+  const notes = context.sources.slice(beforeMusic);
+  assert(notes.length > 0);
+  assert(notes.every((node) => reaches(node, sound.musicOutput)));
+  assert(notes.every((node) => !reaches(node, sound.effectsOutput)));
+  sound.enabled = false;
+  assert.equal(sound.master!.gain.value, 0);
+  sound.enabled = true;
+  assert.equal(sound.effectsVolume, 0.4);
+  assert.equal(sound.musicVolume, 0.25);
+  sound.musicVolume = 0;
+  const beforeMuted = context.sources.length;
+  sound.updateMusic(scene());
+  assert.equal(context.sources.length, beforeMuted);
+  sound.effectsVolume = 0;
+  sound.play('shoot');
+  sound.play('loader');
+  sound.updateTorch(true, 1);
+  assert.equal(
+    context.sources.length,
+    beforeMuted,
+    'zero effects includes priority warnings and sustained weapons',
+  );
+  sound.musicVolume = 0.7;
+  sound.updateMusic(scene());
+  assert(context.sources.length > beforeMuted, 'music remains independent of effects mute');
+  assert.equal(sound.musicOutput!.gain.value, 0.7);
+});
+
+test('invalid volumes cannot inject non-finite or excessive gains', () => {
+  for (const raw of [undefined, null, '0', NaN, Infinity, -Infinity, {}])
+    assert.equal(volumeLevel(raw), 1);
+  assert.equal(volumeLevel(-1), 0);
+  assert.equal(volumeLevel(5), 1);
+  assert.equal(volumeLevel(0), 0);
+  assert.equal(volumeLevel(0.5), 0.5);
+});
 
 test('attack warnings stay audible when gunfire fills the effect voice budget', (t) => {
   installContext(t);

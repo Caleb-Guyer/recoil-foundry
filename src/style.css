@@ -887,9 +887,96 @@ dialog.logbook-dialog {
   width: clamp(75px, 20vw, 140px);
 }
 .controller-slider output {
-  width: 3ch;
+  min-width: 5ch;
   font-size: 13px;
   text-align: right;
+}
+.settings-list label {
+  gap: 16px;
+}
+.volume-slider input {
+  width: clamp(90px, 22vw, 190px);
+}
+.binding-list {
+  border-top: 1px solid #354440;
+}
+.binding-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #354440;
+}
+.binding-keys {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.binding-key {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #52635c;
+  border-radius: 3px;
+  background: #121b19;
+  font-size: 13px;
+}
+.binding-key[aria-pressed='true'] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.binding-row > span:first-child {
+  min-width: 95px;
+}
+.binding-status {
+  min-height: 2em;
+}
+.settings-dialog {
+  --settings-padding: 36px;
+  overflow: hidden;
+}
+.settings-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.settings-dialog #dialog-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100dvh - 42px - 2 * var(--settings-padding));
+}
+.settings-dialog .modal-save-warning {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.settings-scroll {
+  overflow: auto;
+  min-height: 0;
+  scroll-padding: 12px;
+  padding: 6px 10px 6px 0;
+}
+.settings-dialog h2 {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+.settings-dialog .settings-list label {
+  padding: 12px 0;
+}
+.settings-dialog #dialog-content > .actions {
+  flex-shrink: 0;
+  margin-top: 16px;
+  padding-top: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
 }
 body[data-input='controller'] :is(button, summary, input):focus {
   outline: 2px solid var(--accent);
@@ -1063,6 +1150,9 @@ body[data-input='controller'] canvas {
   dialog {
     padding: 24px;
     width: calc(100% - 28px);
+  }
+  .settings-dialog {
+    --settings-padding: 24px;
   }
   h2 {
     margin-bottom: 22px;

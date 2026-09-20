@@ -1,10 +1,12 @@
 # Full browser release checklist
 
-Updated 19 September 2026 against 2.94.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
+Updated 19 September 2026 against 2.95.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
 
 **When work is completed, remove it from this list.** Keep its evidence in a linked report or commit, not a checked-off entry. Section numbers stay stable so references to remaining work do not change. Completed balance work is archived in the [balance closeout](balance-closeout-2.92.0.md); first-session implementation and the five-scenario self-audit are archived in the [clarity report](first-session-2.93.0.md). Those implementation sections are removed. Actual first-time-player observation and human acceptance remain explicitly open in section 7.
 
 Completed progress/recovery item 3 is archived in the [recovery report](progress-recovery-2.94.0.md), covering backups, atomic restore, visible saving failures, older saves, competing tabs and isolated modes.
+
+Completed settings/accessibility item 4 is archived in the [settings report](settings-accessibility-2.95.0.md), covering saved key bindings, separate volumes, menu focus/scrolling, reduced effects, non-color ally markers and input safety. Physical-device and cross-browser acceptance remains in section 5.
 
 ## Scope
 
@@ -12,23 +14,12 @@ The launch scope is frozen after the Auditor: the twenty-room campaign across fi
 
 - [ ] Publish the supported browser/device/input list. Prioritize ordinary desktop/laptop play; advertise touch play only after it passes its own checks.
 
-## 4. Settings and accessibility — release blocker for advertised controls
-
-Sound, Music and Screen shake toggles, controller options, keyboard/mouse input and touch controls already exist. Keyboard controls are currently fixed; audio has toggles rather than user-facing volume sliders.
-
-- [ ] Add saved keyboard rebinding, duplicate-binding handling and restore defaults. Verify every active mechanic and menu can be reached with advertised inputs.
-- [ ] Add separate effects and music volume controls with clear mute behavior.
-- [ ] Audit focus order, modal scrolling, visible focus, controller navigation, readable scaling and reduced-motion attack warnings.
-- [ ] Ensure hostile attacks, allies, interactables and danger warnings remain distinguishable by shape, motion or pattern as well as color.
-- [ ] Verify pause/resume on focus loss, controller disconnect, resize and fullscreen changes.
-
-Acceptance: settings persist, controls do not become trapped or unusable, and reduced effects preserve essential combat information.
-
 ## 5. Performance and stability — release blocker
 
 The simulation and effects already have limits, and the automated suite covers many real collision and combat cases. This does not establish performance on a low-end laptop or compatibility with every browser.
 
 - [ ] Test production builds in current Chrome, Edge and Firefox on Windows, plus Safari if it will be advertised. Record actual versions, device specs and results.
+- [ ] On those browsers, verify physical keyboard/mouse and supported controllers, including disconnect/reconnect, rumble, tab switching and native fullscreen transitions. Test real touch hardware before advertising touch support. Automated input/event tests and the in-app browser audit do not establish hardware support.
 - [ ] Profile on a representative low-end laptop at its normal screen resolution. Use dense late-game builds, boss attacks, portals, explosions, replay recording and Overtime.
 - [ ] Target stable 60 fps on the chosen baseline; investigate long frame stalls and sustained memory growth. If necessary, offer reduced visual effects that preserve physics and tells.
 - [ ] Run long sessions with repeated death/retry, room transitions, menus, audio restarts and replay export. Check memory/voice cleanup and responsiveness.
@@ -64,7 +55,7 @@ Acceptance: the release candidate passes the checklist, a fresh player can start
 ## Work order
 
 1. Run first-session playtests and start collecting the external balance feedback.
-2. Address those findings alongside the remaining settings and accessibility gaps.
+2. Address findings from the playtests and input/device acceptance checks.
 3. Complete browser/hardware checks and presentation/audio polish.
 4. Finish external release acceptance, fix blockers, tag and publish the full browser release.
 

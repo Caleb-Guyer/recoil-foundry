@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
+import { Renderer } from '../src/render.ts';
+import { drawAreaEvent } from '../src/area-event-art.ts';
+import { eventTestFromUrl } from '../src/area-events.ts';
 import { Game, type Shot } from '../src/game.ts';
 import {
   incomingEdgeCues,
@@ -35,6 +38,72 @@ function round(overrides: Partial<Shot> = {}): Shot {
 }
 const cues = (shots: Shot[], solids: Matter.Body[] = [], at = 0.1) =>
   incomingEdgeCues(shots, player, view, at, solids, 28);
+
+function drawing() {
+  const paths: string[][] = [];
+  let path: string[] = [];
+  const c = new Proxy({} as CanvasRenderingContext2D, {
+    get(_target, key) {
+      if (key === 'beginPath')
+        return () => {
+          path = [];
+        };
+      if (key === 'stroke') return () => paths.push([...path]);
+      if (['moveTo', 'lineTo', 'arc', 'closePath'].includes(String(key)))
+        return (...args: number[]) => path.push(`${String(key)}:${args.join(',')}`);
+      return () => {};
+    },
+    set() {
+      return true;
+    },
+  });
+  return { c, paths };
+}
+
+test('reduced effects preserve real boss and sniper warning geometry', () => {
+  const g = new Game();
+  g.startWorkshop([]);
+  for (const kind of ['loader', 'press', 'sniper', 'charger', 'boss'] as const) {
+    g.spawnEnemy(kind, 900, 400);
+    const e = g.enemies.at(-1)!;
+    e.spawn = 0;
+    e.state = 'windup';
+    e.timer = 0.15;
+    e.aim = { x: -1, y: 0 };
+    e.target = { x: 650, y: 740 };
+    const normal = drawing(),
+      reduced = drawing();
+    const renderer = Object.create(Renderer.prototype) as Renderer;
+    renderer.game = g;
+    renderer.ctx = normal.c;
+    renderer.reduced = false;
+    renderer.drawTell(e);
+    renderer.ctx = reduced.c;
+    renderer.reduced = true;
+    renderer.drawTell(e);
+    assert(normal.paths.length > 0, `${kind} needs a visible warning`);
+    assert(
+      reduced.paths.some((path) =>
+        path.some((p) => p.startsWith('lineTo:') || p.startsWith('arc:')),
+      ),
+      `${kind} warning must retain its spatial boundary`,
+    );
+  }
+});
+
+test('Turf War allies have steady closed shield silhouettes independent of blue coloring', () => {
+  const g = new Game();
+  g.startTest(eventTestFromUrl(new URL('https://test/?test=events&event=turf'))!);
+  const { c, paths } = drawing();
+  drawAreaEvent(c, g);
+  const shields = paths.filter((path) => path.length === 6 && path.at(-1) === 'closePath:');
+  assert(g.areaEvents.allies.length > 0);
+  assert.equal(shields.length, g.areaEvents.allies.length);
+  g.time += 0.25;
+  const later = drawing();
+  drawAreaEvent(later.c, g);
+  assert.deepEqual(later.paths, paths, 'the ally marker does not rely on blinking or motion');
+});
 
 test('edge cues mark newly fired incoming shots and merge a volley into one brief flash', () => {
   const shot = round();

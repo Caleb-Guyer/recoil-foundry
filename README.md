@@ -6,6 +6,16 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Controls and accessibility · 2.95.0
+
+**Settings → Keyboard & mouse** now saves individual key bindings, rejects conflicting keys and offers Restore default keys. Movement, alternate jump keys, keyboard fire, the equipped secondary action, pause, Controls and retry/reset can be rebound. Mouse aim, left/right click and Escape remain available. On-screen hints follow your chosen keys; defaults retain the old controls and add **F** as an alternative to holding left click.
+
+Separate **Effects volume** and **Music volume** sliders include a true zero-volume mute. Sound still mutes both channels, and Music enabled keeps its independent switch. Existing preferences are preserved. **Reduced effects** removes camera shake, lowers cosmetic particles and reduces hit flashes while retaining attack warnings. Turf War allies have a steady shield symbol as well as their blue color.
+
+Settings now scroll inside the panel with Back/Resume always visible. Resizing or changing fullscreen pauses active play and clears held inputs; returning focus never automatically resumes a run. No gameplay balance or Daily identity changes.
+
+[Open Settings](https://caleb-guyer.github.io/recoil-foundry/?help=settings&v=2.95.0) · [Try the controls](https://caleb-guyer.github.io/recoil-foundry/?help=controls&v=2.95.0) · [Verification report](docs/settings-accessibility-2.95.0.md). Completed item 4 is removed from the [release checklist](docs/browser-release-checklist.md).
+
 ## Progress backups and recovery · 2.94.0
 
 Open **Settings → Progress** to export a backup or restore one. Backups include your campaign checkpoint and gun, discovered upgrades, Logbook, commendations, equipped appearance, Practice victories, recent runs, Daily records and saved Workshop build. Imports show a preview, validate every section and replace the profile in one operation; **Undo restore** keeps the previous profile recoverable. Return to the title before importing; you can export while paused.

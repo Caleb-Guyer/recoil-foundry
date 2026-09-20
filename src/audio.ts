@@ -29,9 +29,35 @@ const ATTACK_WARNINGS = new Set([
   'sapper-lock',
 ]);
 
+export function volumeLevel(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1;
+}
+
 export class Sound {
   private audioEnabled = true;
   private scoreEnabled = true;
+  private effectLevel = 1;
+  private musicLevel = 1;
+  effectsOutput: GainNode | null = null;
+  musicOutput: GainNode | null = null;
+  get effectsVolume() {
+    return this.effectLevel;
+  }
+  set effectsVolume(value: number) {
+    this.effectLevel = volumeLevel(value);
+    if (this.context)
+      this.effectsOutput?.gain.setTargetAtTime(this.effectLevel, this.context.currentTime, 0.012);
+    if (!this.effectLevel) this.updateTorch(false);
+  }
+  get musicVolume() {
+    return this.musicLevel;
+  }
+  set musicVolume(value: number) {
+    this.musicLevel = volumeLevel(value);
+    if (this.context)
+      this.musicOutput?.gain.setTargetAtTime(this.musicLevel, this.context.currentTime, 0.012);
+    if (!this.musicLevel) this.silenceMusic();
+  }
   music: Music | null = null;
   get enabled() {
     return this.audioEnabled;
@@ -60,7 +86,7 @@ export class Sound {
   private torchVoice: { osc: OscillatorNode; gain: GainNode; frequency: number } | null = null;
   updateTorch(active: boolean, heat = 0) {
     const c = this.context;
-    if (!active || !this.enabled || !c || c.state !== 'running') {
+    if (!active || !this.enabled || !this.effectsVolume || !c || c.state !== 'running') {
       const voice = this.torchVoice;
       if (voice && c) {
         voice.gain.gain.setTargetAtTime(0, c.currentTime, 0.02);
@@ -116,14 +142,22 @@ export class Sound {
         compressor.connect(c.destination);
         const effects = c.createGain();
         effects.gain.value = 1;
-        effects.connect(master);
+        const effectsOutput = c.createGain(),
+          musicOutput = c.createGain();
+        effectsOutput.gain.value = this.effectsVolume;
+        musicOutput.gain.value = this.musicVolume;
+        effects.connect(effectsOutput);
+        effectsOutput.connect(master);
+        musicOutput.connect(master);
         const noise = c.createBuffer(1, Math.ceil(c.sampleRate * 0.3), c.sampleRate);
         const data = noise.getChannelData(0);
         for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-        this.music = new Music(c, master);
+        this.music = new Music(c, musicOutput);
         this.context = c;
         this.master = master;
         this.effects = effects;
+        this.effectsOutput = effectsOutput;
+        this.musicOutput = musicOutput;
         this.noise = noise;
       } catch {
         if (c) void c.close().catch(() => {});
@@ -133,7 +167,7 @@ export class Sound {
     if (this.context.state === 'suspended') void this.context.resume().catch(() => {});
   }
   updateMusic(scene: MusicScene, active = true) {
-    this.music?.update(scene, this.enabled && this.musicEnabled, active);
+    this.music?.update(scene, this.enabled && this.musicEnabled && this.musicVolume > 0, active);
   }
   resetMusic() {
     this.music?.reset();
@@ -163,7 +197,9 @@ export class Sound {
     gain.gain.linearRampToValueAtTime(volume, now + 0.003);
     gain.gain.exponentialRampToValueAtTime(0.001, now + length);
     osc.connect(gain);
-    gain.connect(this.priorityCue ? this.master! : (this.effects ?? this.master!));
+    gain.connect(
+      this.priorityCue ? (this.effectsOutput ?? this.master!) : (this.effects ?? this.master!),
+    );
     osc.onended = () => {
       this.voices--;
       osc.disconnect();
@@ -188,7 +224,9 @@ export class Sound {
     gain.gain.exponentialRampToValueAtTime(0.001, now + length);
     source.connect(filter);
     filter.connect(gain);
-    gain.connect(this.priorityCue ? this.master! : (this.effects ?? this.master!));
+    gain.connect(
+      this.priorityCue ? (this.effectsOutput ?? this.master!) : (this.effects ?? this.master!),
+    );
     source.onended = () => {
       this.voices--;
       source.disconnect();
@@ -200,7 +238,7 @@ export class Sound {
   }
   play(kind: string) {
     const c = this.context;
-    if (!this.enabled || !c || c.state !== 'running') return;
+    if (!this.enabled || !this.effectsVolume || !c || c.state !== 'running') return;
     const previous = this.played.get(kind) ?? -10;
     const warning = ATTACK_WARNINGS.has(kind);
     const cooldown = warning

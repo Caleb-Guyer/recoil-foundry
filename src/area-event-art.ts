@@ -27,6 +27,26 @@ export function drawAreaEvent(c: CanvasRenderingContext2D, g: Game) {
   const event = g.areaEvents;
   if (!event.active) return;
   c.save();
+  // A steady shield identifies allies even with no color perception or motion.
+  for (const ally of event.allies) {
+    const p = ally.body.position;
+    const y = ally.body.bounds.min.y - 13;
+    c.globalAlpha =
+      event.departingAt === null ? 1 : Math.max(0, 1 - (g.time - event.departingAt) / 3);
+    c.beginPath();
+    c.moveTo(p.x - 6, y - 5);
+    c.lineTo(p.x + 6, y - 5);
+    c.lineTo(p.x + 6, y + 1);
+    c.lineTo(p.x, y + 7);
+    c.lineTo(p.x - 6, y + 1);
+    c.closePath();
+    c.fillStyle = '#12202a';
+    c.fill();
+    c.strokeStyle = '#d2e5e9';
+    c.lineWidth = 2;
+    c.stroke();
+  }
+  c.globalAlpha = 1;
   for (const s of g.shots)
     if (s.allied && s.life > 0) {
       c.strokeStyle = '#6bb7ff';

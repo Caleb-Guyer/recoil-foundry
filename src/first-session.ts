@@ -1,4 +1,5 @@
 import type { Game, Input } from './game.ts';
+import { DEFAULT_BINDINGS, bindingLabel, keyLabel, type Bindings } from './keyboard.ts';
 
 export const FIRST_SESSION_KEY = 'rf-first-session-v1';
 export type ControlDevice = 'keyboard' | 'controller' | 'touch';
@@ -48,7 +49,7 @@ export class FirstSessionGuide {
     this.hit ||= g.kills > this.kills;
     this.shots = g.shotCount;
   }
-  message(g: Game, device: ControlDevice) {
+  message(g: Game, device: ControlDevice, bindings: Bindings = DEFAULT_BINDINGS) {
     if (!this.active || g.mode !== 'playing') return '';
     if (
       !this.warmup &&
@@ -81,13 +82,13 @@ export class FirstSessionGuide {
           ? 'Left stick to move.'
           : device === 'touch'
             ? 'Use the left arrows to move.'
-            : 'A / D or ← / → to move.',
+            : `${keyLabel(bindings.left[0])} / ${keyLabel(bindings.right[0])} to move.`,
       jump:
         device === 'controller'
           ? 'LB / L1 or A / ✕ to jump.'
           : device === 'touch'
             ? 'Tap ↑ to jump.'
-            : 'Space to jump.',
+            : `${keyLabel(bindings.jump[0])} to jump.`,
       fire:
         device === 'controller'
           ? 'Right stick aims. Hold RT / R2 to fire.'
@@ -103,16 +104,21 @@ export class FirstSessionGuide {
   }
 }
 
-export function audioState(sound: boolean, music: boolean) {
+export function audioState(sound: boolean, music: boolean, effectsVolume = 1, musicVolume = 1) {
+  const muted = !sound || (effectsVolume === 0 && (!music || musicVolume === 0));
   return {
     sound: sound ? 'On' : 'Off',
-    music: !music ? 'Off' : sound ? 'On' : 'Muted',
-    note: sound ? '' : 'Audio is off. Enable Sound for effects and music.',
-    settings: sound ? 'Settings' : 'Settings · Muted',
+    music: !music ? 'Off' : sound && musicVolume > 0 ? 'On' : 'Muted',
+    note: !sound
+      ? 'Audio is off. Enable Sound for effects and music.'
+      : muted
+        ? 'Both channels are muted. Raise a volume to hear audio.'
+        : '',
+    settings: muted ? 'Settings · Muted' : 'Settings',
   };
 }
 
-export function controlsIntro(device: ControlDevice) {
+export function controlsIntro(device: ControlDevice, bindings: Bindings = DEFAULT_BINDINGS) {
   const rows =
     device === 'controller'
       ? [
@@ -130,12 +136,12 @@ export function controlsIntro(device: ControlDevice) {
             ['Pause', 'Ⅱ button'],
           ]
         : [
-            ['Move', 'A / D or ← / →'],
-            ['Jump', 'Space, W or ↑'],
+            ['Move', `${bindingLabel(bindings, 'left')} · ${bindingLabel(bindings, 'right')}`],
+            ['Jump', bindingLabel(bindings, 'jump')],
             ['Aim', 'Mouse'],
-            ['Fire', 'Hold left click'],
-            ['Pause', 'Esc or P'],
-            ['Controls', 'H'],
+            ['Fire', 'Hold left click or ' + bindingLabel(bindings, 'fire')],
+            ['Pause', 'Esc or ' + bindingLabel(bindings, 'pause')],
+            ['Controls', bindingLabel(bindings, 'controls')],
           ];
   return (
     '<dl class="control-grid">' +
