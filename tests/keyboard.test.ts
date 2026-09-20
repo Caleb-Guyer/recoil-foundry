@@ -44,6 +44,12 @@ test('duplicate keys reject the edit without losing the original controls', () =
   assert.match(rebind(b, 'jump', 0, 'KeyW')!, /already assigned to jump/);
   assert.deepEqual(b, original);
   assert.equal(rebind(b, 'jump', 0, 'Space'), null, 'choosing the same key is harmless');
+  for (const action of ['pause', 'controls', 'retry'] as const)
+    for (const code of ['Space', 'ArrowDown', 'Home', 'PageDown', 'ShiftRight', 'Numpad1']) {
+      assert.match(rebind(b, action, 0, code)!, /menu navigation/);
+      assert.deepEqual(b, original);
+      assert.deepEqual(loadBindings({ ...b, [action]: [code] }), DEFAULT_BINDINGS);
+    }
   for (const reserved of [
     'Escape',
     'Tab',

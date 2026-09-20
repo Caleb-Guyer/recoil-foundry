@@ -51,6 +51,14 @@ const names: Record<string, string> = {
 export function bindable(code: string) {
   return /^(Key[A-Z]|Numpad[0-9])$/.test(code) || Object.hasOwn(names, code);
 }
+function usableFor(action: Action, code: string) {
+  if (!bindable(code)) return false;
+  if (!['pause', 'controls', 'retry'].includes(action)) return true;
+  return (
+    !/^(Arrow|Shift|Numpad)/.test(code) &&
+    !['Space', 'Home', 'End', 'PageUp', 'PageDown'].includes(code)
+  );
+}
 export function keyLabel(code: string) {
   return names[code] ?? (code.startsWith('Key') ? code.slice(3) : code.replace('Numpad', 'Num '));
 }
@@ -64,7 +72,7 @@ export function loadBindings(raw: unknown): Bindings {
     if (!Array.isArray(codes) || codes.length !== DEFAULT_BINDINGS[action].length)
       return defaults();
     for (const code of codes) {
-      if (typeof code !== 'string' || !bindable(code) || seen.has(code)) return defaults();
+      if (typeof code !== 'string' || !usableFor(action, code) || seen.has(code)) return defaults();
       seen.add(code);
     }
     result[action] = [...codes];
@@ -78,6 +86,8 @@ export function rebind(
   code: string,
 ): string | null {
   if (!bindable(code)) return 'That key is reserved for menus or your browser. Choose another key.';
+  if (!usableFor(action, code))
+    return 'That key is used for menu navigation. Choose another key for this shortcut.';
   if (!Number.isInteger(slot) || slot < 0 || slot >= bindings[action].length)
     return 'Unknown binding.';
   for (const other of Object.keys(ACTIONS) as Action[])
