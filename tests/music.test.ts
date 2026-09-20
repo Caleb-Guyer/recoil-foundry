@@ -732,3 +732,68 @@ test('combat warning effects duck music, while muted audio cannot restart the mi
   sound.play('hurt');
   assert.equal(music.duckUntil, until);
 });
+
+test('new threat cues survive saturated gunfire, keep their full warning window, and release voices', (t) => {
+  installContext(t);
+  const reaches = (node: AudioNodeMock, target: unknown): boolean =>
+    node === target || node.connections.some((next) => reaches(next, target));
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  for (const kind of [
+    'audit-tell',
+    'audit-recall',
+    'sapper-tick',
+    'train-near',
+    'crane-wind',
+    'kiln-wind',
+    'machine',
+    'loader',
+    'phase',
+    'harpoon-lock',
+    'train-horn',
+  ]) {
+    sound.updateMusic(scene());
+    for (let i = 0; i < 30; i++) sound.tone(180, 40, 0.15, 0.1);
+    const before = context.sources.length;
+    sound.play(kind);
+    const cues = context.sources.slice(before);
+    assert.ok(cues.length, kind + ' must be audible when ordinary voices are exhausted');
+    assert(cues.every((node) => reaches(node, sound.effectsOutput)));
+    assert(cues.every((node) => !reaches(node, sound.effects)));
+    const hold = (sound.effects!.gain as unknown as AudioParamMock).events.at(-1)!.time;
+    assert(
+      hold >= Math.max(...cues.map((node) => node.stopTime)) - 0.011,
+      kind + ' must stay clear for its entire cue',
+    );
+    assert(sound.music!.duckUntil >= context.currentTime + 0.65);
+    context.advance(3);
+    assert.equal(sound.voices, 0);
+  }
+  sound.play('audit-recall');
+  const until = context.currentTime + 1.1;
+  context.advance(0.15);
+  sound.play('sapper-tick');
+  const automation = sound.effects!.gain as unknown as AudioParamMock;
+  assert.equal(
+    automation.events.at(-1)!.time,
+    until,
+    'A short warning cannot cancel a longer duck',
+  );
+});
+
+test('completion and defeat cues have reserved voices after a dense fight', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  for (const kind of ['win', 'dead', 'shutdown-stop']) {
+    for (let i = 0; i < 30; i++) sound.tone(180, 40, 0.15, 0.1);
+    const before = context.sources.length;
+    sound.play(kind);
+    assert.ok(context.sources.length > before, kind);
+    assert.ok(sound.voices <= 32);
+    context.advance(4);
+    assert.equal(sound.voices, 0);
+  }
+});

@@ -1,3 +1,4 @@
+import { GAME_VERSION } from './version.ts';
 import {
   BACKUP_LIMIT,
   parseProgressBackup,
@@ -62,7 +63,7 @@ export function progressMenu(
   };
   get('export-progress').onclick = () => {
     try {
-      const blob = new Blob([store.backup('2.96.1')], { type: 'application/json' });
+      const blob = new Blob([store.backup(GAME_VERSION)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

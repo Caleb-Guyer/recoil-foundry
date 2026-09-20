@@ -1,4 +1,7 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
+import { creditsMarkup } from './credits.ts';
+import { endingCopy } from './ending.ts';
+import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { auditorTestFromUrl } from './auditor-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
@@ -192,6 +195,15 @@ let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
 let logbookProgress = migrateLogbook(read(LOGBOOK_KEY), storedCheckpoint, runHistory, encounters);
 const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', query: '' };
 let finishedRun: RunRecap | null = null;
+let creditsParent = 'settings';
+function openCredits() {
+  creditsParent = dialogKind;
+  showDialog('credits');
+}
+function backFromCredits() {
+  showDialog(creditsParent);
+  $('open-credits').focus();
+}
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
@@ -292,6 +304,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  presentationTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
   storyTestFromUrl(entryUrl) ??
@@ -560,6 +573,10 @@ function updateTitle() {
     };
     const hint = hints[entryUrl.searchParams.get('build') ?? ''];
     if (hint) $('title-hint').textContent = hint;
+  }
+  if (linkedRunTest?.seed.startsWith('PRESENTATION-')) {
+    $('play').textContent = 'Preview ending';
+    $('title-hint').textContent = 'Ending preview. Your save and discoveries stay untouched.';
   }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
@@ -835,6 +852,7 @@ function startRunTest(save: Checkpoint) {
   activeDaily = null;
   dailyResult = null;
   game.startTest(save);
+  finishPresentationTest(game);
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -1159,17 +1177,24 @@ function showDialog(kind: string) {
   modal.classList.toggle('workshop-dialog', kind === 'workshop');
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
-  modal.classList.toggle('ending-dialog', kind === 'result' && game.shutdown.complete);
+  modal.classList.toggle(
+    'ending-dialog',
+    kind === 'result' && game.mode === 'won' && !game.practice,
+  );
   modal.classList.toggle('controls-dialog', kind === 'controls');
   modal.classList.toggle('progress-dialog', kind === 'progress');
   modal.classList.toggle('settings-dialog', kind === 'settings' || kind === 'pause');
   const content = $('dialog-content');
+  modal.scrollTop = 0;
   if (kind === 'logbook' || kind === 'workshop')
     commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   const visibleCommendations = previewCommendations
     ? COMMENDATIONS.map((c) => c.id)
     : commendations;
-  if (kind === 'progress') {
+  if (kind === 'credits') {
+    content.innerHTML = creditsMarkup();
+    $('back').onclick = backFromCredits;
+  } else if (kind === 'progress') {
     updateProgressPanel = progressMenu(
       content,
       progress,
@@ -1543,20 +1568,19 @@ function showDialog(kind: string) {
               'ROOM ' +
               String(game.stage + 1).padStart(2, '0')) +
       '</p><h2 id="dialog-title">' +
-      (win
-        ? game.shutdown.complete
-          ? 'Shift complete.'
-          : game.overtime
-            ? 'Overtime complete.'
-            : 'Clean escape.'
-        : 'One more run?') +
+      (win ? endingCopy(game.shutdown.complete, !!game.overtime).title : 'One more run?') +
       '</h2><p class="result-line">' +
       (activeDaily ? formatDailyTime(game.elapsed * 100) : formatTime(game.elapsed)) +
       ' <span>·</span> ' +
       game.kills +
       ' kills</p>' +
-      (win && game.shutdown.complete
-        ? '<p class="ending-note">For the first time, the factory has nothing left to ask.</p>'
+      (game.testRun?.seed.startsWith('PRESENTATION-')
+        ? '<p class="presentation-note">Preview · progress is not saved.</p>'
+        : '') +
+      (win
+        ? '<p class="ending-note">' +
+          endingCopy(game.shutdown.complete, !!game.overtime).note +
+          '</p>'
         : '') +
       (dailyResult?.best !== undefined
         ? '<p class="daily-best">' +
@@ -1570,8 +1594,8 @@ function showDialog(kind: string) {
           '</p>'
         : '') +
       '<div class="actions"><button id="retry" class="primary">Again ↗</button><button id="menu" class="quiet">Menu</button>' +
-      (win && game.shutdown.complete
-        ? '<button id="ending-logbook" class="quiet">Logbook</button>'
+      (win
+        ? '<button id="ending-logbook" class="quiet">Logbook</button><button id="open-credits" class="quiet">Credits</button>'
         : '') +
       (activeDaily ? '<button id="share" class="quiet">Copy challenge link</button>' : '') +
       '</div>' +
@@ -1594,7 +1618,10 @@ function showDialog(kind: string) {
         showDialog('logbook');
       };
     }
-    if (win && game.shutdown.complete) $('ending-logbook').onclick = () => showDialog('logbook');
+    if (win) {
+      $('ending-logbook').onclick = () => showDialog('logbook');
+      $('open-credits').onclick = openCredits;
+    }
     if (activeDaily) {
       const link = dailyLink(activeDaily, location.href);
       $('share').onclick = async () => {
@@ -1676,7 +1703,7 @@ function showDialog(kind: string) {
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
           '</ul></details>'
         : '') +
-      '</div><div class="actions"><button id="back" class="primary">' +
+      '<button id="open-credits" class="quiet settings-credits">About & credits</button></div><div class="actions"><button id="back" class="primary">' +
       (paused ? 'Resume' : 'Back') +
       '</button>' +
       '<button id="pause-controls" class="quiet">Controls</button>' +
@@ -1696,6 +1723,7 @@ function showDialog(kind: string) {
         ? '<button id="pause-logbook" class="quiet">Logbook</button><button id="menu" class="quiet">Menu</button>'
         : '') +
       '</div>';
+    $('open-credits').onclick = openCredits;
     $<HTMLInputElement>('sound').onchange = (e) => {
       sound.enabled = (e.target as HTMLInputElement).checked;
       if (sound.enabled) sound.unlock();
@@ -1776,7 +1804,7 @@ function showDialog(kind: string) {
   } else if (kind === 'pause') {
     $('back').focus({ preventScroll: true });
     modal.scrollTop = 0;
-  } else if (['controls', 'progress'].includes(kind)) $('back').focus();
+  } else if (['controls', 'progress', 'credits'].includes(kind)) $('back').focus();
   if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
@@ -1998,6 +2026,10 @@ modal.addEventListener('cancel', (e) => {
   if (!bindingEditor?.cancel()) cancelDialog();
 });
 function cancelDialog() {
+  if (dialogKind === 'credits') {
+    backFromCredits();
+    return;
+  }
   if (dialogKind === 'progress') {
     backFromProgress();
     return;

@@ -8,6 +8,12 @@ A physics roguelike about staying in motion. Clear twenty stages, take optional 
 
 The browser release targets **Windows desktop/laptop with keyboard and mouse**. Edge has the most complete test coverage; basic gameplay is also owner-confirmed in Chrome and Firefox. Controller and touch support are experimental, and minimum hardware requirements are not established. [Browser support and known limitations](docs/browser-support.md).
 
+## Presentation polish · 2.97.0
+
+Cleaner reward and Reforge cards, protected Workshop controls on short screens, and consistent endings with Logbook and Credits access. **Settings → About & credits** shows the running version. Newer threats now keep their warning sounds clear through dense effects, and the original procedural score is retained for the browser release.
+
+[Presentation report and test links](docs/presentation-2.97.0.md) · [Remaining release checklist](docs/browser-release-checklist.md). Physical speaker/headphone listening remains part of external playtest acceptance.
+
 ## Stability checks · 2.96.1
 
 Replay JPEG encoding now runs in a worker on supported browsers, keeping expensive image readback off the game thread without lowering clip quality. Rapid retries keep encoding bounded across old runs, and unsupported worker features fall back safely. Unavailable video export and failed browser recorders leave the replay viewer usable and release their resources. The fallback clip download also supports controller menu focus.

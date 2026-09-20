@@ -516,7 +516,7 @@ export function modDescription(mod: Mod, mods: readonly string[]): string {
   if (mod.id === 'suspension' && mods.includes('tripline'))
     return 'Fire to park up to 30 proximity traps toward your aim. Recoil is immediate; traps expire after four seconds.';
   if (mod.id === 'backfire' && mods.includes('crosshatch'))
-    return 'Also parks a rear volley. Both directions converge on your aim when released. 20% slower firing.';
+    return 'Also parks a rear volley. Both directions converge on your aim when released. 20% longer shot delay.';
   if (mod.id === 'air-brake' && mods.includes('cutting-torch'))
     return 'Release the beam during recoil flight to brake once per jump. The next beam pulse kicks 35% harder.';
   if (mod.id === 'deep-freeze' && mods.includes('coolant-rounds'))

@@ -264,7 +264,7 @@ h2 {
 }
 .choices {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 dialog.single-upgrade {
@@ -302,6 +302,8 @@ dialog.practice-dialog {
   grid-template-columns: minmax(0, 1fr);
 }
 .mod {
+  min-width: 0;
+  overflow-wrap: anywhere;
   background: #202a2b;
   border: 1px solid #41504a;
   border-radius: 2px;
@@ -500,6 +502,7 @@ dialog.logbook-dialog {
   padding: 2px 5px 5px 2px;
 }
 .logbook-item {
+  overflow-wrap: anywhere;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -566,6 +569,7 @@ dialog.logbook-dialog {
   flex-shrink: 0;
 }
 .logbook-entry h3 {
+  overflow-wrap: anywhere;
   font-size: clamp(23px, 3vw, 32px);
   font-weight: 600;
   letter-spacing: -0.8px;
@@ -1173,7 +1177,7 @@ body[data-input='controller'] canvas {
   }
   .mod {
     display: grid;
-    grid-template-columns: 54px 1fr;
+    grid-template-columns: 54px minmax(0, 1fr);
     column-gap: 17px;
     padding: 14px;
   }
@@ -1194,6 +1198,15 @@ body[data-input='controller'] canvas {
   }
   .mod strong {
     align-self: end;
+  }
+  .reforge-choice > :not(.mod-top) {
+    grid-column: 2;
+  }
+  .reforge-choice .mod-top {
+    grid-column: 1;
+    grid-row: 1 / 7;
+    align-self: start;
+    margin: 0;
   }
   .title-controls {
     max-width: 320px;
@@ -1260,8 +1273,31 @@ body[data-workshop='true'] #health {
   font-size: 23px;
 }
 dialog.workshop-dialog {
+  --workshop-padding: 36px;
   width: min(760px, calc(100% - 28px));
-  padding-bottom: 0;
+  overflow: hidden;
+}
+.workshop-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.workshop-dialog #dialog-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100dvh - 42px - 2 * var(--workshop-padding));
+}
+.workshop-dialog h2,
+.workshop-tabs,
+.workshop-actions {
+  flex-shrink: 0;
+}
+#workshop-build,
+#workshop-appearance {
+  min-height: 0;
+  overflow-y: auto;
+  scroll-padding: 8px;
+  padding: 2px 6px 8px 2px;
 }
 .workshop-dialog h2 {
   margin-bottom: 24px;
@@ -1332,9 +1368,7 @@ dialog.workshop-dialog {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  position: sticky;
-  bottom: 0;
-  padding: 12px 0 36px;
+  padding: 16px 0 0;
   background: #182023;
 }
 .workshop-actions .quiet:disabled {
@@ -1342,8 +1376,8 @@ dialog.workshop-dialog {
   cursor: default;
 }
 @media (max-width: 600px) {
-  .workshop-actions {
-    padding-bottom: 24px;
+  dialog.workshop-dialog {
+    --workshop-padding: 24px;
   }
   .workshop-list {
     grid-template-columns: 1fr;
@@ -1601,5 +1635,91 @@ dialog.workshop-dialog {
   }
   .import-preview {
     padding: 13px;
+  }
+}
+
+/* Readable menu copy without competing with the in-game HUD. */
+.credits-copy {
+  max-width: 60ch;
+  color: #b5c3b9;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.credits-copy strong {
+  color: var(--ink);
+}
+.credits-copy dl {
+  margin: 28px 0 0;
+}
+.credits-copy dt {
+  color: var(--accent);
+  font-size: 12px;
+  margin-top: 20px;
+}
+.credits-copy dd {
+  margin: 5px 0 0;
+}
+.actions a.quiet {
+  text-decoration: none;
+}
+.settings-credits {
+  padding-left: 0;
+  margin-top: 12px;
+}
+.presentation-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.ending-dialog .ending-note {
+  max-width: 48ch;
+}
+.appearance-choice > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 681px) and (max-width: 850px) {
+  .logbook-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .logbook-entry {
+    padding-left: 20px;
+  }
+}
+@media (max-height: 600px) and (min-width: 681px) {
+  dialog.logbook-dialog {
+    padding: 20px;
+  }
+  .logbook-header h2 {
+    margin-bottom: 12px;
+  }
+  .logbook-preview {
+    margin-bottom: 8px;
+  }
+  .logbook-sections {
+    margin-bottom: 14px;
+  }
+}
+@media (max-width: 600px) {
+  .ending-dialog #dialog-content > .actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ending-dialog .actions > .quiet {
+    padding: 12px 8px;
+  }
+}
+@media (max-height: 520px), (max-width: 450px) {
+  #title-screen {
+    grid-template-rows: 1fr auto;
+    row-gap: 28px;
+    padding-bottom: 16px;
+  }
+  .title-settings {
+    position: static;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }

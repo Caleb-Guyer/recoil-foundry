@@ -27,7 +27,29 @@ const ATTACK_WARNINGS = new Set([
   'train-warn',
   'train-horn',
   'sapper-lock',
+  'sapper-tick',
+  'audit-tell',
+  'audit-recall',
+  'train-near',
 ]);
+
+// Leave space for the whole cue, including delayed notes and long wind-ups.
+const WARNING_HOLD: Record<string, number> = {
+  'audit-recall': 1.1,
+  'audit-tell': 0.4,
+  'train-horn': 0.65,
+  'turbine-wind': 0.55,
+  'flood-warn': 0.65,
+  'harpoon-lock': 0.5,
+  'sapper-lock': 0.45,
+  'cargo-release': 0.45,
+  'interceptor-lock': 0.35,
+  'crane-wind': 0.42,
+  'kiln-wind': 0.4,
+  machine: 0.45,
+  loader: 0.35,
+  phase: 0.35,
+};
 
 export function volumeLevel(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1;
@@ -82,6 +104,7 @@ export class Sound {
   master: GainNode | null = null;
   effects: GainNode | null = null;
   private priorityCue = false;
+  private effectsDuckUntil = 0;
   noise: AudioBuffer | null = null;
   private torchVoice: { osc: OscillatorNode; gain: GainNode; frequency: number } | null = null;
   updateTorch(active: boolean, heat = 0) {
@@ -248,7 +271,7 @@ export class Sound {
         : 0.015;
     if (c.currentTime - previous < cooldown) return;
     this.played.set(kind, c.currentTime);
-    this.priorityCue = warning || kind === 'hurt';
+    this.priorityCue = warning || ['hurt', 'win', 'dead', 'shutdown-stop'].includes(kind);
     if (kind === 'shutdown-break') {
       this.crack(0.16, 0.08, 900);
       this.tone(270, 90, 0.35, 0.06, 'triangle');
@@ -257,6 +280,7 @@ export class Sound {
     if (kind === 'shutdown-stop') {
       this.tone(110, 25, 2.6, 0.06, 'sine');
       this.crack(0.8, 0.03, 400);
+      this.priorityCue = false;
       return;
     }
     if (kind === 'story-found') {
@@ -270,16 +294,20 @@ export class Sound {
       return;
     }
     if (warning && this.effects) {
+      this.effectsDuckUntil = Math.max(
+        this.effectsDuckUntil,
+        c.currentTime + (WARNING_HOLD[kind] ?? 0.3),
+      );
       const gain = this.effects.gain;
       gain.cancelScheduledValues(c.currentTime);
       gain.setTargetAtTime(0.35, c.currentTime, 0.008);
-      gain.setTargetAtTime(1, c.currentTime + 0.2, 0.07);
+      gain.setTargetAtTime(1, this.effectsDuckUntil, 0.07);
     }
     if (
       warning ||
       ['crane-hit', 'kiln-impact', 'hurt', 'slam', 'cargo-release', 'cargo-impact'].includes(kind)
     )
-      this.music?.duck(kind === 'phase' ? 0.8 : 0.65);
+      this.music?.duck(Math.max(kind === 'phase' ? 0.8 : 0.65, WARNING_HOLD[kind] ?? 0));
     if (kind === 'fabricator-build') {
       this.crack(0.2, 0.06, 2300);
       this.tone(130, 190, 0.4, 0.045, 'triangle');

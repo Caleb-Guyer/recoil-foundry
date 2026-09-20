@@ -1,4 +1,5 @@
 import './stability-bench.css';
+import { GAME_VERSION } from './version.ts';
 import { Game } from './game.ts';
 import { Renderer } from './render.ts';
 import { Sound } from './audio.ts';
@@ -117,7 +118,7 @@ function result() {
 function report(detailed = true) {
   const rows = running ? [...results, result()] : results;
   return {
-    version: '2.96.1',
+    version: GAME_VERSION,
     diagnosticSchema: 2,
     generatedAt: new Date().toISOString(),
     status: running
