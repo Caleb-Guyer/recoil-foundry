@@ -6,6 +6,14 @@
 
 A physics roguelike about staying in motion. Clear twenty stages, take optional challenge detours for extra upgrades, and get out. No inventory, ammunition, energy, or ability selection.
 
+## Stability checks · 2.96.0
+
+Replay JPEG encoding now runs in a worker on supported browsers, keeping expensive image readback off the game thread without lowering clip quality. Rapid retries keep encoding bounded across old runs, and unsupported worker features fall back safely. Unavailable video export and failed browser recorders leave the replay viewer usable and release their resources. The fallback clip download also supports controller menu focus.
+
+A separate [stability test](https://caleb-guyer.github.io/recoil-foundry/diagnostics.html?v=2.96.0) exercises heavy builds, portals, explosions, boss attacks and Overtime, with optional reduced effects and downloadable measurements. **It contains late-game spoilers.** It never saves progress or preferences and adds no diagnostic clutter to normal play.
+
+[Verification report](docs/performance-stability-2.96.0.md) · [Hardware test procedure](docs/performance-testing.md). Finished software checks are removed from the [release checklist](docs/browser-release-checklist.md); low-end hardware and independent browser/device acceptance remain open.
+
 ## Controls and accessibility · 2.95.0
 
 **Settings → Keyboard & mouse** now saves individual key bindings, rejects conflicting keys and offers Restore default keys. Movement, alternate jump keys, keyboard fire, the equipped secondary action, pause, Controls and retry/reset can be rebound. Mouse aim, left/right click and Escape remain available. On-screen hints follow your chosen keys; defaults retain the old controls and add **F** as an alternative to holding left click.

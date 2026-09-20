@@ -1,6 +1,6 @@
 {
   "name": "recoil-foundry",
-  "version": "2.95.0",
+  "version": "2.96.0",
   "private": true,
   "type": "module",
   "description": "One gun. Twenty stages. A physics roguelike with varied obstacle layouts and recoil movement.",
@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "balance": "node --experimental-strip-types scripts/balance-audit.ts"
+    "balance": "node --experimental-strip-types scripts/balance-audit.ts",
+    "stability": "node --expose-gc --experimental-strip-types scripts/stability-audit.ts"
   },
   "dependencies": {
     "matter-js": "0.20.0"

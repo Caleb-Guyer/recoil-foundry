@@ -1,6 +1,6 @@
 # Full browser release checklist
 
-Updated 19 September 2026 against 2.95.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
+Updated 19 September 2026 against 2.96.0. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
 
 **When work is completed, remove it from this list.** Keep its evidence in a linked report or commit, not a checked-off entry. Section numbers stay stable so references to remaining work do not change. Completed balance work is archived in the [balance closeout](balance-closeout-2.92.0.md); first-session implementation and the five-scenario self-audit are archived in the [clarity report](first-session-2.93.0.md). Those implementation sections are removed. Actual first-time-player observation and human acceptance remain explicitly open in section 7.
 
@@ -16,15 +16,12 @@ The launch scope is frozen after the Auditor: the twenty-room campaign across fi
 
 ## 5. Performance and stability — release blocker
 
-The simulation and effects already have limits, and the automated suite covers many real collision and combat cases. This does not establish performance on a low-end laptop or compatibility with every browser.
+Completed software fixes, automated lifecycle checks and available-browser measurements are archived in the [performance/stability report](performance-stability-2.96.0.md). Use the [repeatable test page and acceptance procedure](performance-testing.md) for the remaining checks. These results do not establish performance on a low-end laptop or compatibility with independent browser installations.
 
-- [ ] Test production builds in current Chrome, Edge and Firefox on Windows, plus Safari if it will be advertised. Record actual versions, device specs and results.
+- [ ] Test production builds in current Chrome, Edge and Firefox on Windows, plus Safari if it will be advertised. Include downloading and playing exported replay videos. Record actual versions, device specs and results.
 - [ ] On those browsers, verify physical keyboard/mouse and supported controllers, including disconnect/reconnect, rumble, tab switching and native fullscreen transitions. Test real touch hardware before advertising touch support. Automated input/event tests and the in-app browser audit do not establish hardware support.
 - [ ] Profile on a representative low-end laptop at its normal screen resolution. Use dense late-game builds, boss attacks, portals, explosions, replay recording and Overtime.
 - [ ] Target stable 60 fps on the chosen baseline; investigate long frame stalls and sustained memory growth. If necessary, offer reduced visual effects that preserve physics and tells.
-- [ ] Run long sessions with repeated death/retry, room transitions, menus, audio restarts and replay export. Check memory/voice cleanup and responsiveness.
-- [ ] Resolve crashes, inaccessible exits, stuck encounters, lost input, invalid physics and progression softlocks before release.
-- [ ] Run the complete automated suite and production build for the final candidate. Smoke-test the actual deployed assets, not only localhost.
 
 Acceptance: no known reproducible crash, progress-loss or softlock bugs; baseline hardware remains playable in stress scenes; unsupported optional features fail gracefully.
 

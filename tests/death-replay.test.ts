@@ -243,7 +243,7 @@ function viewerFixture(t: test.TestContext) {
   const elements = new Map(
     ['#replay-play', '#replay-save', '#replay-status', '#replay-download'].map((id) => [
       id,
-      { disabled: false, textContent: '', onclick: () => {} },
+      { disabled: false, hidden: false, textContent: '', onclick: () => {} },
     ]),
   );
   const root = {
@@ -288,6 +288,107 @@ test('closing playback releases late decoded images and its animation/listeners'
   view.dispose();
   resolve({ close: () => closed++ });
   await new Promise((done) => setTimeout(done, 0));
+  assert.equal(closed, 1);
+  assert.equal(f.callbacks.size, 0);
+  assert.equal(f.events.size, 0);
+});
+
+test('rapid retries bound native image work even before old callbacks finish', async () => {
+  const callbacks: Array<(b: Blob | null) => void> = [];
+  const canvas = {
+    width: 854,
+    height: 480,
+    getContext: () => ({ fillRect() {}, drawImage() {} }),
+    toBlob: (done: (b: Blob | null) => void) => callbacks.push(done),
+  } as unknown as HTMLCanvasElement;
+  const replay = new DeathReplay(canvas);
+  for (let retry = 0; retry < 100; retry++) {
+    replay.reset();
+    replay.capture(canvas, 1);
+    replay.finish(canvas, 2, { player: { x: 0, y: 0 }, label: 'Collision' });
+  }
+  assert.equal(
+    callbacks.length,
+    2,
+    'at most one ordinary encode and one death encode across all runs',
+  );
+  callbacks.splice(0).forEach((done) => done(new Blob(['stale'])));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(replay.buffer.frames.length, 0);
+  replay.reset();
+  replay.capture(canvas, 3);
+  callbacks.shift()!(new Blob(['fresh']));
+  await Promise.resolve();
+  assert.equal(replay.buffer.frames.length, 1, 'encoding resumes once old native work is done');
+});
+
+test('a throwing image encoder releases its budget for the next capture', async () => {
+  let attempts = 0;
+  const canvas = {
+    width: 854,
+    height: 480,
+    getContext: () => ({ fillRect() {}, drawImage() {} }),
+    toBlob: (done: (b: Blob | null) => void) => {
+      if (++attempts === 1) throw new Error('encoder unavailable');
+      done(new Blob(['fresh']));
+    },
+  } as unknown as HTMLCanvasElement;
+  const replay = new DeathReplay(canvas);
+  replay.capture(canvas, 1);
+  replay.capture(canvas, 2);
+  await Promise.resolve();
+  assert.equal(replay.buffer.frames.length, 1);
+});
+
+test('missing or throwing video capability probes leave replay viewing usable', async (t) => {
+  const f = viewerFixture(t);
+  f.global('createImageBitmap', async () => ({ close() {} }));
+  for (const recorder of [
+    {},
+    {
+      isTypeSupported: () => {
+        throw new Error('blocked');
+      },
+    },
+  ]) {
+    f.global('MediaRecorder', recorder);
+    const view = f.view();
+    assert.equal(f.elements.get('#replay-save')!.hidden, true);
+    assert.match(f.elements.get('#replay-status')!.textContent, /unavailable/);
+    await f.step(1000);
+    assert.equal(f.elements.get('#replay-play')!.disabled, false);
+    view.dispose();
+  }
+});
+
+test('a failed recorder stop still releases tracks, decoded images and animation', async (t) => {
+  const f = viewerFixture(t);
+  let closed = 0;
+  f.global('createImageBitmap', async () => ({
+    close() {
+      closed++;
+    },
+  }));
+  f.global(
+    'MediaRecorder',
+    class {
+      static isTypeSupported() {
+        return true;
+      }
+      state = 'inactive';
+      start() {
+        this.state = 'recording';
+      }
+      stop() {
+        throw new Error('recorder failed');
+      }
+    },
+  );
+  const view = f.view();
+  f.elements.get('#replay-save')!.onclick();
+  await f.step(1000);
+  view.dispose();
+  assert.equal(f.counts().trackStops, 1);
   assert.equal(closed, 1);
   assert.equal(f.callbacks.size, 0);
   assert.equal(f.events.size, 0);

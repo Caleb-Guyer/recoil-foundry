@@ -1,0 +1,4162 @@
+{
+  "version": "2.96.0",
+  "runtime": "v24.16.0",
+  "platform": "win32",
+  "cycles": 120,
+  "inputSteps": 216000,
+  "deathSteps": 25440,
+  "equivalentInputMinutes": 60,
+  "wallSeconds": 122.26474230000001,
+  "deaths": 60,
+  "clears": 150,
+  "pauseCycles": 720,
+  "menuCycles": 120,
+  "portalPairs": 45,
+  "checkpointWrites": 0,
+  "forcedGC": true,
+  "note": "Simulation-only lifecycle soak; not browser FPS, human difficulty, or low-end hardware acceptance. Maxima sampled once per simulated second. Heap sampled after identical room resets and explicit GC when available.",
+  "samples": [
+    {
+      "cycle": 1,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 4.56,
+        "p50Ms": 2.9,
+        "p95Ms": 13.8,
+        "p99Ms": 32.8,
+        "maxMs": 111.3,
+        "over20": 45,
+        "over34": 18,
+        "over50": 7
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 179,
+        "particles": 201,
+        "enemies": 7,
+        "props": 8
+      },
+      "heapUsed": 17693912,
+      "external": 10978694,
+      "arrayBuffers": 38791,
+      "rss": 191098880
+    },
+    {
+      "cycle": 2,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 3.3,
+        "p50Ms": 1.7,
+        "p95Ms": 10.3,
+        "p99Ms": 15.5,
+        "maxMs": 25.89,
+        "over20": 5,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 207,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 18976064,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 261177344
+    },
+    {
+      "cycle": 3,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 3.25,
+        "p50Ms": 2.2,
+        "p95Ms": 12,
+        "p99Ms": 19.3,
+        "maxMs": 30.13,
+        "over20": 12,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 156,
+        "particles": 211,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 19745424,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 263942144
+    },
+    {
+      "cycle": 4,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.59,
+        "p50Ms": 0.5,
+        "p95Ms": 1.4,
+        "p99Ms": 2.2,
+        "maxMs": 6.86,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 117,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 19810416,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 266035200
+    },
+    {
+      "cycle": 5,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.2,
+        "p50Ms": 0.2,
+        "p95Ms": 0.3,
+        "p99Ms": 1.1,
+        "maxMs": 5.53,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 104,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 20439096,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 260067328
+    },
+    {
+      "cycle": 6,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.46,
+        "p50Ms": 0.4,
+        "p95Ms": 1.2,
+        "p99Ms": 1.8,
+        "maxMs": 2.35,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 215,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 20821816,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 259407872
+    },
+    {
+      "cycle": 7,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 1.1,
+        "p50Ms": 1,
+        "p95Ms": 2.6,
+        "p99Ms": 3.3,
+        "maxMs": 4.41,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 167,
+        "particles": 207,
+        "enemies": 8,
+        "props": 6
+      },
+      "heapUsed": 21136352,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 253595648
+    },
+    {
+      "cycle": 8,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.64,
+        "p50Ms": 0.5,
+        "p95Ms": 1.6,
+        "p99Ms": 2.3,
+        "maxMs": 3.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 213,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21250160,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 256913408
+    },
+    {
+      "cycle": 9,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.8,
+        "p50Ms": 0.7,
+        "p95Ms": 2,
+        "p99Ms": 2.8,
+        "maxMs": 3.77,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 156,
+        "particles": 210,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 21376976,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 259878912
+    },
+    {
+      "cycle": 10,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.28,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 1.43,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 106,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21518688,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 262406144
+    },
+    {
+      "cycle": 11,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 3.14,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 103,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21690072,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 267726848
+    },
+    {
+      "cycle": 12,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.24,
+        "p50Ms": 0.2,
+        "p95Ms": 0.6,
+        "p99Ms": 1,
+        "maxMs": 2.07,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 211,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 21757232,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 267755520
+    },
+    {
+      "cycle": 13,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.89,
+        "p50Ms": 0.8,
+        "p95Ms": 2,
+        "p99Ms": 2.5,
+        "maxMs": 3.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 15,
+        "shots": 178,
+        "particles": 218,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 20969832,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 254377984
+    },
+    {
+      "cycle": 14,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.6,
+        "p50Ms": 0.5,
+        "p95Ms": 1.5,
+        "p99Ms": 2.1,
+        "maxMs": 3.15,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 212,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 20713544,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 268529664
+    },
+    {
+      "cycle": 15,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.96,
+        "p50Ms": 0.9,
+        "p95Ms": 2.3,
+        "p99Ms": 3.1,
+        "maxMs": 4.61,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 180,
+        "particles": 209,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 20879744,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 261324800
+    },
+    {
+      "cycle": 16,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.31,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 1,
+        "maxMs": 1.74,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 107,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 20685648,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 259256320
+    },
+    {
+      "cycle": 17,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.12,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 2.57,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 99,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 20839240,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 289296384
+    },
+    {
+      "cycle": 18,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.3,
+        "p50Ms": 0.3,
+        "p95Ms": 0.7,
+        "p99Ms": 1.2,
+        "maxMs": 2.37,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 211,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 20986296,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277561344
+    },
+    {
+      "cycle": 19,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.81,
+        "p50Ms": 0.8,
+        "p95Ms": 1.8,
+        "p99Ms": 2.3,
+        "maxMs": 4.14,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 177,
+        "particles": 218,
+        "enemies": 7,
+        "props": 8
+      },
+      "heapUsed": 21273400,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 275734528
+    },
+    {
+      "cycle": 20,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.47,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.7,
+        "maxMs": 2.43,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 206,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21352208,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 275484672
+    },
+    {
+      "cycle": 21,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.76,
+        "p50Ms": 0.6,
+        "p95Ms": 1.9,
+        "p99Ms": 2.3,
+        "maxMs": 3.07,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 27,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 159,
+        "particles": 213,
+        "enemies": 10,
+        "props": 8
+      },
+      "heapUsed": 21339216,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277602304
+    },
+    {
+      "cycle": 22,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.27,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.9,
+        "maxMs": 1.68,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 112,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21305648,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 257114112
+    },
+    {
+      "cycle": 23,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.12,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.7,
+        "maxMs": 2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 94,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 20486960,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 287571968
+    },
+    {
+      "cycle": 24,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.26,
+        "p50Ms": 0.2,
+        "p95Ms": 0.7,
+        "p99Ms": 1,
+        "maxMs": 1.63,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 73,
+        "particles": 208,
+        "enemies": 7,
+        "props": 5
+      },
+      "heapUsed": 20610216,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281669632
+    },
+    {
+      "cycle": 25,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.87,
+        "p50Ms": 0.9,
+        "p95Ms": 1.9,
+        "p99Ms": 2.5,
+        "maxMs": 2.78,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 13,
+        "shots": 174,
+        "particles": 218,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 21126064,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281059328
+    },
+    {
+      "cycle": 26,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.47,
+        "p50Ms": 0.4,
+        "p95Ms": 1.2,
+        "p99Ms": 1.6,
+        "maxMs": 2.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 210,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21368152,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279629824
+    },
+    {
+      "cycle": 27,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.79,
+        "p50Ms": 0.7,
+        "p95Ms": 2.1,
+        "p99Ms": 2.7,
+        "maxMs": 3.43,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 175,
+        "particles": 213,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21152120,
+      "external": 10994738,
+      "arrayBuffers": 54795,
+      "rss": 262537216
+    },
+    {
+      "cycle": 28,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.28,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.9,
+        "maxMs": 1.51,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 112,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21005760,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 266264576
+    },
+    {
+      "cycle": 29,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.11,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.5,
+        "maxMs": 2.74,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 105,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21270272,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 287797248
+    },
+    {
+      "cycle": 30,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.23,
+        "p50Ms": 0.2,
+        "p95Ms": 0.5,
+        "p99Ms": 1,
+        "maxMs": 1.47,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 73,
+        "particles": 206,
+        "enemies": 7,
+        "props": 5
+      },
+      "heapUsed": 21127240,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279670784
+    },
+    {
+      "cycle": 31,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.85,
+        "p50Ms": 0.9,
+        "p95Ms": 1.8,
+        "p99Ms": 2.3,
+        "maxMs": 3.05,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 177,
+        "particles": 215,
+        "enemies": 7,
+        "props": 7
+      },
+      "heapUsed": 21389112,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280858624
+    },
+    {
+      "cycle": 32,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.45,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 1.89,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 211,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21566280,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279613440
+    },
+    {
+      "cycle": 33,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.81,
+        "p50Ms": 0.7,
+        "p95Ms": 2,
+        "p99Ms": 2.6,
+        "maxMs": 4.42,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 180,
+        "particles": 213,
+        "enemies": 10,
+        "props": 8
+      },
+      "heapUsed": 21382336,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 282828800
+    },
+    {
+      "cycle": 34,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.25,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.8,
+        "maxMs": 1.41,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 109,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21707840,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 282050560
+    },
+    {
+      "cycle": 35,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.08,
+        "p50Ms": 0.1,
+        "p95Ms": 0.1,
+        "p99Ms": 0.5,
+        "maxMs": 1.75,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 100,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21690200,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 282054656
+    },
+    {
+      "cycle": 36,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.27,
+        "p50Ms": 0.2,
+        "p95Ms": 0.7,
+        "p99Ms": 0.9,
+        "maxMs": 2.93,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 210,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 21003384,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280674304
+    },
+    {
+      "cycle": 37,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.81,
+        "p50Ms": 0.8,
+        "p95Ms": 1.8,
+        "p99Ms": 2.3,
+        "maxMs": 3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 178,
+        "particles": 207,
+        "enemies": 10,
+        "props": 7
+      },
+      "heapUsed": 21322904,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281743360
+    },
+    {
+      "cycle": 38,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.46,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 2.41,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 209,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21455400,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278052864
+    },
+    {
+      "cycle": 39,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.73,
+        "p50Ms": 0.7,
+        "p95Ms": 1.8,
+        "p99Ms": 2.4,
+        "maxMs": 6.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 180,
+        "particles": 218,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 21420608,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277688320
+    },
+    {
+      "cycle": 40,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.27,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 1.13,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 107,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21348080,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 276643840
+    },
+    {
+      "cycle": 41,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 2.42,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 107,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21412144,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 283590656
+    },
+    {
+      "cycle": 42,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.2,
+        "p50Ms": 0.2,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 1.48,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 78,
+        "particles": 202,
+        "enemies": 8,
+        "props": 5
+      },
+      "heapUsed": 21304712,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 275939328
+    },
+    {
+      "cycle": 43,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.78,
+        "p50Ms": 0.8,
+        "p95Ms": 1.7,
+        "p99Ms": 2.1,
+        "maxMs": 3.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 168,
+        "particles": 208,
+        "enemies": 7,
+        "props": 7
+      },
+      "heapUsed": 21683888,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280383488
+    },
+    {
+      "cycle": 44,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.45,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 2.46,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 208,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21429392,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 276709376
+    },
+    {
+      "cycle": 45,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.76,
+        "p50Ms": 0.7,
+        "p95Ms": 1.9,
+        "p99Ms": 2.4,
+        "maxMs": 3.21,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 173,
+        "particles": 204,
+        "enemies": 10,
+        "props": 8
+      },
+      "heapUsed": 21443568,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 276201472
+    },
+    {
+      "cycle": 46,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.26,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 1.19,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 111,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21386256,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 275550208
+    },
+    {
+      "cycle": 47,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.5,
+        "maxMs": 2.33,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 104,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21580936,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 287952896
+    },
+    {
+      "cycle": 48,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.2,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.8,
+        "maxMs": 1.85,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 73,
+        "particles": 207,
+        "enemies": 7,
+        "props": 4
+      },
+      "heapUsed": 21162280,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277286912
+    },
+    {
+      "cycle": 49,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.77,
+        "p50Ms": 0.7,
+        "p95Ms": 1.7,
+        "p99Ms": 2.3,
+        "maxMs": 3.21,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 180,
+        "particles": 216,
+        "enemies": 8,
+        "props": 6
+      },
+      "heapUsed": 21579160,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277708800
+    },
+    {
+      "cycle": 50,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.46,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 2.36,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 209,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21338824,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277458944
+    },
+    {
+      "cycle": 51,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.73,
+        "p50Ms": 0.7,
+        "p95Ms": 1.7,
+        "p99Ms": 2.2,
+        "maxMs": 5.27,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 144,
+        "particles": 205,
+        "enemies": 7,
+        "props": 7
+      },
+      "heapUsed": 21470536,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279203840
+    },
+    {
+      "cycle": 52,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.27,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 1.33,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 110,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21397152,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278257664
+    },
+    {
+      "cycle": 53,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.5,
+        "maxMs": 2.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 101,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21443504,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 287281152
+    },
+    {
+      "cycle": 54,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.2,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.8,
+        "maxMs": 1.64,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 73,
+        "particles": 202,
+        "enemies": 7,
+        "props": 4
+      },
+      "heapUsed": 21323680,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 276516864
+    },
+    {
+      "cycle": 55,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.79,
+        "p50Ms": 0.8,
+        "p95Ms": 1.7,
+        "p99Ms": 2.2,
+        "maxMs": 3.31,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 171,
+        "particles": 219,
+        "enemies": 8,
+        "props": 7
+      },
+      "heapUsed": 21764960,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278859776
+    },
+    {
+      "cycle": 56,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.46,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 2.38,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 209,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21701728,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 262623232
+    },
+    {
+      "cycle": 57,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.83,
+        "p50Ms": 0.8,
+        "p95Ms": 2,
+        "p99Ms": 2.5,
+        "maxMs": 4.11,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 175,
+        "particles": 209,
+        "enemies": 8,
+        "props": 8
+      },
+      "heapUsed": 21806712,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281559040
+    },
+    {
+      "cycle": 58,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.35,
+        "p50Ms": 0.3,
+        "p95Ms": 0.7,
+        "p99Ms": 1.2,
+        "maxMs": 1.67,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 102,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21660176,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280518656
+    },
+    {
+      "cycle": 59,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.12,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.7,
+        "maxMs": 2.83,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 97,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21243520,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 287354880
+    },
+    {
+      "cycle": 60,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.29,
+        "p50Ms": 0.2,
+        "p95Ms": 0.7,
+        "p99Ms": 1.2,
+        "maxMs": 4.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 215,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 21145032,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281382912
+    },
+    {
+      "cycle": 61,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 1,
+        "p50Ms": 1,
+        "p95Ms": 2.2,
+        "p99Ms": 3,
+        "maxMs": 5.61,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 179,
+        "particles": 208,
+        "enemies": 8,
+        "props": 6
+      },
+      "heapUsed": 21512552,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279617536
+    },
+    {
+      "cycle": 62,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.49,
+        "p50Ms": 0.4,
+        "p95Ms": 1.2,
+        "p99Ms": 1.6,
+        "maxMs": 2.54,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 208,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21630952,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277049344
+    },
+    {
+      "cycle": 63,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.91,
+        "p50Ms": 0.9,
+        "p95Ms": 2.3,
+        "p99Ms": 2.9,
+        "maxMs": 4.06,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 155,
+        "particles": 213,
+        "enemies": 8,
+        "props": 8
+      },
+      "heapUsed": 21565328,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279625728
+    },
+    {
+      "cycle": 64,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.32,
+        "p50Ms": 0.3,
+        "p95Ms": 0.7,
+        "p99Ms": 1.1,
+        "maxMs": 1.64,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 110,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21692520,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277712896
+    },
+    {
+      "cycle": 65,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.4,
+        "maxMs": 2.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 105,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21719600,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 291856384
+    },
+    {
+      "cycle": 66,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.23,
+        "p50Ms": 0.2,
+        "p95Ms": 0.5,
+        "p99Ms": 0.9,
+        "maxMs": 2.88,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 93,
+        "particles": 196,
+        "enemies": 7,
+        "props": 5
+      },
+      "heapUsed": 21525600,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277848064
+    },
+    {
+      "cycle": 67,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.73,
+        "p50Ms": 0.7,
+        "p95Ms": 1.5,
+        "p99Ms": 2,
+        "maxMs": 2.71,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 172,
+        "particles": 207,
+        "enemies": 7,
+        "props": 6
+      },
+      "heapUsed": 21854624,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277061632
+    },
+    {
+      "cycle": 68,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.44,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 2.14,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 214,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21586160,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277086208
+    },
+    {
+      "cycle": 69,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.69,
+        "p50Ms": 0.5,
+        "p95Ms": 1.9,
+        "p99Ms": 2.4,
+        "maxMs": 3.04,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 152,
+        "particles": 202,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 21681456,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278630400
+    },
+    {
+      "cycle": 70,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.3,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 1,
+        "maxMs": 3.78,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 109,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21680312,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277352448
+    },
+    {
+      "cycle": 71,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.11,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.4,
+        "maxMs": 2.31,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 101,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21738680,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 292581376
+    },
+    {
+      "cycle": 72,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.31,
+        "p50Ms": 0.2,
+        "p95Ms": 0.8,
+        "p99Ms": 1.3,
+        "maxMs": 2.56,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 209,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 21424728,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 282718208
+    },
+    {
+      "cycle": 73,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.84,
+        "p50Ms": 0.8,
+        "p95Ms": 2,
+        "p99Ms": 2.7,
+        "maxMs": 4.14,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 171,
+        "particles": 219,
+        "enemies": 9,
+        "props": 9
+      },
+      "heapUsed": 21695816,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280526848
+    },
+    {
+      "cycle": 74,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.61,
+        "p50Ms": 0.5,
+        "p95Ms": 1.6,
+        "p99Ms": 2.4,
+        "maxMs": 3.79,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 210,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21599416,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281296896
+    },
+    {
+      "cycle": 75,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 1,
+        "p50Ms": 0.8,
+        "p95Ms": 2.7,
+        "p99Ms": 3.9,
+        "maxMs": 8.63,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 179,
+        "particles": 213,
+        "enemies": 8,
+        "props": 6
+      },
+      "heapUsed": 21639368,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278913024
+    },
+    {
+      "cycle": 76,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.27,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 2.04,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 110,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21650952,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277315584
+    },
+    {
+      "cycle": 77,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.12,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 2.81,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 103,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21699032,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 290574336
+    },
+    {
+      "cycle": 78,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.24,
+        "p50Ms": 0.2,
+        "p95Ms": 0.5,
+        "p99Ms": 1.2,
+        "maxMs": 2.19,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 78,
+        "particles": 204,
+        "enemies": 8,
+        "props": 5
+      },
+      "heapUsed": 21721136,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278437888
+    },
+    {
+      "cycle": 79,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.84,
+        "p50Ms": 0.8,
+        "p95Ms": 2,
+        "p99Ms": 2.7,
+        "maxMs": 3.48,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 13,
+        "shots": 179,
+        "particles": 217,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 21917552,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277753856
+    },
+    {
+      "cycle": 80,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.56,
+        "p50Ms": 0.5,
+        "p95Ms": 1.4,
+        "p99Ms": 2,
+        "maxMs": 2.94,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 204,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21971784,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278425600
+    },
+    {
+      "cycle": 81,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.83,
+        "p50Ms": 0.7,
+        "p95Ms": 2.2,
+        "p99Ms": 3.1,
+        "maxMs": 5.77,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 172,
+        "particles": 220,
+        "enemies": 7,
+        "props": 7
+      },
+      "heapUsed": 21656608,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281018368
+    },
+    {
+      "cycle": 82,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.26,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.8,
+        "maxMs": 1.42,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 108,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21672728,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278208512
+    },
+    {
+      "cycle": 83,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.5,
+        "maxMs": 2.26,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 104,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21746664,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 292679680
+    },
+    {
+      "cycle": 84,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.25,
+        "p50Ms": 0.2,
+        "p95Ms": 0.6,
+        "p99Ms": 1,
+        "maxMs": 2.57,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 215,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 21840472,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278986752
+    },
+    {
+      "cycle": 85,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.81,
+        "p50Ms": 0.8,
+        "p95Ms": 1.9,
+        "p99Ms": 2.7,
+        "maxMs": 3.61,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 180,
+        "particles": 210,
+        "enemies": 8,
+        "props": 7
+      },
+      "heapUsed": 22043400,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278609920
+    },
+    {
+      "cycle": 86,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.54,
+        "p50Ms": 0.4,
+        "p95Ms": 1.4,
+        "p99Ms": 2,
+        "maxMs": 4.24,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 207,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 22024376,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278347776
+    },
+    {
+      "cycle": 87,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.86,
+        "p50Ms": 0.8,
+        "p95Ms": 2.1,
+        "p99Ms": 2.8,
+        "maxMs": 3.97,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 178,
+        "particles": 205,
+        "enemies": 9,
+        "props": 7
+      },
+      "heapUsed": 22201232,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279343104
+    },
+    {
+      "cycle": 88,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.29,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 1,
+        "maxMs": 1.45,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 101,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 22233520,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279343104
+    },
+    {
+      "cycle": 89,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.5,
+        "maxMs": 2.24,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 97,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 22179304,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279343104
+    },
+    {
+      "cycle": 90,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.32,
+        "p50Ms": 0.3,
+        "p95Ms": 0.8,
+        "p99Ms": 1.1,
+        "maxMs": 2.05,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 216,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 21405336,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279261184
+    },
+    {
+      "cycle": 91,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.9,
+        "p50Ms": 0.9,
+        "p95Ms": 2,
+        "p99Ms": 2.8,
+        "maxMs": 4.22,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 180,
+        "particles": 213,
+        "enemies": 7,
+        "props": 7
+      },
+      "heapUsed": 21515680,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279199744
+    },
+    {
+      "cycle": 92,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.45,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 1.95,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 214,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21620752,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277966848
+    },
+    {
+      "cycle": 93,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.69,
+        "p50Ms": 0.6,
+        "p95Ms": 1.7,
+        "p99Ms": 2.1,
+        "maxMs": 2.71,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 163,
+        "particles": 218,
+        "enemies": 7,
+        "props": 7
+      },
+      "heapUsed": 21830888,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278839296
+    },
+    {
+      "cycle": 94,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.29,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 1,
+        "maxMs": 1.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 111,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21447248,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 277327872
+    },
+    {
+      "cycle": 95,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.11,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 4.05,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 103,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21563168,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 284241920
+    },
+    {
+      "cycle": 96,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.3,
+        "p50Ms": 0.3,
+        "p95Ms": 0.7,
+        "p99Ms": 1.2,
+        "maxMs": 1.76,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 73,
+        "particles": 205,
+        "enemies": 7,
+        "props": 5
+      },
+      "heapUsed": 21598640,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279642112
+    },
+    {
+      "cycle": 97,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.97,
+        "p50Ms": 0.9,
+        "p95Ms": 2.2,
+        "p99Ms": 3.1,
+        "maxMs": 5.07,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 180,
+        "particles": 217,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21961272,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280047616
+    },
+    {
+      "cycle": 98,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.52,
+        "p50Ms": 0.4,
+        "p95Ms": 1.4,
+        "p99Ms": 2.4,
+        "maxMs": 4.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 205,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 22035048,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279089152
+    },
+    {
+      "cycle": 99,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.81,
+        "p50Ms": 0.8,
+        "p95Ms": 2,
+        "p99Ms": 2.7,
+        "maxMs": 4.45,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 180,
+        "particles": 213,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 21916560,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 282345472
+    },
+    {
+      "cycle": 100,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.31,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 1.2,
+        "maxMs": 2.31,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 113,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 22044392,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281788416
+    },
+    {
+      "cycle": 101,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 2.13,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 108,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21385360,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 290209792
+    },
+    {
+      "cycle": 102,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.24,
+        "p50Ms": 0.2,
+        "p95Ms": 0.6,
+        "p99Ms": 0.9,
+        "maxMs": 2.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 78,
+        "particles": 206,
+        "enemies": 8,
+        "props": 5
+      },
+      "heapUsed": 21376512,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 282730496
+    },
+    {
+      "cycle": 103,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.95,
+        "p50Ms": 0.9,
+        "p95Ms": 2.3,
+        "p99Ms": 3.1,
+        "maxMs": 5.18,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 164,
+        "particles": 210,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21818976,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281292800
+    },
+    {
+      "cycle": 104,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.47,
+        "p50Ms": 0.4,
+        "p95Ms": 1.2,
+        "p99Ms": 1.7,
+        "maxMs": 2.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 215,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21804080,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279515136
+    },
+    {
+      "cycle": 105,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.77,
+        "p50Ms": 0.7,
+        "p95Ms": 2,
+        "p99Ms": 2.5,
+        "maxMs": 3.64,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 22,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 178,
+        "particles": 213,
+        "enemies": 7,
+        "props": 7
+      },
+      "heapUsed": 21961224,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280850432
+    },
+    {
+      "cycle": 106,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.3,
+        "p50Ms": 0.3,
+        "p95Ms": 0.6,
+        "p99Ms": 0.9,
+        "maxMs": 1.91,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 105,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21821232,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280326144
+    },
+    {
+      "cycle": 107,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.11,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 2.69,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 99,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21868712,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 292823040
+    },
+    {
+      "cycle": 108,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.25,
+        "p50Ms": 0.2,
+        "p95Ms": 0.6,
+        "p99Ms": 0.9,
+        "maxMs": 1.76,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 105,
+        "particles": 214,
+        "enemies": 9,
+        "props": 5
+      },
+      "heapUsed": 21663368,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 281468928
+    },
+    {
+      "cycle": 109,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.82,
+        "p50Ms": 0.9,
+        "p95Ms": 1.7,
+        "p99Ms": 2.2,
+        "maxMs": 2.77,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 179,
+        "particles": 209,
+        "enemies": 9,
+        "props": 7
+      },
+      "heapUsed": 22024480,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278753280
+    },
+    {
+      "cycle": 110,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.43,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.4,
+        "maxMs": 3.01,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 197,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 22102464,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278769664
+    },
+    {
+      "cycle": 111,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.7,
+        "p50Ms": 0.7,
+        "p95Ms": 1.7,
+        "p99Ms": 2.2,
+        "maxMs": 2.89,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 180,
+        "particles": 216,
+        "enemies": 9,
+        "props": 8
+      },
+      "heapUsed": 22193320,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278761472
+    },
+    {
+      "cycle": 112,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.25,
+        "p50Ms": 0.2,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 1.45,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 105,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 22046304,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 278908928
+    },
+    {
+      "cycle": 113,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.08,
+        "p50Ms": 0.1,
+        "p95Ms": 0.1,
+        "p99Ms": 0.5,
+        "maxMs": 2.53,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 105,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 22085952,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 258805760
+    },
+    {
+      "cycle": 114,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.18,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.6,
+        "maxMs": 1.16,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 19,
+        "constraints": 0,
+        "pairs": 7,
+        "shots": 93,
+        "particles": 200,
+        "enemies": 7,
+        "props": 5
+      },
+      "heapUsed": 22232520,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 259330048
+    },
+    {
+      "cycle": 115,
+      "scenario": "volley",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.71,
+        "p50Ms": 0.7,
+        "p95Ms": 1.6,
+        "p99Ms": 2.1,
+        "maxMs": 2.77,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 178,
+        "particles": 213,
+        "enemies": 8,
+        "props": 6
+      },
+      "heapUsed": 21802816,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 280199168
+    },
+    {
+      "cycle": 116,
+      "scenario": "explosions",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.44,
+        "p50Ms": 0.4,
+        "p95Ms": 1.1,
+        "p99Ms": 1.5,
+        "maxMs": 2.52,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 11,
+        "shots": 89,
+        "particles": 207,
+        "enemies": 9,
+        "props": 6
+      },
+      "heapUsed": 21626832,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 279650304
+    },
+    {
+      "cycle": 117,
+      "scenario": "portals",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.92,
+        "p50Ms": 0.9,
+        "p95Ms": 2.2,
+        "p99Ms": 2.8,
+        "maxMs": 4.22,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 180,
+        "particles": 213,
+        "enemies": 10,
+        "props": 8
+      },
+      "heapUsed": 21908216,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 284741632
+    },
+    {
+      "cycle": 118,
+      "scenario": "beam",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.24,
+        "p50Ms": 0.2,
+        "p95Ms": 0.4,
+        "p99Ms": 0.8,
+        "maxMs": 1.27,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 25,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 13,
+        "particles": 113,
+        "enemies": 8,
+        "props": 9
+      },
+      "heapUsed": 21996360,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 283889664
+    },
+    {
+      "cycle": 119,
+      "scenario": "boss",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.1,
+        "p50Ms": 0.1,
+        "p95Ms": 0.2,
+        "p99Ms": 0.6,
+        "maxMs": 1.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 14,
+        "constraints": 0,
+        "pairs": 4,
+        "shots": 29,
+        "particles": 106,
+        "enemies": 1,
+        "props": 4
+      },
+      "heapUsed": 21621872,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 289812480
+    },
+    {
+      "cycle": 120,
+      "scenario": "overtime",
+      "timing": {
+        "samples": 1800,
+        "meanMs": 0.22,
+        "p50Ms": 0.2,
+        "p95Ms": 0.5,
+        "p99Ms": 0.8,
+        "maxMs": 1.89,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "peaks": {
+        "bodies": 21,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 92,
+        "particles": 200,
+        "enemies": 8,
+        "props": 5
+      },
+      "heapUsed": 21600384,
+      "external": 10994738,
+      "arrayBuffers": 38791,
+      "rss": 283041792
+    }
+  ],
+  "deathMemory": [
+    {
+      "retry": 1,
+      "heapUsed": 21234216,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 2,
+      "heapUsed": 21217816,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 3,
+      "heapUsed": 20892320,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 4,
+      "heapUsed": 20918200,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 5,
+      "heapUsed": 20923064,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 6,
+      "heapUsed": 20933976,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 7,
+      "heapUsed": 20966752,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 8,
+      "heapUsed": 20969832,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 9,
+      "heapUsed": 20995912,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 10,
+      "heapUsed": 21008072,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 11,
+      "heapUsed": 21042984,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 12,
+      "heapUsed": 21072272,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 13,
+      "heapUsed": 21068560,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 14,
+      "heapUsed": 21081432,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 15,
+      "heapUsed": 21088768,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 16,
+      "heapUsed": 21092424,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 17,
+      "heapUsed": 21113888,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 18,
+      "heapUsed": 21112000,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 19,
+      "heapUsed": 21106080,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 20,
+      "heapUsed": 21105784,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 21,
+      "heapUsed": 21093592,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 22,
+      "heapUsed": 21102232,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 23,
+      "heapUsed": 21115712,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 24,
+      "heapUsed": 21104112,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 25,
+      "heapUsed": 21133392,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 26,
+      "heapUsed": 21238208,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 27,
+      "heapUsed": 21240936,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 28,
+      "heapUsed": 21246016,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 29,
+      "heapUsed": 21251136,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 30,
+      "heapUsed": 21270592,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 31,
+      "heapUsed": 21270736,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 32,
+      "heapUsed": 21270232,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 33,
+      "heapUsed": 21252424,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 34,
+      "heapUsed": 21258408,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 35,
+      "heapUsed": 21256872,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 36,
+      "heapUsed": 21256360,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 37,
+      "heapUsed": 21270968,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 38,
+      "heapUsed": 21270504,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 39,
+      "heapUsed": 21249232,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 40,
+      "heapUsed": 21256720,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 41,
+      "heapUsed": 21259608,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 42,
+      "heapUsed": 21251664,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 43,
+      "heapUsed": 21264456,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 44,
+      "heapUsed": 21280960,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 45,
+      "heapUsed": 21275064,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 46,
+      "heapUsed": 21281560,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 47,
+      "heapUsed": 21285600,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 48,
+      "heapUsed": 21282696,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 49,
+      "heapUsed": 21255768,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 50,
+      "heapUsed": 21256296,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 51,
+      "heapUsed": 21271984,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 52,
+      "heapUsed": 21271632,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 53,
+      "heapUsed": 21263680,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 54,
+      "heapUsed": 21263640,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 55,
+      "heapUsed": 21273136,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 56,
+      "heapUsed": 21261496,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 57,
+      "heapUsed": 21272824,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 58,
+      "heapUsed": 21271088,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 59,
+      "heapUsed": 21259872,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "retry": 60,
+      "heapUsed": 21275408,
+      "counts": {
+        "bodies": 15,
+        "constraints": 0,
+        "pairs": 0,
+        "shots": 0,
+        "particles": 0,
+        "enemies": 1,
+        "props": 3
+      }
+    }
+  ]
+}

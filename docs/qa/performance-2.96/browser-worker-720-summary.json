@@ -1,0 +1,127 @@
+{
+  "provenance": "Summary read from the completed diagnostic page's visible report. Browser download delivery was unavailable for this run.",
+  "version": "2.96.0",
+  "status": "complete",
+  "activeSeconds": 180,
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "logicalCores": 24,
+    "deviceMemoryGiB": 32,
+    "viewport": {
+      "width": 1280,
+      "height": 720,
+      "pixelRatio": 1.0000000298023224
+    },
+    "canvas": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "options": {
+    "reduced": true,
+    "replay": true,
+    "audio": true
+  },
+  "results": [
+    {
+      "scenario": "volley",
+      "fps": 239.5,
+      "frames": 6707,
+      "frameP95Ms": 4.3,
+      "frameP99Ms": 4.3,
+      "frameMaxMs": 16.8,
+      "framesOver50Ms": 0,
+      "captureP95Ms": 0.1,
+      "captureMaxMs": 0.5,
+      "clears": 1,
+      "retries": 0,
+      "droppedSteps": 0
+    },
+    {
+      "scenario": "explosions",
+      "fps": 239.964,
+      "frames": 6719,
+      "frameP95Ms": 4.3,
+      "frameP99Ms": 4.3,
+      "frameMaxMs": 8.2,
+      "framesOver50Ms": 0,
+      "captureP95Ms": 0.1,
+      "captureMaxMs": 0.4,
+      "clears": 1,
+      "retries": 0,
+      "droppedSteps": 0
+    },
+    {
+      "scenario": "portals",
+      "fps": 234.107,
+      "frames": 6555,
+      "frameP95Ms": 4.3,
+      "frameP99Ms": 8.3,
+      "frameMaxMs": 62.5,
+      "framesOver50Ms": 1,
+      "captureP95Ms": 0.1,
+      "captureMaxMs": 1.4,
+      "clears": 0,
+      "retries": 0,
+      "droppedSteps": 0
+    },
+    {
+      "scenario": "beam",
+      "fps": 237.321,
+      "frames": 6645,
+      "frameP95Ms": 4.3,
+      "frameP99Ms": 4.3,
+      "frameMaxMs": 25,
+      "framesOver50Ms": 0,
+      "captureP95Ms": 0.1,
+      "captureMaxMs": 0.4,
+      "clears": 3,
+      "retries": 0,
+      "droppedSteps": 0
+    },
+    {
+      "scenario": "boss",
+      "fps": 239.394,
+      "frames": 6704,
+      "frameP95Ms": 4.3,
+      "frameP99Ms": 4.3,
+      "frameMaxMs": 12.6,
+      "framesOver50Ms": 0,
+      "captureP95Ms": 0.1,
+      "captureMaxMs": 0.2,
+      "clears": 1,
+      "retries": 0,
+      "droppedSteps": 0
+    },
+    {
+      "scenario": "overtime",
+      "fps": 235.965,
+      "frames": 6608,
+      "frameP95Ms": 4.3,
+      "frameP99Ms": 4.3,
+      "frameMaxMs": 29.1,
+      "framesOver50Ms": 0,
+      "captureP95Ms": 0.1,
+      "captureMaxMs": 0.5,
+      "clears": 3,
+      "retries": 0,
+      "droppedSteps": 0
+    }
+  ],
+  "memory": {
+    "samples": 37,
+    "heapMinBytes": 13264640,
+    "heapMaxBytes": 41959508,
+    "replayMaxBytes": 2391276,
+    "effectsMax": 8,
+    "musicMax": 10
+  },
+  "cleanup": {
+    "effects": 0,
+    "music": 0,
+    "replayBytes": 1930053,
+    "replayFrames": 96
+  },
+  "timingWarning": null,
+  "errors": []
+}

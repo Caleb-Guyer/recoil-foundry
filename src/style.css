@@ -23,6 +23,7 @@ button {
   color: inherit;
 }
 button:focus-visible,
+a:focus-visible,
 summary:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--accent);
@@ -978,7 +979,7 @@ dialog.logbook-dialog {
     animation: none !important;
   }
 }
-body[data-input='controller'] :is(button, summary, input):focus {
+body[data-input='controller'] :is(button, a[href], summary, input):focus {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }

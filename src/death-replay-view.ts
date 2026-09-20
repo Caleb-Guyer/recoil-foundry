@@ -1,8 +1,16 @@
-import { ReplayBuffer, REPLAY_FPS, replayFrameIndex, replayTiming } from './death-replay.ts';
+import {
+  ReplayBuffer,
+  REPLAY_FPS,
+  REPLAY_WIDTH,
+  REPLAY_HEIGHT,
+  replayFrameIndex,
+  replayTiming,
+} from './death-replay.ts';
 import type { ReplayImpact } from './death-replay.ts';
+import { ReplayEncoder } from './replay-encoder.ts';
 
-const WIDTH = 854,
-  HEIGHT = 480;
+const WIDTH = REPLAY_WIDTH,
+  HEIGHT = REPLAY_HEIGHT;
 export class DeathReplay {
   buffer = new ReplayBuffer<Blob>();
   impact: ReplayImpact | null = null;
@@ -12,11 +20,16 @@ export class DeathReplay {
   private sealed = false;
   private last = -Infinity;
   private pending = new Set<Promise<void>>();
+  // Native encodes cannot be cancelled by resetting the run. Keep their budget
+  // across generations so rapid retries cannot enqueue unlimited image work.
+  private encodes = 0;
   private canvas: HTMLCanvasElement;
+  private encoder: ReplayEncoder;
   constructor(canvas = document.createElement('canvas')) {
     this.canvas = canvas;
     this.canvas.width = WIDTH;
     this.canvas.height = HEIGHT;
+    this.encoder = new ReplayEncoder(canvas);
   }
   reset() {
     this.generation++;
@@ -27,35 +40,23 @@ export class DeathReplay {
     this.last = -Infinity;
   }
   capture(source: HTMLCanvasElement, at: number, force = false) {
-    if (this.sealed || (!force && (this.pending.size || at - this.last < 1 / REPLAY_FPS))) return;
-    const ctx = this.canvas.getContext('2d');
-    if (!ctx || !source.width || !source.height) return;
+    if (
+      this.sealed ||
+      this.encodes >= (force ? 2 : 1) ||
+      (!force && at - this.last < 1 / REPLAY_FPS)
+    )
+      return;
+    if (!source.width || !source.height) return;
     const generation = this.generation;
-    const fit = Math.min(WIDTH / source.width, HEIGHT / source.height);
-    ctx.fillStyle = '#14181a';
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.drawImage(
-      source,
-      (WIDTH - source.width * fit) / 2,
-      (HEIGHT - source.height * fit) / 2,
-      source.width * fit,
-      source.height * fit,
-    );
     this.last = at;
+    this.encodes++;
     const pending = new Promise<void>((resolve) => {
-      try {
-        this.canvas.toBlob(
-          (blob) => {
-            if (blob && generation === this.generation)
-              this.buffer.add({ at, data: blob, bytes: blob.size });
-            resolve();
-          },
-          'image/jpeg',
-          0.8,
-        );
-      } catch {
+      this.encoder.encode(source, (blob) => {
+        this.encodes--;
+        if (blob && generation === this.generation)
+          this.buffer.add({ at, data: blob, bytes: blob.size });
         resolve();
-      }
+      });
     });
     this.pending.add(pending);
     void pending.then(() => this.pending.delete(pending));
@@ -83,12 +84,17 @@ export class DeathReplay {
 }
 
 function recorderType() {
-  if (typeof MediaRecorder === 'undefined') return null;
-  return (
-    ['video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find((type) =>
-      MediaRecorder.isTypeSupported(type),
-    ) ?? null
-  );
+  try {
+    if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function')
+      return null;
+    return (
+      ['video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find((type) =>
+        MediaRecorder.isTypeSupported(type),
+      ) ?? null
+    );
+  } catch {
+    return null;
+  }
 }
 
 export class ReplayView {
@@ -207,7 +213,11 @@ export class ReplayView {
       this.playButton.textContent = 'Replay again';
       if (this.recorder?.state === 'recording' && !this.stopTimer)
         this.stopTimer = window.setTimeout(() => {
-          if (this.recorder?.state === 'recording') this.recorder.stop();
+          try {
+            if (this.recorder?.state === 'recording') this.recorder.stop();
+          } catch {
+            this.cancelExport('Could not save the clip. Try again.');
+          }
         }, 100);
     }
     this.raf = requestAnimationFrame((next) => this.tick(next));
@@ -298,7 +308,11 @@ export class ReplayView {
   private cancelExport(message: string) {
     const recorder = this.recorder;
     this.recorder = null;
-    if (recorder && recorder.state !== 'inactive') recorder.stop();
+    try {
+      if (recorder && recorder.state !== 'inactive') recorder.stop();
+    } catch {
+      // Failed browser encoders must still release their tracks and UI below.
+    }
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
     clearTimeout(this.stopTimer);

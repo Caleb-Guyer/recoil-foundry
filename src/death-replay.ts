@@ -1,6 +1,8 @@
 import type { Checkpoint, Vec } from './rules.ts';
 
 export const REPLAY_SECONDS = 5;
+export const REPLAY_WIDTH = 854,
+  REPLAY_HEIGHT = 480;
 export const REPLAY_FPS = 24;
 export const REPLAY_BYTES = 16 * 1024 * 1024;
 export interface ReplayFrame<T> {

@@ -3,7 +3,7 @@ import type { MenuDirection } from './controller.ts';
 function controls(root: HTMLElement): HTMLElement[] {
   return Array.from(
     root.querySelectorAll<HTMLElement>(
-      'button:not(:disabled), input[type="checkbox"], input[type="range"], summary, [data-controller-scroll]',
+      'button:not(:disabled), a[href], input[type="checkbox"], input[type="range"], summary, [data-controller-scroll]',
     ),
   ).filter((el) => {
     if (

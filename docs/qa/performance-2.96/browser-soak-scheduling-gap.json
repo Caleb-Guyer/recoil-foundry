@@ -1,0 +1,1498 @@
+{
+  "version": "2.96.0",
+  "generatedAt": "2026-09-20T01:08:10.869Z",
+  "status": "complete",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "logicalCores": 24,
+    "deviceMemoryGiB": 32,
+    "viewport": {
+      "width": 1280,
+      "height": 720,
+      "pixelRatio": 1.5
+    },
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "options": {
+    "reduced": false,
+    "replay": true,
+    "audio": true
+  },
+  "secondsPerCase": 120,
+  "activeSeconds": 721,
+  "methodology": "Real game simulation/render/audio/replay. Automatic preset retries after death/clear. First 2 seconds of each scenario excluded from timings. No CPU/GPU throttling. Heap is optional browser-reported JS heap, not total process memory.",
+  "results": [
+    {
+      "scenario": "volley",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 231.644,
+      "frameIntervals": {
+        "samples": 27335,
+        "meanMs": 4.32,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 8.4,
+        "maxMs": 45.7,
+        "over20": 6,
+        "over34": 1,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 27335,
+        "meanMs": 0.4,
+        "p50Ms": 0,
+        "p95Ms": 2.2,
+        "p99Ms": 3,
+        "maxMs": 5.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 27335,
+        "meanMs": 0.41,
+        "p50Ms": 0.4,
+        "p95Ms": 0.6,
+        "p99Ms": 0.8,
+        "maxMs": 2.6,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 27335,
+        "meanMs": 0.45,
+        "p50Ms": 0,
+        "p95Ms": 4.8,
+        "p99Ms": 6.9,
+        "maxMs": 43,
+        "over20": 2,
+        "over34": 1,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 7,
+        "meanMs": 8.03,
+        "p50Ms": 6.9,
+        "p95Ms": 13.1,
+        "p99Ms": 13.1,
+        "maxMs": 13.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 6,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 9,
+        "shots": 180,
+        "particles": 220,
+        "enemies": 7,
+        "props": 8
+      }
+    },
+    {
+      "scenario": "explosions",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 234.322,
+      "frameIntervals": {
+        "samples": 27651,
+        "meanMs": 4.27,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 8.3,
+        "maxMs": 108.3,
+        "over20": 32,
+        "over34": 8,
+        "over50": 5
+      },
+      "simulation": {
+        "samples": 27651,
+        "meanMs": 0.27,
+        "p50Ms": 0,
+        "p95Ms": 1.7,
+        "p99Ms": 2.2,
+        "maxMs": 4.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 27651,
+        "meanMs": 0.33,
+        "p50Ms": 0.3,
+        "p95Ms": 0.5,
+        "p99Ms": 0.6,
+        "maxMs": 2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 27651,
+        "meanMs": 0.43,
+        "p50Ms": 0,
+        "p95Ms": 4.3,
+        "p99Ms": 5.7,
+        "maxMs": 61.7,
+        "over20": 17,
+        "over34": 5,
+        "over50": 2
+      },
+      "roomTransitions": {
+        "samples": 8,
+        "meanMs": 6.96,
+        "p50Ms": 6.9,
+        "p95Ms": 7.2,
+        "p99Ms": 7.2,
+        "maxMs": 7.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 7,
+      "droppedSteps": 1,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 23,
+        "constraints": 0,
+        "pairs": 10,
+        "shots": 102,
+        "particles": 211,
+        "enemies": 7,
+        "props": 6
+      }
+    },
+    {
+      "scenario": "portals",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 229.271,
+      "frameIntervals": {
+        "samples": 27054,
+        "meanMs": 4.36,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 12.4,
+        "maxMs": 50,
+        "over20": 5,
+        "over34": 1,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 27054,
+        "meanMs": 0.36,
+        "p50Ms": 0,
+        "p95Ms": 2.1,
+        "p99Ms": 3,
+        "maxMs": 6.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 27054,
+        "meanMs": 0.38,
+        "p50Ms": 0.4,
+        "p95Ms": 0.6,
+        "p99Ms": 0.7,
+        "maxMs": 2.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 27054,
+        "meanMs": 0.52,
+        "p50Ms": 0,
+        "p95Ms": 5,
+        "p99Ms": 9.5,
+        "maxMs": 47.5,
+        "over20": 1,
+        "over34": 1,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 3,
+        "meanMs": 7.07,
+        "p50Ms": 7.2,
+        "p95Ms": 7.3,
+        "p99Ms": 7.3,
+        "maxMs": 7.3,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 2,
+      "droppedSteps": 0,
+      "portalPairs": 3,
+      "peaks": {
+        "bodies": 24,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 180,
+        "particles": 218,
+        "enemies": 10,
+        "props": 9
+      }
+    },
+    {
+      "scenario": "beam",
+      "scenarioSeconds": 120,
+      "measuredSeconds": 118,
+      "fps": 237.034,
+      "frameIntervals": {
+        "samples": 27970,
+        "meanMs": 4.22,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 4.3,
+        "maxMs": 33.3,
+        "over20": 39,
+        "over34": 0,
+        "over50": 0
+      },
+      "simulation": {
+        "samples": 27970,
+        "meanMs": 0.16,
+        "p50Ms": 0,
+        "p95Ms": 0.8,
+        "p99Ms": 1.1,
+        "maxMs": 2.4,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 27970,
+        "meanMs": 0.21,
+        "p50Ms": 0.2,
+        "p95Ms": 0.3,
+        "p99Ms": 0.4,
+        "maxMs": 0.9,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 27970,
+        "meanMs": 0.36,
+        "p50Ms": 0,
+        "p95Ms": 3.7,
+        "p99Ms": 4.4,
+        "maxMs": 32.1,
+        "over20": 35,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 13,
+        "meanMs": 5.81,
+        "p50Ms": 5.7,
+        "p95Ms": 6.5,
+        "p99Ms": 6.5,
+        "maxMs": 6.5,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 12,
+      "droppedSteps": 0,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 26,
+        "constraints": 0,
+        "pairs": 12,
+        "shots": 19,
+        "particles": 132,
+        "enemies": 9,
+        "props": 10
+      }
+    },
+    {
+      "scenario": "boss",
+      "scenarioSeconds": 120.6,
+      "measuredSeconds": 118.6,
+      "fps": 229.693,
+      "frameIntervals": {
+        "samples": 27232,
+        "meanMs": 4.35,
+        "p50Ms": 4.2,
+        "p95Ms": 4.3,
+        "p99Ms": 4.4,
+        "maxMs": 1004.1,
+        "over20": 70,
+        "over34": 13,
+        "over50": 3
+      },
+      "simulation": {
+        "samples": 27232,
+        "meanMs": 0.09,
+        "p50Ms": 0,
+        "p95Ms": 0.4,
+        "p99Ms": 0.6,
+        "maxMs": 3.7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 27232,
+        "meanMs": 0.21,
+        "p50Ms": 0.2,
+        "p95Ms": 0.3,
+        "p99Ms": 0.4,
+        "maxMs": 1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 27232,
+        "meanMs": 0.44,
+        "p50Ms": 0,
+        "p95Ms": 3.8,
+        "p99Ms": 5.6,
+        "maxMs": 39.2,
+        "over20": 66,
+        "over34": 8,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 5,
+        "meanMs": 0.86,
+        "p50Ms": 0.8,
+        "p95Ms": 1.2,
+        "p99Ms": 1.2,
+        "maxMs": 1.2,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 4,
+      "droppedSteps": 165,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 13,
+        "constraints": 0,
+        "pairs": 5,
+        "shots": 34,
+        "particles": 126,
+        "enemies": 1,
+        "props": 3
+      }
+    },
+    {
+      "scenario": "overtime",
+      "scenarioSeconds": 120.2,
+      "measuredSeconds": 118.2,
+      "fps": 1.107,
+      "frameIntervals": {
+        "samples": 132,
+        "meanMs": 903.35,
+        "p50Ms": 1004.3000000000466,
+        "p95Ms": 1004.3000000000466,
+        "p99Ms": 1004.3000000000466,
+        "maxMs": 1004.3,
+        "over20": 119,
+        "over34": 119,
+        "over50": 119
+      },
+      "simulation": {
+        "samples": 132,
+        "meanMs": 2.57,
+        "p50Ms": 2.5,
+        "p95Ms": 5.2,
+        "p99Ms": 7,
+        "maxMs": 7.1,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "render": {
+        "samples": 132,
+        "meanMs": 0.49,
+        "p50Ms": 0.5,
+        "p95Ms": 0.7,
+        "p99Ms": 0.8,
+        "maxMs": 0.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "replayCapture": {
+        "samples": 132,
+        "meanMs": 2.18,
+        "p50Ms": 0,
+        "p95Ms": 5.8,
+        "p99Ms": 6.8,
+        "maxMs": 7,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "roomTransitions": {
+        "samples": 2,
+        "meanMs": 2.7,
+        "p50Ms": 2.6,
+        "p95Ms": 2.8,
+        "p99Ms": 2.8,
+        "maxMs": 2.8,
+        "over20": 0,
+        "over34": 0,
+        "over50": 0
+      },
+      "retries": 0,
+      "clears": 1,
+      "droppedSteps": 6594,
+      "portalPairs": 0,
+      "peaks": {
+        "bodies": 20,
+        "constraints": 0,
+        "pairs": 6,
+        "shots": 80,
+        "particles": 216,
+        "enemies": 7,
+        "props": 5
+      }
+    }
+  ],
+  "peaksSampledEveryMs": 1000,
+  "memorySamples": [
+    {
+      "seconds": 0,
+      "heapBytes": 12537931,
+      "replayBytes": 0,
+      "effects": 0,
+      "music": 0
+    },
+    {
+      "seconds": 0,
+      "heapBytes": 12537931,
+      "replayBytes": 0,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 5,
+      "heapBytes": 22752714,
+      "replayBytes": 2289007,
+      "effects": 2,
+      "music": 5
+    },
+    {
+      "seconds": 10,
+      "heapBytes": 19046647,
+      "replayBytes": 2274302,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 15,
+      "heapBytes": 24523935,
+      "replayBytes": 2191346,
+      "effects": 1,
+      "music": 4
+    },
+    {
+      "seconds": 20,
+      "heapBytes": 26865159,
+      "replayBytes": 1224359,
+      "effects": 4,
+      "music": 5
+    },
+    {
+      "seconds": 25,
+      "heapBytes": 32972415,
+      "replayBytes": 2390523,
+      "effects": 4,
+      "music": 4
+    },
+    {
+      "seconds": 30,
+      "heapBytes": 26290482,
+      "replayBytes": 2309976,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 35,
+      "heapBytes": 24523574,
+      "replayBytes": 1637979,
+      "effects": 8,
+      "music": 4
+    },
+    {
+      "seconds": 40,
+      "heapBytes": 19630563,
+      "replayBytes": 2493399,
+      "effects": 3,
+      "music": 3
+    },
+    {
+      "seconds": 45,
+      "heapBytes": 29863686,
+      "replayBytes": 1093874,
+      "effects": 2,
+      "music": 1
+    },
+    {
+      "seconds": 50,
+      "heapBytes": 24708984,
+      "replayBytes": 2347436,
+      "effects": 8,
+      "music": 5
+    },
+    {
+      "seconds": 55,
+      "heapBytes": 32257120,
+      "replayBytes": 2450427,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 60,
+      "heapBytes": 19939724,
+      "replayBytes": 127934,
+      "effects": 6,
+      "music": 4
+    },
+    {
+      "seconds": 65,
+      "heapBytes": 27193900,
+      "replayBytes": 2396593,
+      "effects": 1,
+      "music": 6
+    },
+    {
+      "seconds": 70,
+      "heapBytes": 44760888,
+      "replayBytes": 2248640,
+      "effects": 9,
+      "music": 6
+    },
+    {
+      "seconds": 75,
+      "heapBytes": 42847561,
+      "replayBytes": 2353540,
+      "effects": 4,
+      "music": 5
+    },
+    {
+      "seconds": 80,
+      "heapBytes": 43804656,
+      "replayBytes": 1981680,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 85,
+      "heapBytes": 26463691,
+      "replayBytes": 2127741,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 90,
+      "heapBytes": 22450195,
+      "replayBytes": 79121,
+      "effects": 5,
+      "music": 5
+    },
+    {
+      "seconds": 95,
+      "heapBytes": 28349550,
+      "replayBytes": 2352315,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 100,
+      "heapBytes": 39611496,
+      "replayBytes": 2291601,
+      "effects": 13,
+      "music": 4
+    },
+    {
+      "seconds": 105,
+      "heapBytes": 26152739,
+      "replayBytes": 2120474,
+      "effects": 1,
+      "music": 5
+    },
+    {
+      "seconds": 110,
+      "heapBytes": 43762589,
+      "replayBytes": 920603,
+      "effects": 2,
+      "music": 3
+    },
+    {
+      "seconds": 115,
+      "heapBytes": 34363362,
+      "replayBytes": 2294923,
+      "effects": 10,
+      "music": 5
+    },
+    {
+      "seconds": 120,
+      "heapBytes": 29094944,
+      "replayBytes": 18945,
+      "effects": 4,
+      "music": 5
+    },
+    {
+      "seconds": 125,
+      "heapBytes": 28625494,
+      "replayBytes": 2131999,
+      "effects": 6,
+      "music": 5
+    },
+    {
+      "seconds": 130,
+      "heapBytes": 32077948,
+      "replayBytes": 2611641,
+      "effects": 5,
+      "music": 5
+    },
+    {
+      "seconds": 135,
+      "heapBytes": 19733045,
+      "replayBytes": 2147150,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 140,
+      "heapBytes": 30804741,
+      "replayBytes": 1840940,
+      "effects": 7,
+      "music": 5
+    },
+    {
+      "seconds": 145,
+      "heapBytes": 24284919,
+      "replayBytes": 2592619,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 150,
+      "heapBytes": 47131716,
+      "replayBytes": 2317137,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 155,
+      "heapBytes": 35529248,
+      "replayBytes": 1568026,
+      "effects": 3,
+      "music": 4
+    },
+    {
+      "seconds": 160,
+      "heapBytes": 32427520,
+      "replayBytes": 2502000,
+      "effects": 4,
+      "music": 3
+    },
+    {
+      "seconds": 165,
+      "heapBytes": 43019433,
+      "replayBytes": 2444853,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 170,
+      "heapBytes": 28413841,
+      "replayBytes": 1287026,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 175,
+      "heapBytes": 43819970,
+      "replayBytes": 2399333,
+      "effects": 5,
+      "music": 4
+    },
+    {
+      "seconds": 180,
+      "heapBytes": 29837233,
+      "replayBytes": 2524340,
+      "effects": 3,
+      "music": 4
+    },
+    {
+      "seconds": 185,
+      "heapBytes": 46527418,
+      "replayBytes": 1016792,
+      "effects": 4,
+      "music": 1
+    },
+    {
+      "seconds": 190,
+      "heapBytes": 44585832,
+      "replayBytes": 2388089,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 195,
+      "heapBytes": 41347068,
+      "replayBytes": 2514426,
+      "effects": 7,
+      "music": 5
+    },
+    {
+      "seconds": 200,
+      "heapBytes": 29199213,
+      "replayBytes": 727165,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 205,
+      "heapBytes": 38831355,
+      "replayBytes": 2340701,
+      "effects": 0,
+      "music": 6
+    },
+    {
+      "seconds": 210,
+      "heapBytes": 43830702,
+      "replayBytes": 2512181,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 215,
+      "heapBytes": 21935328,
+      "replayBytes": 461550,
+      "effects": 4,
+      "music": 5
+    },
+    {
+      "seconds": 220,
+      "heapBytes": 33785378,
+      "replayBytes": 2314514,
+      "effects": 5,
+      "music": 4
+    },
+    {
+      "seconds": 225,
+      "heapBytes": 27628683,
+      "replayBytes": 2532170,
+      "effects": 3,
+      "music": 3
+    },
+    {
+      "seconds": 230,
+      "heapBytes": 25649041,
+      "replayBytes": 161465,
+      "effects": 4,
+      "music": 4
+    },
+    {
+      "seconds": 235,
+      "heapBytes": 25991836,
+      "replayBytes": 2276445,
+      "effects": 1,
+      "music": 6
+    },
+    {
+      "seconds": 240,
+      "heapBytes": 38888031,
+      "replayBytes": 19466,
+      "effects": 8,
+      "music": 5
+    },
+    {
+      "seconds": 245,
+      "heapBytes": 44868025,
+      "replayBytes": 2399000,
+      "effects": 2,
+      "music": 5
+    },
+    {
+      "seconds": 250,
+      "heapBytes": 20324031,
+      "replayBytes": 2477754,
+      "effects": 11,
+      "music": 5
+    },
+    {
+      "seconds": 255,
+      "heapBytes": 19060263,
+      "replayBytes": 2409408,
+      "effects": 1,
+      "music": 4
+    },
+    {
+      "seconds": 260,
+      "heapBytes": 20152103,
+      "replayBytes": 2308485,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 265,
+      "heapBytes": 31912620,
+      "replayBytes": 2352720,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 270,
+      "heapBytes": 35410405,
+      "replayBytes": 2235080,
+      "effects": 5,
+      "music": 5
+    },
+    {
+      "seconds": 275,
+      "heapBytes": 27127220,
+      "replayBytes": 2318172,
+      "effects": 2,
+      "music": 5
+    },
+    {
+      "seconds": 280,
+      "heapBytes": 28311476,
+      "replayBytes": 2148709,
+      "effects": 4,
+      "music": 5
+    },
+    {
+      "seconds": 285,
+      "heapBytes": 39940292,
+      "replayBytes": 2392818,
+      "effects": 0,
+      "music": 6
+    },
+    {
+      "seconds": 290,
+      "heapBytes": 33162424,
+      "replayBytes": 2259575,
+      "effects": 3,
+      "music": 3
+    },
+    {
+      "seconds": 295,
+      "heapBytes": 42007313,
+      "replayBytes": 2331696,
+      "effects": 1,
+      "music": 3
+    },
+    {
+      "seconds": 300,
+      "heapBytes": 43044460,
+      "replayBytes": 2165429,
+      "effects": 1,
+      "music": 3
+    },
+    {
+      "seconds": 305,
+      "heapBytes": 44577605,
+      "replayBytes": 2349337,
+      "effects": 3,
+      "music": 3
+    },
+    {
+      "seconds": 310,
+      "heapBytes": 29797922,
+      "replayBytes": 1418956,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 315,
+      "heapBytes": 32901713,
+      "replayBytes": 2482734,
+      "effects": 5,
+      "music": 4
+    },
+    {
+      "seconds": 320,
+      "heapBytes": 35215883,
+      "replayBytes": 2579375,
+      "effects": 1,
+      "music": 5
+    },
+    {
+      "seconds": 325,
+      "heapBytes": 26111285,
+      "replayBytes": 2380572,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 330,
+      "heapBytes": 20315140,
+      "replayBytes": 2203922,
+      "effects": 1,
+      "music": 4
+    },
+    {
+      "seconds": 335,
+      "heapBytes": 38295600,
+      "replayBytes": 2163580,
+      "effects": 0,
+      "music": 3
+    },
+    {
+      "seconds": 340,
+      "heapBytes": 42008191,
+      "replayBytes": 39124,
+      "effects": 13,
+      "music": 5
+    },
+    {
+      "seconds": 345,
+      "heapBytes": 36007349,
+      "replayBytes": 2412029,
+      "effects": 1,
+      "music": 5
+    },
+    {
+      "seconds": 350,
+      "heapBytes": 36160131,
+      "replayBytes": 2361431,
+      "effects": 11,
+      "music": 4
+    },
+    {
+      "seconds": 355,
+      "heapBytes": 37743170,
+      "replayBytes": 2584677,
+      "effects": 2,
+      "music": 5
+    },
+    {
+      "seconds": 360,
+      "heapBytes": 45583056,
+      "replayBytes": 48827,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 365,
+      "heapBytes": 37035580,
+      "replayBytes": 2406905,
+      "effects": 1,
+      "music": 5
+    },
+    {
+      "seconds": 370,
+      "heapBytes": 30237246,
+      "replayBytes": 220573,
+      "effects": 2,
+      "music": 5
+    },
+    {
+      "seconds": 375,
+      "heapBytes": 40951942,
+      "replayBytes": 2562487,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 380,
+      "heapBytes": 21296747,
+      "replayBytes": 452763,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 385,
+      "heapBytes": 24905249,
+      "replayBytes": 2632963,
+      "effects": 0,
+      "music": 6
+    },
+    {
+      "seconds": 390,
+      "heapBytes": 31755267,
+      "replayBytes": 613518,
+      "effects": 0,
+      "music": 3
+    },
+    {
+      "seconds": 395,
+      "heapBytes": 39804030,
+      "replayBytes": 2566277,
+      "effects": 0,
+      "music": 3
+    },
+    {
+      "seconds": 400,
+      "heapBytes": 22967435,
+      "replayBytes": 814292,
+      "effects": 2,
+      "music": 4
+    },
+    {
+      "seconds": 405,
+      "heapBytes": 32760259,
+      "replayBytes": 2547365,
+      "effects": 3,
+      "music": 4
+    },
+    {
+      "seconds": 410,
+      "heapBytes": 29021104,
+      "replayBytes": 979215,
+      "effects": 4,
+      "music": 3
+    },
+    {
+      "seconds": 415,
+      "heapBytes": 45624958,
+      "replayBytes": 2499289,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 420,
+      "heapBytes": 28920051,
+      "replayBytes": 1150202,
+      "effects": 1,
+      "music": 5
+    },
+    {
+      "seconds": 425,
+      "heapBytes": 37891078,
+      "replayBytes": 2433127,
+      "effects": 2,
+      "music": 5
+    },
+    {
+      "seconds": 430,
+      "heapBytes": 21812641,
+      "replayBytes": 1318320,
+      "effects": 6,
+      "music": 5
+    },
+    {
+      "seconds": 435,
+      "heapBytes": 40470594,
+      "replayBytes": 2457751,
+      "effects": 1,
+      "music": 4
+    },
+    {
+      "seconds": 440,
+      "heapBytes": 37117734,
+      "replayBytes": 1533685,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 445,
+      "heapBytes": 35706522,
+      "replayBytes": 2421344,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 450,
+      "heapBytes": 43573350,
+      "replayBytes": 1712225,
+      "effects": 4,
+      "music": 4
+    },
+    {
+      "seconds": 455,
+      "heapBytes": 37394050,
+      "replayBytes": 2409347,
+      "effects": 1,
+      "music": 3
+    },
+    {
+      "seconds": 460,
+      "heapBytes": 32362391,
+      "replayBytes": 1901351,
+      "effects": 2,
+      "music": 6
+    },
+    {
+      "seconds": 465,
+      "heapBytes": 41054142,
+      "replayBytes": 2381796,
+      "effects": 0,
+      "music": 3
+    },
+    {
+      "seconds": 470,
+      "heapBytes": 20367708,
+      "replayBytes": 2069207,
+      "effects": 4,
+      "music": 5
+    },
+    {
+      "seconds": 475,
+      "heapBytes": 27922235,
+      "replayBytes": 2357035,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 480,
+      "heapBytes": 24317724,
+      "replayBytes": 21189,
+      "effects": 1,
+      "music": 5
+    },
+    {
+      "seconds": 485,
+      "heapBytes": 29602472,
+      "replayBytes": 1294780,
+      "effects": 1,
+      "music": 3
+    },
+    {
+      "seconds": 490,
+      "heapBytes": 27253244,
+      "replayBytes": 1341756,
+      "effects": 3,
+      "music": 1
+    },
+    {
+      "seconds": 495,
+      "heapBytes": 23681700,
+      "replayBytes": 1268535,
+      "effects": 4,
+      "music": 5
+    },
+    {
+      "seconds": 500,
+      "heapBytes": 22883667,
+      "replayBytes": 1375559,
+      "effects": 0,
+      "music": 6
+    },
+    {
+      "seconds": 505,
+      "heapBytes": 39131242,
+      "replayBytes": 1371332,
+      "effects": 3,
+      "music": 4
+    },
+    {
+      "seconds": 510,
+      "heapBytes": 23944861,
+      "replayBytes": 1230345,
+      "effects": 4,
+      "music": 4
+    },
+    {
+      "seconds": 515,
+      "heapBytes": 26663434,
+      "replayBytes": 1347450,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 520,
+      "heapBytes": 25874494,
+      "replayBytes": 1263729,
+      "effects": 1,
+      "music": 5
+    },
+    {
+      "seconds": 525,
+      "heapBytes": 33845034,
+      "replayBytes": 1362511,
+      "effects": 2,
+      "music": 5
+    },
+    {
+      "seconds": 530,
+      "heapBytes": 45883738,
+      "replayBytes": 1368378,
+      "effects": 2,
+      "music": 6
+    },
+    {
+      "seconds": 535,
+      "heapBytes": 23884562,
+      "replayBytes": 1165293,
+      "effects": 3,
+      "music": 4
+    },
+    {
+      "seconds": 540,
+      "heapBytes": 31728694,
+      "replayBytes": 1355143,
+      "effects": 2,
+      "music": 7
+    },
+    {
+      "seconds": 545,
+      "heapBytes": 33374706,
+      "replayBytes": 1259214,
+      "effects": 0,
+      "music": 6
+    },
+    {
+      "seconds": 550,
+      "heapBytes": 39322899,
+      "replayBytes": 1352058,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 555,
+      "heapBytes": 25475903,
+      "replayBytes": 1367662,
+      "effects": 3,
+      "music": 6
+    },
+    {
+      "seconds": 560,
+      "heapBytes": 37215399,
+      "replayBytes": 1092066,
+      "effects": 0,
+      "music": 4
+    },
+    {
+      "seconds": 565,
+      "heapBytes": 26703411,
+      "replayBytes": 1363454,
+      "effects": 1,
+      "music": 4
+    },
+    {
+      "seconds": 570,
+      "heapBytes": 35213231,
+      "replayBytes": 1247391,
+      "effects": 1,
+      "music": 4
+    },
+    {
+      "seconds": 575,
+      "heapBytes": 21089896,
+      "replayBytes": 1344946,
+      "effects": 0,
+      "music": 3
+    },
+    {
+      "seconds": 580,
+      "heapBytes": 26942915,
+      "replayBytes": 1356307,
+      "effects": 0,
+      "music": 3
+    },
+    {
+      "seconds": 585,
+      "heapBytes": 45572179,
+      "replayBytes": 1008685,
+      "effects": 0,
+      "music": 6
+    },
+    {
+      "seconds": 590,
+      "heapBytes": 21636020,
+      "replayBytes": 1367489,
+      "effects": 3,
+      "music": 3
+    },
+    {
+      "seconds": 595,
+      "heapBytes": 34724031,
+      "replayBytes": 1253162,
+      "effects": 6,
+      "music": 4
+    },
+    {
+      "seconds": 601,
+      "heapBytes": 21574324,
+      "replayBytes": 1345587,
+      "effects": 2,
+      "music": 2
+    },
+    {
+      "seconds": 606,
+      "heapBytes": 26658615,
+      "replayBytes": 20651,
+      "effects": 3,
+      "music": 1
+    },
+    {
+      "seconds": 611,
+      "heapBytes": 20012896,
+      "replayBytes": 83415,
+      "effects": 0,
+      "music": 0
+    },
+    {
+      "seconds": 616,
+      "heapBytes": 21213770,
+      "replayBytes": 122401,
+      "effects": 5,
+      "music": 0
+    },
+    {
+      "seconds": 621,
+      "heapBytes": 19884912,
+      "replayBytes": 191734,
+      "effects": 2,
+      "music": 0
+    },
+    {
+      "seconds": 626,
+      "heapBytes": 20505948,
+      "replayBytes": 237265,
+      "effects": 1,
+      "music": 0
+    },
+    {
+      "seconds": 631,
+      "heapBytes": 20077564,
+      "replayBytes": 299101,
+      "effects": 3,
+      "music": 0
+    },
+    {
+      "seconds": 636,
+      "heapBytes": 20637024,
+      "replayBytes": 346157,
+      "effects": 6,
+      "music": 5
+    },
+    {
+      "seconds": 641,
+      "heapBytes": 20843459,
+      "replayBytes": 413088,
+      "effects": 2,
+      "music": 0
+    },
+    {
+      "seconds": 646,
+      "heapBytes": 20054906,
+      "replayBytes": 453326,
+      "effects": 1,
+      "music": 0
+    },
+    {
+      "seconds": 651,
+      "heapBytes": 20900482,
+      "replayBytes": 522685,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 656,
+      "heapBytes": 20217956,
+      "replayBytes": 566385,
+      "effects": 3,
+      "music": 2
+    },
+    {
+      "seconds": 661,
+      "heapBytes": 20292480,
+      "replayBytes": 631181,
+      "effects": 3,
+      "music": 0
+    },
+    {
+      "seconds": 666,
+      "heapBytes": 22768303,
+      "replayBytes": 675611,
+      "effects": 0,
+      "music": 5
+    },
+    {
+      "seconds": 672,
+      "heapBytes": 22522637,
+      "replayBytes": 698336,
+      "effects": 3,
+      "music": 0
+    },
+    {
+      "seconds": 677,
+      "heapBytes": 20561052,
+      "replayBytes": 733218,
+      "effects": 7,
+      "music": 1
+    },
+    {
+      "seconds": 682,
+      "heapBytes": 21482816,
+      "replayBytes": 737543,
+      "effects": 0,
+      "music": 0
+    },
+    {
+      "seconds": 687,
+      "heapBytes": 20018981,
+      "replayBytes": 733051,
+      "effects": 4,
+      "music": 0
+    },
+    {
+      "seconds": 692,
+      "heapBytes": 19929200,
+      "replayBytes": 762131,
+      "effects": 3,
+      "music": 0
+    },
+    {
+      "seconds": 697,
+      "heapBytes": 20050413,
+      "replayBytes": 766563,
+      "effects": 3,
+      "music": 0
+    },
+    {
+      "seconds": 702,
+      "heapBytes": 18448297,
+      "replayBytes": 0,
+      "effects": 3,
+      "music": 5
+    },
+    {
+      "seconds": 707,
+      "heapBytes": 19072914,
+      "replayBytes": 41540,
+      "effects": 3,
+      "music": 1
+    },
+    {
+      "seconds": 712,
+      "heapBytes": 19067867,
+      "replayBytes": 82965,
+      "effects": 0,
+      "music": 1
+    },
+    {
+      "seconds": 717,
+      "heapBytes": 19229024,
+      "replayBytes": 142931,
+      "effects": 6,
+      "music": 0
+    }
+  ],
+  "errors": [],
+  "cleanup": {
+    "replayFrames": 11,
+    "replayBytes": 238861,
+    "effects": 0,
+    "music": 0
+  }
+}
