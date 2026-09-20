@@ -1,0 +1,20 @@
+{
+  "evidenceType": "Values read directly from the completed control page's visible JSON report",
+  "localDate": "2026-09-20",
+  "source": "raf-control.html served on localhost",
+  "method": "requestAnimationFrame only; one DOM report update per second; no timers or game modules during measurement",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+  "status": "complete",
+  "seconds": 60.00109999999404,
+  "samples": 14400,
+  "meanIntervalMs": 4.166666666666666,
+  "minIntervalMs": 3.799999999999272,
+  "maxIntervalMs": 4.600000000000364,
+  "intervalsOver50Ms": 0,
+  "totalIntervalMs": 59999.99999999999,
+  "callbackWorkMaxMs": 0.10000000894069672,
+  "visibility": "visible",
+  "focused": true,
+  "visibilityChanges": 0,
+  "limits": "A one-minute minimal control on localhost, not a game performance test or a same-origin control for GitHub Pages. It rules out continuous one-Hz delivery across every observed page in this session, but does not identify the cause of the hosted game's slowdown. Download was requested but no file appeared in the inspected Downloads location; this is a transcription of DOM-exposed results."
+}

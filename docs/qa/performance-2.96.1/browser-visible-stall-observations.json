@@ -1,0 +1,64 @@
+{
+  "evidenceType": "Selected values read from the diagnostic page's visible JSON report; not the full downloaded report",
+  "localDate": "2026-09-20",
+  "version": "2.96.1",
+  "browser": "Codex in-app browser, Chromium UA 153.0.0.0",
+  "conditions": {
+    "powerScheme": "High performance",
+    "batteryStatusRawWin32": 2,
+    "batteryChargePercent": 76,
+    "displaysReported": [
+      { "adapter": "Intel(R) Graphics", "width": 2560, "height": 1440, "refreshHz": 240 },
+      { "adapter": "NVIDIA GeForce RTX 5080 Laptop GPU", "width": 2560, "height": 1600, "refreshHz": 240 }
+    ],
+    "activeBrowserGpu": "Not identified",
+    "backgroundWork": "No automated test suite or build running; other user workloads not controlled"
+  },
+  "sameTabMadeVisible": {
+    "status": "stopped",
+    "activeSeconds": 96,
+    "slowFrameCountIncludingWarmup": 96,
+    "applicationErrors": [],
+    "sampleAtSeconds": 73,
+    "sampleFps": 0.998,
+    "sampleLongestFrameMs": 1004.4,
+    "sampleDroppedSteps": 4013,
+    "observation": "Showing the already affected browser and restarting the test did not restore normal frame delivery. Download requested, but no corresponding file was found; only these observed values are retained."
+  },
+  "freshVisibleTab": {
+    "reportGeneratedAt": "2026-09-20T05:07:28.430Z",
+    "status": "stopped",
+    "activeSeconds": 124,
+    "canvas": { "width": 1415, "height": 1347 },
+    "viewport": { "width": 943, "height": 898, "pixelRatio": 1.5 },
+    "options": { "audio": true, "replay": true, "reduced": false },
+    "volley": {
+      "scenarioSeconds": 120.5,
+      "measuredSamples": 119,
+      "fps": 0.998,
+      "meanFrameIntervalMs": 1002.07,
+      "longestFrameMs": 1004.3,
+      "framesOver50Ms": 119,
+      "droppedSteps": 6598,
+      "callbackMaxMs": 24.5,
+      "callbackP95Ms": 18.2,
+      "renderMaxMs": 1.8,
+      "captureMaxMs": 0.5
+    },
+    "explosions": {
+      "scenarioSeconds": 3,
+      "measuredSamples": 1,
+      "frameIntervalMs": 1000.1,
+      "callbackMs": 5.4,
+      "droppedSteps": 165
+    },
+    "slowFrameCountIncludingWarmup": 124,
+    "discardedSlowFrames": 4,
+    "browserEntryCount": 1,
+    "applicationErrors": [],
+    "consoleWarningsOrErrors": [],
+    "cleanup": { "effects": 0, "music": 0, "replayBytes": 59802, "replayFrames": 4 },
+    "observation": "A fresh tab also delivered about one callback per second. Download requested, but no corresponding file was found; values were read directly from the visible report before closing."
+  },
+  "limits": "Stopped diagnostic runs, not completed soaks or performance passes. The fresh visible tab used a different natural viewport than the initial hidden tab; these are not equal-resolution performance comparisons. Neither run establishes independent Chrome or Firefox behavior."
+}

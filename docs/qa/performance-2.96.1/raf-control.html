@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animation frame delivery control</title>
+<style>body{font:16px system-ui;margin:32px;background:#171b1d;color:#e8e9e0}pre{white-space:pre-wrap}button{font:inherit;padding:10px}</style>
+<h1>Animation frame delivery control</h1>
+<p>One minute of animation callbacks. No game, physics, canvas, audio, workers or replay capture.</p>
+<button id="start">Start control</button>
+<button id="download" disabled>Download report</button>
+<pre id="report" role="status">Ready.</pre>
+<script>
+const output = document.querySelector('#report');
+const start = document.querySelector('#start');
+const download = document.querySelector('#download');
+let report, last, began, shown;
+const display = () => output.textContent = JSON.stringify(report, null, 2);
+start.onclick = () => {
+  start.disabled = true;
+  download.disabled = true;
+  last = null;
+  shown = began = performance.now();
+  report = {
+    method: 'requestAnimationFrame only; one DOM report update per second; no timers or game modules',
+    userAgent: navigator.userAgent,
+    status: 'running', seconds: 0, samples: 0, meanIntervalMs: null,
+    minIntervalMs: null, maxIntervalMs: 0, intervalsOver50Ms: 0,
+    visibility: document.visibilityState, focused: document.hasFocus(),
+    visibilityChanges: 0, totalIntervalMs: 0,
+    callbackWorkMaxMs: 0, recentIntervalsMs: []
+  };
+  display();
+  requestAnimationFrame(frame);
+};
+function frame(at) {
+  const enter = performance.now();
+  if (last !== null) {
+    const gap = at - last;
+    report.samples++;
+    report.totalIntervalMs += gap;
+    report.meanIntervalMs = report.totalIntervalMs / report.samples;
+    report.minIntervalMs = Math.min(report.minIntervalMs ?? gap, gap);
+    report.maxIntervalMs = Math.max(report.maxIntervalMs, gap);
+    if (gap > 50) report.intervalsOver50Ms++;
+    report.recentIntervalsMs.push(gap);
+    if (report.recentIntervalsMs.length > 12) report.recentIntervalsMs.shift();
+  }
+  last = at;
+  report.seconds = (enter - began) / 1000;
+  if (report.visibility !== document.visibilityState) report.visibilityChanges++;
+  report.visibility = document.visibilityState;
+  report.focused = document.hasFocus();
+  const done = report.seconds >= 60;
+  if (done) report.status = 'complete';
+  if (done || enter - shown >= 1000) {
+    shown = enter;
+    display();
+  }
+  report.callbackWorkMaxMs = Math.max(report.callbackWorkMaxMs, performance.now() - enter);
+  if (done) {
+    display();
+    start.disabled = download.disabled = false;
+  } else requestAnimationFrame(frame);
+}
+download.onclick = () => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], {type:'application/json'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'recoil-foundry-raf-control.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+</script>
+</html>

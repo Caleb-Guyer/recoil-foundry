@@ -1,0 +1,20 @@
+{
+  "evidenceType": "Selected values read directly from the diagnostic page's visible JSON report",
+  "localDate": "2026-09-20",
+  "version": "2.96.1",
+  "browser": "Codex in-app browser, Chromium UA 153.0.0.0",
+  "source": "Same local production-preview tab after the affected full-effects run",
+  "status": "stopped",
+  "activeSeconds": 97,
+  "options": { "audio": false, "replay": false, "reduced": true },
+  "results": [
+    { "scenario": "volley", "seconds": 30.1, "samples": 29, "fps": 0.998, "frameP95Ms": 1004.3, "frameMaxMs": 1004.3, "framesOver50": 29, "droppedSteps": 1647, "callbackMaxMs": 19.5 },
+    { "scenario": "explosions", "seconds": 30.1, "samples": 29, "fps": 0.998, "frameP95Ms": 1004.2, "frameMaxMs": 1004.2, "framesOver50": 29, "droppedSteps": 1649, "callbackMaxMs": 11.9 },
+    { "scenario": "portals", "seconds": 30.1, "samples": 29, "fps": 0.998, "frameP95Ms": 1004.3, "frameMaxMs": 1004.3, "framesOver50": 29, "droppedSteps": 1650, "callbackMaxMs": 15.5 },
+    { "scenario": "beam", "seconds": 7, "samples": 6, "fps": 0.997, "frameP95Ms": 1004.3, "frameMaxMs": 1004.3, "framesOver50": 6, "droppedSteps": 385, "callbackMaxMs": 3.5 }
+  ],
+  "slowFrameCountIncludingWarmup": 97,
+  "errors": [],
+  "cleanup": { "effects": 0, "music": 0, "replayBytes": 0, "replayFrames": 0 },
+  "limits": "A recovery comparison in an already affected tab, stopped after 97 seconds. It does not replace Reduced effects acceptance with audio/replay enabled and cannot rule out a workload having triggered the earlier degradation."
+}

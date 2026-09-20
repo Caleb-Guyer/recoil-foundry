@@ -2,6 +2,8 @@
 
 Follow-up to [item 5 evidence](performance-stability-2.96.0.md). This patch changes the separate diagnostic page and version metadata. Ordinary combat, rendering, replay encoding, input, balance and Daily ruleset 78 are unchanged. The owner's completed Edge gameplay checks remain valid for those unchanged systems.
 
+Subsequent extended-run attempts and the reproduced frame-delivery slowdown are recorded in the [20 September follow-up](stability-follow-up-2026-09-20.md). Its failed runs qualify the earlier short-run observations below; the cause remains unresolved.
+
 ## Measurement changes
 
 Schema 2 records audio, report/housekeeping and whole frame-callback timing, including room resets. Each delayed animation interval retains the work from the **preceding** callback, so subsequent catch-up simulation is not misidentified as its cause. Optional Long Task/Long Animation Frame observers provide overlapping browser timing when supported. Overlap is evidence of concurrent work, not proof of causality. Sources: [Long Animation Frames draft](https://www.w3.org/TR/long-animation-frames/) and [Long Tasks draft](https://www.w3.org/TR/longtasks-1/).

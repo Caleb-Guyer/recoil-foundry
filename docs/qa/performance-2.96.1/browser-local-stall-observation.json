@@ -1,0 +1,28 @@
+{
+  "evidenceType": "Selected values read from the diagnostic page's visible JSON report; download event timed out",
+  "localDate": "2026-09-20",
+  "version": "2.96.1",
+  "browser": "Codex in-app browser, Chromium UA 153.0.0.0",
+  "source": "Local Vite production preview",
+  "status": "stopped",
+  "activeSeconds": 385,
+  "canvas": { "width": 1920, "height": 1080 },
+  "options": { "audio": true, "replay": true, "reduced": false },
+  "bundleVerification": {
+    "method": "SHA-256 equality of local files and published asset response contents",
+    "diagnostics-spiaSsNV.js": "06E0D434006705DC779821EF1448644EF7813E324887E9B6544C84AF174839A9",
+    "branch-builds-CKpt8KW8.js": "E83C5A1C338230C2F906A2F427195F110EF12E803F557500A53A23DFD2A14CF6"
+  },
+  "results": [
+    { "scenario": "volley", "seconds": 120, "samples": 28269, "fps": 239.559, "frameP95Ms": 4.3, "frameMaxMs": 91.6, "framesOver50": 1, "droppedSteps": 1, "callbackMaxMs": 9.6, "renderMaxMs": 2.4, "captureMaxMs": 1.1 },
+    { "scenario": "explosions", "seconds": 120, "samples": 25641, "fps": 217.296, "frameP95Ms": 8.3, "frameMaxMs": 62.6, "framesOver50": 1, "droppedSteps": 0, "callbackMaxMs": 8.6, "renderMaxMs": 1.3, "captureMaxMs": 1.7 },
+    { "scenario": "portals", "seconds": 120, "samples": 16937, "fps": 143.534, "frameP95Ms": 25.1, "frameMaxMs": 108.3, "framesOver50": 141, "droppedSteps": 1, "callbackMaxMs": 14.7, "renderMaxMs": 2.2, "captureMaxMs": 0.4 },
+    { "scenario": "beam", "seconds": 25.2, "samples": 340, "fps": 14.66, "frameP95Ms": 1004.2, "frameMaxMs": 1004.2, "framesOver50": 25, "droppedSteps": 1066, "callbackMaxMs": 5.3, "renderMaxMs": 1, "captureMaxMs": 0.5 }
+  ],
+  "diagnostics": { "slowFrameCountIncludingWarmup": 170, "browserEntryCount": 217, "discardedSlowFrames": 50, "discardedBrowserEntries": 97 },
+  "exampleGap": { "scenario": "beam", "intervalMs": 1004.2, "callbackSpacingMs": 1004.7, "precedingCallbackMs": 3.3, "overlappingBrowserEntries": 0 },
+  "sampledHeapBytes": { "first": 13923105, "min": 13923105, "max": 42039000, "last": 22948308 },
+  "errors": [],
+  "cleanup": { "effects": 0, "music": 0, "replayBytes": 2022765, "replayFrames": 83 },
+  "limits": "The intended twelve-minute run was stopped after degradation. This is not a completed soak or performance pass. Synchronous timing does not cover all GPU, worker, native or browser work. One pause occurred at 385 seconds to inspect the trace, followed by Stop; the report excludes the pause."
+}

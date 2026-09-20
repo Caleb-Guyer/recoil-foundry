@@ -1,6 +1,6 @@
 # Full browser release checklist
 
-Updated 19 September 2026 against 2.96.1. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
+Updated 20 September 2026 against 2.96.1. This is the **unfinished work list** for the browser release. Future content updates remain possible. The Unity/Steam remake is separate.
 
 **When work is completed, remove it from this list.** Keep its evidence in a linked report or commit, not a checked-off entry. Section numbers stay stable so references to remaining work do not change. Completed balance work is archived in the [balance closeout](balance-closeout-2.92.0.md); first-session implementation and the five-scenario self-audit are archived in the [clarity report](first-session-2.93.0.md). Those implementation sections are removed. Actual first-time-player observation and human acceptance remain explicitly open in section 7.
 
@@ -22,7 +22,7 @@ Completed software fixes, automated lifecycle checks and available-browser measu
 - [ ] Complete production-build stress and gameplay checks in current Firefox on Windows, plus Safari if it will be advertised. Include downloading and playing exported replay videos, physical keyboard/mouse, tab switching and native fullscreen transitions. Record actual versions, device specs and results for each browser.
 - [ ] Verify supported physical controllers on supported browsers, including disconnect/reconnect, rumble and recovery after tab/fullscreen changes. Test real touch hardware before advertising touch support. Automated input/event tests and the in-app browser audit do not establish hardware support. The owner currently has no controller available for this check.
 - [ ] Profile on a representative low-end laptop at its normal screen resolution. Use dense late-game builds, boss attacks, portals, explosions, replay recording and Overtime. The owner currently has no lower-end laptop available; the high-end laptop results do not close this requirement.
-- [ ] Target stable 60 fps on the chosen baseline; investigate long frame stalls and sustained memory growth. Include the isolated stalls documented in the [Edge benchmark reports](performance-stability-2.96.0.md#owner-supplied-edge-reduced-effects-run); Reduced effects completed without dropped steps, but did not eliminate all frame stalls. If necessary, offer reduced visual effects that preserve physics and tells.
+- [ ] Target stable 60 fps on the chosen baseline; investigate long frame stalls and sustained memory growth. Include the isolated stalls documented in the [Edge benchmark reports](performance-stability-2.96.0.md#owner-supplied-edge-reduced-effects-run); Reduced effects completed without dropped steps, but did not eliminate all frame stalls. The [20 September follow-up](stability-follow-up-2026-09-20.md) reproduced a persistent one-Hz slowdown during attempted in-app-browser soaks; those interrupted runs do not establish a pass or a root cause. If necessary, offer reduced visual effects that preserve physics and tells.
 
 Acceptance: no known reproducible crash, progress-loss or softlock bugs; baseline hardware remains playable in stress scenes; unsupported optional features fail gracefully.
 
