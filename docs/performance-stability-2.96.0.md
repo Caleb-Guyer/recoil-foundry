@@ -61,7 +61,11 @@ Capture's measured maximum was **0.5 ms**. One explosion-scene frame reached 79.
 
 The real replay viewer opened the worker-generated clip, paused/resumed, and encoded a video through MediaRecorder to **Clip ready** with the fallback Download clip link and no console errors. Closing the viewer restored the diagnostic controls. The later 1080p run retained 98 replay frames and a valid report download completed.
 
-**Downloaded-video delivery and playback remain unverified.** During the worker viewer check no new video file appeared in Downloads after the normal save/link actions. Attempting to open the generated video URL directly was blocked by the browser tool's URL security policy; no workaround was used. The earlier replay file already on disk was not counted as a new successful export. Verify a newly exported file in the independently supported browsers; this is explicitly retained in item 5.
+During the first worker viewer check no new video file appeared in Downloads after the normal save/link actions. Attempting to open the generated video URL directly was blocked by the browser tool's URL security policy; no workaround was used. The earlier replay file already on disk was not counted as a new successful export.
+
+A subsequent public-build recheck on 19 September at 22:05 CDT **did deliver a new video file** through the ordinary Save clip action. The browser tool's download event timed out after 15 seconds, but a later filesystem check established a fresh 324,782-byte WebM with a matching creation time. The viewer reached Clip ready without console warnings or errors. The [download receipt](qa/performance-2.96/replay-download-recheck.json) records its timestamp, size, SHA-256 and WebM header. A missing tool event therefore cannot be treated as proof of failed delivery. This recheck used no direct blob navigation or workaround.
+
+**Downloaded-video playback remains unverified.** A container header and successful download do not establish video decoding or playback. The owner has confirmed availability to perform standalone-browser checks on this laptop; those results have not yet been supplied. Independent Chrome/Edge/Firefox, physical input and baseline-device acceptance remain in item 5.
 
 ## Automated verification
 

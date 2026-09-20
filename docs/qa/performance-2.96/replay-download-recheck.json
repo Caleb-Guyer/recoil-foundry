@@ -1,0 +1,27 @@
+{
+  "build": "2.96.0",
+  "checkedAtUtc": "2026-09-20T03:06:33Z",
+  "browser": "Codex in-app browser (Chromium; not standalone Chrome)",
+  "source": "https://caleb-guyer.github.io/recoil-foundry/?test=replay&v=2.96.0",
+  "steps": [
+    "Start Test death replay and wait for an ordinary enemy to kill the player",
+    "Open Watch replay",
+    "Click Save clip",
+    "Observe Clip ready and the Download clip link",
+    "Check the actual Downloads directory for a newly created file"
+  ],
+  "downloadEventObserved": false,
+  "downloadEventTimeoutMs": 15000,
+  "fileDeliveryVerified": true,
+  "file": {
+    "name": "recoil-foundry-last-moments (1).webm",
+    "createdAtUtc": "2026-09-20T03:05:45.3168136Z",
+    "bytes": 324782,
+    "sha256": "0cb85b5be3ddd3e844339e5c6240544b57d15f509e4fbcaeec079d1e08d3adea",
+    "ebmlHeaderHex": "1a45dfa3",
+    "documentType": "webm"
+  },
+  "consoleWarningsOrErrors": [],
+  "downloadedVideoPlaybackVerified": false,
+  "limits": "A newly delivered WebM file and container header establish delivery, not successful decoding/playback or compatibility with independent browsers. No direct blob navigation or workaround was used. The earlier unsuccessful attempt remains recorded in the main report."
+}
