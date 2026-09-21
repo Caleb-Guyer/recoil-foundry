@@ -7,6 +7,7 @@ import { Renderer } from '../src/render.ts';
 import { Sound } from '../src/audio.ts';
 import { seeded } from '../src/rules.ts';
 import { GAME_VERSION } from '../src/version.ts';
+import { TrailerIntro, introAudio, INTRO_SECONDS, FOOTSTEPS } from './trailer-intro.ts';
 import {
   actionInput,
   recordAction,
@@ -50,6 +51,7 @@ const W = 1920,
   BPM = 100,
   MUSIC_START = 163.276;
 const frameAtBeat = (b: number) => Math.round(((b * 60) / BPM) * FPS);
+const introFrames = Math.round(INTRO_SECONDS * FPS);
 const montage = [
   ['cluster', 0, 0, 2],
   ['pinwheel', 0, 2, 6],
@@ -70,13 +72,14 @@ const montage = [
 ] as const;
 const scenes = montage.map(([name, choice, from, to]) => ({
   take: takes[name][choice],
-  start: frameAtBeat(from),
-  end: frameAtBeat(to),
+  start: introFrames + frameAtBeat(from),
+  end: introFrames + frameAtBeat(to),
 }));
-const endStart = frameAtBeat(54),
-  total = frameAtBeat(62),
+const endStart = introFrames + frameAtBeat(54),
+  total = introFrames + frameAtBeat(62),
   duration = total / FPS;
-const storyboard = process.argv.includes('--storyboard');
+const introOnly = process.argv.includes('--intro-only');
+const storyboard = process.argv.includes('--storyboard') || introOnly;
 if (!storyboard && (!ffmpeg || !existsSync(music)))
   throw new Error('Set FFMPEG and provide the licensed music file (TRAILER_MUSIC).');
 const canvas = createCanvas(W, H),
@@ -117,6 +120,12 @@ zero.gain.value = 0;
 keeper.connect(zero);
 zero.connect(sound.master!);
 keeper.start();
+const introBuffer = context.createBuffer(2, Math.ceil((INTRO_SECONDS + 0.12) * 48000), 48000);
+introAudio().forEach((channel, index) => introBuffer.getChannelData(index).set(channel));
+const introVoice = context.createBufferSource();
+introVoice.buffer = introBuffer;
+introVoice.connect(context.destination);
+introVoice.start(0);
 
 const video = storyboard
   ? null
@@ -244,6 +253,45 @@ async function reviewSequence(index: number, sample: number, frame: number, labe
   ctx.fillStyle = '#e9eadc';
   ctx.fillText(`${index + 1}. ${label} ${(frame / FPS).toFixed(2)}s`, x + 8, y + 201);
 }
+const intro = new TrailerIntro(canvas);
+const introSamples = [0.25, 0.9, 1.5, 2.1, 2.74, 3.98, 4.66, 5.3, 5.8].map((s) =>
+  Math.round(s * FPS),
+);
+const introSheet = createCanvas(1280, 810),
+  ic = introSheet.getContext('2d');
+ic.fillStyle = '#071015';
+ic.fillRect(0, 0, 1280, 810);
+for (let frame = 0; frame < introFrames; frame++) {
+  intro.draw(frame / FPS);
+  const index = introSamples.indexOf(frame);
+  if (index >= 0) {
+    const png = canvas.toBuffer('image/png');
+    const file = `work-action/intro-${String(frame).padStart(4, '0')}.png`;
+    writeFileSync(resolve(out, file), png);
+    const still = await loadImage(png);
+    const x = (index % 3) * 426,
+      y = Math.floor(index / 3) * 270;
+    ic.drawImage(still, x, y, 426, 240);
+    ic.fillStyle = '#e9eadc';
+    ic.font = '17px "Release Mono"';
+    ic.fillText(`${(frame / FPS).toFixed(2)}s · cold open`, x + 10, y + 261);
+    reviewFrames.push({ seconds: frame / FPS, file });
+  }
+  if (!storyboard) {
+    await writeFrame();
+    context.processTo((frame + 1) / FPS);
+  }
+}
+writeFileSync(resolve(out, 'intro-contact-sheet.png'), introSheet.toBuffer('image/png'));
+if (introOnly) {
+  context.processTo(INTRO_SECONDS + 0.12);
+  writeFileSync(
+    resolve(work, 'intro-preview.wav'),
+    Buffer.from(await context.encodeAudioData(context.exportAsAudioData(), { bitDepth: 24 })),
+  );
+  console.log('Cold-open storyboard and Foley preview ready');
+  process.exit(0);
+}
 for (const [index, scene] of scenes.entries()) {
   sound.updateTorch(false);
   const take = scene.take,
@@ -296,7 +344,7 @@ for (const [index, scene] of scenes.entries()) {
       c.fillStyle = '#b0bbb4';
       c.fillText(`${String(g.stage + 1).padStart(2, '0')} / 20`, W - 42, 44);
       c.textAlign = 'left';
-      if (frame < frameAtBeat(2)) caption('ONE GUN.', ease(frame / 6));
+      if (index === 0) caption('ONE GUN.', ease(local / 6));
       if (index === 2)
         caption('100 WAYS TO BUILD IT.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
       if (index === 6)
@@ -395,7 +443,7 @@ const mux = spawnSync(
     '-i',
     music,
     '-filter_complex',
-    `[1:a]highpass=f=65,volume=1.6[fx];[2:a]atrim=duration=${duration},asetpts=PTS-STARTPTS,volume=0.9,afade=t=in:d=0.03,afade=t=out:st=${duration - 0.65}:d=0.65[song];[song][fx]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-2:LRA=9,aresample=48000[a]`,
+    `[1:a]highpass=f=65,volume=1.6[fx];[2:a]atrim=duration=${duration - INTRO_SECONDS},asetpts=PTS-STARTPTS,volume=0.9,afade=t=in:d=0.03,afade=t=out:st=${duration - INTRO_SECONDS - 0.65}:d=0.65,adelay=${INTRO_SECONDS * 1000}:all=1[song];[song][fx]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-2:LRA=9,volume='if(lt(t,${INTRO_SECONDS}),0.25,1)':eval=frame,aresample=48000[a]`,
     '-map',
     '0:v:0',
     '-map',
@@ -428,7 +476,7 @@ writeFileSync(
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 3,
+      revision: 4,
       width: W,
       height: H,
       fps: FPS,
@@ -443,11 +491,21 @@ writeFileSync(
         source: 'https://www.scottbuckley.com.au/library/resonance/',
         license: 'CC BY 4.0',
         sourceIn: MUSIC_START,
-        sourceOut: MUSIC_START + duration,
-        edit: 'Excerpt, fades, level adjustment, mixed with game effects',
+        sourceOut: MUSIC_START + duration - INTRO_SECONDS,
+        timelineStart: INTRO_SECONDS,
+        edit: 'Excerpt, fades, level adjustment, delayed until the first combat cut, mixed with game effects',
+      },
+      intro: {
+        seconds: INTRO_SECONDS,
+        method:
+          'Editorial animation using game scenery, outfit and weapon renderer; keyframed walk, lighting and camera; original synthesized factory ambience, footsteps, relay and weapon clicks',
+        footsteps: FOOTSTEPS,
+        gainAfterNormalization: 0.25,
+        music: false,
+        cutToAction: INTRO_SECONDS,
       },
       method:
-        'Actual Game, Renderer and Sound; real-time scripted inputs, legal checkpoint builds; active health, recoil, collision and enemy AI; editorial zoom/cuts/type; licensed recorded music',
+        'Editorial cold open, followed by actual Game, Renderer and Sound; real-time scripted combat inputs, legal checkpoint builds; active health, recoil, collision and enemy AI; editorial zoom/cuts/type; licensed recorded music',
       scenes: manifest,
       reviewFrames,
     },

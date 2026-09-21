@@ -1,11 +1,11 @@
 {
   "version": "2.98.0",
-  "revision": 3,
+  "revision": 4,
   "width": 1920,
   "height": 1080,
   "fps": 60,
-  "seconds": 37.2,
-  "frames": 2232,
+  "seconds": 43.2,
+  "frames": 2592,
   "cameraScale": [2.05, 2.15],
   "playbackSpeed": 1,
   "bpm": 100,
@@ -16,9 +16,18 @@
     "license": "CC BY 4.0",
     "sourceIn": 163.276,
     "sourceOut": 200.476,
-    "edit": "Excerpt, fades, level adjustment, mixed with game effects"
+    "timelineStart": 6,
+    "edit": "Excerpt, fades, level adjustment, delayed until the first combat cut, mixed with game effects"
   },
-  "method": "Actual Game, Renderer and Sound; real-time scripted inputs, legal checkpoint builds; active health, recoil, collision and enemy AI; editorial zoom/cuts/type; licensed recorded music",
+  "intro": {
+    "seconds": 6,
+    "method": "Editorial animation using game scenery, outfit and weapon renderer; keyframed walk, lighting and camera; original synthesized factory ambience, footsteps, relay and weapon clicks",
+    "footsteps": [0.88, 1.5, 2.12, 2.74, 3.36, 3.98],
+    "gainAfterNormalization": 0.25,
+    "music": false,
+    "cutToAction": 6
+  },
+  "method": "Editorial cold open, followed by actual Game, Renderer and Sound; real-time scripted combat inputs, legal checkpoint builds; active health, recoil, collision and enemy AI; editorial zoom/cuts/type; licensed recorded music",
   "scenes": [
     {
       "name": "cluster",
@@ -49,7 +58,7 @@
         "damage": 199
       },
       "score": 16.828,
-      "timelineStart": 0,
+      "timelineStart": 6,
       "seconds": 1.2,
       "initialHealth": 100,
       "finalHealth": 85,
@@ -85,7 +94,7 @@
         "damage": 327
       },
       "score": 17.945,
-      "timelineStart": 1.2,
+      "timelineStart": 7.2,
       "seconds": 2.4,
       "initialHealth": 100,
       "finalHealth": 85,
@@ -111,7 +120,7 @@
         "damage": 318
       },
       "score": 11.106,
-      "timelineStart": 3.6,
+      "timelineStart": 9.6,
       "seconds": 2.4,
       "initialHealth": 84,
       "finalHealth": 84,
@@ -147,7 +156,7 @@
         "damage": 319
       },
       "score": 13.957,
-      "timelineStart": 6,
+      "timelineStart": 12,
       "seconds": 2.4,
       "initialHealth": 64,
       "finalHealth": 70,
@@ -174,7 +183,7 @@
         "damage": 407
       },
       "score": 19.105,
-      "timelineStart": 8.4,
+      "timelineStart": 14.4,
       "seconds": 2.4,
       "initialHealth": 84,
       "finalHealth": 68,
@@ -200,7 +209,7 @@
         "damage": 184
       },
       "score": 12.587,
-      "timelineStart": 10.8,
+      "timelineStart": 16.8,
       "seconds": 2.4,
       "initialHealth": 84,
       "finalHealth": 84,
@@ -237,7 +246,7 @@
         "damage": 234
       },
       "score": 16.623,
-      "timelineStart": 13.2,
+      "timelineStart": 19.2,
       "seconds": 2.4,
       "initialHealth": 49,
       "finalHealth": 39,
@@ -273,7 +282,7 @@
         "damage": 251
       },
       "score": 17.303,
-      "timelineStart": 15.6,
+      "timelineStart": 21.6,
       "seconds": 2.4,
       "initialHealth": 84,
       "finalHealth": 71,
@@ -299,7 +308,7 @@
         "damage": 102
       },
       "score": 6.62,
-      "timelineStart": 18,
+      "timelineStart": 24,
       "seconds": 2.4,
       "initialHealth": 82,
       "finalHealth": 64,
@@ -336,7 +345,7 @@
         "damage": 447
       },
       "score": 17.702,
-      "timelineStart": 20.4,
+      "timelineStart": 26.4,
       "seconds": 2.4,
       "initialHealth": 100,
       "finalHealth": 66,
@@ -362,7 +371,7 @@
         "damage": 168
       },
       "score": 9.633,
-      "timelineStart": 22.8,
+      "timelineStart": 28.8,
       "seconds": 2.4,
       "initialHealth": 68,
       "finalHealth": 68,
@@ -398,7 +407,7 @@
         "damage": 275
       },
       "score": 11.953,
-      "timelineStart": 25.2,
+      "timelineStart": 31.2,
       "seconds": 1.8,
       "initialHealth": 68,
       "finalHealth": 70,
@@ -424,7 +433,7 @@
         "damage": 146
       },
       "score": 13.835,
-      "timelineStart": 27,
+      "timelineStart": 33,
       "seconds": 1.8,
       "initialHealth": 100,
       "finalHealth": 84,
@@ -451,7 +460,7 @@
         "damage": 135
       },
       "score": 17.51,
-      "timelineStart": 28.8,
+      "timelineStart": 34.8,
       "seconds": 1.2,
       "initialHealth": 84,
       "finalHealth": 68,
@@ -488,7 +497,7 @@
         "damage": 194
       },
       "score": 16.066,
-      "timelineStart": 30,
+      "timelineStart": 36,
       "seconds": 1.2,
       "initialHealth": 82,
       "finalHealth": 64,
@@ -524,7 +533,7 @@
         "damage": 162
       },
       "score": 17.302,
-      "timelineStart": 31.2,
+      "timelineStart": 37.2,
       "seconds": 1.2,
       "initialHealth": 100,
       "finalHealth": 82,
@@ -535,72 +544,108 @@
   ],
   "reviewFrames": [
     {
-      "seconds": 0.6,
-      "file": "work-action/frame-0036.png"
+      "seconds": 0.25,
+      "file": "work-action/intro-0015.png"
     },
     {
-      "seconds": 2.4,
-      "file": "work-action/frame-0144.png"
+      "seconds": 0.9,
+      "file": "work-action/intro-0054.png"
     },
     {
-      "seconds": 4.8,
-      "file": "work-action/frame-0288.png"
+      "seconds": 1.5,
+      "file": "work-action/intro-0090.png"
     },
     {
-      "seconds": 7.2,
-      "file": "work-action/frame-0432.png"
+      "seconds": 2.1,
+      "file": "work-action/intro-0126.png"
     },
     {
-      "seconds": 9.6,
-      "file": "work-action/frame-0576.png"
+      "seconds": 2.7333333333333334,
+      "file": "work-action/intro-0164.png"
     },
     {
-      "seconds": 12,
-      "file": "work-action/frame-0720.png"
+      "seconds": 3.9833333333333334,
+      "file": "work-action/intro-0239.png"
     },
     {
-      "seconds": 14.4,
-      "file": "work-action/frame-0864.png"
+      "seconds": 4.666666666666667,
+      "file": "work-action/intro-0280.png"
     },
     {
-      "seconds": 16.8,
-      "file": "work-action/frame-1008.png"
+      "seconds": 5.3,
+      "file": "work-action/intro-0318.png"
     },
     {
-      "seconds": 19.2,
-      "file": "work-action/frame-1152.png"
+      "seconds": 5.8,
+      "file": "work-action/intro-0348.png"
     },
     {
-      "seconds": 21.6,
-      "file": "work-action/frame-1296.png"
+      "seconds": 6.6,
+      "file": "work-action/frame-0396.png"
     },
     {
-      "seconds": 24,
-      "file": "work-action/frame-1440.png"
+      "seconds": 8.4,
+      "file": "work-action/frame-0504.png"
     },
     {
-      "seconds": 26.1,
-      "file": "work-action/frame-1566.png"
+      "seconds": 10.8,
+      "file": "work-action/frame-0648.png"
     },
     {
-      "seconds": 27.9,
-      "file": "work-action/frame-1674.png"
+      "seconds": 13.2,
+      "file": "work-action/frame-0792.png"
     },
     {
-      "seconds": 29.4,
-      "file": "work-action/frame-1764.png"
+      "seconds": 15.6,
+      "file": "work-action/frame-0936.png"
     },
     {
-      "seconds": 30.6,
-      "file": "work-action/frame-1836.png"
+      "seconds": 18,
+      "file": "work-action/frame-1080.png"
     },
     {
-      "seconds": 31.8,
-      "file": "work-action/frame-1908.png"
+      "seconds": 20.4,
+      "file": "work-action/frame-1224.png"
     },
     {
-      "seconds": 33.4,
-      "file": "work-action/frame-2004.png"
+      "seconds": 22.8,
+      "file": "work-action/frame-1368.png"
+    },
+    {
+      "seconds": 25.2,
+      "file": "work-action/frame-1512.png"
+    },
+    {
+      "seconds": 27.6,
+      "file": "work-action/frame-1656.png"
+    },
+    {
+      "seconds": 30,
+      "file": "work-action/frame-1800.png"
+    },
+    {
+      "seconds": 32.1,
+      "file": "work-action/frame-1926.png"
+    },
+    {
+      "seconds": 33.9,
+      "file": "work-action/frame-2034.png"
+    },
+    {
+      "seconds": 35.4,
+      "file": "work-action/frame-2124.png"
+    },
+    {
+      "seconds": 36.6,
+      "file": "work-action/frame-2196.png"
+    },
+    {
+      "seconds": 37.8,
+      "file": "work-action/frame-2268.png"
+    },
+    {
+      "seconds": 39.4,
+      "file": "work-action/frame-2364.png"
     }
   ]
 }

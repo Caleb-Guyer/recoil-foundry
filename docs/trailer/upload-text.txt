@@ -13,7 +13,7 @@ Build it your way with branching upgrades, changing room layouts, and a Daily Ru
 Available now in your browser. Play on a desktop or laptop with a keyboard and mouse.
 
 A game by Caleb Guyer.
-Trailer features in-engine gameplay and game sound effects.
+Trailer features an animated opening made with game art, followed by in-engine gameplay and game sound effects.
 
 'Resonance' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
 Track: https://www.scottbuckley.com.au/library/resonance/
