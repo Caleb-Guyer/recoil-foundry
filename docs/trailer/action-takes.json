@@ -1,0 +1,387 @@
+{
+  "scatter": [
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "ACTION-SCATTER-5",
+      "style": 1,
+      "start": 391,
+      "length": 180,
+      "score": 19.308
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "ACTION-SCATTER-3",
+      "style": 1,
+      "start": 331,
+      "length": 180,
+      "score": 18.374
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "ACTION-SCATTER-8",
+      "style": 0,
+      "start": 331,
+      "length": 180,
+      "score": 17.423
+    }
+  ],
+  "pinwheel": [
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-9",
+      "style": 1,
+      "start": 571,
+      "length": 180,
+      "score": 26.34
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-8",
+      "style": 0,
+      "start": 301,
+      "length": 180,
+      "score": 24.998
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-2",
+      "style": 0,
+      "start": 571,
+      "length": 180,
+      "score": 24.378
+    }
+  ],
+  "prism": [
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-10",
+      "style": 0,
+      "start": 571,
+      "length": 180,
+      "score": 14.719
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-7",
+      "style": 1,
+      "start": 481,
+      "length": 180,
+      "score": 14.631
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-8",
+      "style": 0,
+      "start": 571,
+      "length": 180,
+      "score": 14.023
+    }
+  ],
+  "cluster": [
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-1",
+      "style": 1,
+      "start": 421,
+      "length": 180,
+      "score": 21.038
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-10",
+      "style": 0,
+      "start": 391,
+      "length": 180,
+      "score": 20.217
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-11",
+      "style": 1,
+      "start": 241,
+      "length": 180,
+      "score": 19.769
+    }
+  ],
+  "storm": [
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-7",
+      "style": 1,
+      "start": 481,
+      "length": 180,
+      "score": 23.167
+    },
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-11",
+      "style": 1,
+      "start": 391,
+      "length": 180,
+      "score": 22.599
+    },
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-3",
+      "style": 1,
+      "start": 391,
+      "length": 180,
+      "score": 22.411
+    }
+  ],
+  "saw": [
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "seed": "ACTION-SAW-6",
+      "style": 0,
+      "start": 631,
+      "length": 180,
+      "score": 16.613
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "seed": "ACTION-SAW-9",
+      "style": 1,
+      "start": 511,
+      "length": 180,
+      "score": 15.799
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "seed": "ACTION-SAW-3",
+      "style": 1,
+      "start": 601,
+      "length": 180,
+      "score": 15.538
+    }
+  ],
+  "turf": [
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "event": true,
+      "seed": "TURF-80-10",
+      "style": 1,
+      "start": 271,
+      "length": 180,
+      "score": 29.946
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "event": true,
+      "seed": "TURF-80-0",
+      "style": 0,
+      "start": 301,
+      "length": 180,
+      "score": 24.838
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "event": true,
+      "seed": "TURF-80-10",
+      "style": 1,
+      "start": 481,
+      "length": 180,
+      "score": 21.936
+    }
+  ],
+  "loader": [
+    {
+      "name": "loader",
+      "stage": 3,
+      "mods": ["magnum", "rapid", "kick"],
+      "seed": "LOADER-SHIFT-5",
+      "style": 0,
+      "start": 211,
+      "length": 180,
+      "score": 6.081
+    },
+    {
+      "name": "loader",
+      "stage": 3,
+      "mods": ["magnum", "rapid", "kick"],
+      "seed": "LOADER-SHIFT-0",
+      "style": 1,
+      "start": 181,
+      "length": 180,
+      "score": 4.395
+    },
+    {
+      "name": "loader",
+      "stage": 3,
+      "mods": ["magnum", "rapid", "kick"],
+      "seed": "LOADER-SHIFT-0",
+      "style": 1,
+      "start": 391,
+      "length": 180,
+      "score": -8.02
+    }
+  ]
+}

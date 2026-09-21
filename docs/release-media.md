@@ -1,6 +1,6 @@
 # Release media
 
-The stable release also has a [35-second YouTube trailer with music, sound effects, a thumbnail, and upload copy](trailer/README.md).
+The stable release also has a [37-second action trailer with licensed music, sound effects, a thumbnail, and upload copy](trailer/README.md).
 
 Prepared for 2.98.0-rc.1. These images and the silent clip show normal enemies and the first three areas; final encounters, secrets and endings are excluded.
 

@@ -1,60 +1,151 @@
 {
   "version": "2.98.0",
+  "revision": 2,
   "width": 1920,
   "height": 1080,
   "fps": 60,
-  "seconds": 34.61666666666667,
-  "frames": 2077,
-  "music": "Original in-game Furnace Halls score, continuous editorial mix at its native 104 BPM",
-  "method": "Game + Renderer + Sound + Music; scripted ordinary controls; legal preset checkpoints; no invulnerability or frozen enemies; title/HUD overlays",
+  "seconds": 37.2,
+  "frames": 2232,
+  "cameraScale": [2.05, 2.15],
+  "playbackSpeed": 1,
+  "bpm": 100,
+  "music": {
+    "title": "Resonance",
+    "artist": "Scott Buckley",
+    "source": "https://www.scottbuckley.com.au/library/resonance/",
+    "license": "CC BY 4.0",
+    "sourceIn": 163.276,
+    "sourceOut": 200.476,
+    "edit": "Excerpt, fades, level adjustment, mixed with game effects"
+  },
+  "method": "Actual Game, Renderer and Sound; real-time scripted inputs, legal checkpoint builds; active health, recoil, collision and enemy AI; editorial zoom/cuts/type; licensed recorded music",
   "scenes": [
     {
-      "name": "recoil-flight",
-      "stage": 2,
-      "mods": ["kick"],
-      "seed": "TRAILER-FLIGHT-3",
-      "start": 0,
-      "end": 277,
-      "hook": true,
-      "seconds": 4.616666666666666,
-      "finalHealth": 92,
-      "kills": 0,
-      "layout": "Cargo switchyard"
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-1",
+      "style": 1,
+      "start": 421,
+      "length": 180,
+      "score": 21.038,
+      "timelineStart": 0,
+      "seconds": 1.2,
+      "initialHealth": 85,
+      "finalHealth": 69,
+      "killsDuringClip": 1,
+      "layout": "Spillway"
     },
     {
-      "name": "scattershot",
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-9",
+      "style": 1,
+      "start": 571,
+      "length": 180,
+      "score": 26.34,
+      "timelineStart": 1.2,
+      "seconds": 2.4,
+      "initialHealth": 72,
+      "finalHealth": 60,
+      "killsDuringClip": 3,
+      "layout": "Spillway"
+    },
+    {
+      "name": "scatter",
       "stage": 6,
       "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
-      "seed": "TRAILER-SCATTER-3",
-      "start": 346,
-      "end": 692,
-      "seconds": 5.766666666666667,
-      "finalHealth": 84,
-      "kills": 6,
+      "seed": "ACTION-SCATTER-5",
+      "style": 1,
+      "start": 391,
+      "length": 180,
+      "score": 19.308,
+      "timelineStart": 3.6,
+      "seconds": 2.4,
+      "initialHealth": 76,
+      "finalHealth": 52,
+      "killsDuringClip": 2,
       "layout": "Stamping line"
     },
     {
       "name": "prism",
       "stage": 10,
-      "mods": ["cutting-torch", "prism-array", "scatter", "pierce", "airshot", "light", "kick"],
-      "seed": "TRAILER-PRISM-11",
-      "start": 692,
-      "end": 1038,
-      "seconds": 5.766666666666667,
-      "finalHealth": 100,
-      "kills": 1,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-10",
+      "style": 0,
+      "start": 571,
+      "length": 180,
+      "score": 14.719,
+      "timelineStart": 6,
+      "seconds": 2.4,
+      "initialHealth": 100,
+      "finalHealth": 84,
+      "killsDuringClip": 1,
       "layout": "Spillway"
     },
     {
-      "name": "pinwheel",
+      "name": "turf",
+      "stage": 4,
+      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "event": true,
+      "seed": "TURF-80-10",
+      "style": 1,
+      "start": 271,
+      "length": 180,
+      "score": 29.946,
+      "timelineStart": 8.4,
+      "seconds": 2.4,
+      "initialHealth": 100,
+      "finalHealth": 100,
+      "killsDuringClip": 0,
+      "layout": "Underpass"
+    },
+    {
+      "name": "saw",
       "stage": 6,
-      "mods": ["crossfire", "pinwheel", "scatter", "rapid", "airshot", "kick"],
-      "seed": "TRAILER-VOLLEY-10",
-      "start": 1038,
-      "end": 1385,
-      "seconds": 5.783333333333333,
-      "finalHealth": 68,
-      "kills": 4,
+      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "seed": "ACTION-SAW-6",
+      "style": 0,
+      "start": 631,
+      "length": 180,
+      "score": 16.613,
+      "timelineStart": 10.8,
+      "seconds": 2.4,
+      "initialHealth": 60,
+      "finalHealth": 60,
+      "killsDuringClip": 0,
       "layout": "Stamping line"
     },
     {
@@ -63,75 +154,293 @@
       "mods": [
         "shellshock",
         "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-10",
+      "style": 0,
+      "start": 391,
+      "length": 180,
+      "score": 20.217,
+      "timelineStart": 13.2,
+      "seconds": 2.4,
+      "initialHealth": 84,
+      "finalHealth": 48,
+      "killsDuringClip": 1,
+      "layout": "Spillway"
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-8",
+      "style": 0,
+      "start": 301,
+      "length": 180,
+      "score": 24.998,
+      "timelineStart": 15.6,
+      "seconds": 2.4,
+      "initialHealth": 100,
+      "finalHealth": 100,
+      "killsDuringClip": 0,
+      "layout": "Spillway"
+    },
+    {
+      "name": "loader",
+      "stage": 3,
+      "mods": ["magnum", "rapid", "kick"],
+      "seed": "LOADER-SHIFT-5",
+      "style": 0,
+      "start": 211,
+      "length": 180,
+      "score": 6.081,
+      "timelineStart": 18,
+      "seconds": 2.4,
+      "initialHealth": 72,
+      "finalHealth": 72,
+      "killsDuringClip": 0,
+      "layout": "Loader bay"
+    },
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
         "aftershock",
         "blast-surf",
         "airshot",
         "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-7",
+      "style": 1,
+      "start": 481,
+      "length": 180,
+      "score": 23.167,
+      "timelineStart": 20.4,
+      "seconds": 2.4,
+      "initialHealth": 84,
+      "finalHealth": 52,
+      "killsDuringClip": 2,
+      "layout": "Spillway"
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "ACTION-SCATTER-3",
+      "style": 1,
+      "start": 331,
+      "length": 180,
+      "score": 18.374,
+      "timelineStart": 22.8,
+      "seconds": 2.4,
+      "initialHealth": 56,
+      "finalHealth": 56,
+      "killsDuringClip": 0,
+      "layout": "Stamping line"
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
         "kick"
       ],
-      "seed": "TRAILER-CLUSTER-9",
-      "start": 1385,
-      "end": 1731,
-      "seconds": 5.766666666666667,
-      "finalHealth": 82,
-      "kills": 3,
+      "seed": "ACTION-PRISM-7",
+      "style": 1,
+      "start": 481,
+      "length": 180,
+      "score": 14.631,
+      "timelineStart": 25.2,
+      "seconds": 1.8,
+      "initialHealth": 86,
+      "finalHealth": 88,
+      "killsDuringClip": 1,
+      "layout": "Spillway"
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "seed": "ACTION-SAW-9",
+      "style": 1,
+      "start": 511,
+      "length": 180,
+      "score": 15.799,
+      "timelineStart": 27,
+      "seconds": 1.8,
+      "initialHealth": 100,
+      "finalHealth": 100,
+      "killsDuringClip": 1,
+      "layout": "Stamping line"
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "event": true,
+      "seed": "TURF-80-0",
+      "style": 0,
+      "start": 301,
+      "length": 180,
+      "score": 24.838,
+      "timelineStart": 28.8,
+      "seconds": 1.2,
+      "initialHealth": 100,
+      "finalHealth": 100,
+      "killsDuringClip": 0,
+      "layout": "Pillar hall"
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-11",
+      "style": 1,
+      "start": 241,
+      "length": 180,
+      "score": 19.769,
+      "timelineStart": 30,
+      "seconds": 1.2,
+      "initialHealth": 82,
+      "finalHealth": 86,
+      "killsDuringClip": 2,
+      "layout": "Spillway"
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-2",
+      "style": 0,
+      "start": 571,
+      "length": 180,
+      "score": 24.378,
+      "timelineStart": 31.2,
+      "seconds": 1.2,
+      "initialHealth": 68,
+      "finalHealth": 70,
+      "killsDuringClip": 1,
       "layout": "Spillway"
     }
   ],
   "reviewFrames": [
     {
-      "seconds": 1,
-      "file": "work/frame-0060.png"
+      "seconds": 0.6,
+      "file": "work-action/frame-0036.png"
     },
     {
-      "seconds": 3,
-      "file": "work/frame-0180.png"
+      "seconds": 2.4,
+      "file": "work-action/frame-0144.png"
     },
     {
-      "seconds": 5,
-      "file": "work/frame-0300.png"
+      "seconds": 4.8,
+      "file": "work-action/frame-0288.png"
     },
     {
-      "seconds": 8,
-      "file": "work/frame-0480.png"
+      "seconds": 7.2,
+      "file": "work-action/frame-0432.png"
     },
     {
-      "seconds": 11,
-      "file": "work/frame-0660.png"
+      "seconds": 9.6,
+      "file": "work-action/frame-0576.png"
     },
     {
-      "seconds": 14,
-      "file": "work/frame-0840.png"
+      "seconds": 12,
+      "file": "work-action/frame-0720.png"
     },
     {
-      "seconds": 17,
-      "file": "work/frame-1020.png"
+      "seconds": 14.4,
+      "file": "work-action/frame-0864.png"
     },
     {
-      "seconds": 20,
-      "file": "work/frame-1200.png"
+      "seconds": 16.8,
+      "file": "work-action/frame-1008.png"
     },
     {
-      "seconds": 23,
-      "file": "work/frame-1380.png"
+      "seconds": 19.2,
+      "file": "work-action/frame-1152.png"
     },
     {
-      "seconds": 26,
-      "file": "work/frame-1560.png"
+      "seconds": 21.6,
+      "file": "work-action/frame-1296.png"
     },
     {
-      "seconds": 28,
-      "file": "work/frame-1680.png"
+      "seconds": 24,
+      "file": "work-action/frame-1440.png"
     },
     {
-      "seconds": 30,
-      "file": "work/frame-1800.png"
+      "seconds": 26.1,
+      "file": "work-action/frame-1566.png"
     },
     {
-      "seconds": 33,
-      "file": "work/frame-1980.png"
+      "seconds": 27.9,
+      "file": "work-action/frame-1674.png"
+    },
+    {
+      "seconds": 29.4,
+      "file": "work-action/frame-1764.png"
+    },
+    {
+      "seconds": 30.6,
+      "file": "work-action/frame-1836.png"
+    },
+    {
+      "seconds": 31.8,
+      "file": "work-action/frame-1908.png"
+    },
+    {
+      "seconds": 33.4,
+      "file": "work-action/frame-2004.png"
     }
-  ],
-  "cameraScale": 1.6,
-  "combatPreRollFrames": 100
+  ]
 }

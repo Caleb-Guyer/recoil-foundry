@@ -13,7 +13,12 @@ Build it your way with branching upgrades, changing room layouts, and a Daily Ru
 Available now in your browser. Play on a desktop or laptop with a keyboard and mouse.
 
 A game by Caleb Guyer.
-Trailer features in-engine gameplay, the game's original procedural music, and its sound effects.
+Trailer features in-engine gameplay and game sound effects.
+
+'Resonance' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
+Track: https://www.scottbuckley.com.au/library/resonance/
+License: https://creativecommons.org/licenses/by/4.0/
+Music edited to an excerpt, faded, and mixed with game sound effects.
 
 GitHub mirror: https://caleb-guyer.github.io/recoil-foundry/
 
@@ -25,6 +30,7 @@ Thumbnail: Recoil-Foundry-YouTube-Thumbnail.png
 
 UPLOAD NOTES
 Use the title and description above; do not include the FILES or UPLOAD NOTES sections.
+Keep the music credit and links in the published description.
 Category: Gaming.
 The trailer has no spoken dialogue. Its short captions are already visible in the video.
 Wait for YouTube's HD processing before sharing the link.
