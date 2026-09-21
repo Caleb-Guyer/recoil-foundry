@@ -1,0 +1,30 @@
+TITLE
+Recoil Foundry — Official Launch Trailer
+
+DESCRIPTION
+Play free: https://caleb-guyer.itch.io/recoil-foundry
+
+One gun. All recoil.
+
+Recoil Foundry is a physics roguelike inside a hostile factory. Turn your gun's kick into movement, combine 100 upgrades, and fight through 20 rooms across five areas. Shoot down. Go up.
+
+Build it your way with branching upgrades, changing room layouts, and a Daily Run with a shared seed and fixed upgrade choices.
+
+Available now in your browser. Play on a desktop or laptop with a keyboard and mouse.
+
+A game by Caleb Guyer.
+Trailer features in-engine gameplay, the game's original procedural music, and its sound effects.
+
+GitHub mirror: https://caleb-guyer.github.io/recoil-foundry/
+
+#RecoilFoundry #Roguelike #IndieGame
+
+FILES
+Video: Recoil-Foundry-Launch-Trailer.mp4
+Thumbnail: Recoil-Foundry-YouTube-Thumbnail.png
+
+UPLOAD NOTES
+Use the title and description above; do not include the FILES or UPLOAD NOTES sections.
+Category: Gaming.
+The trailer has no spoken dialogue. Its short captions are already visible in the video.
+Wait for YouTube's HD processing before sharing the link.

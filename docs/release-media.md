@@ -1,5 +1,7 @@
 # Release media
 
+The stable release also has a [35-second YouTube trailer with music, sound effects, a thumbnail, and upload copy](trailer/README.md).
+
 Prepared for 2.98.0-rc.1. These images and the silent clip show normal enemies and the first three areas; final encounters, secrets and endings are excluded.
 
 Also used for stable 2.98.0, which preserves the candidate's combat and visuals. The capture manifest retains its actual recording version.

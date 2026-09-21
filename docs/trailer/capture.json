@@ -1,0 +1,137 @@
+{
+  "version": "2.98.0",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "seconds": 34.61666666666667,
+  "frames": 2077,
+  "music": "Original in-game Furnace Halls score, continuous editorial mix at its native 104 BPM",
+  "method": "Game + Renderer + Sound + Music; scripted ordinary controls; legal preset checkpoints; no invulnerability or frozen enemies; title/HUD overlays",
+  "scenes": [
+    {
+      "name": "recoil-flight",
+      "stage": 2,
+      "mods": ["kick"],
+      "seed": "TRAILER-FLIGHT-3",
+      "start": 0,
+      "end": 277,
+      "hook": true,
+      "seconds": 4.616666666666666,
+      "finalHealth": 92,
+      "kills": 0,
+      "layout": "Cargo switchyard"
+    },
+    {
+      "name": "scattershot",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "TRAILER-SCATTER-3",
+      "start": 346,
+      "end": 692,
+      "seconds": 5.766666666666667,
+      "finalHealth": 84,
+      "kills": 6,
+      "layout": "Stamping line"
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": ["cutting-torch", "prism-array", "scatter", "pierce", "airshot", "light", "kick"],
+      "seed": "TRAILER-PRISM-11",
+      "start": 692,
+      "end": 1038,
+      "seconds": 5.766666666666667,
+      "finalHealth": 100,
+      "kills": 1,
+      "layout": "Spillway"
+    },
+    {
+      "name": "pinwheel",
+      "stage": 6,
+      "mods": ["crossfire", "pinwheel", "scatter", "rapid", "airshot", "kick"],
+      "seed": "TRAILER-VOLLEY-10",
+      "start": 1038,
+      "end": 1385,
+      "seconds": 5.783333333333333,
+      "finalHealth": 68,
+      "kills": 4,
+      "layout": "Stamping line"
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "kick"
+      ],
+      "seed": "TRAILER-CLUSTER-9",
+      "start": 1385,
+      "end": 1731,
+      "seconds": 5.766666666666667,
+      "finalHealth": 82,
+      "kills": 3,
+      "layout": "Spillway"
+    }
+  ],
+  "reviewFrames": [
+    {
+      "seconds": 1,
+      "file": "work/frame-0060.png"
+    },
+    {
+      "seconds": 3,
+      "file": "work/frame-0180.png"
+    },
+    {
+      "seconds": 5,
+      "file": "work/frame-0300.png"
+    },
+    {
+      "seconds": 8,
+      "file": "work/frame-0480.png"
+    },
+    {
+      "seconds": 11,
+      "file": "work/frame-0660.png"
+    },
+    {
+      "seconds": 14,
+      "file": "work/frame-0840.png"
+    },
+    {
+      "seconds": 17,
+      "file": "work/frame-1020.png"
+    },
+    {
+      "seconds": 20,
+      "file": "work/frame-1200.png"
+    },
+    {
+      "seconds": 23,
+      "file": "work/frame-1380.png"
+    },
+    {
+      "seconds": 26,
+      "file": "work/frame-1560.png"
+    },
+    {
+      "seconds": 28,
+      "file": "work/frame-1680.png"
+    },
+    {
+      "seconds": 30,
+      "file": "work/frame-1800.png"
+    },
+    {
+      "seconds": 33,
+      "file": "work/frame-1980.png"
+    }
+  ],
+  "cameraScale": 1.6,
+  "combatPreRollFrames": 100
+}
