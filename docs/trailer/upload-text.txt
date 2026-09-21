@@ -18,7 +18,7 @@ Trailer features an animated opening made with game art, followed by in-engine g
 'Resonance' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
 Track: https://www.scottbuckley.com.au/library/resonance/
 License: https://creativecommons.org/licenses/by/4.0/
-Music edited to an excerpt, faded, and mixed with game sound effects.
+Music edited to an excerpt, faded, equalized, and ducked beneath game sound effects.
 
 GitHub mirror: https://caleb-guyer.github.io/recoil-foundry/
 

@@ -1,13 +1,14 @@
 import { createRequire } from 'node:module';
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { Renderer } from '../src/render.ts';
-import { Sound } from '../src/audio.ts';
-import { seeded } from '../src/rules.ts';
 import { GAME_VERSION } from '../src/version.ts';
 import { TrailerIntro, introAudio, INTRO_SECONDS, FOOTSTEPS } from './trailer-intro.ts';
+import { planEdit, sourceFrame, type Beat, type EditShot } from './trailer-edit.ts';
+import { trailerSound, INTRO_FOLEY_GAIN, type SoundCue, type BeamFrame } from './trailer-sound.ts';
+import { mixTrailer } from './trailer-mix.ts';
 import {
   actionInput,
   recordAction,
@@ -45,39 +46,42 @@ if (process.argv.includes('--survey')) {
   process.exit(0);
 }
 const takes: Record<string, Take[]> = JSON.parse(readFileSync(takesPath, 'utf8'));
+const beatMap: { sourceIn: number; bpm: number; beats: Beat[] } = JSON.parse(
+  readFileSync('docs/trailer/music-beats.json', 'utf8'),
+);
+if (process.argv.includes('--edit-survey')) {
+  writeFileSync(
+    'docs/trailer/edit-plan.json',
+    JSON.stringify(planEdit(takes, beatMap.beats), null, 2) + '\n',
+  );
+  process.exit(0);
+}
 const W = 1920,
   H = 1080,
   FPS = 60,
-  BPM = 100,
-  MUSIC_START = 163.276;
-const frameAtBeat = (b: number) => Math.round(((b * 60) / BPM) * FPS);
+  BPM = beatMap.bpm,
+  MUSIC_START = beatMap.sourceIn;
+const frameAtBeat = (b: number) => beatMap.beats[b].frame;
 const introFrames = Math.round(INTRO_SECONDS * FPS);
-const montage = [
-  ['cluster', 0, 0, 2],
-  ['pinwheel', 0, 2, 6],
-  ['scatter', 0, 6, 10],
-  ['prism', 0, 10, 14],
-  ['turf', 0, 14, 18],
-  ['saw', 2, 18, 22],
-  ['cluster', 1, 22, 26],
-  ['pinwheel', 1, 26, 30],
-  ['loader', 0, 30, 34],
-  ['storm', 0, 34, 38],
-  ['scatter', 2, 38, 42],
-  ['prism', 1, 42, 45],
-  ['saw', 1, 45, 48],
-  ['turf', 1, 48, 50],
-  ['cluster', 2, 50, 52],
-  ['pinwheel', 2, 52, 54],
-] as const;
-const scenes = montage.map(([name, choice, from, to]) => ({
-  take: takes[name][choice],
-  start: introFrames + frameAtBeat(from),
-  end: introFrames + frameAtBeat(to),
+const edit: EditShot[] = JSON.parse(readFileSync('docs/trailer/edit-plan.json', 'utf8'));
+const scenes = edit.map((shot) => ({
+  ...shot,
+  start: introFrames + shot.start,
+  end: introFrames + shot.end,
 }));
-const endStart = introFrames + frameAtBeat(54),
-  total = introFrames + frameAtBeat(62),
+const endStart = introFrames + frameAtBeat(52),
+  total = introFrames + frameAtBeat(60),
   duration = total / FPS;
+const final = resolve(out, 'Recoil-Foundry-Launch-Trailer.mp4');
+if (process.argv.includes('--mix-only')) {
+  const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS);
+  const capture = JSON.parse(readFileSync(resolve(out, 'capture.json'), 'utf8'));
+  capture.audioMix = mix;
+  capture.intro.gainBeforeMix = INTRO_FOLEY_GAIN;
+  writeFileSync(resolve(out, 'capture.json'), JSON.stringify(capture, null, 2) + '\n');
+  console.log('Remixed trailer', mix);
+  process.exit(0);
+}
 const introOnly = process.argv.includes('--intro-only');
 const storyboard = process.argv.includes('--storyboard') || introOnly;
 if (!storyboard && (!ffmpeg || !existsSync(music)))
@@ -107,19 +111,17 @@ class CaptureAudio extends RenderingAudioContext {
   }
 }
 Object.defineProperty(globalThis, 'AudioContext', { value: CaptureAudio });
-Math.random = seeded('RF-ACTION-TRAILER-AUDIO');
-const sound = new Sound();
-sound.unlock();
-sound.musicEnabled = false;
-if (!sound.context) throw new Error('Audio initialization failed');
-const context = sound.context as unknown as CaptureAudio;
-// Keep the offline graph active across effect gaps without adding audible content.
-const keeper = context.createOscillator(),
-  zero = context.createGain();
-zero.gain.value = 0;
-keeper.connect(zero);
-zero.connect(sound.master!);
-keeper.start();
+const context = new CaptureAudio();
+const cues: SoundCue[] = [],
+  beams: BeamFrame[] = [];
+const syncAudit: {
+  shot: number;
+  kind: string;
+  beat: number;
+  frame: number;
+  expectedFrame: number;
+  errorFrames: number;
+}[] = [];
 const introBuffer = context.createBuffer(2, Math.ceil((INTRO_SECONDS + 0.12) * 48000), 48000);
 introAudio().forEach((channel, index) => introBuffer.getChannelData(index).set(channel));
 const introVoice = context.createBufferSource();
@@ -279,7 +281,6 @@ for (let frame = 0; frame < introFrames; frame++) {
   }
   if (!storyboard) {
     await writeFrame();
-    context.processTo((frame + 1) / FPS);
   }
 }
 writeFileSync(resolve(out, 'intro-contact-sheet.png'), introSheet.toBuffer('image/png'));
@@ -293,7 +294,6 @@ if (introOnly) {
   process.exit(0);
 }
 for (const [index, scene] of scenes.entries()) {
-  sound.updateTorch(false);
   const take = scene.take,
     g = startTake(take),
     r = new Renderer(canvas, g);
@@ -306,8 +306,11 @@ for (const [index, scene] of scenes.entries()) {
   }
   const initialHealth = g.hp,
     initialKills = g.kills;
+  let outputFrame = scene.start,
+    frameKinds: string[] = [];
   g.onSound = (kind) => {
-    if (!storyboard) sound.play(kind);
+    cues.push({ frame: outputFrame, kind });
+    frameKinds.push(kind);
   };
   console.log(
     `Shot ${index + 1}/${scenes.length}: ${take.name}, ${take.seed}, frame ${take.start}`,
@@ -316,16 +319,49 @@ for (const [index, scene] of scenes.entries()) {
   const qualityFrames: ActionFrame[] = [];
   const sequenceAt = Array.from({ length: 6 }, (_, n) => Math.round((n * (len - 1)) / 5));
   let targetOnscreenFrames = 0;
+  let sourceCursor = take.start;
   for (let local = 0; local < len; local++) {
     const frame = scene.start + local,
-      tick = take.start + local;
-    qualityFrames.push(recordAction(g, actionInput(g, tick, take.style)));
+      tick = take.start + Math.round(sourceFrame(scene.points, local));
+    outputFrame = frame;
+    while (sourceCursor <= tick) {
+      frameKinds = [];
+      const wasTorch = g.torch.active;
+      const metric = recordAction(g, actionInput(g, sourceCursor, take.style));
+      qualityFrames.push(metric);
+      if (g.torch.active && !wasTorch) frameKinds.push('beam-start');
+      if (g.torch.active && metric.damage > 2) frameKinds.push('beam-hit');
+      for (const point of scene.points.filter(
+        (p) => p.kind !== 'end' && take.start + p.source === sourceCursor,
+      )) {
+        if (!frameKinds.includes(point.kind))
+          throw new Error(`Missing planned ${point.kind} in shot ${index + 1}`);
+        const errorFrames = local - point.output;
+        if (errorFrames !== 0)
+          throw new Error(`Off-beat impact in shot ${index + 1}: ${errorFrames} frames`);
+        syncAudit.push({
+          shot: index + 1,
+          kind: point.kind,
+          beat: point.beat!,
+          frame,
+          expectedFrame: scene.start + point.output,
+          errorFrames,
+        });
+      }
+      sourceCursor++;
+    }
     if (g.mode !== 'playing' || g.clear)
       throw new Error(`Highlight ended: ${take.name} ${tick} ${g.mode}`);
-    sound.updateTorch(g.torch.active, g.torch.heat);
+    if (g.torch.active) beams.push({ frame, heat: g.torch.heat });
     const sample = local === Math.floor(len / 2);
     // Draw every frame even in storyboard mode so the review uses the final camera.
-    r.scale = 2.05 + 0.1 * ease(local / len);
+    const punch = Math.max(
+      0,
+      ...scene.points
+        .filter((p) => p.kind !== 'end' && p.output <= local)
+        .map((p) => 0.055 * Math.exp(-(local - p.output) / 6)),
+    );
+    r.scale = 2.05 + 0.1 * ease(local / len) + punch;
     r.draw(((tick + 1) * 1000) / FPS);
     const ax = (g.aim.x - r.camera.x) * r.scale,
       ay = (g.aim.y - r.camera.y) * r.scale;
@@ -354,7 +390,6 @@ for (const [index, scene] of scenes.entries()) {
         await reviewSequence(index, sequenceAt.indexOf(local), frame, take.name);
       await writeFrame();
     }
-    if (!storyboard) context.processTo((frame + 1) / FPS);
   }
   const quality = takeQuality(qualityFrames);
   const targetOnscreenFraction = targetOnscreenFrames / len;
@@ -370,9 +405,11 @@ for (const [index, scene] of scenes.entries()) {
     layout: g.level.name,
     quality,
     targetOnscreenFraction,
+    fromBeat: scene.fromBeat,
+    toBeat: scene.toBeat,
+    retiming: scene.points,
   });
 }
-sound.updateTorch(false);
 for (let frame = endStart; frame < total; frame++) {
   const sample = frame === endStart + FPS;
   if (!storyboard || sample) {
@@ -380,7 +417,6 @@ for (let frame = endStart; frame < total; frame++) {
     if (sample) await review(frame, 'play free', scenes.length);
     await writeFrame();
   }
-  if (!storyboard) context.processTo((frame + 1) / FPS);
 }
 writeFileSync(resolve(out, 'action-contact-sheet.png'), sheet.toBuffer('image/png'));
 for (const [index, sequence] of sequences.entries())
@@ -389,6 +425,8 @@ writeFileSync(
   resolve(out, 'shot-review.json'),
   JSON.stringify({ scenes: manifest, rejected }, null, 2) + '\n',
 );
+writeFileSync(resolve(out, 'sync-audit.json'), JSON.stringify(syncAudit, null, 2) + '\n');
+writeFileSync(resolve(work, 'sound-cues.json'), JSON.stringify({ cues, beams }, null, 2) + '\n');
 if (video) {
   video.stdin.end();
   const [code] = await encoded!;
@@ -423,68 +461,51 @@ if (storyboard) {
   process.exit(0);
 }
 
-const data = context.exportAsAudioData();
+const data = trailerSound(cues, beams, duration);
+const effectsLevels = scenes.map((scene, index) => {
+  let sum = 0,
+    peak = 0,
+    count = 0;
+  for (const channel of data.channelData)
+    for (
+      let i = Math.round((scene.start / FPS) * 48000);
+      i < Math.round((scene.end / FPS) * 48000);
+      i++
+    ) {
+      sum += channel[i] * channel[i];
+      peak = Math.max(peak, Math.abs(channel[i]));
+      count++;
+    }
+  const rmsDb = 20 * Math.log10(Math.sqrt(sum / count));
+  if (rmsDb < -33 || peak < 0.15)
+    throw new Error(`Inaudible effects in shot ${index + 1}: ${rmsDb} dB, peak ${peak}`);
+  return { shot: index + 1, rmsDb, peak };
+});
 writeFileSync(
   resolve(work, 'effects.wav'),
   Buffer.from(await context.encodeAudioData(data, { bitDepth: 24 })),
 );
-const final = resolve(out, 'Recoil-Foundry-Launch-Trailer.mp4');
-const mux = spawnSync(
-  ffmpeg,
-  [
-    '-hide_banner',
-    '-y',
-    '-i',
-    resolve(work, 'picture.mp4'),
-    '-i',
-    resolve(work, 'effects.wav'),
-    '-ss',
-    String(MUSIC_START),
-    '-i',
-    music,
-    '-filter_complex',
-    `[1:a]highpass=f=65,volume=1.6[fx];[2:a]atrim=duration=${duration - INTRO_SECONDS},asetpts=PTS-STARTPTS,volume=0.9,afade=t=in:d=0.03,afade=t=out:st=${duration - INTRO_SECONDS - 0.65}:d=0.65,adelay=${INTRO_SECONDS * 1000}:all=1[song];[song][fx]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-2:LRA=9,volume='if(lt(t,${INTRO_SECONDS}),0.25,1)':eval=frame,aresample=48000[a]`,
-    '-map',
-    '0:v:0',
-    '-map',
-    '[a]',
-    '-c:v',
-    'copy',
-    '-c:a',
-    'aac',
-    '-b:a',
-    '384k',
-    '-ar',
-    '48000',
-    '-ac',
-    '2',
-    '-t',
-    String(duration),
-    '-movflags',
-    '+faststart',
-    '-metadata',
-    'title=Recoil Foundry | Official Launch Trailer',
-    '-metadata',
-    'comment=Music: Resonance by Scott Buckley, CC BY 4.0, www.scottbuckley.com.au. Edited excerpt with game sound effects.',
-    final,
-  ],
-  { stdio: ['ignore', 'ignore', 'inherit'] },
-);
-if (mux.status !== 0) throw new Error('Final mux failed');
+writeFileSync(resolve(work, 'effects-audit.json'), JSON.stringify(data.audit, null, 2) + '\n');
+const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS);
 writeFileSync(
   resolve(out, 'capture.json'),
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 4,
+      revision: 5,
       width: W,
       height: H,
       fps: FPS,
       seconds: duration,
       frames: total,
-      cameraScale: [2.05, 2.15],
-      playbackSpeed: 1,
+      cameraScale: [2.05, 2.21],
+      playback:
+        'Original fixed-step simulation, gently retimed between actual combat events and measured musical transients',
       bpm: BPM,
+      audioMix: mix,
+      effects: data.audit,
+      effectsLevels,
+      beatSync: syncAudit,
       music: {
         title: 'Resonance',
         artist: 'Scott Buckley',
@@ -493,19 +514,19 @@ writeFileSync(
         sourceIn: MUSIC_START,
         sourceOut: MUSIC_START + duration - INTRO_SECONDS,
         timelineStart: INTRO_SECONDS,
-        edit: 'Excerpt, fades, level adjustment, delayed until the first combat cut, mixed with game effects',
+        edit: 'Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut',
       },
       intro: {
         seconds: INTRO_SECONDS,
         method:
           'Editorial animation using game scenery, outfit and weapon renderer; keyframed walk, lighting and camera; original synthesized factory ambience, footsteps, relay and weapon clicks',
         footsteps: FOOTSTEPS,
-        gainAfterNormalization: 0.25,
+        gainBeforeMix: INTRO_FOLEY_GAIN,
         music: false,
         cutToAction: INTRO_SECONDS,
       },
       method:
-        'Editorial cold open, followed by actual Game, Renderer and Sound; real-time scripted combat inputs, legal checkpoint builds; active health, recoil, collision and enemy AI; editorial zoom/cuts/type; licensed recorded music',
+        'Editorial cold open, followed by actual Game and Renderer; legal checkpoint builds, active health, recoil, collision and enemy AI; beat-aligned event selection, gentle retiming and camera accents; original game Sound cues remixed with licensed music',
       scenes: manifest,
       reviewFrames,
     },

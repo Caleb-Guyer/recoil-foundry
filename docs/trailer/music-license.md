@@ -8,7 +8,7 @@
 
 The composer's page permits use in projects, including commercial projects, under CC BY 4.0. It specifically requires a credit in a YouTube video's description. The license permits editing and redistribution with attribution, a license link, and an indication of changes. It does not imply the composer's endorsement. Terms checked September 20, 2026.
 
-The trailer uses an excerpt from 2:43.276 to 3:20.476, beginning at 0:06 in the video after an original factory-ambience and footsteps opening. Changes: trimming, short fades, level adjustment, delayed entry, and mixing with Recoil Foundry sound effects. No vocals or other music were added. The game itself continues using its existing soundtrack.
+The trailer uses an excerpt from 2:43.276 to approximately 3:19.259, beginning at 0:06 in the video after an original factory-ambience and footsteps opening. Changes: trimming, short fades, level adjustment, a small EQ cut, brief ducking beneath effects, delayed entry, and mixing with Recoil Foundry sound effects. No vocals or other music were added. The game itself continues using its existing soundtrack.
 
 ## Credit to retain in the YouTube description
 
@@ -16,7 +16,7 @@ The trailer uses an excerpt from 2:43.276 to 3:20.476, beginning at 0:06 in the 
 'Resonance' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
 Track: https://www.scottbuckley.com.au/library/resonance/
 License: https://creativecommons.org/licenses/by/4.0/
-Music edited to an excerpt, faded, and mixed with game sound effects.
+Music edited to an excerpt, faded, equalized, and ducked beneath game sound effects.
 ```
 
 This credit is already included in [upload-text.txt](upload-text.txt). Publish it with the trailer. A copy of the attribution is also stored in the MP4's comment metadata. The music retains its CC BY 4.0 license; the repository's MIT license does not replace the recording's license. Do not claim authorship of the music or imply that Scott Buckley endorses this game.
