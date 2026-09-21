@@ -4,31 +4,58 @@
       "name": "scatter",
       "stage": 6,
       "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
-      "seed": "ACTION-SCATTER-5",
-      "style": 1,
-      "start": 391,
-      "length": 180,
-      "score": 19.308
-    },
-    {
-      "name": "scatter",
-      "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
-      "seed": "ACTION-SCATTER-3",
-      "style": 1,
-      "start": 331,
-      "length": 180,
-      "score": 18.374
-    },
-    {
-      "name": "scatter",
-      "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
-      "seed": "ACTION-SCATTER-8",
+      "seed": "ACTION-SCATTER-2",
       "style": 0,
-      "start": 331,
-      "length": 180,
-      "score": 17.423
+      "start": 289,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8402777777777778,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 0,
+        "travel": 1168,
+        "span": 802,
+        "damage": 318
+      },
+      "score": 11.106
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "ACTION-SCATTER-1",
+      "style": 1,
+      "start": 385,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8125,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 0,
+        "travel": 882,
+        "span": 713,
+        "damage": 189
+      },
+      "score": 9.884
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "ACTION-SCATTER-7",
+      "style": 1,
+      "start": 661,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8611111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 10,
+        "longestStallFrames": 5,
+        "travel": 1212,
+        "span": 505,
+        "damage": 168
+      },
+      "score": 9.633
     }
   ],
   "pinwheel": [
@@ -46,11 +73,20 @@
         "leech",
         "kick"
       ],
-      "seed": "ACTION-PINWHEEL-9",
+      "seed": "ACTION-PINWHEEL-7",
       "style": 1,
-      "start": 571,
-      "length": 180,
-      "score": 26.34
+      "start": 445,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 3,
+        "travel": 1215,
+        "span": 827,
+        "damage": 327
+      },
+      "score": 17.945
     },
     {
       "name": "pinwheel",
@@ -66,11 +102,20 @@
         "leech",
         "kick"
       ],
-      "seed": "ACTION-PINWHEEL-8",
+      "seed": "ACTION-PINWHEEL-14",
       "style": 0,
-      "start": 301,
-      "length": 180,
-      "score": 24.998
+      "start": 553,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.875,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 17,
+        "longestStallFrames": 0,
+        "travel": 1520,
+        "span": 935,
+        "damage": 251
+      },
+      "score": 17.303
     },
     {
       "name": "pinwheel",
@@ -86,11 +131,20 @@
         "leech",
         "kick"
       ],
-      "seed": "ACTION-PINWHEEL-2",
-      "style": 0,
-      "start": 571,
-      "length": 180,
-      "score": 24.378
+      "seed": "ACTION-PINWHEEL-19",
+      "style": 1,
+      "start": 529,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7291666666666666,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 8,
+        "travel": 1205,
+        "span": 663,
+        "damage": 487
+      },
+      "score": 17.302
     }
   ],
   "prism": [
@@ -108,31 +162,20 @@
         "leech",
         "kick"
       ],
-      "seed": "ACTION-PRISM-10",
-      "style": 0,
-      "start": 571,
-      "length": 180,
-      "score": 14.719
-    },
-    {
-      "name": "prism",
-      "stage": 10,
-      "mods": [
-        "cutting-torch",
-        "prism-array",
-        "thermal-runaway",
-        "scatter",
-        "pierce",
-        "airshot",
-        "light",
-        "leech",
-        "kick"
-      ],
-      "seed": "ACTION-PRISM-7",
+      "seed": "ACTION-PRISM-3",
       "style": 1,
       "start": 481,
-      "length": 180,
-      "score": 14.631
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9861111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 2,
+        "longestStallFrames": 0,
+        "travel": 1175,
+        "span": 410,
+        "damage": 319
+      },
+      "score": 13.957
     },
     {
       "name": "prism",
@@ -148,11 +191,49 @@
         "leech",
         "kick"
       ],
-      "seed": "ACTION-PRISM-8",
+      "seed": "ACTION-PRISM-12",
       "style": 0,
-      "start": 571,
-      "length": 180,
-      "score": 14.023
+      "start": 649,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8888888888888888,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 11,
+        "longestStallFrames": 9,
+        "travel": 1034,
+        "span": 314,
+        "damage": 410
+      },
+      "score": 11.953
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-16",
+      "style": 0,
+      "start": 469,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8611111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 20,
+        "longestStallFrames": 4,
+        "travel": 1076,
+        "span": 567,
+        "damage": 313
+      },
+      "score": 11.847
     }
   ],
   "cluster": [
@@ -171,11 +252,20 @@
         "light",
         "leech"
       ],
-      "seed": "ACTION-CLUSTER-1",
+      "seed": "ACTION-CLUSTER-5",
       "style": 1,
-      "start": 421,
-      "length": 180,
-      "score": 21.038
+      "start": 385,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9097222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 2,
+        "travel": 1367,
+        "span": 543,
+        "damage": 434
+      },
+      "score": 16.828
     },
     {
       "name": "cluster",
@@ -192,11 +282,20 @@
         "light",
         "leech"
       ],
-      "seed": "ACTION-CLUSTER-10",
+      "seed": "ACTION-CLUSTER-12",
       "style": 0,
-      "start": 391,
-      "length": 180,
-      "score": 20.217
+      "start": 481,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1224,
+        "span": 459,
+        "damage": 234
+      },
+      "score": 16.623
     },
     {
       "name": "cluster",
@@ -213,11 +312,20 @@
         "light",
         "leech"
       ],
-      "seed": "ACTION-CLUSTER-11",
+      "seed": "ACTION-CLUSTER-9",
       "style": 1,
-      "start": 241,
-      "length": 180,
-      "score": 19.769
+      "start": 325,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9166666666666666,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 12,
+        "longestStallFrames": 0,
+        "travel": 1334,
+        "span": 643,
+        "damage": 457
+      },
+      "score": 16.066
     }
   ],
   "storm": [
@@ -236,32 +344,20 @@
         "leech",
         "rapid"
       ],
-      "seed": "ACTION-STORM-7",
-      "style": 1,
-      "start": 481,
-      "length": 180,
-      "score": 23.167
-    },
-    {
-      "name": "storm",
-      "stage": 10,
-      "mods": [
-        "shellshock",
-        "cluster-shell",
-        "arc-coil",
-        "storm-cell",
-        "aftershock",
-        "blast-surf",
-        "airshot",
-        "light",
-        "leech",
-        "rapid"
-      ],
       "seed": "ACTION-STORM-11",
       "style": 1,
-      "start": 391,
-      "length": 180,
-      "score": 22.599
+      "start": 433,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1374,
+        "span": 1161,
+        "damage": 447
+      },
+      "score": 17.702
     },
     {
       "name": "storm",
@@ -278,11 +374,50 @@
         "leech",
         "rapid"
       ],
-      "seed": "ACTION-STORM-3",
+      "seed": "ACTION-STORM-21",
       "style": 1,
-      "start": 391,
-      "length": 180,
-      "score": 22.411
+      "start": 397,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 2,
+        "travel": 1105,
+        "span": 419,
+        "damage": 512
+      },
+      "score": 16.33
+    },
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-13",
+      "style": 1,
+      "start": 469,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8541666666666666,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 5,
+        "travel": 1277,
+        "span": 748,
+        "damage": 306
+      },
+      "score": 16.247
     }
   ],
   "saw": [
@@ -290,31 +425,58 @@
       "name": "saw",
       "stage": 6,
       "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
-      "seed": "ACTION-SAW-6",
+      "seed": "ACTION-SAW-8",
       "style": 0,
-      "start": 631,
-      "length": 180,
-      "score": 16.613
+      "start": 637,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9097222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 1,
+        "travel": 1207,
+        "span": 673,
+        "damage": 198
+      },
+      "score": 14.282
     },
     {
       "name": "saw",
       "stage": 6,
       "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
-      "seed": "ACTION-SAW-9",
-      "style": 1,
-      "start": 511,
-      "length": 180,
-      "score": 15.799
+      "seed": "ACTION-SAW-18",
+      "style": 0,
+      "start": 325,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 1476,
+        "span": 898,
+        "damage": 224
+      },
+      "score": 13.835
     },
     {
       "name": "saw",
       "stage": 6,
       "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
-      "seed": "ACTION-SAW-3",
-      "style": 1,
-      "start": 601,
-      "length": 180,
-      "score": 15.538
+      "seed": "ACTION-SAW-20",
+      "style": 0,
+      "start": 337,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 1160,
+        "span": 722,
+        "damage": 184
+      },
+      "score": 12.587
     }
   ],
   "turf": [
@@ -323,33 +485,60 @@
       "stage": 4,
       "mods": ["magnum", "ricochet", "airshot", "light"],
       "event": true,
-      "seed": "TURF-80-10",
-      "style": 1,
-      "start": 271,
-      "length": 180,
-      "score": 29.946
-    },
-    {
-      "name": "turf",
-      "stage": 4,
-      "mods": ["magnum", "ricochet", "airshot", "light"],
-      "event": true,
-      "seed": "TURF-80-0",
+      "seed": "ACTION-TURF-14",
       "style": 0,
-      "start": 301,
-      "length": 180,
-      "score": 24.838
+      "start": 277,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9722222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 4,
+        "longestStallFrames": 4,
+        "travel": 984,
+        "span": 473,
+        "damage": 407
+      },
+      "score": 19.105
     },
     {
       "name": "turf",
       "stage": 4,
       "mods": ["magnum", "ricochet", "airshot", "light"],
       "event": true,
-      "seed": "TURF-80-10",
+      "seed": "ACTION-TURF-16",
+      "style": 0,
+      "start": 205,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8819444444444444,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 14,
+        "longestStallFrames": 0,
+        "travel": 991,
+        "span": 554,
+        "damage": 341
+      },
+      "score": 17.51
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "event": true,
+      "seed": "ACTION-TURF-19",
       "style": 1,
-      "start": 481,
-      "length": 180,
-      "score": 21.936
+      "start": 421,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9722222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 4,
+        "longestStallFrames": 4,
+        "travel": 1241,
+        "span": 591,
+        "damage": 339
+      },
+      "score": 15.361
     }
   ],
   "loader": [
@@ -357,31 +546,20 @@
       "name": "loader",
       "stage": 3,
       "mods": ["magnum", "rapid", "kick"],
-      "seed": "LOADER-SHIFT-5",
+      "seed": "ACTION-LOADER-20",
       "style": 0,
-      "start": 211,
-      "length": 180,
-      "score": 6.081
-    },
-    {
-      "name": "loader",
-      "stage": 3,
-      "mods": ["magnum", "rapid", "kick"],
-      "seed": "LOADER-SHIFT-0",
-      "style": 1,
-      "start": 181,
-      "length": 180,
-      "score": 4.395
-    },
-    {
-      "name": "loader",
-      "stage": 3,
-      "mods": ["magnum", "rapid", "kick"],
-      "seed": "LOADER-SHIFT-0",
-      "style": 1,
-      "start": 391,
-      "length": 180,
-      "score": -8.02
+      "start": 685,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7430555555555556,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 0,
+        "travel": 971,
+        "span": 345,
+        "damage": 102
+      },
+      "score": 6.62
     }
   ]
 }

@@ -7,7 +7,16 @@ import { Renderer } from '../src/render.ts';
 import { Sound } from '../src/audio.ts';
 import { seeded } from '../src/rules.ts';
 import { GAME_VERSION } from '../src/version.ts';
-import { actionInput, startTake, surveyTakes, type Take } from './trailer-scenes.ts';
+import {
+  actionInput,
+  recordAction,
+  startTake,
+  surveyTakes,
+  takeQuality,
+  usableAction,
+  type ActionFrame,
+  type Take,
+} from './trailer-scenes.ts';
 
 // Actual engine captures, editorial camera/cuts, licensed recorded music.
 // See docs/trailer/music-license.md for the source and required attribution.
@@ -47,12 +56,12 @@ const montage = [
   ['scatter', 0, 6, 10],
   ['prism', 0, 10, 14],
   ['turf', 0, 14, 18],
-  ['saw', 0, 18, 22],
+  ['saw', 2, 18, 22],
   ['cluster', 1, 22, 26],
   ['pinwheel', 1, 26, 30],
   ['loader', 0, 30, 34],
   ['storm', 0, 34, 38],
-  ['scatter', 1, 38, 42],
+  ['scatter', 2, 38, 42],
   ['prism', 1, 42, 45],
   ['saw', 1, 45, 48],
   ['turf', 1, 48, 50],
@@ -76,6 +85,9 @@ canvas.getBoundingClientRect = () => ({ width: W, height: H });
 const poster = createCanvas(W, H);
 const sheet = createCanvas(1280, Math.ceil((scenes.length + 1) / 3) * 270),
   sc = sheet.getContext('2d');
+const sequences = Array.from({ length: Math.ceil(scenes.length / 4) }, () =>
+  createCanvas(1920, 840),
+);
 sc.fillStyle = '#071015';
 sc.fillRect(0, 0, sheet.width, sheet.height);
 const ease = (x: number) => {
@@ -159,6 +171,7 @@ const video = storyboard
 const encoded = video ? once(video, 'exit') : null;
 const manifest: object[] = [],
   reviewFrames: object[] = [];
+const rejected: string[] = [];
 
 function caption(text: string, alpha: number) {
   c.save();
@@ -219,6 +232,18 @@ async function writeFrame() {
   if (video && !video.stdin.write(Buffer.from(c.getImageData(0, 0, W, H).data)))
     await once(video.stdin, 'drain');
 }
+async function reviewSequence(index: number, sample: number, frame: number, label: string) {
+  const still = await loadImage(canvas.toBuffer('image/png'));
+  const ctx = sequences[Math.floor(index / 4)].getContext('2d');
+  const x = sample * 320,
+    y = (index % 4) * 210;
+  ctx.drawImage(still, x, y, 320, 180);
+  ctx.fillStyle = '#071015';
+  ctx.fillRect(x, y + 180, 320, 30);
+  ctx.font = '15px "Release Mono"';
+  ctx.fillStyle = '#e9eadc';
+  ctx.fillText(`${index + 1}. ${label} ${(frame / FPS).toFixed(2)}s`, x + 8, y + 201);
+}
 for (const [index, scene] of scenes.entries()) {
   sound.updateTorch(false);
   const take = scene.take,
@@ -240,18 +265,24 @@ for (const [index, scene] of scenes.entries()) {
     `Shot ${index + 1}/${scenes.length}: ${take.name}, ${take.seed}, frame ${take.start}`,
   );
   const len = scene.end - scene.start;
+  const qualityFrames: ActionFrame[] = [];
+  const sequenceAt = Array.from({ length: 6 }, (_, n) => Math.round((n * (len - 1)) / 5));
+  let targetOnscreenFrames = 0;
   for (let local = 0; local < len; local++) {
     const frame = scene.start + local,
       tick = take.start + local;
-    g.tick(1 / FPS, actionInput(g, tick, take.style));
+    qualityFrames.push(recordAction(g, actionInput(g, tick, take.style)));
     if (g.mode !== 'playing' || g.clear)
       throw new Error(`Highlight ended: ${take.name} ${tick} ${g.mode}`);
     sound.updateTorch(g.torch.active, g.torch.heat);
     const sample = local === Math.floor(len / 2);
-    if (!storyboard || sample) {
-      // Editorial push-in; physics and simulation remain at native speed.
-      r.scale = 2.05 + 0.1 * ease(local / len);
-      r.draw(((tick + 1) * 1000) / FPS);
+    // Draw every frame even in storyboard mode so the review uses the final camera.
+    r.scale = 2.05 + 0.1 * ease(local / len);
+    r.draw(((tick + 1) * 1000) / FPS);
+    const ax = (g.aim.x - r.camera.x) * r.scale,
+      ay = (g.aim.y - r.camera.y) * r.scale;
+    if (ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35) targetOnscreenFrames++;
+    if (!storyboard || sample || sequenceAt.includes(local)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       if (index === 0 && sample)
         poster.getContext('2d').putImageData(c.getImageData(0, 0, W, H), 0, 0);
@@ -271,10 +302,16 @@ for (const [index, scene] of scenes.entries()) {
       if (index === 6)
         caption('MAKE SOME ROOM.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
       if (sample) await review(frame, take.name, index);
+      if (sequenceAt.includes(local))
+        await reviewSequence(index, sequenceAt.indexOf(local), frame, take.name);
       await writeFrame();
     }
     if (!storyboard) context.processTo((frame + 1) / FPS);
   }
+  const quality = takeQuality(qualityFrames);
+  const targetOnscreenFraction = targetOnscreenFrames / len;
+  if (!usableAction(quality, len) || targetOnscreenFraction < 0.75)
+    rejected.push(`Shot ${index + 1}: ${JSON.stringify({ quality, targetOnscreenFraction })}`);
   manifest.push({
     ...take,
     timelineStart: scene.start / FPS,
@@ -283,6 +320,8 @@ for (const [index, scene] of scenes.entries()) {
     finalHealth: g.hp,
     killsDuringClip: g.kills - initialKills,
     layout: g.level.name,
+    quality,
+    targetOnscreenFraction,
   });
 }
 sound.updateTorch(false);
@@ -296,11 +335,18 @@ for (let frame = endStart; frame < total; frame++) {
   if (!storyboard) context.processTo((frame + 1) / FPS);
 }
 writeFileSync(resolve(out, 'action-contact-sheet.png'), sheet.toBuffer('image/png'));
+for (const [index, sequence] of sequences.entries())
+  writeFileSync(resolve(out, `action-sequence-${index + 1}.png`), sequence.toBuffer('image/png'));
+writeFileSync(
+  resolve(out, 'shot-review.json'),
+  JSON.stringify({ scenes: manifest, rejected }, null, 2) + '\n',
+);
 if (video) {
   video.stdin.end();
   const [code] = await encoded!;
   if (code !== 0) throw new Error(`Picture encoding failed: ${code}`);
 }
+if (rejected.length) throw new Error(`Unusable action shots:\n${rejected.join('\n')}`);
 
 // The thumbnail uses action from the same edit and the established game wordmark.
 c.drawImage(poster, 0, 0);
@@ -382,7 +428,7 @@ writeFileSync(
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 2,
+      revision: 3,
       width: W,
       height: H,
       fps: FPS,

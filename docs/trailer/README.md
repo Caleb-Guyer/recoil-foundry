@@ -1,6 +1,6 @@
 # YouTube launch trailer
 
-Revised on September 20, 2026, for the stable **2.98.0** browser release. This action edit replaces the first trailer.
+Revised on September 20, 2026, for the stable **2.98.0** browser release. Revision 3 replaces all sixteen gameplay takes to remove stalled movement and sustained firing at hidden targets. The licensed song and edit timing are retained.
 
 - [Finished MP4](Recoil-Foundry-Launch-Trailer.mp4)
 - [YouTube thumbnail](Recoil-Foundry-YouTube-Thumbnail.png)
@@ -25,7 +25,9 @@ Sixteen combat shots run for 1.2–2.4 seconds each, followed by a 4.8-second en
 
 ## Capture and sound
 
-[`scripts/youtube-trailer.ts`](../../scripts/youtube-trailer.ts) drives the actual `Game`, `Renderer`, and `Sound` classes with legal preset checkpoints and scripted movement, aiming, jumping, and firing. Health, collision, recoil, enemy AI, and damage remain active. The action scout in [`trailer-scenes.ts`](../../scripts/trailer-scenes.ts) samples ordinary encounters and finds short highlights using nearby threats, damage, projectiles, and movement. [Selected takes](action-takes.json) retain seeds, builds, inputs, and starting ticks. The renderer runs the preceding gameplay before recording each cut. No personal save data is used.
+[`scripts/youtube-trailer.ts`](../../scripts/youtube-trailer.ts) drives the actual `Game`, `Renderer`, and `Sound` classes with legal preset checkpoints and scripted movement, aiming, jumping, and firing. Health, collision, recoil, enemy AI, and damage remain active. The capture driver in [`trailer-scenes.ts`](../../scripts/trailer-scenes.ts) prefers visible enemies, withholds fire when terrain or props block its aim, jumps over nearby obstacles, and reverses temporarily if it stops making progress. It keeps moving during close combat. These controls are confined to the trailer tools.
+
+The scout samples ordinary encounters and rejects windows with blocked firing inputs, extended inactivity, too little movement, or no enemy damage. Both halves of a candidate must pass, so the shorter cuts also start with action. The renderer checks the actual cut again and requires its aim point to remain within the camera frame for at least 75% of the shot. [Selected takes](action-takes.json) retain seeds, builds, starting ticks, and scouting measurements; [capture.json](capture.json) contains the measurements for the exact final cuts. The renderer runs the preceding gameplay before recording each cut. No personal save data is used.
 
 This is an offline engine capture, not a recording of a human playtest or evidence of browser performance. Every included build is checked by the game's compatibility rules and stays within its room's upgrade budget. The script aborts if a clip leaves active combat. Gameplay stays at native speed; the closer camera and slight push-ins are editorial framing. Title text and the small HUD are composited afterward.
 
@@ -33,7 +35,9 @@ Music is a recorded excerpt of **“Resonance” by Scott Buckley**, licensed un
 
 ## Verification
 
-All 2,232 video frames and the entire audio stream decoded without errors. Seventeen timeline frames, full-resolution action shots, and the thumbnail were visually inspected. Analysis found no silence lasting one second at a −50 dB threshold and no black gap lasting 0.15 seconds. The final AAC measures −14.41 LUFS integrated and −2.37 dBTP, without clipping. These are file and mix measurements, not a claim of a physical speaker listening test or a completed YouTube upload.
+All 2,232 video frames and the entire audio stream decoded without errors. The 96-frame sequence review covers the beginning, middle, and end of every combat shot; the contact sheet and revised thumbnail were also visually inspected. All sixteen exact cuts passed the movement, damage, visibility, and framing checks, with zero blocked firing inputs in the recorded windows. Three regression tests cover traversing cover, choosing a visible target over a hidden one, and rejecting stationary combat. The capture driver also passes strict TypeScript checking.
+
+Analysis found no silence lasting one second at a −50 dB threshold and no black gap lasting 0.15 seconds. The final AAC measures −14.42 LUFS integrated and −2.43 dBTP, without clipping. These are file and mix measurements, not a claim of a physical speaker listening test or a completed YouTube upload.
 
 ## Rebuild
 
@@ -52,6 +56,6 @@ node --experimental-strip-types scripts/youtube-trailer.ts
 
 Use an FFmpeg build with libx264 and AAC support. The original export used FFmpeg 7.1 distributed by `imageio-ffmpeg==0.6.0`. Arial, Arial Bold, and Consolas are read from the Windows fonts folder for rasterization; font files are not redistributed. `MEDIA_MODULE_ROOT` may instead point to an existing directory containing `@napi-rs/canvas`.
 
-The default output folder is `../recoil-foundry-trailer`; override it with `TRAILER_OUT`. `TRAILER_MUSIC` can select another local copy of the licensed track. The output folder also receives an action contact sheet, capture manifest, uncompressed effects, silent picture master, and review frames. Finished delivery files and the capture record are archived here. `--survey` regenerates candidate takes; `--storyboard` previews selected shots without encoding video. `TRAILER_TAKES` overrides the take-selection JSON path.
+The default output folder is `../recoil-foundry-trailer`; override it with `TRAILER_OUT`. `TRAILER_MUSIC` can select another local copy of the licensed track. The output folder also receives an action contact sheet, four sequence sheets with six evenly spaced frames per shot, `shot-review.json`, a capture manifest, uncompressed effects, silent picture master, and review frames. Finished delivery files and the capture record are archived here. `--survey` regenerates candidate takes; `--storyboard` previews selected shots without encoding video, using the same continuous camera updates as the final render. Both storyboard and final export fail their quality checks when any shot is unsuitable. `TRAILER_TAKES` overrides the take-selection JSON path.
 
-After a rebuild, inspect the contact sheet and thumbnail, decode the entire MP4, and check the final audio before replacing the archived files. Engine or dependency changes can change the capture.
+After a rebuild, inspect the sequence sheets, contact sheet, and thumbnail, decode the entire MP4, and check the final audio before replacing the archived files. Run the capture-driver regressions with `node --experimental-strip-types --test tests/trailer-scenes.test.ts`. Engine or dependency changes can change the capture.
