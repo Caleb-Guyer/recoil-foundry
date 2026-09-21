@@ -9,6 +9,7 @@ import { TrailerIntro, introAudio, INTRO_SECONDS, FOOTSTEPS } from './trailer-in
 import { planEdit, sourceFrame, type Beat, type EditShot } from './trailer-edit.ts';
 import { trailerSound, INTRO_FOLEY_GAIN, type SoundCue, type BeamFrame } from './trailer-sound.ts';
 import { mixTrailer } from './trailer-mix.ts';
+import { endingTiming, drawEnding } from './trailer-ending.ts';
 import {
   actionInput,
   recordAction,
@@ -70,11 +71,12 @@ const scenes = edit.map((shot) => ({
   end: introFrames + shot.end,
 }));
 const endStart = introFrames + frameAtBeat(52),
-  total = introFrames + frameAtBeat(60),
+  ending = endingTiming(endStart),
+  total = ending.endFrame,
   duration = total / FPS;
 const final = resolve(out, 'Recoil-Foundry-Launch-Trailer.mp4');
 if (process.argv.includes('--mix-only')) {
-  const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS);
+  const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS, ending);
   const capture = JSON.parse(readFileSync(resolve(out, 'capture.json'), 'utf8'));
   capture.audioMix = mix;
   capture.intro.gainBeforeMix = INTRO_FOLEY_GAIN;
@@ -198,32 +200,6 @@ function caption(text: string, alpha: number) {
   c.fillText(text, 76, 172);
   c.restore();
 }
-function card(t: number) {
-  c.drawImage(poster, 0, 0);
-  c.fillStyle = 'rgba(7,16,20,.9)';
-  c.fillRect(0, 0, W, H);
-  c.save();
-  c.globalAlpha = ease(t / 0.18);
-  c.textAlign = 'center';
-  c.fillStyle = '#e9eadc';
-  c.font = '214px "Release Bold"';
-  c.fillText('RECOIL', W / 2, 420);
-  c.fillStyle = '#acc3b6';
-  c.font = '70px "Release Mono"';
-  c.fillText('F O U N D R Y', W / 2, 521);
-  c.fillStyle = '#e9eadc';
-  c.font = '41px "Release Sans"';
-  c.fillText('One gun. All recoil.', W / 2, 632);
-  c.fillStyle = '#acc3b6';
-  c.fillRect(W / 2 - 40, 694, 80, 3);
-  c.fillStyle = '#e9eadc';
-  c.font = '40px "Release Bold"';
-  c.fillText('PLAY FREE IN YOUR BROWSER', W / 2, 787);
-  c.fillStyle = '#acc3b6';
-  c.font = '31px "Release Mono"';
-  c.fillText('caleb-guyer.itch.io/recoil-foundry', W / 2, 852);
-  c.restore();
-}
 async function review(frame: number, label: string, index: number) {
   const file = `work-action/frame-${String(frame).padStart(4, '0')}.png`;
   const png = canvas.toBuffer('image/png');
@@ -316,6 +292,7 @@ for (const [index, scene] of scenes.entries()) {
     `Shot ${index + 1}/${scenes.length}: ${take.name}, ${take.seed}, frame ${take.start}`,
   );
   const len = scene.end - scene.start;
+  const visibleLength = Math.min(scene.end, ending.breathFrame) - scene.start;
   const qualityFrames: ActionFrame[] = [];
   const sequenceAt = Array.from({ length: 6 }, (_, n) => Math.round((n * (len - 1)) / 5));
   let targetOnscreenFrames = 0;
@@ -328,7 +305,7 @@ for (const [index, scene] of scenes.entries()) {
       frameKinds = [];
       const wasTorch = g.torch.active;
       const metric = recordAction(g, actionInput(g, sourceCursor, take.style));
-      qualityFrames.push(metric);
+      if (frame < ending.breathFrame) qualityFrames.push(metric);
       if (g.torch.active && !wasTorch) frameKinds.push('beam-start');
       if (g.torch.active && metric.damage > 2) frameKinds.push('beam-hit');
       for (const point of scene.points.filter(
@@ -365,7 +342,8 @@ for (const [index, scene] of scenes.entries()) {
     r.draw(((tick + 1) * 1000) / FPS);
     const ax = (g.aim.x - r.camera.x) * r.scale,
       ay = (g.aim.y - r.camera.y) * r.scale;
-    if (ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35) targetOnscreenFrames++;
+    if (frame < ending.breathFrame && ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35)
+      targetOnscreenFrames++;
     if (!storyboard || sample || sequenceAt.includes(local)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       if (index === 0 && sample)
@@ -385,6 +363,10 @@ for (const [index, scene] of scenes.entries()) {
         caption('100 WAYS TO BUILD IT.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
       if (index === 6)
         caption('MAKE SOME ROOM.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
+      if (frame >= ending.breathFrame) {
+        c.fillStyle = '#000000';
+        c.fillRect(0, 0, W, H);
+      }
       if (sample) await review(frame, take.name, index);
       if (sequenceAt.includes(local))
         await reviewSequence(index, sequenceAt.indexOf(local), frame, take.name);
@@ -392,13 +374,14 @@ for (const [index, scene] of scenes.entries()) {
     }
   }
   const quality = takeQuality(qualityFrames);
-  const targetOnscreenFraction = targetOnscreenFrames / len;
-  if (!usableAction(quality, len) || targetOnscreenFraction < 0.75)
+  const targetOnscreenFraction = targetOnscreenFrames / visibleLength;
+  if (!usableAction(quality, visibleLength) || targetOnscreenFraction < 0.75)
     rejected.push(`Shot ${index + 1}: ${JSON.stringify({ quality, targetOnscreenFraction })}`);
   manifest.push({
     ...take,
     timelineStart: scene.start / FPS,
     seconds: len / FPS,
+    visibleSeconds: visibleLength / FPS,
     initialHealth,
     finalHealth: g.hp,
     killsDuringClip: g.kills - initialKills,
@@ -410,14 +393,36 @@ for (const [index, scene] of scenes.entries()) {
     retiming: scene.points,
   });
 }
+const endingSamples = [0, 0.15, 0.7, 1.3, 1.9, 3.8, 5.9, 6.6, 7.4].map(
+  (s) => endStart + Math.round(s * FPS),
+);
+const endingSheet = createCanvas(1440, 900),
+  ec = endingSheet.getContext('2d');
 for (let frame = endStart; frame < total; frame++) {
-  const sample = frame === endStart + FPS;
-  if (!storyboard || sample) {
-    card((frame - endStart) / FPS);
+  const sample = frame === endStart + 3 * FPS;
+  const endingSample = endingSamples.indexOf(frame);
+  if (!storyboard || sample || endingSample >= 0) {
+    drawEnding(c, frame, ending);
     if (sample) await review(frame, 'play free', scenes.length);
+    if (endingSample >= 0) {
+      const png = canvas.toBuffer('image/png');
+      const file = `work-action/ending-${String(frame).padStart(4, '0')}.png`;
+      writeFileSync(resolve(out, file), png);
+      const still = await loadImage(png);
+      const x = (endingSample % 3) * 480,
+        y = Math.floor(endingSample / 3) * 300;
+      ec.drawImage(still, x, y, 480, 270);
+      ec.fillStyle = '#071015';
+      ec.fillRect(x, y + 270, 480, 30);
+      ec.font = '17px "Release Mono"';
+      ec.fillStyle = '#e9eadc';
+      ec.fillText(`${(frame / FPS).toFixed(2)}s · ending`, x + 12, y + 292);
+      reviewFrames.push({ seconds: frame / FPS, file });
+    }
     await writeFrame();
   }
 }
+writeFileSync(resolve(out, 'ending-contact-sheet.png'), endingSheet.toBuffer('image/png'));
 writeFileSync(resolve(out, 'action-contact-sheet.png'), sheet.toBuffer('image/png'));
 for (const [index, sequence] of sequences.entries())
   writeFileSync(resolve(out, `action-sequence-${index + 1}.png`), sequence.toBuffer('image/png'));
@@ -461,7 +466,7 @@ if (storyboard) {
   process.exit(0);
 }
 
-const data = trailerSound(cues, beams, duration);
+const data = trailerSound(cues, beams, duration, ending);
 const effectsLevels = scenes.map((scene, index) => {
   let sum = 0,
     peak = 0,
@@ -486,13 +491,13 @@ writeFileSync(
   Buffer.from(await context.encodeAudioData(data, { bitDepth: 24 })),
 );
 writeFileSync(resolve(work, 'effects-audit.json'), JSON.stringify(data.audit, null, 2) + '\n');
-const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS);
+const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS, ending);
 writeFileSync(
   resolve(out, 'capture.json'),
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 5,
+      revision: 6,
       width: W,
       height: H,
       fps: FPS,
@@ -506,15 +511,22 @@ writeFileSync(
       effects: data.audit,
       effectsLevels,
       beatSync: syncAudit,
+      ending: {
+        ...ending,
+        method:
+          'Four single-beat combat cuts, 12-frame picture and audio pause, downbeat wordmark impact, delayed CTA and link, 1.2-second fade and 0.5-second black tail',
+        sound:
+          'Original rising industrial air, metal impact and factory room tail; licensed music downbeat resolves through a short echo tail',
+      },
       music: {
         title: 'Resonance',
         artist: 'Scott Buckley',
         source: 'https://www.scottbuckley.com.au/library/resonance/',
         license: 'CC BY 4.0',
         sourceIn: MUSIC_START,
-        sourceOut: MUSIC_START + duration - INTRO_SECONDS,
+        sourceOut: MUSIC_START + endStart / FPS - INTRO_SECONDS + 0.8,
         timelineStart: INTRO_SECONDS,
-        edit: 'Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut',
+        edit: 'Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut; pause before title downbeat; final accent tapered with echo tail',
       },
       intro: {
         seconds: INTRO_SECONDS,

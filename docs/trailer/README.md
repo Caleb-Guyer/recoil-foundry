@@ -1,6 +1,6 @@
 # YouTube launch trailer
 
-Revised on September 20, 2026, for the stable **2.98.0** browser release. Revision 5 fixes the buried sound effects and synchronizes actual combat events with the song. The six-second factory opening is retained.
+Revised on September 20, 2026, for the stable **2.98.0** browser release. Revision 6 adds a deliberate climax, musical title reveal, staged play card, and complete fade to black. The six-second factory opening and prominent, synchronized combat sound effects are retained.
 
 - [Finished MP4](Recoil-Foundry-Launch-Trailer.mp4)
 - [YouTube thumbnail](Recoil-Foundry-YouTube-Thumbnail.png)
@@ -10,22 +10,27 @@ Revised on September 20, 2026, for the stable **2.98.0** browser release. Revisi
 - [Combat edit and retiming plan](edit-plan.json)
 - [Music source and attribution](music-license.md)
 
-The video is 41.98 seconds, 1920 × 1080 at 60 fps, with an H.264 High profile progressive picture, BT.709 color, and AAC-LC stereo audio at 48 kHz. The MP4 has fast-start metadata. The thumbnail is a 1920 × 1080 PNG. Include the music credit from the supplied description when uploading. This package does not publish to a YouTube account.
+The video is 44.90 seconds, 1920 × 1080 at 60 fps, with an H.264 High profile progressive picture, BT.709 color, and AAC-LC stereo audio at 48 kHz. The MP4 has fast-start metadata. The thumbnail is a 1920 × 1080 PNG. Include the music credit from the supplied description when uploading. This package does not publish to a YouTube account.
 
 ## Edit
 
-| Time      | Content                                                            |
-| --------- | ------------------------------------------------------------------ |
-| 0:00–0:06 | Dark loading bay, footsteps, close-up, and gun lifting             |
-| 0:06–0:13 | Music enters; shell volleys, pinwheel, airborne scattershot        |
-| 0:13–0:20 | Prism beam, Turf War, and bouncing saw rounds                      |
-| 0:20–0:30 | Linked explosives, pinwheel, Loader, and Storm Cell                |
-| 0:30–0:37 | Six faster cuts: scatter, prism, saws, Turf War, cluster, pinwheel |
-| 0:37–0:42 | Wordmark and the free itch.io play link                            |
+| Time      | Content                                                          |
+| --------- | ---------------------------------------------------------------- |
+| 0:00–0:06 | Dark loading bay, footsteps, close-up, and gun lifting           |
+| 0:06–0:13 | Music enters; shell volleys, pinwheel, airborne scattershot      |
+| 0:13–0:20 | Prism beam, Turf War, and bouncing saw rounds                    |
+| 0:20–0:30 | Linked explosives, pinwheel, Loader, and Storm Cell              |
+| 0:30–0:35 | Two-beat cuts: scatter, prism, saws, and Turf War                |
+| 0:35–0:37 | Four single-beat cuts, industrial rise, and a brief blackout     |
+| 0:37–0:39 | Wordmark lands on a musical impact; play invitation appears next |
+| 0:39–0:43 | Clean play card with the free itch.io link                       |
+| 0:43–0:45 | Picture and factory ambience fade fully to black and silence     |
 
 A six-second cold open uses two camera framings, six footsteps on metal, factory hum, a failing lamp, and mechanical gun clicks. It has no title card or music. The player stops, raises the gun, and a 0.1-second dark pause leads into the first shot and the song at exactly 0:06.
 
-Sixteen combat shots run for about 1.2–2.4 seconds each, followed by a 4.78-second end card. The first ten shots follow four-beat musical phrases; six faster two-beat cuts build toward the title. The song's 100 BPM pulse was measured from the recording, and the cut points use local transient peaks rather than an approximate stopwatch grid. Forty-eight real firing, hit, kill, and beam events land on those musical accents. Gentle speed changes and small camera accents reinforce them. Three short captions sit over gameplay. Only the first three areas, a Turf War, and the first Loader boss appear. Later bosses, story reveals, and endings are omitted.
+Eighteen combat shots accelerate from ten four-beat phrases to four two-beat cuts, then four single-beat cuts. The song's 100 BPM pulse was measured from the recording, and the cut points use local transient peaks rather than an approximate stopwatch grid. Forty-eight real firing, hit, kill, and beam events land on those musical accents. Gentle speed changes and small camera accents reinforce them. Three short captions sit over gameplay. Only the first three areas, a Turf War, and the first Loader boss appear. Later bosses, story reveals, and endings are omitted.
+
+The ending in [`trailer-ending.ts`](../../scripts/trailer-ending.ts) shares precise timing between picture, effects, and music. A rising industrial sound builds across the last 4.8 seconds of action, then the picture and all audio stop for 12 frames at 0:37.00. At 0:37.20 the wordmark lands on the recorded downbeat and an original metal impact, with a small settling motion. The music accent rings out through a short echo instead of starting another phrase. “PLAY FREE NOW” enters at 0:38.30 and the URL at 0:38.70. The fully readable card holds for over four seconds before a 1.2-second fade begins at 0:43.20; the file ends with half a second of black and silence. The card uses quiet factory colors and steel seams, without gameplay behind the text.
 
 ## Capture and sound
 
@@ -39,13 +44,13 @@ This is an offline engine capture, not a recording of a human playtest or eviden
 
 The earlier export's combat-effects stem averaged approximately −44.4 dBFS, so the external song overwhelmed it. [`trailer-sound.ts`](../../scripts/trailer-sound.ts) now renders the game's original `Sound` cues into isolated, checked buffers and places them at the retimed events. Weapon shots and explosions receive stronger levels than distant enemies and warning sounds; the beam has a separate continuous layer. The full effects bus stays active during buffer generation. Transient shaping and gentle bus saturation keep dense combat controlled. Each exported combat clip must pass an effects-level check, preventing a silently missing or buried stem from being accepted again.
 
-Music is a recorded excerpt of **“Resonance” by Scott Buckley**, licensed under CC BY 4.0. It begins at 0:06. [`trailer-mix.ts`](../../scripts/trailer-mix.ts) lowers it, makes a small EQ cut around the weapon effects, and briefly ducks it beneath impacts. A measured constant gain and final peak limiter preserve the quiet opening. The music fades out with the end card. See [music-license.md](music-license.md) for attribution. No voiceover is used, and the game's runtime audio is unchanged.
+Music is a recorded excerpt of **“Resonance” by Scott Buckley**, licensed under CC BY 4.0. It begins at 0:06. [`trailer-mix.ts`](../../scripts/trailer-mix.ts) lowers it, makes a small EQ cut around the weapon effects, and briefly ducks it beneath impacts. A measured constant gain and final peak limiter preserve the quiet opening. The arrangement pauses before the title, returns on its downbeat, then tapers into an echo tail. Original synthesized industrial air, a metal impact, and factory room tone complete the ending; the room tone fades with the picture. No additional samples were downloaded. See [music-license.md](music-license.md) for attribution. No voiceover is used, and the game's runtime audio is unchanged.
 
 ## Verification
 
-All sixteen new cuts passed the movement, damage, visibility, and framing checks. Ninety-six sequence frames were visually reviewed. All 48 planned musical accents matched their assigned video frames with zero frame error; the measured song peaks are quantized to 60 fps. The retiming curves were checked for forward-only movement and their speed range. Every original sound buffer is checked for finite, nonzero output; every combat clip must have an effects RMS above −33 dBFS and a peak above 0.15 before final mixing. The new edit and sound modules pass strict TypeScript checking.
+All eighteen cuts passed the movement, damage, visibility, and framing checks, including the visible portion of the final shot before the blackout. The changed final cuts and nine title-card stages were visually reviewed. All 48 planned musical accents matched their assigned video frames with zero frame error; the measured song peaks are quantized to 60 fps. Every original sound buffer is checked for finite, nonzero output; every combat clip must have an effects RMS above −33 dBFS and a peak above 0.15 before final mixing. The ending, edit, and sound modules pass strict TypeScript checking.
 
-All 2,519 video frames and the complete audio stream decoded without errors. Analysis found no silence lasting one second at a −50 dB threshold. The only black interval above 0.15 seconds is the intended first 0.23 seconds of the opening fade; the six-frame pause before action is also intentional. The final AAC measures −14.10 LUFS integrated and −1.64 dBTP, without clipping. The combat-effects stem now averages −18.1 dBFS, about 26 dB above the previous export; individual combat clips range from −21.6 to −14.3 dBFS before final mixing. These are file and mix measurements, not a claim of a physical speaker listening test or a completed YouTube upload.
+All 2,694 frames and the complete audio stream decoded without errors. Final AAC audio measures −14.08 LUFS integrated and −1.81 dBTP, without clipping. Picture analysis confirms the 0:37.00–0:37.20 title pause and the final fade to black; audio analysis confirms the corresponding pause and silent ending. The effects in every combat shot remain above the audibility gate. These are file and mix measurements, not a claim of a physical speaker listening test or a completed YouTube upload.
 
 ## Rebuild
 

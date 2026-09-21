@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import type { EndingTiming } from './trailer-ending.ts';
 
 export function mixTrailer(
   ffmpeg: string,
@@ -10,8 +11,22 @@ export function mixTrailer(
   duration: number,
   sourceIn: number,
   intro: number,
+  ending: EndingTiming,
 ) {
-  const stems = `[1:a]highpass=f=55,asplit=2[fx][side];[2:a]atrim=duration=${duration - intro},asetpts=PTS-STARTPTS,volume=0.60,equalizer=f=1900:t=q:w=0.8:g=-2,afade=t=in:d=0.015,afade=t=out:st=${duration - intro - 0.65}:d=0.65,adelay=${intro * 1000}:all=1[song];[song][side]sidechaincompress=threshold=0.10:ratio=3:attack=3:release=110:makeup=1[ducked];[fx][ducked]amix=inputs=2:duration=first:normalize=0`;
+  const impact = ending.impactFrame / 60,
+    breath = ending.breathFrame / 60,
+    musicHit = impact - intro;
+  // Stop the arrangement on its title downbeat and let that accent ring out.
+  // This resolves the music instead of continuing a new phrase under a static card.
+  const stems = [
+    '[1:a]highpass=f=55,asplit=2[fx][side]',
+    '[2:a]volume=0.60,equalizer=f=1900:t=q:w=0.8:g=-2,asplit=2[main][hit]',
+    `[main]atrim=duration=${breath - intro},asetpts=PTS-STARTPTS,afade=t=in:d=0.015,afade=t=out:st=${breath - intro - 0.035}:d=0.035,adelay=${intro * 1000}:all=1[body]`,
+    `[hit]atrim=start=${musicHit}:end=${musicHit + 0.8},asetpts=PTS-STARTPTS,afade=t=in:d=0.003,afade=t=out:st=0.12:d=0.68,aecho=0.85:0.9:170|330|590|970:0.32|0.22|0.13|0.07,afade=t=out:st=1.1:d=0.67,adelay=${impact * 1000}:all=1[resolve]`,
+    '[body][resolve]amix=inputs=2:duration=longest:normalize=0,apad[song]',
+    '[song][side]sidechaincompress=threshold=0.10:ratio=3:attack=3:release=110:makeup=1[ducked]',
+    '[fx][ducked]amix=inputs=2:duration=first:normalize=0',
+  ].join(';');
   const inputs = [
     '-i',
     resolve(work, 'picture.mp4'),
@@ -81,7 +96,13 @@ export function mixTrailer(
   if (mux.status !== 0) throw new Error(mux.stderr);
   const audit = {
     method:
-      'Isolated original game cues, transient shaping, distinct beam layer, music EQ and brief sidechain ducking, measured constant gain, peak limiter',
+      'Isolated original game cues, industrial build and title hit, music EQ and brief sidechain ducking, pre-title pause, downbeat with echo resolution, measured constant gain, peak limiter',
+    musicResolution: {
+      impact,
+      pauseSeconds: impact - breath,
+      sourceEnd: sourceIn + musicHit + 0.8,
+      echoTailSeconds: 0.97,
+    },
     musicGain: 0.6,
     masterGainDb: gainDb,
     inputLufs: Number(measured.input_i),

@@ -30,8 +30,10 @@ export const MONTAGE = [
   ['prism', 1, 42, 44],
   ['saw', 1, 44, 46],
   ['turf', 1, 46, 48],
-  ['cluster', 2, 48, 50],
-  ['pinwheel', 2, 50, 52],
+  ['prism', 2, 48, 49],
+  ['pinwheel', 2, 49, 50],
+  ['scatter', 1, 50, 51],
+  ['cluster', 2, 51, 52],
 ] as const;
 export interface SyncPoint {
   output: number;
@@ -116,9 +118,10 @@ export function planEdit(takes: Record<string, Take[]>, beats: Beat[]): EditShot
           )
         )
           continue;
-        const clip = frames.slice(sourceStart, sourceStart + len),
+        const visibleLength = toBeat === 52 ? len - 12 : len;
+        const clip = frames.slice(sourceStart, sourceStart + visibleLength),
           quality = takeQuality(clip);
-        if (!usableAction(quality, len)) continue;
+        if (!usableAction(quality, visibleLength)) continue;
         const points: SyncPoint[] = [{ output: 0, source: 0, kind: first.kind, beat: fromBeat }];
         let strength = first.weight;
         for (let b = fromBeat + 1; b < toBeat; b++) {
@@ -153,7 +156,7 @@ export function planEdit(takes: Record<string, Take[]>, beats: Beat[]): EditShot
         if (len > 100 && points.length < 2) continue;
         points.push({ output: len - 1, source: len - 1, kind: 'end' });
         const score =
-          clip.reduce((s, f) => s + f.score, 0) / len +
+          clip.reduce((s, f) => s + f.score, 0) / visibleLength +
           strength * 0.5 +
           (take === takes[name][preferred] ? 1 : 0) -
           Math.abs(sourceStart - take.start) * 0.025;

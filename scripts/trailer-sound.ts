@@ -1,6 +1,7 @@
 import { Sound } from '../src/audio.ts';
 import { seeded } from '../src/rules.ts';
 import { introAudio } from './trailer-intro.ts';
+import { endingAudio, type EndingTiming } from './trailer-ending.ts';
 
 export interface SoundCue {
   frame: number;
@@ -37,7 +38,12 @@ const peakFor = (kind: string) =>
             ? 0.085
             : 0.14;
 
-export function trailerSound(cues: SoundCue[], beams: BeamFrame[], duration: number) {
+export function trailerSound(
+  cues: SoundCue[],
+  beams: BeamFrame[],
+  duration: number,
+  ending: EndingTiming,
+) {
   const rate = 48000;
   const channels = [
     new Float32Array(Math.ceil(duration * rate)),
@@ -116,6 +122,12 @@ export function trailerSound(cues: SoundCue[], beams: BeamFrame[], duration: num
     first = end;
   }
   Math.random = previousRandom;
+  // Stop lingering combat tails before the title, including sustained beams.
+  const breath = ending.breathFrame / 60;
+  for (const channel of channels)
+    for (let i = Math.round((breath - 0.012) * rate); i < channel.length; i++)
+      channel[i] *= Math.max(0, Math.min(1, (breath - i / rate) / 0.012));
+  mix(endingAudio(ending, duration, rate), 0);
   // Gentle bus saturation controls overlapping blast peaks before the final mix.
   for (const channel of channels)
     for (let i = 0; i < channel.length; i++) channel[i] = Math.tanh(channel[i] * 1.15) * 0.8;

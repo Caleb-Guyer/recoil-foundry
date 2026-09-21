@@ -802,59 +802,52 @@
   },
   {
     "take": {
-      "name": "cluster",
+      "name": "prism",
       "stage": 10,
       "mods": [
-        "shellshock",
-        "cluster-shell",
-        "fuse",
-        "linked-fuse",
-        "aftershock",
-        "shockfront",
-        "blast-surf",
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
         "airshot",
         "light",
-        "leech"
+        "leech",
+        "kick"
       ],
-      "seed": "ACTION-CLUSTER-12",
+      "seed": "ACTION-PRISM-12",
       "style": 0,
-      "start": 504,
-      "length": 72,
+      "start": 648,
+      "length": 36,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
-        "longestStallFrames": 0,
-        "travel": 517,
-        "span": 342,
-        "damage": 94
+        "longestStallFrames": 2,
+        "travel": 294,
+        "span": 159,
+        "damage": 147
       },
-      "score": 16.623
+      "score": 11.953
     },
     "fromBeat": 48,
-    "toBeat": 50,
+    "toBeat": 49,
     "start": 1728,
-    "end": 1800,
+    "end": 1764,
     "points": [
       {
         "output": 0,
         "source": 0,
-        "kind": "kill",
+        "kind": "beam-start",
         "beat": 48
       },
       {
-        "output": 36,
-        "source": 36,
-        "kind": "shell-shot",
-        "beat": 49
-      },
-      {
-        "output": 71,
-        "source": 71,
+        "output": 35,
+        "source": 35,
         "kind": "end"
       }
     ],
-    "score": 25.038234265724206
+    "score": 18.897779066919764
   },
   {
     "take": {
@@ -874,41 +867,124 @@
       "seed": "ACTION-PINWHEEL-19",
       "style": 1,
       "start": 566,
-      "length": 72,
+      "length": 36,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 558,
-        "span": 415,
-        "damage": 326
+        "travel": 210,
+        "span": 194,
+        "damage": 119
       },
       "score": 17.302
     },
-    "fromBeat": 50,
-    "toBeat": 52,
-    "start": 1800,
-    "end": 1872,
+    "fromBeat": 49,
+    "toBeat": 50,
+    "start": 1764,
+    "end": 1800,
     "points": [
       {
         "output": 0,
         "source": 0,
         "kind": "scatter",
-        "beat": 50
+        "beat": 49
       },
       {
-        "output": 33,
+        "output": 35,
         "source": 35,
-        "kind": "scatter",
-        "beat": 51
-      },
-      {
-        "output": 71,
-        "source": 71,
         "kind": "end"
       }
     ],
-    "score": 30.77247209750781
+    "score": 20.842062319078615
+  },
+  {
+    "take": {
+      "name": "scatter",
+      "stage": 6,
+      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "seed": "ACTION-SCATTER-7",
+      "style": 1,
+      "start": 693,
+      "length": 33,
+      "quality": {
+        "visibleFraction": 0.696969696969697,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 10,
+        "longestStallFrames": 0,
+        "travel": 289,
+        "span": 205,
+        "damage": 91
+      },
+      "score": 9.633
+    },
+    "fromBeat": 50,
+    "toBeat": 51,
+    "start": 1800,
+    "end": 1833,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 50
+      },
+      {
+        "output": 32,
+        "source": 32,
+        "kind": "end"
+      }
+    ],
+    "score": 14.33011911306117
+  },
+  {
+    "take": {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-12",
+      "style": 0,
+      "start": 488,
+      "length": 39,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 154,
+        "span": 120,
+        "damage": 52
+      },
+      "score": 16.623
+    },
+    "fromBeat": 51,
+    "toBeat": 52,
+    "start": 1833,
+    "end": 1872,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shell-shot",
+        "beat": 51
+      },
+      {
+        "output": 38,
+        "source": 38,
+        "kind": "end"
+      }
+    ],
+    "score": 24.23173617549405
   }
 ]
