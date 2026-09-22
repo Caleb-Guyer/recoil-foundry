@@ -1,13 +1,13 @@
 {
-  "revision": 9,
+  "revision": 10,
   "frames": 2279,
   "seconds": 37.983333333333334,
   "video": "H.264 High, 1920x1080, 60fps, yuv420p, progressive BT.709",
   "audio": "AAC-LC stereo, 48000Hz",
   "fullDecodePassed": true,
   "fastStart": true,
-  "integratedLufs": -14.1,
-  "truePeakDbtp": -1.87,
+  "integratedLufs": -14.09,
+  "truePeakDbtp": -1.85,
   "combatClips": 16,
   "combatClipsPassed": 16,
   "syncedCombatEvents": 45,
@@ -17,15 +17,83 @@
       "sourceStart": 258.91,
       "expectedTimeline": 33.23400000000004,
       "encodedLagMs": 0.0,
-      "correlation": 0.9996164673060407
+      "correlation": 0.9996141745299645
     },
     {
       "sourceStart": 259.34,
       "expectedTimeline": 33.66399999999999,
       "encodedLagMs": 0.0,
-      "correlation": 0.9891571902341243
+      "correlation": 0.9891828365832741
     }
   ],
-  "sourceVideoSha256": "5f61417f687036928a72f3ec1512a41a089958be5fc9b7a44eb6d6ba0f0bb686",
-  "review": "Intro contact sheet, all 16 gameplay sequences, 12 transition samples, 9 end-card stages, and thumbnail inspected. Full audio/video decoded. No physical-speaker or YouTube playback claim."
+  "sourceVideoSha256": "f669a1d33c1b0efc4f325b67ae901f2f1645548490a2e57dee61c0f94d179c42",
+  "review": "Revised intro and all 12 opening handoff samples inspected. Full 2279-frame video/audio decoded. All 16 combat shots and 45 assigned event frames pass capture gates. No physical-speaker or YouTube playback claim.",
+  "openingMatch": {
+    "outgoing": {
+      "player": {
+        "x": 740.2249384514628,
+        "y": 677.4855391808885
+      },
+      "scale": 2.4631448317948523,
+      "aimAngle": -0.554135710821535
+    },
+    "incoming": {
+      "player": {
+        "x": 740.1981466954546,
+        "y": 677.2142116362622
+      },
+      "scale": 2.455,
+      "aimAngle": -0.5553975450932231,
+      "velocityX": 0.649401311626093
+    },
+    "positionErrorPixels": 0.2726470881247829,
+    "scaleError": 0.008144831794852259,
+    "blackGapFrames": 0,
+    "firstShotFrame": 288,
+    "musicFrame": 288
+  },
+  "footsteps": {
+    "plants": [
+      {
+        "seconds": 0.72,
+        "stride": 3,
+        "footBottom": 436,
+        "frameErrorMs": -3.3333333333332993
+      },
+      {
+        "seconds": 1.24,
+        "stride": -3,
+        "footBottom": 436,
+        "frameErrorMs": -6.666666666666599
+      },
+      {
+        "seconds": 1.76,
+        "stride": 3,
+        "footBottom": 436,
+        "frameErrorMs": 6.666666666666599
+      },
+      {
+        "seconds": 2.28,
+        "stride": -3,
+        "footBottom": 436,
+        "frameErrorMs": 3.3333333333334103
+      },
+      {
+        "seconds": 2.8,
+        "stride": 3,
+        "footBottom": 436,
+        "frameErrorMs": 0
+      },
+      {
+        "seconds": 3.32,
+        "stride": -3,
+        "footBottom": 436,
+        "frameErrorMs": -3.333333333332966
+      }
+    ],
+    "peak": 0.16638459265232086,
+    "clipFree": true,
+    "samples": [4945, 5028, 5275, 5165, 5350],
+    "standingStride": -2.7929374788198713e-14
+  }
 }

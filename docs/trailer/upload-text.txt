@@ -15,6 +15,8 @@ Available now in your browser. Play on a desktop or laptop with a keyboard and m
 A game by Caleb Guyer.
 Trailer features an animated opening made with game art, followed by in-engine gameplay and game sound effects.
 
+Opening footfalls: Kenney, Impact Sounds (CC0). https://kenney.nl/assets/impact-sounds
+
 'Resonance' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
 Track: https://www.scottbuckley.com.au/library/resonance/
 License: https://creativecommons.org/licenses/by/4.0/

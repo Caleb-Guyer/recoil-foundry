@@ -3,31 +3,53 @@ import { Game } from '../src/game.ts';
 import { Renderer } from '../src/render.ts';
 import { drawScenery } from '../src/areas.ts';
 import { seeded } from '../src/rules.ts';
+import type { Vec } from '../src/rules.ts';
 
 // Editorial cold open, separate from the unchanged, live-simulation combat takes.
 export const INTRO_SECONDS = 4.8;
 const SOURCE_SECONDS = 6;
 const TIME_SCALE = INTRO_SECONDS / SOURCE_SECONDS;
-const SOURCE_STEPS = [0.88, 1.5, 2.12, 2.74, 3.36, 3.98];
-export const FOOTSTEPS = SOURCE_STEPS.map((time) => time * TIME_SCALE);
+export const FOOTSTEPS = [0.72, 1.24, 1.76, 2.28, 2.8, 3.32];
+export const INTRO_AUDIO_TAIL = 0.28;
 const smooth = (value: number) => {
   const x = Math.max(0, Math.min(1, value));
   return x * x * (3 - 2 * x);
 };
-const walkStart = SOURCE_STEPS[0] - 0.31;
+const walkStart = FOOTSTEPS[0] - 0.26;
 const strideLength = Math.PI / 0.14;
-const walkSpeed = strideLength / 0.62;
+const walkSpeed = strideLength / 0.52;
 const startX = (12 * Math.PI) / 0.14;
+
+// Audio and animation share the same six heel plants, then settle onto both feet.
+export function introWalk(t: number) {
+  const last = FOOTSTEPS.at(-1)!;
+  const x =
+    startX +
+    Math.max(0, Math.min(last - walkStart, t - walkStart)) * walkSpeed +
+    (strideLength / 2) * smooth((t - last) / 0.26);
+  const stride = Math.sin(x * 0.14) * 3;
+  return { x, y: 436 - 18 - Math.abs(stride), stride, walking: t >= walkStart && t < last + 0.26 };
+}
+export interface OpeningMatch {
+  player: Vec;
+  scale: number;
+  aimAngle: number;
+  velocityX: number;
+}
 
 export class TrailerIntro {
   game = new Game();
   renderer: Renderer;
+  match?: OpeningMatch;
   constructor(canvas: HTMLCanvasElement) {
     this.game.start('TRAILER-COLD-OPEN');
     this.renderer = new Renderer(canvas, this.game);
     this.game.grounded = true;
   }
   draw(t: number) {
+    const seconds = t,
+      pose = introWalk(t);
+    const bridge = this.match ? smooth((seconds - 4.2) / 0.6) : 0;
     t /= TIME_SCALE;
     const r = this.renderer,
       c = r.ctx,
@@ -40,9 +62,14 @@ export class TrailerIntro {
     c.scale(w / 960, h / 540);
     const close = t >= 3.36;
     const push = close ? 2.9 + smooth((t - 3.36) / 2.64) * 0.12 : 1 + smooth(t / 3.36) * 0.045;
-    c.translate(close ? 340 : 480, 350);
-    c.scale(push, push);
-    c.translate(close ? -392 : -480, close ? -402 : -350);
+    const oldX = (close ? 340 : 480) + (pose.x - (close ? 392 : 480)) * push;
+    const oldY = 350 + (pose.y - (close ? 402 : 350)) * push;
+    const scale = push + ((this.match?.scale ?? push * 2) / 2 - push) * bridge;
+    const anchorX = oldX + ((this.match?.player.x ?? oldX * 2) / 2 - oldX) * bridge;
+    const anchorY = oldY + ((this.match?.player.y ?? oldY * 2) / 2 - oldY) * bridge;
+    c.translate(anchorX, anchorY);
+    c.scale(scale, scale);
+    c.translate(-pose.x, -pose.y);
     drawScenery(c, 'docks', { x: 45 + t * 2, y: 360 }, 960, 540);
 
     // Closed shutter and overhead services use the existing loading-dock palette.
@@ -87,26 +114,25 @@ export class TrailerIntro {
     c.fillStyle = `rgba(190,209,184,${0.8 * flicker})`;
     c.fillRect(372, 133, 58, 2);
 
-    const walking = t >= walkStart && t <= SOURCE_STEPS.at(-1)! + 0.26;
-    const x =
-      startX +
-      Math.max(0, Math.min(SOURCE_STEPS.at(-1)! - walkStart, t - walkStart)) * walkSpeed +
-      (strideLength / 2) * smooth((t - SOURCE_STEPS.at(-1)!) / 0.26);
-    const foot = Math.abs(Math.sin(x * 0.14));
-    const y = 418 - foot * 2.6;
+    const { x, y, walking } = pose;
     Matter.Body.setPosition(this.game.player, { x, y });
-    Matter.Body.setVelocity(this.game.player, { x: walking ? 1.8 : 0, y: 0 });
+    Matter.Body.setVelocity(this.game.player, {
+      x: walking ? 1.8 : (this.match?.velocityX ?? 0) * bridge,
+      y: 0,
+    });
     this.game.time = 20 + t;
-    const lift = smooth((t - 4.85) / 0.68);
-    this.game.aim = { x: x + 150, y: y + 118 * (1 - lift) };
+    const lift = smooth((seconds - 3.74) / 0.52);
+    const restAngle = Math.atan2(118 * (1 - lift), 150);
+    const angle = restAngle + ((this.match?.aimAngle ?? 0) - restAngle) * bridge;
+    this.game.aim = { x: x + Math.cos(angle) * 180, y: y + Math.sin(angle) * 180 };
     c.fillStyle = '#060d11';
     c.beginPath();
-    c.ellipse(x + 3, 440, 31, 4, 0, 0, Math.PI * 2);
+    c.ellipse(x + 3, 438, 31, 4, 0, 0, Math.PI * 2);
     c.fill();
     r.drawPlayer();
 
     // Grade the original game art into silhouettes; keep the light and eyes readable.
-    c.fillStyle = 'rgba(2,8,12,.43)';
+    c.fillStyle = `rgba(2,8,12,${0.43 - bridge * 0.31})`;
     c.fillRect(-100, -100, 1160, 740);
     const light = c.createRadialGradient(404, 360, 0, 404, 360, 190);
     light.addColorStop(0, `rgba(145,183,167,${0.11 * flicker})`);
@@ -145,22 +171,20 @@ export class TrailerIntro {
       w * 0.65,
     );
     vignette.addColorStop(0, 'rgba(0,3,6,0)');
-    vignette.addColorStop(1, 'rgba(0,3,6,.72)');
+    vignette.addColorStop(1, `rgba(0,3,6,${0.72 - bridge * 0.5})`);
     c.fillStyle = vignette;
     c.fillRect(0, 0, w, h);
     c.fillStyle = `rgba(2,6,9,${1 - smooth(t / 0.65)})`;
     c.fillRect(0, 0, w, h);
-    // A six-frame breath before the downbeat, rather than a bright flash.
-    if (t >= SOURCE_SECONDS - 0.1 / TIME_SCALE) {
-      c.fillStyle = '#020609';
-      c.fillRect(0, 0, w, h);
-    }
+    // The player matches the incoming gameplay frame; the real shot supplies the cut.
+    return { player: { x: anchorX * 2, y: anchorY * 2 }, scale: scale * 2, aimAngle: angle };
   }
 }
 
-// Original, deterministic Foley. No downloaded samples or additional music.
-export function introAudio(sampleRate = 48000) {
-  const length = Math.ceil((INTRO_SECONDS + 0.12) * sampleRate);
+// CC0 Kenney footfalls with quiet original factory ambience and mechanical clicks.
+export function introAudio(footsteps: readonly Float32Array[], sampleRate = 48000) {
+  if (footsteps.length !== 5) throw new Error('Five distinct footstep recordings are required');
+  const length = Math.ceil((INTRO_SECONDS + INTRO_AUDIO_TAIL) * sampleRate);
   const channels = [new Float32Array(length), new Float32Array(length)];
   const random = seeded('RF-FOOTSTEPS-AND-FACTORY');
   const add = (time: number, duration: number, pan: number, sample: (t: number) => number) => {
@@ -173,9 +197,9 @@ export function introAudio(sampleRate = 48000) {
     }
   };
   let rumble = 0;
-  add(0, INTRO_SECONDS - 0.1, 0, (t) => {
+  add(0, INTRO_SECONDS + 0.24, 0, (t) => {
     rumble = rumble * 0.97 + (random() * 2 - 1) * 0.03;
-    const envelope = smooth(t / 0.44) * (1 - smooth((t - INTRO_SECONDS + 0.46) / 0.36));
+    const envelope = smooth(t / 0.44) * (1 - smooth((t - INTRO_SECONDS + 0.08) / 0.32));
     return (
       envelope *
       (rumble * 0.035 +
@@ -185,23 +209,20 @@ export function introAudio(sampleRate = 48000) {
     );
   });
   for (const [index, time] of FOOTSTEPS.entries()) {
-    const pan = -0.28 + index * 0.052;
+    const pan = -0.22 + index * 0.025;
+    const sample = footsteps[[0, 3, 1, 4, 2, 0][index]];
+    const gain = [0.72, 0.8, 0.77, 0.83, 0.94, 0.85][index];
     for (const [delay, level] of [
       [0, 1],
-      [0.12, 0.18],
-      [0.235, 0.075],
+      [0.045, 0.09],
+      [0.082, 0.045],
     ]) {
-      let grit = 0;
-      add(time + delay, 0.65, delay ? -pan : pan, (t) => {
-        const noise = random() * 2 - 1;
-        grit = grit * 0.64 + noise * 0.36;
-        const heel = Math.sin(2 * Math.PI * (92 * t - 70 * t * t)) * Math.exp(-t * 31);
-        const sole = grit * Math.exp(-t * 45) * 0.8;
-        const plate =
-          (Math.sin(2 * Math.PI * 371 * t) + Math.sin(2 * Math.PI * 617 * t) * 0.35) *
-          Math.exp(-t * 10);
-        return level * (0.18 * heel + 0.16 * sole + 0.018 * plate) * Math.min(1, t * 1300);
-      });
+      add(
+        time + delay,
+        sample.length / 48000,
+        delay ? -pan : pan,
+        (t) => (sample[Math.floor(t * 48000)] ?? 0) * gain * level,
+      );
     }
   }
   // Relay tick with the lamp, then a two-part mechanical gun click.
@@ -222,15 +243,5 @@ export function introAudio(sampleRate = 48000) {
         Math.min(1, t * 2200),
     );
   }
-  let air = 0;
-  add(5.36 * TIME_SCALE, 0.54 * TIME_SCALE, 0, (t) => {
-    air = air * 0.8 + (random() * 2 - 1) * 0.2;
-    return (
-      air *
-      0.2 *
-      smooth(t / (0.54 * TIME_SCALE)) *
-      (1 - smooth((t - 0.48 * TIME_SCALE) / (0.06 * TIME_SCALE)))
-    );
-  });
   return channels;
 }

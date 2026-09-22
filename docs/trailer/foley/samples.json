@@ -1,0 +1,37 @@
+[
+  {
+    "file": "footstep_concrete_000.wav",
+    "source": "footstep_concrete_000.ogg",
+    "trimmedLeadingSeconds": 0.0,
+    "seconds": 0.10302083333333334,
+    "peak": 0.24
+  },
+  {
+    "file": "footstep_concrete_001.wav",
+    "source": "footstep_concrete_001.ogg",
+    "trimmedLeadingSeconds": 0.0,
+    "seconds": 0.10475,
+    "peak": 0.23096879997622602
+  },
+  {
+    "file": "footstep_concrete_002.wav",
+    "source": "footstep_concrete_002.ogg",
+    "trimmedLeadingSeconds": 0.0,
+    "seconds": 0.10989583333333333,
+    "peak": 0.22978723404255316
+  },
+  {
+    "file": "footstep_concrete_003.wav",
+    "source": "footstep_concrete_003.ogg",
+    "trimmedLeadingSeconds": 0.0,
+    "seconds": 0.10760416666666667,
+    "peak": 0.23632226897304034
+  },
+  {
+    "file": "footstep_concrete_004.wav",
+    "source": "footstep_concrete_004.ogg",
+    "trimmedLeadingSeconds": 0.0,
+    "seconds": 0.11145833333333334,
+    "peak": 0.24
+  }
+]

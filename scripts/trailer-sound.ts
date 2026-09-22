@@ -43,6 +43,7 @@ export function trailerSound(
   beams: BeamFrame[],
   duration: number,
   ending: EndingTiming,
+  footsteps: readonly Float32Array[],
 ) {
   const rate = 48000;
   const channels = [
@@ -96,7 +97,7 @@ export function trailerSound(
   }
   // The intro is mixed directly, without a loudness normalizer lifting its room tone.
   mix(
-    introAudio(rate).map((ch) => Float32Array.from(ch, (v) => v * INTRO_FOLEY_GAIN)),
+    introAudio(footsteps, rate).map((ch) => Float32Array.from(ch, (v) => v * INTRO_FOLEY_GAIN)),
     0,
   );
   const last = new Map<string, number>();

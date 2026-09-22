@@ -1,6 +1,6 @@
 {
   "version": "2.98.0",
-  "revision": 9,
+  "revision": 10,
   "width": 1920,
   "height": 1080,
   "fps": 60,
@@ -26,8 +26,8 @@
       "subtitleFrameErrorMs": -3.67
     },
     "musicGain": 0.6,
-    "masterGainDb": 1.5199999999999996,
-    "inputLufs": -15.52,
+    "masterGainDb": 1.5299999999999994,
+    "inputLufs": -15.53,
     "inputTruePeak": -0.25,
     "sampleRate": 48000
   },
@@ -246,7 +246,7 @@
   "effectsLevels": [
     {
       "shot": 1,
-      "rmsDb": -21.019347164584413,
+      "rmsDb": -21.01956905243593,
       "peak": 0.5000673532485962
     },
     {
@@ -739,15 +739,40 @@
   },
   "intro": {
     "seconds": 4.8,
-    "method": "Editorial animation using game scenery, outfit and weapon renderer; keyframed walk, lighting and camera; original synthesized factory ambience, footsteps, relay and weapon clicks",
+    "method": "Editorial animation using game scenery, outfit and weapon renderer; shared heel-plant timing with CC0 Kenney concrete footfalls; original factory ambience and mechanical clicks; camera pullback matches the first gameplay shot without a black gap",
     "footsteps": [
-      0.704,
-      1.2,
-      1.696,
-      2.192,
-      2.6879999999999997,
-      3.1839999999999997
+      0.72,
+      1.24,
+      1.76,
+      2.28,
+      2.8,
+      3.32
     ],
+    "footstepSource": "Kenney Impact Sounds, CC0; see docs/trailer/foley/README.md",
+    "handoff": {
+      "outgoing": {
+        "player": {
+          "x": 740.2249384514628,
+          "y": 677.4855391808885
+        },
+        "scale": 2.4631448317948523,
+        "aimAngle": -0.554135710821535
+      },
+      "incoming": {
+        "player": {
+          "x": 740.1981466954546,
+          "y": 677.2142116362622
+        },
+        "scale": 2.455,
+        "aimAngle": -0.5553975450932231,
+        "velocityX": 0.649401311626093
+      },
+      "positionErrorPixels": 0.2726470881247829,
+      "scaleError": 0.008144831794852259,
+      "blackGapFrames": 0,
+      "firstShotFrame": 288,
+      "musicFrame": 288
+    },
     "gainBeforeMix": 1.35,
     "music": false,
     "cutToAction": 4.8
@@ -1806,32 +1831,80 @@
       "file": "work-action/intro-0043.png"
     },
     {
-      "seconds": 1.2,
-      "file": "work-action/intro-0072.png"
+      "seconds": 1.2333333333333334,
+      "file": "work-action/intro-0074.png"
     },
     {
-      "seconds": 1.6833333333333333,
-      "file": "work-action/intro-0101.png"
+      "seconds": 1.7666666666666666,
+      "file": "work-action/intro-0106.png"
     },
     {
-      "seconds": 2.2,
-      "file": "work-action/intro-0132.png"
+      "seconds": 2.283333333333333,
+      "file": "work-action/intro-0137.png"
     },
     {
-      "seconds": 3.183333333333333,
-      "file": "work-action/intro-0191.png"
+      "seconds": 2.8,
+      "file": "work-action/intro-0168.png"
     },
     {
-      "seconds": 3.7333333333333334,
-      "file": "work-action/intro-0224.png"
+      "seconds": 3.316666666666667,
+      "file": "work-action/intro-0199.png"
     },
     {
-      "seconds": 4.233333333333333,
-      "file": "work-action/intro-0254.png"
+      "seconds": 4,
+      "file": "work-action/opening-240.png"
     },
     {
-      "seconds": 4.633333333333334,
-      "file": "work-action/intro-0278.png"
+      "seconds": 4.2,
+      "file": "work-action/opening-252.png"
+    },
+    {
+      "seconds": 4.2,
+      "file": "work-action/intro-0252.png"
+    },
+    {
+      "seconds": 4.4,
+      "file": "work-action/opening-264.png"
+    },
+    {
+      "seconds": 4.6,
+      "file": "work-action/opening-276.png"
+    },
+    {
+      "seconds": 4.7,
+      "file": "work-action/opening-282.png"
+    },
+    {
+      "seconds": 4.783333333333333,
+      "file": "work-action/opening-287.png"
+    },
+    {
+      "seconds": 4.783333333333333,
+      "file": "work-action/intro-0287.png"
+    },
+    {
+      "seconds": 4.8,
+      "file": "work-action/opening-288.png"
+    },
+    {
+      "seconds": 4.816666666666666,
+      "file": "work-action/opening-289.png"
+    },
+    {
+      "seconds": 4.9,
+      "file": "work-action/opening-294.png"
+    },
+    {
+      "seconds": 5,
+      "file": "work-action/opening-300.png"
+    },
+    {
+      "seconds": 5.1,
+      "file": "work-action/opening-306.png"
+    },
+    {
+      "seconds": 5.2,
+      "file": "work-action/opening-312.png"
     },
     {
       "seconds": 6,

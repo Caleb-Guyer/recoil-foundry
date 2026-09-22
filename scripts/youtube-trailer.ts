@@ -5,7 +5,14 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { Renderer } from '../src/render.ts';
 import { GAME_VERSION } from '../src/version.ts';
-import { TrailerIntro, introAudio, INTRO_SECONDS, FOOTSTEPS } from './trailer-intro.ts';
+import {
+  TrailerIntro,
+  introAudio,
+  INTRO_SECONDS,
+  INTRO_AUDIO_TAIL,
+  FOOTSTEPS,
+} from './trailer-intro.ts';
+import { decodeFootstep } from './trailer-foley.ts';
 import {
   planEdit,
   sourceFrame,
@@ -165,6 +172,9 @@ class CaptureAudio extends RenderingAudioContext {
 }
 Object.defineProperty(globalThis, 'AudioContext', { value: CaptureAudio });
 const context = new CaptureAudio();
+const footsteps = Array.from({ length: 5 }, (_, i) =>
+  decodeFootstep(readFileSync(`docs/trailer/foley/footstep_concrete_00${i}.wav`)),
+);
 const cues: SoundCue[] = [],
   beams: BeamFrame[] = [];
 const syncAudit: {
@@ -175,8 +185,12 @@ const syncAudit: {
   expectedFrame: number;
   errorFrames: number;
 }[] = [];
-const introBuffer = context.createBuffer(2, Math.ceil((INTRO_SECONDS + 0.12) * 48000), 48000);
-introAudio().forEach((channel, index) => introBuffer.getChannelData(index).set(channel));
+const introBuffer = context.createBuffer(
+  2,
+  Math.ceil((INTRO_SECONDS + INTRO_AUDIO_TAIL) * 48000),
+  48000,
+);
+introAudio(footsteps).forEach((channel, index) => introBuffer.getChannelData(index).set(channel));
 const introVoice = context.createBufferSource();
 introVoice.buffer = introBuffer;
 introVoice.connect(context.destination);
@@ -300,15 +314,94 @@ async function reviewTransition(frame: number) {
   reviewFrames.push({ seconds: frame / FPS, file });
 }
 const intro = new TrailerIntro(canvas);
-const introSamples = [0.25, 0.9, 1.5, 2.1, 2.74, 3.98, 4.66, 5.3, 5.8].map((s) =>
-  Math.round((s / 6) * INTRO_SECONDS * FPS),
+// Rehearse the exact incoming shot, including the live camera and recoil shake.
+const openingCanvas = createCanvas(W, H);
+openingCanvas.getBoundingClientRect = () => ({ width: W, height: H });
+const openingGame = startTake(scenes[0].take),
+  openingRenderer = new Renderer(openingCanvas, openingGame);
+openingRenderer.scale = 2.4;
+openingRenderer.reset();
+for (let tick = 0; tick < scenes[0].take.start; tick++) {
+  openingGame.tick(1 / FPS, actionInput(openingGame, tick, scenes[0].take.style));
+  if (tick >= scenes[0].take.start - 45) openingRenderer.draw(((tick + 1) * 1000) / FPS);
+}
+openingGame.tick(1 / FPS, actionInput(openingGame, scenes[0].take.start, scenes[0].take.style));
+openingRenderer.scale = 2.455;
+openingRenderer.draw(((scenes[0].take.start + 1) * 1000) / FPS);
+intro.match = {
+  player: openingRenderer.toCanvas(openingGame.player.position),
+  scale: openingRenderer.scale,
+  aimAngle: Math.atan2(
+    openingGame.aim.y - openingGame.player.position.y,
+    openingGame.aim.x - openingGame.player.position.x,
+  ),
+  velocityX: openingGame.player.velocity.x,
+};
+let openingAudit: object | undefined;
+const openingSamples = [
+  4.0,
+  4.2,
+  4.4,
+  4.6,
+  4.7,
+  4.8 - 1 / 60,
+  4.8,
+  4.8 + 1 / 60,
+  4.9,
+  5.0,
+  5.1,
+  5.2,
+].map((s) => Math.round(s * FPS));
+const openingSheet = createCanvas(1600, 750),
+  oc = openingSheet.getContext('2d');
+async function reviewOpening(frame: number) {
+  const index = openingSamples.indexOf(frame);
+  if (index < 0) return;
+  const png = canvas.toBuffer('image/png');
+  const file = `work-action/opening-${frame}.png`;
+  writeFileSync(resolve(out, file), png);
+  const x = (index % 4) * 400,
+    y = Math.floor(index / 4) * 250;
+  oc.drawImage(await loadImage(png), x, y, 400, 225);
+  oc.fillStyle = '#071015';
+  oc.fillRect(x, y + 225, 400, 25);
+  oc.fillStyle = '#e9eadc';
+  oc.font = '15px "Release Mono"';
+  oc.fillText(`${(frame / FPS).toFixed(3)}s · opening`, x + 8, y + 243);
+  reviewFrames.push({ seconds: frame / FPS, file });
+}
+const introSamples = [0.2, 0.72, 1.24, 1.76, 2.28, 2.8, 3.32, 4.2, 4.783333].map((s) =>
+  Math.round(s * FPS),
 );
 const introSheet = createCanvas(1280, 810),
   ic = introSheet.getContext('2d');
 ic.fillStyle = '#071015';
 ic.fillRect(0, 0, 1280, 810);
 for (let frame = 0; frame < introFrames; frame++) {
-  intro.draw(frame / FPS);
+  const pose = intro.draw(frame / FPS);
+  await reviewOpening(frame);
+  if (frame === introFrames - 1) {
+    const positionError = Math.hypot(
+      pose.player.x - intro.match.player.x,
+      pose.player.y - intro.match.player.y,
+    );
+    const scaleError = Math.abs(pose.scale - intro.match.scale);
+    if (positionError > 2 || scaleError > 0.02)
+      throw new Error('Opening match cut missed its player alignment');
+    openingAudit = {
+      outgoing: pose,
+      incoming: intro.match,
+      positionErrorPixels: positionError,
+      scaleError,
+      blackGapFrames: 0,
+      firstShotFrame: introFrames,
+      musicFrame: introFrames,
+    };
+    writeFileSync(
+      resolve(out, 'opening-match-audit.json'),
+      JSON.stringify(openingAudit, null, 2) + '\n',
+    );
+  }
   const index = introSamples.indexOf(frame);
   if (index >= 0) {
     const png = canvas.toBuffer('image/png');
@@ -329,7 +422,7 @@ for (let frame = 0; frame < introFrames; frame++) {
 }
 writeFileSync(resolve(out, 'intro-contact-sheet.png'), introSheet.toBuffer('image/png'));
 if (introOnly) {
-  context.processTo(INTRO_SECONDS + 0.12);
+  context.processTo(INTRO_SECONDS + INTRO_AUDIO_TAIL);
   writeFileSync(
     resolve(work, 'intro-preview.wav'),
     Buffer.from(await context.encodeAudioData(context.exportAsAudioData(), { bitDepth: 24 })),
@@ -436,14 +529,23 @@ for (const [index, scene] of scenes.entries()) {
     if (ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35) targetOnscreenFrames++;
     if (!storyboard || sample || sequenceAt.includes(local) || transitionSamples.includes(frame)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
+      if (index === 0 && local < 10) {
+        c.fillStyle = `rgba(2,8,12,${0.12 * (1 - ease(local / 10))})`;
+        c.fillRect(0, 0, W, H);
+      }
       if (index === 9 && sample)
         poster.getContext('2d').putImageData(c.getImageData(0, 0, W, H), 0, 0);
       // Hide editorial HUD; the live simulation still has health and damage.
       const captionAlpha = ease(local / 6) * (1 - ease((local - len + 16) / 16));
-      if (index === 0) caption('EVERY SHOT\nMOVES YOU.', captionAlpha);
+      if (index === 0)
+        caption(
+          'EVERY SHOT\nMOVES YOU.',
+          ease((local - 12) / 6) * (1 - ease((local - len + 16) / 16)),
+        );
       if (index === 2) caption('ONE GUN.\nYOUR BUILD.', captionAlpha);
       if (index === 8) caption('CLOCK OUT\nALIVE.', captionAlpha);
       await reviewTransition(frame);
+      await reviewOpening(frame);
       if (sample) await review(frame, take.name, index);
       if (sequenceAt.includes(local))
         await reviewSequence(index, sequenceAt.indexOf(local), frame, take.name);
@@ -537,6 +639,7 @@ for (let frame = endStart; frame < total; frame++) {
   }
 }
 writeFileSync(resolve(out, 'ending-contact-sheet.png'), endingSheet.toBuffer('image/png'));
+writeFileSync(resolve(out, 'opening-contact-sheet.png'), openingSheet.toBuffer('image/png'));
 writeFileSync(resolve(out, 'transition-contact-sheet.png'), transitionSheet.toBuffer('image/png'));
 writeFileSync(resolve(out, 'action-contact-sheet.png'), sheet.toBuffer('image/png'));
 for (const [index, sequence] of sequences.entries())
@@ -562,7 +665,7 @@ if (storyboard) {
   process.exit(0);
 }
 
-const data = trailerSound(cues, beams, duration, ending);
+const data = trailerSound(cues, beams, duration, ending, footsteps);
 const effectsLevels = scenes.map((scene, index) => {
   let sum = 0,
     peak = 0,
@@ -603,7 +706,7 @@ writeFileSync(
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 9,
+      revision: 10,
       width: W,
       height: H,
       fps: FPS,
@@ -664,8 +767,10 @@ writeFileSync(
       intro: {
         seconds: INTRO_SECONDS,
         method:
-          'Editorial animation using game scenery, outfit and weapon renderer; keyframed walk, lighting and camera; original synthesized factory ambience, footsteps, relay and weapon clicks',
+          'Editorial animation using game scenery, outfit and weapon renderer; shared heel-plant timing with CC0 Kenney concrete footfalls; original factory ambience and mechanical clicks; camera pullback matches the first gameplay shot without a black gap',
         footsteps: FOOTSTEPS,
+        footstepSource: 'Kenney Impact Sounds, CC0; see docs/trailer/foley/README.md',
+        handoff: openingAudit,
         gainBeforeMix: INTRO_FOLEY_GAIN,
         music: false,
         cutToAction: INTRO_SECONDS,
