@@ -1,44 +1,49 @@
 {
   "version": "2.98.0",
-  "revision": 7,
+  "revision": 8,
   "width": 1920,
   "height": 1080,
   "fps": 60,
-  "seconds": 44.9,
-  "frames": 2694,
+  "seconds": 39.18333333333333,
+  "frames": 2351,
   "cameraScale": [2.05, 2.21],
   "playback": "Original fixed-step simulation, gently retimed between actual combat events and measured musical transients",
   "bpm": 100,
   "audioMix": {
-    "method": "Isolated original game cues, industrial build and softer title hit, music EQ and brief sidechain ducking, continuous downbeat transition with echo resolution, measured constant gain, peak limiter",
+    "method": "Original game cues with space for the closing fill; phrase-aligned edit into the original recorded ending, two title accents and natural ring-out; music EQ, brief ducking, measured constant gain and peak limiter",
     "musicResolution": {
-      "impact": 37.2,
+      "impact": 34.38333333333333,
+      "subtitle": 34.81666666666667,
+      "splice": 25.2,
       "pauseSeconds": 0,
-      "sourceEnd": 195.276,
-      "echoTailSeconds": 1.14
+      "sourceEnd": 263.2,
+      "addedEcho": false,
+      "naturalEnding": true,
+      "titleFrameErrorMs": 3,
+      "subtitleFrameErrorMs": -3.67
     },
     "musicGain": 0.6,
-    "masterGainDb": 1.0600000000000005,
-    "inputLufs": -15.06,
-    "inputTruePeak": -0.19,
+    "masterGainDb": 1.5399999999999991,
+    "inputLufs": -15.54,
+    "inputTruePeak": -0.25,
     "sampleRate": 48000
   },
   "effects": [
     {
       "kind": "shell-shot",
-      "events": 27,
+      "events": 26,
       "originalPeak": 0.21061843633651733,
       "mixedPeak": 0.52
     },
     {
       "kind": "hit",
-      "events": 143,
+      "events": 132,
       "originalPeak": 0.05010034516453743,
       "mixedPeak": 0.19
     },
     {
       "kind": "fuse-stick",
-      "events": 17,
+      "events": 16,
       "originalPeak": 0.024654680863022804,
       "mixedPeak": 0.14
     },
@@ -50,25 +55,25 @@
     },
     {
       "kind": "prop",
-      "events": 106,
+      "events": 99,
       "originalPeak": 0.06426217406988144,
       "mixedPeak": 0.14
     },
     {
       "kind": "break",
-      "events": 9,
+      "events": 7,
       "originalPeak": 0.10749920457601547,
       "mixedPeak": 0.56
     },
     {
       "kind": "aim-warn",
-      "events": 59,
+      "events": 53,
       "originalPeak": 0.027967942878603935,
       "mixedPeak": 0.14
     },
     {
       "kind": "aftershock",
-      "events": 28,
+      "events": 27,
       "originalPeak": 0.056639477610588074,
       "mixedPeak": 0.56
     },
@@ -80,19 +85,19 @@
     },
     {
       "kind": "snipe",
-      "events": 7,
+      "events": 5,
       "originalPeak": 0.0765610784292221,
       "mixedPeak": 0.14
     },
     {
       "kind": "enemy",
-      "events": 93,
+      "events": 84,
       "originalPeak": 0.05693972110748291,
       "mixedPeak": 0.085
     },
     {
       "kind": "kill",
-      "events": 30,
+      "events": 29,
       "originalPeak": 0.16731393337249756,
       "mixedPeak": 0.56
     },
@@ -104,37 +109,37 @@
     },
     {
       "kind": "land",
-      "events": 24,
+      "events": 18,
       "originalPeak": 0.06848135590553284,
       "mixedPeak": 0.14
     },
     {
       "kind": "jump",
-      "events": 18,
+      "events": 15,
       "originalPeak": 0.04282670095562935,
       "mixedPeak": 0.14
     },
     {
       "kind": "hurt",
-      "events": 10,
+      "events": 9,
       "originalPeak": 0.2924985885620117,
       "mixedPeak": 0.3
     },
     {
       "kind": "armor",
-      "events": 17,
+      "events": 14,
       "originalPeak": 0.04314672201871872,
       "mixedPeak": 0.19
     },
     {
       "kind": "lock",
-      "events": 18,
+      "events": 15,
       "originalPeak": 0.024799691513180733,
       "mixedPeak": 0.14
     },
     {
       "kind": "scatter",
-      "events": 23,
+      "events": 24,
       "originalPeak": 0.2952371835708618,
       "mixedPeak": 0.52
     },
@@ -152,13 +157,13 @@
     },
     {
       "kind": "sapper-throw",
-      "events": 4,
+      "events": 2,
       "originalPeak": 0.07013583928346634,
       "mixedPeak": 0.14
     },
     {
       "kind": "heavy",
-      "events": 30,
+      "events": 25,
       "originalPeak": 0.21463032066822052,
       "mixedPeak": 0.52
     },
@@ -182,7 +187,7 @@
     },
     {
       "kind": "hop",
-      "events": 4,
+      "events": 3,
       "originalPeak": 0.04058780521154404,
       "mixedPeak": 0.14
     },
@@ -194,13 +199,13 @@
     },
     {
       "kind": "shot",
-      "events": 13,
+      "events": 11,
       "originalPeak": 0.23846346139907837,
       "mixedPeak": 0.52
     },
     {
       "kind": "grind",
-      "events": 6,
+      "events": 5,
       "originalPeak": 0.032573118805885315,
       "mixedPeak": 0.14
     },
@@ -230,13 +235,19 @@
     },
     {
       "kind": "sapper-tick",
-      "events": 3,
+      "events": 4,
       "originalPeak": 0.02432098053395748,
       "mixedPeak": 0.14
     },
     {
+      "kind": "sapper-blast",
+      "events": 1,
+      "originalPeak": 0.19679519534111023,
+      "mixedPeak": 0.56
+    },
+    {
       "kind": "beam",
-      "events": 6,
+      "events": 4,
       "originalPeak": 0.04915642365813255,
       "mixedPeak": 0.2
     }
@@ -284,53 +295,43 @@
     },
     {
       "shot": 9,
-      "rmsDb": -20.078087334815088,
+      "rmsDb": -20.098472773819562,
       "peak": 0.49654415249824524
     },
     {
       "shot": 10,
-      "rmsDb": -14.346924200502693,
+      "rmsDb": -14.398394927299611,
       "peak": 0.6996150612831116
     },
     {
       "shot": 11,
-      "rmsDb": -18.431438677704318,
+      "rmsDb": -18.511094183810144,
       "peak": 0.6128631234169006
     },
     {
       "shot": 12,
-      "rmsDb": -19.929269715103008,
-      "peak": 0.4980226159095764
+      "rmsDb": -19.25899421234704,
+      "peak": 0.5043598413467407
     },
     {
       "shot": 13,
-      "rmsDb": -20.906132328324144,
-      "peak": 0.7004643082618713
+      "rmsDb": -18.558088100496406,
+      "peak": 0.5873186588287354
     },
     {
       "shot": 14,
-      "rmsDb": -17.938811818570176,
-      "peak": 0.6386140584945679
+      "rmsDb": -22.406866828810582,
+      "peak": 0.41815701127052307
     },
     {
       "shot": 15,
-      "rmsDb": -18.878780666669513,
-      "peak": 0.34549853205680847
+      "rmsDb": -23.14097734163677,
+      "peak": 0.41374170780181885
     },
     {
       "shot": 16,
-      "rmsDb": -21.58702221233908,
-      "peak": 0.46812179684638977
-    },
-    {
-      "shot": 17,
-      "rmsDb": -18.380550569014613,
-      "peak": 0.47949618101119995
-    },
-    {
-      "shot": 18,
-      "rmsDb": -16.777593141920672,
-      "peak": 0.6721118092536926
+      "rmsDb": -21.723791006759143,
+      "peak": 0.4005921185016632
     }
   ],
   "beatSync": [
@@ -586,24 +587,16 @@
       "shot": 9,
       "kind": "heavy",
       "beat": 34,
-      "frame": 1584,
-      "expectedFrame": 1584,
-      "errorFrames": 0
-    },
-    {
-      "shot": 9,
-      "kind": "heavy",
-      "beat": 35,
-      "frame": 1617,
-      "expectedFrame": 1617,
+      "frame": 1585,
+      "expectedFrame": 1585,
       "errorFrames": 0
     },
     {
       "shot": 10,
       "kind": "shell-shot",
       "beat": 36,
-      "frame": 1656,
-      "expectedFrame": 1656,
+      "frame": 1657,
+      "expectedFrame": 1657,
       "errorFrames": 0
     },
     {
@@ -648,89 +641,79 @@
     },
     {
       "shot": 12,
-      "kind": "kill",
+      "kind": "beam-hit",
       "beat": 42,
-      "frame": 1872,
-      "expectedFrame": 1872,
-      "errorFrames": 0
-    },
-    {
-      "shot": 12,
-      "kind": "beam-start",
-      "beat": 43,
-      "frame": 1910,
-      "expectedFrame": 1910,
+      "frame": 1873,
+      "expectedFrame": 1873,
       "errorFrames": 0
     },
     {
       "shot": 13,
+      "kind": "kill",
+      "beat": 43,
+      "frame": 1908,
+      "expectedFrame": 1908,
+      "errorFrames": 0
+    },
+    {
+      "shot": 14,
       "kind": "shot",
       "beat": 44,
-      "frame": 1943,
-      "expectedFrame": 1943,
+      "frame": 1944,
+      "expectedFrame": 1944,
       "errorFrames": 0
     },
     {
-      "shot": 14,
-      "kind": "kill",
+      "shot": 15,
+      "kind": "scatter",
+      "beat": 45,
+      "frame": 1982,
+      "expectedFrame": 1982,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "shell-shot",
       "beat": 46,
-      "frame": 2018,
-      "expectedFrame": 2018,
+      "frame": 2034,
+      "expectedFrame": 2034,
       "errorFrames": 0
     },
     {
-      "shot": 14,
+      "shot": 16,
       "kind": "kill",
       "beat": 47,
       "frame": 2054,
       "expectedFrame": 2054,
       "errorFrames": 0
-    },
-    {
-      "shot": 15,
-      "kind": "beam-start",
-      "beat": 48,
-      "frame": 2088,
-      "expectedFrame": 2088,
-      "errorFrames": 0
-    },
-    {
-      "shot": 16,
-      "kind": "scatter",
-      "beat": 49,
-      "frame": 2124,
-      "expectedFrame": 2124,
-      "errorFrames": 0
-    },
-    {
-      "shot": 17,
-      "kind": "heavy",
-      "beat": 50,
-      "frame": 2160,
-      "expectedFrame": 2160,
-      "errorFrames": 0
-    },
-    {
-      "shot": 18,
-      "kind": "shell-shot",
-      "beat": 51,
-      "frame": 2193,
-      "expectedFrame": 2193,
-      "errorFrames": 0
     }
   ],
   "ending": {
-    "impactFrame": 2232,
-    "buildStartFrame": 1944,
-    "transitionStartFrame": 2220,
-    "transitionEndFrame": 2268,
-    "ctaFrame": 2298,
-    "linkFrame": 2322,
-    "fadeStartFrame": 2592,
-    "fadeEndFrame": 2664,
-    "endFrame": 2694,
-    "method": "Four single-beat combat cuts; final live shot continues at half speed beneath a stationary wordmark, with a 0.6-second background dissolve and uninterrupted audio; delayed CTA and link, 1.2-second fade and 0.5-second black tail",
-    "sound": "Original rising industrial air, metal impact and factory room tail; licensed music downbeat resolves through a short echo tail"
+    "impactFrame": 2063,
+    "subtitleFrame": 2089,
+    "transitionStartFrame": 2063,
+    "transitionEndFrame": 2069,
+    "ctaFrame": 2125,
+    "linkFrame": 2131,
+    "fadeStartFrame": 2249,
+    "fadeEndFrame": 2321,
+    "endFrame": 2351,
+    "method": "Final gameplay follows the recorded closing phrase; RECOIL appears fully on its penultimate accent and FOUNDRY on its final accent, with a six-frame trace of the last shot; CTA during the natural ring-out, 1.2-second fade during the natural decay and half-second black tail",
+    "sound": "The original recording supplies the closing fill, both title accents and the natural ring-out. Combat effects ease back before the title; no added rise, title stinger or echo.",
+    "musicalAccents": [
+      {
+        "word": "RECOIL",
+        "frame": 2063,
+        "sourceSeconds": 258.85633333333334,
+        "errorMs": 3
+      },
+      {
+        "word": "FOUNDRY",
+        "frame": 2089,
+        "sourceSeconds": 259.29633333333334,
+        "errorMs": -3.67
+      }
+    ]
   },
   "music": {
     "title": "Resonance",
@@ -738,9 +721,22 @@
     "source": "https://www.scottbuckley.com.au/library/resonance/",
     "license": "CC BY 4.0",
     "sourceIn": 163.276,
-    "sourceOut": 195.276,
+    "sourceOut": 263.2,
+    "segments": [
+      {
+        "sourceIn": 163.276,
+        "sourceOut": 182.476,
+        "timelineStart": 6
+      },
+      {
+        "sourceIn": 249.676,
+        "sourceOut": 263.2,
+        "timelineStart": 25.2,
+        "overlapSeconds": 0.025
+      }
+    ],
     "timelineStart": 6,
-    "edit": "Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut; continuous title downbeat and final accent tapered with echo tail"
+    "edit": "Two phrase-aligned excerpts, 25ms crossfade, entry fade, EQ and brief ducking beneath effects; original final accents and natural ring-out retained"
   },
   "intro": {
     "seconds": 6,
@@ -1274,20 +1270,20 @@
       "seed": "ACTION-LOADER-20",
       "style": 0,
       "start": 688,
-      "length": 144,
+      "length": 145,
       "quality": {
-        "visibleFraction": 0.7430555555555556,
+        "visibleFraction": 0.7448275862068966,
         "blockedFireFrames": 0,
         "longestQuietFrames": 21,
         "longestStallFrames": 0,
-        "travel": 973,
+        "travel": 983,
         "span": 317,
         "damage": 116
       },
       "score": 6.62,
       "timelineStart": 25.2,
-      "seconds": 2.4,
-      "visibleSeconds": 2.4,
+      "seconds": 2.4166666666666665,
+      "visibleSeconds": 2.4166666666666665,
       "initialHealth": 82,
       "finalHealth": 64,
       "killsDuringClip": 0,
@@ -1309,20 +1305,14 @@
           "beat": 33
         },
         {
-          "output": 72,
+          "output": 73,
           "source": 80,
           "kind": "heavy",
           "beat": 34
         },
         {
-          "output": 105,
-          "source": 107,
-          "kind": "heavy",
-          "beat": 35
-        },
-        {
-          "output": 143,
-          "source": 143,
+          "output": 144,
+          "source": 144,
           "kind": "end"
         }
       ]
@@ -1345,20 +1335,20 @@
       "seed": "ACTION-STORM-11",
       "style": 1,
       "start": 456,
-      "length": 145,
+      "length": 144,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 1295,
+        "travel": 1287,
         "span": 1052,
         "damage": 424
       },
       "score": 17.702,
-      "timelineStart": 27.6,
-      "seconds": 2.4166666666666665,
-      "visibleSeconds": 2.4166666666666665,
+      "timelineStart": 27.616666666666667,
+      "seconds": 2.4,
+      "visibleSeconds": 2.4,
       "initialHealth": 100,
       "finalHealth": 66,
       "killsDuringClip": 1,
@@ -1374,26 +1364,26 @@
           "beat": 36
         },
         {
-          "output": 38,
+          "output": 37,
           "source": 39,
           "kind": "shell-shot",
           "beat": 37
         },
         {
-          "output": 74,
+          "output": 73,
           "source": 76,
           "kind": "explode",
           "beat": 38
         },
         {
-          "output": 110,
+          "output": 109,
           "source": 108,
           "kind": "shell-shot",
           "beat": 39
         },
         {
-          "output": 144,
-          "source": 144,
+          "output": 143,
+          "source": 143,
           "kind": "end"
         }
       ]
@@ -1405,25 +1395,25 @@
       "seed": "ACTION-SCATTER-1",
       "style": 1,
       "start": 396,
-      "length": 71,
+      "length": 72,
       "quality": {
-        "visibleFraction": 0.8169014084507042,
+        "visibleFraction": 0.8194444444444444,
         "blockedFireFrames": 0,
         "longestQuietFrames": 13,
         "longestStallFrames": 0,
-        "travel": 336,
-        "span": 305,
+        "travel": 343,
+        "span": 312,
         "damage": 116
       },
       "score": 9.884,
       "timelineStart": 30.016666666666666,
-      "seconds": 1.1833333333333333,
-      "visibleSeconds": 1.1833333333333333,
+      "seconds": 1.2,
+      "visibleSeconds": 1.2,
       "initialHealth": 84,
       "finalHealth": 84,
       "killsDuringClip": 1,
       "layout": "Stamping line",
-      "targetOnscreenFraction": 0.9154929577464789,
+      "targetOnscreenFraction": 0.9027777777777778,
       "fromBeat": 40,
       "toBeat": 42,
       "retiming": [
@@ -1440,8 +1430,8 @@
           "beat": 41
         },
         {
-          "output": 70,
-          "source": 70,
+          "output": 71,
+          "source": 71,
           "kind": "end"
         }
       ]
@@ -1462,86 +1452,38 @@
       ],
       "seed": "ACTION-PRISM-3",
       "style": 1,
-      "start": 518,
-      "length": 71,
+      "start": 495,
+      "length": 35,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 518,
-        "span": 207,
-        "damage": 121
+        "travel": 393,
+        "span": 289,
+        "damage": 93
       },
       "score": 13.957,
-      "timelineStart": 31.2,
-      "seconds": 1.1833333333333333,
-      "visibleSeconds": 1.1833333333333333,
+      "timelineStart": 31.216666666666665,
+      "seconds": 0.5833333333333334,
+      "visibleSeconds": 0.5833333333333334,
       "initialHealth": 64,
-      "finalHealth": 68,
-      "killsDuringClip": 2,
+      "finalHealth": 66,
+      "killsDuringClip": 1,
       "layout": "Spillway",
       "targetOnscreenFraction": 1,
       "fromBeat": 42,
-      "toBeat": 44,
+      "toBeat": 43,
       "retiming": [
         {
           "output": 0,
           "source": 0,
-          "kind": "kill",
+          "kind": "beam-hit",
           "beat": 42
         },
         {
-          "output": 38,
-          "source": 37,
-          "kind": "beam-start",
-          "beat": 43
-        },
-        {
-          "output": 70,
-          "source": 70,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "saw",
-      "stage": 6,
-      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
-      "seed": "ACTION-SAW-8",
-      "style": 0,
-      "start": 668,
-      "length": 75,
-      "quality": {
-        "visibleFraction": 1,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 0,
-        "longestStallFrames": 0,
-        "travel": 743,
-        "span": 421,
-        "damage": 147
-      },
-      "score": 14.282,
-      "timelineStart": 32.38333333333333,
-      "seconds": 1.25,
-      "visibleSeconds": 1.25,
-      "initialHealth": 27,
-      "finalHealth": 27,
-      "killsDuringClip": 0,
-      "layout": "Stamping line",
-      "targetOnscreenFraction": 0.9733333333333334,
-      "fromBeat": 44,
-      "toBeat": 46,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "shot",
-          "beat": 44
-        },
-        {
-          "output": 74,
-          "source": 74,
+          "output": 34,
+          "source": 34,
           "kind": "end"
         }
       ]
@@ -1554,95 +1496,79 @@
       "seed": "ACTION-TURF-16",
       "style": 0,
       "start": 205,
-      "length": 70,
-      "quality": {
-        "visibleFraction": 0.8714285714285714,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 9,
-        "longestStallFrames": 0,
-        "travel": 299,
-        "span": 241,
-        "damage": 135
-      },
-      "score": 17.51,
-      "timelineStart": 33.63333333333333,
-      "seconds": 1.1666666666666667,
-      "visibleSeconds": 1.1666666666666667,
-      "initialHealth": 84,
-      "finalHealth": 68,
-      "killsDuringClip": 3,
-      "layout": "Pillar hall",
-      "targetOnscreenFraction": 0.8857142857142857,
-      "fromBeat": 46,
-      "toBeat": 48,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "kill",
-          "beat": 46
-        },
-        {
-          "output": 36,
-          "source": 39,
-          "kind": "kill",
-          "beat": 47
-        },
-        {
-          "output": 69,
-          "source": 69,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "prism",
-      "stage": 10,
-      "mods": [
-        "cutting-torch",
-        "prism-array",
-        "thermal-runaway",
-        "scatter",
-        "pierce",
-        "airshot",
-        "light",
-        "leech",
-        "kick"
-      ],
-      "seed": "ACTION-PRISM-12",
-      "style": 0,
-      "start": 648,
       "length": 36,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
-        "longestStallFrames": 2,
-        "travel": 294,
-        "span": 159,
-        "damage": 147
+        "longestStallFrames": 0,
+        "travel": 157,
+        "span": 151,
+        "damage": 69
       },
-      "score": 11.953,
-      "timelineStart": 34.8,
+      "score": 17.51,
+      "timelineStart": 31.8,
       "seconds": 0.6,
       "visibleSeconds": 0.6,
-      "initialHealth": 68,
+      "initialHealth": 84,
       "finalHealth": 68,
-      "killsDuringClip": 0,
-      "layout": "Spillway",
+      "killsDuringClip": 2,
+      "layout": "Pillar hall",
       "targetOnscreenFraction": 1,
-      "fromBeat": 48,
-      "toBeat": 49,
+      "fromBeat": 43,
+      "toBeat": 44,
       "retiming": [
         {
           "output": 0,
           "source": 0,
-          "kind": "beam-start",
-          "beat": 48
+          "kind": "kill",
+          "beat": 43
         },
         {
           "output": 35,
           "source": 35,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "seed": "ACTION-SAW-8",
+      "style": 0,
+      "start": 668,
+      "length": 38,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 395,
+        "span": 368,
+        "damage": 94
+      },
+      "score": 14.282,
+      "timelineStart": 32.4,
+      "seconds": 0.6333333333333333,
+      "visibleSeconds": 0.6333333333333333,
+      "initialHealth": 27,
+      "finalHealth": 27,
+      "killsDuringClip": 0,
+      "layout": "Stamping line",
+      "targetOnscreenFraction": 1,
+      "fromBeat": 44,
+      "toBeat": 45,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "shot",
+          "beat": 44
+        },
+        {
+          "output": 37,
+          "source": 37,
           "kind": "end"
         }
       ]
@@ -1664,79 +1590,37 @@
       "seed": "ACTION-PINWHEEL-19",
       "style": 1,
       "start": 566,
-      "length": 36,
+      "length": 52,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 210,
-        "span": 194,
-        "damage": 119
+        "travel": 335,
+        "span": 290,
+        "damage": 313
       },
       "score": 17.302,
-      "timelineStart": 35.4,
-      "seconds": 0.6,
-      "visibleSeconds": 0.6,
+      "timelineStart": 33.03333333333333,
+      "seconds": 0.8666666666666667,
+      "visibleSeconds": 0.8666666666666667,
       "initialHealth": 82,
-      "finalHealth": 82,
-      "killsDuringClip": 0,
+      "finalHealth": 86,
+      "killsDuringClip": 2,
       "layout": "Spillway",
       "targetOnscreenFraction": 1,
-      "fromBeat": 49,
-      "toBeat": 50,
+      "fromBeat": 45,
+      "toBeat": 46,
       "retiming": [
         {
           "output": 0,
           "source": 0,
           "kind": "scatter",
-          "beat": 49
+          "beat": 45
         },
         {
-          "output": 35,
-          "source": 35,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "scatter",
-      "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
-      "seed": "ACTION-SCATTER-7",
-      "style": 1,
-      "start": 693,
-      "length": 33,
-      "quality": {
-        "visibleFraction": 0.696969696969697,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 10,
-        "longestStallFrames": 0,
-        "travel": 289,
-        "span": 205,
-        "damage": 91
-      },
-      "score": 9.633,
-      "timelineStart": 36,
-      "seconds": 0.55,
-      "visibleSeconds": 0.55,
-      "initialHealth": 68,
-      "finalHealth": 68,
-      "killsDuringClip": 0,
-      "layout": "Stamping line",
-      "targetOnscreenFraction": 1,
-      "fromBeat": 50,
-      "toBeat": 51,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "heavy",
-          "beat": 50
-        },
-        {
-          "output": 32,
-          "source": 32,
+          "output": 51,
+          "source": 51,
           "kind": "end"
         }
       ]
@@ -1759,37 +1643,43 @@
       "seed": "ACTION-CLUSTER-12",
       "style": 0,
       "start": 488,
-      "length": 39,
+      "length": 29,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 263,
-        "span": 175,
+        "travel": 172,
+        "span": 122,
         "damage": 52
       },
       "score": 16.623,
-      "timelineStart": 36.55,
-      "seconds": 0.65,
-      "visibleSeconds": 0.65,
+      "timelineStart": 33.9,
+      "seconds": 0.48333333333333334,
+      "visibleSeconds": 0.48333333333333334,
       "initialHealth": 49,
       "finalHealth": 53,
       "killsDuringClip": 2,
       "layout": "Spillway",
       "targetOnscreenFraction": 1,
-      "fromBeat": 51,
-      "toBeat": 52,
+      "fromBeat": 46,
+      "toBeat": 48,
       "retiming": [
         {
           "output": 0,
           "source": 0,
           "kind": "shell-shot",
-          "beat": 51
+          "beat": 46
         },
         {
-          "output": 38,
-          "source": 38,
+          "output": 20,
+          "source": 21,
+          "kind": "kill",
+          "beat": 47
+        },
+        {
+          "output": 28,
+          "source": 28,
           "kind": "end"
         }
       ]
@@ -1869,128 +1759,120 @@
       "file": "work-action/frame-1584.png"
     },
     {
-      "seconds": 28.8,
-      "file": "work-action/frame-1728.png"
+      "seconds": 28.816666666666666,
+      "file": "work-action/frame-1729.png"
     },
     {
-      "seconds": 30.6,
-      "file": "work-action/frame-1836.png"
+      "seconds": 30.616666666666667,
+      "file": "work-action/frame-1837.png"
     },
     {
-      "seconds": 31.783333333333335,
-      "file": "work-action/frame-1907.png"
+      "seconds": 31.5,
+      "file": "work-action/frame-1890.png"
     },
     {
-      "seconds": 33,
-      "file": "work-action/frame-1980.png"
+      "seconds": 32.1,
+      "file": "work-action/frame-1926.png"
     },
     {
-      "seconds": 34.21666666666667,
-      "file": "work-action/frame-2053.png"
+      "seconds": 32.71666666666667,
+      "file": "work-action/frame-1963.png"
     },
     {
-      "seconds": 35.1,
-      "file": "work-action/frame-2106.png"
+      "seconds": 33.46666666666667,
+      "file": "work-action/frame-2008.png"
     },
     {
-      "seconds": 35.7,
-      "file": "work-action/frame-2142.png"
+      "seconds": 34.083333333333336,
+      "file": "work-action/transition-2045.png"
     },
     {
-      "seconds": 36.266666666666666,
-      "file": "work-action/frame-2176.png"
+      "seconds": 34.13333333333333,
+      "file": "work-action/frame-2048.png"
     },
     {
-      "seconds": 36.86666666666667,
-      "file": "work-action/frame-2212.png"
+      "seconds": 34.18333333333333,
+      "file": "work-action/transition-2051.png"
     },
     {
-      "seconds": 36.9,
-      "file": "work-action/transition-2214.png"
+      "seconds": 34.28333333333333,
+      "file": "work-action/transition-2057.png"
     },
     {
-      "seconds": 37,
-      "file": "work-action/transition-2220.png"
+      "seconds": 34.36666666666667,
+      "file": "work-action/transition-2062.png"
     },
     {
-      "seconds": 37.1,
-      "file": "work-action/transition-2226.png"
+      "seconds": 34.38333333333333,
+      "file": "work-action/transition-2063.png"
     },
     {
-      "seconds": 37.18333333333333,
-      "file": "work-action/transition-2231.png"
+      "seconds": 34.38333333333333,
+      "file": "work-action/ending-2063.png"
     },
     {
-      "seconds": 37.2,
-      "file": "work-action/transition-2232.png"
+      "seconds": 34.416666666666664,
+      "file": "work-action/transition-2065.png"
     },
     {
-      "seconds": 37.2,
-      "file": "work-action/ending-2232.png"
+      "seconds": 34.45,
+      "file": "work-action/transition-2067.png"
     },
     {
-      "seconds": 37.233333333333334,
-      "file": "work-action/transition-2234.png"
+      "seconds": 34.516666666666666,
+      "file": "work-action/transition-2071.png"
     },
     {
-      "seconds": 37.266666666666666,
-      "file": "work-action/transition-2236.png"
+      "seconds": 34.583333333333336,
+      "file": "work-action/ending-2075.png"
     },
     {
-      "seconds": 37.333333333333336,
-      "file": "work-action/transition-2240.png"
+      "seconds": 34.8,
+      "file": "work-action/transition-2088.png"
     },
     {
-      "seconds": 37.35,
-      "file": "work-action/ending-2241.png"
+      "seconds": 34.81666666666667,
+      "file": "work-action/transition-2089.png"
     },
     {
-      "seconds": 37.45,
-      "file": "work-action/transition-2247.png"
+      "seconds": 34.81666666666667,
+      "file": "work-action/ending-2089.png"
     },
     {
-      "seconds": 37.6,
-      "file": "work-action/transition-2256.png"
+      "seconds": 34.85,
+      "file": "work-action/transition-2091.png"
     },
     {
-      "seconds": 37.78333333333333,
-      "file": "work-action/transition-2267.png"
+      "seconds": 34.916666666666664,
+      "file": "work-action/transition-2095.png"
     },
     {
-      "seconds": 37.9,
-      "file": "work-action/ending-2274.png"
+      "seconds": 34.96666666666667,
+      "file": "work-action/ending-2098.png"
     },
     {
-      "seconds": 38,
-      "file": "work-action/transition-2280.png"
+      "seconds": 35.516666666666666,
+      "file": "work-action/ending-2131.png"
     },
     {
-      "seconds": 38.5,
-      "file": "work-action/ending-2310.png"
+      "seconds": 35.81666666666667,
+      "file": "work-action/ending-2149.png"
     },
     {
-      "seconds": 39.1,
-      "file": "work-action/ending-2346.png"
+      "seconds": 37.38333333333333,
+      "file": "work-action/frame-2243.png"
     },
     {
-      "seconds": 40.2,
-      "file": "work-action/frame-2412.png"
+      "seconds": 37.983333333333334,
+      "file": "work-action/ending-2279.png"
     },
     {
-      "seconds": 41,
-      "file": "work-action/ending-2460.png"
+      "seconds": 38.18333333333333,
+      "file": "work-action/ending-2291.png"
     },
     {
-      "seconds": 43.1,
-      "file": "work-action/ending-2586.png"
-    },
-    {
-      "seconds": 43.8,
-      "file": "work-action/ending-2628.png"
-    },
-    {
-      "seconds": 44.6,
-      "file": "work-action/ending-2676.png"
+      "seconds": 38.983333333333334,
+      "file": "work-action/ending-2339.png"
     }
   ]
 }

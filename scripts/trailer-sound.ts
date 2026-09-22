@@ -1,7 +1,7 @@
 import { Sound } from '../src/audio.ts';
 import { seeded } from '../src/rules.ts';
 import { introAudio } from './trailer-intro.ts';
-import { endingAudio, type EndingTiming } from './trailer-ending.ts';
+import type { EndingTiming } from './trailer-ending.ts';
 
 export interface SoundCue {
   frame: number;
@@ -122,15 +122,15 @@ export function trailerSound(
     first = end;
   }
   Math.random = previousRandom;
-  // Let the final explosions resolve under the wordmark with the moving picture.
-  const fadeStart = ending.impactFrame / 60;
-  const fadeEnd = ending.transitionEndFrame / 60;
+  // Give the recorded closing fill room, then clear the effects for its two title hits.
+  const impact = ending.impactFrame / 60;
+  const fadeStart = impact - 2.4;
   for (const channel of channels)
     for (let i = Math.round(fadeStart * rate); i < channel.length; i++) {
-      const x = Math.max(0, Math.min(1, (i / rate - fadeStart) / (fadeEnd - fadeStart)));
-      channel[i] *= 1 - x * x * (3 - 2 * x);
+      const x = Math.max(0, Math.min(1, (i / rate - fadeStart) / 2.4));
+      const release = Math.max(0, Math.min(1, (impact + 0.04 - i / rate) / 0.04));
+      channel[i] *= (1 - 0.55 * x * x * (3 - 2 * x)) * release;
     }
-  mix(endingAudio(ending, duration, rate), 0);
   // Gentle bus saturation controls overlapping blast peaks before the final mix.
   for (const channel of channels)
     for (let i = 0; i < channel.length; i++) channel[i] = Math.tanh(channel[i] * 1.15) * 0.8;

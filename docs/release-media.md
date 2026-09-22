@@ -1,6 +1,6 @@
 # Release media
 
-The stable release also has a [45-second trailer with a mysterious factory opening, beat-synced gameplay, audible combat effects, a musical title reveal, licensed music, a thumbnail, and upload copy](trailer/README.md).
+The stable release also has a [39-second trailer with a mysterious factory opening, beat-synced gameplay, audible combat effects, a title reveal on the song's closing accents, licensed music, a thumbnail, and upload copy](trailer/README.md).
 
 Prepared for 2.98.0-rc.1. These images and the silent clip show normal enemies and the first three areas; final encounters, secrets and endings are excluded.
 

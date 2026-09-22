@@ -6,7 +6,13 @@ import { once } from 'node:events';
 import { Renderer } from '../src/render.ts';
 import { GAME_VERSION } from '../src/version.ts';
 import { TrailerIntro, introAudio, INTRO_SECONDS, FOOTSTEPS } from './trailer-intro.ts';
-import { planEdit, sourceFrame, type Beat, type EditShot } from './trailer-edit.ts';
+import {
+  planEdit,
+  sourceFrame,
+  type Beat,
+  type EditShot,
+  type ClosingMusic,
+} from './trailer-edit.ts';
 import { trailerSound, INTRO_FOLEY_GAIN, type SoundCue, type BeamFrame } from './trailer-sound.ts';
 import { mixTrailer } from './trailer-mix.ts';
 import { endingTiming, drawEnding } from './trailer-ending.ts';
@@ -47,7 +53,7 @@ if (process.argv.includes('--survey')) {
   process.exit(0);
 }
 const takes: Record<string, Take[]> = JSON.parse(readFileSync(takesPath, 'utf8'));
-const beatMap: { sourceIn: number; bpm: number; beats: Beat[] } = JSON.parse(
+const beatMap: { sourceIn: number; bpm: number; beats: Beat[]; closing: ClosingMusic } = JSON.parse(
   readFileSync('docs/trailer/music-beats.json', 'utf8'),
 );
 if (process.argv.includes('--edit-survey')) {
@@ -62,7 +68,6 @@ const W = 1920,
   FPS = 60,
   BPM = beatMap.bpm,
   MUSIC_START = beatMap.sourceIn;
-const frameAtBeat = (b: number) => beatMap.beats[b].frame;
 const introFrames = Math.round(INTRO_SECONDS * FPS);
 const edit: EditShot[] = JSON.parse(readFileSync('docs/trailer/edit-plan.json', 'utf8'));
 const scenes = edit.map((shot) => ({
@@ -70,13 +75,23 @@ const scenes = edit.map((shot) => ({
   start: introFrames + shot.start,
   end: introFrames + shot.end,
 }));
-const endStart = introFrames + frameAtBeat(52),
-  ending = endingTiming(endStart),
+const endStart = introFrames + beatMap.closing.titleFrame,
+  ending = endingTiming(endStart, introFrames + beatMap.closing.subtitleFrame),
   total = ending.endFrame,
   duration = total / FPS;
 const final = resolve(out, 'Recoil-Foundry-Launch-Trailer.mp4');
 if (process.argv.includes('--mix-only')) {
-  const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS, ending);
+  const mix = mixTrailer(
+    ffmpeg,
+    work,
+    music,
+    final,
+    duration,
+    MUSIC_START,
+    INTRO_SECONDS,
+    ending,
+    beatMap.closing,
+  );
   const capture = JSON.parse(readFileSync(resolve(out, 'capture.json'), 'utf8'));
   capture.audioMix = mix;
   capture.intro.gainBeforeMix = INTRO_FOLEY_GAIN;
@@ -102,10 +117,10 @@ const transitionSamples = [
   2 / 60,
   4 / 60,
   8 / 60,
-  0.25,
-  0.4,
-  0.58,
-  0.8,
+  (ending.subtitleFrame - endStart - 1) / FPS,
+  (ending.subtitleFrame - endStart) / FPS,
+  (ending.subtitleFrame - endStart + 2) / FPS,
+  (ending.subtitleFrame - endStart + 6) / FPS,
 ].map((s) => endStart + Math.round(s * FPS));
 const transitionSheet = createCanvas(1600, 750),
   tc = transitionSheet.getContext('2d');
@@ -409,10 +424,6 @@ for (const [index, scene] of scenes.entries()) {
         caption('100 WAYS TO BUILD IT.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
       if (index === 6)
         caption('MAKE SOME ROOM.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
-      if (frame >= ending.transitionStartFrame) {
-        c.fillStyle = `rgba(8,14,17,${0.45 * ease((frame - ending.transitionStartFrame) / 12)})`;
-        c.fillRect(0, 0, W, H);
-      }
       await reviewTransition(frame);
       if (sample) await review(frame, take.name, index);
       if (sequenceAt.includes(local))
@@ -449,9 +460,17 @@ for (const [index, scene] of scenes.entries()) {
     retiming: scene.points,
   });
 }
-const endingSamples = [0, 0.15, 0.7, 1.3, 1.9, 3.8, 5.9, 6.6, 7.4].map(
-  (s) => endStart + Math.round(s * FPS),
-);
+const endingSamples = [
+  endStart,
+  endStart + 12,
+  ending.subtitleFrame,
+  ending.subtitleFrame + 9,
+  ending.ctaFrame + 6,
+  ending.linkFrame + 18,
+  endStart + 228,
+  ending.fadeStartFrame + 30,
+  ending.endFrame - 12,
+];
 const endingSheet = createCanvas(1440, 900),
   ec = endingSheet.getContext('2d');
 for (let frame = endStart; frame < total; frame++) {
@@ -567,13 +586,23 @@ writeFileSync(
   Buffer.from(await context.encodeAudioData(data, { bitDepth: 24 })),
 );
 writeFileSync(resolve(work, 'effects-audit.json'), JSON.stringify(data.audit, null, 2) + '\n');
-const mix = mixTrailer(ffmpeg, work, music, final, duration, MUSIC_START, INTRO_SECONDS, ending);
+const mix = mixTrailer(
+  ffmpeg,
+  work,
+  music,
+  final,
+  duration,
+  MUSIC_START,
+  INTRO_SECONDS,
+  ending,
+  beatMap.closing,
+);
 writeFileSync(
   resolve(out, 'capture.json'),
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 7,
+      revision: 8,
       width: W,
       height: H,
       fps: FPS,
@@ -590,9 +619,23 @@ writeFileSync(
       ending: {
         ...ending,
         method:
-          'Four single-beat combat cuts; final live shot continues at half speed beneath a stationary wordmark, with a 0.6-second background dissolve and uninterrupted audio; delayed CTA and link, 1.2-second fade and 0.5-second black tail',
+          'Final gameplay follows the recorded closing phrase; RECOIL appears fully on its penultimate accent and FOUNDRY on its final accent, with a six-frame trace of the last shot; CTA during the natural ring-out, 1.2-second fade during the natural decay and half-second black tail',
         sound:
-          'Original rising industrial air, metal impact and factory room tail; licensed music downbeat resolves through a short echo tail',
+          'The original recording supplies the closing fill, both title accents and the natural ring-out. Combat effects ease back before the title; no added rise, title stinger or echo.',
+        musicalAccents: [
+          {
+            word: 'RECOIL',
+            frame: endStart,
+            sourceSeconds: beatMap.closing.titleSourceSeconds,
+            errorMs: beatMap.closing.titleFrameErrorMs,
+          },
+          {
+            word: 'FOUNDRY',
+            frame: ending.subtitleFrame,
+            sourceSeconds: beatMap.closing.subtitleSourceSeconds,
+            errorMs: beatMap.closing.subtitleFrameErrorMs,
+          },
+        ],
       },
       music: {
         title: 'Resonance',
@@ -600,9 +643,22 @@ writeFileSync(
         source: 'https://www.scottbuckley.com.au/library/resonance/',
         license: 'CC BY 4.0',
         sourceIn: MUSIC_START,
-        sourceOut: MUSIC_START + endStart / FPS - INTRO_SECONDS + 0.8,
+        sourceOut: beatMap.closing.sourceOut,
+        segments: [
+          {
+            sourceIn: MUSIC_START,
+            sourceOut: MUSIC_START + beatMap.closing.spliceFrame / FPS,
+            timelineStart: INTRO_SECONDS,
+          },
+          {
+            sourceIn: beatMap.closing.sourceIn,
+            sourceOut: beatMap.closing.sourceOut,
+            timelineStart: INTRO_SECONDS + beatMap.closing.spliceFrame / FPS,
+            overlapSeconds: beatMap.closing.crossfadeSeconds,
+          },
+        ],
         timelineStart: INTRO_SECONDS,
-        edit: 'Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut; continuous title downbeat and final accent tapered with echo tail',
+        edit: 'Two phrase-aligned excerpts, 25ms crossfade, entry fade, EQ and brief ducking beneath effects; original final accents and natural ring-out retained',
       },
       intro: {
         seconds: INTRO_SECONDS,

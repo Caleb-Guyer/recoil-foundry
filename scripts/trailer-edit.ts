@@ -15,6 +15,19 @@ export interface Beat {
   strength: number;
   frameErrorMs: number;
 }
+export interface ClosingMusic {
+  spliceFrame: number;
+  sourceIn: number;
+  sourceOut: number;
+  crossfadeSeconds: number;
+  titleFrame: number;
+  subtitleFrame: number;
+  titleSourceSeconds: number;
+  subtitleSourceSeconds: number;
+  titleFrameErrorMs: number;
+  subtitleFrameErrorMs: number;
+  method: string;
+}
 export const MONTAGE = [
   ['cluster', 0, 0, 4],
   ['pinwheel', 0, 4, 8],
@@ -27,13 +40,11 @@ export const MONTAGE = [
   ['loader', 0, 32, 36],
   ['storm', 0, 36, 40],
   ['scatter', 2, 40, 42],
-  ['prism', 1, 42, 44],
-  ['saw', 1, 44, 46],
-  ['turf', 1, 46, 48],
-  ['prism', 2, 48, 49],
-  ['pinwheel', 2, 49, 50],
-  ['scatter', 1, 50, 51],
-  ['cluster', 2, 51, 52],
+  ['prism', 1, 42, 43],
+  ['turf', 1, 43, 44],
+  ['saw', 1, 44, 45],
+  ['pinwheel', 2, 45, 46],
+  ['cluster', 2, 46, 48],
 ] as const;
 export interface SyncPoint {
   output: number;

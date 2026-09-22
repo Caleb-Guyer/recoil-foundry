@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { EndingTiming } from './trailer-ending.ts';
+import type { ClosingMusic } from './trailer-edit.ts';
 
 export function mixTrailer(
   ffmpeg: string,
@@ -12,17 +13,17 @@ export function mixTrailer(
   sourceIn: number,
   intro: number,
   ending: EndingTiming,
+  closing: ClosingMusic,
 ) {
-  const impact = ending.impactFrame / 60,
-    musicHit = impact - intro;
-  // One continuous excerpt crosses the title downbeat, then resolves into a soft tail.
-  // Delayed echoes begin after the hit; there is no gap or overlapping dry downbeat.
+  const splice = closing.spliceFrame / 60;
+  // Skip seven complete musical phrases into the recording's actual closing passage.
+  // The short overlap precedes the aligned barline, preserving the final accents' timing.
   const stems = [
     '[1:a]highpass=f=55,asplit=2[fx][side]',
-    '[2:a]volume=0.60,equalizer=f=1900:t=q:w=0.8:g=-2,asplit=2[main][hit]',
-    `[main]atrim=duration=${musicHit + 0.8},asetpts=PTS-STARTPTS,afade=t=in:d=0.015,afade=t=out:st=${musicHit + 0.12}:d=0.68,adelay=${intro * 1000}:all=1[body]`,
-    `[hit]atrim=start=${musicHit}:end=${musicHit + 0.8},asetpts=PTS-STARTPTS,afade=t=in:d=0.003,afade=t=out:st=0.12:d=0.68,aecho=1:0.22:170|330|590|970:0.32|0.22|0.13|0.07,afade=t=out:st=1.1:d=0.67,adelay=${impact * 1000 + 170}:all=1[resolve]`,
-    '[body][resolve]amix=inputs=2:duration=longest:normalize=0,apad[song]',
+    '[2:a]volume=0.60,equalizer=f=1900:t=q:w=0.8:g=-2,asplit=2[main][closing]',
+    `[main]atrim=duration=${splice},asetpts=PTS-STARTPTS,afade=t=in:d=0.015[body]`,
+    `[closing]atrim=start=${closing.sourceIn - sourceIn - closing.crossfadeSeconds}:end=${closing.sourceOut - sourceIn},asetpts=PTS-STARTPTS[resolve]`,
+    `[body][resolve]acrossfade=d=${closing.crossfadeSeconds}:c1=tri:c2=tri,adelay=${intro * 1000}:all=1,apad[song]`,
     '[song][side]sidechaincompress=threshold=0.10:ratio=3:attack=3:release=110:makeup=1[ducked]',
     '[fx][ducked]amix=inputs=2:duration=first:normalize=0',
   ].join(';');
@@ -95,12 +96,17 @@ export function mixTrailer(
   if (mux.status !== 0) throw new Error(mux.stderr);
   const audit = {
     method:
-      'Isolated original game cues, industrial build and softer title hit, music EQ and brief sidechain ducking, continuous downbeat transition with echo resolution, measured constant gain, peak limiter',
+      'Original game cues with space for the closing fill; phrase-aligned edit into the original recorded ending, two title accents and natural ring-out; music EQ, brief ducking, measured constant gain and peak limiter',
     musicResolution: {
-      impact,
+      impact: ending.impactFrame / 60,
+      subtitle: ending.subtitleFrame / 60,
+      splice: intro + splice,
       pauseSeconds: 0,
-      sourceEnd: sourceIn + musicHit + 0.8,
-      echoTailSeconds: 1.14,
+      sourceEnd: closing.sourceOut,
+      addedEcho: false,
+      naturalEnding: true,
+      titleFrameErrorMs: closing.titleFrameErrorMs,
+      subtitleFrameErrorMs: closing.subtitleFrameErrorMs,
     },
     musicGain: 0.6,
     masterGainDb: gainDb,

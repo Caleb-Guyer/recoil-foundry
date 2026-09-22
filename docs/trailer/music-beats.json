@@ -4,7 +4,7 @@
   "sourceIn": 163.276,
   "bpm": 100,
   "sampleRate": 24000,
-  "analysis": "Positive spectral flux in 35-190, 190-1800 and 1800-8500 Hz bands; 2048-sample Hann windows, 120-sample hops; transient maxima within 65 ms of the measured 100 BPM grid, quantized to 60 fps.",
+  "analysis": "Original action accents retained through marker 31. Closing passage measured from the actual ending: positive spectral flux, 2048-sample Hann windows and 5ms hops; final two accents refined with 1024-sample windows and 1ms hops. Marker 46 follows the final pickup; marker 48 is the first title accent, not a nominal quarter note.",
   "beats": [
     {
       "beat": 0,
@@ -232,220 +232,138 @@
     },
     {
       "beat": 32,
-      "sourceSeconds": 182.482667,
       "frame": 1152,
-      "strength": 6.622,
+      "sourceSeconds": 249.682667,
+      "strength": 390.524,
       "frameErrorMs": -6.67
     },
     {
       "beat": 33,
-      "sourceSeconds": 183.102667,
       "frame": 1190,
-      "strength": 1.918,
-      "frameErrorMs": 6.67
+      "sourceSeconds": 250.312667,
+      "strength": 90.75,
+      "frameErrorMs": -3.33
     },
     {
       "beat": 34,
-      "sourceSeconds": 183.677667,
-      "frame": 1224,
-      "strength": 3.635,
-      "frameErrorMs": -1.67
+      "frame": 1225,
+      "sourceSeconds": 250.887667,
+      "strength": 370.499,
+      "frameErrorMs": 5.0
     },
     {
       "beat": 35,
-      "sourceSeconds": 184.232667,
-      "frame": 1257,
-      "strength": 1.87,
-      "frameErrorMs": -6.67
+      "frame": 1262,
+      "sourceSeconds": 251.512667,
+      "strength": 69.302,
+      "frameErrorMs": -3.33
     },
     {
       "beat": 36,
-      "sourceSeconds": 184.882667,
-      "frame": 1296,
-      "strength": 6.548,
-      "frameErrorMs": -6.67
+      "frame": 1297,
+      "sourceSeconds": 252.092667,
+      "strength": 372.435,
+      "frameErrorMs": -0.0
     },
     {
       "beat": 37,
-      "sourceSeconds": 185.512667,
       "frame": 1334,
-      "strength": 1.707,
+      "sourceSeconds": 252.712667,
+      "strength": 46.13,
       "frameErrorMs": -3.33
     },
     {
       "beat": 38,
-      "sourceSeconds": 186.112667,
       "frame": 1370,
-      "strength": 1.59,
+      "sourceSeconds": 253.312667,
+      "strength": 73.752,
       "frameErrorMs": -3.33
     },
     {
       "beat": 39,
-      "sourceSeconds": 186.702667,
       "frame": 1406,
-      "strength": 1.021,
-      "frameErrorMs": 6.67
+      "sourceSeconds": 253.917667,
+      "strength": 36.28,
+      "frameErrorMs": -8.33
     },
     {
       "beat": 40,
-      "sourceSeconds": 187.287667,
       "frame": 1441,
-      "strength": 6.63,
-      "frameErrorMs": 5.0
+      "sourceSeconds": 254.497667,
+      "strength": 367.391,
+      "frameErrorMs": -5.0
     },
     {
       "beat": 41,
-      "sourceSeconds": 187.912667,
       "frame": 1478,
-      "strength": 1.156,
+      "sourceSeconds": 255.112667,
+      "strength": 42.004,
       "frameErrorMs": -3.33
     },
     {
       "beat": 42,
-      "sourceSeconds": 188.482667,
-      "frame": 1512,
-      "strength": 3.305,
-      "frameErrorMs": -6.67
+      "frame": 1513,
+      "sourceSeconds": 255.687667,
+      "strength": 280.68,
+      "frameErrorMs": 5.0
     },
     {
       "beat": 43,
-      "sourceSeconds": 189.112667,
-      "frame": 1550,
-      "strength": 1.239,
-      "frameErrorMs": -3.33
+      "frame": 1548,
+      "sourceSeconds": 256.272667,
+      "strength": 51.802,
+      "frameErrorMs": 3.33
     },
     {
       "beat": 44,
-      "sourceSeconds": 189.662667,
-      "frame": 1583,
-      "strength": 5.964,
-      "frameErrorMs": -3.33
+      "frame": 1584,
+      "sourceSeconds": 256.882667,
+      "strength": 395.534,
+      "frameErrorMs": -6.67
     },
     {
       "beat": 45,
-      "sourceSeconds": 190.277667,
-      "frame": 1620,
-      "strength": 1.411,
-      "frameErrorMs": -1.67
-    },
-    {
-      "beat": 46,
-      "sourceSeconds": 190.912667,
-      "frame": 1658,
-      "strength": 1.965,
+      "frame": 1622,
+      "sourceSeconds": 257.512667,
+      "strength": 17.996,
       "frameErrorMs": -3.33
     },
     {
+      "beat": 46,
+      "frame": 1674,
+      "sourceSeconds": 258.377333,
+      "strength": 20.15,
+      "frameErrorMs": -1.33
+    },
+    {
       "beat": 47,
-      "sourceSeconds": 191.512667,
       "frame": 1694,
-      "strength": 2.506,
+      "sourceSeconds": 258.712667,
+      "strength": 32.161,
       "frameErrorMs": -3.33
     },
     {
       "beat": 48,
-      "sourceSeconds": 192.082667,
-      "frame": 1728,
-      "strength": 6.362,
-      "frameErrorMs": -6.67
-    },
-    {
-      "beat": 49,
-      "sourceSeconds": 192.677667,
-      "frame": 1764,
-      "strength": 1.768,
-      "frameErrorMs": -1.67
-    },
-    {
-      "beat": 50,
-      "sourceSeconds": 193.282667,
-      "frame": 1800,
-      "strength": 5.474,
-      "frameErrorMs": -6.67
-    },
-    {
-      "beat": 51,
-      "sourceSeconds": 193.832667,
-      "frame": 1833,
-      "strength": 0.927,
-      "frameErrorMs": -6.67
-    },
-    {
-      "beat": 52,
-      "sourceSeconds": 194.482667,
-      "frame": 1872,
-      "strength": 6.11,
-      "frameErrorMs": -6.67
-    },
-    {
-      "beat": 53,
-      "sourceSeconds": 195.117667,
-      "frame": 1910,
-      "strength": 1.506,
-      "frameErrorMs": -8.33
-    },
-    {
-      "beat": 54,
-      "sourceSeconds": 195.707667,
-      "frame": 1946,
-      "strength": 0.951,
-      "frameErrorMs": 1.67
-    },
-    {
-      "beat": 55,
-      "sourceSeconds": 196.312667,
-      "frame": 1982,
-      "strength": 1.421,
-      "frameErrorMs": -3.33
-    },
-    {
-      "beat": 56,
-      "sourceSeconds": 196.887667,
-      "frame": 2017,
-      "strength": 6.127,
-      "frameErrorMs": 5.0
-    },
-    {
-      "beat": 57,
-      "sourceSeconds": 197.512667,
-      "frame": 2054,
-      "strength": 1.571,
-      "frameErrorMs": -3.33
-    },
-    {
-      "beat": 58,
-      "sourceSeconds": 198.087667,
-      "frame": 2089,
-      "strength": 4.264,
-      "frameErrorMs": 5.0
-    },
-    {
-      "beat": 59,
-      "sourceSeconds": 198.667667,
-      "frame": 2123,
-      "strength": 1.351,
-      "frameErrorMs": -8.33
-    },
-    {
-      "beat": 60,
-      "sourceSeconds": 199.262667,
-      "frame": 2159,
-      "strength": 6.414,
-      "frameErrorMs": -3.33
-    },
-    {
-      "beat": 61,
-      "sourceSeconds": 199.907667,
-      "frame": 2198,
-      "strength": 1.491,
-      "frameErrorMs": 1.67
-    },
-    {
-      "beat": 62,
-      "sourceSeconds": 200.512667,
-      "frame": 2234,
-      "strength": 1.287,
-      "frameErrorMs": -3.33
+      "frame": 1703,
+      "sourceSeconds": 258.856333,
+      "strength": 36.177,
+      "frameErrorMs": 3.0,
+      "role": "Final accent: RECOIL title reveal"
     }
-  ]
+  ],
+  "closing": {
+    "spliceFrame": 1152,
+    "spliceAtBeat": 32,
+    "sourceIn": 249.676,
+    "sourceOut": 263.2,
+    "crossfadeSeconds": 0.025,
+    "phraseSkipBeats": 112,
+    "titleFrame": 1703,
+    "subtitleFrame": 1729,
+    "titleSourceSeconds": 258.85633333333334,
+    "subtitleSourceSeconds": 259.29633333333334,
+    "titleFrameErrorMs": 3.0,
+    "subtitleFrameErrorMs": -3.67,
+    "method": "A seven-phrase jump (112 beats / 67.2 seconds) into the original closing passage. The actual last two accents reveal the two title lines; the recording rings out naturally, without an added stinger or echo."
+  }
 }

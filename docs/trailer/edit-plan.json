@@ -498,13 +498,13 @@
       "seed": "ACTION-LOADER-20",
       "style": 0,
       "start": 688,
-      "length": 144,
+      "length": 145,
       "quality": {
-        "visibleFraction": 0.7430555555555556,
+        "visibleFraction": 0.7448275862068966,
         "blockedFireFrames": 0,
         "longestQuietFrames": 21,
         "longestStallFrames": 0,
-        "travel": 973,
+        "travel": 983,
         "span": 317,
         "damage": 116
       },
@@ -513,7 +513,7 @@
     "fromBeat": 32,
     "toBeat": 36,
     "start": 1152,
-    "end": 1296,
+    "end": 1297,
     "points": [
       {
         "output": 0,
@@ -528,24 +528,18 @@
         "beat": 33
       },
       {
-        "output": 72,
+        "output": 73,
         "source": 80,
         "kind": "heavy",
         "beat": 34
       },
       {
-        "output": 105,
-        "source": 107,
-        "kind": "heavy",
-        "beat": 35
-      },
-      {
-        "output": 143,
-        "source": 143,
+        "output": 144,
+        "source": 144,
         "kind": "end"
       }
     ],
-    "score": 25.583688892909247
+    "score": 21.100870348820216
   },
   {
     "take": {
@@ -566,13 +560,13 @@
       "seed": "ACTION-STORM-11",
       "style": 1,
       "start": 456,
-      "length": 145,
+      "length": 144,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 1295,
+        "travel": 1287,
         "span": 1052,
         "damage": 424
       },
@@ -580,7 +574,7 @@
     },
     "fromBeat": 36,
     "toBeat": 40,
-    "start": 1296,
+    "start": 1297,
     "end": 1441,
     "points": [
       {
@@ -590,30 +584,30 @@
         "beat": 36
       },
       {
-        "output": 38,
+        "output": 37,
         "source": 39,
         "kind": "shell-shot",
         "beat": 37
       },
       {
-        "output": 74,
+        "output": 73,
         "source": 76,
         "kind": "explode",
         "beat": 38
       },
       {
-        "output": 110,
+        "output": 109,
         "source": 108,
         "kind": "shell-shot",
         "beat": 39
       },
       {
-        "output": 144,
-        "source": 144,
+        "output": 143,
+        "source": 143,
         "kind": "end"
       }
     ],
-    "score": 39.11521817083154
+    "score": 39.1609723511641
   },
   {
     "take": {
@@ -623,14 +617,14 @@
       "seed": "ACTION-SCATTER-1",
       "style": 1,
       "start": 396,
-      "length": 71,
+      "length": 72,
       "quality": {
-        "visibleFraction": 0.8169014084507042,
+        "visibleFraction": 0.8194444444444444,
         "blockedFireFrames": 0,
         "longestQuietFrames": 13,
         "longestStallFrames": 0,
-        "travel": 336,
-        "span": 305,
+        "travel": 343,
+        "span": 312,
         "damage": 116
       },
       "score": 9.884
@@ -638,7 +632,7 @@
     "fromBeat": 40,
     "toBeat": 42,
     "start": 1441,
-    "end": 1512,
+    "end": 1513,
     "points": [
       {
         "output": 0,
@@ -653,12 +647,12 @@
         "beat": 41
       },
       {
-        "output": 70,
-        "source": 70,
+        "output": 71,
+        "source": 71,
         "kind": "end"
       }
     ],
-    "score": 18.825028414249832
+    "score": 18.831370234773072
   },
   {
     "take": {
@@ -677,82 +671,37 @@
       ],
       "seed": "ACTION-PRISM-3",
       "style": 1,
-      "start": 518,
-      "length": 71,
+      "start": 495,
+      "length": 35,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 518,
-        "span": 207,
-        "damage": 121
+        "travel": 393,
+        "span": 289,
+        "damage": 93
       },
       "score": 13.957
     },
     "fromBeat": 42,
-    "toBeat": 44,
-    "start": 1512,
-    "end": 1583,
+    "toBeat": 43,
+    "start": 1513,
+    "end": 1548,
     "points": [
       {
         "output": 0,
         "source": 0,
-        "kind": "kill",
+        "kind": "beam-hit",
         "beat": 42
       },
       {
-        "output": 38,
-        "source": 37,
-        "kind": "beam-start",
-        "beat": 43
-      },
-      {
-        "output": 70,
-        "source": 70,
+        "output": 34,
+        "source": 34,
         "kind": "end"
       }
     ],
-    "score": 23.766388028419758
-  },
-  {
-    "take": {
-      "name": "saw",
-      "stage": 6,
-      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
-      "seed": "ACTION-SAW-8",
-      "style": 0,
-      "start": 668,
-      "length": 75,
-      "quality": {
-        "visibleFraction": 1,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 0,
-        "longestStallFrames": 0,
-        "travel": 743,
-        "span": 421,
-        "damage": 147
-      },
-      "score": 14.282
-    },
-    "fromBeat": 44,
-    "toBeat": 46,
-    "start": 1583,
-    "end": 1658,
-    "points": [
-      {
-        "output": 0,
-        "source": 0,
-        "kind": "shot",
-        "beat": 44
-      },
-      {
-        "output": 74,
-        "source": 74,
-        "kind": "end"
-      }
-    ],
-    "score": 19.66718054243456
+    "score": 21.474477744134646
   },
   {
     "take": {
@@ -763,83 +712,28 @@
       "seed": "ACTION-TURF-16",
       "style": 0,
       "start": 205,
-      "length": 70,
-      "quality": {
-        "visibleFraction": 0.8714285714285714,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 9,
-        "longestStallFrames": 0,
-        "travel": 299,
-        "span": 241,
-        "damage": 135
-      },
-      "score": 17.51
-    },
-    "fromBeat": 46,
-    "toBeat": 48,
-    "start": 1658,
-    "end": 1728,
-    "points": [
-      {
-        "output": 0,
-        "source": 0,
-        "kind": "kill",
-        "beat": 46
-      },
-      {
-        "output": 36,
-        "source": 39,
-        "kind": "kill",
-        "beat": 47
-      },
-      {
-        "output": 69,
-        "source": 69,
-        "kind": "end"
-      }
-    ],
-    "score": 29.302502005509474
-  },
-  {
-    "take": {
-      "name": "prism",
-      "stage": 10,
-      "mods": [
-        "cutting-torch",
-        "prism-array",
-        "thermal-runaway",
-        "scatter",
-        "pierce",
-        "airshot",
-        "light",
-        "leech",
-        "kick"
-      ],
-      "seed": "ACTION-PRISM-12",
-      "style": 0,
-      "start": 648,
       "length": 36,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
-        "longestStallFrames": 2,
-        "travel": 294,
-        "span": 159,
-        "damage": 147
+        "longestStallFrames": 0,
+        "travel": 157,
+        "span": 151,
+        "damage": 69
       },
-      "score": 11.953
+      "score": 17.51
     },
-    "fromBeat": 48,
-    "toBeat": 49,
-    "start": 1728,
-    "end": 1764,
+    "fromBeat": 43,
+    "toBeat": 44,
+    "start": 1548,
+    "end": 1584,
     "points": [
       {
         "output": 0,
         "source": 0,
-        "kind": "beam-start",
-        "beat": 48
+        "kind": "kill",
+        "beat": 43
       },
       {
         "output": 35,
@@ -847,7 +741,46 @@
         "kind": "end"
       }
     ],
-    "score": 18.897779066919764
+    "score": 26.044401230635295
+  },
+  {
+    "take": {
+      "name": "saw",
+      "stage": 6,
+      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "seed": "ACTION-SAW-8",
+      "style": 0,
+      "start": 668,
+      "length": 38,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 395,
+        "span": 368,
+        "damage": 94
+      },
+      "score": 14.282
+    },
+    "fromBeat": 44,
+    "toBeat": 45,
+    "start": 1584,
+    "end": 1622,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shot",
+        "beat": 44
+      },
+      {
+        "output": 37,
+        "source": 37,
+        "kind": "end"
+      }
+    ],
+    "score": 20.125764829148416
   },
   {
     "take": {
@@ -867,75 +800,36 @@
       "seed": "ACTION-PINWHEEL-19",
       "style": 1,
       "start": 566,
-      "length": 36,
+      "length": 52,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 210,
-        "span": 194,
-        "damage": 119
+        "travel": 335,
+        "span": 290,
+        "damage": 313
       },
       "score": 17.302
     },
-    "fromBeat": 49,
-    "toBeat": 50,
-    "start": 1764,
-    "end": 1800,
+    "fromBeat": 45,
+    "toBeat": 46,
+    "start": 1622,
+    "end": 1674,
     "points": [
       {
         "output": 0,
         "source": 0,
         "kind": "scatter",
-        "beat": 49
+        "beat": 45
       },
       {
-        "output": 35,
-        "source": 35,
+        "output": 51,
+        "source": 51,
         "kind": "end"
       }
     ],
-    "score": 20.842062319078615
-  },
-  {
-    "take": {
-      "name": "scatter",
-      "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
-      "seed": "ACTION-SCATTER-7",
-      "style": 1,
-      "start": 693,
-      "length": 33,
-      "quality": {
-        "visibleFraction": 0.696969696969697,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 10,
-        "longestStallFrames": 0,
-        "travel": 289,
-        "span": 205,
-        "damage": 91
-      },
-      "score": 9.633
-    },
-    "fromBeat": 50,
-    "toBeat": 51,
-    "start": 1800,
-    "end": 1833,
-    "points": [
-      {
-        "output": 0,
-        "source": 0,
-        "kind": "heavy",
-        "beat": 50
-      },
-      {
-        "output": 32,
-        "source": 32,
-        "kind": "end"
-      }
-    ],
-    "score": 14.33011911306117
+    "score": 25.15435776947235
   },
   {
     "take": {
@@ -956,35 +850,41 @@
       "seed": "ACTION-CLUSTER-12",
       "style": 0,
       "start": 488,
-      "length": 39,
+      "length": 29,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 263,
-        "span": 175,
+        "travel": 172,
+        "span": 122,
         "damage": 52
       },
       "score": 16.623
     },
-    "fromBeat": 51,
-    "toBeat": 52,
-    "start": 1833,
-    "end": 1872,
+    "fromBeat": 46,
+    "toBeat": 48,
+    "start": 1674,
+    "end": 1703,
     "points": [
       {
         "output": 0,
         "source": 0,
         "kind": "shell-shot",
-        "beat": 51
+        "beat": 46
       },
       {
-        "output": 38,
-        "source": 38,
+        "output": 20,
+        "source": 21,
+        "kind": "kill",
+        "beat": 47
+      },
+      {
+        "output": 28,
+        "source": 28,
         "kind": "end"
       }
     ],
-    "score": 22.258074733719155
+    "score": 29.60382144891715
   }
 ]
