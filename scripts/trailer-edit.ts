@@ -29,16 +29,16 @@ export interface ClosingMusic {
   method: string;
 }
 export const MONTAGE = [
-  ['cluster', 0, 0, 4],
-  ['pinwheel', 0, 4, 8],
-  ['scatter', 0, 8, 12],
-  ['prism', 0, 12, 16],
+  ['recoil', 0, 0, 4],
+  ['scatter', 0, 4, 8],
+  ['prism', 0, 8, 12],
+  ['pinwheel', 0, 12, 16],
   ['turf', 0, 16, 20],
   ['saw', 2, 20, 24],
   ['cluster', 1, 24, 28],
-  ['pinwheel', 1, 28, 32],
+  ['storm', 0, 28, 32],
   ['loader', 0, 32, 36],
-  ['storm', 0, 36, 40],
+  ['cluster', 0, 36, 40],
   ['scatter', 2, 40, 42],
   ['prism', 1, 42, 43],
   ['turf', 1, 43, 44],

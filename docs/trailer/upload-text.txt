@@ -4,7 +4,7 @@ Recoil Foundry — Official Launch Trailer
 DESCRIPTION
 Play free: https://caleb-guyer.itch.io/recoil-foundry
 
-One gun. All recoil.
+Every shot moves you.
 
 Recoil Foundry is a physics roguelike inside a hostile factory. Turn your gun's kick into movement, combine 100 upgrades, and fight through 20 rooms across five areas. Shoot down. Go up.
 

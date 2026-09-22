@@ -3,7 +3,14 @@
     {
       "name": "scatter",
       "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
       "seed": "ACTION-SCATTER-2",
       "style": 0,
       "start": 289,
@@ -22,7 +29,14 @@
     {
       "name": "scatter",
       "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
       "seed": "ACTION-SCATTER-1",
       "style": 1,
       "start": 385,
@@ -41,7 +55,14 @@
     {
       "name": "scatter",
       "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
       "seed": "ACTION-SCATTER-7",
       "style": 1,
       "start": 661,
@@ -424,7 +445,14 @@
     {
       "name": "saw",
       "stage": 6,
-      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
       "seed": "ACTION-SAW-8",
       "style": 0,
       "start": 637,
@@ -443,7 +471,14 @@
     {
       "name": "saw",
       "stage": 6,
-      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
       "seed": "ACTION-SAW-18",
       "style": 0,
       "start": 325,
@@ -462,7 +497,14 @@
     {
       "name": "saw",
       "stage": 6,
-      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
       "seed": "ACTION-SAW-20",
       "style": 0,
       "start": 337,
@@ -483,7 +525,12 @@
     {
       "name": "turf",
       "stage": 4,
-      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
       "event": true,
       "seed": "ACTION-TURF-14",
       "style": 0,
@@ -503,7 +550,12 @@
     {
       "name": "turf",
       "stage": 4,
-      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
       "event": true,
       "seed": "ACTION-TURF-16",
       "style": 0,
@@ -523,7 +575,12 @@
     {
       "name": "turf",
       "stage": 4,
-      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
       "event": true,
       "seed": "ACTION-TURF-19",
       "style": 1,
@@ -545,7 +602,11 @@
     {
       "name": "loader",
       "stage": 3,
-      "mods": ["magnum", "rapid", "kick"],
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
       "seed": "ACTION-LOADER-20",
       "style": 0,
       "start": 685,
@@ -560,6 +621,74 @@
         "damage": 102
       },
       "score": 6.62
+    }
+  ],
+  "recoil": [
+    {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-11",
+      "style": 1,
+      "start": 205,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8611111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 0,
+        "travel": 1433,
+        "span": 733,
+        "damage": 86
+      },
+      "score": 8.629
+    },
+    {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-5",
+      "style": 1,
+      "start": 157,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8472222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 20,
+        "longestStallFrames": 5,
+        "travel": 928,
+        "span": 392,
+        "damage": 204
+      },
+      "score": 8.487
+    },
+    {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-12",
+      "style": 0,
+      "start": 601,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7847222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 0,
+        "travel": 1202,
+        "span": 737,
+        "damage": 71
+      },
+      "score": 7.615
     }
   ]
 }

@@ -1,0 +1,31 @@
+{
+  "revision": 9,
+  "frames": 2279,
+  "seconds": 37.983333333333334,
+  "video": "H.264 High, 1920x1080, 60fps, yuv420p, progressive BT.709",
+  "audio": "AAC-LC stereo, 48000Hz",
+  "fullDecodePassed": true,
+  "fastStart": true,
+  "integratedLufs": -14.1,
+  "truePeakDbtp": -1.87,
+  "combatClips": 16,
+  "combatClipsPassed": 16,
+  "syncedCombatEvents": 45,
+  "maxCombatSyncErrorFrames": 0,
+  "encodedMusicSync": [
+    {
+      "sourceStart": 258.91,
+      "expectedTimeline": 33.23400000000004,
+      "encodedLagMs": 0.0,
+      "correlation": 0.9996164673060407
+    },
+    {
+      "sourceStart": 259.34,
+      "expectedTimeline": 33.66399999999999,
+      "encodedLagMs": 0.0,
+      "correlation": 0.9891571902341243
+    }
+  ],
+  "sourceVideoSha256": "5f61417f687036928a72f3ec1512a41a089958be5fc9b7a44eb6d6ba0f0bb686",
+  "review": "Intro contact sheet, all 16 gameplay sequences, 12 transition samples, 9 end-card stages, and thumbnail inspected. Full audio/video decoded. No physical-speaker or YouTube playback claim."
+}

@@ -1,20 +1,23 @@
 {
   "version": "2.98.0",
-  "revision": 8,
+  "revision": 9,
   "width": 1920,
   "height": 1080,
   "fps": 60,
-  "seconds": 39.18333333333333,
-  "frames": 2351,
-  "cameraScale": [2.05, 2.21],
+  "seconds": 37.983333333333334,
+  "frames": 2279,
+  "cameraScale": [
+    1.95,
+    2.535
+  ],
   "playback": "Original fixed-step simulation, gently retimed between actual combat events and measured musical transients",
   "bpm": 100,
   "audioMix": {
     "method": "Original game cues with space for the closing fill; phrase-aligned edit into the original recorded ending, two title accents and natural ring-out; music EQ, brief ducking, measured constant gain and peak limiter",
     "musicResolution": {
-      "impact": 34.38333333333333,
-      "subtitle": 34.81666666666667,
-      "splice": 25.2,
+      "impact": 33.18333333333333,
+      "subtitle": 33.61666666666667,
+      "splice": 24,
       "pauseSeconds": 0,
       "sourceEnd": 263.2,
       "addedEcho": false,
@@ -23,77 +26,29 @@
       "subtitleFrameErrorMs": -3.67
     },
     "musicGain": 0.6,
-    "masterGainDb": 1.5399999999999991,
-    "inputLufs": -15.54,
+    "masterGainDb": 1.5199999999999996,
+    "inputLufs": -15.52,
     "inputTruePeak": -0.25,
     "sampleRate": 48000
   },
   "effects": [
     {
-      "kind": "shell-shot",
-      "events": 26,
-      "originalPeak": 0.21061843633651733,
+      "kind": "shot",
+      "events": 20,
+      "originalPeak": 0.23846346139907837,
       "mixedPeak": 0.52
     },
     {
-      "kind": "hit",
-      "events": 132,
-      "originalPeak": 0.05010034516453743,
-      "mixedPeak": 0.19
-    },
-    {
-      "kind": "fuse-stick",
-      "events": 16,
-      "originalPeak": 0.024654680863022804,
+      "kind": "land",
+      "events": 22,
+      "originalPeak": 0.06848135590553284,
       "mixedPeak": 0.14
     },
     {
-      "kind": "shell-blast",
-      "events": 31,
-      "originalPeak": 0.11414691060781479,
-      "mixedPeak": 0.56
-    },
-    {
-      "kind": "prop",
-      "events": 99,
-      "originalPeak": 0.06426217406988144,
+      "kind": "jump",
+      "events": 17,
+      "originalPeak": 0.04282670095562935,
       "mixedPeak": 0.14
-    },
-    {
-      "kind": "break",
-      "events": 7,
-      "originalPeak": 0.10749920457601547,
-      "mixedPeak": 0.56
-    },
-    {
-      "kind": "aim-warn",
-      "events": 53,
-      "originalPeak": 0.027967942878603935,
-      "mixedPeak": 0.14
-    },
-    {
-      "kind": "aftershock",
-      "events": 27,
-      "originalPeak": 0.056639477610588074,
-      "mixedPeak": 0.56
-    },
-    {
-      "kind": "cooling-shot",
-      "events": 5,
-      "originalPeak": 0.10230367630720139,
-      "mixedPeak": 0.14
-    },
-    {
-      "kind": "snipe",
-      "events": 5,
-      "originalPeak": 0.0765610784292221,
-      "mixedPeak": 0.14
-    },
-    {
-      "kind": "enemy",
-      "events": 84,
-      "originalPeak": 0.05693972110748291,
-      "mixedPeak": 0.085
     },
     {
       "kind": "kill",
@@ -102,70 +57,46 @@
       "mixedPeak": 0.56
     },
     {
-      "kind": "angler-fire",
-      "events": 2,
-      "originalPeak": 0.03733432665467262,
-      "mixedPeak": 0.14
-    },
-    {
-      "kind": "land",
-      "events": 18,
-      "originalPeak": 0.06848135590553284,
-      "mixedPeak": 0.14
-    },
-    {
-      "kind": "jump",
-      "events": 15,
-      "originalPeak": 0.04282670095562935,
-      "mixedPeak": 0.14
-    },
-    {
       "kind": "hurt",
       "events": 9,
       "originalPeak": 0.2924985885620117,
       "mixedPeak": 0.3
     },
     {
-      "kind": "armor",
-      "events": 14,
-      "originalPeak": 0.04314672201871872,
+      "kind": "hit",
+      "events": 123,
+      "originalPeak": 0.05010034516453743,
       "mixedPeak": 0.19
     },
     {
+      "kind": "aim-warn",
+      "events": 52,
+      "originalPeak": 0.027967942878603935,
+      "mixedPeak": 0.14
+    },
+    {
       "kind": "lock",
-      "events": 15,
+      "events": 14,
       "originalPeak": 0.024799691513180733,
       "mixedPeak": 0.14
     },
     {
-      "kind": "scatter",
-      "events": 24,
-      "originalPeak": 0.2952371835708618,
+      "kind": "heavy",
+      "events": 26,
+      "originalPeak": 0.21463032066822052,
       "mixedPeak": 0.52
+    },
+    {
+      "kind": "prop",
+      "events": 103,
+      "originalPeak": 0.06426217406988144,
+      "mixedPeak": 0.14
     },
     {
       "kind": "explode",
       "events": 6,
       "originalPeak": 0.26366886496543884,
       "mixedPeak": 0.56
-    },
-    {
-      "kind": "sapper-lock",
-      "events": 2,
-      "originalPeak": 0.03796738386154175,
-      "mixedPeak": 0.14
-    },
-    {
-      "kind": "sapper-throw",
-      "events": 2,
-      "originalPeak": 0.07013583928346634,
-      "mixedPeak": 0.14
-    },
-    {
-      "kind": "heavy",
-      "events": 25,
-      "originalPeak": 0.21463032066822052,
-      "mixedPeak": 0.52
     },
     {
       "kind": "angler-lock",
@@ -186,9 +117,27 @@
       "mixedPeak": 0.14
     },
     {
+      "kind": "enemy",
+      "events": 79,
+      "originalPeak": 0.05693972110748291,
+      "mixedPeak": 0.085
+    },
+    {
       "kind": "hop",
       "events": 3,
       "originalPeak": 0.04058780521154404,
+      "mixedPeak": 0.14
+    },
+    {
+      "kind": "cooling-shot",
+      "events": 4,
+      "originalPeak": 0.10230367630720139,
+      "mixedPeak": 0.14
+    },
+    {
+      "kind": "snipe",
+      "events": 4,
+      "originalPeak": 0.0765610784292221,
       "mixedPeak": 0.14
     },
     {
@@ -198,10 +147,28 @@
       "mixedPeak": 0.14
     },
     {
-      "kind": "shot",
-      "events": 11,
-      "originalPeak": 0.23846346139907837,
+      "kind": "scatter",
+      "events": 14,
+      "originalPeak": 0.2952371835708618,
       "mixedPeak": 0.52
+    },
+    {
+      "kind": "sapper-lock",
+      "events": 1,
+      "originalPeak": 0.03796738386154175,
+      "mixedPeak": 0.14
+    },
+    {
+      "kind": "break",
+      "events": 7,
+      "originalPeak": 0.10749920457601547,
+      "mixedPeak": 0.56
+    },
+    {
+      "kind": "sapper-throw",
+      "events": 1,
+      "originalPeak": 0.07013583928346634,
+      "mixedPeak": 0.14
     },
     {
       "kind": "grind",
@@ -210,16 +177,40 @@
       "mixedPeak": 0.14
     },
     {
-      "kind": "sapper-stick",
-      "events": 1,
-      "originalPeak": 0.04307437688112259,
+      "kind": "shell-shot",
+      "events": 26,
+      "originalPeak": 0.21061843633651733,
+      "mixedPeak": 0.52
+    },
+    {
+      "kind": "fuse-stick",
+      "events": 16,
+      "originalPeak": 0.024654680863022804,
       "mixedPeak": 0.14
     },
     {
-      "kind": "sapper-bat",
-      "events": 1,
-      "originalPeak": 0.06632757186889648,
+      "kind": "shell-blast",
+      "events": 31,
+      "originalPeak": 0.11414691060781479,
+      "mixedPeak": 0.56
+    },
+    {
+      "kind": "aftershock",
+      "events": 27,
+      "originalPeak": 0.056639477610588074,
+      "mixedPeak": 0.56
+    },
+    {
+      "kind": "angler-fire",
+      "events": 2,
+      "originalPeak": 0.03733432665467262,
       "mixedPeak": 0.14
+    },
+    {
+      "kind": "armor",
+      "events": 11,
+      "originalPeak": 0.04314672201871872,
+      "mixedPeak": 0.19
     },
     {
       "kind": "charge",
@@ -255,27 +246,27 @@
   "effectsLevels": [
     {
       "shot": 1,
-      "rmsDb": -15.781928261594476,
-      "peak": 0.7177446484565735
+      "rmsDb": -21.019347164584413,
+      "peak": 0.5000673532485962
     },
     {
       "shot": 2,
-      "rmsDb": -20.196060300872155,
-      "peak": 0.5399087071418762
+      "rmsDb": -19.61233028342481,
+      "peak": 0.6371104717254639
     },
     {
       "shot": 3,
-      "rmsDb": -19.978103137155397,
-      "peak": 0.6314358115196228
+      "rmsDb": -19.479474127458797,
+      "peak": 0.5917316675186157
     },
     {
       "shot": 4,
-      "rmsDb": -19.64633805045385,
-      "peak": 0.5623679757118225
+      "rmsDb": -20.11514657291155,
+      "peak": 0.5399087071418762
     },
     {
       "shot": 5,
-      "rmsDb": -19.15811444806777,
+      "rmsDb": -19.161238948706206,
       "peak": 0.7186694741249084
     },
     {
@@ -285,27 +276,27 @@
     },
     {
       "shot": 7,
-      "rmsDb": -15.358607024681618,
-      "peak": 0.7179113626480103
+      "rmsDb": -15.948397151041975,
+      "peak": 0.7177446484565735
     },
     {
       "shot": 8,
-      "rmsDb": -21.407394292845872,
-      "peak": 0.5156181454658508
+      "rmsDb": -14.344372353672881,
+      "peak": 0.6996150612831116
     },
     {
       "shot": 9,
-      "rmsDb": -20.098472773819562,
+      "rmsDb": -20.08885724964194,
       "peak": 0.49654415249824524
     },
     {
       "shot": 10,
-      "rmsDb": -14.398394927299611,
-      "peak": 0.6996150612831116
+      "rmsDb": -15.501402048315008,
+      "peak": 0.7179113626480103
     },
     {
       "shot": 11,
-      "rmsDb": -18.511094183810144,
+      "rmsDb": -18.513163668595908,
       "peak": 0.6128631234169006
     },
     {
@@ -337,8 +328,24 @@
   "beatSync": [
     {
       "shot": 1,
-      "kind": "shell-shot",
+      "kind": "shot",
       "beat": 0,
+      "frame": 288,
+      "expectedFrame": 288,
+      "errorFrames": 0
+    },
+    {
+      "shot": 1,
+      "kind": "shot",
+      "beat": 1,
+      "frame": 325,
+      "expectedFrame": 325,
+      "errorFrames": 0
+    },
+    {
+      "shot": 1,
+      "kind": "kill",
+      "beat": 2,
       "frame": 360,
       "expectedFrame": 360,
       "errorFrames": 0
@@ -346,167 +353,167 @@
     {
       "shot": 1,
       "kind": "kill",
-      "beat": 1,
-      "frame": 397,
-      "expectedFrame": 397,
+      "beat": 3,
+      "frame": 399,
+      "expectedFrame": 399,
       "errorFrames": 0
     },
     {
-      "shot": 1,
-      "kind": "shell-shot",
-      "beat": 2,
+      "shot": 2,
+      "kind": "heavy",
+      "beat": 4,
       "frame": 432,
       "expectedFrame": 432,
       "errorFrames": 0
     },
     {
-      "shot": 1,
-      "kind": "kill",
-      "beat": 3,
+      "shot": 2,
+      "kind": "heavy",
+      "beat": 5,
       "frame": 471,
       "expectedFrame": 471,
       "errorFrames": 0
     },
     {
       "shot": 2,
-      "kind": "scatter",
-      "beat": 4,
-      "frame": 504,
-      "expectedFrame": 504,
+      "kind": "heavy",
+      "beat": 6,
+      "frame": 507,
+      "expectedFrame": 507,
       "errorFrames": 0
     },
     {
       "shot": 2,
       "kind": "kill",
-      "beat": 5,
+      "beat": 7,
       "frame": 543,
       "expectedFrame": 543,
       "errorFrames": 0
     },
     {
-      "shot": 2,
-      "kind": "kill",
-      "beat": 6,
-      "frame": 579,
-      "expectedFrame": 579,
-      "errorFrames": 0
-    },
-    {
       "shot": 3,
-      "kind": "explode",
-      "beat": 8,
-      "frame": 649,
-      "expectedFrame": 649,
-      "errorFrames": 0
-    },
-    {
-      "shot": 3,
-      "kind": "heavy",
-      "beat": 9,
-      "frame": 685,
-      "expectedFrame": 685,
-      "errorFrames": 0
-    },
-    {
-      "shot": 3,
-      "kind": "heavy",
-      "beat": 10,
-      "frame": 720,
-      "expectedFrame": 720,
-      "errorFrames": 0
-    },
-    {
-      "shot": 3,
-      "kind": "kill",
-      "beat": 11,
-      "frame": 759,
-      "expectedFrame": 759,
-      "errorFrames": 0
-    },
-    {
-      "shot": 4,
       "kind": "beam-hit",
-      "beat": 12,
-      "frame": 791,
-      "expectedFrame": 791,
+      "beat": 8,
+      "frame": 577,
+      "expectedFrame": 577,
       "errorFrames": 0
     },
     {
-      "shot": 4,
+      "shot": 3,
       "kind": "explode",
+      "beat": 9,
+      "frame": 613,
+      "expectedFrame": 613,
+      "errorFrames": 0
+    },
+    {
+      "shot": 3,
+      "kind": "beam-start",
+      "beat": 10,
+      "frame": 648,
+      "expectedFrame": 648,
+      "errorFrames": 0
+    },
+    {
+      "shot": 3,
+      "kind": "beam-start",
+      "beat": 11,
+      "frame": 687,
+      "expectedFrame": 687,
+      "errorFrames": 0
+    },
+    {
+      "shot": 4,
+      "kind": "scatter",
+      "beat": 12,
+      "frame": 719,
+      "expectedFrame": 719,
+      "errorFrames": 0
+    },
+    {
+      "shot": 4,
+      "kind": "kill",
       "beat": 13,
-      "frame": 830,
-      "expectedFrame": 830,
+      "frame": 758,
+      "expectedFrame": 758,
       "errorFrames": 0
     },
     {
       "shot": 4,
-      "kind": "beam-start",
+      "kind": "kill",
       "beat": 14,
-      "frame": 866,
-      "expectedFrame": 866,
-      "errorFrames": 0
-    },
-    {
-      "shot": 4,
-      "kind": "beam-start",
-      "beat": 15,
-      "frame": 902,
-      "expectedFrame": 902,
+      "frame": 794,
+      "expectedFrame": 794,
       "errorFrames": 0
     },
     {
       "shot": 5,
       "kind": "kill",
       "beat": 16,
-      "frame": 936,
-      "expectedFrame": 936,
+      "frame": 864,
+      "expectedFrame": 864,
       "errorFrames": 0
     },
     {
       "shot": 5,
       "kind": "kill",
       "beat": 17,
-      "frame": 974,
-      "expectedFrame": 974,
+      "frame": 902,
+      "expectedFrame": 902,
       "errorFrames": 0
     },
     {
       "shot": 5,
       "kind": "heavy",
       "beat": 18,
-      "frame": 1008,
-      "expectedFrame": 1008,
+      "frame": 936,
+      "expectedFrame": 936,
       "errorFrames": 0
     },
     {
       "shot": 5,
       "kind": "explode",
       "beat": 19,
-      "frame": 1046,
-      "expectedFrame": 1046,
+      "frame": 974,
+      "expectedFrame": 974,
       "errorFrames": 0
     },
     {
       "shot": 6,
       "kind": "shot",
       "beat": 20,
-      "frame": 1080,
-      "expectedFrame": 1080,
+      "frame": 1008,
+      "expectedFrame": 1008,
       "errorFrames": 0
     },
     {
       "shot": 6,
       "kind": "shot",
       "beat": 22,
-      "frame": 1154,
-      "expectedFrame": 1154,
+      "frame": 1082,
+      "expectedFrame": 1082,
       "errorFrames": 0
     },
     {
       "shot": 6,
       "kind": "shot",
       "beat": 23,
+      "frame": 1118,
+      "expectedFrame": 1118,
+      "errorFrames": 0
+    },
+    {
+      "shot": 7,
+      "kind": "shell-shot",
+      "beat": 24,
+      "frame": 1152,
+      "expectedFrame": 1152,
+      "errorFrames": 0
+    },
+    {
+      "shot": 7,
+      "kind": "kill",
+      "beat": 25,
       "frame": 1190,
       "expectedFrame": 1190,
       "errorFrames": 0
@@ -514,79 +521,79 @@
     {
       "shot": 7,
       "kind": "shell-shot",
-      "beat": 24,
-      "frame": 1224,
-      "expectedFrame": 1224,
-      "errorFrames": 0
-    },
-    {
-      "shot": 7,
-      "kind": "shell-shot",
-      "beat": 25,
-      "frame": 1262,
-      "expectedFrame": 1262,
+      "beat": 26,
+      "frame": 1225,
+      "expectedFrame": 1225,
       "errorFrames": 0
     },
     {
       "shot": 7,
       "kind": "kill",
-      "beat": 26,
-      "frame": 1297,
-      "expectedFrame": 1297,
-      "errorFrames": 0
-    },
-    {
-      "shot": 7,
-      "kind": "shell-shot",
       "beat": 27,
-      "frame": 1333,
-      "expectedFrame": 1333,
+      "frame": 1261,
+      "expectedFrame": 1261,
       "errorFrames": 0
     },
     {
       "shot": 8,
-      "kind": "scatter",
+      "kind": "shell-shot",
       "beat": 28,
-      "frame": 1367,
-      "expectedFrame": 1367,
+      "frame": 1295,
+      "expectedFrame": 1295,
       "errorFrames": 0
     },
     {
       "shot": 8,
-      "kind": "scatter",
+      "kind": "shell-shot",
       "beat": 29,
+      "frame": 1334,
+      "expectedFrame": 1334,
+      "errorFrames": 0
+    },
+    {
+      "shot": 8,
+      "kind": "explode",
+      "beat": 30,
+      "frame": 1370,
+      "expectedFrame": 1370,
+      "errorFrames": 0
+    },
+    {
+      "shot": 8,
+      "kind": "shell-shot",
+      "beat": 31,
       "frame": 1406,
       "expectedFrame": 1406,
-      "errorFrames": 0
-    },
-    {
-      "shot": 8,
-      "kind": "scatter",
-      "beat": 30,
-      "frame": 1442,
-      "expectedFrame": 1442,
       "errorFrames": 0
     },
     {
       "shot": 9,
       "kind": "heavy",
       "beat": 32,
-      "frame": 1512,
-      "expectedFrame": 1512,
+      "frame": 1440,
+      "expectedFrame": 1440,
       "errorFrames": 0
     },
     {
       "shot": 9,
       "kind": "heavy",
       "beat": 33,
-      "frame": 1550,
-      "expectedFrame": 1550,
+      "frame": 1478,
+      "expectedFrame": 1478,
       "errorFrames": 0
     },
     {
       "shot": 9,
       "kind": "heavy",
       "beat": 34,
+      "frame": 1513,
+      "expectedFrame": 1513,
+      "errorFrames": 0
+    },
+    {
+      "shot": 10,
+      "kind": "shell-shot",
+      "beat": 36,
       "frame": 1585,
       "expectedFrame": 1585,
       "errorFrames": 0
@@ -594,122 +601,114 @@
     {
       "shot": 10,
       "kind": "shell-shot",
-      "beat": 36,
-      "frame": 1657,
-      "expectedFrame": 1657,
-      "errorFrames": 0
-    },
-    {
-      "shot": 10,
-      "kind": "shell-shot",
       "beat": 37,
-      "frame": 1694,
-      "expectedFrame": 1694,
+      "frame": 1622,
+      "expectedFrame": 1622,
       "errorFrames": 0
     },
     {
       "shot": 10,
-      "kind": "explode",
+      "kind": "kill",
       "beat": 38,
-      "frame": 1730,
-      "expectedFrame": 1730,
+      "frame": 1658,
+      "expectedFrame": 1658,
       "errorFrames": 0
     },
     {
       "shot": 10,
       "kind": "shell-shot",
       "beat": 39,
-      "frame": 1766,
-      "expectedFrame": 1766,
+      "frame": 1694,
+      "expectedFrame": 1694,
       "errorFrames": 0
     },
     {
       "shot": 11,
       "kind": "heavy",
       "beat": 40,
-      "frame": 1801,
-      "expectedFrame": 1801,
+      "frame": 1729,
+      "expectedFrame": 1729,
       "errorFrames": 0
     },
     {
       "shot": 11,
       "kind": "heavy",
       "beat": 41,
-      "frame": 1838,
-      "expectedFrame": 1838,
+      "frame": 1766,
+      "expectedFrame": 1766,
       "errorFrames": 0
     },
     {
       "shot": 12,
       "kind": "beam-hit",
       "beat": 42,
-      "frame": 1873,
-      "expectedFrame": 1873,
+      "frame": 1801,
+      "expectedFrame": 1801,
       "errorFrames": 0
     },
     {
       "shot": 13,
       "kind": "kill",
       "beat": 43,
-      "frame": 1908,
-      "expectedFrame": 1908,
+      "frame": 1836,
+      "expectedFrame": 1836,
       "errorFrames": 0
     },
     {
       "shot": 14,
       "kind": "shot",
       "beat": 44,
-      "frame": 1944,
-      "expectedFrame": 1944,
+      "frame": 1872,
+      "expectedFrame": 1872,
       "errorFrames": 0
     },
     {
       "shot": 15,
       "kind": "scatter",
       "beat": 45,
-      "frame": 1982,
-      "expectedFrame": 1982,
+      "frame": 1910,
+      "expectedFrame": 1910,
       "errorFrames": 0
     },
     {
       "shot": 16,
       "kind": "shell-shot",
       "beat": 46,
-      "frame": 2034,
-      "expectedFrame": 2034,
+      "frame": 1962,
+      "expectedFrame": 1962,
       "errorFrames": 0
     },
     {
       "shot": 16,
       "kind": "kill",
       "beat": 47,
-      "frame": 2054,
-      "expectedFrame": 2054,
+      "frame": 1982,
+      "expectedFrame": 1982,
       "errorFrames": 0
     }
   ],
   "ending": {
-    "impactFrame": 2063,
-    "subtitleFrame": 2089,
-    "transitionStartFrame": 2063,
-    "transitionEndFrame": 2069,
-    "ctaFrame": 2125,
-    "linkFrame": 2131,
-    "fadeStartFrame": 2249,
-    "fadeEndFrame": 2321,
-    "endFrame": 2351,
+    "impactFrame": 1991,
+    "subtitleFrame": 2017,
+    "transitionStartFrame": 1991,
+    "transitionEndFrame": 1997,
+    "ctaFrame": 2053,
+    "linkFrame": 2059,
+    "fadeStartFrame": 2177,
+    "fadeEndFrame": 2249,
+    "endFrame": 2279,
     "method": "Final gameplay follows the recorded closing phrase; RECOIL appears fully on its penultimate accent and FOUNDRY on its final accent, with a six-frame trace of the last shot; CTA during the natural ring-out, 1.2-second fade during the natural decay and half-second black tail",
     "sound": "The original recording supplies the closing fill, both title accents and the natural ring-out. Combat effects ease back before the title; no added rise, title stinger or echo.",
     "musicalAccents": [
       {
         "word": "RECOIL",
-        "frame": 2063,
+        "frame": 1991,
         "sourceSeconds": 258.85633333333334,
         "errorMs": 3
       },
       {
         "word": "FOUNDRY",
-        "frame": 2089,
+        "frame": 2017,
         "sourceSeconds": 259.29633333333334,
         "errorMs": -3.67
       }
@@ -726,95 +725,243 @@
       {
         "sourceIn": 163.276,
         "sourceOut": 182.476,
-        "timelineStart": 6
+        "timelineStart": 4.8
       },
       {
         "sourceIn": 249.676,
         "sourceOut": 263.2,
-        "timelineStart": 25.2,
+        "timelineStart": 24,
         "overlapSeconds": 0.025
       }
     ],
-    "timelineStart": 6,
+    "timelineStart": 4.8,
     "edit": "Two phrase-aligned excerpts, 25ms crossfade, entry fade, EQ and brief ducking beneath effects; original final accents and natural ring-out retained"
   },
   "intro": {
-    "seconds": 6,
+    "seconds": 4.8,
     "method": "Editorial animation using game scenery, outfit and weapon renderer; keyframed walk, lighting and camera; original synthesized factory ambience, footsteps, relay and weapon clicks",
-    "footsteps": [0.88, 1.5, 2.12, 2.74, 3.36, 3.98],
+    "footsteps": [
+      0.704,
+      1.2,
+      1.696,
+      2.192,
+      2.6879999999999997,
+      3.1839999999999997
+    ],
     "gainBeforeMix": 1.35,
     "music": false,
-    "cutToAction": 6
+    "cutToAction": 4.8
   },
   "method": "Editorial cold open, followed by actual Game and Renderer; legal checkpoint builds, active health, recoil, collision and enemy AI; beat-aligned event selection, gentle retiming and camera accents; original game Sound cues remixed with licensed music",
   "scenes": [
     {
-      "name": "cluster",
-      "stage": 10,
+      "name": "recoil",
+      "stage": 2,
       "mods": [
-        "shellshock",
-        "cluster-shell",
-        "fuse",
-        "linked-fuse",
-        "aftershock",
-        "shockfront",
-        "blast-surf",
-        "airshot",
-        "light",
-        "leech"
+        "kick",
+        "light"
       ],
-      "seed": "ACTION-CLUSTER-5",
+      "seed": "ACTION-RECOIL-5",
       "style": 1,
-      "start": 383,
+      "start": 152,
       "length": 144,
       "quality": {
-        "visibleFraction": 0.9097222222222222,
+        "visibleFraction": 0.8402777777777778,
         "blockedFireFrames": 0,
-        "longestQuietFrames": 13,
-        "longestStallFrames": 2,
-        "travel": 1375,
-        "span": 543,
-        "damage": 453
+        "longestQuietFrames": 21,
+        "longestStallFrames": 5,
+        "travel": 914,
+        "span": 375,
+        "damage": 175
       },
-      "score": 16.828,
-      "timelineStart": 6,
+      "score": 8.487,
+      "timelineStart": 4.8,
       "seconds": 2.4,
       "visibleSeconds": 2.4,
       "initialHealth": 100,
-      "finalHealth": 91,
-      "killsDuringClip": 4,
-      "layout": "Spillway",
-      "targetOnscreenFraction": 0.9652777777777778,
+      "finalHealth": 86,
+      "killsDuringClip": 3,
+      "layout": "Cargo switchyard",
+      "targetOnscreenFraction": 0.8888888888888888,
+      "cameraScale": [
+        2.4,
+        2.535
+      ],
       "fromBeat": 0,
       "toBeat": 4,
       "retiming": [
         {
           "output": 0,
           "source": 0,
-          "kind": "shell-shot",
+          "kind": "shot",
           "beat": 0
         },
         {
           "output": 37,
-          "source": 33,
-          "kind": "kill",
+          "source": 42,
+          "kind": "shot",
           "beat": 1
         },
         {
           "output": 72,
-          "source": 70,
-          "kind": "shell-shot",
+          "source": 79,
+          "kind": "kill",
           "beat": 2
         },
         {
           "output": 111,
-          "source": 110,
+          "source": 116,
           "kind": "kill",
           "beat": 3
         },
         {
           "output": 143,
           "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
+      "seed": "ACTION-SCATTER-2",
+      "style": 0,
+      "start": 287,
+      "length": 145,
+      "quality": {
+        "visibleFraction": 0.8482758620689655,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 0,
+        "travel": 1173,
+        "span": 797,
+        "damage": 318
+      },
+      "score": 11.106,
+      "timelineStart": 7.2,
+      "seconds": 2.4166666666666665,
+      "visibleSeconds": 2.4166666666666665,
+      "initialHealth": 84,
+      "finalHealth": 84,
+      "killsDuringClip": 3,
+      "layout": "Stamping line",
+      "targetOnscreenFraction": 0.7655172413793103,
+      "cameraScale": [
+        2.25,
+        2.385
+      ],
+      "fromBeat": 4,
+      "toBeat": 8,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 4
+        },
+        {
+          "output": 39,
+          "source": 37,
+          "kind": "heavy",
+          "beat": 5
+        },
+        {
+          "output": 75,
+          "source": 76,
+          "kind": "heavy",
+          "beat": 6
+        },
+        {
+          "output": 111,
+          "source": 115,
+          "kind": "kill",
+          "beat": 7
+        },
+        {
+          "output": 144,
+          "source": 144,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-16",
+      "style": 0,
+      "start": 474,
+      "length": 142,
+      "quality": {
+        "visibleFraction": 0.8591549295774648,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 20,
+        "longestStallFrames": 4,
+        "travel": 1085,
+        "span": 567,
+        "damage": 288
+      },
+      "score": 11.847,
+      "timelineStart": 9.616666666666667,
+      "seconds": 2.3666666666666667,
+      "visibleSeconds": 2.3666666666666667,
+      "initialHealth": 82,
+      "finalHealth": 84,
+      "killsDuringClip": 1,
+      "layout": "Spillway",
+      "targetOnscreenFraction": 0.971830985915493,
+      "cameraScale": [
+        1.95,
+        2.085
+      ],
+      "fromBeat": 8,
+      "toBeat": 12,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "beam-hit",
+          "beat": 8
+        },
+        {
+          "output": 36,
+          "source": 34,
+          "kind": "explode",
+          "beat": 9
+        },
+        {
+          "output": 71,
+          "source": 74,
+          "kind": "beam-start",
+          "beat": 10
+        },
+        {
+          "output": 110,
+          "source": 116,
+          "kind": "beam-start",
+          "beat": 11
+        },
+        {
+          "output": 141,
+          "source": 141,
           "kind": "end"
         }
       ]
@@ -847,7 +994,7 @@
         "damage": 332
       },
       "score": 17.945,
-      "timelineStart": 8.4,
+      "timelineStart": 11.983333333333333,
       "seconds": 2.4166666666666665,
       "visibleSeconds": 2.4166666666666665,
       "initialHealth": 100,
@@ -855,156 +1002,30 @@
       "killsDuringClip": 2,
       "layout": "Spillway",
       "targetOnscreenFraction": 1,
-      "fromBeat": 4,
-      "toBeat": 8,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "scatter",
-          "beat": 4
-        },
-        {
-          "output": 39,
-          "source": 41,
-          "kind": "kill",
-          "beat": 5
-        },
-        {
-          "output": 75,
-          "source": 77,
-          "kind": "kill",
-          "beat": 6
-        },
-        {
-          "output": 144,
-          "source": 144,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "scatter",
-      "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
-      "seed": "ACTION-SCATTER-2",
-      "style": 0,
-      "start": 293,
-      "length": 142,
-      "quality": {
-        "visibleFraction": 0.823943661971831,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 22,
-        "longestStallFrames": 0,
-        "travel": 1162,
-        "span": 808,
-        "damage": 318
-      },
-      "score": 11.106,
-      "timelineStart": 10.816666666666666,
-      "seconds": 2.3666666666666667,
-      "visibleSeconds": 2.3666666666666667,
-      "initialHealth": 84,
-      "finalHealth": 84,
-      "killsDuringClip": 3,
-      "layout": "Stamping line",
-      "targetOnscreenFraction": 0.8661971830985915,
-      "fromBeat": 8,
-      "toBeat": 12,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "explode",
-          "beat": 8
-        },
-        {
-          "output": 36,
-          "source": 31,
-          "kind": "heavy",
-          "beat": 9
-        },
-        {
-          "output": 71,
-          "source": 70,
-          "kind": "heavy",
-          "beat": 10
-        },
-        {
-          "output": 110,
-          "source": 109,
-          "kind": "kill",
-          "beat": 11
-        },
-        {
-          "output": 141,
-          "source": 141,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "prism",
-      "stage": 10,
-      "mods": [
-        "cutting-torch",
-        "prism-array",
-        "thermal-runaway",
-        "scatter",
-        "pierce",
-        "airshot",
-        "light",
-        "leech",
-        "kick"
+      "cameraScale": [
+        2.2,
+        2.335
       ],
-      "seed": "ACTION-PRISM-16",
-      "style": 0,
-      "start": 473,
-      "length": 145,
-      "quality": {
-        "visibleFraction": 0.8620689655172413,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 20,
-        "longestStallFrames": 4,
-        "travel": 1110,
-        "span": 567,
-        "damage": 299
-      },
-      "score": 11.847,
-      "timelineStart": 13.183333333333334,
-      "seconds": 2.4166666666666665,
-      "visibleSeconds": 2.4166666666666665,
-      "initialHealth": 82,
-      "finalHealth": 84,
-      "killsDuringClip": 1,
-      "layout": "Spillway",
-      "targetOnscreenFraction": 0.9586206896551724,
       "fromBeat": 12,
       "toBeat": 16,
       "retiming": [
         {
           "output": 0,
           "source": 0,
-          "kind": "beam-hit",
+          "kind": "scatter",
           "beat": 12
         },
         {
           "output": 39,
-          "source": 35,
-          "kind": "explode",
+          "source": 41,
+          "kind": "kill",
           "beat": 13
         },
         {
           "output": 75,
-          "source": 75,
-          "kind": "beam-start",
+          "source": 77,
+          "kind": "kill",
           "beat": 14
-        },
-        {
-          "output": 111,
-          "source": 117,
-          "kind": "beam-start",
-          "beat": 15
         },
         {
           "output": 144,
@@ -1016,7 +1037,12 @@
     {
       "name": "turf",
       "stage": 4,
-      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
       "event": true,
       "seed": "ACTION-TURF-14",
       "style": 0,
@@ -1032,7 +1058,7 @@
         "damage": 403
       },
       "score": 19.105,
-      "timelineStart": 15.6,
+      "timelineStart": 14.4,
       "seconds": 2.4,
       "visibleSeconds": 2.4,
       "initialHealth": 68,
@@ -1040,6 +1066,10 @@
       "killsDuringClip": 5,
       "layout": "Pillar hall",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        1.95,
+        2.085
+      ],
       "fromBeat": 16,
       "toBeat": 20,
       "retiming": [
@@ -1077,7 +1107,14 @@
     {
       "name": "saw",
       "stage": 6,
-      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
       "seed": "ACTION-SAW-18",
       "style": 0,
       "start": 338,
@@ -1092,7 +1129,7 @@
         "damage": 205
       },
       "score": 13.835,
-      "timelineStart": 18,
+      "timelineStart": 16.8,
       "seconds": 2.4,
       "visibleSeconds": 2.4,
       "initialHealth": 100,
@@ -1100,6 +1137,10 @@
       "killsDuringClip": 0,
       "layout": "Stamping line",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        2.25,
+        2.385
+      ],
       "fromBeat": 20,
       "toBeat": 24,
       "retiming": [
@@ -1143,28 +1184,32 @@
         "light",
         "leech"
       ],
-      "seed": "ACTION-CLUSTER-9",
+      "seed": "ACTION-CLUSTER-5",
       "style": 1,
-      "start": 324,
+      "start": 383,
       "length": 143,
       "quality": {
-        "visibleFraction": 0.9300699300699301,
+        "visibleFraction": 0.9090909090909091,
         "blockedFireFrames": 0,
-        "longestQuietFrames": 10,
-        "longestStallFrames": 0,
-        "travel": 1316,
-        "span": 622,
-        "damage": 457
+        "longestQuietFrames": 13,
+        "longestStallFrames": 2,
+        "travel": 1365,
+        "span": 543,
+        "damage": 450
       },
-      "score": 16.066,
-      "timelineStart": 20.4,
+      "score": 16.828,
+      "timelineStart": 19.2,
       "seconds": 2.3833333333333333,
       "visibleSeconds": 2.3833333333333333,
-      "initialHealth": 82,
-      "finalHealth": 68,
-      "killsDuringClip": 2,
+      "initialHealth": 100,
+      "finalHealth": 89,
+      "killsDuringClip": 3,
       "layout": "Spillway",
-      "targetOnscreenFraction": 0.8321678321678322,
+      "targetOnscreenFraction": 0.951048951048951,
+      "cameraScale": [
+        2.15,
+        2.285
+      ],
       "fromBeat": 24,
       "toBeat": 28,
       "retiming": [
@@ -1176,20 +1221,20 @@
         },
         {
           "output": 38,
-          "source": 36,
-          "kind": "shell-shot",
+          "source": 33,
+          "kind": "kill",
           "beat": 25
         },
         {
           "output": 73,
-          "source": 76,
-          "kind": "kill",
+          "source": 70,
+          "kind": "shell-shot",
           "beat": 26
         },
         {
           "output": 109,
-          "source": 108,
-          "kind": "shell-shot",
+          "source": 110,
+          "kind": "kill",
           "beat": 27
         },
         {
@@ -1200,61 +1245,72 @@
       ]
     },
     {
-      "name": "pinwheel",
+      "name": "storm",
       "stage": 10,
       "mods": [
-        "crossfire",
-        "pinwheel",
-        "scatter",
-        "rapid",
-        "burst",
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
         "airshot",
         "light",
         "leech",
-        "kick"
+        "rapid"
       ],
-      "seed": "ACTION-PINWHEEL-14",
-      "style": 0,
-      "start": 587,
+      "seed": "ACTION-STORM-11",
+      "style": 1,
+      "start": 456,
       "length": 145,
       "quality": {
-        "visibleFraction": 0.993103448275862,
+        "visibleFraction": 1,
         "blockedFireFrames": 0,
-        "longestQuietFrames": 1,
-        "longestStallFrames": 4,
-        "travel": 1344,
-        "span": 772,
-        "damage": 286
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1295,
+        "span": 1052,
+        "damage": 424
       },
-      "score": 17.303,
-      "timelineStart": 22.783333333333335,
+      "score": 17.702,
+      "timelineStart": 21.583333333333332,
       "seconds": 2.4166666666666665,
       "visibleSeconds": 2.4166666666666665,
-      "initialHealth": 84,
-      "finalHealth": 73,
-      "killsDuringClip": 2,
+      "initialHealth": 100,
+      "finalHealth": 66,
+      "killsDuringClip": 1,
       "layout": "Spillway",
-      "targetOnscreenFraction": 0.903448275862069,
+      "targetOnscreenFraction": 1,
+      "cameraScale": [
+        2.15,
+        2.285
+      ],
       "fromBeat": 28,
       "toBeat": 32,
       "retiming": [
         {
           "output": 0,
           "source": 0,
-          "kind": "scatter",
+          "kind": "shell-shot",
           "beat": 28
         },
         {
           "output": 39,
           "source": 39,
-          "kind": "scatter",
+          "kind": "shell-shot",
           "beat": 29
         },
         {
           "output": 75,
-          "source": 81,
-          "kind": "scatter",
+          "source": 76,
+          "kind": "explode",
           "beat": 30
+        },
+        {
+          "output": 111,
+          "source": 108,
+          "kind": "shell-shot",
+          "beat": 31
         },
         {
           "output": 144,
@@ -1266,7 +1322,11 @@
     {
       "name": "loader",
       "stage": 3,
-      "mods": ["magnum", "rapid", "kick"],
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
       "seed": "ACTION-LOADER-20",
       "style": 0,
       "start": 688,
@@ -1281,7 +1341,7 @@
         "damage": 116
       },
       "score": 6.62,
-      "timelineStart": 25.2,
+      "timelineStart": 24,
       "seconds": 2.4166666666666665,
       "visibleSeconds": 2.4166666666666665,
       "initialHealth": 82,
@@ -1289,6 +1349,10 @@
       "killsDuringClip": 0,
       "layout": "Loader bay",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        2.25,
+        2.385
+      ],
       "fromBeat": 32,
       "toBeat": 36,
       "retiming": [
@@ -1318,42 +1382,46 @@
       ]
     },
     {
-      "name": "storm",
+      "name": "cluster",
       "stage": 10,
       "mods": [
         "shellshock",
         "cluster-shell",
-        "arc-coil",
-        "storm-cell",
+        "fuse",
+        "linked-fuse",
         "aftershock",
+        "shockfront",
         "blast-surf",
         "airshot",
         "light",
-        "leech",
-        "rapid"
+        "leech"
       ],
-      "seed": "ACTION-STORM-11",
+      "seed": "ACTION-CLUSTER-9",
       "style": 1,
-      "start": 456,
+      "start": 324,
       "length": 144,
       "quality": {
-        "visibleFraction": 1,
+        "visibleFraction": 0.9236111111111112,
         "blockedFireFrames": 0,
-        "longestQuietFrames": 0,
+        "longestQuietFrames": 11,
         "longestStallFrames": 0,
-        "travel": 1287,
-        "span": 1052,
-        "damage": 424
+        "travel": 1328,
+        "span": 632,
+        "damage": 457
       },
-      "score": 17.702,
-      "timelineStart": 27.616666666666667,
+      "score": 16.066,
+      "timelineStart": 26.416666666666668,
       "seconds": 2.4,
       "visibleSeconds": 2.4,
-      "initialHealth": 100,
-      "finalHealth": 66,
-      "killsDuringClip": 1,
+      "initialHealth": 82,
+      "finalHealth": 68,
+      "killsDuringClip": 2,
       "layout": "Spillway",
-      "targetOnscreenFraction": 1,
+      "targetOnscreenFraction": 0.8194444444444444,
+      "cameraScale": [
+        2.15,
+        2.285
+      ],
       "fromBeat": 36,
       "toBeat": 40,
       "retiming": [
@@ -1365,14 +1433,14 @@
         },
         {
           "output": 37,
-          "source": 39,
+          "source": 36,
           "kind": "shell-shot",
           "beat": 37
         },
         {
           "output": 73,
           "source": 76,
-          "kind": "explode",
+          "kind": "kill",
           "beat": 38
         },
         {
@@ -1391,7 +1459,14 @@
     {
       "name": "scatter",
       "stage": 6,
-      "mods": ["magnum", "kick", "rapid", "scatter", "ricochet", "airshot"],
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
       "seed": "ACTION-SCATTER-1",
       "style": 1,
       "start": 396,
@@ -1406,14 +1481,18 @@
         "damage": 116
       },
       "score": 9.884,
-      "timelineStart": 30.016666666666666,
+      "timelineStart": 28.816666666666666,
       "seconds": 1.2,
       "visibleSeconds": 1.2,
       "initialHealth": 84,
       "finalHealth": 84,
       "killsDuringClip": 1,
       "layout": "Stamping line",
-      "targetOnscreenFraction": 0.9027777777777778,
+      "targetOnscreenFraction": 0.7916666666666666,
+      "cameraScale": [
+        2.25,
+        2.385
+      ],
       "fromBeat": 40,
       "toBeat": 42,
       "retiming": [
@@ -1464,7 +1543,7 @@
         "damage": 93
       },
       "score": 13.957,
-      "timelineStart": 31.216666666666665,
+      "timelineStart": 30.016666666666666,
       "seconds": 0.5833333333333334,
       "visibleSeconds": 0.5833333333333334,
       "initialHealth": 64,
@@ -1472,6 +1551,10 @@
       "killsDuringClip": 1,
       "layout": "Spillway",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        1.95,
+        2.085
+      ],
       "fromBeat": 42,
       "toBeat": 43,
       "retiming": [
@@ -1491,7 +1574,12 @@
     {
       "name": "turf",
       "stage": 4,
-      "mods": ["magnum", "ricochet", "airshot", "light"],
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
       "event": true,
       "seed": "ACTION-TURF-16",
       "style": 0,
@@ -1507,7 +1595,7 @@
         "damage": 69
       },
       "score": 17.51,
-      "timelineStart": 31.8,
+      "timelineStart": 30.6,
       "seconds": 0.6,
       "visibleSeconds": 0.6,
       "initialHealth": 84,
@@ -1515,6 +1603,10 @@
       "killsDuringClip": 2,
       "layout": "Pillar hall",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        1.95,
+        2.085
+      ],
       "fromBeat": 43,
       "toBeat": 44,
       "retiming": [
@@ -1534,7 +1626,14 @@
     {
       "name": "saw",
       "stage": 6,
-      "mods": ["grindshot", "crosscut", "split", "shatter", "pierce", "light"],
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
       "seed": "ACTION-SAW-8",
       "style": 0,
       "start": 668,
@@ -1549,7 +1648,7 @@
         "damage": 94
       },
       "score": 14.282,
-      "timelineStart": 32.4,
+      "timelineStart": 31.2,
       "seconds": 0.6333333333333333,
       "visibleSeconds": 0.6333333333333333,
       "initialHealth": 27,
@@ -1557,6 +1656,10 @@
       "killsDuringClip": 0,
       "layout": "Stamping line",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        2.25,
+        2.385
+      ],
       "fromBeat": 44,
       "toBeat": 45,
       "retiming": [
@@ -1601,7 +1704,7 @@
         "damage": 313
       },
       "score": 17.302,
-      "timelineStart": 33.03333333333333,
+      "timelineStart": 31.833333333333332,
       "seconds": 0.8666666666666667,
       "visibleSeconds": 0.8666666666666667,
       "initialHealth": 82,
@@ -1609,6 +1712,10 @@
       "killsDuringClip": 2,
       "layout": "Spillway",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        2.2,
+        2.335
+      ],
       "fromBeat": 45,
       "toBeat": 46,
       "retiming": [
@@ -1654,7 +1761,7 @@
         "damage": 52
       },
       "score": 16.623,
-      "timelineStart": 33.9,
+      "timelineStart": 32.7,
       "seconds": 0.48333333333333334,
       "visibleSeconds": 0.48333333333333334,
       "initialHealth": 49,
@@ -1662,6 +1769,10 @@
       "killsDuringClip": 2,
       "layout": "Spillway",
       "targetOnscreenFraction": 1,
+      "cameraScale": [
+        2.15,
+        2.285
+      ],
       "fromBeat": 46,
       "toBeat": 48,
       "retiming": [
@@ -1687,192 +1798,192 @@
   ],
   "reviewFrames": [
     {
-      "seconds": 0.25,
-      "file": "work-action/intro-0015.png"
+      "seconds": 0.2,
+      "file": "work-action/intro-0012.png"
     },
     {
-      "seconds": 0.9,
-      "file": "work-action/intro-0054.png"
+      "seconds": 0.7166666666666667,
+      "file": "work-action/intro-0043.png"
     },
     {
-      "seconds": 1.5,
-      "file": "work-action/intro-0090.png"
+      "seconds": 1.2,
+      "file": "work-action/intro-0072.png"
     },
     {
-      "seconds": 2.1,
-      "file": "work-action/intro-0126.png"
+      "seconds": 1.6833333333333333,
+      "file": "work-action/intro-0101.png"
     },
     {
-      "seconds": 2.7333333333333334,
-      "file": "work-action/intro-0164.png"
+      "seconds": 2.2,
+      "file": "work-action/intro-0132.png"
     },
     {
-      "seconds": 3.9833333333333334,
-      "file": "work-action/intro-0239.png"
+      "seconds": 3.183333333333333,
+      "file": "work-action/intro-0191.png"
     },
     {
-      "seconds": 4.666666666666667,
-      "file": "work-action/intro-0280.png"
+      "seconds": 3.7333333333333334,
+      "file": "work-action/intro-0224.png"
     },
     {
-      "seconds": 5.3,
-      "file": "work-action/intro-0318.png"
+      "seconds": 4.233333333333333,
+      "file": "work-action/intro-0254.png"
     },
     {
-      "seconds": 5.8,
-      "file": "work-action/intro-0348.png"
+      "seconds": 4.633333333333334,
+      "file": "work-action/intro-0278.png"
     },
     {
-      "seconds": 7.2,
-      "file": "work-action/frame-0432.png"
+      "seconds": 6,
+      "file": "work-action/frame-0360.png"
     },
     {
-      "seconds": 9.6,
-      "file": "work-action/frame-0576.png"
+      "seconds": 8.4,
+      "file": "work-action/frame-0504.png"
     },
     {
-      "seconds": 12,
-      "file": "work-action/frame-0720.png"
+      "seconds": 10.8,
+      "file": "work-action/frame-0648.png"
     },
     {
-      "seconds": 14.383333333333333,
-      "file": "work-action/frame-0863.png"
+      "seconds": 13.183333333333334,
+      "file": "work-action/frame-0791.png"
     },
     {
-      "seconds": 16.8,
-      "file": "work-action/frame-1008.png"
+      "seconds": 15.6,
+      "file": "work-action/frame-0936.png"
     },
     {
-      "seconds": 19.2,
-      "file": "work-action/frame-1152.png"
+      "seconds": 18,
+      "file": "work-action/frame-1080.png"
     },
     {
-      "seconds": 21.583333333333332,
-      "file": "work-action/frame-1295.png"
+      "seconds": 20.383333333333333,
+      "file": "work-action/frame-1223.png"
     },
     {
-      "seconds": 23.983333333333334,
-      "file": "work-action/frame-1439.png"
+      "seconds": 22.783333333333335,
+      "file": "work-action/frame-1367.png"
     },
     {
-      "seconds": 26.4,
-      "file": "work-action/frame-1584.png"
+      "seconds": 25.2,
+      "file": "work-action/frame-1512.png"
     },
     {
-      "seconds": 28.816666666666666,
-      "file": "work-action/frame-1729.png"
+      "seconds": 27.616666666666667,
+      "file": "work-action/frame-1657.png"
     },
     {
-      "seconds": 30.616666666666667,
-      "file": "work-action/frame-1837.png"
+      "seconds": 29.416666666666668,
+      "file": "work-action/frame-1765.png"
     },
     {
-      "seconds": 31.5,
-      "file": "work-action/frame-1890.png"
+      "seconds": 30.3,
+      "file": "work-action/frame-1818.png"
     },
     {
-      "seconds": 32.1,
-      "file": "work-action/frame-1926.png"
+      "seconds": 30.9,
+      "file": "work-action/frame-1854.png"
     },
     {
-      "seconds": 32.71666666666667,
-      "file": "work-action/frame-1963.png"
+      "seconds": 31.516666666666666,
+      "file": "work-action/frame-1891.png"
     },
     {
-      "seconds": 33.46666666666667,
-      "file": "work-action/frame-2008.png"
+      "seconds": 32.266666666666666,
+      "file": "work-action/frame-1936.png"
     },
     {
-      "seconds": 34.083333333333336,
-      "file": "work-action/transition-2045.png"
+      "seconds": 32.88333333333333,
+      "file": "work-action/transition-1973.png"
     },
     {
-      "seconds": 34.13333333333333,
-      "file": "work-action/frame-2048.png"
+      "seconds": 32.93333333333333,
+      "file": "work-action/frame-1976.png"
     },
     {
-      "seconds": 34.18333333333333,
-      "file": "work-action/transition-2051.png"
+      "seconds": 32.983333333333334,
+      "file": "work-action/transition-1979.png"
     },
     {
-      "seconds": 34.28333333333333,
-      "file": "work-action/transition-2057.png"
+      "seconds": 33.083333333333336,
+      "file": "work-action/transition-1985.png"
     },
     {
-      "seconds": 34.36666666666667,
-      "file": "work-action/transition-2062.png"
+      "seconds": 33.166666666666664,
+      "file": "work-action/transition-1990.png"
     },
     {
-      "seconds": 34.38333333333333,
-      "file": "work-action/transition-2063.png"
+      "seconds": 33.18333333333333,
+      "file": "work-action/transition-1991.png"
     },
     {
-      "seconds": 34.38333333333333,
-      "file": "work-action/ending-2063.png"
+      "seconds": 33.18333333333333,
+      "file": "work-action/ending-1991.png"
     },
     {
-      "seconds": 34.416666666666664,
-      "file": "work-action/transition-2065.png"
+      "seconds": 33.21666666666667,
+      "file": "work-action/transition-1993.png"
     },
     {
-      "seconds": 34.45,
-      "file": "work-action/transition-2067.png"
+      "seconds": 33.25,
+      "file": "work-action/transition-1995.png"
     },
     {
-      "seconds": 34.516666666666666,
-      "file": "work-action/transition-2071.png"
+      "seconds": 33.31666666666667,
+      "file": "work-action/transition-1999.png"
     },
     {
-      "seconds": 34.583333333333336,
-      "file": "work-action/ending-2075.png"
+      "seconds": 33.38333333333333,
+      "file": "work-action/ending-2003.png"
     },
     {
-      "seconds": 34.8,
-      "file": "work-action/transition-2088.png"
+      "seconds": 33.6,
+      "file": "work-action/transition-2016.png"
     },
     {
-      "seconds": 34.81666666666667,
-      "file": "work-action/transition-2089.png"
+      "seconds": 33.61666666666667,
+      "file": "work-action/transition-2017.png"
     },
     {
-      "seconds": 34.81666666666667,
-      "file": "work-action/ending-2089.png"
+      "seconds": 33.61666666666667,
+      "file": "work-action/ending-2017.png"
     },
     {
-      "seconds": 34.85,
-      "file": "work-action/transition-2091.png"
+      "seconds": 33.65,
+      "file": "work-action/transition-2019.png"
     },
     {
-      "seconds": 34.916666666666664,
-      "file": "work-action/transition-2095.png"
+      "seconds": 33.71666666666667,
+      "file": "work-action/transition-2023.png"
     },
     {
-      "seconds": 34.96666666666667,
-      "file": "work-action/ending-2098.png"
+      "seconds": 33.766666666666666,
+      "file": "work-action/ending-2026.png"
     },
     {
-      "seconds": 35.516666666666666,
-      "file": "work-action/ending-2131.png"
+      "seconds": 34.31666666666667,
+      "file": "work-action/ending-2059.png"
     },
     {
-      "seconds": 35.81666666666667,
-      "file": "work-action/ending-2149.png"
+      "seconds": 34.61666666666667,
+      "file": "work-action/ending-2077.png"
     },
     {
-      "seconds": 37.38333333333333,
-      "file": "work-action/frame-2243.png"
+      "seconds": 36.18333333333333,
+      "file": "work-action/frame-2171.png"
     },
     {
-      "seconds": 37.983333333333334,
-      "file": "work-action/ending-2279.png"
+      "seconds": 36.78333333333333,
+      "file": "work-action/ending-2207.png"
     },
     {
-      "seconds": 38.18333333333333,
-      "file": "work-action/ending-2291.png"
+      "seconds": 36.983333333333334,
+      "file": "work-action/ending-2219.png"
     },
     {
-      "seconds": 38.983333333333334,
-      "file": "work-action/ending-2339.png"
+      "seconds": 37.78333333333333,
+      "file": "work-action/ending-2267.png"
     }
   ]
 }

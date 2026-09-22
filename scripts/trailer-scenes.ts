@@ -23,6 +23,7 @@ const legal = (ids: readonly string[]) => {
   return mods;
 };
 export const templates = [
+  { name: 'recoil', stage: 2, mods: legal(['kick', 'light']) },
   {
     name: 'scatter',
     stage: 6,
@@ -262,10 +263,11 @@ export function usableAction(q: TakeQuality, frames: number) {
   );
 }
 
-export function surveyTakes() {
+export function surveyTakes(names?: string[]) {
   const selected: Record<string, Take[]> = {};
   const length = 144;
   for (const template of templates) {
+    if (names && !names.includes(template.name)) continue;
     const candidates: Take[] = [];
     for (let n = 0; n < 24; n++) {
       const seed =

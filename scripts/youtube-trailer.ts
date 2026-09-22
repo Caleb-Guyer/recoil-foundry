@@ -16,6 +16,7 @@ import {
 import { trailerSound, INTRO_FOLEY_GAIN, type SoundCue, type BeamFrame } from './trailer-sound.ts';
 import { mixTrailer } from './trailer-mix.ts';
 import { endingTiming, drawEnding } from './trailer-ending.ts';
+import { drawThumbnail } from './trailer-thumbnail.ts';
 import {
   actionInput,
   recordAction,
@@ -48,6 +49,15 @@ const out = resolve(process.env.TRAILER_OUT ?? '../recoil-foundry-trailer');
 const work = resolve(out, 'work-action');
 mkdirSync(work, { recursive: true });
 const takesPath = resolve(process.env.TRAILER_TAKES ?? 'docs/trailer/action-takes.json');
+const surveyName = process.argv.find((arg) => arg.startsWith('--survey-name='))?.split('=')[1];
+if (surveyName) {
+  const previous = JSON.parse(readFileSync(takesPath, 'utf8'));
+  writeFileSync(
+    takesPath,
+    JSON.stringify({ ...previous, ...surveyTakes([surveyName]) }, null, 2) + '\n',
+  );
+  process.exit(0);
+}
 if (process.argv.includes('--survey')) {
   writeFileSync(takesPath, JSON.stringify(surveyTakes(), null, 2) + '\n');
   process.exit(0);
@@ -100,13 +110,22 @@ if (process.argv.includes('--mix-only')) {
   process.exit(0);
 }
 const introOnly = process.argv.includes('--intro-only');
-const storyboard = process.argv.includes('--storyboard') || introOnly;
+const storyboard =
+  process.argv.includes('--storyboard') || process.argv.includes('--thumbnail-only') || introOnly;
 if (!storyboard && (!ffmpeg || !existsSync(music)))
   throw new Error('Set FFMPEG and provide the licensed music file (TRAILER_MUSIC).');
 const canvas = createCanvas(W, H),
   c = canvas.getContext('2d');
 canvas.getBoundingClientRect = () => ({ width: W, height: H });
 const poster = createCanvas(W, H);
+if (process.argv.includes('--thumbnail-only')) {
+  const shot = scenes[9];
+  const frame = shot.start + Math.floor((shot.end - shot.start) / 2);
+  const source = await loadImage(resolve(work, `frame-${String(frame).padStart(4, '0')}.png`));
+  drawThumbnail(c, source);
+  writeFileSync(resolve(out, 'Recoil-Foundry-YouTube-Thumbnail.png'), canvas.toBuffer('image/png'));
+  process.exit(0);
+}
 const endingPlate = createCanvas(W, H);
 const transitionSamples = [
   -0.3,
@@ -221,15 +240,15 @@ const rejected: string[] = [];
 function caption(text: string, alpha: number) {
   c.save();
   c.globalAlpha = alpha;
-  const shade = c.createLinearGradient(0, 0, 0, 300);
-  shade.addColorStop(0, 'rgba(5,12,16,.8)');
+  const shade = c.createLinearGradient(0, 0, 0, 340);
+  shade.addColorStop(0, 'rgba(5,12,16,.78)');
   shade.addColorStop(1, 'rgba(5,12,16,0)');
   c.fillStyle = shade;
-  c.fillRect(0, 0, W, 300);
+  c.fillRect(0, 0, W, 340);
   c.fillStyle = '#e9eadc';
-  c.font = '86px "Release Bold"';
+  c.font = '72px "Release Bold"';
   c.textAlign = 'left';
-  c.fillText(text, 76, 172);
+  text.split('\n').forEach((line, n) => c.fillText(line, 96, 132 + n * 78));
   c.restore();
 }
 async function review(frame: number, label: string, index: number) {
@@ -282,7 +301,7 @@ async function reviewTransition(frame: number) {
 }
 const intro = new TrailerIntro(canvas);
 const introSamples = [0.25, 0.9, 1.5, 2.1, 2.74, 3.98, 4.66, 5.3, 5.8].map((s) =>
-  Math.round(s * FPS),
+  Math.round((s / 6) * INTRO_SECONDS * FPS),
 );
 const introSheet = createCanvas(1280, 810),
   ic = introSheet.getContext('2d');
@@ -332,7 +351,20 @@ for (const [index, scene] of scenes.entries()) {
   const take = scene.take,
     g = startTake(take),
     r = new Renderer(canvas, g);
-  r.scale = 2.05;
+  const baseScale = (
+    {
+      recoil: 2.4,
+      scatter: 2.25,
+      prism: 1.95,
+      pinwheel: 2.2,
+      turf: 1.95,
+      saw: 2.25,
+      cluster: 2.15,
+      storm: 2.15,
+      loader: 2.25,
+    } as Record<string, number>
+  )[take.name];
+  r.scale = baseScale;
   r.reset();
   // Run up to the chosen highlight using the same controls used during scouting.
   for (let tick = 0; tick < take.start; tick++) {
@@ -397,33 +429,20 @@ for (const [index, scene] of scenes.entries()) {
         .filter((p) => p.kind !== 'end' && p.output <= local)
         .map((p) => 0.055 * Math.exp(-(local - p.output) / 6)),
     );
-    r.scale = 2.05 + 0.1 * ease(local / len) + punch;
+    r.scale = baseScale + 0.08 * ease(local / len) + punch;
     r.draw(((tick + 1) * 1000) / FPS);
     const ax = (g.aim.x - r.camera.x) * r.scale,
       ay = (g.aim.y - r.camera.y) * r.scale;
     if (ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35) targetOnscreenFrames++;
     if (!storyboard || sample || sequenceAt.includes(local) || transitionSamples.includes(frame)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
-      if (index === 0 && sample)
+      if (index === 9 && sample)
         poster.getContext('2d').putImageData(c.getImageData(0, 0, W, H), 0, 0);
-      // The small original HUD remains grounded in this take's actual state.
-      c.save();
-      c.globalAlpha = 1 - ease((frame - endStart + 24) / 24);
-      c.fillStyle = '#40504d';
-      c.fillRect(36, 34, 162, 7);
-      c.fillStyle = '#e9eadc';
-      c.fillRect(36, 34, (162 * Math.max(0, g.hp)) / 100, 7);
-      c.font = '18px "Release Mono"';
-      c.textAlign = 'right';
-      c.fillStyle = '#b0bbb4';
-      c.fillText(`${String(g.stage + 1).padStart(2, '0')} / 20`, W - 42, 44);
-      c.textAlign = 'left';
-      c.restore();
-      if (index === 0) caption('ONE GUN.', ease(local / 6));
-      if (index === 2)
-        caption('100 WAYS TO BUILD IT.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
-      if (index === 6)
-        caption('MAKE SOME ROOM.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
+      // Hide editorial HUD; the live simulation still has health and damage.
+      const captionAlpha = ease(local / 6) * (1 - ease((local - len + 16) / 16));
+      if (index === 0) caption('EVERY SHOT\nMOVES YOU.', captionAlpha);
+      if (index === 2) caption('ONE GUN.\nYOUR BUILD.', captionAlpha);
+      if (index === 8) caption('CLOCK OUT\nALIVE.', captionAlpha);
       await reviewTransition(frame);
       if (sample) await review(frame, take.name, index);
       if (sequenceAt.includes(local))
@@ -455,6 +474,7 @@ for (const [index, scene] of scenes.entries()) {
     layout: g.level.name,
     quality,
     targetOnscreenFraction,
+    cameraScale: [baseScale, baseScale + 0.135],
     fromBeat: scene.fromBeat,
     toBeat: scene.toBeat,
     retiming: scene.points,
@@ -470,7 +490,7 @@ const endingSamples = [
   endStart + 228,
   ending.fadeStartFrame + 30,
   ending.endFrame - 12,
-];
+].sort((a, b) => a - b);
 const endingSheet = createCanvas(1440, 900),
   ec = endingSheet.getContext('2d');
 for (let frame = endStart; frame < total; frame++) {
@@ -535,26 +555,7 @@ if (video) {
 if (rejected.length) throw new Error(`Unusable action shots:\n${rejected.join('\n')}`);
 
 // The thumbnail uses action from the same edit and the established game wordmark.
-c.drawImage(poster, 0, 0);
-const shade = c.createLinearGradient(0, 0, W, 0);
-shade.addColorStop(0, 'rgba(7,16,20,.95)');
-shade.addColorStop(0.5, 'rgba(7,16,20,.6)');
-shade.addColorStop(1, 'rgba(7,16,20,.05)');
-c.fillStyle = shade;
-c.fillRect(0, 0, W, H);
-c.fillStyle = '#e9eadc';
-c.font = '200px "Release Bold"';
-c.fillText('RECOIL', 100, 405);
-c.fillStyle = '#acc3b6';
-c.font = '70px "Release Mono"';
-c.fillText('F O U N D R Y', 106, 520);
-c.fillStyle = '#e9eadc';
-c.font = '47px "Release Bold"';
-c.fillText('ONE GUN. ALL RECOIL.', 108, 689);
-c.fillStyle = '#acc3b6';
-c.fillRect(110, 774, 62, 4);
-c.font = '30px "Release Mono"';
-c.fillText('OFFICIAL LAUNCH TRAILER', 110, 849);
+drawThumbnail(c, poster);
 writeFileSync(resolve(out, 'Recoil-Foundry-YouTube-Thumbnail.png'), canvas.toBuffer('image/png'));
 if (storyboard) {
   console.log('Storyboard ready');
@@ -602,13 +603,13 @@ writeFileSync(
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 8,
+      revision: 9,
       width: W,
       height: H,
       fps: FPS,
       seconds: duration,
       frames: total,
-      cameraScale: [2.05, 2.21],
+      cameraScale: [1.95, 2.535],
       playback:
         'Original fixed-step simulation, gently retimed between actual combat events and measured musical transients',
       bpm: BPM,

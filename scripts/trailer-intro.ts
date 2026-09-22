@@ -5,13 +5,16 @@ import { drawScenery } from '../src/areas.ts';
 import { seeded } from '../src/rules.ts';
 
 // Editorial cold open, separate from the unchanged, live-simulation combat takes.
-export const INTRO_SECONDS = 6;
-export const FOOTSTEPS = [0.88, 1.5, 2.12, 2.74, 3.36, 3.98];
+export const INTRO_SECONDS = 4.8;
+const SOURCE_SECONDS = 6;
+const TIME_SCALE = INTRO_SECONDS / SOURCE_SECONDS;
+const SOURCE_STEPS = [0.88, 1.5, 2.12, 2.74, 3.36, 3.98];
+export const FOOTSTEPS = SOURCE_STEPS.map((time) => time * TIME_SCALE);
 const smooth = (value: number) => {
   const x = Math.max(0, Math.min(1, value));
   return x * x * (3 - 2 * x);
 };
-const walkStart = FOOTSTEPS[0] - 0.31;
+const walkStart = SOURCE_STEPS[0] - 0.31;
 const strideLength = Math.PI / 0.14;
 const walkSpeed = strideLength / 0.62;
 const startX = (12 * Math.PI) / 0.14;
@@ -25,6 +28,7 @@ export class TrailerIntro {
     this.game.grounded = true;
   }
   draw(t: number) {
+    t /= TIME_SCALE;
     const r = this.renderer,
       c = r.ctx,
       w = r.width,
@@ -74,7 +78,7 @@ export class TrailerIntro {
 
     const flicker = t > 4.58 && t < 4.76 ? 0.2 : t > 0.3 && t < 0.43 ? 0.45 : 1;
     const pool = c.createRadialGradient(400, 280, 2, 400, 340, 300);
-    pool.addColorStop(0, `rgba(159,192,173,${0.14 * flicker})`);
+    pool.addColorStop(0, `rgba(159,192,173,${0.2 * flicker})`);
     pool.addColorStop(1, 'rgba(130,180,170,0)');
     c.fillStyle = pool;
     c.fillRect(100, 70, 600, 400);
@@ -83,11 +87,11 @@ export class TrailerIntro {
     c.fillStyle = `rgba(190,209,184,${0.8 * flicker})`;
     c.fillRect(372, 133, 58, 2);
 
-    const walking = t >= walkStart && t <= FOOTSTEPS.at(-1)! + 0.26;
+    const walking = t >= walkStart && t <= SOURCE_STEPS.at(-1)! + 0.26;
     const x =
       startX +
-      Math.max(0, Math.min(FOOTSTEPS.at(-1)! - walkStart, t - walkStart)) * walkSpeed +
-      (strideLength / 2) * smooth((t - FOOTSTEPS.at(-1)!) / 0.26);
+      Math.max(0, Math.min(SOURCE_STEPS.at(-1)! - walkStart, t - walkStart)) * walkSpeed +
+      (strideLength / 2) * smooth((t - SOURCE_STEPS.at(-1)!) / 0.26);
     const foot = Math.abs(Math.sin(x * 0.14));
     const y = 418 - foot * 2.6;
     Matter.Body.setPosition(this.game.player, { x, y });
@@ -102,10 +106,10 @@ export class TrailerIntro {
     r.drawPlayer();
 
     // Grade the original game art into silhouettes; keep the light and eyes readable.
-    c.fillStyle = 'rgba(2,8,12,.62)';
+    c.fillStyle = 'rgba(2,8,12,.43)';
     c.fillRect(-100, -100, 1160, 740);
     const light = c.createRadialGradient(404, 360, 0, 404, 360, 190);
-    light.addColorStop(0, `rgba(145,183,167,${0.08 * flicker})`);
+    light.addColorStop(0, `rgba(145,183,167,${0.11 * flicker})`);
     light.addColorStop(1, 'rgba(145,183,167,0)');
     c.fillStyle = light;
     c.fillRect(214, 170, 380, 380);
@@ -141,13 +145,13 @@ export class TrailerIntro {
       w * 0.65,
     );
     vignette.addColorStop(0, 'rgba(0,3,6,0)');
-    vignette.addColorStop(1, 'rgba(0,3,6,.85)');
+    vignette.addColorStop(1, 'rgba(0,3,6,.72)');
     c.fillStyle = vignette;
     c.fillRect(0, 0, w, h);
     c.fillStyle = `rgba(2,6,9,${1 - smooth(t / 0.65)})`;
     c.fillRect(0, 0, w, h);
     // A six-frame breath before the downbeat, rather than a bright flash.
-    if (t >= INTRO_SECONDS - 0.1) {
+    if (t >= SOURCE_SECONDS - 0.1 / TIME_SCALE) {
       c.fillStyle = '#020609';
       c.fillRect(0, 0, w, h);
     }
@@ -169,9 +173,9 @@ export function introAudio(sampleRate = 48000) {
     }
   };
   let rumble = 0;
-  add(0, 5.9, 0, (t) => {
+  add(0, INTRO_SECONDS - 0.1, 0, (t) => {
     rumble = rumble * 0.97 + (random() * 2 - 1) * 0.03;
-    const envelope = smooth(t / 0.55) * (1 - smooth((t - 5.45) / 0.45));
+    const envelope = smooth(t / 0.44) * (1 - smooth((t - INTRO_SECONDS + 0.46) / 0.36));
     return (
       envelope *
       (rumble * 0.035 +
@@ -208,7 +212,7 @@ export function introAudio(sampleRate = 48000) {
     [5.36, 0.1],
   ]) {
     add(
-      time,
+      time * TIME_SCALE,
       0.24,
       0.1,
       (t) =>
@@ -219,9 +223,14 @@ export function introAudio(sampleRate = 48000) {
     );
   }
   let air = 0;
-  add(5.36, 0.54, 0, (t) => {
+  add(5.36 * TIME_SCALE, 0.54 * TIME_SCALE, 0, (t) => {
     air = air * 0.8 + (random() * 2 - 1) * 0.2;
-    return air * 0.2 * smooth(t / 0.54) * (1 - smooth((t - 0.48) / 0.06));
+    return (
+      air *
+      0.2 *
+      smooth(t / (0.54 * TIME_SCALE)) *
+      (1 - smooth((t - 0.48 * TIME_SCALE) / (0.06 * TIME_SCALE)))
+    );
   });
   return channels;
 }
