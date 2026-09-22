@@ -1,6 +1,6 @@
 # YouTube launch trailer
 
-Final editorial pass, September 21, 2026, for the stable **2.98.0** browser release. Revision 10 connects the factory opening to the first gunshot with a matched camera pullback and replaces the synthetic footsteps with sampled concrete footfalls. The 38-second edit and music-led ending retain their timing.
+Final editorial pass, September 21, 2026, for the stable **2.98.0** browser release. Revision 11 completes the full-trailer review: the play invitation and link are larger, and overlapping blast sounds are balanced to leave room for gunfire and music. The matched opening, sampled footsteps, 38-second edit and music-led ending retain their timing.
 
 - [Finished MP4](Recoil-Foundry-Launch-Trailer.mp4)
 - [YouTube thumbnail](Recoil-Foundry-YouTube-Thumbnail.png)
@@ -41,7 +41,7 @@ Music is **“Resonance” by Scott Buckley**, under CC BY 4.0. At 0:24, the edi
 
 The final recorded accents occur at source times 4:18.856 and 4:19.296. Both title lines appear fully on their respective hits, with frame-rounding errors of +3.00 ms and −3.67 ms. A six-frame trace of the last action shot sits behind the first word. Combat effects ease back before the title; the original recording supplies the closing fill and natural ring-out. There is no added title stinger, synthetic riser or artificial echo.
 
-The play invitation enters at 0:34.217 and the URL at 0:34.317. The card begins fading at 0:36.283, reaches black at 0:37.483, and ends at 0:37.983. The recording's natural decay accompanies the fade.
+The larger, single-line invitation reads **PLAY FREE IN YOUR BROWSER**, with a brighter 44-pixel URL beneath it. The invitation enters at 0:34.217 and the URL at 0:34.317. The card begins fading at 0:36.283, reaches black at 0:37.483, and ends at 0:37.983. The recording's natural decay accompanies the fade.
 
 [`trailer-ending.ts`](../../scripts/trailer-ending.ts) and [`trailer-mix.ts`](../../scripts/trailer-mix.ts) share timing from [music-beats.json](music-beats.json). Changing title timing requires updating the musical arrangement and combat edit together.
 
@@ -53,15 +53,15 @@ The play invitation enters at 0:34.217 and the URL at 0:34.317. The card begins 
 
 The scout rejects blocked firing, extended inactivity, inadequate movement and clips with no damage. [`trailer-edit.ts`](../../scripts/trailer-edit.ts) chooses real combat events and gently retimes them to measured musical accents. Physics retains its fixed timestep. The renderer checks each exact cut and camera framing, and aborts on missing or off-frame planned events.
 
-[`trailer-sound.ts`](../../scripts/trailer-sound.ts) places the game's original cues at retimed events. Weapons and explosions lead; quieter warnings sit behind them and beams have a continuous layer. Transient shaping and saturation control dense combat. Every clip passes an effects-level gate. Music uses a small EQ cut, brief ducking beneath effects, measured constant gain and a final peak limiter. No voiceover is used. Game runtime and runtime audio are unchanged.
+[`trailer-sound.ts`](../../scripts/trailer-sound.ts) places the game's original cues at retimed events. Weapons and explosions lead; quieter warnings sit behind them and beams have a continuous layer. Transient shaping and saturation control dense combat. When impact sounds overlap within 120 ms, later impacts receive progressively less gain, down to −6 dB; the first impact and weapon sounds retain their full levels. Every cue remains on its original event frame. Every clip passes an effects-level gate. Music uses a small EQ cut, brief ducking beneath effects, measured constant gain and a final peak limiter. No voiceover is used. Game runtime and runtime audio are unchanged.
 
 ## Verification
 
 All sixteen clips pass their quality gates, with no blocked firing. All 45 planned combat accents match their assigned frames. The two title reveals match the recorded closing accents within 3.67 ms; waveform comparison of the encoded export finds zero additional offset around either reveal (correlations 0.9996 and 0.9892).
 
-All 2,279 frames and the full audio stream decode without errors. Final AAC measures −14.09 LUFS integrated and −1.85 dBTP. No unintended black or silent gaps occur through the montage or title transition. The natural music decay falls below −60 dB during the final picture fade. MP4 fast-start metadata and stream formats are checked.
+All 2,279 frames and the full audio stream decode without errors. Final AAC measures −14.09 LUFS integrated and −1.88 dBTP. No unintended black or silent gaps occur through the montage or title transition. The natural music decay falls below −60 dB during the final picture fade. MP4 fast-start metadata and stream formats are checked.
 
-The capture-driver regressions pass. Intro, Foley decoding and sound modules pass strict TypeScript checking. The revised opening and its twelve handoff samples were visually reviewed, alongside the prior full-cut review. The last intro frame aligns to the incoming player within 0.28 pixels, with a 0.0082 scale difference. All six foot plants match their sound onsets within 6.67 ms of the nearest video frame. Measurements describe the exported file, not physical-speaker listening or a completed YouTube upload.
+The capture-driver regressions pass. Ending and sound modules pass strict TypeScript checking; the unchanged intro and Foley modules retain their prior checks. All sixteen six-frame gameplay sequences, the opening and ending transitions, and six small-screen stills from the encoded master were visually reviewed. The mono compatibility check found a worst two-second level change of -1.17 dB versus stereo energy. The last intro frame aligns to the incoming player within 0.28 pixels, with a 0.0082 scale difference. All six foot plants match their sound onsets within 6.67 ms of the nearest video frame. Measurements describe the exported file, not physical-speaker listening or a completed YouTube upload.
 
 ## Rebuild
 

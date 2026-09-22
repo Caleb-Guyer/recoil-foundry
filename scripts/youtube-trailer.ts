@@ -706,7 +706,7 @@ writeFileSync(
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 10,
+      revision: 11,
       width: W,
       height: H,
       fps: FPS,
@@ -718,6 +718,7 @@ writeFileSync(
       bpm: BPM,
       audioMix: mix,
       effects: data.audit,
+      impactMix: data.impactMix,
       effectsLevels,
       beatSync: syncAudit,
       ending: {

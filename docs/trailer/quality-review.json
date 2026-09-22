@@ -1,5 +1,5 @@
 {
-  "revision": 10,
+  "revision": 11,
   "frames": 2279,
   "seconds": 37.983333333333334,
   "video": "H.264 High, 1920x1080, 60fps, yuv420p, progressive BT.709",
@@ -7,7 +7,7 @@
   "fullDecodePassed": true,
   "fastStart": true,
   "integratedLufs": -14.09,
-  "truePeakDbtp": -1.85,
+  "truePeakDbtp": -1.88,
   "combatClips": 16,
   "combatClipsPassed": 16,
   "syncedCombatEvents": 45,
@@ -17,17 +17,17 @@
       "sourceStart": 258.91,
       "expectedTimeline": 33.23400000000004,
       "encodedLagMs": 0.0,
-      "correlation": 0.9996141745299645
+      "correlation": 0.9996151828190032
     },
     {
       "sourceStart": 259.34,
       "expectedTimeline": 33.66399999999999,
       "encodedLagMs": 0.0,
-      "correlation": 0.9891828365832741
+      "correlation": 0.9891745770354664
     }
   ],
-  "sourceVideoSha256": "f669a1d33c1b0efc4f325b67ae901f2f1645548490a2e57dee61c0f94d179c42",
-  "review": "Revised intro and all 12 opening handoff samples inspected. Full 2279-frame video/audio decoded. All 16 combat shots and 45 assigned event frames pass capture gates. No physical-speaker or YouTube playback claim.",
+  "sourceVideoSha256": "4ce2c4d44af3f47706071ecfc8a68cbf94507ba59ad634048557b55d1b557f62",
+  "review": "Full 2279-frame video/audio decode; all 16 six-frame gameplay sequences, opening/ending transitions, and six small-screen encoded stills reviewed. All 45 assigned combat events pass exact-frame checks. No physical-speaker or YouTube playback claim.",
   "openingMatch": {
     "outgoing": {
       "player": {
@@ -95,5 +95,15 @@
     "clipFree": true,
     "samples": [4945, 5028, 5275, 5165, 5350],
     "standingStride": -2.7929374788198713e-14
+  },
+  "monoCompatibility": {
+    "worstTwoSecondChangeDb": -1.1736479380636797,
+    "medianChangeDb": -0.5201615085451082,
+    "method": "RMS of mono sum versus stereo energy, overlapping two-second music/action windows"
+  },
+  "impactMix": {
+    "windowSeconds": 0.12,
+    "layeredImpacts": 60,
+    "minimumImpactGain": 0.6593804733957871
   }
 }

@@ -70,15 +70,12 @@ export function drawEnding(
   c.fillStyle = '#d49463';
   c.fillRect(926, 680, 68, 3);
   c.fillStyle = '#e9eadc';
-  c.font = '42px "Release Bold"';
-  c.fillText('PLAY FREE NOW', 960, 760);
-  c.fillStyle = '#a8b8af';
-  c.font = '28px "Release Sans"';
-  c.fillText('IN YOUR BROWSER', 960, 806);
+  c.font = '58px "Release Bold"';
+  c.fillText('PLAY FREE IN YOUR BROWSER', 960, 760);
   c.globalAlpha *= smooth((frame - timing.linkFrame) / 12);
-  c.font = '31px "Release Mono"';
-  c.fillStyle = '#c0cbc1';
-  c.fillText('caleb-guyer.itch.io/recoil-foundry', 960, 875);
+  c.font = '44px "Release Mono"';
+  c.fillStyle = '#cbd5cc';
+  c.fillText('caleb-guyer.itch.io/recoil-foundry', 960, 850);
   c.restore();
   c.restore();
 }

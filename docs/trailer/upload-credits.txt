@@ -1,0 +1,17 @@
+RECOIL FOUNDRY — TRAILER CREDITS
+
+Game and trailer: Caleb Guyer / Recoil Foundry.
+The opening is editorial animation made with the game's art. Combat footage uses the actual game engine and sound effects.
+
+MUSIC
+'Resonance' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
+Track: https://www.scottbuckley.com.au/library/resonance/
+License: https://creativecommons.org/licenses/by/4.0/
+The recording is edited into two excerpts with a short crossfade, equalized, and ducked beneath game sound effects. The original closing accents and ring-out are retained.
+Keep this music attribution in the YouTube description; upload-text.txt already includes it.
+
+OPENING FOOTFALLS
+Impact Sounds 1.0 by Kenney, CC0.
+Source: https://kenney.nl/assets/impact-sounds
+License: https://creativecommons.org/publicdomain/zero/1.0/
+Five concrete footfall samples were filtered, level-matched and placed to match the animation, with quiet room reflections. No pitch shift is applied. Courtesy attribution is included in upload-text.txt.

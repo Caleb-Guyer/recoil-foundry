@@ -87,12 +87,12 @@ export function trailerSound(
     audit.push({ kind, events: 0, originalPeak: peak, mixedPeak: target });
     return data;
   }
-  function mix(data: Float32Array[], at: number, length = data[0].length, fade = false) {
+  function mix(data: Float32Array[], at: number, length = data[0].length, fade = false, gain = 1) {
     const start = Math.round(at * rate);
     for (let ch = 0; ch < 2; ch++)
       for (let i = 0; i < length && start + i < channels[ch].length; i++) {
         const envelope = fade ? Math.min(1, i / 240, (length - i) / 480) : 1;
-        channels[ch][start + i] += (data[ch] ?? data[0])[i % data[0].length] * envelope;
+        channels[ch][start + i] += (data[ch] ?? data[0])[i % data[0].length] * envelope * gain;
       }
   }
   // The intro is mixed directly, without a loudness normalizer lifting its room tone.
@@ -101,12 +101,26 @@ export function trailerSound(
     0,
   );
   const last = new Map<string, number>();
+  // Keep the first impact intact; clustered blasts should not bury the next gunshot or beat.
+  const impactWindow = 0.12,
+    impactTimes: number[] = [];
+  let layeredImpacts = 0,
+    minimumImpactGain = 1;
   for (const cue of cues) {
     const cooldown =
       cue.kind === 'hit' || cue.kind === 'armor' || cue.kind === 'kill' ? 0.055 : 0.015;
     if (cue.frame / 60 - (last.get(cue.kind) ?? -10) < cooldown) continue;
     last.set(cue.kind, cue.frame / 60);
-    mix(bank(cue.kind), cue.frame / 60);
+    let gain = 1;
+    if (impacts.has(cue.kind)) {
+      const time = cue.frame / 60;
+      while (impactTimes.length && time - impactTimes[0] > impactWindow) impactTimes.shift();
+      gain = Math.max(0.5, 1 / Math.sqrt(1 + impactTimes.length * 0.65));
+      if (gain < 1) layeredImpacts++;
+      minimumImpactGain = Math.min(minimumImpactGain, gain);
+      impactTimes.push(time);
+    }
+    mix(bank(cue.kind), cue.frame / 60, undefined, false, gain);
     audit.find((a) => a.kind === cue.kind)!.events++;
   }
   let first = 0;
@@ -141,5 +155,6 @@ export function trailerSound(
     numberOfChannels: 2,
     length: channels[0].length,
     audit,
+    impactMix: { windowSeconds: impactWindow, layeredImpacts, minimumImpactGain },
   };
 }
