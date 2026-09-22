@@ -1,6 +1,6 @@
 # YouTube launch trailer
 
-Revised on September 20, 2026, for the stable **2.98.0** browser release. Revision 6 adds a deliberate climax, musical title reveal, staged play card, and complete fade to black. The six-second factory opening and prominent, synchronized combat sound effects are retained.
+Revised on September 21, 2026, for the stable **2.98.0** browser release. Revision 7 smooths the gameplay-to-title transition: the final shot keeps moving beneath the wordmark, while picture and sound resolve together. The six-second factory opening, synchronized combat effects, staged play card, and closing fade are retained.
 
 - [Finished MP4](Recoil-Foundry-Launch-Trailer.mp4)
 - [YouTube thumbnail](Recoil-Foundry-YouTube-Thumbnail.png)
@@ -21,7 +21,7 @@ The video is 44.90 seconds, 1920 × 1080 at 60 fps, with an H.264 High profile p
 | 0:13–0:20 | Prism beam, Turf War, and bouncing saw rounds                    |
 | 0:20–0:30 | Linked explosives, pinwheel, Loader, and Storm Cell              |
 | 0:30–0:35 | Two-beat cuts: scatter, prism, saws, and Turf War                |
-| 0:35–0:37 | Four single-beat cuts, industrial rise, and a brief blackout     |
+| 0:35–0:37 | Four single-beat cuts and an industrial rise                     |
 | 0:37–0:39 | Wordmark lands on a musical impact; play invitation appears next |
 | 0:39–0:43 | Clean play card with the free itch.io link                       |
 | 0:43–0:45 | Picture and factory ambience fade fully to black and silence     |
@@ -30,7 +30,7 @@ A six-second cold open uses two camera framings, six footsteps on metal, factory
 
 Eighteen combat shots accelerate from ten four-beat phrases to four two-beat cuts, then four single-beat cuts. The song's 100 BPM pulse was measured from the recording, and the cut points use local transient peaks rather than an approximate stopwatch grid. Forty-eight real firing, hit, kill, and beam events land on those musical accents. Gentle speed changes and small camera accents reinforce them. Three short captions sit over gameplay. Only the first three areas, a Turf War, and the first Loader boss appear. Later bosses, story reveals, and endings are omitted.
 
-The ending in [`trailer-ending.ts`](../../scripts/trailer-ending.ts) shares precise timing between picture, effects, and music. A rising industrial sound builds across the last 4.8 seconds of action, then the picture and all audio stop for 12 frames at 0:37.00. At 0:37.20 the wordmark lands on the recorded downbeat and an original metal impact, with a small settling motion. The music accent rings out through a short echo instead of starting another phrase. “PLAY FREE NOW” enters at 0:38.30 and the URL at 0:38.70. The fully readable card holds for over four seconds before a 1.2-second fade begins at 0:43.20; the file ends with half a second of black and silence. The card uses quiet factory colors and steel seams, without gameplay behind the text.
+The ending in [`trailer-ending.ts`](../../scripts/trailer-ending.ts) shares precise timing between picture, effects, and music. The final shot gradually darkens from 0:37.00, then continues at half speed beneath a quick, stationary wordmark reveal on the 0:37.20 downbeat. Its camera remains continuous as the moving background dissolves into the factory-colored card by 0:37.80. The HUD fades ahead of the reveal. Music stays continuous, and the last combat sounds fade with the picture; a softer original metal impact and musical echo complete the transition. “PLAY FREE NOW” enters at 0:38.30 and the URL at 0:38.70. The fully readable card holds for over four seconds before a 1.2-second fade begins at 0:43.20; the file ends with half a second of black and silence.
 
 ## Capture and sound
 
@@ -44,13 +44,13 @@ This is an offline engine capture, not a recording of a human playtest or eviden
 
 The earlier export's combat-effects stem averaged approximately −44.4 dBFS, so the external song overwhelmed it. [`trailer-sound.ts`](../../scripts/trailer-sound.ts) now renders the game's original `Sound` cues into isolated, checked buffers and places them at the retimed events. Weapon shots and explosions receive stronger levels than distant enemies and warning sounds; the beam has a separate continuous layer. The full effects bus stays active during buffer generation. Transient shaping and gentle bus saturation keep dense combat controlled. Each exported combat clip must pass an effects-level check, preventing a silently missing or buried stem from being accepted again.
 
-Music is a recorded excerpt of **“Resonance” by Scott Buckley**, licensed under CC BY 4.0. It begins at 0:06. [`trailer-mix.ts`](../../scripts/trailer-mix.ts) lowers it, makes a small EQ cut around the weapon effects, and briefly ducks it beneath impacts. A measured constant gain and final peak limiter preserve the quiet opening. The arrangement pauses before the title, returns on its downbeat, then tapers into an echo tail. Original synthesized industrial air, a metal impact, and factory room tone complete the ending; the room tone fades with the picture. No additional samples were downloaded. See [music-license.md](music-license.md) for attribution. No voiceover is used, and the game's runtime audio is unchanged.
+Music is a recorded excerpt of **“Resonance” by Scott Buckley**, licensed under CC BY 4.0. It begins at 0:06. [`trailer-mix.ts`](../../scripts/trailer-mix.ts) lowers it, makes a small EQ cut around the weapon effects, and briefly ducks it beneath impacts. A measured constant gain and final peak limiter preserve the quiet opening. The arrangement continues through the title downbeat, then tapers into an echo tail. Original synthesized industrial air, a metal impact, and factory room tone complete the ending; the room tone fades with the picture. No additional samples were downloaded. See [music-license.md](music-license.md) for attribution. No voiceover is used, and the game's runtime audio is unchanged.
 
 ## Verification
 
-All eighteen cuts passed the movement, damage, visibility, and framing checks, including the visible portion of the final shot before the blackout. The changed final cuts and nine title-card stages were visually reviewed. All 48 planned musical accents matched their assigned video frames with zero frame error; the measured song peaks are quantized to 60 fps. Every original sound buffer is checked for finite, nonzero output; every combat clip must have an effects RMS above −33 dBFS and a peak above 0.15 before final mixing. The ending, edit, and sound modules pass strict TypeScript checking.
+All eighteen cuts passed the movement, damage, visibility, and framing checks. The final shot stays in active gameplay throughout its additional half-speed transition. Twelve closely spaced transition frames and nine title-card stages were visually reviewed. All 48 planned musical accents match their assigned video frames with zero frame error; the measured song peaks are quantized to 60 fps. Every original sound buffer is checked for finite, nonzero output; every combat clip must have an effects RMS above −33 dBFS and a peak above 0.15 before final mixing. The ending, edit, and sound modules pass strict TypeScript checking.
 
-All 2,694 frames and the complete audio stream decoded without errors. Final AAC audio measures −14.08 LUFS integrated and −1.81 dBTP, without clipping. Picture analysis confirms the 0:37.00–0:37.20 title pause and the final fade to black; audio analysis confirms the corresponding pause and silent ending. The effects in every combat shot remain above the audibility gate. These are file and mix measurements, not a claim of a physical speaker listening test or a completed YouTube upload.
+All 2,694 frames and the complete audio stream decoded without errors. Final AAC audio measures −14.09 LUFS integrated and −1.79 dBTP, without clipping. Picture and audio analysis confirm there is no black or silent gap through the title transition. The final fade reaches black and silence. The effects in every combat shot remain above the audibility gate. These are file and mix measurements, not a claim of a physical speaker listening test or a completed YouTube upload.
 
 ## Rebuild
 

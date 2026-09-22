@@ -14,15 +14,14 @@ export function mixTrailer(
   ending: EndingTiming,
 ) {
   const impact = ending.impactFrame / 60,
-    breath = ending.breathFrame / 60,
     musicHit = impact - intro;
-  // Stop the arrangement on its title downbeat and let that accent ring out.
-  // This resolves the music instead of continuing a new phrase under a static card.
+  // One continuous excerpt crosses the title downbeat, then resolves into a soft tail.
+  // Delayed echoes begin after the hit; there is no gap or overlapping dry downbeat.
   const stems = [
     '[1:a]highpass=f=55,asplit=2[fx][side]',
     '[2:a]volume=0.60,equalizer=f=1900:t=q:w=0.8:g=-2,asplit=2[main][hit]',
-    `[main]atrim=duration=${breath - intro},asetpts=PTS-STARTPTS,afade=t=in:d=0.015,afade=t=out:st=${breath - intro - 0.035}:d=0.035,adelay=${intro * 1000}:all=1[body]`,
-    `[hit]atrim=start=${musicHit}:end=${musicHit + 0.8},asetpts=PTS-STARTPTS,afade=t=in:d=0.003,afade=t=out:st=0.12:d=0.68,aecho=0.85:0.9:170|330|590|970:0.32|0.22|0.13|0.07,afade=t=out:st=1.1:d=0.67,adelay=${impact * 1000}:all=1[resolve]`,
+    `[main]atrim=duration=${musicHit + 0.8},asetpts=PTS-STARTPTS,afade=t=in:d=0.015,afade=t=out:st=${musicHit + 0.12}:d=0.68,adelay=${intro * 1000}:all=1[body]`,
+    `[hit]atrim=start=${musicHit}:end=${musicHit + 0.8},asetpts=PTS-STARTPTS,afade=t=in:d=0.003,afade=t=out:st=0.12:d=0.68,aecho=1:0.22:170|330|590|970:0.32|0.22|0.13|0.07,afade=t=out:st=1.1:d=0.67,adelay=${impact * 1000 + 170}:all=1[resolve]`,
     '[body][resolve]amix=inputs=2:duration=longest:normalize=0,apad[song]',
     '[song][side]sidechaincompress=threshold=0.10:ratio=3:attack=3:release=110:makeup=1[ducked]',
     '[fx][ducked]amix=inputs=2:duration=first:normalize=0',
@@ -96,12 +95,12 @@ export function mixTrailer(
   if (mux.status !== 0) throw new Error(mux.stderr);
   const audit = {
     method:
-      'Isolated original game cues, industrial build and title hit, music EQ and brief sidechain ducking, pre-title pause, downbeat with echo resolution, measured constant gain, peak limiter',
+      'Isolated original game cues, industrial build and softer title hit, music EQ and brief sidechain ducking, continuous downbeat transition with echo resolution, measured constant gain, peak limiter',
     musicResolution: {
       impact,
-      pauseSeconds: impact - breath,
+      pauseSeconds: 0,
       sourceEnd: sourceIn + musicHit + 0.8,
-      echoTailSeconds: 0.97,
+      echoTailSeconds: 1.14,
     },
     musicGain: 0.6,
     masterGainDb: gainDb,

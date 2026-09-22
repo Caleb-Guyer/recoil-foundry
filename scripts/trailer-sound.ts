@@ -122,11 +122,14 @@ export function trailerSound(
     first = end;
   }
   Math.random = previousRandom;
-  // Stop lingering combat tails before the title, including sustained beams.
-  const breath = ending.breathFrame / 60;
+  // Let the final explosions resolve under the wordmark with the moving picture.
+  const fadeStart = ending.impactFrame / 60;
+  const fadeEnd = ending.transitionEndFrame / 60;
   for (const channel of channels)
-    for (let i = Math.round((breath - 0.012) * rate); i < channel.length; i++)
-      channel[i] *= Math.max(0, Math.min(1, (breath - i / rate) / 0.012));
+    for (let i = Math.round(fadeStart * rate); i < channel.length; i++) {
+      const x = Math.max(0, Math.min(1, (i / rate - fadeStart) / (fadeEnd - fadeStart)));
+      channel[i] *= 1 - x * x * (3 - 2 * x);
+    }
   mix(endingAudio(ending, duration, rate), 0);
   // Gentle bus saturation controls overlapping blast peaks before the final mix.
   for (const channel of channels)

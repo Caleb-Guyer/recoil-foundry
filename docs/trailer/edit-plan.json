@@ -962,8 +962,8 @@
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 154,
-        "span": 120,
+        "travel": 263,
+        "span": 175,
         "damage": 52
       },
       "score": 16.623
@@ -985,6 +985,6 @@
         "kind": "end"
       }
     ],
-    "score": 24.23173617549405
+    "score": 22.258074733719155
   }
 ]

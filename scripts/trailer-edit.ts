@@ -118,7 +118,7 @@ export function planEdit(takes: Record<string, Take[]>, beats: Beat[]): EditShot
           )
         )
           continue;
-        const visibleLength = toBeat === 52 ? len - 12 : len;
+        const visibleLength = len;
         const clip = frames.slice(sourceStart, sourceStart + visibleLength),
           quality = takeQuality(clip);
         if (!usableAction(quality, visibleLength)) continue;

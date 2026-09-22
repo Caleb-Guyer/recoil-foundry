@@ -1,6 +1,6 @@
 {
   "version": "2.98.0",
-  "revision": 6,
+  "revision": 7,
   "width": 1920,
   "height": 1080,
   "fps": 60,
@@ -10,35 +10,35 @@
   "playback": "Original fixed-step simulation, gently retimed between actual combat events and measured musical transients",
   "bpm": 100,
   "audioMix": {
-    "method": "Isolated original game cues, industrial build and title hit, music EQ and brief sidechain ducking, pre-title pause, downbeat with echo resolution, measured constant gain, peak limiter",
+    "method": "Isolated original game cues, industrial build and softer title hit, music EQ and brief sidechain ducking, continuous downbeat transition with echo resolution, measured constant gain, peak limiter",
     "musicResolution": {
       "impact": 37.2,
-      "pauseSeconds": 0.20000000000000284,
+      "pauseSeconds": 0,
       "sourceEnd": 195.276,
-      "echoTailSeconds": 0.97
+      "echoTailSeconds": 1.14
     },
     "musicGain": 0.6,
-    "masterGainDb": 1.0899999999999999,
-    "inputLufs": -15.09,
-    "inputTruePeak": -0.25,
+    "masterGainDb": 1.0600000000000005,
+    "inputLufs": -15.06,
+    "inputTruePeak": -0.19,
     "sampleRate": 48000
   },
   "effects": [
     {
       "kind": "shell-shot",
-      "events": 26,
+      "events": 27,
       "originalPeak": 0.21061843633651733,
       "mixedPeak": 0.52
     },
     {
       "kind": "hit",
-      "events": 142,
+      "events": 143,
       "originalPeak": 0.05010034516453743,
       "mixedPeak": 0.19
     },
     {
       "kind": "fuse-stick",
-      "events": 16,
+      "events": 17,
       "originalPeak": 0.024654680863022804,
       "mixedPeak": 0.14
     },
@@ -68,7 +68,7 @@
     },
     {
       "kind": "aftershock",
-      "events": 27,
+      "events": 28,
       "originalPeak": 0.056639477610588074,
       "mixedPeak": 0.56
     },
@@ -80,7 +80,7 @@
     },
     {
       "kind": "snipe",
-      "events": 6,
+      "events": 7,
       "originalPeak": 0.0765610784292221,
       "mixedPeak": 0.14
     },
@@ -116,7 +116,7 @@
     },
     {
       "kind": "hurt",
-      "events": 9,
+      "events": 10,
       "originalPeak": 0.2924985885620117,
       "mixedPeak": 0.3
     },
@@ -152,7 +152,7 @@
     },
     {
       "kind": "sapper-throw",
-      "events": 3,
+      "events": 4,
       "originalPeak": 0.07013583928346634,
       "mixedPeak": 0.14
     },
@@ -304,33 +304,33 @@
     },
     {
       "shot": 13,
-      "rmsDb": -20.90577209810249,
-      "peak": 0.7005672454833984
+      "rmsDb": -20.906132328324144,
+      "peak": 0.7004643082618713
     },
     {
       "shot": 14,
-      "rmsDb": -17.93691045007663,
-      "peak": 0.6396045088768005
+      "rmsDb": -17.938811818570176,
+      "peak": 0.6386140584945679
     },
     {
       "shot": 15,
-      "rmsDb": -18.874974400659394,
-      "peak": 0.3447558581829071
+      "rmsDb": -18.878780666669513,
+      "peak": 0.34549853205680847
     },
     {
       "shot": 16,
-      "rmsDb": -21.51795265311555,
-      "peak": 0.4580976963043213
+      "rmsDb": -21.58702221233908,
+      "peak": 0.46812179684638977
     },
     {
       "shot": 17,
-      "rmsDb": -18.32834461662401,
-      "peak": 0.4856072664260864
+      "rmsDb": -18.380550569014613,
+      "peak": 0.47949618101119995
     },
     {
       "shot": 18,
-      "rmsDb": -16.841690723667064,
-      "peak": 0.664724588394165
+      "rmsDb": -16.777593141920672,
+      "peak": 0.6721118092536926
     }
   ],
   "beatSync": [
@@ -722,13 +722,14 @@
   "ending": {
     "impactFrame": 2232,
     "buildStartFrame": 1944,
-    "breathFrame": 2220,
+    "transitionStartFrame": 2220,
+    "transitionEndFrame": 2268,
     "ctaFrame": 2298,
     "linkFrame": 2322,
     "fadeStartFrame": 2592,
     "fadeEndFrame": 2664,
     "endFrame": 2694,
-    "method": "Four single-beat combat cuts, 12-frame picture and audio pause, downbeat wordmark impact, delayed CTA and link, 1.2-second fade and 0.5-second black tail",
+    "method": "Four single-beat combat cuts; final live shot continues at half speed beneath a stationary wordmark, with a 0.6-second background dissolve and uninterrupted audio; delayed CTA and link, 1.2-second fade and 0.5-second black tail",
     "sound": "Original rising industrial air, metal impact and factory room tail; licensed music downbeat resolves through a short echo tail"
   },
   "music": {
@@ -739,7 +740,7 @@
     "sourceIn": 163.276,
     "sourceOut": 195.276,
     "timelineStart": 6,
-    "edit": "Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut; pause before title downbeat; final accent tapered with echo tail"
+    "edit": "Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut; continuous title downbeat and final accent tapered with echo tail"
   },
   "intro": {
     "seconds": 6,
@@ -1764,14 +1765,14 @@
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 154,
-        "span": 120,
+        "travel": 263,
+        "span": 175,
         "damage": 52
       },
       "score": 16.623,
       "timelineStart": 36.55,
       "seconds": 0.65,
-      "visibleSeconds": 0.45,
+      "visibleSeconds": 0.65,
       "initialHealth": 49,
       "finalHealth": 53,
       "killsDuringClip": 2,
@@ -1904,16 +1905,64 @@
       "file": "work-action/frame-2212.png"
     },
     {
+      "seconds": 36.9,
+      "file": "work-action/transition-2214.png"
+    },
+    {
+      "seconds": 37,
+      "file": "work-action/transition-2220.png"
+    },
+    {
+      "seconds": 37.1,
+      "file": "work-action/transition-2226.png"
+    },
+    {
+      "seconds": 37.18333333333333,
+      "file": "work-action/transition-2231.png"
+    },
+    {
+      "seconds": 37.2,
+      "file": "work-action/transition-2232.png"
+    },
+    {
       "seconds": 37.2,
       "file": "work-action/ending-2232.png"
+    },
+    {
+      "seconds": 37.233333333333334,
+      "file": "work-action/transition-2234.png"
+    },
+    {
+      "seconds": 37.266666666666666,
+      "file": "work-action/transition-2236.png"
+    },
+    {
+      "seconds": 37.333333333333336,
+      "file": "work-action/transition-2240.png"
     },
     {
       "seconds": 37.35,
       "file": "work-action/ending-2241.png"
     },
     {
+      "seconds": 37.45,
+      "file": "work-action/transition-2247.png"
+    },
+    {
+      "seconds": 37.6,
+      "file": "work-action/transition-2256.png"
+    },
+    {
+      "seconds": 37.78333333333333,
+      "file": "work-action/transition-2267.png"
+    },
+    {
       "seconds": 37.9,
       "file": "work-action/ending-2274.png"
+    },
+    {
+      "seconds": 38,
+      "file": "work-action/transition-2280.png"
     },
     {
       "seconds": 38.5,

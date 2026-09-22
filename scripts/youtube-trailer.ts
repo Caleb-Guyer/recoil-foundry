@@ -92,6 +92,23 @@ const canvas = createCanvas(W, H),
   c = canvas.getContext('2d');
 canvas.getBoundingClientRect = () => ({ width: W, height: H });
 const poster = createCanvas(W, H);
+const endingPlate = createCanvas(W, H);
+const transitionSamples = [
+  -0.3,
+  -0.2,
+  -0.1,
+  -1 / 60,
+  0,
+  2 / 60,
+  4 / 60,
+  8 / 60,
+  0.25,
+  0.4,
+  0.58,
+  0.8,
+].map((s) => endStart + Math.round(s * FPS));
+const transitionSheet = createCanvas(1600, 750),
+  tc = transitionSheet.getContext('2d');
 const sheet = createCanvas(1280, Math.ceil((scenes.length + 1) / 3) * 270),
   sc = sheet.getContext('2d');
 const sequences = Array.from({ length: Math.ceil(scenes.length / 4) }, () =>
@@ -231,6 +248,23 @@ async function reviewSequence(index: number, sample: number, frame: number, labe
   ctx.fillStyle = '#e9eadc';
   ctx.fillText(`${index + 1}. ${label} ${(frame / FPS).toFixed(2)}s`, x + 8, y + 201);
 }
+async function reviewTransition(frame: number) {
+  const index = transitionSamples.indexOf(frame);
+  if (index < 0) return;
+  const png = canvas.toBuffer('image/png');
+  const file = `work-action/transition-${frame}.png`;
+  writeFileSync(resolve(out, file), png);
+  const still = await loadImage(png);
+  const x = (index % 4) * 400,
+    y = Math.floor(index / 4) * 250;
+  tc.drawImage(still, x, y, 400, 225);
+  tc.fillStyle = '#071015';
+  tc.fillRect(x, y + 225, 400, 25);
+  tc.font = '15px "Release Mono"';
+  tc.fillStyle = '#e9eadc';
+  tc.fillText(`${(frame / FPS).toFixed(3)}s · transition`, x + 8, y + 243);
+  reviewFrames.push({ seconds: frame / FPS, file });
+}
 const intro = new TrailerIntro(canvas);
 const introSamples = [0.25, 0.9, 1.5, 2.1, 2.74, 3.98, 4.66, 5.3, 5.8].map((s) =>
   Math.round(s * FPS),
@@ -269,6 +303,16 @@ if (introOnly) {
   console.log('Cold-open storyboard and Foley preview ready');
   process.exit(0);
 }
+let closingTake:
+  | {
+      game: ReturnType<typeof startTake>;
+      renderer: Renderer;
+      take: Take;
+      nextTick: number;
+      finalTick: number;
+      scale: number;
+    }
+  | undefined;
 for (const [index, scene] of scenes.entries()) {
   const take = scene.take,
     g = startTake(take),
@@ -292,7 +336,7 @@ for (const [index, scene] of scenes.entries()) {
     `Shot ${index + 1}/${scenes.length}: ${take.name}, ${take.seed}, frame ${take.start}`,
   );
   const len = scene.end - scene.start;
-  const visibleLength = Math.min(scene.end, ending.breathFrame) - scene.start;
+  const visibleLength = len;
   const qualityFrames: ActionFrame[] = [];
   const sequenceAt = Array.from({ length: 6 }, (_, n) => Math.round((n * (len - 1)) / 5));
   let targetOnscreenFrames = 0;
@@ -305,7 +349,7 @@ for (const [index, scene] of scenes.entries()) {
       frameKinds = [];
       const wasTorch = g.torch.active;
       const metric = recordAction(g, actionInput(g, sourceCursor, take.style));
-      if (frame < ending.breathFrame) qualityFrames.push(metric);
+      qualityFrames.push(metric);
       if (g.torch.active && !wasTorch) frameKinds.push('beam-start');
       if (g.torch.active && metric.damage > 2) frameKinds.push('beam-hit');
       for (const point of scene.points.filter(
@@ -342,13 +386,14 @@ for (const [index, scene] of scenes.entries()) {
     r.draw(((tick + 1) * 1000) / FPS);
     const ax = (g.aim.x - r.camera.x) * r.scale,
       ay = (g.aim.y - r.camera.y) * r.scale;
-    if (frame < ending.breathFrame && ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35)
-      targetOnscreenFrames++;
-    if (!storyboard || sample || sequenceAt.includes(local)) {
+    if (ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35) targetOnscreenFrames++;
+    if (!storyboard || sample || sequenceAt.includes(local) || transitionSamples.includes(frame)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       if (index === 0 && sample)
         poster.getContext('2d').putImageData(c.getImageData(0, 0, W, H), 0, 0);
       // The small original HUD remains grounded in this take's actual state.
+      c.save();
+      c.globalAlpha = 1 - ease((frame - endStart + 24) / 24);
       c.fillStyle = '#40504d';
       c.fillRect(36, 34, 162, 7);
       c.fillStyle = '#e9eadc';
@@ -358,21 +403,32 @@ for (const [index, scene] of scenes.entries()) {
       c.fillStyle = '#b0bbb4';
       c.fillText(`${String(g.stage + 1).padStart(2, '0')} / 20`, W - 42, 44);
       c.textAlign = 'left';
+      c.restore();
       if (index === 0) caption('ONE GUN.', ease(local / 6));
       if (index === 2)
         caption('100 WAYS TO BUILD IT.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
       if (index === 6)
         caption('MAKE SOME ROOM.', ease(local / 6) * (1 - ease((local - len + 16) / 16)));
-      if (frame >= ending.breathFrame) {
-        c.fillStyle = '#000000';
+      if (frame >= ending.transitionStartFrame) {
+        c.fillStyle = `rgba(8,14,17,${0.45 * ease((frame - ending.transitionStartFrame) / 12)})`;
         c.fillRect(0, 0, W, H);
       }
+      await reviewTransition(frame);
       if (sample) await review(frame, take.name, index);
       if (sequenceAt.includes(local))
         await reviewSequence(index, sequenceAt.indexOf(local), frame, take.name);
       await writeFrame();
     }
   }
+  if (index === scenes.length - 1)
+    closingTake = {
+      game: g,
+      renderer: r,
+      take,
+      nextTick: sourceCursor,
+      finalTick: sourceCursor - 1,
+      scale: r.scale,
+    };
   const quality = takeQuality(qualityFrames);
   const targetOnscreenFraction = targetOnscreenFrames / visibleLength;
   if (!usableAction(quality, visibleLength) || targetOnscreenFraction < 0.75)
@@ -399,10 +455,29 @@ const endingSamples = [0, 0.15, 0.7, 1.3, 1.9, 3.8, 5.9, 6.6, 7.4].map(
 const endingSheet = createCanvas(1440, 900),
   ec = endingSheet.getContext('2d');
 for (let frame = endStart; frame < total; frame++) {
+  let liveGameplay = false;
+  if (frame < ending.transitionEndFrame) {
+    if (!closingTake) throw new Error('Missing final gameplay continuation');
+    const { game: g, renderer: r, take } = closingTake;
+    const target = closingTake.finalTick + Math.ceil((frame - endStart + 1) / 2);
+    g.onSound = (kind) => cues.push({ frame, kind });
+    while (closingTake.nextTick <= target) {
+      g.tick(1 / FPS, actionInput(g, closingTake.nextTick, take.style));
+      closingTake.nextTick++;
+    }
+    if (g.mode !== 'playing' || g.clear)
+      throw new Error('Final action ended during title transition');
+    if (g.torch.active) beams.push({ frame, heat: g.torch.heat });
+    r.scale = closingTake.scale;
+    r.draw((closingTake.nextTick * 1000) / FPS);
+    endingPlate.getContext('2d').putImageData(c.getImageData(0, 0, W, H), 0, 0);
+    liveGameplay = true;
+  }
   const sample = frame === endStart + 3 * FPS;
   const endingSample = endingSamples.indexOf(frame);
-  if (!storyboard || sample || endingSample >= 0) {
-    drawEnding(c, frame, ending);
+  if (!storyboard || sample || endingSample >= 0 || transitionSamples.includes(frame)) {
+    drawEnding(c, frame, ending, liveGameplay ? endingPlate : undefined);
+    await reviewTransition(frame);
     if (sample) await review(frame, 'play free', scenes.length);
     if (endingSample >= 0) {
       const png = canvas.toBuffer('image/png');
@@ -423,6 +498,7 @@ for (let frame = endStart; frame < total; frame++) {
   }
 }
 writeFileSync(resolve(out, 'ending-contact-sheet.png'), endingSheet.toBuffer('image/png'));
+writeFileSync(resolve(out, 'transition-contact-sheet.png'), transitionSheet.toBuffer('image/png'));
 writeFileSync(resolve(out, 'action-contact-sheet.png'), sheet.toBuffer('image/png'));
 for (const [index, sequence] of sequences.entries())
   writeFileSync(resolve(out, `action-sequence-${index + 1}.png`), sequence.toBuffer('image/png'));
@@ -497,7 +573,7 @@ writeFileSync(
   JSON.stringify(
     {
       version: GAME_VERSION,
-      revision: 6,
+      revision: 7,
       width: W,
       height: H,
       fps: FPS,
@@ -514,7 +590,7 @@ writeFileSync(
       ending: {
         ...ending,
         method:
-          'Four single-beat combat cuts, 12-frame picture and audio pause, downbeat wordmark impact, delayed CTA and link, 1.2-second fade and 0.5-second black tail',
+          'Four single-beat combat cuts; final live shot continues at half speed beneath a stationary wordmark, with a 0.6-second background dissolve and uninterrupted audio; delayed CTA and link, 1.2-second fade and 0.5-second black tail',
         sound:
           'Original rising industrial air, metal impact and factory room tail; licensed music downbeat resolves through a short echo tail',
       },
@@ -526,7 +602,7 @@ writeFileSync(
         sourceIn: MUSIC_START,
         sourceOut: MUSIC_START + endStart / FPS - INTRO_SECONDS + 0.8,
         timelineStart: INTRO_SECONDS,
-        edit: 'Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut; pause before title downbeat; final accent tapered with echo tail',
+        edit: 'Excerpt, fades, EQ, brief ducking beneath effects, starts on first combat cut; continuous title downbeat and final accent tapered with echo tail',
       },
       intro: {
         seconds: INTRO_SECONDS,

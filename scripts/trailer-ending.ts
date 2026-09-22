@@ -5,7 +5,8 @@ export function endingTiming(impactFrame: number) {
   return {
     impactFrame,
     buildStartFrame: impactFrame - 288,
-    breathFrame: impactFrame - 12,
+    transitionStartFrame: impactFrame - 12,
+    transitionEndFrame: impactFrame + 36,
     ctaFrame: impactFrame + 66,
     linkFrame: impactFrame + 90,
     fadeStartFrame: impactFrame + 360,
@@ -19,7 +20,12 @@ const smooth = (v: number) => {
   return x * x * (3 - 2 * x);
 };
 
-export function drawEnding(c: CanvasRenderingContext2D, frame: number, timing: EndingTiming) {
+export function drawEnding(
+  c: CanvasRenderingContext2D,
+  frame: number,
+  timing: EndingTiming,
+  gameplay?: CanvasImageSource,
+) {
   const w = c.canvas.width,
     h = c.canvas.height,
     t = (frame - timing.impactFrame) / 60;
@@ -34,7 +40,7 @@ export function drawEnding(c: CanvasRenderingContext2D, frame: number, timing: E
 
   // Restrained steel seams and a fading amber glow continue the factory setting.
   const glow = c.createRadialGradient(960, 540, 50, 960, 540, 840);
-  glow.addColorStop(0, `rgba(106,139,124,${0.07 + 0.16 * Math.exp(-t * 4)})`);
+  glow.addColorStop(0, `rgba(106,139,124,${0.07 + 0.035 * Math.exp(-t * 4)})`);
   glow.addColorStop(1, 'rgba(8,14,17,0)');
   c.fillStyle = glow;
   c.fillRect(0, 0, 1920, 1080);
@@ -47,11 +53,18 @@ export function drawEnding(c: CanvasRenderingContext2D, frame: number, timing: E
     c.stroke();
   }
 
-  // The entire wordmark lands together on the musical downbeat.
+  // Carry the moving final shot through the reveal, then dissolve it away.
+  if (gameplay && frame < timing.transitionEndFrame) {
+    c.save();
+    c.globalAlpha *= 0.55 * (1 - smooth((frame - timing.impactFrame) / 36));
+    c.drawImage(gameplay, 0, 0, 1920, 1080);
+    c.restore();
+  }
+
+  // A quick, stationary reveal avoids the previous oversized, shaking logo pop.
   c.save();
-  const settle = 1 + 0.048 * Math.exp(-t * 14);
-  c.translate(960, 430 + Math.sin(t * 64) * 4 * Math.exp(-t * 18));
-  c.scale(settle, settle);
+  c.globalAlpha *= smooth((t + 0.045) / 0.18);
+  c.translate(960, 430);
   c.textAlign = 'center';
   c.fillStyle = '#e9eadc';
   c.font = '248px "Release Bold"';
@@ -88,8 +101,7 @@ export function endingAudio(timing: EndingTiming, duration: number, rate = 48000
   ];
   const random = seeded('RF-TRAILER-ENDING-6');
   const impact = timing.impactFrame / 60,
-    build = timing.buildStartFrame / 60,
-    breath = timing.breathFrame / 60;
+    build = timing.buildStartFrame / 60;
   let low = 0,
     mid = 0,
     phase = 0;
@@ -100,9 +112,9 @@ export function endingAudio(timing: EndingTiming, duration: number, rate = 48000
     mid += (noise - mid) * 0.16;
     let center = 0,
       side = 0;
-    if (time < breath) {
-      const x = (time - build) / (breath - build);
-      const shut = 1 - smooth((time - breath + 0.018) / 0.018);
+    if (time < impact) {
+      const x = (time - build) / (impact - build);
+      const shut = 1 - smooth((time - impact + 0.025) / 0.025);
       phase += (Math.PI * 2 * (80 + 160 * x * x)) / rate;
       center = (Math.sin(phase) * 0.022 + (mid - low) * 0.28) * x * x * shut;
       side = noise * x * x * 0.018 * shut;
@@ -118,9 +130,9 @@ export function endingAudio(timing: EndingTiming, duration: number, rate = 48000
         Math.sin(t * 2 * Math.PI * 461) * 0.025;
       center =
         attack *
-        (body * 0.46 * Math.exp(-t * 5) +
+        (body * 0.32 * Math.exp(-t * 5) +
           steel * Math.exp(-t * 2.8) +
-          mid * 0.62 * Math.exp(-t * 24));
+          mid * 0.4 * Math.exp(-t * 24));
       // Quiet factory tail under the readable play link, with a continuous closing fade.
       const fade = 1 - smooth((time - timing.fadeStartFrame / 60) / 1.2);
       center += (low * 0.055 + Math.sin(t * 2 * Math.PI * 74) * 0.008) * smooth(t / 0.15) * fade;

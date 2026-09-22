@@ -8,7 +8,7 @@
 
 The composer's page permits use in projects, including commercial projects, under CC BY 4.0. It specifically requires a credit in a YouTube video's description. The license permits editing and redistribution with attribution, a license link, and an indication of changes. It does not imply the composer's endorsement. Terms checked September 20, 2026.
 
-The trailer uses an excerpt from 2:43.276 to approximately 3:15.276, beginning at 0:06 in the video after an original factory-ambience and footsteps opening. Changes: trimming, short fades, level adjustment, a small EQ cut, brief ducking beneath effects, delayed entry, a short pause before the title, an echo tail on the final musical accent, and mixing with Recoil Foundry sound effects and original industrial sound design. No vocals or other music were added. The game itself continues using its existing soundtrack.
+The trailer uses an excerpt from 2:43.276 to approximately 3:15.276, beginning at 0:06 in the video after an original factory-ambience and footsteps opening. Changes: trimming, short fades, level adjustment, a small EQ cut, brief ducking beneath effects, delayed entry, an echo tail on the final musical accent, and mixing with Recoil Foundry sound effects and original industrial sound design. No vocals or other music were added. The game itself continues using its existing soundtrack.
 
 ## Credit to retain in the YouTube description
 
