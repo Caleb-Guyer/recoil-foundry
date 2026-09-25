@@ -144,6 +144,10 @@ import { practiceCheckpoint } from './practice.ts';
 import type { Encounter } from './practice.ts';
 import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
+import { FactionSystem } from './factions.ts';
+import { AnnexSystem } from './annex.ts';
+import { annexLevel } from './annex-layout.ts';
+import { SpoofSystem, primaryGunShot } from './spoof.ts';
 import type { ShotTrace } from './shot-trails.ts';
 import {
   ESCAPE_WIDTH,
@@ -174,6 +178,7 @@ export interface Enemy {
   courier?: true;
   eventRole?: EventRole;
   allied?: boolean;
+  rebootUntil?: number;
   workshopTarget?: WorkshopTarget;
   id: number;
   body: Matter.Body;
@@ -279,6 +284,9 @@ export class Game {
   level!: Level;
   terrain: Matter.Body[] = [];
   areaEvents = new AreaEventSystem(this);
+  factions = new FactionSystem(this);
+  annex = new AnnexSystem(this);
+  spoof = new SpoofSystem(this);
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
   floodgate = new FloodgateSystem(this);
@@ -493,6 +501,8 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.annex.clear();
+      this.spoof.clear();
       this.fabricators.clear();
       this.courier.clear();
       this.areaEvents.clear();
@@ -700,6 +710,8 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.annex.clear();
+    this.spoof.clear();
     this.auditor.clear();
     this.commendations.resetRoom();
     this.fabricators.clear();
@@ -816,6 +828,7 @@ export class Game {
     this.level = this.shutdown.level(this.level);
     if (this.testRun?.auditor && !escapeRoom && !this.detour)
       this.level = auditorTestLevel(this.level);
+    if (this.testRun?.annex && !escapeRoom) this.level = annexLevel(this.testRun.annex);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -888,6 +901,7 @@ export class Game {
     this.story.reset();
     this.shutdown.reset();
     this.auditor.reset();
+    this.annex.reset();
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active || this.shutdown.chamber) return;
@@ -1286,6 +1300,7 @@ export class Game {
       if (this.mode !== 'playing') return;
     }
     this.areaEvents.beforeStep(dt);
+    this.annex.update();
     // Capture descent before Matter resolves the landing collision and zeros velocity.
     if (!this.grounded) this.landingSpeed = this.player.velocity.y;
     this.cargo.update(dt);
@@ -1358,6 +1373,7 @@ export class Game {
     }
     this.courier.update(dt);
     this.areaEvents.update(dt);
+    this.spoof.update();
     if (this.mode !== 'playing') return;
     this.waves.update(dt);
     this.auditor.update(dt);
@@ -1767,7 +1783,8 @@ export class Game {
     }
     const coordinated = updateSquad(this, e);
     if (!coordinated) {
-      if (e.kind === 'sorter' || e.kind === 'borer' || e.kind === 'sifter')
+      if (e.kind === 'switchman') this.annex.updateSwitchman(e, dt);
+      else if (e.kind === 'sorter' || e.kind === 'borer' || e.kind === 'sifter')
         updateReclamationEnemy(this, e, dt);
       else if (e.kind === 'charger') this.updateCharger(e);
       else if (e.kind === 'loader') this.updateLoader(e);
@@ -2384,6 +2401,7 @@ export class Game {
           valve?: PressureVent;
           floodValve?: FloodValve;
           disconnect?: true;
+          annexJunction?: true;
           player?: boolean;
           caught?: boolean;
           prop?: Prop;
@@ -2449,6 +2467,9 @@ export class Game {
         if (disconnect && (!nearest || disconnect.t < nearest.t))
           nearest = { ...disconnect, disconnect: true };
         const floodValve = s.friendly ? this.floodgate.trace(s.pos, end, s.radius) : undefined;
+        const annexJunction = s.friendly ? this.annex.trace(s.pos, end, s.radius) : null;
+        if (annexJunction && (!nearest || annexJunction.t < nearest.t))
+          nearest = { ...annexJunction, annexJunction: true };
         if (floodValve && (!nearest || floodValve.t < nearest.t))
           nearest = { t: floodValve.t, normal: floodValve.normal, floodValve: floodValve.valve };
         if (s.recall?.returning) {
@@ -2560,6 +2581,11 @@ export class Game {
           this.fusions.catch(s);
           s.life = 0;
           s.shell = undefined;
+        } else if (nearest.annexJunction) {
+          this.annex.interrupt();
+          s.life = 0;
+          this.demolition.impact(s);
+          if (this.mode !== 'playing') return;
         } else if (nearest.disconnect) {
           this.shutdown.trigger();
           s.life = 0;
@@ -2620,6 +2646,7 @@ export class Game {
               this.ballistics.fracture(e, s) *
               (this.gun.execute && s.friendly && !s.fragment && e.hp < e.maxHp * 0.3 ? 1.6 : 1),
           );
+          const previousHp = e.hp;
           const blocked = this.hitEnemy(
             e,
             damage,
@@ -2632,6 +2659,7 @@ export class Game {
             true,
             s.reflected ? 'reflection' : undefined,
           );
+          this.spoof.hit(e, previousHp, primaryGunShot(s));
           if (blocked) {
             if (s.massDriver && !s.shell) {
               this.massDriver.bounce(s, nearest.normal, e.body, false);
@@ -3012,6 +3040,13 @@ export class Game {
     return this.enemies.filter((e) => !e.courier).length;
   }
   openReward(enterDetour = false, route?: RouteChoice) {
+    if (this.annex.active) {
+      if (this.mode === 'playing' && this.clear && !this.combatEnemyCount && !this.waves.pending) {
+        this.setMode('won');
+        this.onSound('win');
+      }
+      return;
+    }
     if (this.auditor.pending || this.auditor.enemy) return;
     if (this.areaEvents.waiting || this.mutations.pending.length) return;
     if (

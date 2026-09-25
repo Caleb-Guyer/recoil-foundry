@@ -6,6 +6,7 @@ import { isBoss } from './enemies.ts';
 import type { Prop } from './props.ts';
 import { firstSolid } from './collisions.ts';
 import { STORM_CELL } from './cross-fusions.ts';
+import { primaryGunShot } from './spoof.ts';
 
 export const SHELL_DIRECT = 0.55;
 export const SHELL_BLAST = 0.85;
@@ -21,6 +22,7 @@ export interface ShellPayload {
   launch: number;
 }
 export interface DemolitionBlast {
+  primaryGun?: boolean;
   pos: Vec;
   damage: number;
   radius: number;
@@ -110,6 +112,7 @@ export class DemolitionSystem {
       ...payload,
       radius: SHELL_RADIUS,
       kind: 'shell',
+      primaryGun: primaryGunShot(shot),
       direction: direction({ x: 0, y: 0 }, shot.vel),
       normal: body && shot.impactNormal ? shot.impactNormal : direction(shot.vel, { x: 0, y: 0 }),
     });
@@ -245,6 +248,7 @@ export class DemolitionSystem {
       .map((panel) => ({ panel, amount: strength(panel.body, panel.body) }))
       .filter((hit) => hit.amount > 0);
     const launch = blast.launch * strength(g.player, undefined, true);
+    if (blast.kind === 'shell' && blast.primaryGun) g.annex.blast(pos, radius, inCone);
     const terrain = g.destruction.pieces
       .map((piece) => ({ piece, amount: strength(piece.body, piece.body) }))
       .filter((hit) => hit.amount > 0);
@@ -288,7 +292,9 @@ export class DemolitionSystem {
       );
     for (const { enemy, amount } of enemies) {
       if (!g.enemies.includes(enemy) || enemy.hp <= 0) continue;
+      const previousHp = enemy.hp;
       g.hitEnemy(enemy, damage * amount, pos);
+      g.spoof.hit(enemy, previousHp, blast.kind === 'shell' && !!blast.primaryGun);
       if (enemy.hp > 0 && !enemy.body.isStatic) {
         const d = direction(pos, enemy.body.position);
         const push =

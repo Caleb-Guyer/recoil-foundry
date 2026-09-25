@@ -1,6 +1,7 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { creditsMarkup } from './credits.ts';
 import { installDialogDismissal } from './dialog-dismissal.ts';
+import { annexTestFromUrl } from './annex-layout.ts';
 import { issueReportMenu } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
@@ -315,6 +316,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  annexTestFromUrl(entryUrl) ??
   presentationTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
@@ -414,6 +416,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test new upgrades <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('play').innerHTML = 'Test upgrade reroll <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.annex)
+    $('play').innerHTML = 'Enter the Annex <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('DROPWORKS-64-'))
     $('play').innerHTML =
       (linkedRunTest.stage === 17 ? 'Test Dropworks Roof' : 'Test the Dropworks') +
@@ -512,6 +516,11 @@ function updateTitle() {
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.annex)
+    $('title-hint').textContent =
+      'Dead Signal prototype. ' +
+      (linkedRunTest.annex.spoof ? 'Spoof: defeated machines briefly fight for you. ' : '') +
+      'R to retry.';
   if (linkedRunTest?.reforgeRoom)
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
   if (linkedRunTest?.shutdown)
@@ -1054,6 +1063,10 @@ game.onChange = () => {
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
+  if (game.testRun?.annex) {
+    $('stage').textContent = 'DEAD SIGNAL · TEST';
+    $('stage').title = 'Transmission Annex · One-room prototype';
+  }
   updateTitle();
   updateFirstSession();
   if (game.mode === 'upgrade') showDialog('upgrade');
@@ -1537,6 +1550,19 @@ function showDialog(kind: string) {
           canvas.focus();
         }),
     );
+  } else if (kind === 'result' && game.testRun?.annex) {
+    content.innerHTML =
+      '<p class="eyebrow">DEAD SIGNAL · PROTOTYPE</p>' +
+      '<h2 id="dialog-title">' +
+      (game.mode === 'won' ? 'Transmission cut.' : 'Try another frequency.') +
+      '</h2><p class="result-line">' +
+      formatTime(game.elapsed) +
+      ' <span>·</span> ' +
+      game.kills +
+      ' kills</p><div class="actions"><button id="retry" class="primary">Again ↗</button>' +
+      '<button id="menu" class="quiet">Menu</button></div>';
+    $('retry').onclick = () => start(undefined, true);
+    $('menu').onclick = menu;
   } else if (kind === 'result' && game.practice) {
     const win = game.mode === 'won';
     content.innerHTML =
@@ -1696,7 +1722,9 @@ function showDialog(kind: string) {
         : game.practice
           ? 'Defeat the boss. Retry starts over.'
           : game.testRun
-            ? 'Preset test. Restart test starts over.'
+            ? game.testRun.annex
+              ? 'Clear the Annex, then leave through the right door. Restart test starts over.'
+              : 'Preset test. Restart test starts over.'
             : game.escape
               ? game.canOvertime
                 ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
@@ -1714,6 +1742,7 @@ function showDialog(kind: string) {
           (buildPath(game.mods) ? ' · ' + PATH_NAMES[buildPath(game.mods)!] : '') +
           '</summary><ul>' +
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
+          (game.spoof.equipped ? '<li>Spoof · Subversion (prototype)</li>' : '') +
           '</ul></details>'
         : '') +
       '<div class="settings-links"><button id="open-credits" class="quiet settings-credits">About & credits</button><button id="open-report" class="quiet settings-credits">Report an issue</button></div></div><div class="actions"><button id="back" class="primary">' +

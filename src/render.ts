@@ -83,6 +83,7 @@ import { drawBallistics } from './ballistics-art.ts';
 import { drawFusions } from './fusions-art.ts';
 import { drawInteractionCues } from './interaction-cues.ts';
 import { drawNewPaths, drawStoredRound } from './new-paths-art.ts';
+import { ANNEX_PALETTE, drawAnnex, drawAnnexScenery, drawSwitchman } from './annex-art.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -176,7 +177,8 @@ export class Renderer {
     }
     c.save();
     c.scale(this.scale, this.scale);
-    if (g.level.freight && g.mode !== 'title') drawFreightScenery(c, this.camera, viewW, viewH);
+    if (g.annex.active && g.mode !== 'title') drawAnnexScenery(c, this.camera, viewW, viewH);
+    else if (g.level.freight && g.mode !== 'title') drawFreightScenery(c, this.camera, viewW, viewH);
     else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
     else drawScenery(c, g.level.area, this.camera, viewW, viewH);
     c.restore();
@@ -197,7 +199,7 @@ export class Renderer {
     drawShutdownBackdrop(c, g);
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);
-    const palette = AREAS[g.level.area];
+    const palette = g.annex.active ? ANNEX_PALETTE : AREAS[g.level.area];
     for (const b of g.terrain) {
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
         continue;
@@ -215,7 +217,7 @@ export class Renderer {
         this.line({ x: x + w, y: y + 2 }, { x: x + w, y: y + h }, palette.edge);
         if (y + h < WORLD.floor) this.line({ x, y: y + h }, { x: x + w, y: y + h }, palette.edge);
       }
-      drawSurfaceDetails(c, g.level.area, x, y, w, h);
+      if (!g.annex.active) drawSurfaceDetails(c, g.level.area, x, y, w, h);
       const weak = g.destruction.pieces.find((piece) => piece.body === b);
       if (weak) drawCracks(c, weak, this.reduced);
     }
@@ -237,6 +239,7 @@ export class Renderer {
     drawFloodgate(c, g, this.reduced);
     drawMagnets(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
+    drawAnnex(c, g, this.reduced);
     this.drawProps();
     drawStoryDetails(c, g, this.reduced);
     drawShutdown(c, g, this.reduced);
@@ -279,6 +282,10 @@ export class Renderer {
     drawCourierWorld(c, g);
     drawAuditDoor(c, g, this.reduced);
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (e.kind === 'switchman') {
+        drawSwitchman(c, g, e, this.reduced);
+        continue;
+      }
       if (e.kind === 'auditor') {
         drawAuditor(c, g, e, this.reduced);
         continue;

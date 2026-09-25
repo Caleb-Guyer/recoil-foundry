@@ -27,6 +27,7 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'switchman'
   | 'auditor'
   | 'fabricator'
   | 'sentry'
@@ -88,6 +89,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  annex?: true;
   shutdown?: true;
   story?: import('./story-layout.ts').StoryKind;
   fabricatorIntro?: boolean;

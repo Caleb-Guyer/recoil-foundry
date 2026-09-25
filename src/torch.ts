@@ -37,6 +37,7 @@ export interface TorchSegment {
   valve?: PressureVent;
   floodValve?: FloodValve;
   disconnect?: object;
+  annexJunction?: boolean;
   ray?: number;
   muzzle?: boolean;
 }
@@ -104,6 +105,7 @@ export function traceTorch(
       valve = g.pressure.trace(from, end, radius),
       floodValve = g.floodgate.trace(from, end, radius),
       disconnect = g.shutdown.trace(from, end, radius),
+      annexJunction = g.annex.trace(from, end, radius),
       portal = g.portals.trace(from, end, half);
     const t = Math.min(
         hit?.t ?? 1,
@@ -112,6 +114,7 @@ export function traceTorch(
         valve?.t ?? 1,
         floodValve?.t ?? 1,
         disconnect?.t ?? 1,
+        annexJunction?.t ?? 1,
       ),
       through = portal && portal.t <= t + 1e-6,
       point = add(from, d, remaining * (through ? portal!.t : t));
@@ -144,6 +147,10 @@ export function traceTorch(
         radius,
       };
       continue;
+    }
+    if (annexJunction && annexJunction.t <= t && (!hit || annexJunction.t < hit.t)) {
+      segment.annexJunction = true;
+      break;
     }
     if (disconnect && disconnect.t <= t && (!hit || disconnect.t < hit.t)) {
       segment.disconnect = g.shutdown;
@@ -532,6 +539,7 @@ export class TorchSystem {
       if (segment.valve) g.pressure.trigger(segment.valve);
       if (segment.floodValve) g.floodgate.trigger(segment.floodValve);
       if (segment.disconnect) g.shutdown.trigger();
+      if (segment.annexJunction) g.annex.interrupt();
       s.pos = { ...segment.b };
       s.prev = { ...segment.a };
       s.vel = {
@@ -558,7 +566,9 @@ export class TorchSystem {
           ((s.damage * burn) / this.period) *
           (this.fracture.get(e.id) ?? 1) *
           (g.gun.execute && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
+        const previousHp = e.hp;
         const blocked = g.hitEnemy(e, damage, add(e.body.position, segment.dir, -30), !!first);
+        g.spoof.hit(e, previousHp, true);
         if (!blocked) {
           g.evolutions.hit(s);
           if (first) {

@@ -17,7 +17,7 @@ import {
 } from './turf-formations.ts';
 export { TURF_RED_COUNT, TURF_BLUE_COUNT, TURF_SPACING } from './turf-formations.ts';
 
-const { Body, Query, Composite } = Matter;
+const { Body, Query } = Matter;
 export const AREA_EVENTS = {
   blackout: { name: 'Blackout' },
   turf: { name: 'Turf War' },
@@ -152,16 +152,25 @@ export class AreaEventSystem {
   state: AreaEventSave | null = null;
   active: AreaEventKind | null = null;
   site: Vec = { x: 1000, y: 724 };
-  allies: Enemy[] = [];
+  get allies() {
+    return this.game.factions.allies;
+  }
+  set allies(value: Enemy[]) {
+    this.game.factions.allies = value;
+  }
   formation: TurfFormation | null = null;
-  departingAt: number | null = null;
+  get departingAt() {
+    return this.game.factions.departingAt;
+  }
+  set departingAt(value: number | null) {
+    this.game.factions.departingAt = value;
+  }
   cacheReady = false;
   cacheTaken = false;
   hunted = false;
   pending = false;
   releaseAt = 0;
   powered = false;
-  contactAt = new Map<number, number>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -201,10 +210,8 @@ export class AreaEventSystem {
     return this.active === 'lockdown' && !this.hunted && !this.game.enemies.length;
   }
   clear() {
-    for (const e of this.allies) Composite.remove(this.game.engine.world, e.body);
-    this.allies = [];
+    this.game.factions.clear();
     this.formation = null;
-    this.contactAt.clear();
     this.departingAt = null;
     this.active = null;
     this.pending = false;
@@ -343,12 +350,7 @@ export class AreaEventSystem {
     }
   }
   spawnAlly(kind: TurfKind, p: Vec) {
-    const ally = this.spawn(kind, p);
-    if (!ally) return;
-    this.game.enemies = this.game.enemies.filter((e) => e !== ally);
-    ally.allied = true;
-    ally.aim = { x: 1, y: 0 };
-    this.allies.push(ally);
+    return this.game.factions.spawn(kind, p);
   }
   findSite(): Vec {
     const g = this.game,
@@ -439,86 +441,19 @@ export class AreaEventSystem {
     }
   }
   beforeStep(dt: number) {
-    const g = this.game;
-    for (const e of [...this.allies]) {
-      if (this.departingAt !== null) {
-        if (e.body.isStatic) Body.setStatic(e.body, false);
-        if (e.kind === 'flyer')
-          Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
-        Body.setVelocity(e.body, { x: -4, y: e.kind === 'flyer' ? -5 : e.body.velocity.y });
-        if (e.body.position.x < 28 || e.body.position.y < 28 || g.time - this.departingAt > 3)
-          this.removeAlly(e);
-      } else g.updateEnemy(e, dt);
-    }
+    this.game.factions.beforeStep(dt);
   }
   contact(e: Enemy) {
-    if (
-      this.active !== 'turf' ||
-      this.departingAt !== null ||
-      this.game.time < (this.contactAt.get(e.id) ?? 0)
-    )
-      return;
-    const g = this.game;
-    const other = (e.allied ? g.enemies : this.allies).find(
-      (a) => a.hp > 0 && a.spawn <= 0 && Query.collides(e.body, [a.body]).length,
-    );
-    if (!other) return;
-    this.contactAt.set(e.id, g.time + 0.65);
-    if (other.allied) this.hitAlly(other, e.splitChild ? 9 : 15);
-    else g.hitEnemy(other, 15, e.body.position, true, false, false);
+    this.game.factions.contact(e);
   }
-  combatTarget(e: Enemy): Vec {
-    const g = this.game;
-    if (e.allied) {
-      const live = g.enemies.filter((a) => a.hp > 0 && a.spawn <= 0);
-      const visible = live.filter(
-        (a) => distance(g.lineEnd(e.body.position, a.body.position), a.body.position) < 1,
-      );
-      return (
-        [...(visible.length ? visible : live)].sort(
-          (a, b) =>
-            distance(e.body.position, a.body.position) - distance(e.body.position, b.body.position),
-        )[0]?.body.position ?? e.body.position
-      );
-    }
-    if (
-      this.active !== 'turf' ||
-      e.squad ||
-      e.elite ||
-      !['runner', 'flyer', 'shooter'].includes(e.kind)
-    )
-      return g.player.position;
-    // Ordinary gunmen return fire at closer, visible blue combatants. Other
-    // enemy archetypes keep their authored player-facing attacks and tells.
-    let target = g.player.position,
-      nearest = distance(e.body.position, target);
-    for (const ally of this.allies) {
-      const p = ally.body.position,
-        d = distance(e.body.position, p);
-      if (
-        ally.spawn <= 0 &&
-        ally.hp > 0 &&
-        d < nearest &&
-        distance(g.lineEnd(e.body.position, p), p) < 1
-      ) {
-        target = p;
-        nearest = d;
-      }
-    }
-    return target;
+  combatTarget(e: Enemy) {
+    return this.game.factions.combatTarget(e);
   }
   removeAlly(e: Enemy) {
-    Composite.remove(this.game.engine.world, e.body);
-    this.allies = this.allies.filter((a) => a !== e);
+    this.game.factions.removeAlly(e);
   }
   hitAlly(e: Enemy, damage: number) {
-    if (!this.allies.includes(e) || e.spawn > 0 || this.departingAt !== null) return;
-    e.hp -= damage;
-    e.flash = 0.08;
-    if (e.hp <= 0) {
-      this.game.burst(e.body.position, 12, '#7cbfff', 3);
-      this.removeAlly(e);
-    }
+    this.game.factions.hitAlly(e, damage);
   }
   arrival(x = this.site.x): Vec | null {
     for (const y of [this.site.y - 110, 480, 340, 180]) {

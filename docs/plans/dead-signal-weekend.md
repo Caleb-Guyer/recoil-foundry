@@ -1,6 +1,8 @@
 # Recoil Foundry: Dead Signal
 
-Proposed themed update, planned against 2.98.1, with target version **3.0.0**. Planning document only; these features and test presets are not implemented. Target: ready Sunday, 27 September 2026, with public release before 7:00 a.m. Central on Monday, 28 September. The timetable below is a work plan, not a scheduled background job.
+Proposed themed update, planned against 2.98.1, with target version **3.0.0**. The [first playable room](dead-signal-prototype.md) is implemented on `feature/dead-signal` as of 24 September. The full route, remaining upgrades, second machine and boss below are still planned. Target: ready Sunday, 27 September 2026, with public release before 7:00 a.m. Central on Monday, 28 September. The timetable below is a work plan, not a scheduled background job.
+
+**Foundation completed:** one Transmission Annex room in both mirrors; one Switchman and interruptible gun port; pre-equipped Spoof with temporary blue allies; bullet, beam and shell presets. The production build and 1,601 automated tests pass, including 27 prototype checks and six ordinary-input combat completions. Browser presentation, pause and retry were checked in the in-app browser. See the prototype notes for exact scope, test links and remaining integration work. This is a development preview; the public release remains 2.98.1.
 
 **The hook:** a communications wing sealed years ago has started issuing orders again. You can enter it, trace the transmission, and steal enough authority to make the factory attack itself.
 

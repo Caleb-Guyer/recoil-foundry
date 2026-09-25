@@ -3,6 +3,11 @@ import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 export const MACHINE_LORE = {
+  switchman: [
+    'Dispatch authority test',
+    'T. Orr · dispatch',
+    'The switching unit does not check who signed an order. It checks whether the order arrived on the right wire.\n\nI changed two connections. For four seconds, the machines let me through. Then somebody in the closed wing corrected my work.',
+  ],
   auditor: [
     'Asset recovery · field inspection',
     'E. Holt · safety office',

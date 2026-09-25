@@ -1034,6 +1034,8 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  // Isolated development preset; never written by Game.save().
+  annex?: import('./annex-layout.ts').AnnexPreview;
   auditor?: import('./auditor-layout.ts').AuditorSave;
   cleanBoss?: boolean;
   shutdown?: import('./shutdown-layout.ts').ShutdownSave;
