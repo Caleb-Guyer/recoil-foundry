@@ -393,7 +393,7 @@ export class Game {
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
   region: RegionDecision | null = null;
-  annexVersion: 1 | 2 | 3 = 3;
+  annexVersion: import('./regions.ts').AnnexVersion = 4;
   get inAnnex() {
     return (
       !this.practice &&
@@ -896,6 +896,7 @@ export class Game {
         this.stage,
         this.testRun?.annexRouteTest?.mirror,
         this.annexVersion,
+        this.testRun?.annexRouteTest?.layout,
       );
     if ((this.inAnnex && this.stage === 11) || this.practice?.kind === 'switchboard')
       this.level = switchboardLevel(

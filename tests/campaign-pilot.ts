@@ -326,6 +326,7 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
       e?.kind === 'boss' ||
       e?.kind === 'condenser' ||
       e?.kind === 'turbine' ||
+      e?.kind === 'switchboard' ||
       e?.kind === 'interceptor' ||
       // Slow shells need the full visible tell to start their approach. Direct
       // rounds can keep firing until the bank locks. Neither reads future aim.

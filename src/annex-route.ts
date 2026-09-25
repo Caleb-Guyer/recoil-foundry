@@ -1,6 +1,8 @@
 import type { Level, Solid, Spawn } from './levels.ts';
 import { annexLevel, annexPoint } from './annex-layout.ts';
 import { seeded, type Checkpoint, type Vec } from './rules.ts';
+import { annexRevision, type AnnexVersion } from './regions.ts';
+import { ANNEX_ALTERNATES, type AnnexLayout } from './annex-alternates.ts';
 
 export interface AnnexStation {
   junction: Vec;
@@ -17,12 +19,14 @@ export function annexRouteLevel(
   seed: string,
   stage: number,
   mirror?: boolean,
-  version: 1 | 2 | 3 = /^RF-D80-/.test(seed) ? 1 : 2,
+  version: AnnexVersion = annexRevision(seed),
+  layout?: AnnexLayout,
 ): Level {
-  if (stage < 8 || stage > 10) throw new RangeError('Annex combat rooms occupy stages 8–10');
+  if (!Number.isInteger(stage) || stage < 8 || stage > 10)
+    throw new RangeError('Annex combat rooms occupy stages 8–10');
   const mirrored = mirror ?? seeded(seed + ':annex-room:' + stage)() < 0.5;
   const base = annexLevel({ mirror: false, spoof: false });
-  const room: Level =
+  let room: Level =
     stage === 8
       ? {
           ...base,
@@ -151,6 +155,10 @@ export function annexRouteLevel(
         s.kind === 'shooter' && s.x === 1140 ? spawn('caller', 1090, 417) : s,
       );
   }
+  // Layout selection has its own random stream: mirroring and reward identity
+  // stay stable. Saved revisions and older Daily challenges keep their rooms.
+  if (version >= 4 && (layout ?? annexArrangement(seed, stage)) === 'alternate')
+    room = { ...base, ...ANNEX_ALTERNATES[stage] };
   const station = room.annexStation!;
   return {
     ...room,
@@ -160,14 +168,21 @@ export function annexRouteLevel(
     route: room.route.map((p) => annexPoint(mirrored, p)).sort((a, b) => a.x - b.x),
     setpiece: {
       ...room.setpiece!,
+      rosters: [...room.setpiece!.rosters],
+      weak: [...room.setpiece!.weak],
       props: room.setpiece!.props.map((p) => ({ ...p, ...annexPoint(mirrored, p) })),
     },
     annexStation: {
       ...station,
+      patrol: [...station.patrol],
       junction: annexPoint(mirrored, station.junction),
       port: annexPoint(mirrored, station.port),
     },
   };
+}
+
+export function annexArrangement(seed: string, stage: number): AnnexLayout {
+  return seeded(seed + ':annex-arrangement-v1:' + stage)() < 0.5 ? 'original' : 'alternate';
 }
 
 export const ANNEX_ROUTE_ROOMS = ['fork', 'broadcast', 'well', 'gallery'] as const;
@@ -175,13 +190,15 @@ export function annexRouteTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   let valid = p.get('test') === 'annex-route';
   p.forEach((_, k) => {
-    if (!['test', 'room', 'mirror'].includes(k) || p.getAll(k).length !== 1) valid = false;
+    if (!['test', 'room', 'mirror', 'layout'].includes(k) || p.getAll(k).length !== 1)
+      valid = false;
   });
   const room = p.get('room') ?? 'fork';
   if (
     !valid ||
     !ANNEX_ROUTE_ROOMS.some((r) => r === room) ||
-    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))
+    (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!)) ||
+    (p.has('layout') && !['original', 'alternate'].includes(p.get('layout')!))
   )
     return null;
   const stage = 7 + ANNEX_ROUTE_ROOMS.indexOf(room as (typeof ANNEX_ROUTE_ROOMS)[number]);
@@ -207,7 +224,11 @@ export function annexRouteTestFromUrl(url: URL): Checkpoint | null {
     elapsed: 0,
     mods: mods.slice(0, stage),
     region: stage === 7 ? 'pending' : 'annex',
-    annexVersion: 3,
-    annexRouteTest: { mirror: p.get('mirror') === '1', fork: room === 'fork' },
+    annexVersion: 4,
+    annexRouteTest: {
+      mirror: p.get('mirror') === '1',
+      fork: room === 'fork',
+      layout: (p.get('layout') ?? 'original') as AnnexLayout,
+    },
   };
 }

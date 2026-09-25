@@ -41,4 +41,4 @@ Eighteen ordinary-input combat simulations exercise bullets, beams and shells ac
 
 In-app browser inspection covers the two layouts, horn silhouette, fixture separation, minimal HUD, pause/resume, and an empty error log. Human balance evaluation and the finished update's dedicated boss remain outside this step.
 
-The dedicated [Switchboard boss is now implemented](dead-signal-switchboard.md). Further authored arrangements, regional music and release acceptance work remain on the [weekend plan](dead-signal-weekend.md).
+The [Switchboard boss](dead-signal-switchboard.md) and [three additional arrangements](dead-signal-layouts.md) are now implemented. Regional music, final balance and release acceptance work remain on the [weekend plan](dead-signal-weekend.md).

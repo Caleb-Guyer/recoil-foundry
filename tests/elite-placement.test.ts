@@ -135,7 +135,7 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
     'elite-save-0',
     'elite-save-1',
     'elite-save-2',
-    ...[80, 81, 82].flatMap((v) =>
+    ...[80, 81, 82, 83].flatMap((v) =>
       ['2026-09-01', '2026-09-02', '2026-09-06'].map((day) => dailyForDate(day, v)!.seed),
     ),
   ]) {

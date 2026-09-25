@@ -427,7 +427,7 @@ for (const old of oldDaily)
 test('Daily 82 fixes the region and keeps exactly one reward after the new boss', () => {
   const seen = new Set<string>();
   for (let day = 1; day <= 8; day++) {
-    const seed = dailyForDate(`2026-09-${String(day).padStart(2, '0')}`)!.seed;
+    const seed = dailyForDate(`2026-09-${String(day).padStart(2, '0')}`, 82)!.seed;
     const g = new Game();
     g.start(seed);
     g.areaEvents.state = null;

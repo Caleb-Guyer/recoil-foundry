@@ -4,6 +4,7 @@ import { installDialogDismissal } from './dialog-dismissal.ts';
 import { annexTestFromUrl } from './annex-layout.ts';
 import { switchboardTestFromUrl } from './switchboard-layout.ts';
 import { annexRouteTestFromUrl } from './annex-route.ts';
+import { ANNEX_ALTERNATES } from './annex-alternates.ts';
 import { REGION_NAMES } from './regions.ts';
 import { issueReportMenu } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
@@ -427,8 +428,11 @@ function updateTitle() {
     $('play').innerHTML = 'Test the Switchboard <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.annexRouteTest)
     $('play').innerHTML =
-      (linkedRunTest.annexRouteTest.fork ? 'Test the route fork' : 'Enter the Annex') +
-      ' <span aria-hidden="true">↗</span>';
+      (linkedRunTest.annexRouteTest.fork
+        ? 'Test the route fork'
+        : linkedRunTest.annexRouteTest.layout === 'alternate'
+          ? 'Test ' + ANNEX_ALTERNATES[linkedRunTest.stage].name
+          : 'Enter the Annex') + ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('DROPWORKS-64-'))
     $('play').innerHTML =
       (linkedRunTest.stage === 17 ? 'Test Dropworks Roof' : 'Test the Dropworks') +

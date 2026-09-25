@@ -269,8 +269,8 @@ test('bounded warning state and reduced effects retain readable shapes without t
 
 test('Caller is introduced alone in Cable Well and paired with Switchman in Gallery in both mirrors', () => {
   for (const mirror of [false, true]) {
-    const well = annexRouteLevel('caller', 9, mirror),
-      gallery = annexRouteLevel('caller', 10, mirror);
+    const well = annexRouteLevel('caller', 9, mirror, 3),
+      gallery = annexRouteLevel('caller', 10, mirror, 3);
     assert.equal(well.spawns.filter((e) => e.kind === 'caller').length, 1);
     assert(!well.spawns.some((e) => e.kind === 'switchman'));
     assert.equal(gallery.spawns.filter((e) => e.kind === 'caller').length, 1);
@@ -306,7 +306,7 @@ test('saved Annex revision preserves old encounters and persists new ones', () =
     resumed.start(next.seed, next);
     assert.deepEqual(resumed.level, g.level);
   }
-  for (const bad of [0, 4, '2', null])
+  for (const bad of [0, 5, '2', null])
     assert.equal(loadCheckpoint({ ...preset, annexVersion: bad }), null);
   for (const ruleset of [80, 81]) {
     const seed = `RF-D${ruleset}-2026-09-01`,

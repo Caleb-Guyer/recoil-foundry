@@ -16,6 +16,7 @@ import { playCampaign } from './campaign-pilot.ts';
 import { playRoom } from './room-pilot.ts';
 import { drawDetourDoor } from '../src/detour-art.ts';
 import { drawRegionExits } from '../src/route-art.ts';
+import { annexPoint } from '../src/annex-layout.ts';
 
 const { Body, Composite, Query } = Matter;
 const idle: Input = {
@@ -26,9 +27,11 @@ const idle: Input = {
   fire: false,
   aim: { x: 1000, y: 400 },
 };
-function preset(room = 'fork', mirror = false) {
+function preset(room = 'fork', mirror = false, layout = 'original') {
   return annexRouteTestFromUrl(
-    new URL(`https://example.test/?test=annex-route&room=${room}&mirror=${mirror ? 1 : 0}`),
+    new URL(
+      `https://example.test/?test=annex-route&room=${room}&mirror=${mirror ? 1 : 0}&layout=${layout}`,
+    ),
   )!;
 }
 function clear(g: Game) {
@@ -121,47 +124,48 @@ test('route presets are legal, isolated, strict, and start at the requested room
     );
 });
 
-for (const stage of [8, 9, 10])
-  for (const mirror of [false, true]) {
-    test(`Annex ${stage} mirror=${mirror}: supported hulls, fixtures and safe approaches`, () => {
-      const l = annexRouteLevel('layout', stage, mirror);
-      assert.deepEqual(l, annexRouteLevel('layout', stage, mirror));
-      assert.equal(l.spawns.length, stage);
-      assert(l.solids.every((s) => s.x >= 180 && s.x + s.w <= 1820));
-      assert(l.spawns.every((s) => s.x >= 340 && s.x <= 1660));
-      for (const s of l.spawns) {
-        const { w, h } = ENEMY_STATS[s.kind];
-        assert(
-          !l.solids.some((b) => overlap(b, { x: s.x - w / 2, y: s.y - h / 2, w, h })),
-          JSON.stringify(s),
-        );
-        if (s.kind !== 'flyer')
+for (const layout of ['original', 'alternate'] as const)
+  for (const stage of [8, 9, 10])
+    for (const mirror of [false, true]) {
+      test(`Annex ${layout} ${stage} mirror=${mirror}: supported hulls, fixtures and safe approaches`, () => {
+        const l = annexRouteLevel('layout', stage, mirror, 4, layout);
+        assert.deepEqual(l, annexRouteLevel('layout', stage, mirror, 4, layout));
+        assert.equal(l.spawns.length, stage);
+        assert(l.solids.every((s) => s.x >= 180 && s.x + s.w <= 1820));
+        assert(l.spawns.every((s) => s.x >= 340 && s.x <= 1660));
+        for (const s of l.spawns) {
+          const { w, h } = ENEMY_STATS[s.kind];
           assert(
-            Math.abs(s.y + h / 2 - 740) < 2 ||
-              l.solids.some(
-                (b) =>
-                  Math.abs(b.y - s.y - h / 2) < 2 && s.x - w / 2 > b.x && s.x + w / 2 < b.x + b.w,
-              ),
+            !l.solids.some((b) => overlap(b, { x: s.x - w / 2, y: s.y - h / 2, w, h })),
+            JSON.stringify(s),
           );
-      }
-      const j = l.annexStation!.junction;
-      assert(l.solids.some((b) => b.y === l.annexStation!.mount && j.x > b.x && j.x < b.x + b.w));
-      assert.equal(j.y + 42, l.annexStation!.mount);
-      const port = l.annexStation!.port;
-      assert(!l.solids.some((b) => overlap(b, { x: port.x - 22, y: port.y - 22, w: 44, h: 44 })));
-    });
-    test(`Annex ${stage} mirror=${mirror}: traversable in both directions with ordinary jumps`, () => {
-      const g = new Game();
-      g.startTest(preset(ANNEX_ROUTE_ROOMS[stage - 7], mirror));
-      g.mods = [];
-      g.gun = getGun([]);
-      clear(g);
-      // Traversal tests remove combat pressure, preserving crates, cover and all terrain.
-      walk(g, g.level.route);
-      walk(g, [...g.level.route].reverse());
-      walk(g, [{ x: 140, y: 722 }]);
-    });
-  }
+          if (s.kind !== 'flyer')
+            assert(
+              Math.abs(s.y + h / 2 - 740) < 2 ||
+                l.solids.some(
+                  (b) =>
+                    Math.abs(b.y - s.y - h / 2) < 2 && s.x - w / 2 > b.x && s.x + w / 2 < b.x + b.w,
+                ),
+            );
+        }
+        const j = l.annexStation!.junction;
+        assert(l.solids.some((b) => b.y === l.annexStation!.mount && j.x > b.x && j.x < b.x + b.w));
+        assert.equal(j.y + 42, l.annexStation!.mount);
+        const port = l.annexStation!.port;
+        assert(!l.solids.some((b) => overlap(b, { x: port.x - 22, y: port.y - 22, w: 44, h: 44 })));
+      });
+      test(`Annex ${layout} ${stage} mirror=${mirror}: traversable in both directions with ordinary jumps`, () => {
+        const g = new Game();
+        g.startTest(preset(ANNEX_ROUTE_ROOMS[stage - 7], mirror, layout));
+        g.mods = [];
+        g.gun = getGun([]);
+        clear(g);
+        // Traversal tests remove combat pressure, preserving crates, cover and all terrain.
+        walk(g, g.level.route);
+        walk(g, [...g.level.route].reverse());
+        walk(g, [{ x: 140, y: 722 }]);
+      });
+    }
 
 test('regional exits have one label each, without the unrelated Challenge door underneath', () => {
   const g = new Game();
@@ -178,6 +182,44 @@ test('regional exits have one label each, without the unrelated Challenge door u
   drawRegionExits(c, g);
   assert.deepEqual(labels, ['COOLING', 'ANNEX']);
 });
+
+for (const room of ['broadcast', 'well'])
+  for (const mirror of [false, true])
+    test(`${room} alternate mirror=${mirror}: optional high perches need no recoil upgrade`, () => {
+      const g = new Game();
+      g.startTest(preset(room, mirror, 'alternate'));
+      g.mods = [];
+      g.gun = getGun([]);
+      clear(g);
+      Body.setPosition(g.player, annexPoint(mirror, { x: 140, y: 722 }));
+      Body.setVelocity(g.player, { x: 0, y: 0 });
+      const high =
+        room === 'broadcast'
+          ? [
+              [270, 722],
+              [425, 632],
+              [665, 522],
+              [920, 407],
+              [1210, 522],
+              [1430, 522],
+              [1600, 387],
+            ]
+          : [
+              [270, 722],
+              [415, 632],
+              [605, 512],
+              [765, 392],
+              [555, 272],
+              [765, 392],
+              [1110, 527],
+              [1340, 427],
+              [1550, 307],
+            ];
+      walk(
+        g,
+        high.map(([x, y]) => annexPoint(mirror, { x, y })),
+      );
+    });
 
 test('both physical exits stay closed in combat; upper chooses Annex and lower Cooling', () => {
   for (const choice of ['cooling', 'annex'] as const) {
@@ -273,7 +315,7 @@ test('Spoof is optional, has no duplicate when owned, and rerolls remain legal',
   assert(saveOf(g));
 });
 
-for (const ruleset of [80, 81])
+for (const ruleset of [80, 81, 82, 83])
   test(`Daily ${ruleset} fixes both regional choices, blocks the other, and forces one legal reward`, () => {
     const seen = new Set<RegionChoice>();
     for (let day = 1; day <= 12; day++) {
@@ -369,32 +411,37 @@ test('Annex discovery and death recaps name the visited region without revealing
   assert(migrated.annex && !migrated.areas.includes('cooling'));
 });
 
-for (const core of ['pierce', 'cutting-torch', 'shellshock'])
-  for (const room of ['broadcast', 'well', 'gallery'])
-    for (const mirror of [false, true])
-      test(`${room} mirror=${mirror}: ordinary-input ${core} combat`, (t) => {
-        const s = preset(room, mirror);
-        s.mods = ['magnum', 'light', 'kick', 'rapid', 'airshot', 'leech', 'landing', core];
-        if (s.stage > 8) s.mods.push('spoof');
-        if (s.stage > 9) s.mods.push('standing-orders');
-        assert(validBuild(s.mods));
-        const g = new Game();
-        g.startTest(s);
-        // Broadcast has crossing horizontal lanes; the later rooms use the
-        // campaign pilot's platform navigation. Both send ordinary input only.
-        if (room === 'broadcast') playRoom(g, 120);
-        else playCampaign(g, { pathMods: s.mods, seconds: 120, stop: (g) => g.clear });
-        const result = {
-          clear: g.clear,
-          hp: g.hp,
-          kills: g.kills,
-          time: g.time,
-          shots: g.shotCount,
-          enemies: g.enemies.map((e) => ({ kind: e.kind, hp: e.hp, pos: { ...e.body.position } })),
-        };
-        t.diagnostic(JSON.stringify(result));
-        assert(result.clear && result.hp > 0, JSON.stringify(result));
-      });
+for (const layout of ['original', 'alternate'])
+  for (const core of ['pierce', 'cutting-torch', 'shellshock'])
+    for (const room of ['broadcast', 'well', 'gallery'])
+      for (const mirror of [false, true])
+        test(`${layout} ${room} mirror=${mirror}: ordinary-input ${core} combat`, (t) => {
+          const s = preset(room, mirror, layout);
+          s.mods = ['magnum', 'light', 'kick', 'rapid', 'airshot', 'leech', 'landing', core];
+          if (s.stage > 8) s.mods.push('spoof');
+          if (s.stage > 9) s.mods.push('standing-orders');
+          assert(validBuild(s.mods));
+          const g = new Game();
+          g.startTest(s);
+          // Broadcast has crossing horizontal lanes; the later rooms use the
+          // campaign pilot's platform navigation. Both send ordinary input only.
+          if (room === 'broadcast') playRoom(g, 120);
+          else playCampaign(g, { pathMods: s.mods, seconds: 120, stop: (g) => g.clear });
+          const result = {
+            clear: g.clear,
+            hp: g.hp,
+            kills: g.kills,
+            time: g.time,
+            shots: g.shotCount,
+            enemies: g.enemies.map((e) => ({
+              kind: e.kind,
+              hp: e.hp,
+              pos: { ...e.body.position },
+            })),
+          };
+          t.diagnostic(JSON.stringify(result));
+          assert(result.clear && result.hp > 0, JSON.stringify(result));
+        });
 
 // Captured from 5572627 before route integration, not generated by the code under test.
 const oldDaily: { seed: string; rooms: string[]; rewards: string[] }[] = JSON.parse(

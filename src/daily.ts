@@ -1,7 +1,7 @@
 // Bump when layouts, upgrade pools, or gameplay balance change. Old links must
 // not silently become a different challenge under the same identity.
-export const DAILY_RULESET = 82;
-export const SUPPORTED_DAILY_RULESETS = [78, 79, 80, 81, DAILY_RULESET] as const;
+export const DAILY_RULESET = 83;
+export const SUPPORTED_DAILY_RULESETS = [78, 79, 80, 81, 82, DAILY_RULESET] as const;
 export const isLegacyDaily = (seed: string) => /^RF-D78-/.test(seed);
 export const DAILY_BESTS_KEY = 'rf-daily-bests-v1';
 export interface DailyChallenge {

@@ -11,6 +11,7 @@ With the local development server running on port 4186:
 - [Cable Well](http://127.0.0.1:4186/?test=annex-route&room=well)
 - [Receiver Gallery](http://127.0.0.1:4186/?test=annex-route&room=gallery)
 - [Mirrored route](http://127.0.0.1:4186/?test=annex-route&room=broadcast&mirror=1)
+- [New alternate arrangements](dead-signal-layouts.md)
 
 The fork preset starts with the Furnace fight already cleared: climb the two steps into **ANNEX**, or walk into **COOLING**. Normal runs require defeating the actual Furnace boss. Daily shows only its seeded destination. These presets use legal modest builds, preserve campaign saves and discoveries, and reset with R. `mirror` changes the Annex rooms, not the preceding Furnace arena.
 
@@ -21,7 +22,7 @@ Direct room presets continue through the remaining campaign; they are not one-ro
 - **Broadcast Floor:** eight machines, intersecting firing lanes, elevated junction and interruptible remote port.
 - **Cable Well:** introduces one Caller without a Switchman among nine machines, a stepped climb through suspended platforms, high firing positions and recoil shortcuts. Every platform route also works with ordinary jumps and no upgrades.
 - **Receiver Gallery:** pairs Caller with Switchman among ten machines, alternating solid cover and raised firing positions, with room to flank or use blue allies.
-- All three rooms have deterministic mirrored versions. Fixtures, spawn hulls, cover and navigation points mirror together.
+- Each room role now has [two authored arrangements](dead-signal-layouts.md), with deterministic mirrored versions. Fixtures, spawn hulls, cover and navigation points mirror together. New campaigns independently select one arrangement per role from the seed.
 - The first Annex room's reward includes Spoof when unowned. It remains one of three optional normal-run cards; Daily keeps one forced card. Owning Spoof never creates a duplicate, and normal rerolls work as before.
 - Continue restores the selected region, exact room orientation, owned upgrades and pending offers. Choosing a route changes no mandatory room or reward counts.
 - The region is identified correctly in the HUD tooltip, death recap and an earned dispatch Logbook entry. Visiting the Annex does not claim a Cooling discovery.
@@ -29,7 +30,7 @@ Direct room presets continue through the remaining campaign; they are not one-ro
 
 ## Compatibility and scope
 
-Stages 8–10 (rooms 9–11) use the new layouts. **Stage 11 now contains [The Switchboard](dead-signal-switchboard.md)** for Annex revision 3 and Daily 82, then proceeds to Reclamation. Older saved revisions retain the existing Cooling boss. [Caller is also implemented](dead-signal-caller.md). There are three authored combat layouts plus the boss arena, each mirrored; further distinct combat arrangements remain on the weekend plan.
+Stages 8–10 (rooms 9–11) select from six authored combat arrangements. Revision 4 and Daily 83 introduce Crossed Lines, Broken Ladder and Relay Stacks; earlier revisions retain the original arrangements. **Stage 11 contains [The Switchboard](dead-signal-switchboard.md)** from Annex revision 3 and Daily 82 onward, then proceeds to Reclamation. Earlier saved revisions retain the existing Cooling boss. [Caller is also implemented](dead-signal-caller.md). All six combat arrangements and the boss arena have mirrored versions.
 
 The region choice is separate from the existing Cooling difficulty band. These rooms currently use its score; the regional arrangement and boss layer remain open. Cooling's optional alternate layouts, story rooms, floodgate and area events do not replace the authored Annex rooms, and this preview does not offer Cooling's optional challenge detour. Existing reward, enemy collision, allied targeting and transmission lifecycle rules apply. Overtime retains its existing layout sequence.
 
@@ -43,4 +44,4 @@ The route tests cover supported spawn hulls, mounted fixtures, both mirrors, ord
 
 Eighteen ordinary-input combat tests cover gun, beam and shell builds across all three rooms and both mirrors, without health, damage, AI or physics overrides. The Broadcast pilot uses its crossing-lane movement policy; the later rooms use the campaign pilot's platform navigation. Two continuous runs climb the real fork, earn upgrades, fight all three rooms and reach the shared boss entrance with their remaining health. These are repeatable simulations, not human balance sign-off.
 
-Browser inspection covers the fork's two signs, the live Annex layout, minimal HUD and pause controls. [Switchboard has separate verification notes](dead-signal-switchboard.md). Full-update balance, extra arrangements, regional music and release packaging remain on the [weekend plan](dead-signal-weekend.md).
+Browser inspection covers the fork's two signs, the live Annex layout, minimal HUD and pause controls. [Switchboard](dead-signal-switchboard.md) and [layout variety](dead-signal-layouts.md) have separate verification notes. Full-update balance, regional music and release packaging remain on the [weekend plan](dead-signal-weekend.md).

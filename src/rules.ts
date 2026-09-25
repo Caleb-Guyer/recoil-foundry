@@ -1052,9 +1052,13 @@ export interface RewardCheckpoint {
 export interface Checkpoint {
   // Isolated development preset; never written by Game.save().
   annex?: import('./annex-layout.ts').AnnexPreview;
-  annexRouteTest?: { mirror: boolean; fork: boolean };
+  annexRouteTest?: {
+    mirror: boolean;
+    fork: boolean;
+    layout?: import('./annex-alternates.ts').AnnexLayout;
+  };
   region?: RegionDecision;
-  annexVersion?: 1 | 2 | 3;
+  annexVersion?: import('./regions.ts').AnnexVersion;
   switchboardTest?: { mirror: boolean };
   auditor?: import('./auditor-layout.ts').AuditorSave;
   cleanBoss?: boolean;

@@ -1,9 +1,18 @@
 import { seeded, type Checkpoint } from './rules.ts';
 
-export function annexRevision(seed: string, save?: Pick<Checkpoint, 'annexVersion'>): 1 | 2 | 3 {
+export type AnnexVersion = 1 | 2 | 3 | 4;
+export function annexRevision(seed: string, save?: Pick<Checkpoint, 'annexVersion'>): AnnexVersion {
   return (
     save?.annexVersion ??
-    (/^RF-D82-/.test(seed) ? 3 : /^RF-D81-/.test(seed) ? 2 : save || /^RF-D80-/.test(seed) ? 1 : 3)
+    (/^RF-D83-/.test(seed)
+      ? 4
+      : /^RF-D82-/.test(seed)
+        ? 3
+        : /^RF-D81-/.test(seed)
+          ? 2
+          : save || /^RF-D80-/.test(seed)
+            ? 1
+            : 4)
   );
 }
 export type RegionChoice = 'cooling' | 'annex';
@@ -14,7 +23,7 @@ export const REGION_NAMES: Record<RegionChoice, string> = {
 };
 // Daily 78/79 retain their original rooms and reward sequence.
 export function dailyRegion(seed: string): RegionChoice | null {
-  return /^RF-D(?:80|81|82)-/.test(seed)
+  return /^RF-D(?:80|81|82|83)-/.test(seed)
     ? seeded(seed + ':region:annex-v1')() < 0.5
       ? 'cooling'
       : 'annex'
@@ -24,7 +33,7 @@ export function isAnnexStage(
   region: RegionDecision | null | undefined,
   stage: number,
   overtime = false,
-  version: 1 | 2 | 3 = 1,
+  version: AnnexVersion = 1,
 ) {
   return region === 'annex' && !overtime && stage >= 8 && stage <= (version >= 3 ? 11 : 10);
 }
@@ -39,10 +48,11 @@ export function validRegion(d: Checkpoint) {
     d.annexVersion !== undefined &&
     (d.version !== 6 ||
       !region ||
-      ![1, 2, 3].includes(d.annexVersion) ||
+      ![1, 2, 3, 4].includes(d.annexVersion) ||
       (/^RF-D80-/.test(d.seed) && d.annexVersion !== 1) ||
       (/^RF-D81-/.test(d.seed) && d.annexVersion !== 2) ||
-      (/^RF-D82-/.test(d.seed) && d.annexVersion !== 3))
+      (/^RF-D82-/.test(d.seed) && d.annexVersion !== 3) ||
+      (/^RF-D83-/.test(d.seed) && d.annexVersion !== 4))
   )
     return false;
   if (!region) return true;
