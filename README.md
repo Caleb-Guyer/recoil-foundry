@@ -8,13 +8,13 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 ![Recoil flight in the Loading Docks](public/media/loading-docks.png)
 
-- **100 upgrades** with branching paths and combinations that change how your gun works.
+- **105 upgrades** with branching paths and combinations that change how your gun works.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**The full browser release is complete. Latest patch: 2.98.1.** Future fixes and updates can continue. [Release notes](docs/releases/2.98.1.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v2.98.1).
+**Dead Signal — version 3.0.** Take the alternate Transmission Annex route after Furnace, interrupt hostile transmissions, and reboot fallen machines with five Subversion upgrades. [Release notes](docs/releases/3.0.0.md) · [Watch the update trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.0.0).
 
 ## Controls
 

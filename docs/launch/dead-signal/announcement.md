@@ -1,8 +1,4 @@
-# Dead Signal — launch-day draft
-
-Publish this copy only after Dead Signal is verified on both public hosts. The staged teaser says **Coming soon**; replace its closing availability line before reusing it as a launch-day trailer.
-
----
+# Dead Signal is here
 
 **The shift ended. The orders didn’t.**
 

@@ -1,8 +1,8 @@
 # Dead Signal launch kit
 
-Staged on `feature/dead-signal`, using **3.0.0-rc.2**. No public build, announcement, video, screenshot or store-page change has been published by this work.
+Launch material for **Dead Signal 3.0.0**. The trailer closes with **Play now**. Public promotion evidence is recorded in [release operations](../../release-operations.md).
 
-Open [the review page](index.html) through a local static server to watch the teaser and inspect the images. It is documentation, excluded from the playable site's build.
+Open [the review page](index.html) through a local static server to watch the trailer and inspect the images. The review page and source captures remain documentation. A copy of the final MP4 is hosted at `public/media/dead-signal.mp4` for the itch.io trailer link; it is never requested by the game's startup code.
 
 | Asset                                                 | Format                                                 |
 | ----------------------------------------------------- | ------------------------------------------------------ |
@@ -11,8 +11,8 @@ Open [the review page](index.html) through a local static server to watch the te
 | [Recoil climb](02-recoil-climb.png)                   | 1920 × 1080 PNG                                        |
 | [Subversion](03-subversion.png)                       | 1920 × 1080 PNG                                        |
 | [Teaser cover](Dead-Signal-Teaser-Cover.png)          | 1920 × 1080 PNG                                        |
-| [Upload text and image descriptions](upload-text.txt) | Coming-soon copy; not posted                           |
-| [Launch announcement](announcement.md)                | Launch-day draft; publish only after host verification |
+| [Upload text and image descriptions](upload-text.txt) | Launch copy; YouTube upload is separate                |
+| [Launch announcement](announcement.md)                | Spoiler-light release announcement                     |
 
 ## Editorial approach
 
@@ -39,4 +39,4 @@ node --experimental-strip-types scripts/dead-signal-media.ts
 
 The default output is `../recoil-foundry-dead-signal-launch`; override it with `SIGNAL_MEDIA_OUT`. The checked-in [take survey](takes.json) selects the inputs; `surveySignalTakes()` in `scripts/dead-signal-scenes.ts` can regenerate it. Review generated media before copying the final files here. Raw WAVs, temporary renders and contact sheets stay outside the game/repository distribution.
 
-The local review media and candidate site have separate ZIPs. Do not upload the launch kit as the playable itch.io game. At release, use the candidate site's ZIP and the established [promotion procedure](../../release-operations.md). Keep the existing public `v2.98.1` as the rollback reference until promotion succeeds.
+The local media kit and playable site have separate ZIPs. Do not upload the launch kit as the playable itch.io game. Use the verified `v3.0.0` release site's ZIP and the established [promotion procedure](../../release-operations.md). The immutable `v2.98.1` tag remains the previous stable rollback reference.

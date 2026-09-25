@@ -320,7 +320,7 @@ for (; frame < TEASER_FRAMES; frame++) {
   c.globalAlpha *= smooth((t - 60 / TEASER_BPM) / 0.25);
   c.fillStyle = '#aaa3b3';
   c.font = '22px "Release Mono"';
-  c.fillText('A FREE CONTENT UPDATE · COMING SOON', W / 2, 744);
+  c.fillText('A FREE CONTENT UPDATE · PLAY NOW', W / 2, 744);
   c.font = '23px "Release Sans"';
   c.fillText('caleb-guyer.itch.io/recoil-foundry', W / 2, 801);
   c.restore();
@@ -508,13 +508,13 @@ const mixed = spawnSync(
     '-movflags',
     '+faststart',
     '-metadata',
-    'title=Recoil Foundry: Dead Signal — Teaser',
+    'title=Recoil Foundry: Dead Signal — Update Trailer',
     '-metadata',
-    'comment=Original game music: Orders After Hours. Real engine gameplay; scripted inputs. Preview of an unreleased update.',
+    'comment=Original game music: Orders After Hours. Real engine gameplay; scripted inputs. Dead Signal 3.0 update trailer.',
     resolve(out, 'Recoil-Foundry-Dead-Signal-Teaser.mp4'),
   ],
   { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
 );
 writeFileSync(resolve(work, 'encode.log'), mixed.stderr ?? '');
 if (mixed.status !== 0) throw Error('Final mix failed: ' + mixed.stderr);
-console.log('Finished staged teaser:', out);
+console.log('Finished Dead Signal update trailer:', out);

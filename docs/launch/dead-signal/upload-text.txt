@@ -1,22 +1,21 @@
 VIDEO TITLE
-Recoil Foundry: Dead Signal — Update Teaser
+Recoil Foundry: Dead Signal — Update Trailer
 
 DESCRIPTION
 The shift ended. The orders didn’t.
 
 A sealed communications wing is transmitting again. Take the new route. Interrupt its orders. Turn its machines against it.
 
-Dead Signal is a free content update coming to Recoil Foundry, with the Transmission Annex, five Subversion upgrades, new machines, and an original regional soundtrack.
+Dead Signal is out now: a free content update for Recoil Foundry, with the Transmission Annex, five Subversion upgrades, new machines, and an original regional soundtrack.
 
-Play the current release free in your browser:
+Play free in your browser:
 https://caleb-guyer.itch.io/recoil-foundry
 
 Music: “Orders After Hours” — original Recoil Foundry game score, arranged for this teaser.
 Captured from the actual game engine using scripted controls and legal preset builds. Combat uses ordinary damage, recoil and collision rules.
 
-POSTING STATUS
-Prepared for review. Nothing has been uploaded or published.
-This is a coming-soon teaser, not an announcement that the update is live.
+UPLOAD NOTE
+This is launch-day copy for version 3.0. Uploading to YouTube is a separate action; no YouTube upload is included in the game release.
 Keep the boss out of the title, thumbnail, description and tags.
 
 SCREENSHOT CAPTIONS / ALT TEXT

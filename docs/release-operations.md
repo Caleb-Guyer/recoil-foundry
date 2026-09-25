@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Dead Signal 3.0 promotion — 25 September 2026
+
+The owner authorized publication of Dead Signal 3.0 to both hosts, including the screenshots and announcement. The final package contains the unchanged rc.2 gameplay, stable `3.0.0` version metadata, release notes, updated store copy, and the trailer's **Play now** closing card. The trailer is available as an optional static media file and is not loaded by game startup. Existing checkpoint and Daily rules remain unchanged.
+
+Promotion is in progress: run the final checks, fast-forward `main`, verify Pages CI on that exact commit, then tag/package and replace the itch.io HTML upload. Record public-host evidence here after verification. No YouTube upload or direct recruitment message is included.
+
 ## Stable release and rollback points
 
 - Stable tag: `v2.98.1`.
