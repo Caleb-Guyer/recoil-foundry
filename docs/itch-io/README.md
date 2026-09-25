@@ -1,6 +1,6 @@
 # itch.io launch
 
-**Published 20 September 2026:** [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The uploaded build is the complete browser release, **2.98.0**, unchanged from the stable GitHub release. Project ID: `5033600`. No recruitment messages or player feedback have been recorded.
+**Published 20 September 2026; patched 24 September 2026:** [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The current build is **2.98.1**, unchanged from the stable GitHub release ZIP. Project ID: `5033600`. This update did not send recruitment messages or post a devlog.
 
 ## Page
 
@@ -20,7 +20,17 @@
 - Theme: background `#0a1419`, content `#142127`, text `#e9eadc`, links/buttons `#acc3b6`. Simple sans-serif typography, visible screenshots, no additional decorative background.
 - Embed: click to launch fullscreen, with scrollbars off and Loading Docks as the launch background. Screenshots use the sidebar layout; comments are enabled.
 
-The uploaded file is the existing [stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v2.98.0/recoil-foundry-v2.98.0-site.zip), not the repository or this launch folder. It has `index.html` at its root and uses relative asset URLs. SHA-256: `595985cd384363fbfce714213bc0415638d12b44c17c9ff5e6cda3b837daf13a`.
+The uploaded file is the [2.98.1 stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v2.98.1/recoil-foundry-v2.98.1-site.zip), not the repository or this launch folder. It has `index.html` at its root and uses relative asset URLs. SHA-256: `5840669165e84aa6b66196dd2c3b3ff490a14e593196b52c3a33b4c6de993322`. The replacement used the previous archive filename, `recoil-foundry-v2.98.0-site.zip`, with display name **Recoil Foundry 2.98.1**. Its contents are the verified 2.98.1 artifact.
+
+## Patch 2.98.1 verification
+
+- Commit `4d579d148840a3078eb968616a6d58e0d41530b5` passed all 1,571 local tests, TypeScript and the production build. Its [Pages workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36078168553) passed before tagging, and the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36078834142) published `v2.98.1`.
+- The downloaded ZIP matches GitHub's SHA-256 digest. Its 16 files contain 2,698,226 uncompressed bytes; `index.html` and all four relative entry assets resolve inside the archive.
+- itch.io accepted the replacement as upload `19388095`. Browser playback was re-enabled, the display name updated, and the editor confirmed **Saved**. The public page remained **Published**.
+- The live itch.io iframe reports **2.98.1** in About & credits. Its existing **Continue daily** entry remained available after the update. Warm-up startup, jump/fire input, pause and return to menu worked without overwriting that run. No browser warnings or errors were recorded in this smoke test.
+- GitHub Pages also reports **2.98.1** in About & credits and Report an issue. Its existing **Continue** entry survived warm-up checks. The deployed reward test survived six Escape presses, a reroll, reward selection and pausing afterward.
+
+These are patch smoke checks. The original launch and hardware evidence below retains its original scope.
 
 ## Sharing with classmates
 
@@ -32,7 +42,7 @@ Send personally to 5–10 willing classmates. Do not reveal late encounters or c
 
 Use the [first-session sheet](../first-session-playtest.md) for observations and the [feedback packet](../external-playtest-packet.md) for longer sessions. Record anonymous IDs and actual comments. Fix reproducible broken behavior first; use recurring feedback to guide balance or clarity changes.
 
-## Launch verification
+## Original 2.98.0 launch verification
 
 - The stable ZIP checksum matches the release; 16 files plus two directory entries, 2,697,193 uncompressed bytes. Root `index.html` and all four relative entry assets resolve within the ZIP, within itch.io's size and path limits.
 - itch.io accepted the upload and showed **Published** after saving public visibility. An independent request without the browser's login returned HTTP 200, the expected page title, description and Run game control, and no owner panel.
