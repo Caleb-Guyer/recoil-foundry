@@ -11,6 +11,7 @@ export const VOLATILE_TELL = 0.9;
 export const VOLATILE_RADIUS = 135;
 
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
+  caller: { w: 34, h: 36, hp: 100 },
   switchman: { w: 34, h: 36, hp: 110 },
   auditor: { w: 42, h: 58, hp: 1800 },
   fabricator: { w: 30, h: 32, hp: 115 },

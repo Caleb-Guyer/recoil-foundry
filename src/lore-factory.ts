@@ -3,6 +3,11 @@ import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 export const MACHINE_LORE = {
+  caller: [
+    'Playback fault · service note',
+    'M. Vale · maintenance',
+    'The announcement head keeps the last three attendance readings. If someone misses a call, it repeats their station number until they answer.\n\nI stood in three different places to test it. The head turned to each empty space in order. There was a neat hole in the panel behind every one.\n\nWe used to complain that dispatch was always a few seconds behind us. I am no longer filing that complaint.',
+  ],
   switchman: [
     'Dispatch authority test',
     'T. Orr · dispatch',

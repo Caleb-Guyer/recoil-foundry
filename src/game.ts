@@ -145,6 +145,7 @@ import type { Encounter } from './practice.ts';
 import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
 import { FactionSystem } from './factions.ts';
+import { clearCaller, updateCaller, type CallerRig } from './caller.ts';
 import { AnnexSystem } from './annex.ts';
 import { annexLevel } from './annex-layout.ts';
 import { annexRouteLevel } from './annex-route.ts';
@@ -174,6 +175,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  caller?: CallerRig;
   auditor?: AuditorRig;
   fabricator?: FabricatorRig;
   sentry?: SentryRig;
@@ -380,6 +382,7 @@ export class Game {
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
   region: RegionDecision | null = null;
+  annexVersion: 1 | 2 = 2;
   get inAnnex() {
     return (
       !this.practice &&
@@ -553,6 +556,7 @@ export class Game {
       this.sappers.clear();
       for (const prop of [...this.props.items]) if (prop.kind === 'rubble') this.props.remove(prop);
       for (const e of this.enemies) {
+        clearCaller(e);
         releaseScrapper(this, e);
         clearArsenal(this, e);
       }
@@ -628,6 +632,9 @@ export class Game {
       save?.region ??
       dailyRegion(this.seed) ??
       (!save && !dailyFromSeed(this.seed) ? 'pending' : null);
+    this.annexVersion =
+      save?.annexVersion ??
+      (/^RF-D81-/.test(this.seed) ? 2 : save || /^RF-D80-/.test(this.seed) ? 1 : 2);
     this.route =
       !practice &&
       !this.detour &&
@@ -741,7 +748,7 @@ export class Game {
       ...(this.detours.length ? { detours: [...this.detours] } : {}),
       ...(this.overtime ? { overtime: { ...this.overtime } } : {}),
       ...(this.route ? { route: this.route } : {}),
-      ...(this.region ? { region: this.region } : {}),
+      ...(this.region ? { region: this.region, annexVersion: this.annexVersion } : {}),
       ...(this.mode === 'upgrade' && !this.rewardTaken
         ? {
             reward: {
@@ -802,7 +809,10 @@ export class Game {
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
-    for (const enemy of this.enemies) clearKiln(enemy);
+    for (const enemy of this.enemies) {
+      clearKiln(enemy);
+      clearCaller(enemy);
+    }
     Composite.clear(this.engine.world, false);
     Engine.clear(this.engine);
     this.escape = escapeRoom ? { phase: 'route', time: 0, depart: 0 } : null;
@@ -870,7 +880,12 @@ export class Game {
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
     if (this.inAnnex)
-      this.level = annexRouteLevel(this.seed, this.stage, this.testRun?.annexRouteTest?.mirror);
+      this.level = annexRouteLevel(
+        this.seed,
+        this.stage,
+        this.testRun?.annexRouteTest?.mirror,
+        this.annexVersion,
+      );
     if (!escapeRoom && !this.inAnnex) this.level = this.courier.level(this.level);
     if (!escapeRoom && !this.inAnnex) this.level = this.floodgate.level(this.level);
     if (!escapeRoom && !this.inAnnex) this.level = this.story.level(this.level);
@@ -1836,7 +1851,8 @@ export class Game {
     }
     const coordinated = updateSquad(this, e);
     if (!coordinated) {
-      if (e.kind === 'switchman') this.annex.updateSwitchman(e, dt);
+      if (e.kind === 'caller') updateCaller(this, e, dt);
+      else if (e.kind === 'switchman') this.annex.updateSwitchman(e, dt);
       else if (e.kind === 'sorter' || e.kind === 'borer' || e.kind === 'sifter')
         updateReclamationEnemy(this, e, dt);
       else if (e.kind === 'charger') this.updateCharger(e);
@@ -2995,6 +3011,7 @@ export class Game {
     if (credited && e.eventRole !== 'relay') this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);
+    clearCaller(e);
     clearKiln(e);
     clearArsenal(this, e);
     this.enemies = this.enemies.filter((x) => x !== e);

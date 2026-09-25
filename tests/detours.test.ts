@@ -283,36 +283,38 @@ test('checkpoint validation rejects duplicate, future, unordered and inconsisten
   delete old.detours;
   assert(loadCheckpoint(old), 'ordinary existing saves must remain supported');
 });
-test('Daily routes have one forced legal offer per reward and replay identically with all detours', () => {
-  const seed = dailyForDate('2026-09-07')!.seed,
-    g = new Game(),
-    other = new Game();
-  g.start(seed);
-  other.start(seed);
-  // This fixture skips combat to test rewards; event fights have their own playtests.
-  g.areaEvents.state = other.areaEvents.state = null;
-  while (g.stage < 19) {
-    if (g.canDetour) {
-      enter(g);
-      enter(other);
-      assert.deepEqual(g.level, other.level);
+for (const ruleset of [80, 81])
+  test(`Daily ${ruleset} routes replay one forced legal offer with every available detour`, () => {
+    const seed = dailyForDate('2026-09-07', ruleset)!.seed,
+      g = new Game(),
+      other = new Game();
+    g.start(seed);
+    other.start(seed);
+    // This fixture skips combat to test rewards; event fights have their own playtests.
+    g.areaEvents.state = other.areaEvents.state = null;
+    while (g.stage < 19) {
+      if (g.canDetour) {
+        enter(g);
+        enter(other);
+        assert.deepEqual(g.level, other.level);
+        assert.deepEqual(g.mods, other.mods);
+        cleared(g);
+        cleared(other);
+      }
+      g.openReward();
+      for (let n = 0; n < 125; n++) other.rng();
+      other.openReward();
+      assert.equal(g.offers.length, 1);
+      assert.deepEqual(g.offers, other.offers);
+      g.chooseMod(g.offers[0].id);
+      other.chooseMod(other.offers[0].id);
+      assert.equal(g.stage, other.stage);
       assert.deepEqual(g.mods, other.mods);
-      cleared(g);
-      cleared(other);
     }
-    g.openReward();
-    for (let n = 0; n < 125; n++) other.rng();
-    other.openReward();
-    assert.equal(g.offers.length, 1);
-    assert.deepEqual(g.offers, other.offers);
-    g.chooseMod(g.offers[0].id);
-    other.chooseMod(other.offers[0].id);
-    assert.equal(g.stage, other.stage);
-    assert.deepEqual(g.mods, other.mods);
-  }
-  assert.equal(g.mods.length, 23);
-  assert(loadCheckpoint(snapshot(g)));
-});
+    assert.deepEqual(g.detours, g.region === 'annex' ? [0, 1, 4] : [0, 1, 2, 4]);
+    assert.equal(g.mods.length, 19 + g.detours.length);
+    assert(loadCheckpoint(snapshot(g)));
+  });
 test('detour layouts, waves and bonus rewards use independent streams from normal rooms', () => {
   const a = entrance('detour-rng'),
     b = entrance('detour-rng');

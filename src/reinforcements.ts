@@ -18,7 +18,7 @@ export interface ReinforcementDoor {
 }
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
-  if (level.annex) return [level.spawns.map(s => ({...s})), []];
+  if (level.annex) return [level.spawns.map((s) => ({ ...s })), []];
   if (level.freight) return [[], level.spawns.map((s) => ({ ...s }))];
   if (level.boss || level.spawns.length < 3) return [level.spawns.map((s) => ({ ...s })), []];
   if (level.fabricatorIntro)
@@ -60,6 +60,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
       : {
           auditor: 0,
           switchman: 5,
+          caller: 6,
           borer: 8,
           sifter: 8,
           sorter: 0,

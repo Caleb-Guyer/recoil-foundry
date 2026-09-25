@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { clearCaller } from './caller.ts';
 import type { Enemy, Game } from './game.ts';
 import type { EnemyKind } from './levels.ts';
 import { distance, type Vec } from './rules.ts';
@@ -14,7 +15,10 @@ export class FactionSystem {
     this.game = game;
   }
   clear() {
-    for (const e of this.allies) Composite.remove(this.game.engine.world, e.body);
+    for (const e of this.allies) {
+      clearCaller(e);
+      Composite.remove(this.game.engine.world, e.body);
+    }
     this.allies = [];
     this.departingAt = null;
     this.contactAt.clear();
@@ -37,6 +41,7 @@ export class FactionSystem {
         this.removeAlly(e);
         g.spoof.expired(e);
       } else if (this.departingAt !== null) {
+        clearCaller(e);
         if (e.body.isStatic) Body.setStatic(e.body, false);
         if (e.kind === 'flyer')
           Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
@@ -102,7 +107,7 @@ export class FactionSystem {
       !this.allies.length ||
       e.squad ||
       e.elite ||
-      !['runner', 'flyer', 'shooter', 'switchman'].includes(e.kind)
+      !['runner', 'flyer', 'shooter', 'switchman', 'caller'].includes(e.kind)
     )
       return g.player.position;
     // Ordinary gunmen return fire at closer, visible blue combatants. Other
@@ -125,6 +130,7 @@ export class FactionSystem {
     return target;
   }
   removeAlly(e: Enemy) {
+    clearCaller(e);
     Composite.remove(this.game.engine.world, e.body);
     this.allies = this.allies.filter((a) => a !== e);
     this.contactAt.delete(e.id);

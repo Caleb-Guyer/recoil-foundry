@@ -61,4 +61,4 @@ The normal campaign `path-run-67` completes with the expanded pool and a sustain
 
 In-app browser checks cover both branch links, their equipped-build labels, the live room, pause/Your gun, death/retry and an empty error log. The preview retains the minimal HUD. These checks do not replace standalone-browser or human balance testing for the finished 3.0 release.
 
-The [three-room route integration](dead-signal-route.md), first-Annex Spoof offer, regional discovery and Daily 80 are now implemented. Caller, Switchboard, further layouts and regional sound remain open in the [weekend plan](dead-signal-weekend.md).
+The [three-room route integration](dead-signal-route.md), first-Annex Spoof offer, regional discovery and Daily 80 are now implemented. [Caller and its Spoof behavior](dead-signal-caller.md) are now implemented. Switchboard, further layouts and regional sound remain open in the [weekend plan](dead-signal-weekend.md).

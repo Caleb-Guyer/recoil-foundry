@@ -273,36 +273,37 @@ test('Spoof is optional, has no duplicate when owned, and rerolls remain legal',
   assert(saveOf(g));
 });
 
-test('Daily 80 fixes both regional choices, blocks the other, and forces one legal reward', () => {
-  const seen = new Set<RegionChoice>();
-  for (let day = 1; day <= 12; day++) {
-    const seed = dailyForDate(`2026-09-${String(day).padStart(2, '0')}`)!.seed;
-    const chosen = dailyRegion(seed)!;
-    seen.add(chosen);
-    const g = new Game();
-    const s = { ...testCheckpoint(seed, 7), version: 6 as const, region: chosen };
-    g.start(seed, s);
-    assert.deepEqual(g.regionChoices, [chosen]);
-    assert(!g.canBranch);
-    clear(g);
-    g.openReward(false, undefined, chosen === 'annex' ? 'cooling' : 'annex');
-    assert.equal(g.mode, 'playing');
-    g.openReward();
-    assert.equal(g.offers.length, 1);
-    g.chooseMod(g.offers[0].id);
-    assert.equal(g.annex.active, chosen === 'annex');
-    const save = saveOf(g),
-      resumed = new Game();
-    resumed.start(seed, save);
-    assert.deepEqual(resumed.level, g.level);
-    clear(g);
-    g.openReward();
-    assert.equal(g.offers.length, 1);
-    if (chosen === 'annex' && !g.mods.includes('spoof')) assert.equal(g.offers[0].id, 'spoof');
-    assert(saveOf(g));
-  }
-  assert.equal(seen.size, 2);
-});
+for (const ruleset of [80, 81])
+  test(`Daily ${ruleset} fixes both regional choices, blocks the other, and forces one legal reward`, () => {
+    const seen = new Set<RegionChoice>();
+    for (let day = 1; day <= 12; day++) {
+      const seed = dailyForDate(`2026-09-${String(day).padStart(2, '0')}`, ruleset)!.seed;
+      const chosen = dailyRegion(seed)!;
+      seen.add(chosen);
+      const g = new Game();
+      const s = { ...testCheckpoint(seed, 7), version: 6 as const, region: chosen };
+      g.start(seed, s);
+      assert.deepEqual(g.regionChoices, [chosen]);
+      assert(!g.canBranch);
+      clear(g);
+      g.openReward(false, undefined, chosen === 'annex' ? 'cooling' : 'annex');
+      assert.equal(g.mode, 'playing');
+      g.openReward();
+      assert.equal(g.offers.length, 1);
+      g.chooseMod(g.offers[0].id);
+      assert.equal(g.annex.active, chosen === 'annex');
+      const save = saveOf(g),
+        resumed = new Game();
+      resumed.start(seed, save);
+      assert.deepEqual(resumed.level, g.level);
+      clear(g);
+      g.openReward();
+      assert.equal(g.offers.length, 1);
+      if (chosen === 'annex' && !g.mods.includes('spoof')) assert.equal(g.offers[0].id, 'spoof');
+      assert(saveOf(g));
+    }
+    assert.equal(seen.size, 2);
+  });
 
 test('old saves keep their rooms, while malformed regional states are rejected', () => {
   for (const seed of ['legacy-normal', 'RF-D78-2026-09-24', 'RF-D79-2026-09-24']) {

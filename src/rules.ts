@@ -1047,6 +1047,7 @@ export interface Checkpoint {
   annex?: import('./annex-layout.ts').AnnexPreview;
   annexRouteTest?: { mirror: boolean; fork: boolean };
   region?: RegionDecision;
+  annexVersion?: 1 | 2;
   auditor?: import('./auditor-layout.ts').AuditorSave;
   cleanBoss?: boolean;
   shutdown?: import('./shutdown-layout.ts').ShutdownSave;

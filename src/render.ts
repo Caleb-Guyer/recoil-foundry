@@ -83,6 +83,7 @@ import { drawBallistics } from './ballistics-art.ts';
 import { drawFusions } from './fusions-art.ts';
 import { drawInteractionCues } from './interaction-cues.ts';
 import { drawNewPaths, drawStoredRound } from './new-paths-art.ts';
+import { drawCaller, drawCallerWarnings } from './caller-art.ts';
 import { ANNEX_PALETTE, drawAnnex, drawAnnexScenery, drawSwitchman } from './annex-art.ts';
 import { drawSpoof } from './spoof-art.ts';
 export class Renderer {
@@ -243,6 +244,7 @@ export class Renderer {
     drawMagnets(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
     drawAnnex(c, g, this.reduced);
+    drawCallerWarnings(c, g);
     drawSpoof(c, g, this.reduced);
     this.drawProps();
     drawStoryDetails(c, g, this.reduced);
@@ -286,6 +288,10 @@ export class Renderer {
     drawCourierWorld(c, g);
     drawAuditDoor(c, g, this.reduced);
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (e.kind === 'caller') {
+        drawCaller(c, e, this.reduced);
+        continue;
+      }
       if (e.kind === 'switchman') {
         drawSwitchman(c, g, e, this.reduced);
         continue;

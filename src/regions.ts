@@ -8,7 +8,7 @@ export const REGION_NAMES: Record<RegionChoice, string> = {
 };
 // Daily 78/79 retain their original rooms and reward sequence.
 export function dailyRegion(seed: string): RegionChoice | null {
-  return /^RF-D80-/.test(seed)
+  return /^RF-D(?:80|81)-/.test(seed)
     ? seeded(seed + ':region:annex-v1')() < 0.5
       ? 'cooling'
       : 'annex'
@@ -28,6 +28,15 @@ export function validRegion(d: Checkpoint) {
   )
     return false;
   const region = d.region ?? dailyRegion(d.seed);
+  if (
+    d.annexVersion !== undefined &&
+    (d.version !== 6 ||
+      !region ||
+      ![1, 2].includes(d.annexVersion) ||
+      (/^RF-D80-/.test(d.seed) && d.annexVersion !== 1) ||
+      (/^RF-D81-/.test(d.seed) && d.annexVersion !== 2))
+  )
+    return false;
   if (!region) return true;
   const daily = /^RF-D\d+-/.test(d.seed);
   if (daily && region !== dailyRegion(d.seed)) return false;

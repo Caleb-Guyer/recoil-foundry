@@ -54,7 +54,7 @@ export function drawAnnexScenery(c: CanvasRenderingContext2D, camera: Vec, w: nu
 }
 
 export function drawAnnex(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
-  if (!g.annex.active) return;
+  if (!g.annex.active || !g.level.spawns.some((s) => s.kind === 'switchman')) return;
   const a = g.annex,
     j = a.junction,
     p = a.port,

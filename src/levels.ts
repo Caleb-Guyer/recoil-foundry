@@ -28,6 +28,7 @@ import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
   | 'switchman'
+  | 'caller'
   | 'auditor'
   | 'fabricator'
   | 'sentry'

@@ -15,6 +15,7 @@ export const REBOOT_KINDS: readonly EnemyKind[] = [
   'flyer',
   'hopper',
   'switchman',
+  'caller',
 ];
 interface Feedback {
   enemy: Enemy;
