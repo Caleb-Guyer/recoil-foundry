@@ -298,3 +298,20 @@ test('overhead warnings freeze during pause and hit stop, and dead or unloaded a
     assert(g.enemies.every((enemy) => enemy.state === 'idle' && enemy.attack !== 'flak'));
   }
 });
+
+test('Turbine flanks a player beside a crate instead of treating every firing lane as blocked', () => {
+  const g = new Game(),
+    seed = 'boss-flank-1';
+  g.start(
+    seed,
+    { version: 5, seed, stage: 11, hp: 100, mods: [], kills: 0, elapsed: 0 },
+    { kind: 'turbine', seed },
+  );
+  const e = g.enemies[0],
+    origin = { ...e.body.position };
+  Body.setPosition(g.player, { x: 835, y: 722 });
+  Body.setStatic(g.player, true);
+  for (let i = 0; i < 900 && g.hp === 100; i++) step(g);
+  assert(g.hp < 100, 'standing beside the crate remained safe for fifteen seconds');
+  assert(distance(origin, e.body.position) > 100, 'boss found a physical route around cover');
+});

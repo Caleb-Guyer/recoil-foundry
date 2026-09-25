@@ -1,5 +1,6 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { creditsMarkup } from './credits.ts';
+import { installDialogDismissal } from './dialog-dismissal.ts';
 import { issueReportMenu } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
@@ -2034,10 +2035,15 @@ $('workshop').onclick = () => showDialog('workshop');
 $('workshop-edit').onclick = () => showDialog('workshop');
 $('workshop-reset').onclick = () => startWorkshop(game.mods);
 $('pause').onclick = pause;
-modal.addEventListener('cancel', (e) => {
-  e.preventDefault();
-  if (!bindingEditor?.cancel()) cancelDialog();
-});
+installDialogDismissal(
+  modal,
+  () => {
+    if (!bindingEditor?.cancel()) cancelDialog();
+  },
+  () => {
+    if (dialogKind) showDialog(dialogKind);
+  },
+);
 function cancelDialog() {
   if (dialogKind === 'issue') {
     backFromReport();

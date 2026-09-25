@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **2.98.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [final release closeout](browser-release-closeout-2.98.0.md) records subsequent software and browser smoke checks.
+Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **2.98.1**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [final release closeout](browser-release-closeout-2.98.0.md) records subsequent software and browser smoke checks.
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

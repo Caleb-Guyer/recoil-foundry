@@ -50,6 +50,60 @@ function settle(g: Game, frames = 160) {
   }
 }
 
+test('reported cooling blackout keeps its relay anchored on a conveyor until shot', () => {
+  const g = new Game(),
+    seed = '1OUSOYR';
+  g.start(seed, {
+    version: 5,
+    seed,
+    stage: 10,
+    hp: 100,
+    mods: [],
+    kills: 0,
+    elapsed: 0,
+    route: 'high',
+    areaEvent: planAreaEvent(seed)!,
+  });
+  assert.equal(g.level.id, 'cooling-high-road');
+  assert.equal(g.areaEvents.active, 'blackout');
+  const relay = g.enemies.find((e) => e.eventRole === 'relay')!;
+  assert(relay);
+  const origin = { ...relay.body.position };
+  assert(
+    g.conveyors.items.some(
+      (belt) =>
+        origin.x >= belt.x &&
+        origin.x <= belt.x + belt.w &&
+        Math.abs(belt.y - relay.body.bounds.max.y) < 3,
+    ),
+    'the report exercises a real belt underneath the relay',
+  );
+  kill(g, true);
+  settle(g, 600);
+  assert(relay.body.isStatic);
+  assert.deepEqual(relay.body.position, origin);
+  assert(!g.areaEvents.powered);
+  assert(g.waves.held);
+  g.hitEnemy(relay, 1);
+  assert(g.areaEvents.powered);
+  assert(!g.waves.held);
+  settle(g, 120);
+  assert(
+    g.enemies.some((e) => e.eventRole !== 'relay'),
+    'reserve wave is still released',
+  );
+});
+
+test('destroyed footing does not release the fixed blackout relay', () => {
+  const g = game('blackout');
+  const relay = g.enemies.find((e) => e.eventRole === 'relay')!;
+  const origin = { ...relay.body.position };
+  g.destruction.broken.push({ x: origin.x - 30, y: relay.body.bounds.max.y, w: 60, h: 20 });
+  g.destruction.releaseUnsupported();
+  assert(relay.body.isStatic);
+  assert.deepEqual(relay.body.position, origin);
+});
+
 test('seeded events remain optional, repeatable and Blackout selects exactly one combat room', () => {
   const seen = new Set<string>();
   let absent = 0;

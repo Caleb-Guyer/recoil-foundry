@@ -182,6 +182,32 @@ function lane(g: Game, x: number) {
     ),
   );
 }
+function headClearsFlak(g: Game, e: Enemy, head = e.crane!.head) {
+  const muzzle = bossMuzzle(e),
+    aim = direction(muzzle, g.player.position),
+    length = distance(muzzle, g.player.position) + 50;
+  // Reserve clearance for the widest volley, including the projectile radius.
+  return flakAngles(Math.atan2(aim.y, aim.x), true).every(
+    (angle) =>
+      !segmentBox(
+        muzzle,
+        { x: muzzle.x + Math.cos(angle) * length, y: muzzle.y + Math.sin(angle) * length },
+        { x: head.x - 32, y: head.y - 30 },
+        { x: head.x + 32, y: head.y + 30 },
+      ),
+  );
+}
+function stowForFlak(g: Game, e: Enemy) {
+  const rig = e.crane!;
+  const homes = [-140, 140]
+    .map((dx) => ({
+      x: clamp(e.body.position.x + dx, 26, g.worldWidth - 26),
+      y: 250,
+    }))
+    .filter((p) => available(g, p) && headClearsFlak(g, e, p));
+  homes.sort((a, b) => distance(a, rig.head) - distance(b, rig.head));
+  for (const home of homes) if (moveHead(g, rig, home)) break;
+}
 function moveMotor(g: Game, e: Enemy, seekShot: boolean) {
   let x = clamp(g.player.position.x, CRANE_RAIL.left, CRANE_RAIL.right);
   if (seekShot) {
@@ -333,8 +359,8 @@ export function updateCrane(g: Game, e: Enemy) {
   if (e.hp <= 0 || g.mode !== 'playing') return;
   if (e.timer > 0) return;
   if (!plan) {
-    moveHead(g, rig, { x: e.body.position.x, y: 250 });
-    if (lane(g, e.body.position.x)) {
+    stowForFlak(g, e);
+    if (lane(g, e.body.position.x) && headClearsFlak(g, e)) {
       e.attack = 'flak';
       e.state = 'windup';
       e.timer = FLAK_TELL;

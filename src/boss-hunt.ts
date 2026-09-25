@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { ENEMY_STATS } from './enemies.ts';
+import { ENEMY_STATS, isBoss } from './enemies.ts';
 import type { Enemy, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, distance, segmentBox } from './rules.ts';
@@ -7,31 +7,44 @@ import { clamp, distance, segmentBox } from './rules.ts';
 export interface BossHunt {
   route: Vec[];
   nextPlan: number;
+  nearPlayer: boolean;
 }
 
-function firingLane(g: Game, from: Vec, padding = 9) {
+function firingLane(g: Game, from: Vec, padding = 9, nearPlayer = false) {
   // A center ray can skim a platform that still catches the five-pixel bolt.
   // Leave a little clearance for both the projectile and the braking drift.
-  return !g.solidBodies.some((body) =>
+  const radius = padding === 16 ? 11 : 5;
+  const playerHit =
+    nearPlayer &&
     segmentBox(
+      from,
+      g.player.position,
+      { x: g.player.bounds.min.x - radius, y: g.player.bounds.min.y - radius },
+      { x: g.player.bounds.max.x + radius, y: g.player.bounds.max.y + radius },
+    );
+  // A shot only needs to reach the near side of the player. Testing all the
+  // way to their center makes adjacent cover erase every possible firing lane.
+  return !g.solidBodies.some((body) => {
+    const hit = segmentBox(
       from,
       g.player.position,
       { x: body.bounds.min.x - padding, y: body.bounds.min.y - padding },
       { x: body.bounds.max.x + padding, y: body.bounds.max.y + padding },
-    ),
-  );
+    );
+    return hit && hit.t <= (playerHit ? playerHit.t : 1);
+  });
 }
 
 export function bossHasLane(g: Game, e: Enemy) {
   return (
     distance(e.body.position, g.player.position) < 760 &&
-    firingLane(g, e.body.position, e.kind === 'turbine' ? 16 : 9)
+    firingLane(g, e.body.position, e.kind === 'turbine' ? 16 : 9, e.hunt?.nearPlayer)
   );
 }
 
 // Navigate the hull around solid corners. Shots still use the ordinary swept
 // collision path; acquiring an angle never grants permission to fire through cover.
-function plan(g: Game, e: Enemy, relocate = false, flankSide = 0): Vec[] {
+function plan(g: Game, e: Enemy, relocate = false, flankSide = 0) {
   const start = e.body.position,
     player = g.player.position;
   const halfW = ENEMY_STATS[e.kind].w / 2 - 0.5,
@@ -55,7 +68,7 @@ function plan(g: Game, e: Enemy, relocate = false, flankSide = 0): Vec[] {
       ...g.terrainBodies.flatMap((body) => [body.bounds.min.y - 42, body.bounds.max.y + 42]),
     ]),
   ].filter((y) => y >= 52 && y <= 695);
-  const goals = [
+  const candidates = [
     start,
     ...[-420, -280, -160, 0, 160, 280, 420].flatMap((x) =>
       heights.map((y) => ({
@@ -70,9 +83,14 @@ function plan(g: Game, e: Enemy, relocate = false, flankSide = 0): Vec[] {
       (!relocate || distance(p, start) >= 140) &&
       (e.kind !== 'interceptor' || start.y - player.y < 140 || p.y <= player.y + 90) &&
       distance(p, player) >= 175 &&
-      distance(p, player) <= 600 &&
-      firingLane(g, p, e.kind === 'turbine' ? 16 : 9),
+      distance(p, player) <= 600,
   );
+  const padding = e.kind === 'turbine' ? 16 : 9;
+  let goals = candidates.filter((p) => firingLane(g, p, padding));
+  const nearPlayer = goals.length === 0 && isBoss(e.kind);
+  // Keep the usual generous clearance whenever possible. A player hugging
+  // cover may leave only a shot at their exposed edge; seek that angle then.
+  if (nearPlayer) goals = candidates.filter((p) => firingLane(g, p, padding, true));
   const corners = blocks
     .flatMap((b) => [
       { x: b.min.x - 5, y: b.min.y - 5 },
@@ -115,12 +133,15 @@ function plan(g: Game, e: Enemy, relocate = false, flankSide = 0): Vec[] {
     route.unshift(nodes[goal]);
     goal = previous[goal];
   }
-  return route;
+  return { route, nearPlayer };
 }
 
 export function bossHuntTarget(g: Game, e: Enemy, relocate = false, flankSide = 0): Vec {
   if (!e.hunt || e.hunt.nextPlan <= g.time)
-    e.hunt = { route: plan(g, e, relocate, flankSide), nextPlan: g.time + 0.45 };
+    e.hunt = {
+      ...plan(g, e, relocate, flankSide),
+      nextPlan: g.time + 0.45,
+    };
   const p = e.body.position;
   while (e.hunt.route.length > 1 && distance(p, e.hunt.route[0]) < 6) e.hunt.route.shift();
   return e.hunt.route[0] ?? p;

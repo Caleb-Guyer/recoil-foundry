@@ -506,3 +506,48 @@ test('a falling crate contacting the resting hammer cannot permanently stall ret
   );
   assert.equal(g.mode, 'playing');
 });
+
+test('reported Crane platform cannot settle into shooting its own hammer, in either mirror or phase', () => {
+  for (const mirrored of [false, true])
+    for (const enraged of [false, true]) {
+      const g = new Game(),
+        seed = '10CQQYO';
+      g.start(seed, {
+        version: 5,
+        seed,
+        stage: 3,
+        hp: 100,
+        mods: ['kick', 'cutting-torch', 'thermal-runaway', 'airshot'],
+        kills: 0,
+        elapsed: 0,
+      });
+      if (g.level.mirrored !== mirrored) {
+        // Mirror the actual reported room, including its live props and hammer.
+        for (const body of Composite.allBodies(g.engine.world))
+          Body.setPosition(body, { x: 2000 - body.position.x, y: body.position.y });
+        const rig = g.enemies[0].crane!;
+        for (const point of [rig.head, rig.prev, rig.from, rig.to]) point.x = 2000 - point.x;
+      }
+      const e = g.enemies[0];
+      if (enraged) e.hp = e.maxHp * 0.4;
+      Body.setStatic(g.player, true);
+      Body.setPosition(g.player, { x: mirrored ? 640 : 1360, y: 642 });
+      // Keep measuring after the first hits: the original bug only settled into
+      // an invulnerable camp once the hammer finished retracting beneath the gun.
+      let lastHit = 0,
+        longestGap = 0,
+        hits = 0;
+      g.damagePlayer = () => {
+        longestGap = Math.max(longestGap, g.time - lastHit);
+        lastHit = g.time;
+        hits++;
+      };
+      step(g, 2400);
+      longestGap = Math.max(longestGap, g.time - lastHit);
+      assert(
+        hits >= 5 && longestGap < 8,
+        `Crane stopped threatening the platform: mirror=${mirrored}, enraged=${enraged}, gap=${longestGap}`,
+      );
+      assert(e.attacks > 5);
+    }
+});

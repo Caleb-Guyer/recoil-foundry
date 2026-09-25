@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**The full browser release is complete: 2.98.0.** Future fixes and updates can continue. [Release notes](docs/releases/2.98.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v2.98.0).
+**The full browser release is complete. Latest patch: 2.98.1.** Future fixes and updates can continue. [Release notes](docs/releases/2.98.1.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v2.98.1).
 
 ## Controls
 

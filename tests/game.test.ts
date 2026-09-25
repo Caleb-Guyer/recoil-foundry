@@ -645,8 +645,8 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
       'light', // Take steering before the moving Reclaimer; earn Landing gear afterward.
       'countershot',
       'scatter',
-      'reprisal', // Cover the slow shell volley between dense late-room attacks.
-      'rapid',
+      'rapid', // Shorten recovery before the Condenser can flank the old cover pocket.
+      'reprisal',
       'pierce',
       'burst',
       'ricochet',

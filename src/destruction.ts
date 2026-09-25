@@ -199,6 +199,7 @@ export class DestructionSystem {
     for (const e of g.enemies) {
       if (
         (e.kind === 'shooter' || e.kind === 'sniper') &&
+        e.eventRole !== 'relay' &&
         e.body.isStatic &&
         removedFooting(e.body)
       )

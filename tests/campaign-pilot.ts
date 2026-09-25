@@ -351,6 +351,20 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
       if (g.time < craneDodgeUntil) move = craneDirection;
       firing = e.state !== 'rush' && !(e.state === 'windup' && e.timer <= CRANE_LOCK);
       aim = { ...ep };
+      // The wider Overtime volley now clears the hammer. Use the projectile
+      // forecast instead of running blindly across all five locked lanes.
+      if (
+        g.overtime &&
+        e.attack === 'flak' &&
+        ((e.state === 'windup' && e.timer <= 0.38) ||
+          g.shots.some((s) => !s.friendly && s.damageCause?.enemy === 'crane'))
+      ) {
+        const choice = dodgePilot(g, e);
+        move = Number(choice.right) - Number(choice.left);
+        jump = !!choice.jump;
+        firing = !!choice.fire;
+        aim = choice.aim ?? aim;
+      }
     }
     // Re-evaluate actual cover and visible fire after each support failure.
     // A fixed direction held for a full second can cross a newly opened charge lane.

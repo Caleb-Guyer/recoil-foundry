@@ -54,7 +54,9 @@ export class ConveyorSystem {
     const g = this.game;
     return [
       g.player,
-      ...g.enemies.filter((e) => e.spawn <= 0 && e.hp > 0).map((e) => e.body),
+      ...g.enemies
+        .filter((e) => e.spawn <= 0 && e.hp > 0 && e.eventRole !== 'relay')
+        .map((e) => e.body),
       ...g.props.bodies,
     ];
   }
