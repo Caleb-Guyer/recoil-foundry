@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.0.3**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Practice builds 3.0.3](validation/practice-builds-3.0.3.md).
+Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.0.4**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Build blueprints 3.0.4](validation/blueprints-3.0.4.md).
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

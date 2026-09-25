@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Build blueprints 3.0.4 — 25 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `6aa155fed508e9db5bd07255293da6033b385ced` passed all **1,912 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36182346336). Tag `v3.0.4` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36183367664); the matching official ZIP is itch.io upload `19400245`. Both public games show 3.0.4 and preserve their existing saves. [Validation and artifact evidence](validation/blueprints-3.0.4.md) records the checksum, blueprint flows, backup migration/round trip/undo, and test scope.
+
+Six named slots save Workshop and finished-run guns, share versioned codes, and load discovered legal upgrades into Workshop or earned boss Practice. Oversized practice builds require manual trimming without changing the saved blueprint. Blueprint fields are included in progress backups; older backups migrate to empty slots. Combat balance, campaign checkpoints and Daily rules are unchanged. Publication checks are complete.
+
 ## Practice builds 3.0.3 — 25 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `2fcba8531d8feae036f94e2d253342b18e327993` passed all **1,903 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36178571167). Tag `v3.0.3` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36179836841); the matching official ZIP is itch.io upload `19399784`. Both public games show 3.0.3, with their existing campaign/Daily saves intact. [Validation and artifact evidence](validation/practice-builds-3.0.3.md) records the checksum, browser flows and test scope.
@@ -30,7 +36,9 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.0.2` at `0bc55580cf8878908731d53bd4670129a470ada8`.
+- Stable tag: `v3.0.4` at `6aa155fed508e9db5bd07255293da6033b385ced`. Rollbacks must preserve the blueprint profile field/decoder; unchanged older builds reject profiles saved by 3.0.4.
+- Previous stable reference: `v3.0.3` at `2fcba8531d8feae036f94e2d253342b18e327993`.
+- Earlier stable reference: `v3.0.2` at `0bc55580cf8878908731d53bd4670129a470ada8`.
 - Previous stable reference: `v3.0.1` at `3a9eee707a23ea91bdd111427e6172e61285c111`.
 - Earlier stable reference: `v3.0.0` at `50f9c5a514255994fb60d13d620161d4ba90c936`. A rollback must preserve revision-6 checkpoint decoding; do not deploy the unchanged old build over those saves.
 - Earlier stable rollback tag: `v2.98.1` at `4d579d148840a3078eb968616a6d58e0d41530b5`.
