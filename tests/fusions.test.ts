@@ -17,6 +17,7 @@ import {
 import type { Checkpoint } from '../src/rules.ts';
 import { FUSION_TEST_BUILDS, fusionTestFromUrl, testCheckpoint } from '../src/practice.ts';
 import { dailyForDate } from '../src/daily.ts';
+import { isSubversion } from '../src/subversion-rules.ts';
 import { withParents } from '../src/branch-builds.ts';
 import { FUSE_TIME, FUSE_LIMIT } from '../src/ballistics.ts';
 import { ORBIT_LIMIT, ORBIT_TIME, RAIL_RECOIL } from '../src/fusions.ts';
@@ -178,6 +179,7 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
     const next = availableMods(mods).find(
       (m) =>
         !isFusion(m.id) &&
+        !isSubversion(m.id) &&
         ![
           'vector',
           'afterburner',

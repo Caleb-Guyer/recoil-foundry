@@ -15,6 +15,7 @@ import {
 import { BRANCH_PARENTS } from '../src/upgrade-branches.ts';
 
 const packageInfo = JSON.parse(await readFile(new URL('../package.json', import.meta.url)));
+const version = process.argv.includes('--preview') ? '3.0.0-development' : packageInfo.version;
 const ids = new Set(MODS.map((mod) => mod.id));
 assert.equal(ids.size, MODS.length, 'Duplicate upgrade ID');
 
@@ -96,7 +97,7 @@ for (let i = 0; i < MODS.length; i++) {
       sameGun(forward, reverse);
     }
     rows.push([
-      packageInfo.version,
+      version,
       a.id,
       a.name,
       b.id,
@@ -130,7 +131,7 @@ await writeFile(new URL('../docs/upgrade-compatibility.csv', import.meta.url), o
 console.log(
   JSON.stringify(
     {
-      version: packageInfo.version,
+      version,
       upgrades: MODS.length,
       pairs: rows.length,
       allowed,

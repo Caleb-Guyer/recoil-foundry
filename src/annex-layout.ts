@@ -10,17 +10,27 @@ export const ANNEX_BUILDS = {
   beam: ['cutting-torch', 'light', 'kick'],
   shell: ['shellshock', 'light', 'kick'],
 } as const;
+export const SUBVERSION_TEST_PATHS = {
+  spoof: ['spoof'],
+  orders: ['spoof', 'standing-orders'],
+  priority: ['spoof', 'standing-orders', 'priority-target'],
+  cross: ['spoof', 'cross-talk'],
+  switch: ['spoof', 'cross-talk', 'dead-switch'],
+} as const;
 export function annexTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   let valid = p.get('test') === 'annex';
   p.forEach((_, k) => {
-    if (!['test', 'build', 'mirror', 'spoof'].includes(k) || p.getAll(k).length !== 1)
+    if (!['test', 'build', 'mirror', 'spoof', 'path'].includes(k) || p.getAll(k).length !== 1)
       valid = false;
   });
   if (!valid) return null;
   const build = p.get('build') ?? 'gun';
+  const path = p.get('path') ?? 'spoof';
   if (
     !Object.hasOwn(ANNEX_BUILDS, build) ||
+    !Object.hasOwn(SUBVERSION_TEST_PATHS, path) ||
+    (p.has('path') && p.get('spoof') === '0') ||
     (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!)) ||
     (p.has('spoof') && !['0', '1'].includes(p.get('spoof')!))
   )
@@ -32,7 +42,12 @@ export function annexTestFromUrl(url: URL): Checkpoint | null {
     hp: 100,
     kills: 0,
     elapsed: 0,
-    mods: [...ANNEX_BUILDS[build as keyof typeof ANNEX_BUILDS]],
+    mods: [
+      ...ANNEX_BUILDS[build as keyof typeof ANNEX_BUILDS],
+      ...(p.get('spoof') === '0'
+        ? []
+        : SUBVERSION_TEST_PATHS[path as keyof typeof SUBVERSION_TEST_PATHS]),
+    ],
     annex: { mirror: p.get('mirror') === '1', spoof: p.get('spoof') !== '0' },
   };
 }

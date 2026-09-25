@@ -14,10 +14,12 @@ import {
 import { DAILY_RULESET } from '../src/daily.ts';
 import { maxCombos, BRANCH_TEST_BUILDS, branchTestFromUrl } from '../src/branch-builds.ts';
 import { BRANCH_PARENTS, BRANCH_GROUPS, isBranch } from '../src/upgrade-branches.ts';
-const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url)));
+const packageInfo = JSON.parse(await readFile(new URL('../package.json', import.meta.url)));
+const preview = process.argv.includes('--preview');
+const version = preview ? '3.0.0-development' : packageInfo.version;
 const names = new Map(MODS.map((m) => [m.id, m.name]));
 const name = (id) => names.get(id) ?? '';
-const base = 'https://caleb-guyer.github.io/recoil-foundry/';
+const base = preview ? 'http://127.0.0.1:4186/' : 'https://caleb-guyer.github.io/recoil-foundry/';
 const link = (query) => base + '?test=branches&' + query + '&v=' + version;
 const combos = maxCombos();
 const cells = (row) => row.map((v) => '"' + String(v).replaceAll('"', '""') + '"').join(',');
@@ -40,6 +42,12 @@ const max = [
   '# Every new fully maxed combination',
   '',
   `Game **${version}**. **${combos.length}** distinct legal completed builds contain a new specialization.`,
+  ...(preview
+    ? [
+        '',
+        'Development preview on `feature/dead-signal`. These links require the local preview server; the public release is unchanged.',
+      ]
+    : []),
   '',
   `“Maxed” means every remaining compatible upgrade is fitted, including boss salvage. These contain ${Math.min(...combos.map((c) => c.mods.length))}–${Math.max(...combos.map((c) => c.mods.length))} upgrades: stress builds, beyond the ordinary run’s 19 picks. Different acquisition orders of the same gun are counted once. All five paths are included.`,
   '',
@@ -87,6 +95,10 @@ for (const c of combos) {
   );
 }
 const tips = {
+  priority:
+    'Spoof reboots an eligible patrol unit. Standing Orders extends it to 7.5 seconds with 115% normal health. Shoot a target to mark it for three seconds: your ally prefers it when visible and deals 40% more damage. Resistant machines take stronger feedback, including a 25% marked-target bonus. One ally, eight-second recharge, four conversions per room.',
+  'dead-switch':
+    'Cross Talk permits two allies with 45% normal health, 70% output and 3.5-second lifetimes, at most six conversions per room with a 2.5-second recharge. Natural expiry releases a covered, enemy-only overload. Resistant machines take two feedback pulses; Dead Switch adds a bounded overload on the second. Damage death and room cleanup do not detonate allies.',
   grapnel:
     'Requires Tether rounds; replaces enemy links and locks Snapback. Your first eligible airborne surface hit within 560 units anchors a cable for 2.8 seconds. Recoil supplies tangential momentum; jump detaches. Landing rearms it. Cover, destroyed hosts and teleportation break the cable; it never constrains moving machinery.',
   convoy:
@@ -145,8 +157,16 @@ const guide = [
   '# New upgrade builds',
   '',
   `Implemented in **${version}** · Daily ruleset **${DAILY_RULESET}**.`,
+  ...(preview
+    ? [
+        '',
+        'Development preview on `feature/dead-signal`; local links require `npm run dev -- --port 4186 --strictPort`. Stable public releases are unchanged.',
+      ]
+    : []),
   '',
   'Cryogenic and Stasis join Precision, Bullet Hell and Demolition. Each run chooses one main path, with local alternatives within it. Cryogenic forks into Deep Freeze → Icebreaker or Cold Snap → Cold Front. Stasis forks into Crosshatch → Thread the Needle or Tripline → Chain Release. Retrace, Wallrunner and Air Brake are shared follow-ups. Grapnel branches away from Snapback, and Convoy branches away from Thread the Needle. Corner Pocket follows Banker; Scrap Feed follows Splinter. Thermal Shock fuses Coolant Rounds with Cinder in the one fusion slot. All follow-ups require their parents. The twelve earlier local specializations retain their stage-7 gate, and fusions retain their parent and rarity rules. Daily still gives one predetermined legal card.',
+  '',
+  'Subversion is a shared support family: Spoof → Standing Orders → Priority Target, or Spoof → Cross Talk → Dead Switch. Its two branches exclude each other and coexist with every main weapon path. New Daily 79 uses the expanded pool; supported Daily 78 retains its original pool, links, saves and records.',
   '',
   `For **every upgrade in every new max combo**, use the [${combos.length}-build catalog](max-upgrade-combos.md) or [CSV](max-upgrade-combos.csv).`,
   '',
@@ -198,7 +218,7 @@ guide.push(
   '- Breach clears at most two small rounds per 0.45 seconds. Heavy rounds and blades resist it; Countershot retains its separate shared charge.',
   '- Contextual cards explain beam, charged-lance, rail, trap and direct-impact adaptations.',
   '',
-  'Regenerate these documents with `node --experimental-strip-types scripts/catalog-branch-builds.mjs`.',
+  `Regenerate these documents with \`node --experimental-strip-types scripts/catalog-branch-builds.mjs${preview ? ' --preview' : ''}\`.`,
   '',
 );
 await writeFile(

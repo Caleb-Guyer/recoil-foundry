@@ -207,7 +207,7 @@ test('Cluster Shell keeps the stronger direct impact when its child limit is ful
 });
 
 for (const daily of [false, true])
-  test(`${daily ? 'Daily' : 'campaign'} reaches extraction with actual rewards and current encounters enabled`, (t) => {
+  test(`${daily ? 'preserved Daily 78' : 'campaign'} reaches extraction with actual rewards and current encounters enabled`, (t) => {
     const random = Math.random;
     Math.random = seeded('balance-particles');
     t.after(() => {
@@ -216,19 +216,31 @@ for (const daily of [false, true])
     const common = Matter.Common as typeof Matter.Common & { _nextId: number; _seed: number };
     common._nextId = common._seed = 0;
     const g = new Game();
-    g.start(daily ? dailyForDate('2026-09-20')!.seed : 'path-run-67');
+    // Keep the historical Daily's seed identity fixed across pool revisions.
+    // New rulesets have different rooms and builds, covered separately.
+    g.start(daily ? dailyForDate('2026-09-20', 78)!.seed : 'path-run-67');
     const plannedStory = g.story.state;
     const priorities = [
+      // Prefer sustain and straightforward output as the pool expands, rather
+      // than taking the first utility card when a useful gun card is offered.
+      'leech',
+      'countershot',
       'magnum',
       'rapid',
-      'deadeye',
+      'scatter',
       'airshot',
+      'pierce',
+      'ricochet',
       'light',
-      'leech',
+      'burst',
+      'backblast',
+      'spoof',
+      'standing-orders',
+      'priority-target',
+      'deadeye',
       'execute',
-      'rivet',
       'fracture',
-      'deadlock',
+      'banker',
       'capacitor',
       'reserve-cell',
       'rail-spike',

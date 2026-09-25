@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { isSubversion } from '../src/subversion-rules.ts';
 import Matter from 'matter-js';
 import { Game, type Enemy, type Input, type Shot } from '../src/game.ts';
 import { ARC_RANGE, ARC_CHARGE_LIFE, ARC_EFFECT_LIMIT } from '../src/arc-coil.ts';
@@ -92,7 +93,7 @@ function tick(g: Game, n = 1, input: Partial<Input> = {}) {
 }
 
 test('Arc Coil is shared, costs 10 percent round damage, and Daisy Chain requires its parent', () => {
-  assert.equal(MODS.length, 100);
+  assert.equal(MODS.length, 105);
   for (const path of [[], ['deadeye'], ['crossfire'], ['shellshock']]) {
     assert(availableMods(path).some((m) => m.id === 'arc-coil'));
     assert(!availableMods(path).some((m) => m.id === 'daisy-chain'));
@@ -528,6 +529,7 @@ test('Overtime builds that exhausted the previous pool can resume and earn Arc C
   while (true) {
     const next = availableMods(mods).find(
       (m) =>
+        !isSubversion(m.id) &&
         ![
           'arc-coil',
           'daisy-chain',

@@ -179,6 +179,8 @@ export interface Enemy {
   eventRole?: EventRole;
   allied?: boolean;
   rebootUntil?: number;
+  rebootDuration?: number;
+  rebootDamage?: number;
   workshopTarget?: WorkshopTarget;
   id: number;
   body: Matter.Body;
@@ -214,6 +216,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  rebooted?: boolean;
   auditorOwner?: number;
   sentryOwner?: number;
   mutationShell?: { owner: number };
@@ -1368,6 +1371,7 @@ export class Game {
       return;
     }
     if (this.workshop.active) {
+      this.spoof.update();
       this.workshop.update(dt);
       return;
     }
@@ -2133,7 +2137,7 @@ export class Game {
   }
   hopperTarget(e: Enemy): Vec {
     const p = e.body.position,
-      player = this.player.position;
+      player = this.factions.combatTarget(e);
     const candidates: Vec[] = [];
     for (const b of this.terrainBodies) {
       const min = b.bounds.min,
@@ -2348,10 +2352,11 @@ export class Game {
     this.addShot({
       pos: portalMuzzle ? { ...origin } : muzzle,
       vel: { x: d.x * speed, y: d.y * speed },
-      damage,
+      damage: damage * (e.rebootDamage ?? 1),
       life: 4,
       friendly: false,
       ...(e.allied ? { allied: true } : {}),
+      ...(e.rebootUntil !== undefined ? { rebooted: true } : {}),
       damageCause: { type: blade ? 'blade' : 'shot', enemy: e.kind },
       ...(e.sentry ? { sentryOwner: e.sentry.owner } : {}),
       source: { ...e.body.position },
@@ -2423,7 +2428,8 @@ export class Game {
               targets.push([e.body, e]);
         } else {
           if (s.allied) {
-            for (const e of this.enemies) if (e.spawn <= 0) targets.push([e.body, e]);
+            for (const e of this.enemies)
+              if (this.factions.targetable(e)) targets.push([e.body, e]);
           } else {
             targets.push([this.player, undefined, true]);
             for (const e of this.areaEvents.allies) if (e.spawn <= 0) targets.push([e.body, e]);
@@ -2620,7 +2626,7 @@ export class Game {
             else
               this.hitEnemy(
                 e,
-                s.damage,
+                this.spoof.alliedDamage(e, s.damage, !!s.rebooted),
                 { x: e.body.position.x - s.vel.x, y: e.body.position.y - s.vel.y },
                 true,
                 false,
@@ -3093,6 +3099,7 @@ export class Game {
         stage: this.stage,
         overtime: !!this.overtime,
         salvage: this.courierReward ? null : this.earnedSalvage,
+        seed: this.seed,
       },
     );
     if (!this.courierReward && this.areaEvents.clearance)
@@ -3106,6 +3113,7 @@ export class Game {
             stage: this.stage,
             overtime: !!this.overtime,
             salvage: this.earnedSalvage,
+            seed: this.seed,
           },
         ),
       );
@@ -3122,7 +3130,7 @@ export class Game {
       seeded(
         this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage + ':reroll',
       ),
-      { stage: this.stage, overtime: !!this.overtime },
+      { stage: this.stage, overtime: !!this.overtime, seed: this.seed },
       this.offers.map((m) => m.id),
     );
     if (!this.areaEvents.clearance) return replacements;
@@ -3130,6 +3138,7 @@ export class Game {
       replacements,
       rewardMods(this.mods, MODS.length, seeded(this.layoutSeed + ':event-reroll:' + this.stage), {
         stage: this.stage,
+        seed: this.seed,
         overtime: !!this.overtime,
       }),
       this.offers.map((m) => m.id),

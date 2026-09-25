@@ -4,6 +4,31 @@ export type Lore = readonly [source: string, author: string, text: string];
 
 // These are original Foundry documents. Mechanical descriptions live in the upgrade catalog.
 export const UPGRADE_LORE = {
+  spoof: [
+    'Dispatch credential test',
+    'T. Orr · dispatch',
+    'The patrol units check who issued an order only when they wake. After that, they trust the badge. Vale found a way to put a different badge in the restart packet.\n\nThe larger machines reject it. Their receivers still spend a moment arguing with themselves. That moment has proved useful.',
+  ],
+  'standing-orders': [
+    'Instruction retention memo',
+    'M. Vale · maintenance',
+    'The borrowed units kept forgetting which side they were on. I fitted a retention circuit and reinforced the receiver housing. They remember longer now.\n\nI told one to keep Orr safe. For seven seconds, someone in this building took that instruction seriously.',
+  ],
+  'priority-target': [
+    'Red-pencil protocol',
+    'T. Orr · dispatch',
+    'We used to circle the urgent jobs on the shift sheet. Now the tool sends a reference number with each hit. The borrowed machine follows the most recent reference it can see.\n\nA sensible system. One job at a time. I suggested it at a planning meeting once, before those stopped.',
+  ],
+  'cross-talk': [
+    'Receiver duplication trial',
+    'Dr. S. Anik · development',
+    'Two machines accepted the same borrowed authority. Splitting the carrier weakens both receivers, and neither holds the instruction for long.\n\nAcross the bay they turned together, hesitated, and opened fire on their former supervisor. The recording has been requested by three departments.',
+  ],
+  'dead-switch': [
+    'Final instruction',
+    'M. Vale · maintenance',
+    'The receiver knows when its borrowed authority is about to run out. I gave it one last job before the circuit opens.\n\nIt empties what is left into the company equipment around it. Keep your badge; the discharge recognizes us. I wish the rest of the factory still did.',
+  ],
   magnum: [
     'Tool requisition 08',
     'M. Vale · maintenance',

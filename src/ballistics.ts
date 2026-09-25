@@ -10,6 +10,7 @@ import { SHELL_RADIUS } from './demolition.ts';
 import type { VectorSample } from './vector-rounds.ts';
 import { recordRoute, routeTarget, type RoutePoint } from './retrace.ts';
 import { dormant } from './stasis.ts';
+import { primaryGunShot } from './spoof.ts';
 
 export const CHARGE_TIME = 0.85;
 export const RECALL_TIME = 0.24;
@@ -27,6 +28,7 @@ export interface RecallFlight {
   route?: RoutePoint[];
 }
 export interface StuckShell {
+  primaryGun?: boolean;
   pos: Vec;
   body?: Matter.Body;
   local: Vec;
@@ -214,6 +216,7 @@ export class BallisticsSystem {
         launch: payload.launch,
         radius: SHELL_RADIUS,
         kind: 'shell',
+        primaryGun: primaryGunShot(s),
         direction: direction({ x: 0, y: 0 }, s.vel),
         normal: s.impactNormal ?? direction(s.vel, { x: 0, y: 0 }),
       });
@@ -223,6 +226,7 @@ export class BallisticsSystem {
       dx = s.pos.x - (body?.position.x ?? 0),
       dy = s.pos.y - (body?.position.y ?? 0);
     this.shells.push({
+      primaryGun: primaryGunShot(s),
       pos: { ...s.pos },
       body,
       local: { x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) },
@@ -261,6 +265,7 @@ export class BallisticsSystem {
         launch: s.launch,
         radius: SHELL_RADIUS,
         kind: 'shell',
+        primaryGun: s.primaryGun,
         direction: s.direction,
         normal: s.normal ?? (s.direction ? { x: -s.direction.x, y: -s.direction.y } : undefined),
       });

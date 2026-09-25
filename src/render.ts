@@ -84,6 +84,7 @@ import { drawFusions } from './fusions-art.ts';
 import { drawInteractionCues } from './interaction-cues.ts';
 import { drawNewPaths, drawStoredRound } from './new-paths-art.ts';
 import { ANNEX_PALETTE, drawAnnex, drawAnnexScenery, drawSwitchman } from './annex-art.ts';
+import { drawSpoof } from './spoof-art.ts';
 export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -178,7 +179,8 @@ export class Renderer {
     c.save();
     c.scale(this.scale, this.scale);
     if (g.annex.active && g.mode !== 'title') drawAnnexScenery(c, this.camera, viewW, viewH);
-    else if (g.level.freight && g.mode !== 'title') drawFreightScenery(c, this.camera, viewW, viewH);
+    else if (g.level.freight && g.mode !== 'title')
+      drawFreightScenery(c, this.camera, viewW, viewH);
     else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
     else drawScenery(c, g.level.area, this.camera, viewW, viewH);
     c.restore();
@@ -240,6 +242,7 @@ export class Renderer {
     drawMagnets(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
     drawAnnex(c, g, this.reduced);
+    drawSpoof(c, g, this.reduced);
     this.drawProps();
     drawStoryDetails(c, g, this.reduced);
     drawShutdown(c, g, this.reduced);

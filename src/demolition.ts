@@ -33,6 +33,7 @@ export interface DemolitionBlast {
   shaped?: boolean;
 }
 export interface Bomblet {
+  primaryGun?: boolean;
   cell?: number;
   pos: Vec;
   prev: Vec;
@@ -159,6 +160,7 @@ export class DemolitionSystem {
           radius: 62,
           launch: b.launch,
           kind: 'cluster',
+          primaryGun: b.primaryGun,
         });
         if (g.mode !== 'playing') return;
       }
@@ -200,6 +202,7 @@ export class DemolitionSystem {
           2,
         );
         this.bomblets.push({
+          primaryGun: blast.primaryGun,
           cell,
           pos,
           prev: { ...pos },
@@ -294,7 +297,11 @@ export class DemolitionSystem {
       if (!g.enemies.includes(enemy) || enemy.hp <= 0) continue;
       const previousHp = enemy.hp;
       g.hitEnemy(enemy, damage * amount, pos);
-      g.spoof.hit(enemy, previousHp, blast.kind === 'shell' && !!blast.primaryGun);
+      g.spoof.hit(
+        enemy,
+        previousHp,
+        (blast.kind === 'shell' || blast.kind === 'cluster') && !!blast.primaryGun,
+      );
       if (enemy.hp > 0 && !enemy.body.isStatic) {
         const d = direction(pos, enemy.body.position);
         const push =

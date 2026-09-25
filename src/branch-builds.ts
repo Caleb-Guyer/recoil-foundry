@@ -8,6 +8,7 @@ import {
 } from './rules.ts';
 import { BRANCH_GROUPS, BRANCH_PARENTS } from './upgrade-branches.ts';
 import { getLevel } from './levels.ts';
+import { isSubversion } from './subversion-rules.ts';
 
 export function withParents(build: readonly string[], wanted: readonly string[]): string[] | null {
   const result = [...build],
@@ -40,6 +41,36 @@ export function completeBuild(build: readonly string[]) {
 }
 
 export const BRANCH_TEST_BUILDS: Record<string, { name: string; mods: readonly string[] }> = {
+  priority: {
+    name: 'Priority Target',
+    mods: [
+      'spoof',
+      'standing-orders',
+      'priority-target',
+      'magnum',
+      'rapid',
+      'light',
+      'kick',
+      'leech',
+      'airshot',
+      'pierce',
+    ],
+  },
+  'dead-switch': {
+    name: 'Dead Switch',
+    mods: [
+      'spoof',
+      'cross-talk',
+      'dead-switch',
+      'magnum',
+      'rapid',
+      'light',
+      'kick',
+      'leech',
+      'airshot',
+      'pierce',
+    ],
+  },
   grapnel: {
     name: 'Grapnel',
     mods: [
@@ -510,7 +541,19 @@ export function branchTestFromUrl(url: URL): Checkpoint | null {
   let mods: string[] | null;
   if (p.has('combo')) {
     if (p.has('build') || p.has('max')) return null;
-    mods = [...(maxCombos().find((combo) => combo.code === p.get('combo'))?.mods ?? [])];
+    const found = maxCombos().find((combo) => combo.code === p.get('combo'));
+    // Existing catalog links keep their original gun without a new support fork.
+    const previous = found
+      ? undefined
+      : maxCombos().find(
+          (combo) =>
+            combo.choices.includes('standing-orders') &&
+            combo.code
+              .split('.')
+              .filter((part) => !isSubversion(part))
+              .join('.') === p.get('combo'),
+        );
+    mods = [...(found?.mods ?? previous?.mods.filter((id) => !isSubversion(id)) ?? [])];
     if (!mods.length) return null;
   } else {
     const key = p.get('build') ?? 'pulse';

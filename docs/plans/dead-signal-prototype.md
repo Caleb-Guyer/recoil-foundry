@@ -14,7 +14,7 @@ Run `npm run dev -- --port 4186 --strictPort` in the game repository, then open:
 
 Select **Enter the Annex**. Normal controls apply; R retries the same test. Defeat the red machines and use the right exit to finish. The pause menu lists Spoof under Your gun. These local links require the preview server on this computer.
 
-The test mode does not overwrite a saved campaign, grant Logbook discoveries, alter the normal reward pool, or change Daily rules. Spoof is pre-equipped prototype equipment, not yet a reward card or saved upgrade.
+The test mode does not overwrite a saved campaign, grant Logbook discoveries or alter Daily records. The [Subversion family](dead-signal-subversion.md) is now implemented as five real upgrades in this development branch, including normal rewards, saves, Workshop and lore. These one-room tests still pre-equip their selected build and award no progression.
 
 ## Included
 
@@ -22,13 +22,13 @@ The test mode does not overwrite a saved campaign, grant Logbook discoveries, al
 - A fixed amber cable connects the junction to a remote gun port. Each 1.8-second charge visibly advances along it. The aim locks for the last 0.65 seconds, then fires three ordinary projectiles with normal cover collision.
 - Shooting the charging junction cancels that volley and deals 42 feedback damage to its sender. Its 2.4-second recovery prevents repeated hits from farming the same charge. Bullets, beams and primary shell explosions can interrupt it; cover blocks all three.
 - The Switchman patrols a supported bay and takes direct shots as well as operating the port. Defeating a sender cancels its unfinished charge. Already-fired rounds retain their original allegiance.
-- Spoof reboots a defeated ordinary runner, shooter, flyer or Switchman as a blue ally for four active seconds after its brief startup. One ally at a time, eight seconds between conversions, at most four conversions per room. Blue bodies retain the original enemy silhouette, with a small shield and remaining-life underline.
+- Spoof reboots a defeated ordinary runner, shooter, flyer, hopper or Switchman as a blue ally for four active seconds after its brief startup. One ally at a time, eight seconds between conversions, at most four conversions per room. Blue bodies retain the original enemy silhouette, with a small shield and remaining-life underline. Specialized machinery resists conversion and receives feedback instead.
 - A reboot uses a fresh body and AI state. It cannot hurt the player, be shot by the player, produce another reward on shutdown, or hold the exit closed. Its attacks target red enemies. A blue Switchman can operate the port against them.
 - Primary bullets, continuous beam damage and primary shell blast kills qualify. Fragments, reflected shots, echoes, allied attacks, feedback, elites, summons and objective enemies do not create more allies. The ordinary kill reward is resolved once before replacement.
-- A preliminary boss fallback accumulates 12% of actual primary damage into a feedback pulse, capped at 24 before the boss's normal damage modifiers, on a 0.6-second window. It cannot recursively generate feedback or convert a boss. There is no boss in this room; the fallback is covered by an isolated combat test.
+- Base Spoof accumulates 12% of actual primary damage into a feedback pulse against resistant machinery, capped at 24 before normal damage modifiers, on a 0.6-second window. It cannot recursively generate feedback or convert a boss. The complete family adds two branches and final-boss presets; see the Subversion notes.
 - Pause and hitstop freeze simulation timers. Death, menu, retry and room completion clear transient allies, pending reboots and transmissions. Results use a prototype-specific finish screen.
 
-## Verification
+## Original foundation verification
 
 `npm test`: **1,601 passed, zero failed**. This includes 27 new prototype tests and the existing Turf War, weapon, progression, save and physics suites. Focused tests cover both mirrors, cover obstruction, timing/aim lock, real gun/beam/shell kills, reward provenance, conversion limits, friendly fire, boss feedback, pause, cleanup and repeated restart body counts.
 
@@ -47,4 +47,4 @@ These are repeatable simulator results, not a claim that the final area is balan
 
 ## Next step
 
-Playtest whether interrupting the junction and gaining a short-lived ally feel useful while moving through the room. Then integrate the alternate regional route and complete the Subversion reward family, expanding eligibility and runtime compatibility beyond these three prototype presets. Caller, the Switchboard boss, remaining layouts, regional audio, full discovery/lore integration, save migration and the new Daily ruleset are still pending in the [weekend plan](dead-signal-weekend.md).
+The [Subversion reward family](dead-signal-subversion.md) is complete in the development branch. Next: integrate the alternate regional route and its saves. Caller, the Switchboard boss, remaining layouts, regional audio and regional discovery/lore are still pending in the [weekend plan](dead-signal-weekend.md). Daily 79 now carries the new upgrade pool; route changes will require a further ruleset decision.

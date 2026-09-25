@@ -171,8 +171,9 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
           (distance(b.body.position, p) +
             (distance(g.lineEnd(p, b.body.position), b.body.position) > 1 ? 800 : 0)),
       )[0];
-    const exitX = g.escape ? EXTRACTION.x : 1910;
-    const ep = e?.body.position ?? { x: exitX, y: 700 },
+    const terminal = g.areaEvents.terminalReady;
+    const exitX = terminal ? g.areaEvents.site.x : g.escape ? EXTRACTION.x : 1910;
+    const ep = e?.body.position ?? (terminal ? g.areaEvents.site : { x: exitX, y: 700 }),
       // Heavy shells should lead a short movement, not predict an entire
       // long flight through the target's next landing or direction change.
       lead = Math.min(
@@ -187,21 +188,22 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     };
     stuck = Math.abs(p.x - previousX) < 0.5 ? stuck + 1 : 0;
     previousX = p.x;
-    let move = g.clear
-      ? p.x < exitX - (g.escape ? 10 : 0)
-        ? 1
-        : p.x > exitX + (g.escape ? 10 : 50)
-          ? -1
-          : 0
-      : dx > 240
-        ? 1
-        : dx < -240
-          ? -1
-          : Math.abs(dx) < 100
-            ? dx < 0
-              ? 1
-              : -1
-            : 0;
+    let move =
+      g.clear || terminal
+        ? p.x < exitX - (g.escape ? 10 : 0)
+          ? 1
+          : p.x > exitX + (g.escape ? 10 : 50)
+            ? -1
+            : 0
+        : dx > 240
+          ? 1
+          : dx < -240
+            ? -1
+            : Math.abs(dx) < 100
+              ? dx < 0
+                ? 1
+                : -1
+              : 0;
     if (!g.clear && (p.x < 100 || p.x > 1900)) move = p.x < 100 ? 1 : -1;
     if (g.kills !== lastKills) {
       lastKills = g.kills;
@@ -209,7 +211,7 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     }
     if (!g.clear && g.time - lastProgress > 5) move = Math.sin(g.time * 0.65) > 0 ? 1 : -1;
     // If cover blocks a distant target, stop recoil and take the next terrain waypoint.
-    const navigate = g.clear || (g.time - lastProgress > 8 && distance(p, ep) > 500);
+    const navigate = g.clear || terminal || (g.time - lastProgress > 8 && distance(p, ep) > 500);
     const path = [...g.level.route, { x: exitX, y: 720 }];
     let way = navigate
       ? dx > 0
@@ -255,7 +257,8 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
       jump = g.grounded && (blocked || stuck > 15 || !!(way && p.y - way.y > 50));
     }
     if (way && p.y - way.y > 50 && g.grounded) jump = true;
-    let firing = !g.clear && (!navigate || (lift && !g.grounded));
+    let firing = !g.clear && !terminal && (!navigate || (lift && !g.grounded));
+    const terminalInput = { move, jump, fire: lift && !g.grounded };
     const breach = g.breaches.placement,
       hatch = breach?.panels.find((rect) => rect.w > rect.h);
     if (
@@ -613,6 +616,19 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     }
     if (g.mods.includes('charge-lens')) firing &&= g.torch.chargeProgress < 1;
     if (g.mods.includes('suspension') && !g.mods.includes('tripline')) firing &&= i % 48 < 32;
+    // A Lockdown has no target until the player approaches its visible terminal
+    // and presses the ordinary interact/jump key. Do not hover toward the exit.
+    if (terminal) {
+      move = terminalInput.move;
+      jump = terminalInput.jump;
+      firing = terminalInput.fire;
+      if (firing) aim = { x: p.x, y: p.y + 500 };
+      if (Math.abs(p.x - g.areaEvents.site.x) < 65) {
+        move = 0;
+        firing = false;
+        jump = distance(p, g.areaEvents.site) < 80;
+      }
+    }
     tick(g, 1, {
       left: move < 0,
       right: move > 0,

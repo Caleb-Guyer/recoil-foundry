@@ -14,6 +14,8 @@ import {
 } from './upgrade-branches.ts';
 import { WORKSHOP_MODS, WORKSHOP_PARENTS } from './workshop-upgrades.ts';
 import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
+import { SUBVERSION_MODS, SUBVERSION_PARENTS, isSubversion } from './subversion-rules.ts';
+import { isLegacyDaily } from './daily.ts';
 export type Vec = { x: number; y: number };
 export const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -476,6 +478,7 @@ export const MODS = [
   ...BRANCH_MODS,
   ...NEW_PATH_MODS,
   ...WORKSHOP_MODS,
+  ...SUBVERSION_MODS,
   {
     id: 'resonator',
     name: 'Resonator',
@@ -630,6 +633,7 @@ export const FUSION_REQUIRES: Record<string, readonly string[]> = {
 export const isFusion = (id: string) => Object.hasOwn(FUSION_REQUIRES, id);
 export interface RewardContext {
   stage: number;
+  seed?: string;
   overtime?: boolean;
   salvage?: string | null;
 }
@@ -682,6 +686,7 @@ export const MOD_REQUIRES: Record<string, string> = {
   parallax: 'afterimage',
   ...NEW_PATH_PARENTS,
   ...WORKSHOP_PARENTS,
+  ...SUBVERSION_PARENTS,
 };
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
@@ -754,6 +759,7 @@ export function rewardMods(
     pool = availableMods(mods).filter(
       (mod) =>
         !excluded.includes(mod.id) &&
+        (!isLegacyDaily(context.seed ?? '') || !isSubversion(mod.id)) &&
         (!isFusion(mod.id) || fusionUnlocked(context)) &&
         (!isBranch(mod.id) || context.overtime || context.stage >= BRANCH_STAGE),
     ),
@@ -769,6 +775,7 @@ export function rewardMods(
   if (salvage && count > 0) offers.push(salvage);
   const weight = (mod: Mod) =>
     (path && MOD_PATHS[mod.id]?.path === path ? 1.5 : 1) *
+    (mods.includes('spoof') && isSubversion(mod.id) ? 1.5 : 1) *
     (isFusion(mod.id) ? (context.overtime ? 0.65 : 0.18) : 1);
   while (pool.length && offers.length < count) {
     let roll = rng() * pool.reduce((sum, mod) => sum + weight(mod), 0);
@@ -820,6 +827,7 @@ export function validSavedBuild(mods: readonly string[], legacyMods?: readonly s
   return true;
 }
 export function modPathLabel(id: string): string {
+  if (isSubversion(id)) return 'Subversion';
   if (isSalvage(id) || isSalvage(MOD_REQUIRES[id])) return 'Salvage';
   const branch = MOD_PATHS[id];
   const group = isBranch(id) ? branchGroup(id) : undefined;
@@ -1140,6 +1148,14 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const previous = raw.version === 4;
   const incoming = value as Checkpoint;
   if (
+    typeof incoming.seed === 'string' &&
+    isLegacyDaily(incoming.seed) &&
+    [incoming.mods, incoming.reward?.offers].some(
+      (list) => Array.isArray(list) && list.some(isSubversion),
+    )
+  )
+    return null;
+  if (
     incoming.version !== 6 &&
     (incoming.legacyMods !== undefined || incoming.legacyOffers !== undefined)
   )
@@ -1223,6 +1239,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
               isFusion(m.id) ||
               isBranch(m.id) ||
               NEW_PATH_MODS.some((mod) => mod.id === m.id) ||
+              isSubversion(m.id) ||
               WORKSHOP_MODS.some((mod) => mod.id === m.id) ||
               m.id === 'arc-coil' ||
               m.id === 'daisy-chain' ||

@@ -35,6 +35,7 @@ export class FactionSystem {
       if (e.rebootUntil !== undefined && g.time >= e.rebootUntil) {
         g.burst(e.body.position, 9, '#7cbfff', 2);
         this.removeAlly(e);
+        g.spoof.expired(e);
       } else if (this.departingAt !== null) {
         if (e.body.isStatic) Body.setStatic(e.body, false);
         if (e.kind === 'flyer')
@@ -45,6 +46,10 @@ export class FactionSystem {
       } else g.updateEnemy(e, dt);
     }
   }
+  targetable(e: Enemy) {
+    // Objective interactions belong to the player, not borrowed patrol AI.
+    return e.hp > 0 && e.spawn <= 0 && !e.allied && !e.courier && e.eventRole !== 'relay';
+  }
   contact(e: Enemy) {
     if (
       !this.allies.length ||
@@ -54,17 +59,35 @@ export class FactionSystem {
       return;
     const g = this.game;
     const other = (e.allied ? g.enemies : this.allies).find(
-      (a) => a.hp > 0 && a.spawn <= 0 && Query.collides(e.body, [a.body]).length,
+      (a) =>
+        a.hp > 0 &&
+        a.spawn <= 0 &&
+        (!e.allied || this.targetable(a)) &&
+        Query.collides(e.body, [a.body]).length,
     );
     if (!other) return;
     this.contactAt.set(e.id, g.time + 0.65);
     if (other.allied) this.hitAlly(other, e.splitChild ? 9 : 15);
-    else g.hitEnemy(other, 15, e.body.position, true, false, false);
+    else
+      g.hitEnemy(
+        other,
+        g.spoof.alliedDamage(other, 15, e.rebootUntil !== undefined, e.rebootDamage ?? 1),
+        e.body.position,
+        true,
+        false,
+        false,
+      );
   }
   combatTarget(e: Enemy): Vec {
     const g = this.game;
     if (e.allied) {
-      const live = g.enemies.filter((a) => a.hp > 0 && a.spawn <= 0);
+      const priority = e.rebootUntil !== undefined ? g.spoof.target() : null;
+      if (
+        priority &&
+        distance(g.lineEnd(e.body.position, priority.body.position), priority.body.position) < 1
+      )
+        return priority.body.position;
+      const live = g.enemies.filter((a) => this.targetable(a));
       const visible = live.filter(
         (a) => distance(g.lineEnd(e.body.position, a.body.position), a.body.position) < 1,
       );

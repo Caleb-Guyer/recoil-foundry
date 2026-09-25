@@ -74,7 +74,7 @@ test('Annex links select legal isolated presets, rejecting ambiguous or mixed ru
     for (const mirror of [false, true]) {
       const p = preset(build, mirror);
       assert(loadCheckpoint(p));
-      assert.deepEqual(p.mods, ANNEX_BUILDS[build as keyof typeof ANNEX_BUILDS]);
+      assert.deepEqual(p.mods, [...ANNEX_BUILDS[build as keyof typeof ANNEX_BUILDS], 'spoof']);
       const g = game(build, mirror);
       assert(g.annex.active && g.spoof.equipped);
       assert.equal(g.level.mirrored, mirror);
@@ -100,9 +100,10 @@ test('Annex links select legal isolated presets, rejecting ambiguous or mixed ru
   const g = new Game();
   g.start('normal-campaign');
   assert(!g.annex.active && !g.spoof.equipped);
-  assert.equal(MODS.length, 100);
+  assert.equal(MODS.length, 105);
   const disabled = preset();
   disabled.annex!.spoof = false;
+  disabled.mods = disabled.mods.filter((id) => id !== 'spoof');
   g.startTest(disabled);
   assert(g.annex.active && !g.spoof.equipped);
 });
@@ -167,7 +168,7 @@ test('a charged junction absorbs a real gun shot, damages its sender once and ca
   g.time = g.annex.transmission!.at + 0.01;
   g.annex.update();
   assert.equal(g.annex.volleys, 0);
-  assert.equal(g.spoof.pending, null);
+  assert.equal(g.spoof.pending.length, 0);
 });
 
 test('beam interrupts exposed junctions but ordinary cover blocks both beam and gun hits', () => {
@@ -450,13 +451,13 @@ test('death, menu and retry remove all prototype transients without writing save
     charge(g);
     const ally = g.factions.spawn('runner', { x: 300, y: 710 })!;
     ally.rebootUntil = 50;
-    g.spoof.pending = { kind: 'runner', pos: { x: 400, y: 700 } };
+    g.spoof.pending = [{ kind: 'runner', pos: { x: 400, y: 700 } }];
     const victim = g.enemies.find((e) => e.kind === 'runner')!;
     victim.spawn = 0;
     g.hitEnemy(victim, 99999);
     g.setMode(mode);
     assert.equal(g.annex.transmission, null);
-    assert.equal(g.spoof.pending, null);
+    assert.equal(g.spoof.pending.length, 0);
     assert.equal(g.factions.allies.length, 0);
     g.save();
     assert(!Composite.allBodies(g.engine.world).includes(ally.body));

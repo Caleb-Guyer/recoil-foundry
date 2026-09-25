@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { isSubversion } from '../src/subversion-rules.ts';
 import Matter from 'matter-js';
 import { Game, type Enemy, type Input } from '../src/game.ts';
 import {
@@ -473,6 +474,7 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
     const next = availableMods(mods).find(
       (m) =>
         !isBranch(m.id) &&
+        !isSubversion(m.id) &&
         ![
           'wrecking-ball',
           'flashpoint',
@@ -518,6 +520,7 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
       'air-brake',
       'corner-pocket',
       'scrap-feed',
+      'spoof',
     ],
   );
 });

@@ -47,7 +47,7 @@ const pocketBuild = ['ricochet', 'banker', 'corner-pocket'];
 const scrapBuild = ['split', 'scrap-feed'];
 
 test('all five additions are legal, reachable, saved, represented in max builds and have isolated presets', () => {
-  assert.equal(MODS.length, 100);
+  assert.equal(MODS.length, 105);
   assert.equal(WORKSHOP_MODS.length, 5);
   const combos = maxCombos();
   for (const m of WORKSHOP_MODS) {

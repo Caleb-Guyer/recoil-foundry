@@ -519,7 +519,17 @@ function updateTitle() {
   if (linkedRunTest?.annex)
     $('title-hint').textContent =
       'Dead Signal prototype. ' +
-      (linkedRunTest.annex.spoof ? 'Spoof: defeated machines briefly fight for you. ' : '') +
+      (linkedRunTest.mods.includes('priority-target')
+        ? 'Priority Target equipped. '
+        : linkedRunTest.mods.includes('dead-switch')
+          ? 'Dead Switch equipped. '
+          : linkedRunTest.mods.includes('standing-orders')
+            ? 'Standing Orders equipped. '
+            : linkedRunTest.mods.includes('cross-talk')
+              ? 'Cross Talk equipped. '
+              : linkedRunTest.annex.spoof
+                ? 'Spoof equipped. '
+                : '') +
       'R to retry.';
   if (linkedRunTest?.reforgeRoom)
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
@@ -1075,6 +1085,11 @@ game.onChange = () => {
 };
 function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    spoof: 'M12 11h23v26H12zM17 18h10M17 24h7M35 14h8v20h-8M39 20l7 4-7 4',
+    'standing-orders': 'M15 9h26v22L28 41 15 31zM21 17h14M21 23h14M24 29h8',
+    'priority-target': 'M16 8h-7v8M40 8h7v8M9 32v8h7M47 32v8h-7M17 24h22M28 13v22',
+    'cross-talk': 'M7 12h16v24H7zM33 12h16v24H33zM23 18h10M27 14l6 4-6 4M33 30H23l6 4',
+    'dead-switch': 'M17 9h22v27H17zM28 14l-6 10h10l-4 8M8 5l4 5M48 5l-4 5M8 41l4-5M48 41l-4-5',
     'coolant-rounds': 'M28 7v34M13 15l30 18M13 33l30-18M22 10l6 6 6-6M22 38l6-6 6 6',
     'deep-freeze': 'M15 10h26v28H15zM28 14v20M19 19l18 10M19 29l18-10',
     icebreaker: 'M7 24h21M19 17l9 7-9 7M35 7l-6 14 10 6-6 14M43 12l6-5M44 35l6 5',
@@ -1742,7 +1757,6 @@ function showDialog(kind: string) {
           (buildPath(game.mods) ? ' · ' + PATH_NAMES[buildPath(game.mods)!] : '') +
           '</summary><ul>' +
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
-          (game.spoof.equipped ? '<li>Spoof · Subversion (prototype)</li>' : '') +
           '</ul></details>'
         : '') +
       '<div class="settings-links"><button id="open-credits" class="quiet settings-credits">About & credits</button><button id="open-report" class="quiet settings-credits">Report an issue</button></div></div><div class="actions"><button id="back" class="primary">' +

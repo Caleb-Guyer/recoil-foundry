@@ -1,17 +1,20 @@
 // Bump when layouts, upgrade pools, or gameplay balance change. Old links must
 // not silently become a different challenge under the same identity.
-export const DAILY_RULESET = 78;
+export const DAILY_RULESET = 79;
+export const SUPPORTED_DAILY_RULESETS = [78, DAILY_RULESET] as const;
+export const isLegacyDaily = (seed: string) => /^RF-D78-/.test(seed);
 export const DAILY_BESTS_KEY = 'rf-daily-bests-v1';
 export interface DailyChallenge {
   date: string;
   seed: string;
 }
 
-export function dailyForDate(date: string): DailyChallenge | null {
+export function dailyForDate(date: string, ruleset: number = DAILY_RULESET): DailyChallenge | null {
+  if (!SUPPORTED_DAILY_RULESETS.some((v) => v === ruleset)) return null;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   const parsed = new Date(date + 'T00:00:00.000Z');
   if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) return null;
-  return { date, seed: `RF-D${DAILY_RULESET}-${date}` };
+  return { date, seed: `RF-D${ruleset}-${date}` };
 }
 
 export function todayDaily(now = new Date()): DailyChallenge {
@@ -19,20 +22,26 @@ export function todayDaily(now = new Date()): DailyChallenge {
 }
 
 export function dailyFromSeed(seed: string): DailyChallenge | null {
-  const prefix = `RF-D${DAILY_RULESET}-`;
-  return seed.startsWith(prefix) ? dailyForDate(seed.slice(prefix.length)) : null;
+  const match = /^RF-D([1-9]\d*)-(\d{4}-\d{2}-\d{2})$/.exec(seed);
+  return match ? dailyForDate(match[2], Number(match[1])) : null;
 }
 
 export function isUnsupportedDailySeed(seed: string): boolean {
   const match = /^RF-D([1-9]\d*)-(\d{4}-\d{2}-\d{2})$/.exec(seed);
-  return !!match && match[1] !== String(DAILY_RULESET) && !!dailyForDate(match[2]);
+  return (
+    !!match &&
+    !SUPPORTED_DAILY_RULESETS.some((v) => String(v) === match[1]) &&
+    !!dailyForDate(match[2])
+  );
 }
 
 export function dailyFromUrl(url: URL): DailyChallenge | null {
   const dates = url.searchParams.getAll('daily');
   const versions = url.searchParams.getAll('dv');
-  return dates.length === 1 && versions.length === 1 && versions[0] === String(DAILY_RULESET)
-    ? dailyForDate(dates[0])
+  return dates.length === 1 &&
+    versions.length === 1 &&
+    SUPPORTED_DAILY_RULESETS.some((v) => String(v) === versions[0])
+    ? dailyForDate(dates[0], Number(versions[0]))
     : null;
 }
 
@@ -41,7 +50,7 @@ export function dailyLink(challenge: DailyChallenge, base: string): string {
   url.search = '';
   url.hash = '';
   url.searchParams.set('daily', challenge.date);
-  url.searchParams.set('dv', String(DAILY_RULESET));
+  url.searchParams.set('dv', /^RF-D(\d+)-/.exec(challenge.seed)?.[1] ?? String(DAILY_RULESET));
   return url.href;
 }
 
@@ -66,7 +75,7 @@ export function recordDailyWin(raw: unknown, challenge: DailyChallenge, elapsed:
   // Keep a year of records, including the challenge just played even if it is old.
   const recent = Object.entries(bests)
     .filter(([seed]) => seed !== challenge.seed)
-    .sort(([a], [b]) => b.localeCompare(a))
+    .sort(([a], [b]) => b.slice(-10).localeCompare(a.slice(-10)) || b.localeCompare(a))
     .slice(0, 364);
   return { bests: Object.fromEntries([...recent, [challenge.seed, best]]), best, newBest };
 }

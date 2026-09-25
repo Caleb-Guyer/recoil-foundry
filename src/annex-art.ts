@@ -1,7 +1,6 @@
 import type { Enemy, Game } from './game.ts';
 import { clamp, type Vec } from './rules.ts';
 import { TRANSMISSION } from './annex.ts';
-import { SPOOF } from './spoof.ts';
 
 export const ANNEX_PALETTE = {
   body: '#35323f',
@@ -161,26 +160,6 @@ export function drawAnnex(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   c.fillStyle = charging ? color : '#443d4c';
   circle(c, p, 6);
   c.fill();
-  for (const ally of g.factions.allies) {
-    if (ally.rebootUntil === undefined) continue;
-    const b = ally.body.bounds,
-      x = ally.body.position.x,
-      y = b.min.y - 17;
-    c.strokeStyle = blue;
-    c.lineWidth = 1.5;
-    // A shield and a shrinking underline identify allegiance and remaining life.
-    line(c, [
-      { x: x - 5, y: y - 5 },
-      { x: x + 5, y: y - 5 },
-      { x: x + 5, y: y + 1 },
-      { x, y: y + 5 },
-      { x: x - 5, y: y + 1 },
-      { x: x - 5, y: y - 5 },
-    ]);
-    const remaining = clamp((ally.rebootUntil - g.time) / SPOOF.duration, 0, 1);
-    c.fillStyle = blue;
-    c.fillRect(x - 12, y + 9, 24 * remaining, 2);
-  }
   c.restore();
 }
 

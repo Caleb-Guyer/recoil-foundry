@@ -1,8 +1,10 @@
 # Recoil Foundry: Dead Signal
 
-Proposed themed update, planned against 2.98.1, with target version **3.0.0**. The [first playable room](dead-signal-prototype.md) is implemented on `feature/dead-signal` as of 24 September. The full route, remaining upgrades, second machine and boss below are still planned. Target: ready Sunday, 27 September 2026, with public release before 7:00 a.m. Central on Monday, 28 September. The timetable below is a work plan, not a scheduled background job.
+Proposed themed update, planned against 2.98.1, with target version **3.0.0**. The [first playable room](dead-signal-prototype.md) and [five-upgrade Subversion family](dead-signal-subversion.md) are implemented on `feature/dead-signal` as of 24 September. The full route, second machine and boss below are still planned. Target: ready Sunday, 27 September 2026, with public release before 7:00 a.m. Central on Monday, 28 September. The timetable below is a work plan, not a scheduled background job.
 
 **Foundation completed:** one Transmission Annex room in both mirrors; one Switchman and interruptible gun port; pre-equipped Spoof with temporary blue allies; bullet, beam and shell presets. The production build and 1,601 automated tests pass, including 27 prototype checks and six ordinary-input combat completions. Browser presentation, pause and retry were checked in the in-app browser. See the prototype notes for exact scope, test links and remaining integration work. This is a development preview; the public release remains 2.98.1.
+
+**Subversion implemented:** all five real upgrades, exclusive support branches, compatible gun families, normal rewards, saves, Workshop, original lore and focused room/boss presets. Both branches provide bounded feedback against resistant machines. Daily 79 has the new pool; Daily 78 keeps its original rewards, links, saves and records. The completed eligibility audit covers all 510 new pairs and the build catalog now contains 2,048 maximal combinations. Current verification is recorded in the [Subversion notes](dead-signal-subversion.md). The first-Annex guaranteed Spoof choice remains part of the upcoming route integration.
 
 **The hook:** a communications wing sealed years ago has started issuing orders again. You can enter it, trace the transmission, and steal enough authority to make the factory attack itself.
 
@@ -43,7 +45,7 @@ Ownership changes clear recorded player targets and pending hostile transmission
 | Cross Talk | Spoof | Two weaker, shorter-lived allies can be active. Alternative to Standing Orders. | Feedback becomes two smaller pulses; splitting preserves the base payload rather than doubling it. |
 | Dead Switch | Cross Talk | An expiring ally produces a small hostile-only overload before shutting down. | The second feedback pulse gains a limited explosion around the struck boss, subject to cover. |
 
-These are starting designs, with values fixed by Saturday's balance work. Subversion is a support family compatible with existing gun forms; its two internal branches exclude each other. It does not remove existing weapon-path restrictions.
+The five nodes are implemented; exact current values and playtest links are in the Subversion notes. Further balance work belongs with the full route and boss. Subversion is a support family compatible with existing gun forms; its two internal branches exclude each other. It does not remove existing weapon-path restrictions.
 
 Make the update discoverable: the first Annex reward includes Spoof among the three choices when it is unowned and legal. Picking it is optional. Afterward, use the existing chosen-family weighting and normal eligibility rules. Spoof can also appear in ordinary campaigns outside the Annex. A Daily entering the Annex has its corresponding single fixed reward planned in advance; it never opens a three-card choice.
 
@@ -81,7 +83,7 @@ New Daily runs need a new ruleset for the changed pool and routes. Keep old Dail
 **Release acceptance.** These are open implementation gates, not claims of completed testing.
 
 - All existing automated checks and the production build pass, plus meaningful regressions for every new system. The baseline has 1,571 tests; passing that baseline alone is insufficient.
-- Validate all 510 unordered upgrade pairs involving at least one of the five additions, both legal acquisition orders, prerequisite closure, descriptions and generated build catalogs. Exercise runtime behavior for each representative weapon family and the strongest complete combinations.
+- Exercise the strongest complete Subversion combinations against the finished alternate area and boss. The 510-pair eligibility audit, representative weapon-runtime checks and generated build catalogs are complete; repeat affected checks when remaining content changes these rules.
 - Finish at least twelve seeded campaign routes spanning both mirrors and the main gun families, plus a Daily run and an Overtime continuation. Record seeds, builds, damage taken and failures. A simulator passing is not a substitute for watching the encounters.
 - Test stationary corner play, hovering above the boss, hiding behind each major obstacle, portal loops, Countershot/Breach spam, ally body-blocking, and repeated junction interruption. No indefinite safe position or complete attack suppression may remain. Verify that evasive play has a real escape from each attack combination.
 - Exercise death/retry, repeated Escape at rewards, rerolling, pending rewards across reload, lost browser focus, fullscreen, existing imports, old checkpoints and both Daily rulesets. Retain the 2.98.1 blackout and boss-collision regressions.
