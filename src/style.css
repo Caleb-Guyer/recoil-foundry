@@ -1353,6 +1353,9 @@ dialog.workshop-dialog {
 .workshop-dialog h2 {
   margin-bottom: 24px;
 }
+.workshop-dialog .practice-note {
+  margin-top: 0;
+}
 .workshop-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
