@@ -382,6 +382,7 @@ export class Game {
   auditor = new AuditorSystem(this);
   auditorReward = false;
   practice: PracticeSession | null = null;
+  practiceHits = 0;
   workshop = new WorkshopSystem(this);
   seed = '';
   stage = 0;
@@ -634,6 +635,7 @@ export class Game {
   ) {
     this.workshop.active = workshop;
     this.practice = practice;
+    this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.areaEvents.start(save);
@@ -3100,6 +3102,7 @@ export class Game {
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     this.hp = Math.max(0, this.hp - amount);
+    if (this.practice && amount > 0) this.practiceHits++;
     if (amount > 0) this.commendations.damaged();
     this.hurtAt = this.time;
     this.feedback(8);

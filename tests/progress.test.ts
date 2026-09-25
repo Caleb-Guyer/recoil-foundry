@@ -30,6 +30,11 @@ import {
 } from '../src/practice.ts';
 import { retrySeed } from '../src/run-seed.ts';
 import { BLUEPRINTS_KEY, loadBlueprints, setBlueprint } from '../src/blueprints.ts';
+import {
+  PRACTICE_RECORDS_KEY,
+  PRACTICE_RULESET,
+  recordPracticeWin,
+} from '../src/practice-records.ts';
 
 class MemoryStorage {
   items = new Map<string, string>();
@@ -152,6 +157,55 @@ test('blueprints round-trip all six slots with locked upgrades without granting 
     [{ name: 'Bad', mods: ['rewire'] }, ...Array(5).fill(null)],
   ])
     assert.equal(validateProgress({ ...after, [BLUEPRINTS_KEY]: bad }), null);
+});
+
+test('pre-record profiles migrate and current/archived practice records survive backup restore and undo', async () => {
+  const { store, disk } = setup();
+  await populated(store);
+  const expected = parseProgressBackup(store.backup('3.0.4')).values;
+  const old = JSON.parse(store.backup('3.0.4'));
+  delete old.values[PRACTICE_RECORDS_KEY];
+  assert.deepEqual(parseProgressBackup(JSON.stringify(old)).values, expected);
+  const stored = JSON.parse(disk.getItem(PROGRESS_KEY)!);
+  delete stored.values[PRACTICE_RECORDS_KEY];
+  disk.setItem(PROGRESS_KEY, JSON.stringify(stored));
+  const migrated = new ProgressStore(() => disk);
+  assert.equal(migrated.state, 'saved');
+  assert.deepEqual(migrated.read(PRACTICE_RECORDS_KEY), []);
+  const records = recordPracticeWin([], {
+    rules: PRACTICE_RULESET,
+    kind: 'switchboard',
+    seed: 'records-backup',
+    mods: ['magnum'],
+    timeMs: 43210,
+    hits: 2,
+    finishedAt: 1234,
+  }).records;
+  records.push({
+    ...structuredClone(records[0]),
+    rules: PRACTICE_RULESET + 1,
+    mods: ['retired-upgrade'],
+  });
+  assert(await migrated.write(PRACTICE_RECORDS_KEY, records));
+  const backup = parseProgressBackup(migrated.backup('3.0.5'));
+  const target = setup();
+  assert(await target.store.restore(backup));
+  assert.deepEqual(new ProgressStore(() => target.disk).read(PRACTICE_RECORDS_KEY), records);
+  for (const key of Object.keys(expected))
+    if (key !== PRACTICE_RECORDS_KEY)
+      assert.deepEqual(target.store.read(key), expected[key as keyof typeof expected]);
+  assert(await target.store.undo());
+  assert.deepEqual(target.store.read(PRACTICE_RECORDS_KEY), []);
+  for (const bad of [
+    {},
+    [records[0], records[0]],
+    [{ ...records[0], mods: ['rewire'] }],
+    [{ ...records[0], fastest: { timeMs: -1, hits: 0, finishedAt: 0 } }],
+  ]) {
+    const malformed = structuredClone(backup);
+    malformed.values[PRACTICE_RECORDS_KEY] = bad;
+    assert.throws(() => parseProgressBackup(JSON.stringify(malformed)));
+  }
 });
 
 test('Annex discoveries and earned Switchboard practice survive backup restore and undo', async () => {

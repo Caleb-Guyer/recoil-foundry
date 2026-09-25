@@ -139,7 +139,20 @@ import {
   FUSION_TEST_BUILDS,
   fusionTestFromUrl,
 } from './practice.ts';
-import { canPractice, type Encounter, type PracticeBoss } from './practice.ts';
+import { canPractice, practiceCheckpoint, type Encounter, type PracticeBoss } from './practice.ts';
+import {
+  PRACTICE_RECORDS_KEY,
+  PRACTICE_RULESET,
+  loadPracticeRecords,
+  snapshotPracticeWin,
+  recordPracticeWin,
+  practiceBuildKey,
+  practiceTime,
+  challengeAccess,
+  type PracticeChallenge,
+  type PracticeWin,
+} from './practice-records.ts';
+import { practiceRecordsMenu } from './practice-records-menu.ts';
 import { PHYSICS_LAYOUTS } from './physics-layouts.ts';
 import {
   DAILY_BESTS_KEY,
@@ -209,6 +222,16 @@ let buildMenu: MenuBack | null = null;
 let practiceTarget: Encounter | null = null;
 let practiceEditorParent = 'practice-setup';
 const practiceDrafts: Partial<Record<PracticeBoss, string[]>> = {};
+let practiceRecords = loadPracticeRecords(read(PRACTICE_RECORDS_KEY));
+let practiceTest = false;
+let practiceEligible = false;
+let practiceCaptured = false;
+let practiceWin: PracticeWin | null = null;
+let practiceOutcome: ReturnType<typeof recordPracticeWin> | null = null;
+let activePracticeChallenge: PracticeChallenge | null = null;
+let sharedPracticeChallenge: PracticeChallenge | undefined;
+let practiceRecordsBoss: PracticeBoss | undefined;
+let practiceRecordsParent = 'practice-setup';
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let equippedCosmetics = loadCosmetics(read(COSMETICS_KEY), commendations);
@@ -842,7 +865,10 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     return;
   }
   if (retry && game.practice) {
-    startPractice(game.practice, game.practice.build ?? null);
+    startPractice(game.practice, game.practice.build ?? null, {
+      test: practiceTest,
+      challenge: activePracticeChallenge ?? undefined,
+    });
     return;
   }
   finishedRun = null;
@@ -892,8 +918,28 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   pointer.y = canvas.clientHeight * 0.6;
   if (game.mode === 'playing') canvas.focus();
 }
-function startPractice(encounter: Encounter, mods: readonly string[] | null = null) {
-  if (!canPractice(encounter, encounters, mods === null ? linkedTest : null)) return;
+function startPractice(
+  encounter: Encounter,
+  mods: readonly string[] | null = null,
+  options: { test?: boolean; challenge?: PracticeChallenge } = {},
+) {
+  discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+  if (options.challenge) {
+    if (
+      !challengeAccess(options.challenge, encounters, discovered).allowed ||
+      options.challenge.kind !== encounter.kind ||
+      options.challenge.seed !== encounter.seed ||
+      JSON.stringify(options.challenge.mods) !== JSON.stringify(mods)
+    )
+      return;
+  } else if (!canPractice(encounter, encounters, options.test && mods === null ? linkedTest : null))
+    return;
+  practiceTest = options.test === true;
+  practiceEligible = !practiceTest;
+  practiceCaptured = false;
+  practiceWin = null;
+  practiceOutcome = null;
+  activePracticeChallenge = options.challenge ? structuredClone(options.challenge) : null;
   firstSession.stop();
   finishedRun = null;
   runCommendations = [];
@@ -907,6 +953,43 @@ function startPractice(encounter: Encounter, mods: readonly string[] | null = nu
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
+}
+function startPracticeChallenge(challenge: PracticeChallenge) {
+  startPractice(challenge, challenge.mods, { challenge });
+}
+function capturePracticeResult() {
+  if (practiceCaptured) return;
+  const win = snapshotPracticeWin(game, practiceEligible);
+  if (!win) return;
+  practiceCaptured = true;
+  practiceWin = win;
+  progress.checkExternal();
+  if (progress.blocked) return;
+  practiceOutcome = recordPracticeWin(read(PRACTICE_RECORDS_KEY), win);
+  practiceRecords = practiceOutcome.records;
+  if (practiceOutcome.newFastest || practiceOutcome.newCleanest)
+    write(PRACTICE_RECORDS_KEY, practiceRecords);
+}
+function openPracticeRecords(boss: PracticeBoss) {
+  if (!encounters.some((e) => e.kind === boss)) return;
+  practiceRecordsBoss = boss;
+  practiceRecordsParent = dialogKind;
+  showDialog('practice-records');
+}
+function presetBest(encounter: Encounter) {
+  const mods = practiceCheckpoint(encounter)?.mods;
+  if (!mods) return '';
+  const key = practiceBuildKey({ ...encounter, rules: PRACTICE_RULESET, mods });
+  const best = loadPracticeRecords(read(PRACTICE_RECORDS_KEY)).find(
+    (r) => practiceBuildKey(r) === key,
+  );
+  return best
+    ? '<p class="practice-record-note">Preset best ' +
+        practiceTime(best.fastest.timeMs) +
+        ' · Fewest hits ' +
+        best.cleanest.hits +
+        '</p>'
+    : '';
 }
 function openPracticeBuild(encounter: Encounter, parent = 'practice-setup') {
   if (!canPractice(encounter, encounters)) return;
@@ -1101,6 +1184,7 @@ game.onChange = () => {
     deathReplay.reset();
   }
   captureFinishedRun();
+  capturePracticeResult();
   $('history').hidden = runHistory.length === 0;
   updateMusic();
   if (game.mode !== 'playing') controller.stopRumble();
@@ -1272,7 +1356,14 @@ function showDialog(kind: string) {
   modal.classList.toggle('practice-dialog', kind === 'practice' || kind === 'practice-setup');
   modal.classList.toggle(
     'workshop-dialog',
-    ['workshop', 'practice-build', 'blueprints'].includes(kind),
+    [
+      'workshop',
+      'practice-build',
+      'blueprints',
+      'practice-records',
+      'practice-import',
+      'practice-share',
+    ].includes(kind),
   );
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
@@ -1501,7 +1592,7 @@ function showDialog(kind: string) {
             '</span><span aria-hidden="true">↗</span></button>',
         )
         .join('') +
-      '</div><div class="actions"><button id="practice-back" class="quiet">Back</button></div>';
+      '</div><div class="actions"><button id="practice-import" class="quiet">Import challenge</button><button id="practice-back" class="quiet">Back</button></div>';
     content.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((button) => {
       button.onclick = () => {
         const encounter = encounters.find((record) => record.kind === button.dataset.boss);
@@ -1512,6 +1603,7 @@ function showDialog(kind: string) {
       };
     });
     $('practice-back').onclick = backFromPractice;
+    $('practice-import').onclick = () => showDialog('practice-import');
   } else if (kind === 'practice-setup' && practiceTarget) {
     const encounter = practiceTarget;
     const boss = PRACTICE_BOSSES[encounter.kind];
@@ -1520,16 +1612,37 @@ function showDialog(kind: string) {
       boss.name +
       '</h2><p class="practice-note">Full health · Up to ' +
       boss.stage +
-      ' upgrades</p><div class="practice-list">' +
+      ' upgrades</p>' +
+      presetBest(encounter) +
+      '<div class="practice-list">' +
       '<button id="practice-preset" class="practice-fight"><span>Preset</span><span aria-hidden="true">↗</span></button>' +
       '<button id="practice-workshop" class="practice-fight"><span>Workshop build</span><span aria-hidden="true">↗</span></button>' +
-      '</div><div class="actions"><button id="practice-back" class="quiet">Back</button></div>';
+      '</div><div class="actions"><button id="practice-records" class="quiet">Records</button><button id="practice-back" class="quiet">Back</button></div>';
+    $('practice-records').onclick = () => openPracticeRecords(encounter.kind);
     $('practice-preset').onclick = () => startPractice(encounter);
     $('practice-workshop').onclick = () => openPracticeBuild(encounter);
     $('practice-back').onclick = () => {
       showDialog('practice');
       content.querySelector<HTMLButtonElement>('[data-boss="' + encounter.kind + '"]')?.focus();
     };
+  } else if (['practice-records', 'practice-import', 'practice-share'].includes(kind)) {
+    practiceRecords = loadPracticeRecords(read(PRACTICE_RECORDS_KEY));
+    buildMenu = practiceRecordsMenu(content, {
+      records: practiceRecords,
+      known: discovered,
+      victories: encounters,
+      boss: kind === 'practice-records' ? practiceRecordsBoss : undefined,
+      share: kind === 'practice-share' ? sharedPracticeChallenge : undefined,
+      start: startPracticeChallenge,
+      exit: () =>
+        showDialog(
+          kind === 'practice-import'
+            ? 'practice'
+            : kind === 'practice-share'
+              ? 'result'
+              : practiceRecordsParent,
+        ),
+    });
   } else if (kind === 'practice-build' && practiceTarget) {
     const encounter = practiceTarget;
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
@@ -1715,24 +1828,73 @@ function showDialog(kind: string) {
     $('menu').onclick = menu;
   } else if (kind === 'result' && game.practice) {
     const win = game.mode === 'won';
+    const recordNote = practiceOutcome
+      ? practiceOutcome.first
+        ? 'First record for this arena and gun.'
+        : [
+            practiceOutcome.newFastest ? 'New fastest victory.' : '',
+            practiceOutcome.newCleanest ? 'New cleanest victory.' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+      : '';
+    const targetNote = activePracticeChallenge
+      ? win
+        ? Math.round(game.elapsed * 100) * 10 < activePracticeChallenge.timeMs
+          ? 'Target beaten by ' +
+            practiceTime(activePracticeChallenge.timeMs - Math.round(game.elapsed * 100) * 10) +
+            '.'
+          : Math.round(game.elapsed * 100) * 10 === activePracticeChallenge.timeMs
+            ? 'Target matched.'
+            : practiceTime(Math.round(game.elapsed * 100) * 10 - activePracticeChallenge.timeMs) +
+              ' behind the target.'
+        : 'Target ' +
+          practiceTime(activePracticeChallenge.timeMs) +
+          ' · ' +
+          activePracticeChallenge.hits +
+          ' hits'
+      : '';
     content.innerHTML =
       '<p class="eyebrow">PRACTICE · ' +
       PRACTICE_BOSSES[game.practice.kind].name +
       '</p><h2 id="dialog-title">' +
       (win ? 'Fight cleared.' : 'Try again.') +
       '</h2><p class="result-line">' +
-      formatTime(game.elapsed) +
-      '</p><div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button>' +
-      (canPractice(game.practice, encounters)
+      practiceTime(Math.round(game.elapsed * 100) * 10) +
+      ' <span>·</span> ' +
+      game.practiceHits +
+      ' hits' +
+      '</p>' +
+      (recordNote || targetNote
+        ? '<p class="practice-record-note">' +
+          [recordNote, targetNote].filter(Boolean).join(' ') +
+          '</p>'
+        : '') +
+      '<div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button>' +
+      (practiceWin ? '<button id="practice-share" class="quiet">Challenge a friend</button>' : '') +
+      (!activePracticeChallenge && canPractice(game.practice, encounters)
         ? '<button id="practice-edit" class="quiet">Edit build</button>'
         : '') +
       '<button id="choose-fight" class="quiet"' +
       (encounters.length ? '' : ' hidden') +
-      '>Choose fight</button><button id="menu" class="quiet">Menu</button></div>';
+      '>Choose fight</button>' +
+      (encounters.some((e) => e.kind === game.practice!.kind)
+        ? '<button id="practice-records" class="quiet">Records</button>'
+        : '') +
+      '<button id="menu" class="quiet">Menu</button></div>';
     $('retry').onclick = () => start(undefined, true);
     $('choose-fight').onclick = () => showDialog('practice');
     const edit = document.getElementById('practice-edit');
     if (edit) edit.onclick = () => openPracticeBuild(game.practice!, 'result');
+    const records = document.getElementById('practice-records');
+    if (records) records.onclick = () => openPracticeRecords(game.practice!.kind);
+    const share = document.getElementById('practice-share');
+    if (share)
+      share.onclick = () => {
+        const { rules, kind, seed, mods, timeMs, hits } = practiceWin!;
+        sharedPracticeChallenge = { rules, kind, seed, mods: [...mods], timeMs, hits };
+        showDialog('practice-share');
+      };
     $('menu').onclick = menu;
   } else if (kind === 'result') {
     const win = game.mode === 'won';
@@ -1918,7 +2080,7 @@ function showDialog(kind: string) {
           : '<button id="workshop-pause-build" class="quiet">Build</button><button id="workshop-pause-reset" class="quiet">Reset room</button>'
         : paused && game.practice
           ? '<button id="retry" class="quiet">Retry</button>' +
-            (canPractice(game.practice, encounters)
+            (!activePracticeChallenge && canPractice(game.practice, encounters)
               ? '<button id="practice-edit" class="quiet">Edit build</button>'
               : '') +
             '<button id="choose-fight" class="quiet"' +
@@ -2206,7 +2368,7 @@ $('play').onclick = () =>
         : linkedRunTest
           ? startRunTest(linkedRunTest)
           : linkedTest
-            ? startPractice(linkedTest)
+            ? startPractice(linkedTest, null, { test: true })
             : start();
 $('daily').onclick = () => {
   if (linkedDaily) {

@@ -328,6 +328,28 @@ dialog.practice-dialog {
 .practice-list {
   border-top: 1px solid #354440;
 }
+.practice-record-note {
+  margin: 12px 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.practice-record-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 36px;
+  margin: 0;
+}
+.practice-record-stats dt {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.practice-record-stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
 .practice-fight {
   display: flex;
   align-items: center;

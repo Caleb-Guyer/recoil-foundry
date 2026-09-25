@@ -35,7 +35,7 @@ export function progressMenu(
     '<div class="actions"><button id="back" class="quiet">Back</button><button id="retry-save" class="quiet" hidden>Retry saving</button><button id="reload-progress" class="quiet" hidden>Reload saved progress</button><button id="undo-import" class="quiet" hidden>Undo restore</button></div>';
   const get = <T extends HTMLElement>(id: string) => root.querySelector<T>('#' + id)!;
   root.querySelector('.progress-summary')!.textContent =
-    `${summary.run} · ${summary.upgrades} upgrade${summary.upgrades === 1 ? '' : 's'} discovered · ${summary.victories} Practice ${summary.victories === 1 ? 'victory' : 'victories'} · ${summary.blueprints} blueprints`;
+    `${summary.run} · ${summary.upgrades} upgrade${summary.upgrades === 1 ? '' : 's'} discovered · ${summary.victories} Practice ${summary.victories === 1 ? 'victory' : 'victories'} · ${summary.blueprints} blueprints · ${summary.practiceRecords} Practice records`;
   const feedback = get('progress-feedback');
   let preview: ProgressBackup | null = null;
   let selection = 0;
@@ -98,7 +98,7 @@ export function progressMenu(
       panel.innerHTML =
         '<strong>Restore this backup?</strong><p class="import-summary"></p><p>This replaces your current profile. You can undo this restore from Progress.</p><div class="actions"><button id="confirm-import" class="primary">Restore backup</button><button id="cancel-import" class="quiet">Cancel</button></div>';
       panel.querySelector('.import-summary')!.textContent =
-        `${imported.run} · ${imported.upgrades} upgrade${imported.upgrades === 1 ? '' : 's'} · ${imported.victories} Practice ${imported.victories === 1 ? 'victory' : 'victories'} · ${imported.commendations} commendations · ${imported.runs} recent runs · ${imported.blueprints} blueprints`;
+        `${imported.run} · ${imported.upgrades} upgrade${imported.upgrades === 1 ? '' : 's'} · ${imported.victories} Practice ${imported.victories === 1 ? 'victory' : 'victories'} · ${imported.commendations} commendations · ${imported.runs} recent runs · ${imported.blueprints} blueprints · ${imported.practiceRecords} Practice records`;
       panel.hidden = false;
       feedback.textContent = '';
       get('cancel-import').onclick = () => {
