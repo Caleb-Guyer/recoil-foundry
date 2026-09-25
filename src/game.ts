@@ -141,7 +141,7 @@ import type { CraneRig } from './crane-ai.ts';
 import { createKiln, updateKiln, clearKiln } from './kiln-ai.ts';
 import type { KilnRig } from './kiln-ai.ts';
 import { practiceCheckpoint } from './practice.ts';
-import type { Encounter } from './practice.ts';
+import type { Encounter, PracticeSession } from './practice.ts';
 import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
 import { FactionSystem } from './factions.ts';
@@ -381,7 +381,7 @@ export class Game {
   commendations = new CommendationTracker(this);
   auditor = new AuditorSystem(this);
   auditorReward = false;
-  practice: Encounter | null = null;
+  practice: PracticeSession | null = null;
   workshop = new WorkshopSystem(this);
   seed = '';
   stage = 0;
@@ -587,10 +587,18 @@ export class Game {
     this.mode = mode;
     this.onChange();
   }
-  startPractice(encounter: Encounter) {
-    const save = practiceCheckpoint(encounter);
+  startPractice(
+    encounter: Encounter,
+    mods: readonly string[] | null = null,
+    known: readonly string[] = [],
+  ) {
+    const save = practiceCheckpoint(encounter, mods, known);
     if (!save) return false;
-    this.start(save.seed, save, { ...encounter });
+    this.start(save.seed, save, {
+      kind: encounter.kind,
+      seed: encounter.seed,
+      ...(mods === null ? {} : { build: [...save.mods] }),
+    });
     return true;
   }
   startWorkshop(discovered: readonly string[], mods: readonly string[] = []) {
@@ -620,7 +628,7 @@ export class Game {
   start(
     seed: string,
     save?: Checkpoint,
-    practice: Encounter | null = null,
+    practice: PracticeSession | null = null,
     testRun: Checkpoint | null = null,
     workshop = false,
   ) {

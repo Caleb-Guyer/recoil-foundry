@@ -135,6 +135,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
         'stories',
         'disconnects',
         'shutdown',
+        'annex',
       ]) ||
       book.version !== 1 ||
       typeof book.escaped !== 'boolean'
@@ -146,6 +147,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
         return null;
     }
     if (book.shutdown !== undefined && book.shutdown !== true) return null;
+    if (book.annex !== undefined && book.annex !== true) return null;
     const cosmetics = raw[COSMETICS_KEY],
       cleanCosmetics = loadCosmetics(cosmetics, loadCommendations(raw[COMMENDATIONS_KEY]));
     if (

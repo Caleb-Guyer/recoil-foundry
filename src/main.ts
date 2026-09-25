@@ -137,7 +137,7 @@ import {
   FUSION_TEST_BUILDS,
   fusionTestFromUrl,
 } from './practice.ts';
-import type { Encounter } from './practice.ts';
+import { canPractice, practiceBuild, type Encounter, type PracticeBoss } from './practice.ts';
 import { PHYSICS_LAYOUTS } from './physics-layouts.ts';
 import {
   DAILY_BESTS_KEY,
@@ -194,6 +194,9 @@ let discovered = discoverBuild(
   storedCheckpoint?.legacyMods,
 );
 let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
+let practiceTarget: Encounter | null = null;
+let practiceEditorParent = 'practice-setup';
+const practiceDrafts: Partial<Record<PracticeBoss, string[]>> = {};
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let equippedCosmetics = loadCosmetics(read(COSMETICS_KEY), commendations);
@@ -826,7 +829,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     return;
   }
   if (retry && game.practice) {
-    startPractice(game.practice);
+    startPractice(game.practice, game.practice.build ?? null);
     return;
   }
   finishedRun = null;
@@ -876,13 +879,8 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   pointer.y = canvas.clientHeight * 0.6;
   if (game.mode === 'playing') canvas.focus();
 }
-function startPractice(encounter: Encounter) {
-  if (
-    ![...encounters, ...(linkedTest ? [linkedTest] : [])].some(
-      (record) => record.kind === encounter.kind && record.seed === encounter.seed,
-    )
-  )
-    return;
+function startPractice(encounter: Encounter, mods: readonly string[] | null = null) {
+  if (!canPractice(encounter, encounters, mods === null ? linkedTest : null)) return;
   firstSession.stop();
   finishedRun = null;
   runCommendations = [];
@@ -891,11 +889,23 @@ function startPractice(encounter: Encounter) {
   closeDialog();
   activeDaily = null;
   dailyResult = null;
-  game.startPractice(encounter);
+  game.startPractice(encounter, mods, discovered);
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
+}
+function openPracticeBuild(encounter: Encounter, parent = 'practice-setup') {
+  if (!canPractice(encounter, encounters)) return;
+  practiceTarget = encounter;
+  practiceEditorParent = parent;
+  if (parent !== 'practice-setup' && game.practice?.build)
+    practiceDrafts[encounter.kind] = [...game.practice.build];
+  showDialog('practice-build');
+}
+function backFromPracticeBuild() {
+  showDialog(practiceEditorParent);
+  document.querySelector<HTMLButtonElement>('#practice-edit, #practice-workshop')?.focus();
 }
 function startRunTest(save: Checkpoint) {
   firstSession.stop();
@@ -1238,8 +1248,8 @@ function showDialog(kind: string) {
     (kind === 'upgrade' && game.offers.length === 1) ||
     (kind === 'reforge' && game.reforge.offers.length === 1);
   modal.classList.toggle('single-upgrade', singleUpgrade);
-  modal.classList.toggle('practice-dialog', kind === 'practice');
-  modal.classList.toggle('workshop-dialog', kind === 'workshop');
+  modal.classList.toggle('practice-dialog', kind === 'practice' || kind === 'practice-setup');
+  modal.classList.toggle('workshop-dialog', kind === 'workshop' || kind === 'practice-build');
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle(
@@ -1438,7 +1448,7 @@ function showDialog(kind: string) {
     $('back').onclick = resume;
   } else if (kind === 'practice') {
     content.innerHTML =
-      '<h2 id="dialog-title">Practice.</h2><p class="practice-note">Full health. Preset gun.</p><div class="practice-list">' +
+      '<h2 id="dialog-title">Practice.</h2><div class="practice-list">' +
       encounters
         .map(
           (record) =>
@@ -1453,10 +1463,55 @@ function showDialog(kind: string) {
     content.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((button) => {
       button.onclick = () => {
         const encounter = encounters.find((record) => record.kind === button.dataset.boss);
-        if (encounter) startPractice(encounter);
+        if (encounter) {
+          practiceTarget = encounter;
+          showDialog('practice-setup');
+        }
       };
     });
     $('practice-back').onclick = backFromPractice;
+  } else if (kind === 'practice-setup' && practiceTarget) {
+    const encounter = practiceTarget;
+    const boss = PRACTICE_BOSSES[encounter.kind];
+    content.innerHTML =
+      '<p class="eyebrow">PRACTICE</p><h2 id="dialog-title">' +
+      boss.name +
+      '</h2><p class="practice-note">Full health · Up to ' +
+      boss.stage +
+      ' upgrades</p><div class="practice-list">' +
+      '<button id="practice-preset" class="practice-fight"><span>Preset</span><span aria-hidden="true">↗</span></button>' +
+      '<button id="practice-workshop" class="practice-fight"><span>Workshop build</span><span aria-hidden="true">↗</span></button>' +
+      '</div><div class="actions"><button id="practice-back" class="quiet">Back</button></div>';
+    $('practice-preset').onclick = () => startPractice(encounter);
+    $('practice-workshop').onclick = () => openPracticeBuild(encounter);
+    $('practice-back').onclick = () => {
+      showDialog('practice');
+      content.querySelector<HTMLButtonElement>('[data-boss="' + encounter.kind + '"]')?.focus();
+    };
+  } else if (kind === 'practice-build' && practiceTarget) {
+    const encounter = practiceTarget;
+    discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+    workshopMenu(
+      content,
+      discovered,
+      practiceBuild(encounter.kind, practiceDrafts[encounter.kind] ?? workshopMods, discovered),
+      false,
+      (mods) => {
+        practiceDrafts[encounter.kind] = [...mods];
+        startPractice(encounter, mods);
+      },
+      backFromPracticeBuild,
+      undefined,
+      {
+        title: 'Practice build.',
+        note: PRACTICE_BOSSES[encounter.kind].name + ' · Collected upgrades only.',
+        limit: PRACTICE_BOSSES[encounter.kind].stage,
+        applyLabel: 'Start fight ↗',
+        change: (mods) => {
+          practiceDrafts[encounter.kind] = mods;
+        },
+      },
+    );
   } else if (kind === 'reforge') {
     content.innerHTML =
       '<p class="eyebrow">' +
@@ -1624,11 +1679,17 @@ function showDialog(kind: string) {
       (win ? 'Fight cleared.' : 'Try again.') +
       '</h2><p class="result-line">' +
       formatTime(game.elapsed) +
-      '</p><div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button><button id="choose-fight" class="quiet"' +
+      '</p><div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button>' +
+      (canPractice(game.practice, encounters)
+        ? '<button id="practice-edit" class="quiet">Edit build</button>'
+        : '') +
+      '<button id="choose-fight" class="quiet"' +
       (encounters.length ? '' : ' hidden') +
       '>Choose fight</button><button id="menu" class="quiet">Menu</button></div>';
     $('retry').onclick = () => start(undefined, true);
     $('choose-fight').onclick = () => showDialog('practice');
+    const edit = document.getElementById('practice-edit');
+    if (edit) edit.onclick = () => openPracticeBuild(game.practice!, 'result');
     $('menu').onclick = menu;
   } else if (kind === 'result') {
     const win = game.mode === 'won';
@@ -1806,7 +1867,11 @@ function showDialog(kind: string) {
           ? '<button id="workshop-pause-reset" class="quiet">Reset warm-up</button>'
           : '<button id="workshop-pause-build" class="quiet">Build</button><button id="workshop-pause-reset" class="quiet">Reset room</button>'
         : paused && game.practice
-          ? '<button id="retry" class="quiet">Retry</button><button id="choose-fight" class="quiet"' +
+          ? '<button id="retry" class="quiet">Retry</button>' +
+            (canPractice(game.practice, encounters)
+              ? '<button id="practice-edit" class="quiet">Edit build</button>'
+              : '') +
+            '<button id="choose-fight" class="quiet"' +
             (encounters.length ? '' : ' hidden') +
             '>Choose fight</button>'
           : paused && game.testRun
@@ -1874,6 +1939,8 @@ function showDialog(kind: string) {
     if (paused && (game.practice || game.testRun)) {
       $('retry').onclick = () => start(undefined, true);
       if (game.practice) $('choose-fight').onclick = () => showDialog('practice');
+      const edit = document.getElementById('practice-edit');
+      if (edit) edit.onclick = () => openPracticeBuild(game.practice!, 'pause');
     }
     if (paused) {
       $('menu').onclick = menu;
@@ -1907,8 +1974,9 @@ function showDialog(kind: string) {
     $('back').focus({ preventScroll: true });
     modal.scrollTop = 0;
   } else if (['controls', 'progress', 'credits', 'issue'].includes(kind)) $('back').focus();
-  if (kind === 'upgrade' || kind === 'reforge' || kind === 'practice' || kind === 'result')
+  if (['upgrade', 'reforge', 'practice', 'practice-setup', 'result'].includes(kind))
     content.querySelector<HTMLButtonElement>('button')?.focus();
+  if (kind === 'practice-build') $('workshop-apply').focus({ preventScroll: true });
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (kind === 'replay') $('replay-play').focus();
   if (kind === 'logbook')
@@ -2178,6 +2246,14 @@ function cancelDialog() {
   }
   if (dialogKind === 'practice') {
     backFromPractice();
+    return;
+  }
+  if (dialogKind === 'practice-setup') {
+    $('practice-back').click();
+    return;
+  }
+  if (dialogKind === 'practice-build') {
+    backFromPracticeBuild();
     return;
   }
   if (game.mode === 'upgrade' || game.mode === 'dead' || game.mode === 'won') return;

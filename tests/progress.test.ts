@@ -102,6 +102,28 @@ test('complete backup round-trips every progress category into a fresh browser',
   assert.deepEqual(g.mods, cp.mods);
 });
 
+test('Annex discoveries and earned Switchboard practice survive backup restore and undo', async () => {
+  const { store } = setup();
+  await populated(store);
+  await store.write(VICTORIES_KEY, [{ kind: 'switchboard', seed: 'earned-annex' }]);
+  const backup = parseProgressBackup(store.backup('3.0.3'));
+  assert.equal((backup.values[LOGBOOK_KEY] as any).annex, true);
+  const target = setup();
+  const before = target.store.snapshot();
+  assert(await target.store.restore(backup));
+  assert.deepEqual(target.store.snapshot(), backup.values);
+  assert.deepEqual(new ProgressStore(() => target.disk).read(VICTORIES_KEY), [
+    { kind: 'switchboard', seed: 'earned-annex' },
+  ]);
+  for (const invalid of [false, 'true', 1, null, {}]) {
+    const malformed = structuredClone(backup.values);
+    (malformed[LOGBOOK_KEY] as any).annex = invalid;
+    assert.equal(validateProgress(malformed), null);
+  }
+  assert(await target.store.undo());
+  assert.deepEqual(target.store.snapshot(), before);
+});
+
 test('saving Daily records preserves archived rulesets without undoing the current record limit', () => {
   const records: Record<string, number> = { 'RF-D78-2026-09-19': 1234 };
   const old: Record<string, number> = { 'RF-D78-2026-09-18': 1000, 'RF-D77-2026-09-18': 2000 };

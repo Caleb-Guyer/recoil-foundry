@@ -4,7 +4,7 @@ import { switchboardLevel } from '../src/switchboard-layout.ts';
 import { Game } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
 import { getLevel } from '../src/levels.ts';
-import { getGun, loadCheckpoint } from '../src/rules.ts';
+import { getGun, loadCheckpoint, MODS, availableMods, validBuild } from '../src/rules.ts';
 import type { Checkpoint } from '../src/rules.ts';
 import { dailyForDate } from '../src/daily.ts';
 import {
@@ -13,6 +13,8 @@ import {
   VICTORIES_KEY,
   practiceCheckpoint,
   testEncounterFromUrl,
+  canPractice,
+  practiceBuild,
 } from '../src/practice.ts';
 import type { Encounter, PracticeBoss } from '../src/practice.ts';
 
@@ -38,6 +40,111 @@ function record(kind: PracticeBoss, mirrored = false): Encounter {
   }
   assert.fail('No fixture for ' + kind);
 }
+
+test('custom practice requires the exact earned victory; test access does not become an unlock', () => {
+  const earned = record('loader'),
+    unseen = record('kiln');
+  assert(canPractice(earned, [earned]));
+  assert(!canPractice(unseen, [earned]));
+  assert(!canPractice({ ...earned, seed: 'different' }, [earned]));
+  assert(canPractice(unseen, [earned], unseen));
+  assert(!canPractice(unseen, [earned]), 'custom builds use victories without the test exception');
+  assert.deepEqual(loadEncounters([{ ...earned, build: ['magnum'] }]), [earned]);
+});
+
+test('custom practice filters undiscovered, incompatible and dependent upgrades before applying its cap', () => {
+  const all = MODS.map((mod) => mod.id);
+  assert.deepEqual(practiceBuild('loader', ['unknown', 'fold', 'rewire', 'light', 'magnum'], all), [
+    'fold',
+    'rewire',
+    'light',
+  ]);
+  assert.deepEqual(practiceBuild('loader', ['fold', 'rewire', 'light'], ['rewire', 'light']), [
+    'light',
+  ]);
+  assert.deepEqual(
+    practiceBuild(
+      'kiln',
+      ['cutting-torch', 'burst', 'pulse-chamber', 'charge-lens', 'magnum', 'magnum'],
+      all,
+    ),
+    ['cutting-torch', 'burst', 'pulse-chamber', 'magnum'],
+  );
+  assert.deepEqual(practiceBuild('kiln', ['rewire', 'light'], all), ['light']);
+  assert.deepEqual(practiceBuild('kiln', all, []), []);
+});
+
+test('all bosses accept legal custom guns within their normal upgrade budget in both arena orientations', () => {
+  const all = MODS.map((mod) => mod.id),
+    build: string[] = [];
+  while (build.length < 20) build.push(availableMods(build, true)[0].id);
+  for (const kind of Object.keys(PRACTICE_BOSSES) as PracticeBoss[])
+    for (const mirrored of [false, true]) {
+      const g = new Game(),
+        entry = record(kind, mirrored),
+        limit = PRACTICE_BOSSES[kind].stage;
+      assert(g.startPractice(entry, build, all));
+      assert.deepEqual(g.mods, build.slice(0, limit));
+      assert(validBuild(g.mods));
+      assert.deepEqual(g.gun, getGun(g.mods));
+      assert.deepEqual(g.practice?.build, g.mods);
+      assert.notEqual(g.practice?.build, g.mods);
+      assert.equal(g.hp, 100);
+      assert.equal(g.enemies[0].kind, kind);
+      assert.equal(g.level.mirrored, mirrored);
+      assert(!g.workshop.active && !g.testRun);
+      if (kind === 'switchboard') assert.equal(g.region, 'annex');
+    }
+  assert.equal(build.length, 20, 'caller-owned build is not shortened');
+});
+
+test('custom retries preserve the gun, reset the fight and cannot write progress or award discoveries', () => {
+  const all = MODS.map((mod) => mod.id);
+  for (const mods of [[], ['cutting-torch', 'burst', 'light'], ['fold', 'rewire', 'kick']]) {
+    const g = new Game(),
+      writes: unknown[] = [],
+      awards: string[] = [],
+      entry = record('kiln');
+    g.onCheckpoint = (value) => writes.push(structuredClone(value));
+    g.onBossDefeated = (kind) => awards.push(kind);
+    g.onEnemyDefeated = (kind) => awards.push(kind);
+    g.onCommendation = (id) => awards.push(id);
+    g.start('custom-practice-save');
+    const saved = structuredClone(writes[0]) as Checkpoint;
+    g.startPractice(entry, mods, all);
+    step(g, 45);
+    g.fire();
+    g.die();
+    assert.equal(g.mode, 'dead');
+    const previousPlayer = g.player;
+    assert(g.startPractice(g.practice!, g.practice!.build ?? null, all));
+    assert.notEqual(g.player, previousPlayer);
+    assert.deepEqual(g.mods, mods);
+    assert.equal(g.elapsed, 0);
+    assert.equal(g.hp, 100);
+    assert.equal(g.shots.length, 0);
+    assert.equal(g.burstRemaining, 0);
+    assert(g.portals.pair.every((portal) => !portal));
+    g.enemies[0].spawn = 0;
+    g.hitEnemy(g.enemies[0], 999999);
+    step(g, 20);
+    assert.equal(g.mode, 'won');
+    g.save();
+    g.openReward();
+    g.chooseMod('magnum');
+    g.startEscape();
+    g.startOvertime();
+    assert.deepEqual(g.mods, mods);
+    assert.deepEqual(awards, []);
+    assert.deepEqual(writes, [saved]);
+    g.startPractice(entry);
+    assert.equal(g.practice?.build, undefined, 'Preset clears the custom selection');
+    assert.equal(g.mods.length, 7);
+    g.start(saved.seed, saved);
+    assert.equal(g.practice, null);
+    assert.deepEqual(g.mods, saved.mods);
+  }
+});
 
 test('the explicit Turbine test link selects its real boss and never overrides Daily or seeded links', () => {
   const base = 'https://caleb-guyer.github.io/recoil-foundry/';

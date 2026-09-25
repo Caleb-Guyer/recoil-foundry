@@ -2,6 +2,7 @@ import { breakableSolids } from './destruction-layout.ts';
 import { getLevel } from './levels.ts';
 import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
 import { DROPWORKS_LAYOUTS } from './dropworks-layouts.ts';
+import { workshopBuild } from './workshop-build.ts';
 import { bossStage, availableMods, rewardMods, seeded, type Checkpoint } from './rules.ts';
 
 // Encounter-only records cannot prove a win; start a separate victory history.
@@ -22,6 +23,28 @@ export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
 export interface Encounter {
   kind: PracticeBoss;
   seed: string;
+}
+// The loadout belongs to this attempt, never to the persisted victory record.
+export interface PracticeSession extends Encounter {
+  build?: string[];
+}
+
+export function canPractice(
+  encounter: Encounter,
+  victories: readonly Encounter[],
+  test: Encounter | null = null,
+): boolean {
+  return [...victories, ...(test ? [test] : [])].some(
+    (record) => record.kind === encounter.kind && record.seed === encounter.seed,
+  );
+}
+
+export function practiceBuild(
+  kind: PracticeBoss,
+  mods: readonly string[],
+  known: readonly string[],
+): string[] {
+  return workshopBuild(mods, known).slice(0, PRACTICE_BOSSES[kind].stage);
 }
 
 // Explicit playtest links are isolated fights, never earned Practice unlocks.
@@ -97,11 +120,16 @@ export function loadEncounters(value: unknown): Encounter[] {
   return records;
 }
 
-export function practiceCheckpoint(record: Encounter): Checkpoint | null {
+export function practiceCheckpoint(
+  record: Encounter,
+  mods: readonly string[] | null = null,
+  known: readonly string[] = [],
+): Checkpoint | null {
   const encounter = loadEncounters([record])[0];
   if (!encounter) return null;
   const stage = PRACTICE_BOSSES[encounter.kind].stage;
   const save = testCheckpoint(encounter.seed, stage);
+  if (mods !== null) save.mods = practiceBuild(encounter.kind, mods, known);
   return encounter.kind === 'switchboard'
     ? { ...save, version: 6, region: 'annex', annexVersion: 5 }
     : save;
