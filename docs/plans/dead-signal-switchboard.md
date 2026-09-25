@@ -1,6 +1,6 @@
 # Dead Signal: The Switchboard
 
-Implemented 25 September 2026 on `feature/dead-signal`. Transmission Annex now ends in its own boss arena in room 12, then returns to Reclamation with the ordinary reward count. Public Pages and itch.io remain on stable 2.98.1.
+Implemented 25 September 2026 on `feature/dead-signal`, now included in [stable 3.0](../validation/dead-signal-3.0.md). Transmission Annex ends in its own boss arena in room 12, then returns to Reclamation with the ordinary reward count.
 
 ## Play
 

@@ -1,6 +1,6 @@
 # Dead Signal: Annex room variety
 
-Implemented 25 September 2026 on `feature/dead-signal`. The Annex now has six authored combat arrangements plus the Switchboard arena. It still occupies four rooms of the twenty-room campaign. Public Pages and itch.io remain on stable 2.98.1.
+Implemented 25 September 2026 on `feature/dead-signal`, now included in [stable 3.0](../validation/dead-signal-3.0.md). The Annex has six authored combat arrangements plus the Switchboard arena. It occupies four rooms of the twenty-room campaign.
 
 ## Play
 

@@ -1,6 +1,6 @@
 # Dead Signal: Caller
 
-Implemented 25 September 2026 on `feature/dead-signal`. This is the Annex's second enemy, introduced in Cable Well and paired with the Switchman in Receiver Gallery. The stable public release is still 2.98.1.
+Implemented 25 September 2026 on `feature/dead-signal`, now included in [stable 3.0](../validation/dead-signal-3.0.md). This is the Annex's second enemy, introduced in Cable Well and paired with the Switchman in Receiver Gallery.
 
 ## Play
 

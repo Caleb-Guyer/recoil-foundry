@@ -1,6 +1,6 @@
 # Dead Signal: first playable room
 
-Implemented 24 September 2026 on `feature/dead-signal`. This completes the first playable foundation from the weekend plan. It is a one-room development preview, not the full 3.0 update. The public Pages and itch.io releases remain 2.98.1.
+Historical prototype notes from 24 September 2026 on `feature/dead-signal`. This was the one-room foundation from the weekend plan, while public hosts still served 2.98.1. The full update has since [shipped as stable 3.0](../validation/dead-signal-3.0.md).
 
 ## Play
 

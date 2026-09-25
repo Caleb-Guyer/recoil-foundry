@@ -1,6 +1,6 @@
 # Dead Signal balance and release-candidate audit
 
-25 September 2026. Prepared on `feature/dead-signal` for **3.0.0-rc.1**. Public Pages and itch.io remain **2.98.1**.
+25 September 2026. Historical candidate measurements prepared on `feature/dead-signal` for **3.0.0-rc.1**, while the public hosts still served 2.98.1. The subsequent stable 3.0 publication is recorded in [release evidence](../validation/dead-signal-3.0.md); the measurements below retain their original candidate versions and scope.
 
 ## Changes justified by the audit
 
@@ -107,4 +107,4 @@ Reproduce with the development-only [browser harness](../../scripts/dead-signal-
 
 Twenty repeated twenty-second maximal-build runs on the same `Game` instance reset to exactly 13 bodies, no constraints/contact pairs/shots/particles, one enemy and two props. Every sampled world remains finite; peaks stay at 180 shots and 220 particles. [Restart measurements](../validation/dead-signal-rc/restarts.json) record all twenty cycles.
 
-The extracted candidate ZIP starts successfully and shows **3.0.0-rc.1** in About. Its [release notes](../releases/3.0.0-rc.1.md), checksum and promotion/rollback procedure are recorded in [release operations](../release-operations.md). Physical low-end testing and independent human difficulty judgments remain unavailable. Public-host acceptance is a separate promotion step; this branch does not publish to either public host.
+The extracted candidate ZIP started successfully and showed **3.0.0-rc.1** in About. Its [release notes](../releases/3.0.0-rc.1.md), checksum and promotion/rollback procedure are recorded in [release operations](../release-operations.md). Physical low-end testing and independent human difficulty judgments remain unavailable. Public-host checks were subsequently completed during [stable 3.0 publication](../validation/dead-signal-3.0.md).

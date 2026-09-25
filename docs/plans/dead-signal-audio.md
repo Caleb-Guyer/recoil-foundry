@@ -1,6 +1,6 @@
 # Dead Signal: music and machinery
 
-Implemented on `feature/dead-signal`, 25 September 2026. The public 2.98.1 build is unchanged.
+Historical implementation notes from `feature/dead-signal`, 25 September 2026, while the public build was 2.98.1. This work is now included in [stable 3.0](../validation/dead-signal-3.0.md).
 
 ## Listen and play
 

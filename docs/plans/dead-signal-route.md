@@ -1,16 +1,16 @@
 # Dead Signal: playable Annex route
 
-Implemented 25 September 2026 on `feature/dead-signal`. This preview connects the Annex to normal campaigns. The public Pages and itch.io releases remain 2.98.1.
+Implemented 25 September 2026 on `feature/dead-signal`, then published in **3.0.0**. The Annex is connected to normal campaigns on both public hosts. See [publication evidence](../validation/dead-signal-3.0.md).
 
 ## Play
 
-With the local development server running on port 4186:
+Public, isolated test links (existing run progress stays intact):
 
-- [The physical fork after Furnace](http://127.0.0.1:4186/?test=annex-route)
-- [Broadcast Floor](http://127.0.0.1:4186/?test=annex-route&room=broadcast)
-- [Cable Well](http://127.0.0.1:4186/?test=annex-route&room=well)
-- [Receiver Gallery](http://127.0.0.1:4186/?test=annex-route&room=gallery)
-- [Mirrored route](http://127.0.0.1:4186/?test=annex-route&room=broadcast&mirror=1)
+- [The physical fork after Furnace](https://caleb-guyer.github.io/recoil-foundry/?test=annex-route)
+- [Broadcast Floor](https://caleb-guyer.github.io/recoil-foundry/?test=annex-route&room=broadcast)
+- [Cable Well](https://caleb-guyer.github.io/recoil-foundry/?test=annex-route&room=well)
+- [Receiver Gallery](https://caleb-guyer.github.io/recoil-foundry/?test=annex-route&room=gallery)
+- [Mirrored route](https://caleb-guyer.github.io/recoil-foundry/?test=annex-route&room=broadcast&mirror=1)
 - [New alternate arrangements](dead-signal-layouts.md)
 
 The fork preset starts with the Furnace fight already cleared: climb the two steps into **ANNEX**, or walk into **COOLING**. Normal runs require defeating the actual Furnace boss. Daily shows only its seeded destination. These presets use legal modest builds, preserve campaign saves and discoveries, and reset with R. `mirror` changes the Annex rooms, not the preceding Furnace arena.

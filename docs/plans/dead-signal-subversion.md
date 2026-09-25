@@ -1,6 +1,6 @@
 # Dead Signal: Subversion
 
-Implemented on `feature/dead-signal`, 24 September 2026. Development preview based on 2.98.1; stable Pages and itch.io builds are unchanged. This completes the five-upgrade family, not the alternate region or its boss.
+Historical implementation notes from `feature/dead-signal`, 24 September 2026. This milestone completed the five-upgrade family before the alternate region and its boss. All are now included in [stable 3.0](../validation/dead-signal-3.0.md).
 
 ## Play
 

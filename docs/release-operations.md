@@ -4,33 +4,34 @@
 
 The owner authorized publication of Dead Signal 3.0 to both hosts, including the screenshots and announcement. The final package contains the unchanged rc.2 gameplay, stable `3.0.0` version metadata, release notes, updated store copy, and the trailer's **Play now** closing card. The trailer is available as an optional static media file and is not loaded by game startup. Existing checkpoint and Daily rules remain unchanged.
 
-Promotion is in progress: run the final checks, fast-forward `main`, verify Pages CI on that exact commit, then tag/package and replace the itch.io HTML upload. Record public-host evidence here after verification. No YouTube upload or direct recruitment message is included.
+**Published on both hosts.** Commit `50f9c5a514255994fb60d13d620161d4ba90c936` passed [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36161216441) before the immutable `v3.0.0` tag triggered the successful [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36162154559). The verified GitHub ZIP is also itch.io upload `19397514`. Both live About and issue-report panels show `3.0.0`; existing progress, warm-up/reset and isolated reward checks passed. [Publication evidence and checksum](validation/dead-signal-3.0.md) record the exact scope and retained human/hardware limits. The [itch.io announcement](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30), screenshots and trailer link are public. No YouTube upload or direct recruitment messages were sent.
 
 ## Stable release and rollback points
 
-- Stable tag: `v2.98.1`.
-- Previous stable rollback tag: `v2.98.0`.
+- Stable tag: `v3.0.0`.
+- Previous stable rollback tag: `v2.98.1` at `4d579d148840a3078eb968616a6d58e0d41530b5`.
+- Earlier stable tag: `v2.98.0`.
 - Previous verified candidate: `v2.98.0-rc.1` at `ce13cc258e26c13f5504856e76b458a17d3cdb1a`.
 - Earlier rollback tag: `browser-rollback-2.97.0` at `9f5707fa7a6c3f9fab507f48ad026d37da2b8e02`.
 - Deployment: [GitHub Actions](https://github.com/Caleb-Guyer/recoil-foundry/actions/workflows/deploy.yml), tests and build before Pages publication.
 
-## Dead Signal candidate — 25 September 2026
+## Archived candidate evidence — 25 September 2026
 
-The current presentation candidate is **`3.0.0-rc.2`** on `feature/dead-signal`: [notes](releases/3.0.0-rc.2.md), [launch kit](launch/dead-signal/README.md). It adds the optional title-screen update notes, with no gameplay, save or Daily changes. All 1,885 tests pass and the production build succeeds. The local site archive is `.release-assets/recoil-foundry-v3.0.0-rc.2-site.zip`, SHA-256 `35D2391B064BC38119B7E1E98D5FAB9A5551070EDE7C18F7437FF70B84FE1E67`. The launch media are stored in documentation and excluded from the 16-file game ZIP. The earlier rc.1 archive below remains preserved. Neither candidate is published.
+The presentation candidate was **`3.0.0-rc.2`** on `feature/dead-signal`: [notes](releases/3.0.0-rc.2.md), [launch kit](launch/dead-signal/README.md). It added the optional title-screen update notes, with no gameplay, save or Daily changes. All 1,885 tests passed and the production build succeeded. Its preserved local site archive is `.release-assets/recoil-foundry-v3.0.0-rc.2-site.zip`, SHA-256 `35D2391B064BC38119B7E1E98D5FAB9A5551070EDE7C18F7437FF70B84FE1E67`. That 16-file candidate excluded launch media. The stable 3.0 ZIP now also contains the optional trailer. The rc.1/rc.2 archives were never published as releases.
 
-For launch-day copy use `docs/launch/dead-signal/announcement.md`; the teaser and its upload text are explicitly **Coming soon**. Review availability wording before publishing. Promotion and public-host verification remain pending.
+The final `docs/launch/dead-signal/announcement.md` is published, and the trailer/upload copy now say **Play now**. The public verification above supersedes the old candidate promotion checklist.
 
 The rc.2 archive was extracted into its own local preview. Startup, optional update notes/Back/Escape, About's `3.0.0-rc.2` version, and route-test startup/pause were verified there; warning/error logs were empty. The media preview separately completed the 23-second MP4. Its files are not included in the playable ZIP. Both checks were local, not public-host acceptance.
 
-`3.0.0-rc.1` is prepared on **`feature/dead-signal`**, with [release notes](releases/3.0.0-rc.1.md) and [validation evidence](plans/dead-signal-balance.md). It is not tagged, merged to main, published to GitHub Releases, or uploaded to either public host. The existing workflow requires a successful Pages run for the exact main commit before tagged publication; do not bypass that gate to publish a feature-branch candidate.
+`3.0.0-rc.1` was prepared on **`feature/dead-signal`**, with [release notes](releases/3.0.0-rc.1.md) and [validation evidence](plans/dead-signal-balance.md). It was checked locally before promotion as stable 3.0. The existing workflow requires a successful Pages run for the exact main commit before tagged publication; do not bypass that gate.
 
 The local artifact is `.release-assets/recoil-foundry-v3.0.0-rc.1-site.zip`, with `index.html` at the archive root, 16 files, relative asset URLs, and no development harness, source code, dependencies or private files. It was extracted and served locally to verify startup, normal gameplay, death/retry, pause, About/version and issue-report details. No issue was submitted. The final About copy includes the new regional score without the obsolete five-theme count. Browser warning/error logs were empty.
 
 SHA-256: `A7B54CA2438EEACB8A5B0EE8E3D3F61050FACB6F48975C6F33E1013DEEC44860`.
 
-The candidate's matching checksum is also committed in [validation evidence](validation/dead-signal-rc/SHA256SUMS.txt). Rebuilding may change ZIP metadata and therefore the archive hash; always verify the artifact actually distributed. Keep stable `v2.98.1` (`b9de8d4ee52d8ee7d2f34e3d3bb1d1762f0322f7`) as the public reference until promotion. To abandon this local candidate, keep serving the unchanged stable release; no public rollback is necessary. If a later promoted update needs rollback, make a reviewed revert/new version as described below rather than moving tags or rewriting history.
+The candidate's matching checksum is also committed in [validation evidence](validation/dead-signal-rc/SHA256SUMS.txt). Rebuilding may change ZIP metadata and therefore the archive hash; always verify the artifact actually distributed. Retain `v2.98.1` as the previous stable rollback reference. If the update needs rollback, make a reviewed revert/new version as described below rather than moving tags or rewriting history.
 
-Remaining promotion checks: ordinary player feedback on the documented balance limits, Pages CI and deployed version, itch.io upload/iframe version, and both hosts' existing-progress/startup/reward/report smoke checks. There is no scheduled deployment job in this task.
+Completed promotion checks have been removed from the weekend checklist. Independent player feedback and low-end hardware remain disclosed limitations, not fabricated passes. No future deployment job is scheduled.
 
 ## Triage
 
@@ -51,6 +52,6 @@ The API uses GitHub's [workflow-run endpoint](https://docs.github.com/en/rest/ac
 
 ## Roll back without rewriting history
 
-Back up local work and inspect `git status` first. For this single-commit patch, `git revert v2.98.1` restores the previous gameplay with a new commit. If later commits exist, identify the failing change and review its revert rather than blindly reverting a range. Assign a new patch version and Daily ruleset before publishing a rollback; never reuse a published challenge identity. Run tests/build and push `main`; the Pages workflow redeploys the restored source. Verify the public game afterward.
+Back up local work and inspect `git status` first. Identify the failing change and review a focused revert against the previous stable reference; 3.0 spans multiple commits, so do not blindly revert only its version commit or a whole range. Preserve newer checkpoint fields and saved Daily identities. Assign a new patch version and, if Daily behavior changes, a new ruleset; never reuse a published challenge identity. Run tests/build and push `main`; the Pages workflow deploys the corrected source. Verify both public hosts afterward.
 
-Do not force-push, move a published version tag, or overwrite player storage. This patch adds no save migration. If only Pages failed, retry the failed workflow rather than changing game files; the last successful deployment remains the reference.
+Do not force-push, move a published version tag, or overwrite player storage. If only Pages failed, retry the failed workflow rather than changing game files; the last successful deployment remains the reference.

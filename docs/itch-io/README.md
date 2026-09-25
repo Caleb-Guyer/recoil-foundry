@@ -1,6 +1,6 @@
 # itch.io launch
 
-**Published 20 September 2026; patched 24 September 2026:** [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The current build is **2.98.1**, unchanged from the stable GitHub release ZIP. Project ID: `5033600`. This update did not send recruitment messages or post a devlog.
+**Dead Signal 3.0 published 25 September 2026:** [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The current build is **3.0.0**, identical to the verified stable GitHub release ZIP. Project ID: `5033600`. The [launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) is public; no direct recruitment messages were sent.
 
 ## Page
 
@@ -14,13 +14,19 @@
 - Accessibility: configurable controls and interactive tutorial. Session duration: about a half-hour, based on the 20–30 minute successful-run design target, not a measured player average.
 - Description: [ready-to-paste HTML](description.html).
 - Cover: [1260 × 1000](assets/cover.png). Header: [1600 × 450](assets/banner.png).
-- Screenshots: Loading Docks, Furnace Halls, Cooling Works from [the media kit](../release-media.md).
+- Screenshots: Transmission, Recoil climb and Subversion from [the Dead Signal launch kit](../launch/dead-signal/README.md), followed by the existing Loading Docks, Furnace Halls and Cooling Works images.
 - Video: use the actual MP4 link in the description. The trailer field only accepts supported video hosts; it is not a YouTube upload.
 - AI disclosure: Yes, with Code and Text & Dialog selected. The game uses code-drawn art and procedural audio; no image or audio generation model assets are used.
 - Theme: background `#0a1419`, content `#142127`, text `#e9eadc`, links/buttons `#acc3b6`. Simple sans-serif typography, visible screenshots, no additional decorative background.
 - Embed: click to launch fullscreen, with scrollbars off and Loading Docks as the launch background. Screenshots use the sidebar layout; comments are enabled.
 
-The uploaded file is the [2.98.1 stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v2.98.1/recoil-foundry-v2.98.1-site.zip), not the repository or this launch folder. It has `index.html` at its root and uses relative asset URLs. SHA-256: `5840669165e84aa6b66196dd2c3b3ff490a14e593196b52c3a33b4c6de993322`. The replacement used the previous archive filename, `recoil-foundry-v2.98.0-site.zip`, with display name **Recoil Foundry 2.98.1**. Its contents are the verified 2.98.1 artifact.
+The uploaded file is the [3.0.0 stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v3.0.0/recoil-foundry-v3.0.0-site.zip), not the repository or this launch folder. It has root `index.html`, relative assets and 17 files. SHA-256: `14f89d176a9aa06699ca95aecc54646c6344b65a9d9e8c1b5cbb41da2e4f1a39`. The replacement used the previous transport filename, `recoil-foundry-v2.98.0-site.zip`, with display name **Recoil Foundry 3.0 — Dead Signal**. Its bytes are the verified 3.0 artifact.
+
+## Dead Signal 3.0 verification
+
+[Publication evidence](../validation/dead-signal-3.0.md) records successful same-commit Pages/release workflows, the downloaded archive's digest and file inspection, and live checks on both sites. itch.io upload **19397514** is browser playable. The public iframe shows **3.0.0** in About and Report an issue; **Continue daily** and its Room 1 progress remain intact after warm-up jump/fire, pause, reset and return to menu. The published itch-hosted reward test also passed Escape, reroll and selection checks. Browser warning/error logs were empty during these checks.
+
+The public store page was checked after saving: **Dead Signal is here**, 105 upgrades, the 23-second trailer link and the new screenshots are visible. An editor synchronization issue was corrected before the announcement was posted. The launch devlog is marked **Published** and retains spoiler-light copy. These are publication smoke checks, not independent player feedback or new hardware/audio certification. Earlier release evidence below remains historical.
 
 ## Patch 2.98.1 verification
 
