@@ -23,16 +23,16 @@ export class AnnexSystem {
     this.game = game;
   }
   get active() {
-    return !!this.game.level?.annex && !!this.game.testRun?.annex;
+    return !!this.game.level?.annex;
   }
   point(p: Vec) {
     return annexPoint(!!this.game.level?.mirrored, p);
   }
   get junction() {
-    return this.point(ANNEX_JUNCTION);
+    return this.game.level.annexStation?.junction ?? this.point(ANNEX_JUNCTION);
   }
   get port() {
-    return this.point(ANNEX_PORT);
+    return this.game.level.annexStation?.port ?? this.point(ANNEX_PORT);
   }
   clear() {
     this.transmission = null;
@@ -151,7 +151,8 @@ export class AnnexSystem {
     }
     // Patrol the clear bay; Matter resolves props, bodies and ledges normally.
     const canonical = g.level.mirrored ? 2000 - p.x : p.x;
-    const destination = e.attacks % 2 ? 1410 : 1190;
+    const patrol = g.level.annexStation?.patrol ?? [1190, 1410];
+    const destination = patrol[e.attacks % 2];
     const dx = (destination - canonical) * (g.level.mirrored ? -1 : 1);
     Body.setVelocity(e.body, {
       x: e.timer <= 0.55 ? 0 : clamp(dx * 0.025, -1.7, 1.7),

@@ -1,4 +1,5 @@
 import { AREAS } from './areas.ts';
+import { REGION_NAMES } from './regions.ts';
 import { MODS } from './rules.ts';
 import { damageCauseText } from './damage-cause.ts';
 import { canPracticeRunBuild, canReplayRun, reachedRoom, type RunRecap } from './run-history.ts';
@@ -21,7 +22,7 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
     '<dt>Reached</dt><dd>' +
     reachedRoom(run) +
     ' · ' +
-    AREAS[run.area].name +
+    (run.annex ? REGION_NAMES.annex : AREAS[run.area].name) +
     '</dd>' +
     '<dt>Layout</dt><dd>' +
     escapeRecapText(run.roomName) +

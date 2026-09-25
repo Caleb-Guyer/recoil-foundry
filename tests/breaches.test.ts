@@ -74,6 +74,10 @@ function populatedDaily() {
     const g = new Game(),
       challenge = dailyForDate(`2026-09-${String(day).padStart(2, '0')}`)!;
     g.start(challenge.seed);
+    // This fixture skips fighting while finding a passage. A newly seeded
+    // Lockdown or Auditor cannot be resolved by opening the reward directly.
+    g.areaEvents.state = null;
+    g.auditor.state = null;
     for (let stage = 0; stage < 11; stage++) {
       if (g.breaches.placement) return g;
       g.openReward();

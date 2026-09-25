@@ -2,6 +2,8 @@ import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { creditsMarkup } from './credits.ts';
 import { installDialogDismissal } from './dialog-dismissal.ts';
 import { annexTestFromUrl } from './annex-layout.ts';
+import { annexRouteTestFromUrl } from './annex-route.ts';
+import { REGION_NAMES } from './regions.ts';
 import { issueReportMenu } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
@@ -316,6 +318,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  annexRouteTestFromUrl(entryUrl) ??
   annexTestFromUrl(entryUrl) ??
   presentationTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
@@ -418,6 +421,10 @@ function updateTitle() {
     $('play').innerHTML = 'Test upgrade reroll <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.annex)
     $('play').innerHTML = 'Enter the Annex <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.annexRouteTest)
+    $('play').innerHTML =
+      (linkedRunTest.annexRouteTest.fork ? 'Test the route fork' : 'Enter the Annex') +
+      ' <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('DROPWORKS-64-'))
     $('play').innerHTML =
       (linkedRunTest.stage === 17 ? 'Test Dropworks Roof' : 'Test the Dropworks') +
@@ -531,6 +538,10 @@ function updateTitle() {
                 ? 'Spoof equipped. '
                 : '') +
       'R to retry.';
+  if (linkedRunTest?.annexRouteTest)
+    $('title-hint').textContent = linkedRunTest.annexRouteTest.fork
+      ? 'Climb to the Annex. Continue along the floor for Cooling Works.'
+      : 'Three rooms. One new route. R to retry.';
   if (linkedRunTest?.reforgeRoom)
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
   if (linkedRunTest?.shutdown)
@@ -1072,7 +1083,7 @@ game.onChange = () => {
             : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
-    : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${AREAS[game.level.area].name} · ${game.level.name}`;
+    : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${game.level.annex ? REGION_NAMES.annex : AREAS[game.level.area].name} · ${game.level.name}`;
   if (game.testRun?.annex) {
     $('stage').textContent = 'DEAD SIGNAL · TEST';
     $('stage').title = 'Transmission Annex · One-room prototype';

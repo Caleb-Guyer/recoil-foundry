@@ -33,7 +33,7 @@ import { drawRivalShot } from './interceptor-effects.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
-import { drawRouteExits } from './route-art.ts';
+import { drawRouteExits, drawRegionExits } from './route-art.ts';
 import { drawCracks } from './destruction-art.ts';
 import { drawCrane } from './crane-art.ts';
 import { drawKiln } from './kiln-art.ts';
@@ -231,6 +231,7 @@ export class Renderer {
     if (!g.areaEvents.dark) {
       drawDetourDoor(c, g);
       drawRouteExits(c, g);
+      drawRegionExits(c, g);
     }
     this.drawHazards();
     drawFreightLift(c, g);
@@ -1532,7 +1533,7 @@ export class Renderer {
     c.restore();
   }
   drawExit() {
-    if (this.game.canChooseRoute) return;
+    if (this.game.canChooseRoute || this.game.regionChoices.length) return;
     if (this.game.escape) {
       this.drawExtraction();
       return;

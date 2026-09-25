@@ -10,6 +10,7 @@ import { MACHINE_LORE, PLACE_LORE, RECORDS, TOOL_LORE } from './lore-factory.ts'
 import { DISCONNECT_STAGES } from './shutdown-layout.ts';
 import { STORY_KINDS, type StoryKind } from './story-layout.ts';
 import { COMMENDATIONS, type CommendationId } from './commendations.ts';
+import { isAnnexStage, REGION_NAMES } from './regions.ts';
 
 export const LOGBOOK_KEY = 'rf-logbook-v1';
 export const LOGBOOK_SECTIONS = [
@@ -28,6 +29,7 @@ export interface LogbookProgress {
   stories?: StoryKind[];
   disconnects?: number[];
   shutdown?: true;
+  annex?: true;
 }
 const areaIds = Object.keys(AREAS) as AreaId[];
 const enemyIds = Object.keys(ENEMY_NAMES) as EnemyKind[];
@@ -48,6 +50,7 @@ export function loadLogbook(raw: unknown): LogbookProgress {
       ? { disconnects: DISCONNECT_STAGES.filter((s) => value.disconnects!.includes(s)) }
       : {}),
     ...(value.shutdown === true ? { shutdown: true } : {}),
+    ...(value.annex === true ? { annex: true } : {}),
   };
 }
 export function mergeLogbook(a: LogbookProgress, b: LogbookProgress): LogbookProgress {
@@ -59,6 +62,7 @@ export function mergeLogbook(a: LogbookProgress, b: LogbookProgress): LogbookPro
     stories: [...(a.stories ?? []), ...(b.stories ?? [])],
     disconnects: [...(a.disconnects ?? []), ...(b.disconnects ?? [])],
     ...(a.shutdown || b.shutdown ? { shutdown: true } : {}),
+    ...(a.annex || b.annex ? { annex: true } : {}),
   });
 }
 export function migrateLogbook(
@@ -69,13 +73,19 @@ export function migrateLogbook(
 ) {
   const progress = loadLogbook(raw);
   const stages = [
-    checkpoint?.stage,
-    ...history.map((run) => run.stage),
+    checkpoint && isAnnexStage(checkpoint.region, checkpoint.stage, !!checkpoint.overtime)
+      ? 7
+      : checkpoint?.stage,
+    ...history.map((run) => (run.annex ? 7 : run.stage)),
     ...victories.map((victory) => PRACTICE_BOSSES[victory.kind].stage),
   ].filter((stage): stage is number => stage !== undefined);
   return mergeLogbook(progress, {
     version: 1,
     enemies: victories.map((victory) => victory.kind),
+    ...((checkpoint && isAnnexStage(checkpoint.region, checkpoint.stage, !!checkpoint.overtime)) ||
+    history.some((run) => run.annex)
+      ? { annex: true as const }
+      : {}),
     areas: stages.length ? areaIds.slice(0, areaIndex(Math.max(...stages)) + 1) : [],
     escaped: history.some((run) => run.outcome === 'won' && !run.shutdown),
     stories: checkpoint?.story?.recovered ? [checkpoint.story.kind] : [],
@@ -94,7 +104,8 @@ export function recordLogbook(progress: LogbookProgress, game: Game, enemy?: Ene
   return mergeLogbook(progress, {
     version: 1,
     enemies: enemy ? [enemy] : [],
-    areas: [game.level.area],
+    areas: game.level.annex ? [] : [game.level.area],
+    ...(game.level.annex ? { annex: true as const } : {}),
     escaped: game.mode === 'won' && !game.shutdown.complete,
     stories: game.story.state?.recovered ? [game.story.state.kind] : [],
     disconnects: game.shutdown.state?.disabled ?? [],
@@ -153,6 +164,22 @@ export function logbookEntries(
       description: '',
       lore: PLACE_LORE[id],
     })),
+    ...(safe.annex
+      ? [
+          {
+            id: 'region:annex',
+            name: REGION_NAMES.annex,
+            section: 'places' as const,
+            label: 'Site record',
+            description: '',
+            lore: [
+              'Cable survey · annex access',
+              'T. Orr · dispatch',
+              'The cooling line goes straight ahead. The other door is above it, where a maintenance ladder used to be. Nobody has filed a request to replace the ladder.\n\nInside, the racks are warm. Every receiver is waiting for instructions from a floor that no longer appears on our plans. I disconnected one. The others started answering for it.',
+            ] as Lore,
+          },
+        ]
+      : []),
     ...RECORDS.filter(
       (record) =>
         record.unlock === 'always' ||

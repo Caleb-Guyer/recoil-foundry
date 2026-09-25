@@ -192,6 +192,7 @@ export class AreaEventSystem {
       g.overtime ||
       g.detour ||
       g.level?.boss ||
+      g.level?.annex ||
       g.level?.shutdown ||
       g.level?.freight ||
       areaIndex(g.stage) !== s.area

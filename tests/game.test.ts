@@ -765,6 +765,9 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     // Keep this scripted weapon-progression course stable. Story rooms have
     // separate ordinary-input clears in both orientations and traversal tests.
     g.story.state = null;
+    // Preserve this scripted pre-Annex course, including its exit timing and
+    // reward count. The regional fork and new rooms have their own input tests.
+    g.region = null;
     if (overtimeRun)
       g.startTest(overtimeTestFromUrl(new URL('https://example.com/?test=overtime'))!);
     const extendedRewards = rewards && [...rewards];

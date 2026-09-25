@@ -94,6 +94,7 @@ export class MutationSystem {
       g.escape ||
       g.overtime ||
       g.level.boss ||
+      g.level.annex ||
       g.level.freight ||
       g.level.courier ||
       g.level.floodgate ||

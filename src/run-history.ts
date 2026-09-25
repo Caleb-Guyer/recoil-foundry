@@ -17,6 +17,7 @@ export interface RunRecap {
   mode: 'normal' | 'daily';
   stage: number;
   area: AreaId;
+  annex?: true;
   roomName: string;
   overtime: boolean;
   detour: boolean;
@@ -83,6 +84,9 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       mode: raw.mode,
       stage: raw.stage,
       area: raw.area as AreaId,
+      ...(raw.annex === true && raw.stage >= 8 && raw.stage <= 10 && !raw.overtime && !raw.detour
+        ? { annex: true as const }
+        : {}),
       roomName: raw.roomName,
       overtime: raw.overtime,
       detour: raw.detour,
@@ -120,6 +124,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
         mode: dailyFromSeed(game.seed) ? 'daily' : 'normal',
         stage: game.stage,
         area: game.level.area,
+        ...(game.level.annex ? { annex: true as const } : {}),
         roomName: game.level.name,
         overtime: !!game.overtime,
         detour: game.detour,

@@ -90,6 +90,7 @@ export interface Layout {
 }
 export interface Level extends Layout {
   annex?: true;
+  annexStation?: import('./annex-route.ts').AnnexStation;
   shutdown?: true;
   story?: import('./story-layout.ts').StoryKind;
   fabricatorIntro?: boolean;

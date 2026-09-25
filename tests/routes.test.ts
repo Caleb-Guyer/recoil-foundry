@@ -245,6 +245,11 @@ test('Daily fixes a single route per fork, rejects the other route, and preserve
       const seed = dailyForDate('2026-09-' + day)!.seed,
         g = new Game();
       g.start(seed, testCheckpoint(seed, stage - 1));
+      // Daily 80 can replace this Cooling fork with the authored Annex route.
+      if (g.inAnnex) {
+        assert.deepEqual(g.routeChoices, []);
+        continue;
+      }
       const route = dailyRoute(seed, stage);
       seen.add(route);
       assert.deepEqual(g.routeChoices, [route]);

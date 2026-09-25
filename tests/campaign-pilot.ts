@@ -8,6 +8,7 @@ import { CRAWLER } from '../src/wallcrawler.ts';
 import { dodgePilot } from './combat-pilot.ts';
 import { pressurePilot } from './pressure-pilot.ts';
 import { freightPilot } from './freight-pilot.ts';
+import type { RegionChoice } from '../src/regions.ts';
 const { Query } = Matter;
 const tick = (g: Game, n = 1, p: Partial<Input> = {}) => {
   for (let i = 0; i < n; i++)
@@ -27,6 +28,7 @@ export interface CampaignPilotOptions {
   fusion?: string;
   extendedRewards?: string[];
   highRoads?: number[];
+  region?: RegionChoice;
   seconds?: number;
   chooseUpgrade?: (g: Game) => string;
   beforeInput?: (g: Game) => Input | undefined;
@@ -455,7 +457,9 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
         move = threat.pos.x < p.x ? 1 : -1;
       }
     }
-    const takeHighRoad = g.canChooseRoute && highRoads?.includes(g.stage);
+    const takeHighRoad =
+      (g.canChooseRoute && highRoads?.includes(g.stage)) ||
+      (g.regionChoices.length === 2 && options.region === 'annex');
     // Catch landings on either approach step too, not only flight above the
     // upper door. A low arrival must not accidentally select a bonus room.
     if (g.clear && g.canBranch && !takeHighRoad && p.x > 1700 && p.y < 600) takingLowerRoute = true;
@@ -487,12 +491,15 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     if (g.clear && takeHighRoad && p.x > 1600) {
       // Select terrain with normal movement. Precision gets open firing lanes;
       // one shell run takes the aerial Reclamation road to cover mixed routes.
-      if (routeStep === 0 && Math.abs(p.x - 1725) < 22 && g.grounded) routeStep = 1;
+      // The regional entrance follows a boss arena with more approach speed;
+      // launch earlier so the first step is not struck from underneath.
+      const approach = g.regionChoices.length ? 1690 : 1725;
+      if (routeStep === 0 && Math.abs(p.x - approach) < 22 && g.grounded) routeStep = 1;
       if (routeStep === 1 && Math.abs(p.x - 1828) < 22 && Math.abs(p.y - 572) < 8 && g.grounded)
         routeStep = 2;
       const target =
         routeStep === 0
-          ? { x: 1725, y: 722 }
+          ? { x: approach, y: 722 }
           : routeStep === 1
             ? { x: 1828, y: 572 }
             : { x: 1930, y: 442 };

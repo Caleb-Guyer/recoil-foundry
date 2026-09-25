@@ -2,6 +2,7 @@ import type { Game } from './game.ts';
 import type { RouteChoice } from './rules.ts';
 import { DETOUR_DOOR } from './detours.ts';
 import { FREIGHT } from './freight-layout.ts';
+import type { RegionChoice } from './regions.ts';
 
 function routeDoor(
   c: CanvasRenderingContext2D,
@@ -59,4 +60,56 @@ export function drawRouteExits(c: CanvasRenderingContext2D, g: Game) {
   if (!choices.length) return;
   routeDoor(c, DETOUR_DOOR.x, g.level.freight ? FREIGHT.dock : 740, choices[0], g.clear);
   if (choices.length === 2) routeDoor(c, g.branchDoor.x, g.branchDoor.floor, 'high', g.clear);
+}
+
+function regionDoor(
+  c: CanvasRenderingContext2D,
+  x: number,
+  floor: number,
+  region: RegionChoice,
+  clear: boolean,
+) {
+  const annex = region === 'annex';
+  const color = clear ? (annex ? '#e8bb76' : '#9bd9c2') : '#737578';
+  c.save();
+  c.fillStyle = annex ? '#211d2b' : '#1b292b';
+  c.fillRect(x - 36, floor - 111, 72, 111);
+  c.strokeStyle = color;
+  c.lineWidth = 2;
+  c.strokeRect(x - 36, floor - 111, 72, 111);
+  c.fillStyle = color;
+  c.font = 'bold 12px monospace';
+  c.textAlign = 'center';
+  c.fillText(annex ? 'ANNEX' : 'COOLING', x, floor - 127);
+  c.beginPath();
+  if (annex) {
+    for (const r of [11, 19]) c.arc(x, floor - 63, r, -Math.PI * 0.8, -Math.PI * 0.2);
+    c.moveTo(x, floor - 58);
+    c.lineTo(x, floor - 47);
+  } else {
+    for (const dx of [-12, 0, 12]) {
+      c.moveTo(x + dx, floor - 78);
+      c.lineTo(x + dx, floor - 52);
+    }
+  }
+  c.stroke();
+  c.beginPath();
+  if (clear) {
+    c.moveTo(x - 7, floor - 31);
+    c.lineTo(x + 7, floor - 23);
+    c.lineTo(x - 7, floor - 15);
+  } else {
+    c.moveTo(x - 6, floor - 31);
+    c.lineTo(x + 6, floor - 19);
+    c.moveTo(x + 6, floor - 31);
+    c.lineTo(x - 6, floor - 19);
+  }
+  c.stroke();
+  c.restore();
+}
+export function drawRegionExits(c: CanvasRenderingContext2D, g: Game) {
+  const choices = g.regionChoices;
+  if (!choices.length) return;
+  regionDoor(c, DETOUR_DOOR.x, 740, choices[0], g.clear);
+  if (choices.length === 2) regionDoor(c, g.branchDoor.x, g.branchDoor.floor, 'annex', g.clear);
 }

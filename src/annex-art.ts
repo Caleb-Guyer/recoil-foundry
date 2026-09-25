@@ -63,7 +63,8 @@ export function drawAnnex(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   const color = t?.owner.allied ? blue : amber;
   const progress = charging ? clamp(1 - (t!.at - g.time) / TRANSMISSION.tell, 0, 1) : 0;
   const locked = charging && t!.at - g.time <= TRANSMISSION.lock;
-  const cable = [j, { x: j.x, y: 228 }, { x: p.x, y: 228 }, p];
+  const cableY = g.level.annexStation?.cable ?? 228;
+  const cable = [j, { x: j.x, y: cableY }, { x: p.x, y: cableY }, p];
   c.save();
   c.lineWidth = 7;
   c.strokeStyle = '#17151e';
@@ -73,7 +74,7 @@ export function drawAnnex(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   line(c, cable);
   if (charging) {
     // A growing solid trace reads with effects reduced and without relying on a flash.
-    let left = progress * (Math.abs(j.y - 228) + Math.abs(p.x - j.x) + Math.abs(p.y - 228));
+    let left = progress * (Math.abs(j.y - cableY) + Math.abs(p.x - j.x) + Math.abs(p.y - cableY));
     c.lineWidth = 4;
     c.strokeStyle = color;
     for (let i = 1; i < cable.length; i++) {
@@ -102,7 +103,7 @@ export function drawAnnex(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   c.lineWidth = 3;
   line(c, [
     { x: j.x, y: j.y + 17 },
-    { x: j.x, y: 502 },
+    { x: j.x, y: g.level.annexStation?.mount ?? 502 },
   ]);
   c.fillStyle = '#17151e';
   c.fillRect(j.x - 20, j.y - 20, 40, 40);

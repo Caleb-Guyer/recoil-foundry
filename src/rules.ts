@@ -16,6 +16,7 @@ import { WORKSHOP_MODS, WORKSHOP_PARENTS } from './workshop-upgrades.ts';
 import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
 import { SUBVERSION_MODS, SUBVERSION_PARENTS, isSubversion } from './subversion-rules.ts';
 import { isLegacyDaily } from './daily.ts';
+import { dailyRegion, isAnnexStage, validRegion, type RegionDecision } from './regions.ts';
 export type Vec = { x: number; y: number };
 export const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -1044,6 +1045,8 @@ export interface RewardCheckpoint {
 export interface Checkpoint {
   // Isolated development preset; never written by Game.save().
   annex?: import('./annex-layout.ts').AnnexPreview;
+  annexRouteTest?: { mirror: boolean; fork: boolean };
+  region?: RegionDecision;
   auditor?: import('./auditor-layout.ts').AuditorSave;
   cleanBoss?: boolean;
   shutdown?: import('./shutdown-layout.ts').ShutdownSave;
@@ -1121,7 +1124,12 @@ function validRewardCheckpoint(d: Checkpoint) {
         d.detours?.includes(areaIndex(d.stage))))
   )
     return false;
-  if (!r.auditor && !d.detour && isRouteStage(d.stage + 1)) {
+  if (
+    !r.auditor &&
+    !d.detour &&
+    !isAnnexStage(d.region ?? dailyRegion(d.seed), d.stage, !!d.overtime) &&
+    isRouteStage(d.stage + 1)
+  ) {
     if (
       (r.enteringRoute !== 'low' && r.enteringRoute !== 'high') ||
       (daily && r.enteringRoute !== dailyRoute(d.seed, d.stage + 1))
@@ -1325,6 +1333,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   if (
     !valid ||
     !validRewardCheckpoint(d) ||
+    !validRegion(d) ||
     !validReforge(d) ||
     !validStory(d) ||
     !validShutdown(d) ||

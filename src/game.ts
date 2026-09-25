@@ -147,6 +147,8 @@ import { recordShotTrace } from './shot-trails.ts';
 import { FactionSystem } from './factions.ts';
 import { AnnexSystem } from './annex.ts';
 import { annexLevel } from './annex-layout.ts';
+import { annexRouteLevel } from './annex-route.ts';
+import { dailyRegion, isAnnexStage, type RegionChoice, type RegionDecision } from './regions.ts';
 import { SpoofSystem, primaryGunShot } from './spoof.ts';
 import type { ShotTrace } from './shot-trails.ts';
 import {
@@ -377,12 +379,37 @@ export class Game {
   enteringDetour = false;
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
+  region: RegionDecision | null = null;
+  get inAnnex() {
+    return (
+      !this.practice &&
+      !this.workshop.active &&
+      !this.detour &&
+      !this.escape &&
+      isAnnexStage(this.region, this.stage, !!this.overtime)
+    );
+  }
+  get regionChoices(): RegionChoice[] {
+    if (
+      !this.region ||
+      this.stage !== 7 ||
+      this.practice ||
+      this.workshop.active ||
+      this.overtime ||
+      this.detour ||
+      this.escape
+    )
+      return [];
+    const daily = dailyFromSeed(this.seed);
+    return daily ? [dailyRegion(this.seed)!].filter(Boolean) : ['cooling', 'annex'];
+  }
   get canChooseRoute() {
     return (
       !this.workshop.active &&
       !this.practice &&
       !this.escape &&
       !this.detour &&
+      !this.inAnnex &&
       isRouteStage(this.stage + 1)
     );
   }
@@ -401,6 +428,7 @@ export class Game {
       !this.overtime &&
       !this.escape &&
       !this.detour &&
+      !this.inAnnex &&
       isDetourStage(this.stage) &&
       !this.detours.includes(areaIndex(this.stage))
     );
@@ -423,7 +451,10 @@ export class Game {
     );
   }
   get canBranch() {
-    return !this.shutdown.chamber && (this.canDetour || this.routeChoices.length === 2);
+    return (
+      !this.shutdown.chamber &&
+      (this.canDetour || this.routeChoices.length === 2 || this.regionChoices.length === 2)
+    );
   }
   get branchDoor() {
     return {
@@ -593,8 +624,16 @@ export class Game {
     this.missedUpgrades = save?.missedUpgrades ?? 0;
     this.detour = !practice && save?.detour === true;
     this.detours = !practice ? [...(save?.detours ?? [])] : [];
+    this.region =
+      save?.region ??
+      dailyRegion(this.seed) ??
+      (!save && !dailyFromSeed(this.seed) ? 'pending' : null);
     this.route =
-      !practice && !this.detour && !save?.escape && isRouteStage(this.stage)
+      !practice &&
+      !this.detour &&
+      !save?.escape &&
+      !isAnnexStage(this.region, this.stage, !!this.overtime) &&
+      isRouteStage(this.stage)
         ? dailyFromSeed(this.seed)
           ? dailyRoute(this.seed, this.stage)
           : (save?.route ?? null)
@@ -626,6 +665,7 @@ export class Game {
     this.loadRoom(
       save?.escape === true,
       !!save?.reward ||
+        (!!this.testRun?.annexRouteTest?.fork && this.stage === 7) ||
         !!save?.reforgeRoom ||
         storyInspection ||
         shutdownInspection ||
@@ -635,6 +675,10 @@ export class Game {
           (save.auditor.status !== 'sealed' || !!this.testRun?.auditor)),
     );
     if (save) this.commendations.cleanBoss = save.cleanBoss === true;
+    if (this.testRun?.annexRouteTest?.fork && this.stage === 7) {
+      Body.setPosition(this.player, { x: 1660, y: 720 });
+      Body.setVelocity(this.player, { x: 0, y: 0 });
+    }
     if (storyInspection && this.story.note) {
       Body.setPosition(this.player, { x: this.story.note.x - 35, y: this.story.note.y + 16 });
       Body.setVelocity(this.player, { x: 0, y: 0 });
@@ -697,6 +741,7 @@ export class Game {
       ...(this.detours.length ? { detours: [...this.detours] } : {}),
       ...(this.overtime ? { overtime: { ...this.overtime } } : {}),
       ...(this.route ? { route: this.route } : {}),
+      ...(this.region ? { region: this.region } : {}),
       ...(this.mode === 'upgrade' && !this.rewardTaken
         ? {
             reward: {
@@ -824,10 +869,12 @@ export class Game {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
-    if (!escapeRoom) this.level = this.courier.level(this.level);
-    if (!escapeRoom) this.level = this.floodgate.level(this.level);
-    if (!escapeRoom) this.level = this.story.level(this.level);
-    if (!escapeRoom) this.level = fabricatorLevel(this, this.level);
+    if (this.inAnnex)
+      this.level = annexRouteLevel(this.seed, this.stage, this.testRun?.annexRouteTest?.mirror);
+    if (!escapeRoom && !this.inAnnex) this.level = this.courier.level(this.level);
+    if (!escapeRoom && !this.inAnnex) this.level = this.floodgate.level(this.level);
+    if (!escapeRoom && !this.inAnnex) this.level = this.story.level(this.level);
+    if (!escapeRoom && !this.inAnnex) this.level = fabricatorLevel(this, this.level);
     this.level = this.shutdown.level(this.level);
     if (this.testRun?.auditor && !escapeRoom && !this.detour)
       this.level = auditorTestLevel(this.level);
@@ -1424,7 +1471,8 @@ export class Game {
       this.player.position.x < this.branchDoor.x + 40 &&
       Math.abs(this.player.position.y - (this.branchDoor.floor - 18)) < 8
     ) {
-      if (this.canChooseRoute) this.openReward(false, 'high');
+      if (this.regionChoices.length === 2) this.openReward(false, undefined, 'annex');
+      else if (this.canChooseRoute) this.openReward(false, 'high');
       else this.openReward(true);
       return;
     }
@@ -1433,6 +1481,7 @@ export class Game {
       this.time - this.clearAt > 0.4 &&
       this.player.position.x > 1870 &&
       this.player.position.y > (this.level.freight ? FREIGHT.dock - 70 : 590) &&
+      (!this.regionChoices.length || (this.grounded && this.player.position.y > 690)) &&
       (!this.level.freight || this.player.position.y < FREIGHT.dock)
     ) {
       if (this.stage === STAGES - 1) {
@@ -3045,8 +3094,8 @@ export class Game {
   get combatEnemyCount() {
     return this.enemies.filter((e) => !e.courier).length;
   }
-  openReward(enterDetour = false, route?: RouteChoice) {
-    if (this.annex.active) {
+  openReward(enterDetour = false, route?: RouteChoice, region?: RegionChoice) {
+    if (this.testRun?.annex) {
       if (this.mode === 'playing' && this.clear && !this.combatEnemyCount && !this.waves.pending) {
         this.setMode('won');
         this.onSound('win');
@@ -3078,6 +3127,17 @@ export class Game {
     )
       return;
     if (this.detour && (!this.clear || this.enemies.length || this.waves.pending)) return;
+    if (
+      region &&
+      (!this.regionChoices.includes(region) ||
+        route ||
+        enterDetour ||
+        !this.clear ||
+        this.combatEnemyCount ||
+        this.waves.pending)
+    )
+      return;
+    if (this.regionChoices.length) this.region = region ?? this.regionChoices[0];
     this.enteringDetour = enterDetour;
     this.auditorReward = false;
     this.enteringRoute = this.canChooseRoute ? (route ?? this.routeChoices[0]) : null;
@@ -3117,6 +3177,16 @@ export class Game {
           },
         ),
       );
+    if (
+      this.inAnnex &&
+      this.stage === 8 &&
+      !this.courierReward &&
+      !this.mods.includes('spoof') &&
+      !this.offers.some((m) => m.id === 'spoof')
+    ) {
+      const spoof = availableMods(this.mods).find((m) => m.id === 'spoof');
+      if (spoof) this.offers.splice(Math.max(0, this.offers.length - 1), 1, spoof);
+    }
     if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
     this.rewardTaken = false;
     this.rewardRerolled = false;
@@ -3200,7 +3270,13 @@ export class Game {
     if (this.courierReward) {
       if (this.courier.state) this.courier.state.status = 'claimed';
       this.mode = 'playing';
-      this.openReward(this.enteringDetour, this.enteringRoute ?? undefined);
+      this.openReward(
+        this.enteringDetour,
+        this.enteringRoute ?? undefined,
+        this.regionChoices.length && this.region !== 'pending'
+          ? (this.region ?? undefined)
+          : undefined,
+      );
       this.onSound('upgrade');
       return;
     }
