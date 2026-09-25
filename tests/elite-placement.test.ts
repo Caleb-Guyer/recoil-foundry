@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { annexRouteLevel } from '../src/annex-route.ts';
+import { annexRevision, dailyRegion, isAnnexStage } from '../src/regions.ts';
 import assert from 'node:assert/strict';
 import { BOSS_LAYOUTS, getLevel, LAYOUTS, SPECIAL_LAYOUTS } from '../src/levels.ts';
 import type { Level } from '../src/levels.ts';
@@ -133,7 +135,9 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
     'elite-save-0',
     'elite-save-1',
     'elite-save-2',
-    dailyForDate('2026-09-06')!.seed,
+    ...[80, 81, 82].flatMap((v) =>
+      ['2026-09-01', '2026-09-02', '2026-09-06'].map((day) => dailyForDate(day, v)!.seed),
+    ),
   ]) {
     for (const stage of [4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18]) {
       const checkpoint: Checkpoint = {
@@ -149,8 +153,10 @@ test('ordinary and daily checkpoints reconstruct identical elite bodies without 
       assert(restored);
       const game = new Game();
       game.start(restored.seed, restored);
-      const expected =
-        seed.startsWith('RF-D') && isRouteStage(stage)
+      const revision = annexRevision(seed, restored);
+      const expected = isAnnexStage(dailyRegion(seed), stage, false, revision)
+        ? annexRouteLevel(seed, stage, undefined, revision)
+        : seed.startsWith('RF-D') && isRouteStage(stage)
           ? getRouteLevel(seed, stage, dailyRoute(seed, stage))
           : getLevel(seed, stage);
       assert.deepEqual(game.level, expected);

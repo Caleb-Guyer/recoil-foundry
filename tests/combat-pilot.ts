@@ -1,4 +1,5 @@
 import { CRAWLER, crawlerSpeed } from '../src/wallcrawler.ts';
+import { SIGNAL, signalFireAt } from '../src/switchboard.ts';
 import { ANGLER, anglerSpeed, anglerSurfaceValid, anglerWarningPoints } from '../src/angler.ts';
 import { RIVAL_GRIND, grindPlanValid } from '../src/interceptor-grindshot.ts';
 import type { Enemy, Game, Input } from '../src/game.ts';
@@ -56,6 +57,29 @@ export function dodgePilot(g: Game, e: Enemy, allowFire = true): Partial<Input> 
     });
   }
   for (const enemy of g.enemies) {
+    for (const plan of enemy.switchboard?.plans ?? []) {
+      if (!plan.locked || plan.cut || plan.done) continue;
+      for (let i = plan.sent; i < plan.angles.length; i++) {
+        const a = plan.angles[i],
+          origin = plan.origin;
+        const start = { x: origin.x + Math.cos(a) * 26, y: origin.y + Math.sin(a) * 26 };
+        if (distance(g.lineEnd(origin, start, 5), start) > 0.1) continue;
+        const v = { x: Math.cos(a) * SIGNAL.speed, y: Math.sin(a) * SIGNAL.speed };
+        bolts.push({
+          p: start,
+          v,
+          radius: 5,
+          delay: Math.max(0, signalFireAt(plan, i) - enemy.switchboard!.elapsed) * 60,
+          life: Math.min(
+            SIGNAL.life * 60,
+            distance(
+              start,
+              g.lineEnd(start, { x: start.x + v.x * 200, y: start.y + v.y * 200 }, 5),
+            ) / SIGNAL.speed,
+          ),
+        });
+      }
+    }
     if (enemy.spawn > 0 || enemy.squad || enemy.elite === 'volatile') continue;
     if (enemy.angler && enemy.state === 'windup' && enemy.timer <= ANGLER.lock) {
       const points = anglerWarningPoints(g, enemy),

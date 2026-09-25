@@ -84,7 +84,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       mode: raw.mode,
       stage: raw.stage,
       area: raw.area as AreaId,
-      ...(raw.annex === true && raw.stage >= 8 && raw.stage <= 10 && !raw.overtime && !raw.detour
+      ...(raw.annex === true && raw.stage >= 8 && raw.stage <= 11 && !raw.overtime && !raw.detour
         ? { annex: true as const }
         : {}),
       roomName: raw.roomName,

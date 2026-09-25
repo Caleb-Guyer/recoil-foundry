@@ -11,6 +11,7 @@ export const VOLATILE_TELL = 0.9;
 export const VOLATILE_RADIUS = 135;
 
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
+  switchboard: { w: 86, h: 72, hp: 4200 },
   caller: { w: 34, h: 36, hp: 100 },
   switchman: { w: 34, h: 36, hp: 110 },
   auditor: { w: 42, h: 58, hp: 1800 },
@@ -60,6 +61,7 @@ export function flakAngles(aim: number, enraged: boolean): number[] {
   );
 }
 export const isBoss = (kind: EnemyKind) =>
+  kind === 'switchboard' ||
   kind === 'auditor' ||
   kind === 'sorter' ||
   kind === 'loader' ||

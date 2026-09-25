@@ -29,7 +29,7 @@ Direct room presets continue through the remaining campaign; they are not one-ro
 
 ## Compatibility and scope
 
-Stages 8–10 (rooms 9–11) use the new layouts. **Stage 11 currently rejoins the existing Cooling boss**, then proceeds to Reclamation. [Caller is now implemented](dead-signal-caller.md); Switchboard remains future work. This is three authored layouts, each mirrored; it is not the weekend plan's eventual six distinct arrangements.
+Stages 8–10 (rooms 9–11) use the new layouts. **Stage 11 now contains [The Switchboard](dead-signal-switchboard.md)** for Annex revision 3 and Daily 82, then proceeds to Reclamation. Older saved revisions retain the existing Cooling boss. [Caller is also implemented](dead-signal-caller.md). There are three authored combat layouts plus the boss arena, each mirrored; further distinct combat arrangements remain on the weekend plan.
 
 The region choice is separate from the existing Cooling difficulty band. These rooms currently use its score; the regional arrangement and boss layer remain open. Cooling's optional alternate layouts, story rooms, floodgate and area events do not replace the authored Annex rooms, and this preview does not offer Cooling's optional challenge detour. Existing reward, enemy collision, allied targeting and transmission lifecycle rules apply. Overtime retains its existing layout sequence.
 
@@ -43,4 +43,4 @@ The route tests cover supported spawn hulls, mounted fixtures, both mirrors, ord
 
 Eighteen ordinary-input combat tests cover gun, beam and shell builds across all three rooms and both mirrors, without health, damage, AI or physics overrides. The Broadcast pilot uses its crossing-lane movement policy; the later rooms use the campaign pilot's platform navigation. Two continuous runs climb the real fork, earn upgrades, fight all three rooms and reach the shared boss entrance with their remaining health. These are repeatable simulations, not human balance sign-off.
 
-Browser inspection covers the fork's two signs, the live Annex layout, minimal HUD and pause controls. Full-update balance, Switchboard, extra arrangements, regional music and release packaging remain on the [weekend plan](dead-signal-weekend.md).
+Browser inspection covers the fork's two signs, the live Annex layout, minimal HUD and pause controls. [Switchboard has separate verification notes](dead-signal-switchboard.md). Full-update balance, extra arrangements, regional music and release packaging remain on the [weekend plan](dead-signal-weekend.md).

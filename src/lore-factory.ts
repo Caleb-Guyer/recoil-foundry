@@ -3,6 +3,11 @@ import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 export const MACHINE_LORE = {
+  switchboard: [
+    'Unclosed shift · dispatch record',
+    'T. Orr · dispatch',
+    'Three outside lines, one exchange. Each supervisor was meant to receive the same instruction at the same time. The control carriage moved between panels so a single failed contact could not stop the floor.\n\nThe Annex closed on a Friday. Nobody sent the final acknowledgement.\n\nI found the last order in its buffer: HOLD UNTIL RELIEVED. There was a space for a name. Someone had left it blank.',
+  ],
   caller: [
     'Playback fault · service note',
     'M. Vale · maintenance',

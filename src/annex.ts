@@ -95,14 +95,18 @@ export class AnnexSystem {
     g.onSound('enemy');
   }
   trace(from: Vec, to: Vec, radius = 0) {
+    const boss = this.game.switchboard.trace(from, to, radius);
+    if (boss) return boss;
     const t = this.transmission;
     if (!this.active || !t || t.phase !== 'charging' || t.owner.allied || !this.valid(t))
       return null;
     const p = this.junction,
       h = TRANSMISSION.half + radius;
-    return segmentBox(from, to, { x: p.x - h, y: p.y - h }, { x: p.x + h, y: p.y + h });
+    const hit = segmentBox(from, to, { x: p.x - h, y: p.y - h }, { x: p.x + h, y: p.y + h });
+    return hit ? { ...hit, slot: -1 } : null;
   }
-  interrupt() {
+  interrupt(slot = -1) {
+    if (slot >= 0) return this.game.switchboard.interrupt(slot);
     const g = this.game,
       t = this.transmission;
     if (
@@ -126,6 +130,7 @@ export class AnnexSystem {
     return true;
   }
   blast(pos: Vec, radius: number, cone: (p: Vec) => boolean) {
+    this.game.switchboard.blast(pos, radius, cone);
     if (!this.active || this.transmission?.phase !== 'charging') return;
     if (
       distance(pos, this.junction) <= radius &&

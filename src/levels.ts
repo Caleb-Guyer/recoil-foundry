@@ -27,6 +27,7 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'switchboard'
   | 'switchman'
   | 'caller'
   | 'auditor'

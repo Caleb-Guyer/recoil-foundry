@@ -2,6 +2,7 @@ import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { creditsMarkup } from './credits.ts';
 import { installDialogDismissal } from './dialog-dismissal.ts';
 import { annexTestFromUrl } from './annex-layout.ts';
+import { switchboardTestFromUrl } from './switchboard-layout.ts';
 import { annexRouteTestFromUrl } from './annex-route.ts';
 import { REGION_NAMES } from './regions.ts';
 import { issueReportMenu } from './issue-report.ts';
@@ -318,6 +319,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  switchboardTestFromUrl(entryUrl) ??
   annexRouteTestFromUrl(entryUrl) ??
   annexTestFromUrl(entryUrl) ??
   presentationTestFromUrl(entryUrl) ??
@@ -421,6 +423,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test upgrade reroll <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.annex)
     $('play').innerHTML = 'Enter the Annex <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.switchboardTest)
+    $('play').innerHTML = 'Test the Switchboard <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.annexRouteTest)
     $('play').innerHTML =
       (linkedRunTest.annexRouteTest.fork ? 'Test the route fork' : 'Enter the Annex') +
@@ -541,7 +545,7 @@ function updateTitle() {
   if (linkedRunTest?.annexRouteTest)
     $('title-hint').textContent = linkedRunTest.annexRouteTest.fork
       ? 'Climb to the Annex. Continue along the floor for Cooling Works.'
-      : 'Three rooms. One new route. R to retry.';
+      : 'Four rooms. One new route. R to retry.';
   if (linkedRunTest?.reforgeRoom)
     $('title-hint').textContent = 'One exchange. 64 health. R to restart test.';
   if (linkedRunTest?.shutdown)
@@ -1576,9 +1580,9 @@ function showDialog(kind: string) {
           canvas.focus();
         }),
     );
-  } else if (kind === 'result' && game.testRun?.annex) {
+  } else if (kind === 'result' && (game.testRun?.annex || game.testRun?.switchboardTest)) {
     content.innerHTML =
-      '<p class="eyebrow">DEAD SIGNAL · PROTOTYPE</p>' +
+      '<p class="eyebrow">DEAD SIGNAL · TEST</p>' +
       '<h2 id="dialog-title">' +
       (game.mode === 'won' ? 'Transmission cut.' : 'Try another frequency.') +
       '</h2><p class="result-line">' +

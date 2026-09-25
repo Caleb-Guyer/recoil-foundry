@@ -7,6 +7,7 @@ import { bossStage, availableMods, rewardMods, seeded, type Checkpoint } from '.
 // Encounter-only records cannot prove a win; start a separate victory history.
 export const VICTORIES_KEY = 'rf-boss-victories-v1';
 export const PRACTICE_BOSSES = {
+  switchboard: { name: 'The Switchboard', stage: bossStage(2) },
   loader: { name: 'The Loader', stage: bossStage(0) },
   crane: { name: 'The Crane', stage: bossStage(0) },
   press: { name: 'The Press', stage: bossStage(1) },
@@ -85,6 +86,7 @@ export function loadEncounters(value: unknown): Encounter[] {
     // Existing victories predate alternate bosses. Keep their original arenas
     // available for earned practice even if that seed now selects a new boss.
     if (
+      kind === 'switchboard' ||
       kind === 'condenser' ||
       kind === 'boss' ||
       kind === 'sorter' ||
@@ -99,7 +101,10 @@ export function practiceCheckpoint(record: Encounter): Checkpoint | null {
   const encounter = loadEncounters([record])[0];
   if (!encounter) return null;
   const stage = PRACTICE_BOSSES[encounter.kind].stage;
-  return testCheckpoint(encounter.seed, stage);
+  const save = testCheckpoint(encounter.seed, stage);
+  return encounter.kind === 'switchboard'
+    ? { ...save, version: 6, region: 'annex', annexVersion: 3 }
+    : save;
 }
 export function testCheckpoint(seed: string, stage: number): Checkpoint {
   const build = [

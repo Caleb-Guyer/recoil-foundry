@@ -37,7 +37,7 @@ export interface TorchSegment {
   valve?: PressureVent;
   floodValve?: FloodValve;
   disconnect?: object;
-  annexJunction?: boolean;
+  annexJunction?: number;
   ray?: number;
   muzzle?: boolean;
 }
@@ -149,7 +149,7 @@ export function traceTorch(
       continue;
     }
     if (annexJunction && annexJunction.t <= t && (!hit || annexJunction.t < hit.t)) {
-      segment.annexJunction = true;
+      segment.annexJunction = annexJunction.slot;
       break;
     }
     if (disconnect && disconnect.t <= t && (!hit || disconnect.t < hit.t)) {
@@ -539,7 +539,7 @@ export class TorchSystem {
       if (segment.valve) g.pressure.trigger(segment.valve);
       if (segment.floodValve) g.floodgate.trigger(segment.floodValve);
       if (segment.disconnect) g.shutdown.trigger();
-      if (segment.annexJunction) g.annex.interrupt();
+      if (segment.annexJunction !== undefined) g.annex.interrupt(segment.annexJunction);
       s.pos = { ...segment.b };
       s.prev = { ...segment.a };
       s.vel = {

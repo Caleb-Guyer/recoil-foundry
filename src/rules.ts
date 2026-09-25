@@ -16,7 +16,13 @@ import { WORKSHOP_MODS, WORKSHOP_PARENTS } from './workshop-upgrades.ts';
 import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
 import { SUBVERSION_MODS, SUBVERSION_PARENTS, isSubversion } from './subversion-rules.ts';
 import { isLegacyDaily } from './daily.ts';
-import { dailyRegion, isAnnexStage, validRegion, type RegionDecision } from './regions.ts';
+import {
+  dailyRegion,
+  annexRevision,
+  isAnnexStage,
+  validRegion,
+  type RegionDecision,
+} from './regions.ts';
 export type Vec = { x: number; y: number };
 export const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -645,6 +651,7 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
   kiln: 'cinder',
   condenser: 'crosswind',
   turbine: 'crosswind',
+  switchboard: 'crosswind',
   sorter: 'ramjet',
   boss: 'cinder',
 };
@@ -1047,7 +1054,8 @@ export interface Checkpoint {
   annex?: import('./annex-layout.ts').AnnexPreview;
   annexRouteTest?: { mirror: boolean; fork: boolean };
   region?: RegionDecision;
-  annexVersion?: 1 | 2;
+  annexVersion?: 1 | 2 | 3;
+  switchboardTest?: { mirror: boolean };
   auditor?: import('./auditor-layout.ts').AuditorSave;
   cleanBoss?: boolean;
   shutdown?: import('./shutdown-layout.ts').ShutdownSave;
@@ -1128,7 +1136,12 @@ function validRewardCheckpoint(d: Checkpoint) {
   if (
     !r.auditor &&
     !d.detour &&
-    !isAnnexStage(d.region ?? dailyRegion(d.seed), d.stage, !!d.overtime) &&
+    !isAnnexStage(
+      d.region ?? dailyRegion(d.seed),
+      d.stage,
+      !!d.overtime,
+      annexRevision(d.seed, d),
+    ) &&
     isRouteStage(d.stage + 1)
   ) {
     if (

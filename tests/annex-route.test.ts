@@ -214,7 +214,7 @@ test('both physical exits stay closed in combat; upper chooses Annex and lower C
   }
 });
 
-test('Annex preserves rewards, Continue, and room order, then rejoins the area boss', () => {
+test('Annex preserves rewards, Continue, and room order, then defeats its area boss and rejoins Reclamation', () => {
   let g = realGame();
   for (const stage of [8, 9, 10]) {
     assert.equal(g.stage, stage);
@@ -245,7 +245,7 @@ test('Annex preserves rewards, Continue, and room order, then rejoins the area b
     assert.equal(g.annex.transmission, null);
   }
   assert.equal(g.stage, 11);
-  assert(g.level.boss && !g.annex.active);
+  assert(g.level.boss && g.annex.active && g.enemies[0]?.kind === 'switchboard');
   clear(g);
   g.openReward();
   g.chooseMod(g.offers[0].id);
@@ -345,7 +345,7 @@ for (const mirror of [false, true])
     assert.equal(g.region, 'annex');
     assert.equal(g.stage, 11);
     assert.equal(g.mode, 'playing');
-    assert(g.hp > 0 && g.level.boss && !g.annex.active);
+    assert(g.hp > 0 && g.level.boss && g.annex.active && g.enemies[0]?.kind === 'switchboard');
     assert.equal(visited.size, 3);
     assert(g.mods.includes('spoof'));
     assert.equal(g.mods.length, 11);

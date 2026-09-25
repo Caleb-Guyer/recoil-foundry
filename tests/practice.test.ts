@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { switchboardLevel } from '../src/switchboard-layout.ts';
 import { Game } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
 import { getLevel } from '../src/levels.ts';
@@ -29,7 +30,10 @@ function step(g: Game, n = 1) {
 function record(kind: PracticeBoss, mirrored = false): Encounter {
   for (let i = 0; i < 100; i++) {
     const seed = 'practice-check-' + i,
-      level = getLevel(seed, PRACTICE_BOSSES[kind].stage);
+      level =
+        kind === 'switchboard'
+          ? switchboardLevel(seed)
+          : getLevel(seed, PRACTICE_BOSSES[kind].stage);
     if (level.spawns[0].kind === kind && level.mirrored === mirrored) return { kind, seed };
   }
   assert.fail('No fixture for ' + kind);
@@ -184,7 +188,10 @@ test('every practice boss keeps its discovered arena and gets the right number o
       assert.equal(g.enemies.length, 1);
       assert.equal(g.enemies[0].kind, kind);
       assert.equal(g.enemies[0].hp, g.enemies[0].maxHp);
-      assert.deepEqual(g.level, getLevel(entry.seed, g.stage));
+      assert.deepEqual(
+        g.level,
+        kind === 'switchboard' ? switchboardLevel(entry.seed) : getLevel(entry.seed, g.stage),
+      );
       assert.equal(g.level.mirrored, mirror);
       assert.equal(g.elapsed, 0);
       assert.equal(g.kills, 0);

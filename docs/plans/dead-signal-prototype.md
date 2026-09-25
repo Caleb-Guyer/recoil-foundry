@@ -47,4 +47,4 @@ These are repeatable simulator results, not a claim that the final area is balan
 
 ## Next step
 
-The [Subversion reward family](dead-signal-subversion.md) is complete in the development branch. Next: integrate the alternate regional route and its saves. Caller, the Switchboard boss, remaining layouts, regional audio and regional discovery/lore are still pending in the [weekend plan](dead-signal-weekend.md). Daily 79 now carries the new upgrade pool; route changes will require a further ruleset decision.
+The [Subversion reward family](dead-signal-subversion.md), [regional route and saves](dead-signal-route.md), [Caller](dead-signal-caller.md) and [Switchboard boss](dead-signal-switchboard.md) are now implemented in the development branch, including regional discovery and lore. Daily 82 carries the current encounters while preserving earlier rulesets. Additional layouts, regional audio and release acceptance remain on the [weekend plan](dead-signal-weekend.md).

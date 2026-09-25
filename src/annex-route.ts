@@ -17,7 +17,7 @@ export function annexRouteLevel(
   seed: string,
   stage: number,
   mirror?: boolean,
-  version: 1 | 2 = /^RF-D80-/.test(seed) ? 1 : 2,
+  version: 1 | 2 | 3 = /^RF-D80-/.test(seed) ? 1 : 2,
 ): Level {
   if (stage < 8 || stage > 10) throw new RangeError('Annex combat rooms occupy stages 8–10');
   const mirrored = mirror ?? seeded(seed + ':annex-room:' + stage)() < 0.5;
@@ -141,7 +141,7 @@ export function annexRouteLevel(
             },
           };
   // Keep the original roster byte-for-byte for Daily 80 and in-progress saves.
-  if (version === 2) {
+  if (version >= 2) {
     if (stage === 9)
       room.spawns = room.spawns.map((s) =>
         s.kind === 'switchman' ? spawn('caller', s.x, s.y) : s,
@@ -207,7 +207,7 @@ export function annexRouteTestFromUrl(url: URL): Checkpoint | null {
     elapsed: 0,
     mods: mods.slice(0, stage),
     region: stage === 7 ? 'pending' : 'annex',
-    annexVersion: 2,
+    annexVersion: 3,
     annexRouteTest: { mirror: p.get('mirror') === '1', fork: room === 'fork' },
   };
 }

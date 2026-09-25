@@ -145,11 +145,19 @@ import type { Encounter } from './practice.ts';
 import { ReinforcementSystem } from './reinforcements.ts';
 import { recordShotTrace } from './shot-trails.ts';
 import { FactionSystem } from './factions.ts';
+import { SwitchboardSystem, createSwitchboard, type SwitchboardRig } from './switchboard.ts';
+import { switchboardLevel } from './switchboard-layout.ts';
 import { clearCaller, updateCaller, type CallerRig } from './caller.ts';
 import { AnnexSystem } from './annex.ts';
 import { annexLevel } from './annex-layout.ts';
 import { annexRouteLevel } from './annex-route.ts';
-import { dailyRegion, isAnnexStage, type RegionChoice, type RegionDecision } from './regions.ts';
+import {
+  dailyRegion,
+  annexRevision,
+  isAnnexStage,
+  type RegionChoice,
+  type RegionDecision,
+} from './regions.ts';
 import { SpoofSystem, primaryGunShot } from './spoof.ts';
 import type { ShotTrace } from './shot-trails.ts';
 import {
@@ -175,6 +183,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  switchboard?: SwitchboardRig;
   caller?: CallerRig;
   auditor?: AuditorRig;
   fabricator?: FabricatorRig;
@@ -220,6 +229,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  signalOwner?: number;
   rebooted?: boolean;
   auditorOwner?: number;
   sentryOwner?: number;
@@ -293,6 +303,7 @@ export class Game {
   areaEvents = new AreaEventSystem(this);
   factions = new FactionSystem(this);
   annex = new AnnexSystem(this);
+  switchboard = new SwitchboardSystem(this);
   spoof = new SpoofSystem(this);
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
@@ -382,14 +393,14 @@ export class Game {
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
   region: RegionDecision | null = null;
-  annexVersion: 1 | 2 = 2;
+  annexVersion: 1 | 2 | 3 = 3;
   get inAnnex() {
     return (
       !this.practice &&
       !this.workshop.active &&
       !this.detour &&
       !this.escape &&
-      isAnnexStage(this.region, this.stage, !!this.overtime)
+      isAnnexStage(this.region, this.stage, !!this.overtime, this.annexVersion)
     );
   }
   get regionChoices(): RegionChoice[] {
@@ -538,6 +549,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.switchboard.clear();
       this.annex.clear();
       this.spoof.clear();
       this.fabricators.clear();
@@ -632,14 +644,12 @@ export class Game {
       save?.region ??
       dailyRegion(this.seed) ??
       (!save && !dailyFromSeed(this.seed) ? 'pending' : null);
-    this.annexVersion =
-      save?.annexVersion ??
-      (/^RF-D81-/.test(this.seed) ? 2 : save || /^RF-D80-/.test(this.seed) ? 1 : 2);
+    this.annexVersion = annexRevision(this.seed, save);
     this.route =
       !practice &&
       !this.detour &&
       !save?.escape &&
-      !isAnnexStage(this.region, this.stage, !!this.overtime) &&
+      !isAnnexStage(this.region, this.stage, !!this.overtime, this.annexVersion) &&
       isRouteStage(this.stage)
         ? dailyFromSeed(this.seed)
           ? dailyRoute(this.seed, this.stage)
@@ -765,6 +775,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.switchboard.clear();
     this.annex.clear();
     this.spoof.clear();
     this.auditor.clear();
@@ -879,12 +890,17 @@ export class Game {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
-    if (this.inAnnex)
+    if (this.inAnnex && this.stage < 11)
       this.level = annexRouteLevel(
         this.seed,
         this.stage,
         this.testRun?.annexRouteTest?.mirror,
         this.annexVersion,
+      );
+    if ((this.inAnnex && this.stage === 11) || this.practice?.kind === 'switchboard')
+      this.level = switchboardLevel(
+        this.seed,
+        this.testRun?.switchboardTest?.mirror ?? this.testRun?.annexRouteTest?.mirror,
       );
     if (!escapeRoom && !this.inAnnex) this.level = this.courier.level(this.level);
     if (!escapeRoom && !this.inAnnex) this.level = this.floodgate.level(this.level);
@@ -1178,6 +1194,7 @@ export class Game {
     this.enemies.push(enemy);
     if (kind === 'crane') enemy.crane = createCrane(this, enemy);
     if (kind === 'kiln') enemy.kiln = createKiln();
+    if (kind === 'switchboard') enemy.switchboard = createSwitchboard();
     if (kind === 'turbine') enemy.turbine = createTurbine();
     if (kind === 'interceptor') enemy.interceptor = createInterceptor();
     if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
@@ -1470,7 +1487,7 @@ export class Game {
       this.reforge.arrive();
       this.onChange();
     }
-    if (this.practice && this.clear) {
+    if ((this.practice || this.testRun?.switchboardTest) && this.clear) {
       this.setMode('won');
       return;
     }
@@ -1851,7 +1868,8 @@ export class Game {
     }
     const coordinated = updateSquad(this, e);
     if (!coordinated) {
-      if (e.kind === 'caller') updateCaller(this, e, dt);
+      if (e.kind === 'switchboard') this.switchboard.update(e, dt);
+      else if (e.kind === 'caller') updateCaller(this, e, dt);
       else if (e.kind === 'switchman') this.annex.updateSwitchman(e, dt);
       else if (e.kind === 'sorter' || e.kind === 'borer' || e.kind === 'sifter')
         updateReclamationEnemy(this, e, dt);
@@ -2471,7 +2489,7 @@ export class Game {
           valve?: PressureVent;
           floodValve?: FloodValve;
           disconnect?: true;
-          annexJunction?: true;
+          annexJunction?: number;
           player?: boolean;
           caught?: boolean;
           prop?: Prop;
@@ -2540,7 +2558,7 @@ export class Game {
         const floodValve = s.friendly ? this.floodgate.trace(s.pos, end, s.radius) : undefined;
         const annexJunction = s.friendly ? this.annex.trace(s.pos, end, s.radius) : null;
         if (annexJunction && (!nearest || annexJunction.t < nearest.t))
-          nearest = { ...annexJunction, annexJunction: true };
+          nearest = { ...annexJunction, annexJunction: annexJunction.slot };
         if (floodValve && (!nearest || floodValve.t < nearest.t))
           nearest = { t: floodValve.t, normal: floodValve.normal, floodValve: floodValve.valve };
         if (s.recall?.returning) {
@@ -2652,8 +2670,8 @@ export class Game {
           this.fusions.catch(s);
           s.life = 0;
           s.shell = undefined;
-        } else if (nearest.annexJunction) {
-          this.annex.interrupt();
+        } else if (nearest.annexJunction !== undefined) {
+          this.annex.interrupt(nearest.annexJunction);
           s.life = 0;
           this.demolition.impact(s);
           if (this.mode !== 'playing') return;
@@ -2963,6 +2981,8 @@ export class Game {
     if (e.kind === 'kiln') damage *= e.state === 'recover' ? 1.35 : 0.4;
     if (e.kind === 'sorter') damage *= e.state === 'recover' ? 1.35 : 0.32;
     if (e.kind === 'condenser') damage *= e.state === 'recover' ? 1.3 : 0.25;
+    if (e.kind === 'switchboard')
+      damage *= (e.switchboard?.opening ?? 0) > 0 ? 1.55 : e.state === 'recover' ? 1.25 : 0.6;
     if (e.kind === 'turbine') damage *= e.state === 'recover' ? 1.35 : 0.32;
     if (e.kind === 'interceptor') damage *= e.state === 'recover' ? 1.3 : 0.35;
     if (e.kind === 'boss')
@@ -3011,6 +3031,7 @@ export class Game {
     if (credited && e.eventRole !== 'relay') this.hp = Math.min(100, this.hp + this.gun.heal);
     Composite.remove(this.engine.world, e.body);
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);
+    this.switchboard.clear(e);
     clearCaller(e);
     clearKiln(e);
     clearArsenal(this, e);

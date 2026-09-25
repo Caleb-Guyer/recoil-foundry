@@ -10,7 +10,7 @@ import { MACHINE_LORE, PLACE_LORE, RECORDS, TOOL_LORE } from './lore-factory.ts'
 import { DISCONNECT_STAGES } from './shutdown-layout.ts';
 import { STORY_KINDS, type StoryKind } from './story-layout.ts';
 import { COMMENDATIONS, type CommendationId } from './commendations.ts';
-import { isAnnexStage, REGION_NAMES } from './regions.ts';
+import { annexRevision, isAnnexStage, REGION_NAMES } from './regions.ts';
 
 export const LOGBOOK_KEY = 'rf-logbook-v1';
 export const LOGBOOK_SECTIONS = [
@@ -73,17 +73,32 @@ export function migrateLogbook(
 ) {
   const progress = loadLogbook(raw);
   const stages = [
-    checkpoint && isAnnexStage(checkpoint.region, checkpoint.stage, !!checkpoint.overtime)
+    checkpoint &&
+    isAnnexStage(
+      checkpoint.region,
+      checkpoint.stage,
+      !!checkpoint.overtime,
+      annexRevision(checkpoint.seed, checkpoint),
+    )
       ? 7
       : checkpoint?.stage,
     ...history.map((run) => (run.annex ? 7 : run.stage)),
-    ...victories.map((victory) => PRACTICE_BOSSES[victory.kind].stage),
+    ...victories.map((victory) =>
+      victory.kind === 'switchboard' ? 7 : PRACTICE_BOSSES[victory.kind].stage,
+    ),
   ].filter((stage): stage is number => stage !== undefined);
   return mergeLogbook(progress, {
     version: 1,
     enemies: victories.map((victory) => victory.kind),
-    ...((checkpoint && isAnnexStage(checkpoint.region, checkpoint.stage, !!checkpoint.overtime)) ||
-    history.some((run) => run.annex)
+    ...((checkpoint &&
+      isAnnexStage(
+        checkpoint.region,
+        checkpoint.stage,
+        !!checkpoint.overtime,
+        annexRevision(checkpoint.seed, checkpoint),
+      )) ||
+    history.some((run) => run.annex) ||
+    victories.some((v) => v.kind === 'switchboard')
       ? { annex: true as const }
       : {}),
     areas: stages.length ? areaIds.slice(0, areaIndex(Math.max(...stages)) + 1) : [],
