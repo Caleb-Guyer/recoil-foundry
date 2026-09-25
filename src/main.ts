@@ -60,6 +60,8 @@ import {
   workshopLink,
 } from './workshop-build.ts';
 import { workshopMenu } from './workshop-menu.ts';
+import { BLUEPRINTS_KEY, loadBlueprints } from './blueprints.ts';
+import { blueprintMenu, type BlueprintStore, type MenuBack } from './blueprint-menu.ts';
 import {
   RUN_HISTORY_KEY,
   addRun,
@@ -137,7 +139,7 @@ import {
   FUSION_TEST_BUILDS,
   fusionTestFromUrl,
 } from './practice.ts';
-import { canPractice, practiceBuild, type Encounter, type PracticeBoss } from './practice.ts';
+import { canPractice, type Encounter, type PracticeBoss } from './practice.ts';
 import { PHYSICS_LAYOUTS } from './physics-layouts.ts';
 import {
   DAILY_BESTS_KEY,
@@ -194,6 +196,16 @@ let discovered = discoverBuild(
   storedCheckpoint?.legacyMods,
 );
 let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
+const blueprintStore: BlueprintStore = {
+  read: () => loadBlueprints(read(BLUEPRINTS_KEY)),
+  write: (slots) => {
+    progress.checkExternal();
+    return progress.blocked ? Promise.resolve(false) : progress.write(BLUEPRINTS_KEY, slots);
+  },
+};
+let blueprintSource: RunRecap | null = null;
+let blueprintParent = 'result';
+let buildMenu: MenuBack | null = null;
 let practiceTarget: Encounter | null = null;
 let practiceEditorParent = 'practice-setup';
 const practiceDrafts: Partial<Record<PracticeBoss, string[]>> = {};
@@ -657,6 +669,7 @@ function clearInput(disarm = true) {
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
+  buildMenu = null;
   bindingEditor?.cancel();
   bindingEditor = null;
   replayView?.dispose();
@@ -987,6 +1000,12 @@ function workshopFromRun(run: RunRecap) {
   discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
   if (canPracticeRunBuild(run, discovered)) startWorkshop(run.mods);
 }
+function saveRunBlueprint(run: RunRecap) {
+  if (!canPracticeRunBuild(run, discovered)) return;
+  blueprintSource = run;
+  blueprintParent = dialogKind;
+  showDialog('blueprints');
+}
 function backFromHistory() {
   if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
   else resume();
@@ -1237,6 +1256,8 @@ function modMark(mod: Mod) {
   );
 }
 function showDialog(kind: string) {
+  buildMenu = null;
+  modal.setAttribute('aria-labelledby', 'dialog-title');
   bindingEditor?.cancel();
   bindingEditor = null;
   replayView?.dispose();
@@ -1249,7 +1270,10 @@ function showDialog(kind: string) {
     (kind === 'reforge' && game.reforge.offers.length === 1);
   modal.classList.toggle('single-upgrade', singleUpgrade);
   modal.classList.toggle('practice-dialog', kind === 'practice' || kind === 'practice-setup');
-  modal.classList.toggle('workshop-dialog', kind === 'workshop' || kind === 'practice-build');
+  modal.classList.toggle(
+    'workshop-dialog',
+    ['workshop', 'practice-build', 'blueprints'].includes(kind),
+  );
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle(
@@ -1349,11 +1373,18 @@ function showDialog(kind: string) {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     runHistory = loadRunHistory([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))]);
     content.innerHTML = runHistoryMenu(runHistory, discovered);
-    bindRecapActions(content, runHistory, discovered, replayFinishedRun, workshopFromRun);
+    bindRecapActions(
+      content,
+      runHistory,
+      discovered,
+      replayFinishedRun,
+      workshopFromRun,
+      saveRunBlueprint,
+    );
     $('back').onclick = backFromHistory;
   } else if (kind === 'workshop') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
-    workshopMenu(
+    buildMenu = workshopMenu(
       content,
       discovered,
       game.workshop.active ? game.mods : workshopMods,
@@ -1379,6 +1410,17 @@ function showDialog(kind: string) {
           showDialog('logbook');
         },
       },
+      { blueprints: blueprintStore },
+    );
+  } else if (kind === 'blueprints' && blueprintSource) {
+    buildMenu = blueprintMenu(
+      content,
+      blueprintStore,
+      discovered,
+      blueprintSource.mods,
+      null,
+      () => showDialog(blueprintParent),
+      true,
     );
   } else if (kind === 'layout-test') {
     const descriptions = [
@@ -1491,10 +1533,10 @@ function showDialog(kind: string) {
   } else if (kind === 'practice-build' && practiceTarget) {
     const encounter = practiceTarget;
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
-    workshopMenu(
+    buildMenu = workshopMenu(
       content,
       discovered,
-      practiceBuild(encounter.kind, practiceDrafts[encounter.kind] ?? workshopMods, discovered),
+      practiceDrafts[encounter.kind] ?? workshopMods,
       false,
       (mods) => {
         practiceDrafts[encounter.kind] = [...mods];
@@ -1507,6 +1549,7 @@ function showDialog(kind: string) {
         note: PRACTICE_BOSSES[encounter.kind].name + ' · Collected upgrades only.',
         limit: PRACTICE_BOSSES[encounter.kind].stage,
         applyLabel: 'Start fight ↗',
+        blueprints: blueprintStore,
         change: (mods) => {
           practiceDrafts[encounter.kind] = mods;
         },
@@ -1800,7 +1843,14 @@ function showDialog(kind: string) {
     }
     if (finishedRun) {
       content.insertAdjacentHTML('beforeend', resultRecap(finishedRun, discovered));
-      bindRecapActions(content, [finishedRun], discovered, replayFinishedRun, workshopFromRun);
+      bindRecapActions(
+        content,
+        [finishedRun],
+        discovered,
+        replayFinishedRun,
+        workshopFromRun,
+        saveRunBlueprint,
+      );
       $('recap-history').onclick = () => showDialog('history');
     }
     $('retry').onclick = () => start(undefined, true);
@@ -2202,6 +2252,7 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (buildMenu?.back()) return;
   if (dialogKind === 'update') {
     backFromUpdate();
     return;

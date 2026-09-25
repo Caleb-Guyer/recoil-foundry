@@ -9,6 +9,7 @@ import {
 import { workshopBuild } from './workshop-build.ts';
 import { BRANCH_PARENTS } from './upgrade-branches.ts';
 import { appearanceMenu, type AppearanceOptions } from './appearance-menu.ts';
+import { blueprintMenu, type BlueprintStore, type MenuBack } from './blueprint-menu.ts';
 
 interface BuildOptions {
   title?: string;
@@ -16,6 +17,7 @@ interface BuildOptions {
   limit?: number;
   applyLabel?: string;
   change?: (mods: string[]) => void;
+  blueprints?: BlueprintStore;
 }
 
 export function workshopMenu(
@@ -29,7 +31,8 @@ export function workshopMenu(
   options: BuildOptions = {},
 ) {
   const limit = options.limit ?? MODS.length;
-  let draft = workshopBuild(initial, known).slice(0, limit);
+  let draft = workshopBuild(initial, known);
+  let library: MenuBack | null = null;
   const discovered = MODS.filter((mod) => known.includes(mod.id));
   content.innerHTML =
     '<h2 id="dialog-title"></h2>' +
@@ -45,7 +48,9 @@ export function workshopMenu(
     '<div id="workshop-appearance" hidden></div>' +
     '<div class="workshop-actions"><p id="workshop-status" class="workshop-status" role="status"></p><button id="workshop-apply" class="primary">' +
     (active ? 'Apply & reset' : 'Enter Workshop') +
-    '</button><button id="workshop-clear" class="quiet">Clear build</button><button id="workshop-back" class="quiet">Back</button></div>';
+    '</button>' +
+    (options.blueprints ? '<button id="workshop-blueprints" class="quiet">Builds</button>' : '') +
+    '<button id="workshop-clear" class="quiet">Clear build</button><button id="workshop-back" class="quiet">Back</button></div><div id="workshop-library" class="blueprint-panel" hidden></div>';
   content.querySelector<HTMLElement>('#dialog-title')!.textContent =
     options.title ?? 'The Workshop';
   content.querySelector<HTMLElement>('#workshop-note')!.textContent =
@@ -120,7 +125,12 @@ export function workshopMenu(
           ' / ' +
           limit +
           ' fitted' +
-          (draft.length === limit ? ' · Build full' : '');
+          (draft.length > limit
+            ? ' · Remove ' + (draft.length - limit) + ' to start'
+            : draft.length === limit
+              ? ' · Build full'
+              : '');
+    content.querySelector<HTMLButtonElement>('#workshop-apply')!.disabled = draft.length > limit;
     clear.disabled = draft.length === 0;
     list.querySelectorAll<HTMLButtonElement>('[data-workshop-mod]').forEach((button) => {
       button.onclick = () => {
@@ -149,9 +159,48 @@ export function workshopMenu(
     options.change?.([]);
     content.querySelector<HTMLButtonElement>('#workshop-apply')!.focus();
   };
-  content.querySelector<HTMLButtonElement>('#workshop-apply')!.onclick = () => apply([...draft]);
+  content.querySelector<HTMLButtonElement>('#workshop-apply')!.onclick = () => {
+    if (draft.length <= limit) apply([...draft]);
+  };
   content.querySelector<HTMLButtonElement>('#workshop-back')!.onclick = back;
   render();
+  if (options.blueprints) {
+    const open = content.querySelector<HTMLButtonElement>('#workshop-blueprints')!;
+    const panel = content.querySelector<HTMLElement>('#workshop-library')!;
+    open.onclick = () => {
+      const shown = Array.from(content.children).filter(
+        (element): element is HTMLElement => element instanceof HTMLElement && !element.hidden,
+      );
+      shown.forEach((element) => {
+        element.hidden = true;
+      });
+      panel.hidden = false;
+      const returnToEditor = () => {
+        content.closest('dialog')?.setAttribute('aria-labelledby', 'dialog-title');
+        library = null;
+        panel.hidden = true;
+        shown.forEach((element) => {
+          element.hidden = false;
+        });
+        open.focus({ preventScroll: true });
+      };
+      library = blueprintMenu(
+        panel,
+        options.blueprints!,
+        known,
+        draft,
+        (mods) => {
+          draft = workshopBuild(mods, known);
+          if (search) search.value = '';
+          render();
+          options.change?.([...draft]);
+          returnToEditor();
+          content.querySelector<HTMLElement>('#workshop-build')!.scrollTop = 0;
+        },
+        returnToEditor,
+      );
+    };
+  }
   if (appearance) {
     appearanceMenu(content.querySelector<HTMLElement>('#workshop-appearance')!, appearance);
     content.querySelectorAll<HTMLButtonElement>('[data-workshop-tab]').forEach((button) => {
@@ -159,8 +208,10 @@ export function workshopMenu(
         const build = button.dataset.workshopTab === 'build';
         content.querySelector<HTMLElement>('#workshop-build')!.hidden = !build;
         content.querySelector<HTMLElement>('#workshop-appearance')!.hidden = build;
-        for (const id of ['workshop-status', 'workshop-clear'])
-          content.querySelector<HTMLElement>('#' + id)!.hidden = !build;
+        for (const id of ['workshop-status', 'workshop-clear', 'workshop-blueprints']) {
+          const element = content.querySelector<HTMLElement>('#' + id);
+          if (element) element.hidden = !build;
+        }
         button.focus();
         content
           .querySelectorAll<HTMLButtonElement>('[data-workshop-tab]')
@@ -168,4 +219,5 @@ export function workshopMenu(
       };
     });
   }
+  return { back: () => library?.back() ?? false };
 }

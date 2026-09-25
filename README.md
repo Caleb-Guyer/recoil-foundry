@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Dead Signal — version 3.0.3.** Take the alternate Transmission Annex route after Furnace, interrupt hostile transmissions, and reboot fallen machines with five Subversion upgrades. The latest patch lets you bring discovered Workshop upgrades into unlocked boss Practice and fixes importing Annex progress backups. [Release notes](docs/releases/3.0.3.md) · [Watch the update trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.0.3).
+**Dead Signal — version 3.0.4.** Take the alternate Transmission Annex route after Furnace, interrupt hostile transmissions, and reboot fallen machines with five Subversion upgrades. Save six named build blueprints, share codes with friends, and load collected upgrades into Workshop or unlocked boss Practice. [Release notes](docs/releases/3.0.4.md) · [Watch the update trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.0.4).
 
 ## Controls
 

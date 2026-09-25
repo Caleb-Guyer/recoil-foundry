@@ -53,6 +53,11 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
     '"' +
     (canBuild ? '' : ' disabled') +
     '>Try build in Workshop</button>' +
+    '<button class="quiet" data-recap-save="' +
+    index +
+    '"' +
+    (canBuild ? '' : ' disabled') +
+    '>Save blueprint</button>' +
     '<button class="quiet" data-recap-replay="' +
     index +
     '"' +
@@ -119,6 +124,7 @@ export function bindRecapActions(
   known: readonly string[],
   replay: (run: RunRecap) => void,
   workshop: (run: RunRecap) => void,
+  saveBlueprint?: (run: RunRecap) => void,
 ) {
   content.querySelectorAll<HTMLButtonElement>('[data-recap-replay]').forEach((button) => {
     const run = records[Number(button.dataset.recapReplay)];
@@ -130,6 +136,13 @@ export function bindRecapActions(
     const run = records[Number(button.dataset.recapBuild)];
     button.onclick = () => {
       if (run && canPracticeRunBuild(run, known)) workshop(run);
+    };
+  });
+  content.querySelectorAll<HTMLButtonElement>('[data-recap-save]').forEach((button) => {
+    const run = records[Number(button.dataset.recapSave)];
+    button.disabled = !saveBlueprint || !run || !canPracticeRunBuild(run, known);
+    button.onclick = () => {
+      if (run && canPracticeRunBuild(run, known)) saveBlueprint?.(run);
     };
   });
 }

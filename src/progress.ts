@@ -12,6 +12,7 @@ import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
 import { VICTORIES_KEY, loadEncounters } from './practice.ts';
 import { RUN_HISTORY_KEY, loadRunHistory } from './run-history.ts';
 import { DAILY_BESTS_KEY, dailyForDate, dailyFromSeed } from './daily.ts';
+import { BLUEPRINTS_KEY, loadBlueprints, validBlueprintSlots } from './blueprints.ts';
 
 export const PROGRESS_KEY = 'rf-progress-v1';
 export const CHECKPOINT_KEY = 'rf-checkpoint-v5';
@@ -26,6 +27,7 @@ export const PROGRESS_KEYS = [
   RUN_HISTORY_KEY,
   DAILY_BESTS_KEY,
   WORKSHOP_BUILD_KEY,
+  BLUEPRINTS_KEY,
 ] as const;
 export type ProgressValues = Record<(typeof PROGRESS_KEYS)[number], unknown>;
 export type SaveState = 'saved' | 'saving' | 'unavailable' | 'conflict' | 'unreadable';
@@ -97,6 +99,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [RUN_HISTORY_KEY]: history,
     [DAILY_BESTS_KEY]: dailyRecords(read(DAILY_BESTS_KEY)),
     [WORKSHOP_BUILD_KEY]: workshopBuild(read(WORKSHOP_BUILD_KEY), discovered),
+    [BLUEPRINTS_KEY]: loadBlueprints(read(BLUEPRINTS_KEY)),
   };
 }
 export function validateProgress(raw: unknown): ProgressValues | null {
@@ -105,10 +108,13 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       !object(raw) ||
       !safeTree(raw) ||
       !keysOnly(raw, PROGRESS_KEYS) ||
-      !PROGRESS_KEYS.every((k) => Object.hasOwn(raw, k))
+      !PROGRESS_KEYS.every((k) => k === BLUEPRINTS_KEY || Object.hasOwn(raw, k))
     )
       return null;
     const checkpoint = raw[CHECKPOINT_KEY];
+    // Pre-blueprint profiles and backups migrate to six empty slots.
+    if (Object.hasOwn(raw, BLUEPRINTS_KEY) && !validBlueprintSlots(raw[BLUEPRINTS_KEY]))
+      return null;
     if (checkpoint !== null && !loadCheckpoint(checkpoint)) return null;
     const arrays = [
       [DISCOVERIES_KEY, loadDiscoveries(raw[DISCOVERIES_KEY])],
@@ -213,6 +219,7 @@ export function progressSummary(values: ProgressValues) {
     victories: loadEncounters(values[VICTORIES_KEY]).length,
     commendations: loadCommendations(values[COMMENDATIONS_KEY]).length,
     runs: loadRunHistory(values[RUN_HISTORY_KEY]).length,
+    blueprints: loadBlueprints(values[BLUEPRINTS_KEY]).filter(Boolean).length,
   };
 }
 

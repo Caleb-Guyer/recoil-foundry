@@ -29,6 +29,7 @@ import {
   overtimeTestFromUrl,
 } from '../src/practice.ts';
 import { retrySeed } from '../src/run-seed.ts';
+import { BLUEPRINTS_KEY, loadBlueprints, setBlueprint } from '../src/blueprints.ts';
 
 class MemoryStorage {
   items = new Map<string, string>();
@@ -100,6 +101,57 @@ test('complete backup round-trips every progress category into a fresh browser',
   g.start(cp.seed, cp);
   assert.equal(g.stage, 2);
   assert.deepEqual(g.mods, cp.mods);
+});
+
+test('pre-blueprint profiles and backups migrate without losing any progress', async () => {
+  const { store, disk } = setup();
+  await populated(store);
+  const expected = parseProgressBackup(store.backup('3.0.3')).values;
+  const oldBackup = JSON.parse(store.backup('3.0.3'));
+  delete oldBackup.values[BLUEPRINTS_KEY];
+  assert.deepEqual(parseProgressBackup(JSON.stringify(oldBackup)).values, expected);
+  const oldStored = JSON.parse(disk.getItem(PROGRESS_KEY)!);
+  delete oldStored.values[BLUEPRINTS_KEY];
+  disk.setItem(PROGRESS_KEY, JSON.stringify(oldStored));
+  const migrated = new ProgressStore(() => disk);
+  assert.equal(migrated.state, 'saved');
+  assert.deepEqual(migrated.snapshot(), expected);
+  for (const missing of [CHECKPOINT_KEY, DISCOVERIES_KEY, VICTORIES_KEY]) {
+    const bad = structuredClone(oldBackup.values);
+    delete bad[missing];
+    assert.equal(validateProgress(bad), null);
+  }
+});
+
+test('blueprints round-trip all six slots with locked upgrades without granting discoveries; undo restores them', async () => {
+  const { store } = setup();
+  await populated(store);
+  const before = store.snapshot();
+  let slots = loadBlueprints(null);
+  for (let i = 0; i < 6; i++)
+    slots = setBlueprint(slots, i, {
+      name: 'Blueprint ' + i,
+      mods: ['cutting-torch', 'burst', 'pulse-chamber'],
+    });
+  assert(await store.write(BLUEPRINTS_KEY, slots));
+  const after = store.snapshot();
+  for (const key of Object.keys(before))
+    if (key !== BLUEPRINTS_KEY)
+      assert.deepEqual(after[key as keyof typeof after], before[key as keyof typeof before]);
+  const backup = parseProgressBackup(store.backup('3.0.4'));
+  const target = setup();
+  assert(await target.store.restore(backup));
+  assert.deepEqual(new ProgressStore(() => target.disk).read(BLUEPRINTS_KEY), slots);
+  assert.deepEqual(target.store.read(DISCOVERIES_KEY), before[DISCOVERIES_KEY]);
+  assert(await target.store.undo());
+  assert.deepEqual(target.store.read(BLUEPRINTS_KEY), loadBlueprints(null));
+  for (const bad of [
+    null,
+    [],
+    Array(7).fill(null),
+    [{ name: 'Bad', mods: ['rewire'] }, ...Array(5).fill(null)],
+  ])
+    assert.equal(validateProgress({ ...after, [BLUEPRINTS_KEY]: bad }), null);
 });
 
 test('Annex discoveries and earned Switchboard practice survive backup restore and undo', async () => {

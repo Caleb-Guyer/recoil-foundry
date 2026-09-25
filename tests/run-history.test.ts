@@ -160,6 +160,8 @@ test('recap HTML starts collapsed, escapes stored text, and reveals only the run
   assert.equal((history.match(/<details/g) ?? []).length, 1);
   assert(!history.includes(' open'));
   assert.match(recapBody(recap, 0, []), /data-recap-build="0" disabled/);
+  assert.match(recapBody(recap, 0, []), /data-recap-save="0" disabled/);
+  assert.match(recapBody(recap, 0, recap.mods), /data-recap-save="0">Save blueprint/);
 });
 test('lethal shots retain their source even after the attacker is gone; grace hits cannot change the cause', () => {
   const g = room();

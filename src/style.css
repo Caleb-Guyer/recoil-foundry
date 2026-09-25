@@ -1429,6 +1429,61 @@ dialog.workshop-dialog {
   opacity: 0.4;
   cursor: default;
 }
+.workshop-actions .primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+#blueprint-title {
+  overflow-wrap: anywhere;
+}
+.blueprint-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.blueprint-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  padding: 2px 6px 8px 2px;
+}
+.blueprint-slots .practice-fight {
+  gap: 12px;
+}
+.blueprint-slots .practice-fight > span:first-child {
+  overflow-wrap: anywhere;
+}
+.blueprint-slots .practice-fight > span:last-child {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.blueprint-slots small {
+  margin-right: 12px;
+  color: var(--muted);
+  font-family: monospace;
+}
+.blueprint-slots button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.blueprint-code {
+  min-height: 100px;
+  resize: vertical;
+  overflow-wrap: anywhere;
+  font-family: monospace;
+}
+.blueprint-status {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 12px 0 0;
+  flex-shrink: 0;
+}
+.blueprint-status:empty {
+  display: none;
+}
+.blueprint-scroll .blueprint-note {
+  margin: 16px 0 0;
+}
 @media (max-width: 600px) {
   dialog.workshop-dialog {
     --workshop-padding: 24px;
