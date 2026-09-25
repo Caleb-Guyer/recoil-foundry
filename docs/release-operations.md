@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Practice records 3.0.5 — 25 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `b0b2fe9a326ab8fdb7ec212bdf9df7ff6b73129d` passed all **1,922 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36185757134). Tag `v3.0.5` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36186797071); the verified official ZIP is itch.io upload `19400641`. Both public games show 3.0.5 and preserve existing saves. [Validation and artifact evidence](validation/practice-records-3.0.5.md) records the checksum, record/challenge flows, backup migration/export/undo and test scope.
+
+Practice wins save fastest and fewest-hit records for the exact arena, ordered gun and balance rules. Players can share that fight and target through a challenge code, with earned boss/discovery gates and fixed-build retries. Records remain local, are included in backups, and archive earlier balance rules. Campaign and Daily behavior is unchanged. Publication checks are complete.
+
 ## Build blueprints 3.0.4 — 25 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `6aa155fed508e9db5bd07255293da6033b385ced` passed all **1,912 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36182346336). Tag `v3.0.4` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36183367664); the matching official ZIP is itch.io upload `19400245`. Both public games show 3.0.4 and preserve their existing saves. [Validation and artifact evidence](validation/blueprints-3.0.4.md) records the checksum, blueprint flows, backup migration/round trip/undo, and test scope.
@@ -36,7 +42,8 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.0.4` at `6aa155fed508e9db5bd07255293da6033b385ced`. Rollbacks must preserve the blueprint profile field/decoder; unchanged older builds reject profiles saved by 3.0.4.
+- Stable tag: `v3.0.5` at `b0b2fe9a326ab8fdb7ec212bdf9df7ff6b73129d`. Rollbacks must preserve the Practice records and blueprint profile fields/decoders; unchanged older builds reject profiles saved by 3.0.5.
+- Previous stable reference: `v3.0.4` at `6aa155fed508e9db5bd07255293da6033b385ced`.
 - Previous stable reference: `v3.0.3` at `2fcba8531d8feae036f94e2d253342b18e327993`.
 - Earlier stable reference: `v3.0.2` at `0bc55580cf8878908731d53bd4670129a470ada8`.
 - Previous stable reference: `v3.0.1` at `3a9eee707a23ea91bdd111427e6172e61285c111`.
