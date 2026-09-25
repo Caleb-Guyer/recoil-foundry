@@ -1,0 +1,256 @@
+{
+  "version": "3.0.2",
+  "scope": "Five normal campaign starts; stop at room 4, death, or 240 simulated seconds. Ordinary-input expert pilot, first offered card, no combat overrides. Not human sessions.",
+  "rows": [
+    {
+      "seed": "OPENING-302-1",
+      "outcome": "reached-room-4",
+      "room": 4,
+      "seconds": 45.56666666666536,
+      "health": 100,
+      "kills": 13,
+      "shots": 139,
+      "build": ["airshot", "tripwire", "kick"],
+      "rooms": [
+        {
+          "room": 1,
+          "layout": "terraces",
+          "enteredAt": 0,
+          "health": 100
+        },
+        {
+          "room": 2,
+          "layout": "overpass",
+          "enteredAt": 10.850000000000119,
+          "health": 100
+        },
+        {
+          "room": 3,
+          "layout": "docks-low-road",
+          "enteredAt": 32.783333333332756,
+          "health": 100
+        }
+      ],
+      "rewards": [
+        {
+          "room": 1,
+          "health": 100,
+          "offers": ["airshot", "pierce", "recall"],
+          "chosen": "airshot"
+        },
+        {
+          "room": 2,
+          "health": 100,
+          "offers": ["tripwire", "arc-coil", "kick"],
+          "chosen": "tripwire"
+        },
+        {
+          "room": 3,
+          "health": 100,
+          "offers": ["kick", "landing", "tension"],
+          "chosen": "kick"
+        }
+      ]
+    },
+    {
+      "seed": "OPENING-302-2",
+      "outcome": "reached-room-4",
+      "room": 4,
+      "seconds": 34.91666666666597,
+      "health": 67,
+      "kills": 13,
+      "shots": 76,
+      "build": ["deadeye", "mass-driver", "deadlock"],
+      "rooms": [
+        {
+          "room": 1,
+          "layout": "terraces",
+          "enteredAt": 0,
+          "health": 100
+        },
+        {
+          "room": 2,
+          "layout": "staggered",
+          "enteredAt": 10.400000000000096,
+          "health": 100
+        },
+        {
+          "room": 3,
+          "layout": "docks-low-road",
+          "enteredAt": 19.333333333333517,
+          "health": 98
+        }
+      ],
+      "rewards": [
+        {
+          "room": 1,
+          "health": 100,
+          "offers": ["deadeye", "pierce", "scatter"],
+          "chosen": "deadeye"
+        },
+        {
+          "room": 2,
+          "health": 86,
+          "offers": ["mass-driver", "rivet", "scatter"],
+          "chosen": "mass-driver"
+        },
+        {
+          "room": 3,
+          "health": 55,
+          "offers": ["deadlock", "capacitor", "burst"],
+          "chosen": "deadlock"
+        }
+      ]
+    },
+    {
+      "seed": "OPENING-302-3",
+      "outcome": "reached-room-4",
+      "room": 4,
+      "seconds": 40.23333333333233,
+      "health": 100,
+      "kills": 13,
+      "shots": 126,
+      "build": ["crossfire", "vector", "ricochet"],
+      "rooms": [
+        {
+          "room": 1,
+          "layout": "staggered",
+          "enteredAt": 0,
+          "health": 100
+        },
+        {
+          "room": 2,
+          "layout": "terraces",
+          "enteredAt": 8.38333333333333,
+          "health": 100
+        },
+        {
+          "room": 3,
+          "layout": "docks-low-road",
+          "enteredAt": 26.266666666666456,
+          "health": 100
+        }
+      ],
+      "rewards": [
+        {
+          "room": 1,
+          "health": 100,
+          "offers": ["crossfire", "split", "rapid"],
+          "chosen": "crossfire"
+        },
+        {
+          "room": 2,
+          "health": 100,
+          "offers": ["vector", "backblast", "capacitor"],
+          "chosen": "vector"
+        },
+        {
+          "room": 3,
+          "health": 100,
+          "offers": ["ricochet", "landing", "rapid"],
+          "chosen": "ricochet"
+        }
+      ]
+    },
+    {
+      "seed": "OPENING-302-4",
+      "outcome": "reached-room-4",
+      "room": 4,
+      "seconds": 75.89999999999698,
+      "health": 100,
+      "kills": 13,
+      "shots": 241,
+      "build": ["tether", "crossfire", "convergence"],
+      "rooms": [
+        {
+          "room": 1,
+          "layout": "staggered",
+          "enteredAt": 0,
+          "health": 100
+        },
+        {
+          "room": 2,
+          "layout": "freight-crossing",
+          "enteredAt": 5.733333333333318,
+          "health": 100
+        },
+        {
+          "room": 3,
+          "layout": "docks-low-road",
+          "enteredAt": 55.26666666666481,
+          "health": 88
+        }
+      ],
+      "rewards": [
+        {
+          "room": 1,
+          "health": 100,
+          "offers": ["tether", "cutting-torch", "magnum"],
+          "chosen": "tether"
+        },
+        {
+          "room": 2,
+          "health": 76,
+          "offers": ["crossfire", "snapback", "burst"],
+          "chosen": "crossfire"
+        },
+        {
+          "room": 3,
+          "health": 88,
+          "offers": ["convergence", "split", "magnum"],
+          "chosen": "convergence"
+        }
+      ]
+    },
+    {
+      "seed": "OPENING-302-5",
+      "outcome": "reached-room-4",
+      "room": 4,
+      "seconds": 41.16666666666561,
+      "health": 96,
+      "kills": 13,
+      "shots": 127,
+      "build": ["crossfire", "ricochet", "convergence"],
+      "rooms": [
+        {
+          "room": 1,
+          "layout": "terraces",
+          "enteredAt": 0,
+          "health": 100
+        },
+        {
+          "room": 2,
+          "layout": "overpass",
+          "enteredAt": 11.783333333333498,
+          "health": 100
+        },
+        {
+          "room": 3,
+          "layout": "docks-low-road",
+          "enteredAt": 26.33333333333312,
+          "health": 84
+        }
+      ],
+      "rewards": [
+        {
+          "room": 1,
+          "health": 100,
+          "offers": ["crossfire", "light", "kick"],
+          "chosen": "crossfire"
+        },
+        {
+          "room": 2,
+          "health": 72,
+          "offers": ["ricochet", "bloom", "airshot"],
+          "chosen": "ricochet"
+        },
+        {
+          "room": 3,
+          "health": 84,
+          "offers": ["convergence", "magnum", "capacitor"],
+          "chosen": "convergence"
+        }
+      ]
+    }
+  ]
+}

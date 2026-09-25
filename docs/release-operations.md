@@ -2,6 +2,8 @@
 
 ## Run feedback 3.0.2 — 25 September 2026
 
+The subsequent [opening/replay-flow self-audit](validation/first-session-3.0.2.md) found no new reproducible blocker: 110 focused checks passed, five scripted openings reached room 4 with legal varied rewards, and a fresh-profile browser check confirmed recoil guidance and a new seed after death. Keep 3.0.2 stable; no runtime patch was made. The [player session sheet](playtest-3.0.2.md) remains unfilled because independent human feedback is unavailable.
+
 **Published on Pages and itch.io.** Commit `0bc55580cf8878908731d53bd4670129a470ada8` passed all **1,891 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36171302497), then tag `v3.0.2` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36172630191). The matching ZIP is itch.io upload `19398808`. Both public games show 3.0.2 and preserve existing progress. [Publication evidence](validation/run-feedback-3.0.2.md) records the checksum and result/form checks.
 
 A quiet Feedback action on result screens opens Bug, Difficulty or Suggestion, with editable run details and drafts retained until gameplay resumes or the player returns to the title. The same form is available through Settings/Pause. No report is automatically submitted. Gameplay, checkpoint formats and Daily rules are unchanged; no publication checks remain open.
