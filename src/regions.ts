@@ -1,6 +1,6 @@
 import { seeded, type Checkpoint } from './rules.ts';
 
-export type AnnexVersion = 1 | 2 | 3 | 4 | 5;
+export type AnnexVersion = 1 | 2 | 3 | 4 | 5 | 6;
 export function annexRevision(seed: string, save?: Pick<Checkpoint, 'annexVersion'>): AnnexVersion {
   return (
     save?.annexVersion ??
@@ -14,7 +14,7 @@ export function annexRevision(seed: string, save?: Pick<Checkpoint, 'annexVersio
             ? 2
             : save || /^RF-D80-/.test(seed)
               ? 1
-              : 5)
+              : 6)
   );
 }
 export type RegionChoice = 'cooling' | 'annex';
@@ -50,7 +50,7 @@ export function validRegion(d: Checkpoint) {
     d.annexVersion !== undefined &&
     (d.version !== 6 ||
       !region ||
-      ![1, 2, 3, 4, 5].includes(d.annexVersion) ||
+      ![1, 2, 3, 4, 5, 6].includes(d.annexVersion) ||
       (/^RF-D80-/.test(d.seed) && d.annexVersion !== 1) ||
       (/^RF-D81-/.test(d.seed) && d.annexVersion !== 2) ||
       (/^RF-D82-/.test(d.seed) && d.annexVersion !== 3) ||

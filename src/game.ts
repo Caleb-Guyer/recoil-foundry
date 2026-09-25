@@ -159,6 +159,7 @@ import {
   type RegionDecision,
 } from './regions.ts';
 import { SpoofSystem, primaryGunShot } from './spoof.ts';
+import { isSubversion } from './subversion-rules.ts';
 import type { ShotTrace } from './shot-trails.ts';
 import {
   ESCAPE_WIDTH,
@@ -393,7 +394,7 @@ export class Game {
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
   region: RegionDecision | null = null;
-  annexVersion: import('./regions.ts').AnnexVersion = 5;
+  annexVersion: import('./regions.ts').AnnexVersion = 6;
   get inAnnex() {
     return (
       !this.practice &&
@@ -1513,6 +1514,11 @@ export class Game {
       this.clear &&
       this.time - this.clearAt > 0.4 &&
       this.player.position.x > 1870 &&
+      // At the two-way fork, cross the visible threshold before committing.
+      // Old checkpoints and the one-door Daily retain their existing exit.
+      (this.annexVersion < 6 ||
+        this.regionChoices.length !== 2 ||
+        this.player.position.x > this.branchDoor.x - 24) &&
       this.player.position.y > (this.level.freight ? FREIGHT.dock - 70 : 590) &&
       (!this.regionChoices.length || (this.grounded && this.player.position.y > 690)) &&
       (!this.level.freight || this.player.position.y < FREIGHT.dock)
@@ -3216,6 +3222,21 @@ export class Game {
           },
         ),
       );
+    const annexIntroduction =
+      this.annexVersion >= 6 &&
+      !dailyFromSeed(this.seed) &&
+      !this.overtime &&
+      this.region === 'annex' &&
+      (this.stage === 7 || this.stage === 8);
+    if (annexIntroduction && !this.courierReward && !this.offers.some((m) => isSubversion(m.id))) {
+      const candidates = availableMods(this.mods).filter((m) => isSubversion(m.id));
+      let replacement = this.offers.length - 1;
+      while (replacement >= 0 && isSalvage(this.offers[replacement].id)) replacement--;
+      if (candidates.length && replacement >= 0) {
+        const rng = seeded(this.layoutSeed + ':annex-introduction:' + this.stage);
+        this.offers[replacement] = candidates[Math.floor(rng() * candidates.length)];
+      }
+    }
     if (
       this.inAnnex &&
       this.stage === 8 &&

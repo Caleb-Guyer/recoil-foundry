@@ -6,7 +6,17 @@ import { Game, type Input } from '../src/game.ts';
 import { annexRouteLevel, annexRouteTestFromUrl, ANNEX_ROUTE_ROOMS } from '../src/annex-route.ts';
 import { dailyRegion, type RegionChoice } from '../src/regions.ts';
 import { dailyForDate } from '../src/daily.ts';
-import { getGun, loadCheckpoint, validBuild, type Checkpoint, type Vec } from '../src/rules.ts';
+import {
+  getGun,
+  loadCheckpoint,
+  validBuild,
+  rewardMods,
+  seeded,
+  SALVAGE_BOSSES,
+  type Checkpoint,
+  type Vec,
+} from '../src/rules.ts';
+import { isSubversion } from '../src/subversion-rules.ts';
 import { ENEMY_STATS } from '../src/enemies.ts';
 import { getLevel, type Solid } from '../src/levels.ts';
 import { testCheckpoint } from '../src/practice.ts';
@@ -253,6 +263,110 @@ test('both physical exits stay closed in combat; upper chooses Annex and lower C
     resumed.chooseMod(resumed.offers[0].id);
     assert.equal(resumed.stage, 8);
     assert.equal(resumed.annex.active, choice === 'annex');
+  }
+});
+
+test('new regional forks do not commit Cooling before crossing its visible threshold', () => {
+  for (const x of [1871, 1890, 1900, 1910, 1930]) {
+    const g = new Game();
+    g.startTest(preset());
+    Body.setPosition(g.player, { x, y: 722 });
+    Body.setVelocity(g.player, { x: 0, y: 0 });
+    for (let i = 0; i < 90 && g.mode === 'playing'; i++) g.tick(1 / 60, idle);
+    assert.equal(g.mode, x > 1906 ? 'upgrade' : 'playing', String(x));
+    assert.equal(g.region, x > 1906 ? 'cooling' : 'pending');
+  }
+  const old = preset();
+  old.annexVersion = 5;
+  const g = new Game();
+  g.startTest(old);
+  Body.setPosition(g.player, { x: 1871, y: 722 });
+  for (let i = 0; i < 90 && g.mode === 'playing'; i++) g.tick(1 / 60, idle);
+  assert.equal(g.mode, 'upgrade');
+});
+
+test('entering the new Annex offers Spoof before its first fight, preserving the boss reward and Continue', () => {
+  for (let i = 0; i < 24; i++) {
+    const s = preset();
+    delete s.annexRouteTest;
+    s.seed = `annex-introduction-${i}`;
+    const g = new Game();
+    g.start(s.seed, s);
+    clear(g);
+    // The actual Furnace boss normally supplies this salvage card.
+    g.earnedSalvage = SALVAGE_BOSSES.kiln;
+    g.openReward(false, undefined, 'annex');
+    assert.equal(g.offers.length, 3);
+    assert.equal(new Set(g.offers.map((m) => m.id)).size, 3);
+    assert(g.offers.some((m) => m.id === 'spoof'));
+    assert.equal(g.offers[0].id, SALVAGE_BOSSES.kiln);
+    assert(g.offers.every((m) => validBuild([...g.mods, m.id])));
+    const save = saveOf(g);
+    const resumed = new Game();
+    resumed.start(save.seed, save);
+    assert.equal(resumed.annexVersion, 6);
+    assert.deepEqual(resumed.offers, g.offers);
+    resumed.chooseMod('spoof');
+    assert(resumed.inAnnex && resumed.mods.includes('spoof'));
+    assert.equal(resumed.stage, 8);
+    assert.equal(resumed.mods.length, 8);
+    clear(resumed);
+    resumed.openReward();
+    assert(resumed.offers.some((m) => ['standing-orders', 'cross-talk'].includes(m.id)));
+    assert(!resumed.offers.some((m) => m.id === 'spoof'));
+  }
+});
+
+test('Annex introductions respect both Subversion forks and never offer an owned or locked upgrade', () => {
+  for (const owned of [
+    ['spoof'],
+    ['spoof', 'standing-orders'],
+    ['spoof', 'cross-talk'],
+    ['spoof', 'standing-orders', 'priority-target'],
+    ['spoof', 'cross-talk', 'dead-switch'],
+  ]) {
+    const g = realGame();
+    g.mods = ['magnum', 'light', 'rapid', ...owned];
+    clear(g);
+    g.openReward();
+    assert.equal(g.offers.length, 3);
+    assert(g.offers.every((m) => !owned.includes(m.id) && validBuild([...g.mods, m.id])));
+    if (owned.length < 3) assert(g.offers.some((m) => isSubversion(m.id)));
+    else assert(!g.offers.some((m) => isSubversion(m.id)));
+    const old = g.offers.map((m) => m.id);
+    assert(g.rerollReward());
+    assert(g.offers.every((m) => !old.includes(m.id) && validBuild([...g.mods, m.id])));
+  }
+});
+
+test('declining Subversion remains possible and Cooling/legacy/Daily entrance rewards stay unchanged', () => {
+  const g = realGame('fork');
+  clear(g);
+  g.openReward(false, undefined, 'annex');
+  const other = g.offers.find((m) => !isSubversion(m.id))!;
+  g.chooseMod(other.id);
+  assert(g.inAnnex && !g.mods.includes('spoof'));
+  for (const seed of ['old-annex', 'new-cooling', 'RF-D84-2026-09-16']) {
+    const s = preset();
+    delete s.annexRouteTest;
+    s.seed = seed;
+    if (seed !== 'new-cooling') s.annexVersion = 5;
+    if (seed.startsWith('RF-')) s.region = dailyRegion(seed)!;
+    const run = new Game();
+    run.start(seed, s);
+    clear(run);
+    const expected = rewardMods(
+      run.mods,
+      seed.startsWith('RF-') ? 1 : 3,
+      seeded(run.layoutSeed + ':rewards:7'),
+      { stage: 7, seed },
+    );
+    run.openReward(
+      false,
+      undefined,
+      seed === 'old-annex' ? 'annex' : seed === 'new-cooling' ? 'cooling' : undefined,
+    );
+    assert.deepEqual(run.offers, expected);
   }
 });
 

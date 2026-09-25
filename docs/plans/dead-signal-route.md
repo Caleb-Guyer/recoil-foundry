@@ -23,12 +23,14 @@ Direct room presets continue through the remaining campaign; they are not one-ro
 - **Cable Well:** introduces one Caller without a Switchman among nine machines, a stepped climb through suspended platforms, high firing positions and recoil shortcuts. Every platform route also works with ordinary jumps and no upgrades.
 - **Receiver Gallery:** pairs Caller with Switchman among ten machines, alternating solid cover and raised firing positions, with room to flank or use blue allies.
 - Each room role now has [two authored arrangements](dead-signal-layouts.md), with deterministic mirrored versions. Fixtures, spawn hulls, cover and navigation points mirror together. New campaigns independently select one arrangement per role from the seed.
-- The first Annex room's reward includes Spoof when unowned. It remains one of three optional normal-run cards; Daily keeps one forced card. Owning Spoof never creates a duplicate, and normal rerolls work as before.
+- In 3.0.1, fresh normal runs offer a legal Subversion card at the Annex entrance and after its first room: Spoof if unowned, otherwise an available follow-up. It remains one of three optional cards; boss salvage is preserved and rerolls work normally. Saved revisions 1–5 and Daily retain their previous rewards, including their first-room Spoof rule.
 - Continue restores the selected region, exact room orientation, owned upgrades and pending offers. Choosing a route changes no mandatory room or reward counts.
 - The region is identified correctly in the HUD tooltip, death recap and an earned dispatch Logbook entry. Visiting the Annex does not claim a Cooling discovery.
-- The upper exit has its own short sign and antenna symbol. The lower regional exit requires landing at the door, so passing above it cannot accidentally choose Cooling. No additional combat instructions or HUD meters.
+- The upper exit has its own short sign and antenna symbol. After combat, amber step lights and a small arrow mark its climb. In fresh normal runs, the lower regional exit requires landing inside the visible doorway, so approaching the fork cannot prematurely choose Cooling. No additional combat instructions or HUD meters.
 
 ## Compatibility and scope
+
+3.0.1 assigns Annex revision **6** only to fresh normal runs. Existing checkpoints keep their saved revision and pending reward offers. Daily 84 stays on revision 5, preserving its exact behavior and challenge identity. [Post-launch audit](../validation/dead-signal-3.0.1.md).
 
 Stages 8–10 (rooms 9–11) select from six authored combat arrangements. Revision 4 and Daily 83 introduce Crossed Lines, Broken Ladder and Relay Stacks; earlier revisions retain the original arrangements. **Stage 11 contains [The Switchboard](dead-signal-switchboard.md)** from Annex revision 3 and Daily 82 onward, then proceeds to Reclamation. Earlier saved revisions retain the existing Cooling boss. [Caller is also implemented](dead-signal-caller.md). All six combat arrangements and the boss arena have mirrored versions.
 
@@ -44,4 +46,4 @@ The route tests cover supported spawn hulls, mounted fixtures, both mirrors, ord
 
 Eighteen ordinary-input combat tests cover gun, beam and shell builds across all three rooms and both mirrors, without health, damage, AI or physics overrides. The Broadcast pilot uses its crossing-lane movement policy; the later rooms use the campaign pilot's platform navigation. Two continuous runs climb the real fork, earn upgrades, fight all three rooms and reach the shared boss entrance with their remaining health. These are repeatable simulations, not human balance sign-off.
 
-Browser inspection covers the fork's two signs, the live Annex layout, minimal HUD and pause controls. [Switchboard](dead-signal-switchboard.md) and [layout variety](dead-signal-layouts.md) have separate verification notes. [Regional audio](dead-signal-audio.md) is implemented. Full-update balance and release packaging remain on the [weekend plan](dead-signal-weekend.md).
+Browser inspection covers the fork's two signs, the live Annex layout, minimal HUD and pause controls. [Switchboard](dead-signal-switchboard.md) and [layout variety](dead-signal-layouts.md) have separate verification notes. [Regional audio](dead-signal-audio.md) is implemented. Full-update balance and release packaging were completed for [3.0](../validation/dead-signal-3.0.md); the [3.0.1 audit](../validation/dead-signal-3.0.1.md) records the subsequent focused patch.

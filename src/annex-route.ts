@@ -224,7 +224,7 @@ export function annexRouteTestFromUrl(url: URL): Checkpoint | null {
     elapsed: 0,
     mods: mods.slice(0, stage),
     region: stage === 7 ? 'pending' : 'annex',
-    annexVersion: 5,
+    annexVersion: 6,
     annexRouteTest: {
       mirror: p.get('mirror') === '1',
       fork: room === 'fork',

@@ -245,13 +245,18 @@ for (const daily of [false, true])
       'reserve-cell',
       'rail-spike',
     ];
-    let rewards = 0;
+    let rewards = 0,
+      courierRewards = 0;
     const { escapeSeen } = playCampaign(g, {
       pathMods: [],
       seconds: 1000,
       chooseUpgrade: () => {
         assert.equal(g.offers.length, daily ? 1 : 3);
         rewards++;
+        if (g.courierReward) {
+          assert.equal(g.courier.state?.status, 'collected');
+          courierRewards++;
+        }
         const id =
           (!daily && priorities.find((id) => g.offers.some((m) => m.id === id))) || g.offers[0].id;
         assert(availableMods(g.mods, true).some((m) => m.id === id));
@@ -260,12 +265,15 @@ for (const daily of [false, true])
     });
     assert.equal(g.mode, 'won', JSON.stringify({ stage: g.stage, hp: g.hp, cause: g.deathCause }));
     assert(escapeSeen);
-    assert.equal(rewards, 19);
+    assert(courierRewards <= 1);
+    assert.equal(rewards - courierRewards, 19);
     assert(validBuild(g.mods));
-    assert.equal(g.mods.length, 19);
+    assert.equal(g.mods.length, 19 + courierRewards);
     assert(g.areaEvents.state);
     assert(g.fabricators.enabled);
     assert.equal(g.story.state, plannedStory);
     assert(g.hp > 0 && g.hp <= 100);
-    t.diagnostic(JSON.stringify({ seed: g.seed, seconds: g.time, hp: g.hp, mods: g.mods }));
+    t.diagnostic(
+      JSON.stringify({ seed: g.seed, seconds: g.time, hp: g.hp, courierRewards, mods: g.mods }),
+    );
   });

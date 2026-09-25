@@ -111,5 +111,27 @@ export function drawRegionExits(c: CanvasRenderingContext2D, g: Game) {
   const choices = g.regionChoices;
   if (!choices.length) return;
   regionDoor(c, DETOUR_DOOR.x, 740, choices[0], g.clear);
-  if (choices.length === 2) regionDoor(c, g.branchDoor.x, g.branchDoor.floor, 'annex', g.clear);
+  if (choices.length === 2) {
+    regionDoor(c, g.branchDoor.x, g.branchDoor.floor, 'annex', g.clear);
+    if (g.clear) {
+      // The light belongs to the machinery, not the HUD. It stays still with
+      // reduced effects and only guides the climb after combat has finished.
+      c.save();
+      c.strokeStyle = '#e8bb76';
+      c.lineWidth = 2;
+      c.beginPath();
+      for (const step of g.branchSteps) {
+        c.moveTo(step.x + 5, step.y);
+        c.lineTo(step.x + step.w - 5, step.y);
+      }
+      const x = g.branchSteps[0].x - 30;
+      c.moveTo(x - 7, 692);
+      c.lineTo(x, 685);
+      c.lineTo(x + 7, 692);
+      c.moveTo(x, 685);
+      c.lineTo(x, 706);
+      c.stroke();
+      c.restore();
+    }
+  }
 }

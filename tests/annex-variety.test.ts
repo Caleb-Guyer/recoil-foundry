@@ -136,7 +136,7 @@ test('Continue and pending rewards retain the seeded arrangement, mirror and exa
 test('old normal revisions stay original, and malformed or mixed Daily revisions are rejected', () => {
   const fresh = new Game();
   fresh.start('new-annex');
-  assert.equal(fresh.annexVersion, 5);
+  assert.equal(fresh.annexVersion, 6);
   for (const revision of [undefined, 1, 2, 3] as const)
     for (const stage of [8, 9, 10]) {
       const s = checkpoint('annex-variety-3', stage);
@@ -150,10 +150,10 @@ test('old normal revisions stay original, and malformed or mixed Daily revisions
       );
       assert.notEqual(g.level.id, ANNEX_ALTERNATES[stage].id);
     }
-  for (const bad of [0, 6, '4', null])
+  for (const bad of [0, 7, '4', null])
     assert.equal(loadCheckpoint({ ...checkpoint('bad', 8), annexVersion: bad }), null);
   for (const ruleset of [80, 81, 82, 83, 84])
-    for (const wrong of [1, 2, 3, 4, 5].filter((v) => v !== ruleset - 79)) {
+    for (const wrong of [1, 2, 3, 4, 5, 6].filter((v) => v !== ruleset - 79)) {
       const seed = `RF-D${ruleset}-2026-09-01`;
       assert.equal(
         loadCheckpoint({ ...checkpoint(seed, 8), region: dailyRegion(seed)!, annexVersion: wrong }),
