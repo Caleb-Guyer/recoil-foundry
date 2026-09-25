@@ -1,6 +1,6 @@
 # itch.io launch
 
-**Dead Signal 3.0 published 25 September 2026:** [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The current build is **3.0.0**, identical to the verified stable GitHub release ZIP. Project ID: `5033600`. The [launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) is public; no direct recruitment messages were sent.
+**Dead Signal 3.0.1 published 25 September 2026:** [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The current build is **3.0.1**, identical to the verified stable GitHub release ZIP. Project ID: `5033600`. The [3.0 launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) remains public; no direct recruitment messages were sent.
 
 ## Page
 
@@ -20,9 +20,13 @@
 - Theme: background `#0a1419`, content `#142127`, text `#e9eadc`, links/buttons `#acc3b6`. Simple sans-serif typography, visible screenshots, no additional decorative background.
 - Embed: click to launch fullscreen, with scrollbars off and Loading Docks as the launch background. Screenshots use the sidebar layout; comments are enabled.
 
-The uploaded file is the [3.0.0 stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v3.0.0/recoil-foundry-v3.0.0-site.zip), not the repository or this launch folder. It has root `index.html`, relative assets and 17 files. SHA-256: `14f89d176a9aa06699ca95aecc54646c6344b65a9d9e8c1b5cbb41da2e4f1a39`. The replacement used the previous transport filename, `recoil-foundry-v2.98.0-site.zip`, with display name **Recoil Foundry 3.0 — Dead Signal**. Its bytes are the verified 3.0 artifact.
+The uploaded file is the [3.0.1 stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v3.0.1/recoil-foundry-v3.0.1-site.zip), not the repository or this launch folder. It has root `index.html`, relative assets and 17 files. SHA-256: `f2332703cd04af76bed3a4c3505a64e38058c0318b0a88bc03b588f3cbb619ec`. The replacement used the previous transport filename, `recoil-foundry-v2.98.0-site.zip`, with display name **Recoil Foundry 3.0.1 — Dead Signal**. Its bytes are the verified 3.0.1 artifact.
 
-## Dead Signal 3.0 verification
+## Current 3.0.1 verification
+
+[Audit and publication evidence](../validation/dead-signal-3.0.1.md) record the matching workflows, archive digest, 1,889 passing tests and public smoke checks. itch.io upload **19398338** is browser playable. Its actual store iframe shows 3.0.1 in About and Report an issue. Continue daily and Room 1 progress remain intact; warm-up jump/fire, pause, reset and return to menu passed with no browser warnings/errors. Store copy, screenshots and trailer remain the 3.0 launch presentation.
+
+## Archived Dead Signal 3.0 verification
 
 [Publication evidence](../validation/dead-signal-3.0.md) records successful same-commit Pages/release workflows, the downloaded archive's digest and file inspection, and live checks on both sites. itch.io upload **19397514** is browser playable. The public iframe shows **3.0.0** in About and Report an issue; **Continue daily** and its Room 1 progress remain intact after warm-up jump/fire, pause, reset and return to menu. The published itch-hosted reward test also passed Escape, reroll and selection checks. Browser warning/error logs were empty during these checks.
 

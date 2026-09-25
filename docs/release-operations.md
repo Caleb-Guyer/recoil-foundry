@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Dead Signal 3.0.1 patch — 25 September 2026
+
+**Published on Pages and itch.io.** Commit `3a9eee707a23ea91bdd111427e6172e61285c111` passed all **1,889 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36167770811), then the `v3.0.1` tag passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36168968718). The matching ZIP is itch.io upload `19398338`. Both public games show 3.0.1 and preserve existing progress. [Audit and publication evidence](validation/dead-signal-3.0.1.md) include the full probe results, checksum and smoke-test scope.
+
+The patch tightens the Cooling doorway trigger, lights the Annex climb after combat, and offers optional Subversion choices at Annex entry and its first clear. Fresh normal runs use Annex revision 6; old saves and Daily 84 retain their rules. Combat stats are unchanged. Completed checks have no pending checklist entries; independent human feedback remains unavailable.
+
 ## Dead Signal 3.0 promotion — 25 September 2026
 
 The owner authorized publication of Dead Signal 3.0 to both hosts, including the screenshots and announcement. The final package contains the unchanged rc.2 gameplay, stable `3.0.0` version metadata, release notes, updated store copy, and the trailer's **Play now** closing card. The trailer is available as an optional static media file and is not loaded by game startup. Existing checkpoint and Daily rules remain unchanged.
@@ -8,8 +14,9 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.0.0`.
-- Previous stable rollback tag: `v2.98.1` at `4d579d148840a3078eb968616a6d58e0d41530b5`.
+- Stable tag: `v3.0.1` at `3a9eee707a23ea91bdd111427e6172e61285c111`.
+- Previous stable reference: `v3.0.0` at `50f9c5a514255994fb60d13d620161d4ba90c936`. A rollback must preserve revision-6 checkpoint decoding; do not deploy the unchanged old build over those saves.
+- Earlier stable rollback tag: `v2.98.1` at `4d579d148840a3078eb968616a6d58e0d41530b5`.
 - Earlier stable tag: `v2.98.0`.
 - Previous verified candidate: `v2.98.0-rc.1` at `ce13cc258e26c13f5504856e76b458a17d3cdb1a`.
 - Earlier rollback tag: `browser-rollback-2.97.0` at `9f5707fa7a6c3f9fab507f48ad026d37da2b8e02`.
