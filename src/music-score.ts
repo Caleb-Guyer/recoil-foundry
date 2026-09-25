@@ -1,29 +1,35 @@
 import type { Game, Mode } from './game.ts';
 import type { AreaId } from './areas.ts';
 import { isBoss } from './enemies.ts';
+import { annexMusicNotes } from './annex-score.ts';
+
+export type MusicTheme = AreaId | 'annex';
 
 export interface MusicScene {
   area: AreaId;
+  theme?: MusicTheme;
   room: string;
   mode: Mode;
   intensity: number;
   boss: boolean;
   clear: boolean;
+  bossPhase?: number;
 }
 
 export interface MusicNote {
-  part: 'kick' | 'tick' | 'snare' | 'bass' | 'pad' | 'pluck';
+  part: 'kick' | 'tick' | 'snare' | 'bass' | 'pad' | 'pluck' | 'hum' | 'pulse' | 'drive' | 'lead';
   midi?: number;
   velocity: number;
   duration: number;
 }
 
-export const MUSIC_PROFILES: Record<AreaId, { bpm: number }> = {
+export const MUSIC_PROFILES: Record<MusicTheme, { bpm: number }> = {
   docks: { bpm: 88 },
   furnace: { bpm: 104 },
   cooling: { bpm: 98 },
   reclamation: { bpm: 110 },
   rooftops: { bpm: 118 },
+  annex: { bpm: 112 },
 };
 
 const unit = (value: number) => (Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0);
@@ -42,6 +48,7 @@ export function musicScene(game: Game): MusicScene {
   }
   const alive = game.enemies.filter((enemy) => enemy.hp > 0 && !enemy.workshopTarget);
   const boss = alive.some((enemy) => isBoss(enemy.kind));
+  const switchboard = alive.find((enemy) => enemy.kind === 'switchboard');
   const clear = game.clear || (alive.length === 0 && !game.waves.pending);
   let intensity = 0;
   if (game.mode === 'playing' && !clear) {
@@ -70,14 +77,22 @@ export function musicScene(game: Game): MusicScene {
         (boss ? 0.14 : 0) +
         (game.waves.phase === 'warning' ? 0.2 : 0),
     );
+    if (
+      game.level.annex &&
+      game.annex.transmission?.phase === 'charging' &&
+      !game.annex.transmission.owner.allied
+    )
+      intensity = Math.max(intensity, 0.52);
   }
   return {
     area: game.level.area,
+    theme: game.level.annex ? 'annex' : game.level.area,
     room: game.roomSeed + ':' + game.stage,
     mode: game.mode,
     intensity,
     boss,
     clear,
+    bossPhase: switchboard?.phase ?? 0,
   };
 }
 
@@ -177,13 +192,15 @@ const PHRASES: Record<AreaId, Phrase> = {
 };
 
 export function musicNotes(
-  area: AreaId,
+  area: MusicTheme,
   step: number,
   intensity: number,
   boss: boolean,
   clear: boolean,
+  bossPhase = 0,
 ): MusicNote[] {
   if (!Number.isFinite(step)) return [];
+  if (area === 'annex') return annexMusicNotes(step, unit(intensity), boss, clear, bossPhase);
   const position = ((Math.floor(step) % 64) + 64) % 64;
   const bar = Math.floor(position / 16);
   const beat = position % 16;

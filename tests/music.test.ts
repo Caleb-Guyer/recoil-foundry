@@ -741,6 +741,10 @@ test('new threat cues survive saturated gunfire, keep their full warning window,
   sound.unlock();
   const context = sound.context as unknown as AudioContextMock;
   for (const kind of [
+    'signal-charge',
+    'signal-lock',
+    'caller-record',
+    'caller-lock',
     'audit-tell',
     'audit-recall',
     'sapper-tick',
@@ -796,4 +800,111 @@ test('completion and defeat cues have reserved voices after a dense fight', (t) 
     context.advance(4);
     assert.equal(sound.voices, 0);
   }
+});
+
+test('Annex transport preserves the beat at boss escalation, fades on clear and changes theme independently of area', () => {
+  const { context, music } = fixture();
+  const annex = scene({ area: 'cooling', theme: 'annex', boss: true });
+  const played: { part: string; at: number }[] = [];
+  const note = music.note.bind(music);
+  music.note = (n, at, bpm) => {
+    played.push({ part: n.part, at });
+    note(n, at, bpm);
+  };
+  for (let i = 0; i < 900; i++) {
+    music.update(annex);
+    context.advance(1 / 60);
+  }
+  assert(played.some((n) => n.part === 'lead'));
+  const step = music.step,
+    next = music.nextTime;
+  music.update({ ...annex, bossPhase: 1 });
+  assert.equal(music.step, step, 'Phase changes must not restart the melody');
+  assert.equal(music.nextTime, next);
+  const previous = [...music.voices];
+  music.update({ ...annex, clear: true });
+  for (const voice of previous) assert(voice.ends <= context.currentTime + 0.24);
+  context.advance(0.3);
+  const afterClear = played.length;
+  for (let i = 0; i < 300; i++) {
+    music.update({ ...annex, clear: true });
+    context.advance(1 / 60);
+  }
+  assert(played.slice(afterClear).length > 0);
+  assert(played.slice(afterClear).every((n) => ['pad', 'hum', 'pulse'].includes(n.part)));
+  music.update({ ...annex, theme: 'cooling' });
+  assert.equal(music.step, 1, 'Changing only the regional theme resets its transport');
+  context.advance(0.3);
+  music.stop();
+  context.advance(0.05);
+  assert.equal(music.voiceCount, 0);
+});
+
+test('Annex filters and sources remain bounded through loops, frame stalls, retries, mute and focus loss', () => {
+  const { context, music } = fixture();
+  const annex = scene({ theme: 'annex', boss: true, bossPhase: 1 });
+  let peak = 0;
+  for (let i = 0; i < 3600; i++) {
+    if (i % 300 === 0) music.reset();
+    music.update(annex);
+    peak = Math.max(peak, music.voiceCount);
+    context.advance(i === 1200 ? 60 : 1 / 60);
+  }
+  assert(peak <= MUSIC_VOICES);
+  for (const [change, enabled, active] of [
+    [{ mode: 'paused' }, true, true],
+    [{ mode: 'dead' }, true, true],
+    [{ mode: 'title' }, true, true],
+    [{}, false, true],
+    [{}, true, false],
+  ] as [Partial<MusicScene>, boolean, boolean][]) {
+    music.update(annex);
+    const voices = [...music.voices];
+    assert(voices.length);
+    music.update({ ...annex, ...change }, enabled, active);
+    context.advance(0.05);
+    assert.equal(music.voiceCount, 0);
+    assert.equal(music.targetGain, 0);
+    for (const voice of voices)
+      for (const node of voice.nodes) assert((node as unknown as AudioNodeMock).disconnected);
+  }
+});
+
+test('friendly and success signals stay distinct from warning cues and respect effects mute', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const signatures: number[][] = [];
+  for (const kind of ['signal-friendly', 'signal-reboot', 'signal-cut', 'signal-fire']) {
+    sound.updateMusic(scene({ theme: 'annex' }));
+    const duckUntil = sound.music!.duckUntil;
+    const first = context.sources.length;
+    sound.play(kind);
+    assert.equal(
+      sound.music!.duckUntil,
+      duckUntil,
+      'Friendly cues must not suppress the soundtrack',
+    );
+    const cues = context.sources.slice(first);
+    assert(cues.length > 0);
+    signatures.push(cues.filter((s) => s.kind === 'oscillator').map((s) => s.frequency.value));
+    context.advance(0.5);
+    assert(cues.every((s) => s.disconnected));
+  }
+  assert.equal(new Set(signatures.map((s) => JSON.stringify(s))).size, 4);
+  sound.effectsVolume = 0;
+  const first = context.sources.length;
+  for (const kind of [
+    'signal-friendly',
+    'signal-reboot',
+    'signal-cut',
+    'signal-fire',
+    'signal-charge',
+    'signal-lock',
+    'caller-record',
+    'caller-lock',
+  ])
+    sound.play(kind);
+  assert.equal(context.sources.length, first);
 });

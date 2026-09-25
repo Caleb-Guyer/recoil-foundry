@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dead Signal — audio preview</title>
+    <style>
+      body {
+        max-width: 780px;
+        margin: 64px auto;
+        padding: 0 24px;
+        background: #15151c;
+        color: #ede9dc;
+        font: 17px/1.6 system-ui;
+      }
+      h1 {
+        font-size: 32px;
+      }
+      p {
+        color: #bbb7c4;
+      }
+      button,
+      select {
+        font: inherit;
+        background: #292735;
+        color: inherit;
+        border: 1px solid #706877;
+        padding: 10px 16px;
+        border-radius: 4px;
+      }
+      button {
+        cursor: pointer;
+      }
+      audio {
+        display: block;
+        width: 100%;
+        margin: 24px 0;
+      }
+      [hidden] {
+        display: none;
+      }
+      pre {
+        white-space: pre-wrap;
+        font-size: 13px;
+      }
+      a {
+        color: #e8bb76;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Orders After Hours</h1>
+    <p>
+      Dead Signal’s original Annex theme. This local audio check uses the game’s actual synthesizer,
+      scheduler, warning cues and mixer. It does not change game settings or saved progress.
+    </p>
+    <label
+      >Preview
+      <select id="mix">
+        <option value="score">Music only</option>
+        <option value="combat">Music with gunfire and machinery cues</option>
+        <option value="cooling">Existing Cooling Works comparison</option>
+      </select></label
+    >
+    <button id="render">Render preview</button>
+    <p>
+      0–18s: entry and combat · 18–34s: boss · 34–50s: escalation · 50–58s: room clear · 58–60s:
+      pause.
+    </p>
+    <audio id="sample" controls hidden></audio>
+    <a id="download" hidden>Download WAV</a>
+    <pre id="status" role="status">Ready.</pre>
+    <p><a href="/?test=annex-route&amp;room=broadcast&amp;layout=alternate">Play the Annex</a></p>
+    <script type="module" src="./annex-audio-preview.ts"></script>
+  </body>
+</html>

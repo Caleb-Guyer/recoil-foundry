@@ -85,7 +85,7 @@ export function updateCaller(g: Game, e: Enemy, dt: number) {
     r.marks = [{ ...target.position }];
     r.phase = 'recording';
     r.clock = CALLER.sample;
-    g.onSound('aim-warn');
+    g.onSound(e.allied ? 'signal-friendly' : 'caller-record');
   } else {
     r.clock -= dt;
     if (r.clock <= 0) {
@@ -96,7 +96,7 @@ export function updateCaller(g: Game, e: Enemy, dt: number) {
           r.phase = 'locked';
           r.origin = { ...e.body.position };
           r.clock = CALLER.lock;
-          g.onSound('aim-warn');
+          g.onSound(e.allied ? 'signal-friendly' : 'caller-lock');
         }
       } else {
         const aim = direction(e.body.position, r.marks[r.next]);

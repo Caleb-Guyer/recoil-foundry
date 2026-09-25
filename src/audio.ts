@@ -31,6 +31,10 @@ const ATTACK_WARNINGS = new Set([
   'audit-tell',
   'audit-recall',
   'train-near',
+  'signal-charge',
+  'signal-lock',
+  'caller-record',
+  'caller-lock',
 ]);
 
 // Leave space for the whole cue, including delayed notes and long wind-ups.
@@ -49,6 +53,10 @@ const WARNING_HOLD: Record<string, number> = {
   machine: 0.45,
   loader: 0.35,
   phase: 0.35,
+  'signal-charge': 0.36,
+  'signal-lock': 0.3,
+  'caller-record': 0.23,
+  'caller-lock': 0.34,
 };
 
 export function volumeLevel(value: unknown) {
@@ -308,7 +316,32 @@ export class Sound {
       ['crane-hit', 'kiln-impact', 'hurt', 'slam', 'cargo-release', 'cargo-impact'].includes(kind)
     )
       this.music?.duck(Math.max(kind === 'phase' ? 0.8 : 0.65, WARNING_HOLD[kind] ?? 0));
-    if (kind === 'fabricator-build') {
+    if (kind === 'signal-charge') {
+      this.tone(310, 620, 0.24, 0.055, 'triangle');
+      this.tone(930, 1240, 0.12, 0.03, 'sine', 0.23);
+    } else if (kind === 'signal-lock') {
+      this.tone(1240, 1240, 0.09, 0.055, 'sine');
+      this.tone(1240, 930, 0.13, 0.04, 'triangle', 0.16);
+    } else if (kind === 'caller-record') {
+      this.tone(420, 630, 0.08, 0.04, 'sine');
+      this.tone(630, 840, 0.08, 0.035, 'sine', 0.14);
+    } else if (kind === 'caller-lock') {
+      // Three fixed pitches echo the three recorded positions, not the gun.
+      for (const delay of [0, 0.12, 0.24]) this.tone(980, 980, 0.09, 0.045, 'triangle', delay);
+    } else if (kind === 'signal-cut') {
+      this.crack(0.08, 0.06, 2300);
+      this.tone(820, 140, 0.22, 0.065, 'triangle');
+    } else if (kind === 'signal-reboot') {
+      this.tone(330, 330, 0.09, 0.04, 'triangle');
+      this.tone(495, 495, 0.12, 0.035, 'triangle', 0.08);
+      this.tone(660, 660, 0.16, 0.03, 'sine', 0.18);
+    } else if (kind === 'signal-friendly') {
+      // A quiet confirmation, with no hostile-warning duck or reserved voices.
+      this.tone(330, 495, 0.13, 0.025, 'sine');
+    } else if (kind === 'signal-fire') {
+      this.tone(210, 95, 0.1, 0.055, 'triangle');
+      this.crack(0.045, 0.04, 1400);
+    } else if (kind === 'fabricator-build') {
       this.crack(0.2, 0.06, 2300);
       this.tone(130, 190, 0.4, 0.045, 'triangle');
     } else if (kind === 'fabricator-ready') {

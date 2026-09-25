@@ -176,7 +176,7 @@ export class SwitchboardSystem {
     }
     r.elapsed = 0;
     e.state = 'windup';
-    g.onSound('aim-warn');
+    g.onSound('signal-charge');
   }
   update(e: Enemy, dt: number) {
     const g = this.game,
@@ -236,7 +236,7 @@ export class SwitchboardSystem {
           plan.cut = true;
           continue;
         }
-        g.onSound('lock');
+        g.onSound('signal-lock');
       }
       if (r.elapsed < signalFireAt(plan)) continue;
       e.state = 'rush';
@@ -251,7 +251,7 @@ export class SwitchboardSystem {
       }
       plan.sent++;
       r.fired++;
-      g.onSound('enemy');
+      g.onSound('signal-fire');
       if (plan.sent === plan.angles.length) plan.done = true;
     }
     if (r.plans.every((p) => p.done || p.cut)) {
@@ -297,7 +297,7 @@ export class SwitchboardSystem {
     const at = signalPoint(this.game, slot, 'junction');
     this.game.hitEnemy(e, 70, at, true, false);
     this.game.burst(at, 12, '#e8bb76', 3);
-    this.game.onSound('armor');
+    this.game.onSound('signal-cut');
     return true;
   }
   blast(pos: Vec, radius: number, cone: (p: Vec) => boolean) {

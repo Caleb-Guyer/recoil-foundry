@@ -47,4 +47,4 @@ These are repeatable simulator results, not a claim that the final area is balan
 
 ## Next step
 
-The [Subversion reward family](dead-signal-subversion.md), [regional route and saves](dead-signal-route.md), [Caller](dead-signal-caller.md), [Switchboard boss](dead-signal-switchboard.md) and [six combat arrangements](dead-signal-layouts.md) are now implemented in the development branch, including regional discovery and lore. Daily 83 carries the current layout pool while preserving earlier rulesets. Regional audio, final balance and release acceptance remain on the [weekend plan](dead-signal-weekend.md).
+The [Subversion reward family](dead-signal-subversion.md), [regional route and saves](dead-signal-route.md), [Caller](dead-signal-caller.md), [Switchboard boss](dead-signal-switchboard.md) and [six combat arrangements](dead-signal-layouts.md) are now implemented in the development branch, including regional discovery and lore. Daily 83 carries the current layout pool while preserving earlier rulesets. [Regional audio](dead-signal-audio.md) is implemented. Final balance and release acceptance remain on the [weekend plan](dead-signal-weekend.md).

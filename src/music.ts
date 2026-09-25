@@ -61,7 +61,7 @@ export class Music {
     for (const node of voice.nodes) node.disconnect();
     this.voices.delete(voice);
   }
-  stop() {
+  stop(release = 0.04) {
     const now = this.context.currentTime;
     this.running = false;
     this.targetGain = 0;
@@ -75,15 +75,15 @@ export class Music {
           : Math.min(voice.peak, Math.max(SILENCE, voice.gain.gain.value)),
         now,
       );
-      voice.gain.gain.setTargetAtTime(SILENCE, now, 0.008);
+      voice.gain.gain.setTargetAtTime(SILENCE, now, release / 5);
       // This also cancels sources scheduled ahead of a pause/mute.
-      voice.source.stop(now + 0.04);
-      voice.ends = Math.min(voice.ends, now + 0.04);
+      voice.source.stop(now + release);
+      voice.ends = Math.min(voice.ends, now + release);
     }
     this.nextTime = now;
   }
-  reset() {
-    this.stop();
+  reset(release = 0.04) {
+    this.stop(release);
     this.step = 0;
     this.scene = null;
     this.intensity = 0;
@@ -105,13 +105,18 @@ export class Music {
   }
   update(scene: MusicScene, enabled = true, active = true) {
     const now = this.context.currentTime;
-    const changed = !this.scene || this.scene.room !== scene.room || this.scene.area !== scene.area;
+    const theme = scene.theme ?? scene.area;
+    const changed =
+      !this.scene ||
+      this.scene.room !== scene.room ||
+      (this.scene.theme ?? this.scene.area) !== theme;
     const calmChanged =
       !!this.scene &&
       (this.scene.clear || this.scene.mode === 'upgrade') !==
         (scene.clear || scene.mode === 'upgrade');
-    if (changed) this.reset();
-    else if (calmChanged) this.stop();
+    const release = theme === 'annex' || this.scene?.theme === 'annex' ? 0.24 : 0.04;
+    if (changed) this.reset(release);
+    else if (calmChanged) this.stop(release);
     this.scene = { ...scene };
     if (
       !enabled ||
@@ -138,7 +143,7 @@ export class Music {
       this.step = Math.ceil(this.step / 16) * 16;
     }
     this.setGain(this.gainForScene(), 0.16);
-    const bpm = MUSIC_PROFILES[scene.area].bpm;
+    const bpm = MUSIC_PROFILES[theme].bpm;
     const interval = 60 / bpm / 4;
     if (this.nextTime < now - 0.05) {
       this.step += Math.ceil((now - this.nextTime) / interval);
@@ -148,11 +153,12 @@ export class Music {
     while (this.nextTime < now + MUSIC_LOOKAHEAD && scheduled < 4) {
       const at = Math.max(now + 0.005, this.nextTime);
       for (const note of musicNotes(
-        scene.area,
+        theme,
         this.step,
         this.intensity,
         scene.boss,
         scene.clear || scene.mode === 'upgrade',
+        scene.bossPhase,
       ))
         this.note(note, at, bpm);
       this.nextTime += interval;
@@ -185,7 +191,15 @@ export class Music {
       peak = note.part === 'snare' ? 0.18 : 0.07;
     } else {
       const osc = c.createOscillator();
-      osc.type = note.part === 'bass' ? 'triangle' : 'sine';
+      const signal = ['hum', 'pulse', 'drive', 'lead'].includes(note.part);
+      osc.type =
+        note.part === 'pulse'
+          ? 'square'
+          : note.part === 'drive' || note.part === 'lead'
+            ? 'sawtooth'
+            : note.part === 'bass' || note.part === 'hum'
+              ? 'triangle'
+              : 'sine';
       osc.frequency.setValueAtTime(note.part === 'kick' ? 110 : pitch, at);
       if (note.part === 'kick') osc.frequency.exponentialRampToValueAtTime(43, at + 0.11);
       if (note.part === 'pad') {
@@ -194,9 +208,41 @@ export class Music {
       }
       source = osc;
       nodes.push(osc);
-      osc.connect(gain);
+      if (signal) {
+        const filter = c.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.Q.value = 0.6;
+        const cutoff =
+          note.part === 'hum'
+            ? 220
+            : note.part === 'pulse'
+              ? 850
+              : note.part === 'drive'
+                ? 1100
+                : 2100;
+        filter.frequency.setValueAtTime(cutoff, at);
+        filter.frequency.exponentialRampToValueAtTime(cutoff * 0.45, at + length);
+        osc.detune.value = note.part === 'pulse' ? -7 : note.part === 'lead' ? 5 : -3;
+        if (note.part === 'hum') attack = 0.3;
+        if (note.part === 'lead') attack = 0.015;
+        osc.connect(filter);
+        filter.connect(gain);
+        nodes.push(filter);
+      } else osc.connect(gain);
       peak =
-        note.part === 'kick' ? 0.4 : note.part === 'bass' ? 0.3 : note.part === 'pad' ? 0.3 : 0.25;
+        note.part === 'kick'
+          ? 0.4
+          : note.part === 'bass' || note.part === 'pad'
+            ? 0.3
+            : note.part === 'hum'
+              ? 0.22
+              : note.part === 'pulse'
+                ? 0.14
+                : note.part === 'drive'
+                  ? 0.26
+                  : note.part === 'lead'
+                    ? 0.18
+                    : 0.25;
     }
     const end = at + length + 0.03;
     gain.gain.setValueAtTime(SILENCE, at);

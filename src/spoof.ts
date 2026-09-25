@@ -203,7 +203,7 @@ export class SpoofSystem {
       ally.rebootDamage = s.damage;
       ally.rebootUntil = g.time + s.duration + ally.spawn;
       g.burst(pos, 16, '#6bb7ff', 2.8);
-      g.onSound('upgrade');
+      g.onSound('signal-reboot');
     }
     for (const [id, f] of this.feedback) {
       if (!g.enemies.includes(f.enemy) || f.enemy.hp <= 0) this.feedback.delete(id);
