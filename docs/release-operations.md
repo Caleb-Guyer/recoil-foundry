@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Practice builds 3.0.3 — 25 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `2fcba8531d8feae036f94e2d253342b18e327993` passed all **1,903 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36178571167). Tag `v3.0.3` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36179836841); the matching official ZIP is itch.io upload `19399784`. Both public games show 3.0.3, with their existing campaign/Daily saves intact. [Validation and artifact evidence](validation/practice-builds-3.0.3.md) records the checksum, browser flows and test scope.
+
+Players can choose Preset or Workshop build for an earned boss, fit only discovered upgrades within its normal upgrade count, retry that gun, and edit between attempts. Practice does not change the saved Workshop gun or award campaign progress. A related backup defect found during verification is fixed: imports now accept the existing Annex logbook discovery field. Campaign/Daily rules and save formats are unchanged. Publication checks are complete.
+
 ## Run feedback 3.0.2 — 25 September 2026
 
 The [beam balance investigation](validation/beam-balance-3.0.2.md) is complete. It corrects test-pilot recoil and input assumptions, preserves the failed configurations, and records a 112-fight matching-input comparison plus focused regression checks. It provides no justification for a live damage buff; production balance, saves and Daily rules remain unchanged, with no new release or deployment.
