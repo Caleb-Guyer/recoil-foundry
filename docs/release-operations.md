@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Run feedback 3.0.2 — 25 September 2026
+
+**Published on Pages and itch.io.** Commit `0bc55580cf8878908731d53bd4670129a470ada8` passed all **1,891 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36171302497), then tag `v3.0.2` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36172630191). The matching ZIP is itch.io upload `19398808`. Both public games show 3.0.2 and preserve existing progress. [Publication evidence](validation/run-feedback-3.0.2.md) records the checksum and result/form checks.
+
+A quiet Feedback action on result screens opens Bug, Difficulty or Suggestion, with editable run details and drafts retained until gameplay resumes or the player returns to the title. The same form is available through Settings/Pause. No report is automatically submitted. Gameplay, checkpoint formats and Daily rules are unchanged; no publication checks remain open.
+
 ## Dead Signal 3.0.1 patch — 25 September 2026
 
 **Published on Pages and itch.io.** Commit `3a9eee707a23ea91bdd111427e6172e61285c111` passed all **1,889 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36167770811), then the `v3.0.1` tag passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36168968718). The matching ZIP is itch.io upload `19398338`. Both public games show 3.0.1 and preserve existing progress. [Audit and publication evidence](validation/dead-signal-3.0.1.md) include the full probe results, checksum and smoke-test scope.
@@ -14,8 +20,9 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.0.1` at `3a9eee707a23ea91bdd111427e6172e61285c111`.
-- Previous stable reference: `v3.0.0` at `50f9c5a514255994fb60d13d620161d4ba90c936`. A rollback must preserve revision-6 checkpoint decoding; do not deploy the unchanged old build over those saves.
+- Stable tag: `v3.0.2` at `0bc55580cf8878908731d53bd4670129a470ada8`.
+- Previous stable reference: `v3.0.1` at `3a9eee707a23ea91bdd111427e6172e61285c111`.
+- Earlier stable reference: `v3.0.0` at `50f9c5a514255994fb60d13d620161d4ba90c936`. A rollback must preserve revision-6 checkpoint decoding; do not deploy the unchanged old build over those saves.
 - Earlier stable rollback tag: `v2.98.1` at `4d579d148840a3078eb968616a6d58e0d41530b5`.
 - Earlier stable tag: `v2.98.0`.
 - Previous verified candidate: `v2.98.0-rc.1` at `ce13cc258e26c13f5504856e76b458a17d3cdb1a`.
