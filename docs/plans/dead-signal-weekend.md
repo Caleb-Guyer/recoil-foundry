@@ -43,6 +43,8 @@ Ownership changes clear recorded player targets and pending hostile transmission
 
 These are starting designs, with values fixed by Saturday's balance work. Subversion is a support family compatible with existing gun forms; its two internal branches exclude each other. It does not remove existing weapon-path restrictions.
 
+Make the update discoverable: the first Annex reward includes Spoof among the three choices when it is unowned and legal. Picking it is optional. Afterward, use the existing chosen-family weighting and normal eligibility rules. Spoof can also appear in ordinary campaigns outside the Annex. A Daily entering the Annex has its corresponding single fixed reward planned in advance; it never opens a three-card choice.
+
 Count one reboot opportunity per eligible original enemy, including kills by a primary shell's explosion or continuous beam. A killed machine grants its ordinary reward exactly once before becoming a temporary ally; its later shutdown grants no second kill, health, score, loot, or conversion. Reboots cannot come from summoned enemies, allies, fragments or feedback effects. Secondary damage cannot recursively create more feedback or allies. Share one discharge/target credit across pellets and beam samples; use actual damage, not overkill, for feedback. Set explicit per-room and simultaneous-entity limits.
 
 Every new node must visibly help against a boss without adds as well as in ordinary rooms. Test the family with the base gun, Bullet Hell, Precision, Demolition, every beam fork, Rail, Mass Driver, Recall, Vector, Stasis and portals. Every upgrade description must match its final behavior. Do not accept a compatibility rule that silently leaves an owned upgrade doing nothing.
