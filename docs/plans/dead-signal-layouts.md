@@ -36,4 +36,4 @@ The room battery covers bullets, beams and shells across all six arrangements an
 
 The production build passes with Vite's existing large-chunk advisory. In-app browser inspection covers the three new rooms, the mirrored Broken Ladder entrance, fixture/character separation and the sparse HUD; no warnings or errors were logged. The complete regression suite passes **1,844/1,844** with no failures or skipped tests (331 seconds). TypeScript and the diff whitespace check also pass.
 
-[Regional audio](dead-signal-audio.md) is implemented. The final whole-update balance pass and release acceptance remain on the [weekend plan](dead-signal-weekend.md).
+[Regional audio](dead-signal-audio.md) is implemented. The [whole-update balance audit and 3.0.0-rc.1 preparation](dead-signal-balance.md) are complete. Public-host acceptance remains in the [weekend plan](dead-signal-weekend.md).

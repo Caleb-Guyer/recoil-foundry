@@ -6,7 +6,7 @@ export function creditsMarkup() {
     <div class="credits-copy">
       <p>A game by <strong>Caleb Guyer</strong>.</p>
       <p>One gun, a factory full of bad ideas, and the people who kept asking for one more run. Thanks for playing.</p>
-      <dl><dt>Music & sound</dt><dd>Original procedural score and synthesized effects, made for Recoil Foundry. Five area themes change with the fight.</dd>
+      <dl><dt>Music & sound</dt><dd>Original procedural score and synthesized effects, made for Recoil Foundry. Regional themes change with the fight.</dd>
       <dt>Built with</dt><dd>Matter.js by Liam Brummitt and contributors. TypeScript and Vite.</dd></dl>
     </div>
     <div class="actions"><button id="back" class="primary">Back</button>

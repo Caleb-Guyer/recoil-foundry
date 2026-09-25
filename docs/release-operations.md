@@ -8,6 +8,18 @@
 - Earlier rollback tag: `browser-rollback-2.97.0` at `9f5707fa7a6c3f9fab507f48ad026d37da2b8e02`.
 - Deployment: [GitHub Actions](https://github.com/Caleb-Guyer/recoil-foundry/actions/workflows/deploy.yml), tests and build before Pages publication.
 
+## Dead Signal candidate — 25 September 2026
+
+`3.0.0-rc.1` is prepared on **`feature/dead-signal`**, with [release notes](releases/3.0.0-rc.1.md) and [validation evidence](plans/dead-signal-balance.md). It is not tagged, merged to main, published to GitHub Releases, or uploaded to either public host. The existing workflow requires a successful Pages run for the exact main commit before tagged publication; do not bypass that gate to publish a feature-branch candidate.
+
+The local artifact is `.release-assets/recoil-foundry-v3.0.0-rc.1-site.zip`, with `index.html` at the archive root, 16 files, relative asset URLs, and no development harness, source code, dependencies or private files. It was extracted and served locally to verify startup, normal gameplay, death/retry, pause, About/version and issue-report details. No issue was submitted. The final About copy includes the new regional score without the obsolete five-theme count. Browser warning/error logs were empty.
+
+SHA-256: `A7B54CA2438EEACB8A5B0EE8E3D3F61050FACB6F48975C6F33E1013DEEC44860`.
+
+The candidate's matching checksum is also committed in [validation evidence](validation/dead-signal-rc/SHA256SUMS.txt). Rebuilding may change ZIP metadata and therefore the archive hash; always verify the artifact actually distributed. Keep stable `v2.98.1` (`b9de8d4ee52d8ee7d2f34e3d3bb1d1762f0322f7`) as the public reference until promotion. To abandon this local candidate, keep serving the unchanged stable release; no public rollback is necessary. If a later promoted update needs rollback, make a reviewed revert/new version as described below rather than moving tags or rewriting history.
+
+Remaining promotion checks: ordinary player feedback on the documented balance limits, Pages CI and deployed version, itch.io upload/iframe version, and both hosts' existing-progress/startup/reward/report smoke checks. There is no scheduled deployment job in this task.
+
 ## Triage
 
 Use [GitHub issues](https://github.com/Caleb-Guyer/recoil-foundry/issues). Record version, mode, seed, room, build, exact steps, expected and observed behavior. Ask for browser/device details only when relevant. Never require a whole browser profile or private information.

@@ -42,4 +42,4 @@ The production build passes with Vite's existing large-chunk advisory. In-app br
 
 The full suite completed 1,788 checks: 1,787 passed and one elite-save fixture incorrectly assumed the current Daily always selected Cooling. Daily 82's date now selects Annex. The fixture was corrected to check the actual seeded region and expanded across Daily 80/81/82 on three dates, while preserving exact layout and spawn-body comparisons. All four elite-placement tests then passed. No runtime changes were needed for that correction, and the five-minute full suite was not repeated afterward. `git diff --check` passes.
 
-The [three additional arrangements are now implemented](dead-signal-layouts.md). [Regional audio](dead-signal-audio.md) is implemented. Whole-update balance and release acceptance remain on the [weekend plan](dead-signal-weekend.md).
+The [three additional arrangements are now implemented](dead-signal-layouts.md). [Regional audio](dead-signal-audio.md) is implemented. The [whole-update balance audit and 3.0.0-rc.1 preparation](dead-signal-balance.md) are complete. Public-host acceptance remains in the [weekend plan](dead-signal-weekend.md).

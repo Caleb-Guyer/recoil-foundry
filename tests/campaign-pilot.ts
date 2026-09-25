@@ -495,6 +495,10 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
       // The regional entrance follows a boss arena with more approach speed;
       // launch earlier so the first step is not struck from underneath.
       const approach = g.regionChoices.length ? 1690 : 1725;
+      // If a missed landing puts us beneath the approach steps, back out before
+      // jumping again. Jumping in place here only strikes the underside.
+      if (g.regionChoices.length && routeStep > 0 && g.grounded && p.y > 630 && p.x > 1750)
+        routeStep = 0;
       if (routeStep === 0 && Math.abs(p.x - approach) < 22 && g.grounded) routeStep = 1;
       if (routeStep === 1 && Math.abs(p.x - 1828) < 22 && Math.abs(p.y - 572) < 8 && g.grounded)
         routeStep = 2;
@@ -552,15 +556,30 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     // Sustained recoil can keep a rapid build above a covered target forever.
     // Release until landing before trying the next firing angle.
     if (
-      g.mods.includes('orbit') &&
+      (g.mods.includes('orbit') || g.inAnnex) &&
       !g.clear &&
       !g.level.boss &&
       g.time - lastProgress > 12 &&
-      p.y < 200
+      p.y < ep.y - 140
     )
       settlingGun = true;
     if (settlingGun) {
       firing = false;
+      jump = false;
+      const shelf = g.solidBodies.find(
+        (b) =>
+          p.x > b.bounds.min.x - 14 &&
+          p.x < b.bounds.max.x + 14 &&
+          b.bounds.min.y >= p.y &&
+          b.bounds.min.y < ep.y - 25,
+      );
+      if (shelf) {
+        const edge =
+          p.x - shelf.bounds.min.x < shelf.bounds.max.x - p.x
+            ? shelf.bounds.min.x - 35
+            : shelf.bounds.max.x + 35;
+        move = Math.sign(edge - p.x);
+      }
       if (g.grounded || g.clear) settlingGun = false;
     }
     // A charged build must release the trigger long enough to load its rail.

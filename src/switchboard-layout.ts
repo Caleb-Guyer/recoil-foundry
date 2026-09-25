@@ -148,7 +148,7 @@ export function switchboardTestFromUrl(url: URL): Checkpoint | null {
     elapsed: 0,
     kills: 0,
     region: 'annex',
-    annexVersion: 3,
+    annexVersion: 5,
     mods: [...SWITCHBOARD_BUILDS[build as keyof typeof SWITCHBOARD_BUILDS]],
     switchboardTest: { mirror: p.get('mirror') === '1' },
   };

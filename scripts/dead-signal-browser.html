@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dead Signal browser audit</title>
+    <style>
+      body {
+        margin: 0;
+        background: #111217;
+        color: #edece0;
+        font: 14px monospace;
+      }
+      header {
+        padding: 12px;
+        display: flex;
+        gap: 20px;
+      }
+      canvas {
+        width: 1280px;
+        height: 720px;
+        display: block;
+      }
+      pre {
+        white-space: pre-wrap;
+      }
+      button {
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button id="run">Run 20-second recording</button><button id="freeze">Pause</button
+      ><label><input id="reduced" type="checkbox" />Reduced effects</label
+      ><span id="status">Ready</span>
+    </header>
+    <canvas></canvas>
+    <pre id="results"></pre>
+    <script type="module">
+      import Matter from 'matter-js';
+      import { Game } from '../src/game.ts';
+      import { Renderer } from '../src/render.ts';
+      import { seeded } from '../src/rules.ts';
+      import {
+        stabilityInput,
+        startStabilityCase,
+        stabilityCounts,
+        assertFiniteWorld,
+      } from '../src/stability-scenarios.ts';
+      const scenario = new URL(location.href).searchParams.get('case') ?? 'boss';
+      const g = new Game(),
+        r = new Renderer(document.querySelector('canvas'), g);
+      const status = document.querySelector('#status'),
+        result = document.querySelector('#results');
+      let playing = false,
+        frame = 0,
+        last = 0,
+        samples = [],
+        frames = [],
+        restarts = 0,
+        peaks = {},
+        freeze = false;
+      const quantile = (a, q) => a.toSorted((a, b) => a - b)[Math.floor((a.length - 1) * q)];
+      const idle = {
+        left: false,
+        right: false,
+        jump: false,
+        jumpHeld: false,
+        fire: false,
+        aim: { x: 1000, y: 400 },
+      };
+      let dodge, annexSave;
+      if (scenario !== 'boss') {
+        const source = '../src/switchboard-layout.ts';
+        const { switchboardTestFromUrl } = await import(/* @vite-ignore */ source);
+        annexSave = switchboardTestFromUrl(new URL('https://test/?test=switchboard&build=counter'));
+        if (scenario === 'annex') {
+          const { withParents, completeBuild } = await import('../src/branch-builds.ts');
+          annexSave.mods = completeBuild(
+            withParents(annexSave.mods, ['spoof', 'cross-talk', 'dead-switch']),
+          );
+        }
+        const pilot = '../tests/combat-pilot.ts';
+        dodge = (await import(/* @vite-ignore */ pilot)).dodgePilot;
+      }
+      function reset() {
+        Matter.Common._nextId = Matter.Common._seed = 0;
+        Math.random = seeded('browser-balance');
+        if (scenario === 'boss') startStabilityCase(g, 4);
+        else {
+          g.startTest(annexSave);
+          if (scenario === 'pocket') {
+            Matter.Body.setPosition(g.player, { x: 1000, y: 502 });
+            Matter.Body.setStatic(g.player, true);
+            Matter.Body.setPosition(g.enemies[0].body, { x: 1200, y: 620 });
+            g.enemies[0].spawn = 0;
+            g.switchboard.begin(g.enemies[0]);
+          }
+        }
+        r.reset();
+      }
+      document.querySelector('#run').onclick = () => {
+        reset();
+        playing = true;
+        freeze = false;
+        frame = 0;
+        last = 0;
+        samples = [];
+        frames = [];
+        restarts = 0;
+        peaks = {};
+        result.textContent = '';
+      };
+      document.querySelector('#freeze').onclick = () => {
+        freeze = !freeze;
+        document.querySelector('#freeze').textContent = freeze ? 'Resume' : 'Pause';
+      };
+      document.querySelector('#reduced').onchange = (e) => (r.reduced = e.target.checked);
+      function loop(now) {
+        if (playing && !freeze && (!last || now - last >= 1000 / 60 - 0.1)) {
+          if (g.mode !== 'playing' || g.clear) {
+            reset();
+            restarts++;
+          }
+          const start = performance.now();
+          const input =
+            scenario === 'boss'
+              ? stabilityInput(g, frame)
+              : scenario === 'pocket'
+                ? { ...idle, fire: true, aim: { ...g.enemies[0].body.position } }
+                : { ...idle, ...dodge(g, g.enemies[0]) };
+          g.tick(1 / 60, input);
+          r.draw(now);
+          assertFiniteWorld(g);
+          if (frame >= 120) {
+            samples.push(performance.now() - start);
+            if (last) frames.push(now - last);
+          }
+          last = now;
+          frame++;
+          if (
+            scenario === 'pocket' &&
+            new URL(location.href).searchParams.has('hold') &&
+            frame === 45
+          ) {
+            freeze = true;
+            document.querySelector('#freeze').textContent = 'Resume';
+          }
+          for (const [k, v] of Object.entries(stabilityCounts(g)))
+            peaks[k] = Math.max(peaks[k] ?? 0, v);
+          status.textContent = `${scenario} | ${frame}/1320 | HP ${g.hp} | ${g.mode} | mobile ${!!g.enemies[0]?.switchboard?.plans.some((p) => p.mobile && !p.done && !p.cut)}`;
+          if (frame >= 1320) {
+            playing = false;
+            result.textContent = JSON.stringify(
+              {
+                scenario,
+                frames: samples.length,
+                viewport: [r.width, r.height],
+                dpr: devicePixelRatio,
+                reduced: r.reduced,
+                restarts,
+                workMs: {
+                  p50: quantile(samples, 0.5),
+                  p95: quantile(samples, 0.95),
+                  p99: quantile(samples, 0.99),
+                  max: Math.max(...samples),
+                },
+                frameMs: {
+                  p50: quantile(frames, 0.5),
+                  p95: quantile(frames, 0.95),
+                  p99: quantile(frames, 0.99),
+                  max: Math.max(...frames),
+                },
+                peaks,
+              },
+              null,
+              2,
+            );
+          }
+        }
+        requestAnimationFrame(loop);
+      }
+      reset();
+      r.draw();
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>

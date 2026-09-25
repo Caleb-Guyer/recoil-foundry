@@ -315,7 +315,7 @@ test('Spoof is optional, has no duplicate when owned, and rerolls remain legal',
   assert(saveOf(g));
 });
 
-for (const ruleset of [80, 81, 82, 83])
+for (const ruleset of [80, 81, 82, 83, 84])
   test(`Daily ${ruleset} fixes both regional choices, blocks the other, and forces one legal reward`, () => {
     const seen = new Set<RegionChoice>();
     for (let day = 1; day <= 12; day++) {

@@ -1,0 +1,482 @@
+[
+  {
+    "cycle": 0,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 1,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 2,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 3,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 4,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 5,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 6,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 7,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 8,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 9,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 10,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 11,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 12,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 13,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 14,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 15,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 16,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 17,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 18,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  },
+  {
+    "cycle": 19,
+    "baseline": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 0,
+      "shots": 0,
+      "particles": 0,
+      "enemies": 1,
+      "props": 2
+    },
+    "peaks": {
+      "bodies": 13,
+      "constraints": 0,
+      "pairs": 3,
+      "shots": 180,
+      "particles": 220,
+      "enemies": 1,
+      "props": 2
+    },
+    "hp": 100,
+    "seconds": 20.000000000000146,
+    "mode": "playing"
+  }
+]

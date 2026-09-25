@@ -49,4 +49,4 @@ The Annex combat music RMS is 0.00702 versus Cooling's 0.00654 in this fixture; 
 
 The complete regression run passes **1,853/1,853** with no failures or skipped tests (220 seconds). One additional Switchboard cue-integration test was added afterward; it and the other focused audio checks pass **38/38**, with no subsequent runtime edits. In-game browser checks cover startup, live gameplay, pause/resume, retry, death and return to menu. Sound and Music were enabled at 100%; no preferences were changed and the console reported no warnings or errors. These checks do not claim human headphone/speaker listening or the separate whole-update balance sign-off.
 
-Whole-update balance, anti-cheese checks and release acceptance remain in the [weekend plan](dead-signal-weekend.md).
+The [whole-update balance audit and 3.0.0-rc.1 preparation](dead-signal-balance.md) are complete. Public-host acceptance remains in the [weekend plan](dead-signal-weekend.md).

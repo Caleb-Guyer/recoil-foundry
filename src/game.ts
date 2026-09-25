@@ -393,7 +393,7 @@ export class Game {
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
   region: RegionDecision | null = null;
-  annexVersion: import('./regions.ts').AnnexVersion = 4;
+  annexVersion: import('./regions.ts').AnnexVersion = 5;
   get inAnnex() {
     return (
       !this.practice &&

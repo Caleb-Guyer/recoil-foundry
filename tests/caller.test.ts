@@ -306,7 +306,7 @@ test('saved Annex revision preserves old encounters and persists new ones', () =
     resumed.start(next.seed, next);
     assert.deepEqual(resumed.level, g.level);
   }
-  for (const bad of [0, 5, '2', null])
+  for (const bad of [0, 6, '2', null])
     assert.equal(loadCheckpoint({ ...preset, annexVersion: bad }), null);
   for (const ruleset of [80, 81]) {
     const seed = `RF-D${ruleset}-2026-09-01`,

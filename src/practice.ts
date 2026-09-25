@@ -103,7 +103,7 @@ export function practiceCheckpoint(record: Encounter): Checkpoint | null {
   const stage = PRACTICE_BOSSES[encounter.kind].stage;
   const save = testCheckpoint(encounter.seed, stage);
   return encounter.kind === 'switchboard'
-    ? { ...save, version: 6, region: 'annex', annexVersion: 3 }
+    ? { ...save, version: 6, region: 'annex', annexVersion: 5 }
     : save;
 }
 export function testCheckpoint(seed: string, stage: number): Checkpoint {

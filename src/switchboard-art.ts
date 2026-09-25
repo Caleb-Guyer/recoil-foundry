@@ -16,9 +16,21 @@ export function drawSwitchboardArena(c: CanvasRenderingContext2D, g: Game) {
     r = e?.switchboard;
   c.save();
   for (let slot = 0; slot < 3; slot++) {
-    const port = signalPoint(g, slot, 'port'),
-      j = signalPoint(g, slot, 'junction');
     const p = r?.plans.find((p) => p.slot === slot && !p.cut && !p.done);
+    if (p?.mobile) {
+      // The fixed mount stays in the room while control is routed to the boss.
+      const fixed = signalPoint(g, slot, 'port');
+      c.strokeStyle = '#605468';
+      c.lineWidth = 3;
+      line(c, [{ x: fixed.x, y: 80 }, fixed]);
+      c.fillStyle = '#17151e';
+      c.beginPath();
+      c.arc(fixed.x, fixed.y, 22, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+    }
+    const port = p?.mobile ? p.origin : signalPoint(g, slot, 'port'),
+      j = signalPoint(g, slot, 'junction');
     const lit = !!p,
       canCut = lit && p!.sent === 0 && r!.cooldown <= 0;
     const cable = [j, { x: j.x, y: 80 }, { x: port.x, y: 80 }, port];
@@ -90,15 +102,16 @@ export function drawSwitchboardArena(c: CanvasRenderingContext2D, g: Game) {
     c.strokeStyle = lit ? amber : '#796a86';
     c.lineWidth = 3;
     c.beginPath();
-    c.arc(port.x, port.y, 22, 0, Math.PI * 2);
-    c.fill();
+    c.arc(port.x, port.y, p?.mobile ? 52 : 22, 0, Math.PI * 2);
+    if (!p?.mobile) c.fill();
     c.stroke();
     const angle =
       p?.angles[Math.min(p.sent, p.angles.length - 1)] ??
       (slot === 1 ? Math.PI / 2 : port.x < 1000 ? 0 : Math.PI);
     c.lineWidth = 7;
     c.strokeStyle = lit && r!.elapsed >= signalFireAt(p!) - SIGNAL.lock ? red : '#96859e';
-    line(c, [port, { x: port.x + Math.cos(angle) * 29, y: port.y + Math.sin(angle) * 29 }]);
+    const barrel = p?.mobile ? 60 : 29;
+    line(c, [port, { x: port.x + Math.cos(angle) * barrel, y: port.y + Math.sin(angle) * barrel }]);
   }
   c.restore();
 }

@@ -30,6 +30,7 @@ export interface SignalPlan {
   cut: boolean;
   done: boolean;
   escape: Vec | null;
+  mobile?: boolean;
 }
 export interface SwitchboardRig {
   plans: SignalPlan[];
@@ -88,7 +89,7 @@ function segmentDistance(p: Vec, a: Vec, b: Vec) {
   const t = clamp(((p.x - a.x) * x + (p.y - a.y) * y) / (x * x + y * y || 1), 0, 1);
   return Math.hypot(p.x - a.x - x * t, p.y - a.y - y * t);
 }
-// A conservative escape corridor: ordinary movement or one rising jump, with
+// A conservative escape corridor: ordinary movement, one jump or a fall, with
 // a clear player hull and enough separation from every still-pending lane.
 export function signalEscape(g: Game, plans: SignalPlan[]): Vec | null {
   const from = { x: g.player.position.x, y: clamp(g.player.position.y - 1, 18.1, 721.9) };
@@ -104,12 +105,23 @@ export function signalEscape(g: Game, plans: SignalPlan[]): Vec | null {
         ),
       })),
     );
-  for (const y of [0, -80, -150])
+  // Releasing recoil lets a hovering player drop out of a lane below a shelf.
+  // Omitting downward escapes used to cancel every aimed volley in that pocket.
+  // Saved encounters and older Daily rulesets retain their original scheduler.
+  const falling = g.annexVersion >= 5;
+  for (const y of falling ? [0, -80, -150, 40, 80] : [0, -80, -150])
     for (const x of [-150, 150, -240, 240, -80, 80, 0]) {
-      const to = { x: from.x + x, y: from.y + y };
+      const to = { x: from.x + x, y: falling ? clamp(from.y + y, 18.1, 721.9) : from.y + y };
       if (to.x < 20 || to.x > 1980 || to.y < 18 || to.y > 722) continue;
       if (g.solidBodies.some((b) => sweepBox(from, to, { x: 14, y: 18 }, b))) continue;
-      if (lines.every((l) => segmentDistance(to, l.a, l.b) >= 34)) return to;
+      if (
+        lines.every((l) =>
+          falling
+            ? !segmentBox(l.a, l.b, { x: to.x - 22, y: to.y - 26 }, { x: to.x + 22, y: to.y + 26 })
+            : segmentDistance(to, l.a, l.b) >= 34,
+        )
+      )
+        return to;
     }
   return null;
 }
@@ -158,7 +170,15 @@ export class SwitchboardSystem {
         kind,
         r.plans.map((p) => p.slot),
       );
-      const origin = signalPoint(g, slot, 'port'),
+      const remote = signalPoint(g, slot, 'port');
+      // When shelves shield every remote emitter, use the controller's visible
+      // firing lane. This replaces one pattern; it never adds a third attack.
+      const mobile =
+        g.annexVersion >= 5 &&
+        kind !== 'ground' &&
+        distance(g.lineEnd(remote, g.player.position, 5), g.player.position) > 1 &&
+        distance(g.lineEnd(e.body.position, g.player.position, 5), g.player.position) < 1;
+      const origin = mobile ? { ...e.body.position } : remote,
         marks = [{ ...g.player.position }];
       r.plans.push({
         slot,
@@ -172,6 +192,7 @@ export class SwitchboardSystem {
         cut: false,
         done: false,
         escape: null,
+        ...(mobile ? { mobile: true } : {}),
       });
     }
     r.elapsed = 0;
@@ -186,7 +207,8 @@ export class SwitchboardSystem {
     Matter.Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
     const dest = bossHuntTarget(g, e, e.state === 'recover'),
       p = e.body.position;
-    const speed = e.state === 'recover' || r.opening > 0 ? 1.5 : 3.8;
+    const braced = r.plans.some((p) => p.mobile && !p.cut && !p.done);
+    const speed = braced ? 0 : e.state === 'recover' || r.opening > 0 ? 1.5 : 3.8;
     Matter.Body.setVelocity(e.body, {
       x: clamp((dest.x - p.x) * 0.08, -speed, speed),
       y: clamp((dest.y - p.y) * 0.08, -speed, speed),
@@ -221,6 +243,7 @@ export class SwitchboardSystem {
       if (plan.cut || plan.done || r.elapsed < plan.delay) continue;
       const age = r.elapsed - plan.delay;
       if (!plan.locked) {
+        if (plan.mobile) plan.origin = { ...e.body.position };
         if (plan.kind === 'playback') {
           if (plan.marks.length < 3 && age >= plan.marks.length * 0.3)
             plan.marks.push({ ...g.player.position });
