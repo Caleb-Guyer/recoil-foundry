@@ -12,6 +12,8 @@ These changes use normal Annex revision **6**. Continue retains saved revisions 
 
 ## Combat probes
 
+Follow-up: the [3.0.2 beam investigation](beam-balance-3.0.2.md) reproduces the results below, then identifies recoil, charge-release, ray-alignment and jump-input limitations in the pilot. Its matching-input matrix demonstrates wins for every audited beam branch without changing live balance. The original results below remain historical evidence, not human difficulty measurements.
+
 Run `node --experimental-strip-types scripts/dead-signal-postlaunch.ts boss`, then `boss-full`. Both use real Game/Matter simulation, legal builds, actual damage and ordinary movement/fire input. Each set has 24 fights: three weapon families × two Subversion branches × two mirrors × two aiming policies. No combat health, enemy, damage or physics overrides. Presets start fresh boss fights; these are not full campaigns.
 
 | Build              | Modest: body aim | Modest: junction aim | 11 upgrades: body aim | 11 upgrades: junction aim |

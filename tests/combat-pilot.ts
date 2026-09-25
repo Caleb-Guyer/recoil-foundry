@@ -11,13 +11,25 @@ import { weaponAngles } from '../src/interceptor-weapons.ts';
 import { kilnMuzzle, kilnPoint } from '../src/kiln-ai.ts';
 import { sorterFan } from '../src/reclamation.ts';
 import { harpoonMuzzle, HARPOON_LOCK, HARPOON_SPEED } from '../src/harpooner.ts';
-import { areaIndex, clamp, distance, direction } from '../src/rules.ts';
+import { areaIndex, clamp, distance, direction, type Vec } from '../src/rules.ts';
+import { beamRecoilForecast } from './beam-pilot.ts';
+
+export interface CombatPilotOptions {
+  aim?: Vec;
+  fire?: boolean;
+  beamAware?: boolean;
+}
 
 // Test-only player: compare short movement trajectories with visible bolts and
 // locked warnings. It sends ordinary inputs; it never changes health, enemies,
 // shots, upgrades, or the simulation. Approximate terrain/recoil prediction is
 // deliberately independent from Matter's collision solver.
-export function dodgePilot(g: Game, e: Enemy, allowFire = true): Partial<Input> {
+export function dodgePilot(
+  g: Game,
+  e: Enemy,
+  allowFire = true,
+  options: CombatPilotOptions = {},
+): Partial<Input> {
   const p = g.player.position,
     target = e.harpoon?.phase === 'latched' ? harpoonMuzzle(e) : e.body.position;
   const boxes = g.solidBodies.map((b) => ({
@@ -344,7 +356,11 @@ export function dodgePilot(g: Game, e: Enemy, allowFire = true): Partial<Input> 
   ]);
   for (const move of [-1, 0, 1])
     for (const jump of g.grounded ? [false, true] : [false])
-      for (const fire of allowFire ? [true, false] : [false])
+      for (const fire of !allowFire
+        ? [false]
+        : options.fire === undefined
+          ? [true, false]
+          : [options.fire])
         for (const lift of fire &&
         (e.kind === 'sorter' ||
           e.kind === 'boss' ||
@@ -373,15 +389,18 @@ export function dodgePilot(g: Game, e: Enemy, allowFire = true): Partial<Input> 
               : e.kind === 'boss' && e.state !== 'windup' && e.state !== 'followup'
                 ? Math.min(12, flight)
                 : 0;
-          const aim = lift
-            ? { x: p.x, y: p.y + 500 }
-            : {
-                x: target.x + e.body.velocity.x * travel,
-                y: target.y + e.body.velocity.y * travel,
-              };
+          const aim =
+            options.aim ??
+            (lift
+              ? { x: p.x, y: p.y + 500 }
+              : {
+                  x: target.x + e.body.velocity.x * travel,
+                  y: target.y + e.body.velocity.y * travel,
+                });
           // Slow explosive volleys need enough look-ahead to include their
           // recoil landing, rather than choosing a safe first half of a jump.
           const horizon = g.gun.shellshock ? 60 : 40;
+          const beam = options.beamAware && g.torch.equipped ? beamRecoilForecast(g) : undefined;
           for (let frame = 1; frame <= horizon; frame++) {
             const time = g.time + frame / 60,
               ox = x,
@@ -396,7 +415,14 @@ export function dodgePilot(g: Game, e: Enemy, allowFire = true): Partial<Input> 
               ground = false;
             }
             let shot = false;
-            if (burst > 0 && time >= burstAt) {
+            if (beam) {
+              const emission = beam(1 / 60, fire, charged);
+              const d = direction({ x, y }, aim);
+              const force = emission.impulse * (ground ? 0.21 : 1);
+              if (emission.spentLanding) charged = false;
+              vx = clamp(vx - d.x * force, -23, 23);
+              vy = clamp(vy - d.y * force, -21, 20);
+            } else if (burst > 0 && time >= burstAt) {
               burst--;
               burstAt = time + g.gun.interval * 0.3;
               shot = true;

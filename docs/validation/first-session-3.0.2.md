@@ -44,4 +44,6 @@ All fifteen reward screens contained three distinct legal options, and all five 
 
 ## What remains unknown
 
+The subsequent [beam balance investigation](beam-balance-3.0.2.md) has now checked the earlier beam-loss hypothesis. It found significant pilot/input mismatches and confirmed all audited beam branches can win without a gameplay buff. Human balance remains unverified.
+
 Whether new players discover recoil without coaching, which choices they find exciting, whether they voluntarily restart, and whether they notice the Annex. Automated success is not a substitute for those observations. Existing beam-boss weaknesses from the [3.0.1 technical audit](dead-signal-3.0.1.md) remain a hypothesis to investigate if reproduced in play; this opening probe does not resolve them. No new physical hardware or separate browser certification is claimed.
