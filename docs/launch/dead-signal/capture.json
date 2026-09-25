@@ -1,0 +1,1227 @@
+{
+  "version": "3.0.0-rc.2",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "seconds": 23,
+  "method": "Actual Game/Renderer, legal preset builds, scripted controls, ordinary damage/collision. Editorial camera and cuts. No boss footage.",
+  "music": "Original Orders After Hours — trailer arrangement, 112 BPM, final D-minor resolution",
+  "cuts": [
+    {
+      "frame": 193,
+      "seconds": 3.216666666666667
+    },
+    {
+      "frame": 321,
+      "seconds": 5.35
+    },
+    {
+      "frame": 579,
+      "seconds": 9.65
+    },
+    {
+      "frame": 836,
+      "seconds": 13.933333333333334
+    },
+    {
+      "frame": 1093,
+      "seconds": 18.216666666666665
+    }
+  ],
+  "scenes": [
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-14",
+      "style": 0,
+      "start": 172,
+      "length": 128,
+      "quality": {
+        "visibleFraction": 0.6796875,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 35,
+        "longestStallFrames": 11,
+        "travel": 692,
+        "span": 618,
+        "damage": 335
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1281.1203983379683,
+      "screenStart": 3.216666666666667,
+      "screenEnd": 5.35,
+      "visibleBlue": 0,
+      "health": 88,
+      "screenshot": {
+        "file": "01-transmission.png",
+        "frame": 258
+      }
+    },
+    {
+      "name": "climb",
+      "stage": 9,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-climb-5",
+      "style": 1,
+      "start": 212,
+      "length": 258,
+      "quality": {
+        "visibleFraction": 0.6434108527131783,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 65,
+        "longestStallFrames": 5,
+        "travel": 1673,
+        "span": 711,
+        "damage": 446
+      },
+      "layout": "annex-cable-well",
+      "mirror": true,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 2354.831164367123,
+      "screenStart": 5.35,
+      "screenEnd": 9.65,
+      "visibleBlue": 0,
+      "health": 88,
+      "screenshot": {
+        "file": "02-recoil-climb.png",
+        "frame": 511
+      }
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-1",
+      "style": 1,
+      "start": 64,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8599221789883269,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 18,
+        "longestStallFrames": 5,
+        "travel": 1564,
+        "span": 744,
+        "damage": 673
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        643
+      ],
+      "blueFrames": 233,
+      "score": 3190.9145023247415,
+      "screenStart": 9.65,
+      "screenEnd": 13.933333333333334,
+      "visibleBlue": 193,
+      "health": 64,
+      "screenshot": {
+        "file": "03-subversion.png",
+        "frame": 668
+      }
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 140,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8871595330739299,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 0,
+        "travel": 2078,
+        "span": 825,
+        "damage": 349
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        1041
+      ],
+      "blueFrames": 257,
+      "score": 4086.7934268609024,
+      "screenStart": 13.933333333333334,
+      "screenEnd": 18.216666666666665,
+      "visibleBlue": 100,
+      "health": 64
+    }
+  ],
+  "cues": [
+    {
+      "frame": 144,
+      "kind": "signal-charge"
+    },
+    {
+      "frame": 193,
+      "kind": "prop"
+    },
+    {
+      "frame": 193,
+      "kind": "break"
+    },
+    {
+      "frame": 196,
+      "kind": "enemy"
+    },
+    {
+      "frame": 198,
+      "kind": "enemy"
+    },
+    {
+      "frame": 202,
+      "kind": "heavy"
+    },
+    {
+      "frame": 214,
+      "kind": "hit"
+    },
+    {
+      "frame": 221,
+      "kind": "hit"
+    },
+    {
+      "frame": 233,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 235,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 237,
+      "kind": "heavy"
+    },
+    {
+      "frame": 246,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 248,
+      "kind": "hit"
+    },
+    {
+      "frame": 249,
+      "kind": "heavy"
+    },
+    {
+      "frame": 254,
+      "kind": "enemy"
+    },
+    {
+      "frame": 256,
+      "kind": "enemy"
+    },
+    {
+      "frame": 258,
+      "kind": "hit"
+    },
+    {
+      "frame": 261,
+      "kind": "heavy"
+    },
+    {
+      "frame": 268,
+      "kind": "kill"
+    },
+    {
+      "frame": 276,
+      "kind": "heavy"
+    },
+    {
+      "frame": 280,
+      "kind": "hit"
+    },
+    {
+      "frame": 282,
+      "kind": "enemy"
+    },
+    {
+      "frame": 288,
+      "kind": "heavy"
+    },
+    {
+      "frame": 289,
+      "kind": "signal-fire"
+    },
+    {
+      "frame": 292,
+      "kind": "kill"
+    },
+    {
+      "frame": 299,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 303,
+      "kind": "heavy"
+    },
+    {
+      "frame": 314,
+      "kind": "kill"
+    },
+    {
+      "frame": 318,
+      "kind": "heavy"
+    },
+    {
+      "frame": 328,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 336,
+      "kind": "enemy"
+    },
+    {
+      "frame": 341,
+      "kind": "heavy"
+    },
+    {
+      "frame": 349,
+      "kind": "enemy"
+    },
+    {
+      "frame": 349,
+      "kind": "hit"
+    },
+    {
+      "frame": 351,
+      "kind": "land"
+    },
+    {
+      "frame": 352,
+      "kind": "jump"
+    },
+    {
+      "frame": 353,
+      "kind": "heavy"
+    },
+    {
+      "frame": 361,
+      "kind": "kill"
+    },
+    {
+      "frame": 366,
+      "kind": "caller-lock"
+    },
+    {
+      "frame": 372,
+      "kind": "enemy"
+    },
+    {
+      "frame": 376,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 382,
+      "kind": "heavy"
+    },
+    {
+      "frame": 393,
+      "kind": "land"
+    },
+    {
+      "frame": 394,
+      "kind": "jump"
+    },
+    {
+      "frame": 397,
+      "kind": "enemy"
+    },
+    {
+      "frame": 402,
+      "kind": "heavy"
+    },
+    {
+      "frame": 411,
+      "kind": "enemy"
+    },
+    {
+      "frame": 415,
+      "kind": "hit"
+    },
+    {
+      "frame": 424,
+      "kind": "enemy"
+    },
+    {
+      "frame": 425,
+      "kind": "enemy"
+    },
+    {
+      "frame": 430,
+      "kind": "enemy"
+    },
+    {
+      "frame": 433,
+      "kind": "heavy"
+    },
+    {
+      "frame": 439,
+      "kind": "enemy"
+    },
+    {
+      "frame": 445,
+      "kind": "heavy"
+    },
+    {
+      "frame": 451,
+      "kind": "prop"
+    },
+    {
+      "frame": 455,
+      "kind": "enemy"
+    },
+    {
+      "frame": 456,
+      "kind": "hurt"
+    },
+    {
+      "frame": 460,
+      "kind": "heavy"
+    },
+    {
+      "frame": 461,
+      "kind": "hit"
+    },
+    {
+      "frame": 472,
+      "kind": "heavy"
+    },
+    {
+      "frame": 478,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 478,
+      "kind": "prop"
+    },
+    {
+      "frame": 481,
+      "kind": "hit"
+    },
+    {
+      "frame": 482,
+      "kind": "hit"
+    },
+    {
+      "frame": 484,
+      "kind": "heavy"
+    },
+    {
+      "frame": 491,
+      "kind": "enemy"
+    },
+    {
+      "frame": 495,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 496,
+      "kind": "heavy"
+    },
+    {
+      "frame": 498,
+      "kind": "kill"
+    },
+    {
+      "frame": 502,
+      "kind": "enemy"
+    },
+    {
+      "frame": 505,
+      "kind": "land"
+    },
+    {
+      "frame": 506,
+      "kind": "jump"
+    },
+    {
+      "frame": 511,
+      "kind": "heavy"
+    },
+    {
+      "frame": 519,
+      "kind": "enemy"
+    },
+    {
+      "frame": 523,
+      "kind": "prop"
+    },
+    {
+      "frame": 523,
+      "kind": "break"
+    },
+    {
+      "frame": 524,
+      "kind": "hit"
+    },
+    {
+      "frame": 531,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 541,
+      "kind": "heavy"
+    },
+    {
+      "frame": 547,
+      "kind": "kill"
+    },
+    {
+      "frame": 555,
+      "kind": "enemy"
+    },
+    {
+      "frame": 556,
+      "kind": "heavy"
+    },
+    {
+      "frame": 568,
+      "kind": "heavy"
+    },
+    {
+      "frame": 569,
+      "kind": "kill"
+    },
+    {
+      "frame": 581,
+      "kind": "hit"
+    },
+    {
+      "frame": 585,
+      "kind": "hit"
+    },
+    {
+      "frame": 590,
+      "kind": "heavy"
+    },
+    {
+      "frame": 591,
+      "kind": "land"
+    },
+    {
+      "frame": 591,
+      "kind": "hit"
+    },
+    {
+      "frame": 601,
+      "kind": "hit"
+    },
+    {
+      "frame": 602,
+      "kind": "heavy"
+    },
+    {
+      "frame": 611,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 612,
+      "kind": "hit"
+    },
+    {
+      "frame": 618,
+      "kind": "land"
+    },
+    {
+      "frame": 619,
+      "kind": "jump"
+    },
+    {
+      "frame": 623,
+      "kind": "heavy"
+    },
+    {
+      "frame": 629,
+      "kind": "enemy"
+    },
+    {
+      "frame": 633,
+      "kind": "hit"
+    },
+    {
+      "frame": 635,
+      "kind": "heavy"
+    },
+    {
+      "frame": 635,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 637,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 643,
+      "kind": "kill"
+    },
+    {
+      "frame": 643,
+      "kind": "signal-reboot"
+    },
+    {
+      "frame": 654,
+      "kind": "land"
+    },
+    {
+      "frame": 655,
+      "kind": "jump"
+    },
+    {
+      "frame": 659,
+      "kind": "enemy"
+    },
+    {
+      "frame": 662,
+      "kind": "heavy"
+    },
+    {
+      "frame": 662,
+      "kind": "signal-charge"
+    },
+    {
+      "frame": 662,
+      "kind": "hit"
+    },
+    {
+      "frame": 668,
+      "kind": "kill"
+    },
+    {
+      "frame": 677,
+      "kind": "enemy"
+    },
+    {
+      "frame": 681,
+      "kind": "caller-record"
+    },
+    {
+      "frame": 685,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 685,
+      "kind": "hit"
+    },
+    {
+      "frame": 693,
+      "kind": "enemy"
+    },
+    {
+      "frame": 699,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 703,
+      "kind": "heavy"
+    },
+    {
+      "frame": 703,
+      "kind": "hit"
+    },
+    {
+      "frame": 704,
+      "kind": "prop"
+    },
+    {
+      "frame": 706,
+      "kind": "enemy"
+    },
+    {
+      "frame": 717,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 720,
+      "kind": "enemy"
+    },
+    {
+      "frame": 721,
+      "kind": "hurt"
+    },
+    {
+      "frame": 728,
+      "kind": "caller-lock"
+    },
+    {
+      "frame": 730,
+      "kind": "kill"
+    },
+    {
+      "frame": 734,
+      "kind": "heavy"
+    },
+    {
+      "frame": 734,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 736,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 736,
+      "kind": "hit"
+    },
+    {
+      "frame": 742,
+      "kind": "hit"
+    },
+    {
+      "frame": 743,
+      "kind": "hit"
+    },
+    {
+      "frame": 746,
+      "kind": "heavy"
+    },
+    {
+      "frame": 754,
+      "kind": "hit"
+    },
+    {
+      "frame": 755,
+      "kind": "enemy"
+    },
+    {
+      "frame": 757,
+      "kind": "enemy"
+    },
+    {
+      "frame": 758,
+      "kind": "heavy"
+    },
+    {
+      "frame": 758,
+      "kind": "hit"
+    },
+    {
+      "frame": 763,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 763,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 770,
+      "kind": "heavy"
+    },
+    {
+      "frame": 774,
+      "kind": "hit"
+    },
+    {
+      "frame": 776,
+      "kind": "enemy"
+    },
+    {
+      "frame": 780,
+      "kind": "signal-fire"
+    },
+    {
+      "frame": 782,
+      "kind": "heavy"
+    },
+    {
+      "frame": 784,
+      "kind": "enemy"
+    },
+    {
+      "frame": 784,
+      "kind": "enemy"
+    },
+    {
+      "frame": 788,
+      "kind": "hit"
+    },
+    {
+      "frame": 790,
+      "kind": "enemy"
+    },
+    {
+      "frame": 794,
+      "kind": "heavy"
+    },
+    {
+      "frame": 794,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 797,
+      "kind": "hurt"
+    },
+    {
+      "frame": 804,
+      "kind": "hit"
+    },
+    {
+      "frame": 807,
+      "kind": "enemy"
+    },
+    {
+      "frame": 809,
+      "kind": "heavy"
+    },
+    {
+      "frame": 809,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 812,
+      "kind": "hit"
+    },
+    {
+      "frame": 818,
+      "kind": "enemy"
+    },
+    {
+      "frame": 818,
+      "kind": "kill"
+    },
+    {
+      "frame": 827,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 829,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 833,
+      "kind": "enemy"
+    },
+    {
+      "frame": 836,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 836,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 837,
+      "kind": "heavy"
+    },
+    {
+      "frame": 841,
+      "kind": "prop"
+    },
+    {
+      "frame": 841,
+      "kind": "hit"
+    },
+    {
+      "frame": 843,
+      "kind": "signal-charge"
+    },
+    {
+      "frame": 847,
+      "kind": "hit"
+    },
+    {
+      "frame": 847,
+      "kind": "hit"
+    },
+    {
+      "frame": 849,
+      "kind": "enemy"
+    },
+    {
+      "frame": 852,
+      "kind": "heavy"
+    },
+    {
+      "frame": 855,
+      "kind": "hit"
+    },
+    {
+      "frame": 857,
+      "kind": "enemy"
+    },
+    {
+      "frame": 857,
+      "kind": "enemy"
+    },
+    {
+      "frame": 861,
+      "kind": "hit"
+    },
+    {
+      "frame": 863,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 863,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 867,
+      "kind": "heavy"
+    },
+    {
+      "frame": 875,
+      "kind": "hit"
+    },
+    {
+      "frame": 875,
+      "kind": "hit"
+    },
+    {
+      "frame": 882,
+      "kind": "heavy"
+    },
+    {
+      "frame": 884,
+      "kind": "enemy"
+    },
+    {
+      "frame": 884,
+      "kind": "enemy"
+    },
+    {
+      "frame": 884,
+      "kind": "hit"
+    },
+    {
+      "frame": 890,
+      "kind": "kill"
+    },
+    {
+      "frame": 895,
+      "kind": "land"
+    },
+    {
+      "frame": 896,
+      "kind": "jump"
+    },
+    {
+      "frame": 897,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 907,
+      "kind": "hurt"
+    },
+    {
+      "frame": 912,
+      "kind": "heavy"
+    },
+    {
+      "frame": 913,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 913,
+      "kind": "enemy"
+    },
+    {
+      "frame": 914,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 919,
+      "kind": "hit"
+    },
+    {
+      "frame": 921,
+      "kind": "enemy"
+    },
+    {
+      "frame": 922,
+      "kind": "hit"
+    },
+    {
+      "frame": 923,
+      "kind": "hit"
+    },
+    {
+      "frame": 927,
+      "kind": "heavy"
+    },
+    {
+      "frame": 927,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 935,
+      "kind": "land"
+    },
+    {
+      "frame": 935,
+      "kind": "enemy"
+    },
+    {
+      "frame": 936,
+      "kind": "hit"
+    },
+    {
+      "frame": 936,
+      "kind": "hit"
+    },
+    {
+      "frame": 937,
+      "kind": "jump"
+    },
+    {
+      "frame": 942,
+      "kind": "heavy"
+    },
+    {
+      "frame": 948,
+      "kind": "enemy"
+    },
+    {
+      "frame": 948,
+      "kind": "hit"
+    },
+    {
+      "frame": 949,
+      "kind": "hit"
+    },
+    {
+      "frame": 949,
+      "kind": "hit"
+    },
+    {
+      "frame": 950,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 957,
+      "kind": "heavy"
+    },
+    {
+      "frame": 958,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 958,
+      "kind": "signal-fire"
+    },
+    {
+      "frame": 960,
+      "kind": "kill"
+    },
+    {
+      "frame": 974,
+      "kind": "enemy"
+    },
+    {
+      "frame": 975,
+      "kind": "heavy"
+    },
+    {
+      "frame": 981,
+      "kind": "hit"
+    },
+    {
+      "frame": 981,
+      "kind": "hit"
+    },
+    {
+      "frame": 982,
+      "kind": "enemy"
+    },
+    {
+      "frame": 982,
+      "kind": "hit"
+    },
+    {
+      "frame": 982,
+      "kind": "hit"
+    },
+    {
+      "frame": 988,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 990,
+      "kind": "heavy"
+    },
+    {
+      "frame": 995,
+      "kind": "prop"
+    },
+    {
+      "frame": 996,
+      "kind": "hit"
+    },
+    {
+      "frame": 996,
+      "kind": "hit"
+    },
+    {
+      "frame": 1001,
+      "kind": "land"
+    },
+    {
+      "frame": 1003,
+      "kind": "jump"
+    },
+    {
+      "frame": 1009,
+      "kind": "enemy"
+    },
+    {
+      "frame": 1011,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 1016,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 1019,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 1020,
+      "kind": "heavy"
+    },
+    {
+      "frame": 1020,
+      "kind": "hit"
+    },
+    {
+      "frame": 1020,
+      "kind": "hit"
+    },
+    {
+      "frame": 1020,
+      "kind": "hit"
+    },
+    {
+      "frame": 1020,
+      "kind": "hit"
+    },
+    {
+      "frame": 1020,
+      "kind": "hit"
+    },
+    {
+      "frame": 1032,
+      "kind": "enemy"
+    },
+    {
+      "frame": 1035,
+      "kind": "heavy"
+    },
+    {
+      "frame": 1040,
+      "kind": "enemy"
+    },
+    {
+      "frame": 1041,
+      "kind": "kill"
+    },
+    {
+      "frame": 1041,
+      "kind": "signal-reboot"
+    },
+    {
+      "frame": 1048,
+      "kind": "hurt"
+    },
+    {
+      "frame": 1052,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 1056,
+      "kind": "heavy"
+    },
+    {
+      "frame": 1057,
+      "kind": "hit"
+    },
+    {
+      "frame": 1057,
+      "kind": "hit"
+    },
+    {
+      "frame": 1057,
+      "kind": "hit"
+    },
+    {
+      "frame": 1057,
+      "kind": "hit"
+    },
+    {
+      "frame": 1057,
+      "kind": "hit"
+    },
+    {
+      "frame": 1068,
+      "kind": "aftershock"
+    },
+    {
+      "frame": 1071,
+      "kind": "heavy"
+    },
+    {
+      "frame": 1075,
+      "kind": "aim-warn"
+    },
+    {
+      "frame": 1075,
+      "kind": "hit"
+    },
+    {
+      "frame": 1075,
+      "kind": "hit"
+    },
+    {
+      "frame": 1076,
+      "kind": "kill"
+    },
+    {
+      "frame": 1088,
+      "kind": "hit"
+    }
+  ]
+}

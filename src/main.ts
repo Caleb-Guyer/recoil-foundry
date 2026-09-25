@@ -220,12 +220,16 @@ function backFromCredits() {
   showDialog(creditsParent);
   $('open-credits').focus();
 }
+function backFromUpdate() {
+  closeDialog();
+  $('whats-new').focus();
+}
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Dead Signal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button><button id="learn" class="quiet" hidden>Learn to play</button></div>
    <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
@@ -1242,6 +1246,7 @@ function showDialog(kind: string) {
   modal.classList.toggle('controls-dialog', kind === 'controls');
   modal.classList.toggle('progress-dialog', kind === 'progress');
   modal.classList.toggle('settings-dialog', kind === 'settings' || kind === 'pause');
+  modal.classList.toggle('update-dialog', kind === 'update');
   const content = $('dialog-content');
   modal.scrollTop = 0;
   if (kind === 'logbook' || kind === 'workshop')
@@ -1249,7 +1254,16 @@ function showDialog(kind: string) {
   const visibleCommendations = previewCommendations
     ? COMMENDATIONS.map((c) => c.id)
     : commendations;
-  if (kind === 'credits') {
+  if (kind === 'update') {
+    content.innerHTML =
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Dead Signal.</h2>' +
+      '<p class="update-tagline">The shift ended. The orders didn’t.</p>' +
+      '<dl class="update-notes"><div><dt>A different way through.</dt><dd>After Furnace, take the upper exit into the Transmission Annex. Four rooms. Six possible layouts. Something is still issuing orders.</dd></div>' +
+      '<div><dt>Make them change sides.</dt><dd>Five Subversion upgrades let your gun reboot fallen machines. Keep one stronger ally, or command a short-lived pair.</dd></div>' +
+      '<div><dt>Follow the transmission.</dt><dd>New machines, an original synth-rock theme, and factory records to discover. Your saved progress stays with you.</dd></div></dl>' +
+      '<div class="actions"><button id="back" class="primary">Back</button></div>';
+    $('back').onclick = backFromUpdate;
+  } else if (kind === 'credits') {
     content.innerHTML = creditsMarkup();
     $('back').onclick = backFromCredits;
   } else if (kind === 'issue') {
@@ -2075,6 +2089,7 @@ $('continue').onclick = () => {
   if (checkpoint) start(checkpoint);
 };
 $('settings').onclick = () => showDialog('settings');
+$('whats-new').onclick = () => showDialog('update');
 document.querySelectorAll<HTMLButtonElement>('[data-save-warning]').forEach((button) => {
   button.onclick = openProgress;
 });
@@ -2107,6 +2122,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'update') {
+    backFromUpdate();
+    return;
+  }
   if (dialogKind === 'issue') {
     backFromReport();
     return;

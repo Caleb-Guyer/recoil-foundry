@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dead Signal — launch review</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+        background: #0d0c13;
+        color: #eee9df;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        max-width: 1180px;
+        margin: auto;
+        padding: 44px 24px 64px;
+      }
+      p {
+        color: #b0aabb;
+        margin: 0 0 24px;
+      }
+      .eyebrow {
+        font: 12px monospace;
+        letter-spacing: 0.18em;
+        color: #e8bb76;
+      }
+      h1 {
+        font-size: clamp(38px, 6vw, 72px);
+        line-height: 1.1;
+        letter-spacing: -0.05em;
+        margin: 16px 0;
+      }
+      video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #000;
+        border: 1px solid #383141;
+      }
+      nav {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin: 20px 0 38px;
+      }
+      a {
+        color: #e8bb76;
+        text-underline-offset: 4px;
+      }
+      a:focus-visible {
+        outline: 2px solid #e8bb76;
+        outline-offset: 5px;
+      }
+      .stills {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+      figure {
+        margin: 0;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid #383141;
+      }
+      figcaption {
+        font-size: 14px;
+        color: #b0aabb;
+        margin-top: 9px;
+      }
+      footer {
+        margin-top: 40px;
+        border-top: 1px solid #383141;
+        padding-top: 24px;
+        font-size: 14px;
+      }
+      @media (max-width: 650px) {
+        body {
+          padding: 26px 18px;
+        }
+        .stills {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="eyebrow">RECOIL FOUNDRY · STAGED LAUNCH KIT</span>
+      <h1>Dead Signal.</h1>
+      <p>The shift ended. The orders didn’t.</p>
+    </header>
+    <video
+      controls
+      playsinline
+      preload="metadata"
+      poster="Dead-Signal-Teaser-Cover.png"
+      aria-label="Dead Signal update teaser, 23 seconds"
+    >
+      <source src="Recoil-Foundry-Dead-Signal-Teaser.mp4" type="video/mp4" />
+      <a href="Recoil-Foundry-Dead-Signal-Teaser.mp4">Download the teaser</a>
+    </video>
+    <nav aria-label="Launch files">
+      <a href="Recoil-Foundry-Dead-Signal-Teaser.mp4" download>Download teaser</a
+      ><a href="upload-text.txt">Upload copy</a
+      ><a href="announcement.md">Release announcement draft</a>
+    </nav>
+    <div class="stills">
+      <figure>
+        <a href="01-transmission.png"
+          ><img
+            src="01-transmission.png"
+            alt="The player recoils past a charged amber gun port."
+            width="1920"
+            height="1080"
+        /></a>
+        <figcaption>01 · Follow the transmission.</figcaption>
+      </figure>
+      <figure>
+        <a href="02-recoil-climb.png"
+          ><img
+            src="02-recoil-climb.png"
+            alt="The player fires downward while rising between platforms."
+            width="1920"
+            height="1080"
+        /></a>
+        <figcaption>02 · Recoil through the Cable Well.</figcaption>
+      </figure>
+      <figure>
+        <a href="03-subversion.png"
+          ><img
+            src="03-subversion.png"
+            alt="A rebooted blue machine fights alongside the player."
+            width="1920"
+            height="1080"
+        /></a>
+        <figcaption>03 · Make them change sides.</figcaption>
+      </figure>
+    </div>
+    <footer>
+      <p>
+        Prepared for review. Dead Signal has not been published. The teaser uses actual engine
+        gameplay with scripted controls and the original game score; it keeps the boss unseen.
+      </p>
+    </footer>
+  </body>
+</html>

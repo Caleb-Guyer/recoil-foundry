@@ -1,0 +1,1306 @@
+{
+  "transmission": [
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-14",
+      "style": 0,
+      "start": 172,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.6744186046511628,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 35,
+        "longestStallFrames": 11,
+        "travel": 701,
+        "span": 627,
+        "damage": 335
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1281.1203983379683
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-14",
+      "style": 0,
+      "start": 160,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.6356589147286822,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 47,
+        "longestStallFrames": 1,
+        "travel": 737,
+        "span": 675,
+        "damage": 301
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1245.8701175703115
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-14",
+      "style": 0,
+      "start": 184,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.6744186046511628,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 11,
+        "travel": 664,
+        "span": 596,
+        "damage": 335
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1243.1816462675104
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-14",
+      "style": 0,
+      "start": 196,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.6744186046511628,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 31,
+        "longestStallFrames": 11,
+        "travel": 578,
+        "span": 498,
+        "damage": 335
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1175.159679520451
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-14",
+      "style": 0,
+      "start": 208,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.6666666666666666,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 43,
+        "longestStallFrames": 11,
+        "travel": 544,
+        "span": 394,
+        "damage": 292
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1118.4464112740752
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-17",
+      "style": 1,
+      "start": 184,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.6356589147286822,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 42,
+        "longestStallFrames": 5,
+        "travel": 595,
+        "span": 353,
+        "damage": 360
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1083.5893242088648
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-17",
+      "style": 1,
+      "start": 220,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.8217054263565892,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 12,
+        "longestStallFrames": 5,
+        "travel": 524,
+        "span": 215,
+        "damage": 210
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1083.1217761889557
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-17",
+      "style": 1,
+      "start": 232,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.7751937984496124,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 24,
+        "longestStallFrames": 5,
+        "travel": 525,
+        "span": 258,
+        "damage": 191
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1076.2845238451046
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-17",
+      "style": 1,
+      "start": 196,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.7286821705426356,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 30,
+        "longestStallFrames": 5,
+        "travel": 585,
+        "span": 324,
+        "damage": 307
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1069.5539470568096
+    },
+    {
+      "name": "transmission",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-transmission-17",
+      "style": 1,
+      "start": 208,
+      "length": 129,
+      "quality": {
+        "visibleFraction": 0.8217054263565892,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 18,
+        "longestStallFrames": 5,
+        "travel": 547,
+        "span": 244,
+        "damage": 171
+      },
+      "layout": "annex-crossed-lines",
+      "mirror": false,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 1020.9784494343531
+    }
+  ],
+  "climb": [
+    {
+      "name": "climb",
+      "stage": 9,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-climb-5",
+      "style": 1,
+      "start": 212,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.642023346303502,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 65,
+        "longestStallFrames": 5,
+        "travel": 1666,
+        "span": 703,
+        "damage": 446
+      },
+      "layout": "annex-cable-well",
+      "mirror": true,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 2354.831164367123
+    },
+    {
+      "name": "climb",
+      "stage": 9,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-climb-5",
+      "style": 1,
+      "start": 224,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.6459143968871596,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 65,
+        "longestStallFrames": 5,
+        "travel": 1608,
+        "span": 748,
+        "damage": 446
+      },
+      "layout": "annex-cable-well",
+      "mirror": true,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 2341.0905990262254
+    },
+    {
+      "name": "climb",
+      "stage": 9,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-climb-5",
+      "style": 1,
+      "start": 236,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.642023346303502,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 65,
+        "longestStallFrames": 5,
+        "travel": 1504,
+        "span": 743,
+        "damage": 499
+      },
+      "layout": "annex-cable-well",
+      "mirror": true,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 2323.194174926835
+    },
+    {
+      "name": "climb",
+      "stage": 9,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-climb-5",
+      "style": 1,
+      "start": 200,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.6108949416342413,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 65,
+        "longestStallFrames": 5,
+        "travel": 1699,
+        "span": 697,
+        "damage": 427
+      },
+      "layout": "annex-cable-well",
+      "mirror": true,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 2287.846032796585
+    },
+    {
+      "name": "climb",
+      "stage": 9,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "airshot",
+        "pierce",
+        "ricochet",
+        "leech"
+      ],
+      "seed": "SIGNAL-MEDIA-climb-5",
+      "style": 1,
+      "start": 188,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.6108949416342413,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 65,
+        "longestStallFrames": 5,
+        "travel": 1713,
+        "span": 691,
+        "damage": 427
+      },
+      "layout": "annex-cable-well",
+      "mirror": true,
+      "reboots": [],
+      "blueFrames": 0,
+      "score": 2282.9917627773084
+    }
+  ],
+  "orders": [
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-1",
+      "style": 1,
+      "start": 104,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8949416342412452,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 18,
+        "longestStallFrames": 5,
+        "travel": 1501,
+        "span": 674,
+        "damage": 595
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 233,
+      "score": 3190.9145023247415
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-19",
+      "style": 1,
+      "start": 44,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7859922178988327,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 33,
+        "longestStallFrames": 3,
+        "travel": 2111,
+        "span": 711,
+        "damage": 572
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": true,
+      "reboots": [
+        67
+      ],
+      "blueFrames": 216,
+      "score": 3133.8027536634904
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-21",
+      "style": 1,
+      "start": 104,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7587548638132295,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 40,
+        "longestStallFrames": 5,
+        "travel": 2014,
+        "span": 828,
+        "damage": 476
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 233,
+      "score": 3125.885441749969
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-1",
+      "style": 1,
+      "start": 92,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8599221789883269,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 18,
+        "longestStallFrames": 5,
+        "travel": 1558,
+        "span": 709,
+        "damage": 615
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 221,
+      "score": 3090.897048522591
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-19",
+      "style": 1,
+      "start": 32,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7587548638132295,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 33,
+        "longestStallFrames": 3,
+        "travel": 2067,
+        "span": 711,
+        "damage": 608
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": true,
+      "reboots": [
+        67
+      ],
+      "blueFrames": 204,
+      "score": 3053.9086362404773
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-21",
+      "style": 1,
+      "start": 92,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7237354085603113,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 40,
+        "longestStallFrames": 5,
+        "travel": 1988,
+        "span": 865,
+        "damage": 476
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 221,
+      "score": 3053.8879608094708
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-21",
+      "style": 1,
+      "start": 80,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7237354085603113,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 40,
+        "longestStallFrames": 5,
+        "travel": 1969,
+        "span": 877,
+        "damage": 512
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 209,
+      "score": 3022.357857681588
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-1",
+      "style": 1,
+      "start": 80,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8599221789883269,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 18,
+        "longestStallFrames": 5,
+        "travel": 1555,
+        "span": 734,
+        "damage": 615
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 209,
+      "score": 3021.1868851906393
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-21",
+      "style": 1,
+      "start": 68,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7237354085603113,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 40,
+        "longestStallFrames": 5,
+        "travel": 1999,
+        "span": 858,
+        "damage": 534
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 197,
+      "score": 3016.519304597624
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-1",
+      "style": 1,
+      "start": 68,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8599221789883269,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 18,
+        "longestStallFrames": 5,
+        "travel": 1566,
+        "span": 744,
+        "damage": 637
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 197,
+      "score": 3003.6642529853966
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-0",
+      "style": 0,
+      "start": 32,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.622568093385214,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 47,
+        "longestStallFrames": 9,
+        "travel": 2077,
+        "span": 715,
+        "damage": 615
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": true,
+      "reboots": [
+        67
+      ],
+      "blueFrames": 200,
+      "score": 2991.6153065269477
+    },
+    {
+      "name": "orders",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "kick",
+        "pierce",
+        "spoof",
+        "standing-orders",
+        "priority-target"
+      ],
+      "seed": "SIGNAL-MEDIA-orders-19",
+      "style": 1,
+      "start": 20,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7120622568093385,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 33,
+        "longestStallFrames": 2,
+        "travel": 2097,
+        "span": 711,
+        "damage": 572
+      },
+      "layout": "annex-receiver-gallery",
+      "mirror": true,
+      "reboots": [
+        67
+      ],
+      "blueFrames": 192,
+      "score": 2990.833889262608
+    }
+  ],
+  "cross-talk": [
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 140,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8871595330739299,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 0,
+        "travel": 2078,
+        "span": 825,
+        "damage": 349
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        345
+      ],
+      "blueFrames": 257,
+      "score": 4086.7934268609024
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 152,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8404669260700389,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 28,
+        "longestStallFrames": 0,
+        "travel": 2112,
+        "span": 811,
+        "damage": 320
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        345
+      ],
+      "blueFrames": 257,
+      "score": 4045.736288975438
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 164,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7937743190661478,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 40,
+        "longestStallFrames": 0,
+        "travel": 2193,
+        "span": 780,
+        "damage": 310
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        345
+      ],
+      "blueFrames": 257,
+      "score": 4041.160858263825
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 176,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7470817120622568,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 52,
+        "longestStallFrames": 0,
+        "travel": 2235,
+        "span": 729,
+        "damage": 300
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        345
+      ],
+      "blueFrames": 257,
+      "score": 4003.755880474012
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 104,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.9494163424124513,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 0,
+        "travel": 1977,
+        "span": 918,
+        "damage": 329
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 233,
+      "score": 3976.165706668999
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-21",
+      "style": 1,
+      "start": 128,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8871595330739299,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 4,
+        "travel": 1921,
+        "span": 743,
+        "damage": 359
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        325
+      ],
+      "blueFrames": 257,
+      "score": 3944.5929588169406
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 92,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.9494163424124513,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 0,
+        "travel": 2000,
+        "span": 887,
+        "damage": 349
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 221,
+      "score": 3929.0288696129846
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-11",
+      "style": 1,
+      "start": 188,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7003891050583657,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 64,
+        "longestStallFrames": 0,
+        "travel": 2205,
+        "span": 743,
+        "damage": 281
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        345
+      ],
+      "blueFrames": 249,
+      "score": 3928.263222915027
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-21",
+      "style": 1,
+      "start": 140,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.867704280155642,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 4,
+        "travel": 1988,
+        "span": 728,
+        "damage": 348
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        325
+      ],
+      "blueFrames": 257,
+      "score": 3905.9192479478256
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-21",
+      "style": 1,
+      "start": 152,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.8249027237354085,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 4,
+        "travel": 2022,
+        "span": 715,
+        "damage": 328
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        325
+      ],
+      "blueFrames": 257,
+      "score": 3877.047822991022
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-21",
+      "style": 1,
+      "start": 164,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.7782101167315175,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 4,
+        "travel": 2019,
+        "span": 685,
+        "damage": 328
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        325
+      ],
+      "blueFrames": 257,
+      "score": 3830.337734628268
+    },
+    {
+      "name": "cross-talk",
+      "stage": 8,
+      "mods": [
+        "magnum",
+        "rapid",
+        "light",
+        "scatter",
+        "spoof",
+        "cross-talk",
+        "dead-switch",
+        "ricochet"
+      ],
+      "seed": "SIGNAL-MEDIA-cross-talk-21",
+      "style": 1,
+      "start": 104,
+      "length": 257,
+      "quality": {
+        "visibleFraction": 0.914396887159533,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 4,
+        "travel": 1907,
+        "span": 815,
+        "damage": 320
+      },
+      "layout": "annex-broadcast-floor",
+      "mirror": false,
+      "reboots": [
+        128
+      ],
+      "blueFrames": 233,
+      "score": 3809.548019249404
+    }
+  ]
+}

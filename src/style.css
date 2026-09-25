@@ -127,6 +127,53 @@ progress.low::-moz-progress-bar {
 .title-content {
   width: min(600px, 100%);
 }
+.update-link {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 10px 4px;
+  border: 0;
+  background: transparent;
+  color: #a8a2b1;
+  font-size: 12px;
+}
+.update-link > span:first-child {
+  color: #e1b986;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.update-link:hover > span:last-child {
+  color: var(--ink);
+}
+dialog.update-dialog {
+  width: min(620px, calc(100% - 40px));
+}
+.update-dialog h2 {
+  margin-bottom: 12px;
+}
+.update-tagline {
+  color: #e1b986;
+  margin: 0 0 28px;
+  line-height: 1.5;
+}
+.update-notes {
+  display: grid;
+  gap: 22px;
+  margin: 0 0 30px;
+  line-height: 1.55;
+}
+.update-notes dt {
+  font-weight: 650;
+  margin-bottom: 4px;
+}
+.update-notes dd {
+  margin: 0;
+  color: #adb7b4;
+  font-size: 14px;
+}
 h1 {
   margin: 0 0 44px;
   font-weight: 900;
@@ -1222,6 +1269,10 @@ body[data-input='controller'] canvas {
   }
 }
 @media (max-height: 520px) {
+  .update-link {
+    margin-bottom: 12px;
+    padding-block: 6px;
+  }
   #title-screen {
     padding: 26px 20px 55px;
     place-items: start center;
@@ -1694,7 +1745,9 @@ dialog.workshop-dialog {
   color: var(--ink);
   border: 1px solid #40524f;
   border-radius: 3px;
-  font: 13px/1.6 ui-monospace, monospace;
+  font:
+    13px/1.6 ui-monospace,
+    monospace;
 }
 .issue-details:focus-visible {
   outline: 2px solid var(--accent);

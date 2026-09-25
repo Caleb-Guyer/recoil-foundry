@@ -10,6 +10,12 @@
 
 ## Dead Signal candidate — 25 September 2026
 
+The current presentation candidate is **`3.0.0-rc.2`** on `feature/dead-signal`: [notes](releases/3.0.0-rc.2.md), [launch kit](launch/dead-signal/README.md). It adds the optional title-screen update notes, with no gameplay, save or Daily changes. All 1,885 tests pass and the production build succeeds. The local site archive is `.release-assets/recoil-foundry-v3.0.0-rc.2-site.zip`, SHA-256 `35D2391B064BC38119B7E1E98D5FAB9A5551070EDE7C18F7437FF70B84FE1E67`. The launch media are stored in documentation and excluded from the 16-file game ZIP. The earlier rc.1 archive below remains preserved. Neither candidate is published.
+
+For launch-day copy use `docs/launch/dead-signal/announcement.md`; the teaser and its upload text are explicitly **Coming soon**. Review availability wording before publishing. Promotion and public-host verification remain pending.
+
+The rc.2 archive was extracted into its own local preview. Startup, optional update notes/Back/Escape, About's `3.0.0-rc.2` version, and route-test startup/pause were verified there; warning/error logs were empty. The media preview separately completed the 23-second MP4. Its files are not included in the playable ZIP. Both checks were local, not public-host acceptance.
+
 `3.0.0-rc.1` is prepared on **`feature/dead-signal`**, with [release notes](releases/3.0.0-rc.1.md) and [validation evidence](plans/dead-signal-balance.md). It is not tagged, merged to main, published to GitHub Releases, or uploaded to either public host. The existing workflow requires a successful Pages run for the exact main commit before tagged publication; do not bypass that gate to publish a feature-branch candidate.
 
 The local artifact is `.release-assets/recoil-foundry-v3.0.0-rc.1-site.zip`, with `index.html` at the archive root, 16 files, relative asset URLs, and no development harness, source code, dependencies or private files. It was extracted and served locally to verify startup, normal gameplay, death/retry, pause, About/version and issue-report details. No issue was submitted. The final About copy includes the new regional score without the obsolete five-theme count. Browser warning/error logs were empty.
