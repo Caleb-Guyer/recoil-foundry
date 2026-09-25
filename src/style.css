@@ -1728,6 +1728,21 @@ dialog.workshop-dialog {
   flex-wrap: wrap;
   gap: 0 24px;
 }
+.feedback-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 20px;
+}
+.feedback-types button {
+  padding: 9px 14px;
+  border: 1px solid transparent;
+}
+.feedback-types [aria-pressed='true'] {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: #acc3b614;
+}
 .issue-label {
   display: block;
   color: var(--muted);

@@ -6,7 +6,7 @@ import { switchboardTestFromUrl } from './switchboard-layout.ts';
 import { annexRouteTestFromUrl } from './annex-route.ts';
 import { ANNEX_ALTERNATES } from './annex-alternates.ts';
 import { REGION_NAMES } from './regions.ts';
-import { issueReportMenu } from './issue-report.ts';
+import { createReportDraft, issueReportMenu, type ReportDraft } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
@@ -204,8 +204,10 @@ const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', 
 let finishedRun: RunRecap | null = null;
 let creditsParent = 'settings';
 let reportParent = 'settings';
+let reportDraft: ReportDraft | undefined;
 function openReport() {
   reportParent = dialogKind;
+  reportDraft ??= createReportDraft(game);
   showDialog('issue');
 }
 function backFromReport() {
@@ -1063,6 +1065,7 @@ game.onDeath = (origin) => {
   }
 };
 game.onChange = () => {
+  if (game.mode === 'playing' || game.mode === 'title') reportDraft = undefined;
   updateLogbook();
   if (replayRoom !== game.level || game.mode === 'title' || game.mode === 'won') {
     replayRoom = game.level;
@@ -1267,7 +1270,8 @@ function showDialog(kind: string) {
     content.innerHTML = creditsMarkup();
     $('back').onclick = backFromCredits;
   } else if (kind === 'issue') {
-    issueReportMenu(content, game, backFromReport);
+    reportDraft ??= createReportDraft(game);
+    issueReportMenu(content, game, backFromReport, reportDraft, reportParent === 'result');
   } else if (kind === 'progress') {
     updateProgressPanel = progressMenu(
       content,
@@ -1884,6 +1888,14 @@ function showDialog(kind: string) {
     watch.hidden = !deathReplay.ready;
     watch.onclick = () => showDialog('replay');
     content.querySelector('.actions')?.append(watch);
+  }
+  if (kind === 'result') {
+    const feedback = document.createElement('button');
+    feedback.id = 'open-report';
+    feedback.className = 'quiet';
+    feedback.textContent = 'Feedback';
+    feedback.onclick = openReport;
+    content.querySelector('.actions')?.append(feedback);
   }
   if (!modal.open) modal.showModal();
   updateControlHints();
