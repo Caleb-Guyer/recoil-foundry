@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.2.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Pressure Shift 3.2.0](validation/overtime-furnace-3.2.0.md).
+Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.3.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Crosswind 3.3.0](validation/overtime-cooling-3.3.0.md).
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
