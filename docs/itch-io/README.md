@@ -1,6 +1,6 @@
 # itch.io launch
 
-**Dead Signal 3.0.2 published 25 September 2026:** [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The current build is **3.0.2**, identical to the verified stable GitHub release ZIP. Project ID: `5033600`. The [3.0 launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) remains public; no direct recruitment messages were sent.
+[Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The [release operations record](../release-operations.md) identifies the current published build, verified GitHub ZIP and itch.io upload. Project ID: `5033600`. The [3.0 launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) remains public; no direct recruitment messages were sent.
 
 ## Page
 
@@ -20,9 +20,11 @@
 - Theme: background `#0a1419`, content `#142127`, text `#e9eadc`, links/buttons `#acc3b6`. Simple sans-serif typography, visible screenshots, no additional decorative background.
 - Embed: click to launch fullscreen, with scrollbars off and Loading Docks as the launch background. Screenshots use the sidebar layout; comments are enabled.
 
-The uploaded file is the [3.0.2 stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v3.0.2/recoil-foundry-v3.0.2-site.zip), not the repository or this launch folder. It has root `index.html`, relative assets and 17 files. SHA-256: `4f6ceda05b8b41bac8411c5db3c58bfacdb2526a0f026d7dee4b15ffeb102e18`. The replacement used the previous transport filename, `recoil-foundry-v2.98.0-site.zip`, with display name **Recoil Foundry 3.0.2 — Dead Signal**. Its bytes are the verified 3.0.2 artifact.
+Upload the verified stable release ZIP, not the repository or this launch folder. It must have root `index.html` and relative assets. Replacements retain the transport filename `recoil-foundry-v2.98.0-site.zip` to replace the existing file, while updating its display name to the actual version. Re-enable browser playback after replacement. The current release's validation record contains the distributed archive checksum and upload ID.
 
-## Current 3.0.2 verification
+## Archived 3.0.2 verification
+
+The [3.0.2 stable release ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v3.0.2/recoil-foundry-v3.0.2-site.zip) had 17 files and SHA-256 `4f6ceda05b8b41bac8411c5db3c58bfacdb2526a0f026d7dee4b15ffeb102e18`. Its display name was **Recoil Foundry 3.0.2 — Dead Signal**.
 
 [Publication evidence](../validation/run-feedback-3.0.2.md) records all 1,891 passing tests, matching CI/release workflows, artifact checks and live UI verification. Upload **19398808** is browser playable; About shows 3.0.2, the report categories work, and Continue daily/Room 1 progress remain intact. The same hosted artifact's ending preview opens the new Feedback form. Browser warning/error logs were empty. No player feedback was submitted during QA.
 

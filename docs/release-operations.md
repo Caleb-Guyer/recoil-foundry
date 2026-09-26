@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Overtime: Loading Docks 3.1.0 — 25 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `858389fd2109f27a87e5a3e8f90dfd5525f444c2` passed all **1,929 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36211354886). Tag `v3.1.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36211996604); the verified official ZIP is itch.io upload `19404536`. Both public games show 3.1.0 and preserve existing saves. [Validation and artifact evidence](validation/overtime-docks-3.1.0.md) records the checksum, route and machinery checks, limited combat probes and browser scope.
+
+Six authored layouts cover the first two Overtime rooms, both third-room routes and both Docks boss arenas. Each uses one machinery family, reserved entrances and coordinated reinforcements. New Overtime entries opt in with `overtime.remix: 1`; saved laps without that field retain their original layouts. Campaign, Daily, ordinary Practice, upgrade balance and later Overtime regions are unchanged. Publication checks are complete.
+
 ## Practice records 3.0.5 — 25 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `b0b2fe9a326ab8fdb7ec212bdf9df7ff6b73129d` passed all **1,922 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36185757134). Tag `v3.0.5` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36186797071); the verified official ZIP is itch.io upload `19400641`. Both public games show 3.0.5 and preserve existing saves. [Validation and artifact evidence](validation/practice-records-3.0.5.md) records the checksum, record/challenge flows, backup migration/export/undo and test scope.
@@ -42,7 +48,8 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.0.5` at `b0b2fe9a326ab8fdb7ec212bdf9df7ff6b73129d`. Rollbacks must preserve the Practice records and blueprint profile fields/decoders; unchanged older builds reject profiles saved by 3.0.5.
+- Stable tag: `v3.1.0` at `858389fd2109f27a87e5a3e8f90dfd5525f444c2`. Rollbacks must retain the `overtime.remix` checkpoint field and its generation behavior, together with Practice records and blueprint profile fields/decoders. Do not deploy an unchanged older build over newer saves.
+- Previous stable reference: `v3.0.5` at `b0b2fe9a326ab8fdb7ec212bdf9df7ff6b73129d`.
 - Previous stable reference: `v3.0.4` at `6aa155fed508e9db5bd07255293da6033b385ced`.
 - Previous stable reference: `v3.0.3` at `2fcba8531d8feae036f94e2d253342b18e327993`.
 - Earlier stable reference: `v3.0.2` at `0bc55580cf8878908731d53bd4670129a470ada8`.
