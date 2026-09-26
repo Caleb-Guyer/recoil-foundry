@@ -91,6 +91,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  overtimeDocks?: true;
   annex?: true;
   annexStation?: import('./annex-route.ts').AnnexStation;
   shutdown?: true;

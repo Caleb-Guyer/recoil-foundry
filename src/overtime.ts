@@ -6,6 +6,8 @@ import type { EnemyKind } from './levels.ts';
 import type { EliteKind } from './enemies.ts';
 import { addHarpooner } from './harpooner-layout.ts';
 import { addSapper } from './sapper-layout.ts';
+import { remixDocks } from './overtime-docks.ts';
+import type { RouteChoice } from './rules.ts';
 
 // A separate, short seed keeps the first lap stable and lets an earned boss
 // victory reconstruct its ordinary Practice arena from this same seed.
@@ -18,8 +20,14 @@ export function overtimeHealth(kind: EnemyKind, stage: number, elite?: EliteKind
       : enemyHealth(kind, STAGES - 1, elite) * (1.2 + stage * 0.025),
   );
 }
-export function getOvertimeLevel(seed: string, stage: number): Level {
+export function getOvertimeLevel(
+  seed: string,
+  stage: number,
+  remix = 0,
+  route?: RouteChoice | null,
+): Level {
   const level = getLevel(overtimeSeed(seed), stage);
+  if (remix === 1 && stage < 4) return remixDocks(level, stage, route);
   const rng = seeded(seed + ':overtime-roster:' + stage);
   if (level.boss) {
     // Reinforcement points are reserved before props and hazards are placed.

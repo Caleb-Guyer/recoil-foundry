@@ -111,7 +111,7 @@ test('entering Overtime carries the exact gun, health, kills and clock and saves
   assert.equal(g.hp, 63);
   assert.equal(g.elapsed, 812);
   assert.equal(g.kills, 188);
-  assert.deepEqual(g.overtime, { baseMods: 19, repairs: 0 });
+  assert.deepEqual(g.overtime, { baseMods: 19, repairs: 0, remix: 1 });
   assert(saved);
   assert(loadCheckpoint(saved));
   const resumed = new Game();

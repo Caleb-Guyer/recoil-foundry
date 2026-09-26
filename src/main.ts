@@ -134,6 +134,7 @@ import {
   massDriverTestFromUrl,
   dropworksTestFromUrl,
   overtimeTestFromUrl,
+  overtimeDocksTestFromUrl,
   exitTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
@@ -403,6 +404,7 @@ let linkedRunTest =
   harpoonerTestFromUrl(entryUrl) ??
   fusionTestFromUrl(entryUrl) ??
   overtimeTestFromUrl(entryUrl) ??
+  overtimeDocksTestFromUrl(entryUrl) ??
   exitTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??

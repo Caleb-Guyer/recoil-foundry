@@ -14,7 +14,9 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Dead Signal — version 3.0.5.** Take the alternate Transmission Annex route after Furnace, interrupt hostile transmissions, and reboot fallen machines with five Subversion upgrades. Save build blueprints, track your Practice bests, and challenge friends to beat your time with the same arena and gun. [Release notes](docs/releases/3.0.5.md) · [Watch the update trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.0.5).
+**Overtime: Loading Docks — version 3.1.0.** Return to redesigned Docks rooms with moving machinery, coordinated security teams, two route layouts and remixed Loader/Crane arenas. New Overtime entries use the remixes; existing saved laps retain their original rooms. [Release notes and six test links](docs/releases/3.1.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.1.0).
+
+The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 
 ## Controls
 
