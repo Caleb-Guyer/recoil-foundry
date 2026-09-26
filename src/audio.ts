@@ -7,6 +7,7 @@ const ATTACK_WARNINGS = new Set([
   'charge',
   'machine',
   'pressure-warn',
+  'fan-warn',
   'pressure-open',
   'flood-warn',
   'reinforce',
@@ -45,6 +46,7 @@ const WARNING_HOLD: Record<string, number> = {
   'train-horn': 0.65,
   'turbine-wind': 0.55,
   'flood-warn': 0.65,
+  'fan-warn': 1.25,
   'harpoon-lock': 0.5,
   'sapper-lock': 0.45,
   'cargo-release': 0.45,
@@ -449,6 +451,12 @@ export class Sound {
       this.tone(260, 75, 0.18, 0.03, 'triangle');
     } else if (kind === 'crawler-lock') {
       this.tone(650, 870, 0.13, 0.025, 'triangle');
+    } else if (kind === 'fan-warn') {
+      this.tone(72, 145, 1.2, 0.12, 'sine');
+      this.crack(1.2, 0.09, 460);
+    } else if (kind === 'fan-gust') {
+      this.crack(0.65, 0.13, 800);
+      this.tone(110, 75, 0.65, 0.09, 'sine');
     } else if (kind === 'pressure-open') {
       this.tone(240, 560, 0.15, 0.035, 'triangle');
       this.crack(0.12, 0.025, 2800);

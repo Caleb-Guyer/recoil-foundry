@@ -19,6 +19,7 @@ import {
   THREAT_CORE,
 } from './combat-readability.ts';
 import { drawPressure } from './pressure-art.ts';
+import { drawCrosswind } from './crosswind-art.ts';
 import { drawWorkshopTarget, drawWorkshopMounts } from './workshop-art.ts';
 import { drawTripwires } from './tripwire-art.ts';
 import { drawTorch } from './torch-art.ts';
@@ -244,6 +245,7 @@ export class Renderer {
     drawFloodgate(c, g, this.reduced);
     drawMagnets(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
+    drawCrosswind(c, g, this.reduced);
     drawAnnex(c, g, this.reduced);
     drawSwitchboardArena(c, g);
     drawCallerWarnings(c, g);

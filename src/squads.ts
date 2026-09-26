@@ -24,7 +24,8 @@ export const SQUAD_LOCK = 0.35;
 // Pair existing members of the final wave. Counts, hull anchors, elite rolls,
 // health, and the combat/reward random stream remain unchanged.
 export function squadSpawns(spawns: Spawn[], level: Level, seed: string, stage: number): Spawn[] {
-  if (level.overtimeDocks || level.overtimeFurnace) return structuredClone(spawns);
+  if (level.overtimeDocks || level.overtimeFurnace || level.overtimeCooling)
+    return structuredClone(spawns);
   const result = spawns.map(({ squad: _old, ...s }) => ({ ...s }) as Spawn);
   if (level.boss || level.detour || level.freight || stage < 4) return result;
   const rng = seeded(seed + ':squads:' + stage);

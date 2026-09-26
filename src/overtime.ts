@@ -8,6 +8,7 @@ import { addHarpooner } from './harpooner-layout.ts';
 import { addSapper } from './sapper-layout.ts';
 import { remixDocks } from './overtime-docks.ts';
 import { remixFurnace } from './overtime-furnace.ts';
+import { remixCooling } from './overtime-cooling.ts';
 import type { RouteChoice } from './rules.ts';
 
 // A separate, short seed keeps the first lap stable and lets an earned boss
@@ -29,7 +30,8 @@ export function getOvertimeLevel(
 ): Level {
   const level = getLevel(overtimeSeed(seed), stage);
   if (remix >= 1 && stage < 4) return remixDocks(level, stage, route);
-  if (remix === 2 && stage >= 4 && stage < 8) return remixFurnace(level, stage, route);
+  if (remix >= 2 && stage >= 4 && stage < 8) return remixFurnace(level, stage, route);
+  if (remix === 3 && stage >= 8 && stage < 12) return remixCooling(level, stage, route);
   const rng = seeded(seed + ':overtime-roster:' + stage);
   if (level.boss) {
     // Reinforcement points are reserved before props and hazards are placed.

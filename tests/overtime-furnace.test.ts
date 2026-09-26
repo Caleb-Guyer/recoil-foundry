@@ -157,7 +157,7 @@ test('new saves round-trip while revision-1 Furnace saves keep their old geometr
       if (cp.stage !== 6) assert.deepEqual(resumed.level, getOvertimeLevel(cp.seed, cp.stage, 1));
       else assert.equal(resumed.level.routeChoice, cp.route);
     }
-  for (const remix of [0, 3, -1, '2', null, true])
+  for (const remix of [0, 4, -1, '2', null, true])
     assert.equal(
       loadCheckpoint({
         ...fixture('boilers'),

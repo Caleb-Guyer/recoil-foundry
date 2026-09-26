@@ -2,7 +2,7 @@ import Matter from 'matter-js';
 import type { Enemy, Game } from './game.ts';
 import type { PressurePlacement } from './pressure-layouts.ts';
 import { clamp, segmentBox, type Vec } from './rules.ts';
-import { firstSolid } from './collisions.ts';
+import { airflowReach, airflowExposed } from './airflow.ts';
 import { isBoss } from './enemies.ts';
 import { dropWallcrawler } from './wallcrawler.ts';
 import { breakSquad } from './squads.ts';
@@ -32,10 +32,6 @@ export interface PressureVent extends PressurePlacement {
   launched: Set<Matter.Body>;
   manual: boolean;
 }
-const along = (v: PressurePlacement, distance: number, across = 0): Vec => ({
-  x: v.x + v.dir.x * distance - v.dir.y * across,
-  y: v.y + v.dir.y * distance + v.dir.x * across,
-});
 
 export class PressureSystem {
   game: Game;
@@ -104,44 +100,10 @@ export class PressureSystem {
   // Rendering and physics share parallel, cover-clipped lanes. Crates and
   // tilted machinery obstruct the jet at their actual convex surfaces.
   reach(v: PressurePlacement, across = 0, ignore?: Matter.Body) {
-    const from = along(v, 0, across),
-      to = along(v, v.length, across);
-    const hit = firstSolid(
-      from,
-      to,
-      { x: 0, y: 0 },
-      this.game.solidBodies.filter((b) => b !== ignore),
-    );
-    return v.length * (hit?.t ?? 1);
+    return airflowReach(this.game, v, across, ignore);
   }
   exposed(v: PressureVent, b: Matter.Body) {
-    const dx = b.position.x - v.x,
-      dy = b.position.y - v.y;
-    const depth = dx * v.dir.x + dy * v.dir.y;
-    const across = -dx * v.dir.y + dy * v.dir.x;
-    const halfAlong = Math.max(
-      ...b.vertices.map((p) =>
-        Math.abs((p.x - b.position.x) * v.dir.x + (p.y - b.position.y) * v.dir.y),
-      ),
-    );
-    const halfAcross = Math.max(
-      ...b.vertices.map((p) =>
-        Math.abs(-(p.x - b.position.x) * v.dir.y + (p.y - b.position.y) * v.dir.x),
-      ),
-    );
-    if (
-      depth + halfAlong <= 0 ||
-      depth - halfAlong >= v.length ||
-      Math.abs(across) >= v.width / 2 + halfAcross
-    )
-      return false;
-    const lane = clamp(across, -v.width / 2 + 1, v.width / 2 - 1);
-    // Test the actual target hull, not its center or an expanded bounding box.
-    // A prop partly in a jet can move, but a nearby wall still shields it.
-    const from = along(v, 0, lane),
-      end = along(v, v.length, lane);
-    const hit = firstSolid(from, end, { x: 0, y: 0 }, [b]);
-    return !!hit && hit.t * v.length <= this.reach(v, lane, b) + 0.01;
+    return airflowExposed(this.game, v, b);
   }
   beforeStep(dt: number) {
     const g = this.game;

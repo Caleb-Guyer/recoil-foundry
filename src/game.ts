@@ -13,6 +13,7 @@ import {
 import { fabricatorLevel } from './fabricator-layout.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
+import { CrosswindSystem } from './crosswind.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { WorkshopSystem, workshopLevel, type WorkshopTarget } from './workshop.ts';
@@ -323,6 +324,7 @@ export class Game {
   crossing = new CrossingSystem(this);
   counterweights = new CounterweightSystem(this);
   pressure = new PressureSystem(this);
+  crosswind = new CrosswindSystem(this);
   massDriver = new MassDriverSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
@@ -828,6 +830,7 @@ export class Game {
     this.crossing.clear();
     this.counterweights.clear();
     this.pressure.clear();
+    this.crosswind.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -902,7 +905,8 @@ export class Game {
       !escapeRoom &&
       !this.detour &&
       !this.level.overtimeDocks &&
-      !this.level.overtimeFurnace
+      !this.level.overtimeFurnace &&
+      !this.level.overtimeCooling
     ) {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
@@ -991,6 +995,7 @@ export class Game {
     this.destruction.reset();
     this.loaderArena.reset();
     this.pressure.reset();
+    this.crosswind.reset();
     this.workshop.reset();
     this.areaEvents.reset(clearedRoom);
     this.mutations.reset(clearedRoom);
@@ -1023,7 +1028,7 @@ export class Game {
     )
       return false;
     this.areaEvents.state = null;
-    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 2 };
+    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 3 };
     this.stage = 0;
     this.route = null;
     this.loadRoom();
@@ -1417,6 +1422,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.pressure.beforeStep(dt);
     if (this.mode !== 'playing') return;
+    this.crosswind.beforeStep(dt);
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();

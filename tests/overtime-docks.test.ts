@@ -168,7 +168,7 @@ test('old saves preserve old rooms; new room identities and route choices round-
       assert.deepEqual(resumed.mods, g.mods);
       assert.equal(g.loaderArena.supports.length, room === 'loader' ? 2 : 0);
     }
-  for (const remix of [0, 3, -1, '1', true, null])
+  for (const remix of [0, 4, -1, '1', true, null])
     assert.equal(loadCheckpoint({ ...old, overtime: { ...old.overtime, remix } }), null);
 });
 

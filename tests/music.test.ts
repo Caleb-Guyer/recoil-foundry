@@ -786,6 +786,34 @@ test('new threat cues survive saturated gunfire, keep their full warning window,
   );
 });
 
+test('Crosswind spin-up remains audible under gunfire, cleans up and respects effects mute', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  sound.updateMusic(scene({ area: 'cooling' }));
+  for (let i = 0; i < 30; i++) sound.tone(180, 40, 0.15, 0.1);
+  const first = context.sources.length;
+  sound.play('fan-warn');
+  const cue = context.sources.slice(first);
+  assert.equal(cue.length, 2);
+  assert(sound.music!.duckUntil >= context.currentTime + 1.25);
+  assert(cue.every((s) => s.stopTime < context.currentTime + 1.3));
+  assert(sound.voices <= 32);
+  context.advance(1.4);
+  assert(cue.every((s) => s.disconnected));
+  assert.equal(sound.voices, 0);
+  sound.play('fan-gust');
+  assert(sound.voices > 0);
+  context.advance(0.8);
+  assert.equal(sound.voices, 0);
+  sound.effectsVolume = 0;
+  const beforeMute = context.sources.length;
+  sound.play('fan-warn');
+  sound.play('fan-gust');
+  assert.equal(context.sources.length, beforeMute);
+});
+
 test('completion and defeat cues have reserved voices after a dense fight', (t) => {
   installContext(t);
   const sound = new Sound();

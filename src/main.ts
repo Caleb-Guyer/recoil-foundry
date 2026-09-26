@@ -136,6 +136,7 @@ import {
   overtimeTestFromUrl,
   overtimeDocksTestFromUrl,
   overtimeFurnaceTestFromUrl,
+  overtimeCoolingTestFromUrl,
   exitTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
@@ -407,6 +408,7 @@ let linkedRunTest =
   overtimeTestFromUrl(entryUrl) ??
   overtimeDocksTestFromUrl(entryUrl) ??
   overtimeFurnaceTestFromUrl(entryUrl) ??
+  overtimeCoolingTestFromUrl(entryUrl) ??
   exitTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??

@@ -93,6 +93,8 @@ export interface Layout {
 export interface Level extends Layout {
   overtimeDocks?: true;
   overtimeFurnace?: true;
+  overtimeCooling?: true;
+  fans?: import('./crosswind.ts').FanPlacement[];
   annex?: true;
   annexStation?: import('./annex-route.ts').AnnexStation;
   shutdown?: true;
