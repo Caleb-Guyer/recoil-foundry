@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Overtime: Pressure Shift 3.2.0 — 25 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `91cd643f80092b433c7c66e508f332b3516db46c` passed all **1,940 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36213483349). Tag `v3.2.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36214032347); the verified official ZIP is itch.io upload `19404836`. Both public games show 3.2.0 and preserve existing saves. [Validation and artifact evidence](validation/overtime-furnace-3.2.0.md) records the checksum, geometry and valve checks, limited combat probes and browser scope.
+
+Six authored layouts cover Overtime's Furnace rooms, both third-room routes and both boss arenas. Shootable valves release hot steam after a full warning; manually triggered jets create brief boss armor openings without interrupting attacks. New Overtime entries opt in with `overtime.remix: 2`, which includes the revision-1 Docks layouts. Older saves retain their generation. Campaign, Daily, ordinary Practice and upgrade balance are unchanged. Publication checks are complete.
+
 ## Overtime: Loading Docks 3.1.0 — 25 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `858389fd2109f27a87e5a3e8f90dfd5525f444c2` passed all **1,929 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36211354886). Tag `v3.1.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36211996604); the verified official ZIP is itch.io upload `19404536`. Both public games show 3.1.0 and preserve existing saves. [Validation and artifact evidence](validation/overtime-docks-3.1.0.md) records the checksum, route and machinery checks, limited combat probes and browser scope.
@@ -48,7 +54,8 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.1.0` at `858389fd2109f27a87e5a3e8f90dfd5525f444c2`. Rollbacks must retain the `overtime.remix` checkpoint field and its generation behavior, together with Practice records and blueprint profile fields/decoders. Do not deploy an unchanged older build over newer saves.
+- Stable tag: `v3.2.0` at `91cd643f80092b433c7c66e508f332b3516db46c`. Rollbacks must retain revision-2 `overtime.remix` checkpoint decoding and generation, together with Practice records and blueprint profile fields/decoders. Do not deploy an unchanged older build over newer saves.
+- Previous stable reference: `v3.1.0` at `858389fd2109f27a87e5a3e8f90dfd5525f444c2`.
 - Previous stable reference: `v3.0.5` at `b0b2fe9a326ab8fdb7ec212bdf9df7ff6b73129d`.
 - Previous stable reference: `v3.0.4` at `6aa155fed508e9db5bd07255293da6033b385ced`.
 - Previous stable reference: `v3.0.3` at `2fcba8531d8feae036f94e2d253342b18e327993`.
