@@ -5,6 +5,7 @@ import { seeded } from './rules.ts';
 // The nozzle sits two units outside a permanent floor or wall. The valve is
 // mounted beside it in open space, where a normal shot can reach its wheel.
 export interface PressurePlacement extends Vec {
+  overpressure?: true;
   dir: Vec;
   valve: Vec;
   width: number;

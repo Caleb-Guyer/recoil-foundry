@@ -168,7 +168,7 @@ test('old saves preserve old rooms; new room identities and route choices round-
       assert.deepEqual(resumed.mods, g.mods);
       assert.equal(g.loaderArena.supports.length, room === 'loader' ? 2 : 0);
     }
-  for (const remix of [0, 2, -1, '1', true, null])
+  for (const remix of [0, 3, -1, '1', true, null])
     assert.equal(loadCheckpoint({ ...old, overtime: { ...old.overtime, remix } }), null);
 });
 
@@ -246,10 +246,10 @@ test('floor routes remain traversable with the base gun and after cargo drops', 
       g.waves.clear();
       g.waves.held = true;
       g.waves.phase = 'opening';
-    g.mods = [];
-    g.gun = getGun([]);
-    g.hp = 10000;
-    g.loaderArena.clear();
+      g.mods = [];
+      g.gun = getGun([]);
+      g.hp = 10000;
+      g.loaderArena.clear();
       for (const cargo of g.cargo.items) g.cargo.cut(cargo, 1000);
       for (let n = 0; n < 2400 && g.player.position.x < 1820; n++) {
         const p = g.player.position;

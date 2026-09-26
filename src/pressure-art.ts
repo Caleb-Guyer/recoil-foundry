@@ -1,5 +1,5 @@
 import type { Game } from './game.ts';
-import { PRESSURE } from './pressure.ts';
+import { PRESSURE, PRESSURE_SHIFT } from './pressure.ts';
 import { AREAS } from './areas.ts';
 
 export function drawPressure(c: CanvasRenderingContext2D, g: Game, reduced = false) {
@@ -7,7 +7,17 @@ export function drawPressure(c: CanvasRenderingContext2D, g: Game, reduced = fal
   for (const v of g.pressure.items) {
     const warn = v.phase === 'warn',
       burst = v.phase === 'burst';
-    const color = warn ? '#d8b783' : burst || v.phase === 'ready' ? '#b3d6cd' : palette.edge;
+    const color = warn
+      ? v.overpressure
+        ? '#e3b17d'
+        : '#d8b783'
+      : burst
+        ? v.overpressure
+          ? '#efac7c'
+          : '#b3d6cd'
+        : v.phase === 'ready'
+          ? '#b3d6cd'
+          : palette.edge;
     c.save();
     c.strokeStyle = palette.edge;
     c.lineWidth = 5;
@@ -16,6 +26,11 @@ export function drawPressure(c: CanvasRenderingContext2D, g: Game, reduced = fal
     c.lineTo(v.x, v.valve.y);
     c.lineTo(v.x, v.y);
     c.stroke();
+    if (v.overpressure && (warn || v.phase === 'ready')) {
+      c.strokeStyle = color;
+      c.lineWidth = warn ? 2.5 : 1.5;
+      c.stroke();
+    }
     // The grille is recessed into its host, with its front edge exactly at the
     // visible floor/wall. It never looks like a floating platform or loose prop.
     c.save();
@@ -41,8 +56,8 @@ export function drawPressure(c: CanvasRenderingContext2D, g: Game, reduced = fal
         const across = (lane * v.width) / 5,
           length = g.pressure.reach(v, across);
         c.strokeStyle = color;
-        c.globalAlpha = burst ? 0.24 : 0.12;
-        c.lineWidth = burst ? 3 : 1;
+        c.globalAlpha = v.overpressure ? (burst ? 0.42 : 0.3) : burst ? 0.24 : 0.12;
+        c.lineWidth = burst ? 3 : v.overpressure ? 1.5 : 1;
         c.setLineDash(warn ? [3, 14] : []);
         c.beginPath();
         c.moveTo(3, across);
@@ -84,7 +99,10 @@ export function drawPressure(c: CanvasRenderingContext2D, g: Game, reduced = fal
       c.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
       c.stroke();
     }
-    const charge = v.phase === 'recharge' ? Math.max(0, 1 - v.timer / PRESSURE.recharge) : 1;
+    const charge =
+      v.phase === 'recharge'
+        ? Math.max(0, 1 - v.timer / (v.overpressure ? PRESSURE_SHIFT.recharge : PRESSURE.recharge))
+        : 1;
     c.strokeStyle = warn ? '#e2c391' : '#9dada5';
     c.lineWidth = 2;
     c.beginPath();

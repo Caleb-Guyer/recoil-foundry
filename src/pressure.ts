@@ -16,10 +16,21 @@ export const PRESSURE = {
   radius: 13,
   impulse: 16,
 };
+export const PRESSURE_SHIFT = {
+  ready: 4,
+  warn: 1.15,
+  burst: 0.5,
+  recharge: 5.6,
+  playerDamage: 14,
+  enemyDamage: 180,
+  opening: 1.6,
+  bossCooldown: 8,
+};
 export interface PressureVent extends PressurePlacement {
   phase: 'recharge' | 'ready' | 'warn' | 'burst';
   timer: number;
   launched: Set<Matter.Body>;
+  manual: boolean;
 }
 const along = (v: PressurePlacement, distance: number, across = 0): Vec => ({
   x: v.x + v.dir.x * distance - v.dir.y * across,
@@ -30,12 +41,14 @@ export class PressureSystem {
   game: Game;
   items: PressureVent[] = [];
   airborne = new Map<Enemy, number>();
+  openings = new Map<Enemy, { until: number; next: number }>();
   constructor(game: Game) {
     this.game = game;
   }
   clear() {
     this.items = [];
     this.airborne.clear();
+    this.openings.clear();
   }
   reset() {
     this.clear();
@@ -49,6 +62,7 @@ export class PressureSystem {
       phase: 'recharge',
       timer: 2.5 + p.offset,
       launched: new Set(),
+      manual: false,
     };
     this.items.push(v);
     return v;
@@ -56,11 +70,20 @@ export class PressureSystem {
   staggered(e: Enemy) {
     return (this.airborne.get(e) ?? 0) > this.game.time;
   }
-  trigger(v: PressureVent) {
-    if (this.game.mode !== 'playing' || v.phase !== 'ready' || !this.items.includes(v))
+  opening(e: Enemy) {
+    return e.hp > 0 && (this.openings.get(e)?.until ?? 0) > this.game.time;
+  }
+  trigger(v: PressureVent, manual = true) {
+    if (
+      this.game.mode !== 'playing' ||
+      v.phase !== 'ready' ||
+      !this.items.includes(v) ||
+      (v.overpressure && this.game.clear)
+    )
       return false;
     v.phase = 'warn';
-    v.timer = PRESSURE.warn;
+    v.timer = v.overpressure ? PRESSURE_SHIFT.warn : PRESSURE.warn;
+    v.manual = manual;
     this.game.onSound('pressure-warn');
     return true;
   }
@@ -125,21 +148,32 @@ export class PressureSystem {
     if (g.mode !== 'playing' || !(dt > 0)) return;
     for (const [e, until] of this.airborne)
       if (until <= g.time || e.hp <= 0 || !g.enemies.includes(e)) this.airborne.delete(e);
+    for (const [e, opening] of this.openings)
+      if (opening.next <= g.time || e.hp <= 0 || !g.enemies.includes(e)) this.openings.delete(e);
     for (const v of this.items) {
+      const timing = v.overpressure ? PRESSURE_SHIFT : PRESSURE;
+      // A cleared room is safe to cross. Ordinary launch vents keep their
+      // original post-clear traversal behavior in older rooms and saves.
+      if (v.overpressure && g.clear) {
+        v.phase = 'recharge';
+        v.timer = timing.recharge;
+        v.launched.clear();
+        continue;
+      }
       v.timer = Math.max(0, v.timer - dt);
       if (v.timer <= 1e-8) {
         if (v.phase === 'recharge') {
           v.phase = 'ready';
-          v.timer = PRESSURE.ready;
-        } else if (v.phase === 'ready' && !g.clear) this.trigger(v);
+          v.timer = timing.ready;
+        } else if (v.phase === 'ready' && !g.clear) this.trigger(v, false);
         else if (v.phase === 'warn') {
           v.phase = 'burst';
-          v.timer = PRESSURE.burst;
+          v.timer = timing.burst;
           v.launched.clear();
           g.onSound('pressure-burst');
         } else if (v.phase === 'burst') {
           v.phase = 'recharge';
-          v.timer = PRESSURE.recharge;
+          v.timer = timing.recharge;
           v.launched.clear();
         }
       }
@@ -153,12 +187,42 @@ export class PressureSystem {
       // Decide exposure before moving anything: the same cover shields every
       // target for this step, regardless of its order in the actor array.
       const exposed = actors.filter((b) => !v.launched.has(b) && this.exposed(v, b));
-      for (const b of exposed) this.launch(v, b);
+      for (const b of exposed) {
+        this.launch(v, b);
+        if (g.mode !== 'playing') return;
+      }
     }
   }
   private launch(v: PressureVent, b: Matter.Body) {
     const g = this.game,
       e = g.enemies.find((e) => e.body === b);
+    if (v.overpressure) {
+      v.launched.add(b);
+      // Steam cannot juggle or cancel a boss's warned attack. A deliberately
+      // released jet opens its armor, with a shared cooldown across all valves.
+      if (e && isBoss(e.kind)) {
+        if (
+          v.manual &&
+          ['press', 'kiln'].includes(e.kind) &&
+          (this.openings.get(e)?.next ?? 0) <= g.time
+        ) {
+          this.openings.set(e, {
+            until: g.time + PRESSURE_SHIFT.opening,
+            next: g.time + PRESSURE_SHIFT.bossCooldown,
+          });
+          g.burst(e.body.position, 9, '#b3d6cd', 2.2);
+          g.onSound('pressure-open');
+        }
+        return;
+      }
+      if (e) {
+        g.hitEnemy(e, PRESSURE_SHIFT.enemyDamage, undefined, false, false, v.manual);
+        if (e.hp <= 0) return;
+      } else if (b === g.player) {
+        g.damagePlayer(PRESSURE_SHIFT.playerDamage, v, { type: 'steam' });
+        if (g.mode !== 'playing') return;
+      }
+    }
     // Anchored machines and armed volatile enemies retain their warned attacks.
     if (e && (isBoss(e.kind) || (e.elite === 'volatile' && e.state === 'windup'))) return;
     if (e && (g.ballistics.pinned(e) || g.salvageEvolutions.carried(e))) return;

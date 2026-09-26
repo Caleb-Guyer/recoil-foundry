@@ -144,7 +144,8 @@ function drawKilnEffects(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced
 
 export function drawKiln(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean): void {
   const p = e.body.position,
-    open = e.state === 'recover',
+    vented = g.pressure.opening(e),
+    open = e.state === 'recover' || vented,
     lit = e.flash > 0;
   drawKilnEffects(c, g, e, reduced);
   c.save();
@@ -224,9 +225,9 @@ export function drawKiln(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced
   c.clip();
   if (open) {
     const glow = reduced ? 0.18 : 0.15 + (Math.sin(g.time * 5) + 1) * 0.03;
-    c.fillStyle = `rgba(242,153,76,${glow})`;
+    c.fillStyle = vented ? `rgba(179,244,222,${glow})` : `rgba(242,153,76,${glow})`;
     c.fillRect(-31, -28, 62, 46);
-    c.fillStyle = lit ? '#fff0bc' : '#e8bd7e';
+    c.fillStyle = lit ? '#fff0bc' : vented ? '#b3f4de' : '#e8bd7e';
     for (let x = -23; x <= 23; x += 10) c.fillRect(x, -22, 5, 31);
     c.fillStyle = '#8b563b';
     c.fillRect(-29, -11, 58, 2);

@@ -92,6 +92,7 @@ export interface Layout {
 }
 export interface Level extends Layout {
   overtimeDocks?: true;
+  overtimeFurnace?: true;
   annex?: true;
   annexStation?: import('./annex-route.ts').AnnexStation;
   shutdown?: true;

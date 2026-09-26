@@ -48,6 +48,7 @@ const CAUSES = {
   crusher: 'Crusher',
   train: 'Freight train',
   coolant: 'Scalding coolant',
+  steam: 'Pressure jet',
   fall: 'Fall',
   unknown: 'Cause unavailable',
 } as const;

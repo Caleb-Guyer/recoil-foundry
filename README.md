@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Overtime: Loading Docks — version 3.1.0.** Return to redesigned Docks rooms with moving machinery, coordinated security teams, two route layouts and remixed Loader/Crane arenas. New Overtime entries use the remixes; existing saved laps retain their original rooms. [Release notes and six test links](docs/releases/3.1.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.1.0).
+**Pressure Shift — version 3.2.0.** Overtime Furnace has six authored layouts with hot steam lanes, shootable valves, coordinated teams and remixed Press/Kiln arenas. Release a jet early to make room, catch enemies, or briefly expose a boss's armor. New Overtime entries include both the Docks and Furnace remixes; existing saved laps retain their original rooms. [Release notes and six test links](docs/releases/3.2.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.2.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 

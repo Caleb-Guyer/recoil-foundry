@@ -425,7 +425,11 @@ export class Renderer {
         c.fillRect(-60, 19, 120, 12);
         c.fillStyle = '#1e2023';
         c.fillRect(-49, -18, 98, 28);
-        c.fillStyle = e.state === 'recover' ? '#ffe0a0' : '#c38966';
+        c.fillStyle = g.pressure.opening(e)
+          ? '#b3f4de'
+          : e.state === 'recover'
+            ? '#ffe0a0'
+            : '#c38966';
         for (let i = 0; i < 4; i++) c.fillRect(-37 + i * 22, -11, 9, 14);
         for (const side of [-1, 1])
           this.line({ x: side * 52, y: -19 }, { x: side * 52, y: 12 }, '#948373', 3);

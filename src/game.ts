@@ -897,7 +897,13 @@ export class Game {
                   ? this.practice.kind
                   : undefined,
               );
-    if (this.route && !escapeRoom && !this.detour && !this.level.overtimeDocks) {
+    if (
+      this.route &&
+      !escapeRoom &&
+      !this.detour &&
+      !this.level.overtimeDocks &&
+      !this.level.overtimeFurnace
+    ) {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
@@ -1017,7 +1023,7 @@ export class Game {
     )
       return false;
     this.areaEvents.state = null;
-    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 1 };
+    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 2 };
     this.stage = 0;
     this.route = null;
     this.loadRoom();
@@ -1410,6 +1416,7 @@ export class Game {
     this.crossing.beforeStep(dt);
     if (this.mode !== 'playing') return;
     this.pressure.beforeStep(dt);
+    if (this.mode !== 'playing') return;
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();
@@ -2994,8 +3001,9 @@ export class Game {
     if (e.kind === 'charger' && e.state === 'recover') damage *= 1.4;
     if (e.kind === 'loader') damage *= e.state === 'recover' ? 1.25 : 0.4;
     if (e.kind === 'crane') damage *= e.state === 'recover' && e.crane && !e.crane.hit ? 1.4 : 0.35;
-    if (e.kind === 'press') damage *= e.state === 'recover' ? 1.25 : 0.4;
-    if (e.kind === 'kiln') damage *= e.state === 'recover' ? 1.35 : 0.4;
+    if (e.kind === 'press')
+      damage *= e.state === 'recover' || this.pressure.opening(e) ? 1.25 : 0.4;
+    if (e.kind === 'kiln') damage *= e.state === 'recover' || this.pressure.opening(e) ? 1.35 : 0.4;
     if (e.kind === 'sorter') damage *= e.state === 'recover' ? 1.35 : 0.32;
     if (e.kind === 'condenser') damage *= e.state === 'recover' ? 1.3 : 0.25;
     if (e.kind === 'switchboard')

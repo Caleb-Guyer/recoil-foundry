@@ -135,6 +135,7 @@ import {
   dropworksTestFromUrl,
   overtimeTestFromUrl,
   overtimeDocksTestFromUrl,
+  overtimeFurnaceTestFromUrl,
   exitTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
@@ -405,6 +406,7 @@ let linkedRunTest =
   fusionTestFromUrl(entryUrl) ??
   overtimeTestFromUrl(entryUrl) ??
   overtimeDocksTestFromUrl(entryUrl) ??
+  overtimeFurnaceTestFromUrl(entryUrl) ??
   exitTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??

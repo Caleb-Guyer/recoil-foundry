@@ -238,6 +238,38 @@ export function overtimeDocksTestFromUrl(url: URL): Checkpoint | null {
   return save;
 }
 
+export function overtimeFurnaceTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (p.get('test') !== 'overtime-furnace') return null;
+  let invalid = false;
+  p.forEach((_, key) => {
+    if (!['test', 'room', 'mirror', 'v'].includes(key) || p.getAll(key).length !== 1)
+      invalid = true;
+  });
+  if (invalid || (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))) return null;
+  const rooms = {
+    boilers: { stage: 4, seeds: [2, 0] },
+    gallery: { stage: 5, seeds: [4, 0] },
+    tunnel: { stage: 6, seeds: [1, 0] },
+    flue: { stage: 6, seeds: [1, 0] },
+    press: { stage: 7, seeds: [0, 5] },
+    kiln: { stage: 7, seeds: [10, 3] },
+  };
+  const room = p.get('room') ?? 'boilers';
+  if (!Object.hasOwn(rooms, room)) return null;
+  const plan = rooms[room as keyof typeof rooms];
+  const save = testCheckpoint('OT-FURNACE-' + plan.seeds[p.get('mirror') === '1' ? 1 : 0], 19);
+  save.stage = plan.stage;
+  save.overtime = { baseMods: save.mods.length, repairs: 0, remix: 2 };
+  if (plan.stage === 6) save.route = room === 'flue' ? 'high' : 'low';
+  for (let i = 0; i < save.stage; i++) {
+    const mod = availableMods(save.mods)[0];
+    if (mod) save.mods.push(mod.id);
+    else save.overtime.repairs++;
+  }
+  return save;
+}
+
 export function exitTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

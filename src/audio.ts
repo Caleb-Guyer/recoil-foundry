@@ -7,6 +7,7 @@ const ATTACK_WARNINGS = new Set([
   'charge',
   'machine',
   'pressure-warn',
+  'pressure-open',
   'flood-warn',
   'reinforce',
   'crane-wind',
@@ -448,6 +449,9 @@ export class Sound {
       this.tone(260, 75, 0.18, 0.03, 'triangle');
     } else if (kind === 'crawler-lock') {
       this.tone(650, 870, 0.13, 0.025, 'triangle');
+    } else if (kind === 'pressure-open') {
+      this.tone(240, 560, 0.15, 0.035, 'triangle');
+      this.crack(0.12, 0.025, 2800);
     } else if (kind === 'pressure-warn') {
       this.tone(145, 230, 0.24, 0.025, 'triangle');
       this.crack(0.26, 0.024, 2100);
