@@ -1,0 +1,1537 @@
+{
+  "suite": "areas",
+  "results": [
+    {
+      "build": "beam",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 1,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 5,
+      "seconds": 87.62,
+      "hp": 96,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 246
+        },
+        {
+          "kind": "shooter",
+          "hp": 240
+        },
+        {
+          "kind": "hopper",
+          "hp": 205
+        },
+        {
+          "kind": "sniper",
+          "hp": 205
+        }
+      ],
+      "player": {
+        "x": 140,
+        "y": 680.2777777777778
+      },
+      "mods": [
+        "cutting-torch",
+        "magnum",
+        "rapid",
+        "burst",
+        "pulse-chamber",
+        "light",
+        "leech",
+        "airshot",
+        "scatter",
+        "countershot",
+        "kick",
+        "redline",
+        "thermal-runaway",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "air-brake",
+        "landing",
+        "reprisal",
+        "banker"
+      ]
+    },
+    {
+      "build": "beam",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 5,
+      "completed": false,
+      "mode": "playing",
+      "clear": false,
+      "room": 5,
+      "seconds": 299.25,
+      "hp": 10,
+      "kills": 9,
+      "remaining": [
+        {
+          "kind": "hopper",
+          "hp": 139
+        },
+        {
+          "kind": "sniper",
+          "hp": 69
+        },
+        {
+          "kind": "shooter",
+          "hp": 283
+        }
+      ],
+      "player": {
+        "x": 1171.77611238099,
+        "y": 673.8968471790663
+      },
+      "mods": [
+        "cutting-torch",
+        "magnum",
+        "rapid",
+        "burst",
+        "pulse-chamber",
+        "light",
+        "leech",
+        "airshot",
+        "scatter",
+        "countershot",
+        "kick",
+        "redline",
+        "thermal-runaway",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain"
+      ]
+    },
+    {
+      "build": "beam",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 9,
+      "completed": false,
+      "mode": "dead",
+      "clear": false,
+      "room": 12,
+      "seconds": 107.88,
+      "hp": 0,
+      "kills": 39,
+      "remaining": [
+        {
+          "kind": "turbine",
+          "hp": 3688
+        }
+      ],
+      "player": {
+        "x": 314.76560774768416,
+        "y": 625.9003547530992
+      },
+      "mods": [
+        "cutting-torch",
+        "magnum",
+        "rapid",
+        "burst",
+        "pulse-chamber",
+        "light",
+        "leech",
+        "airshot",
+        "scatter",
+        "countershot",
+        "kick",
+        "redline",
+        "thermal-runaway",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "banker",
+        "landing",
+        "shatter",
+        "corner-pocket",
+        "spoof"
+      ]
+    },
+    {
+      "build": "beam",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 13,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 17,
+      "seconds": 97.13,
+      "hp": 100,
+      "kills": 39,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 303
+        },
+        {
+          "kind": "shooter",
+          "hp": 295
+        },
+        {
+          "kind": "skimmer",
+          "hp": 319
+        },
+        {
+          "kind": "sifter",
+          "hp": 344
+        }
+      ],
+      "player": {
+        "x": 139.59496855544577,
+        "y": 680.839595587966
+      },
+      "mods": [
+        "cutting-torch",
+        "magnum",
+        "rapid",
+        "burst",
+        "pulse-chamber",
+        "light",
+        "leech",
+        "airshot",
+        "scatter",
+        "countershot",
+        "kick",
+        "redline",
+        "thermal-runaway",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "banker",
+        "landing",
+        "deadeye",
+        "execute",
+        "fold",
+        "rewire",
+        "slingshot",
+        "scrap-feed",
+        "reprisal",
+        "ramjet"
+      ]
+    },
+    {
+      "build": "beam",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 17,
+      "completed": true,
+      "mode": "won",
+      "clear": true,
+      "room": 20,
+      "seconds": 81.13,
+      "hp": 73,
+      "kills": 39,
+      "remaining": [],
+      "player": {
+        "x": 7250,
+        "y": 682
+      },
+      "mods": [
+        "cutting-torch",
+        "magnum",
+        "rapid",
+        "burst",
+        "pulse-chamber",
+        "light",
+        "leech",
+        "airshot",
+        "scatter",
+        "countershot",
+        "kick",
+        "redline",
+        "thermal-runaway",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "banker",
+        "landing",
+        "deadeye",
+        "execute",
+        "fold",
+        "rewire",
+        "slingshot",
+        "shatter",
+        "deadlock",
+        "reprisal",
+        "rivet",
+        "wallrunner",
+        "spoof"
+      ]
+    },
+    {
+      "build": "precision",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 1,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 5,
+      "seconds": 83.83,
+      "hp": 58,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 246
+        },
+        {
+          "kind": "shooter",
+          "hp": 240
+        },
+        {
+          "kind": "hopper",
+          "hp": 205
+        },
+        {
+          "kind": "sniper",
+          "hp": 205
+        }
+      ],
+      "player": {
+        "x": 140,
+        "y": 680.2777777777778
+      },
+      "mods": [
+        "deadeye",
+        "magnum",
+        "rapid",
+        "execute",
+        "rivet",
+        "fracture",
+        "deadlock",
+        "airshot",
+        "light",
+        "leech",
+        "capacitor",
+        "reserve-cell",
+        "rail-spike",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "wallrunner",
+        "burst",
+        "countershot",
+        "scatter"
+      ]
+    },
+    {
+      "build": "precision",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 5,
+      "completed": false,
+      "mode": "dead",
+      "clear": false,
+      "room": 6,
+      "seconds": 81.45,
+      "hp": 0,
+      "kills": 22,
+      "remaining": [
+        {
+          "kind": "shooter",
+          "hp": 296
+        },
+        {
+          "kind": "shooter",
+          "hp": 161
+        }
+      ],
+      "player": {
+        "x": 819.5464279642955,
+        "y": 584.8379255400549
+      },
+      "mods": [
+        "deadeye",
+        "magnum",
+        "rapid",
+        "execute",
+        "rivet",
+        "fracture",
+        "deadlock",
+        "airshot",
+        "light",
+        "leech",
+        "capacitor",
+        "reserve-cell",
+        "rail-spike",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "fold"
+      ]
+    },
+    {
+      "build": "precision",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 9,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 13,
+      "seconds": 70.32,
+      "hp": 66,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "borer",
+          "hp": 378
+        },
+        {
+          "kind": "shooter",
+          "hp": 276
+        },
+        {
+          "kind": "skimmer",
+          "hp": 299
+        }
+      ],
+      "player": {
+        "x": 140.499968,
+        "y": 680.2777777777778
+      },
+      "mods": [
+        "deadeye",
+        "magnum",
+        "rapid",
+        "execute",
+        "rivet",
+        "fracture",
+        "deadlock",
+        "airshot",
+        "light",
+        "leech",
+        "capacitor",
+        "reserve-cell",
+        "rail-spike",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "scatter",
+        "kick",
+        "burst",
+        "banker",
+        "shatter",
+        "corner-pocket",
+        "spoof",
+        "crosswind"
+      ]
+    },
+    {
+      "build": "precision",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 13,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 17,
+      "seconds": 74.6,
+      "hp": 100,
+      "kills": 39,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 303
+        },
+        {
+          "kind": "shooter",
+          "hp": 295
+        },
+        {
+          "kind": "skimmer",
+          "hp": 319
+        },
+        {
+          "kind": "sifter",
+          "hp": 344
+        }
+      ],
+      "player": {
+        "x": 135.78969813385856,
+        "y": 686.1178739146836
+      },
+      "mods": [
+        "deadeye",
+        "magnum",
+        "rapid",
+        "execute",
+        "rivet",
+        "fracture",
+        "deadlock",
+        "airshot",
+        "light",
+        "leech",
+        "capacitor",
+        "reserve-cell",
+        "rail-spike",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "scatter",
+        "kick",
+        "burst",
+        "banker",
+        "landing",
+        "fold",
+        "rewire",
+        "slingshot",
+        "redline",
+        "scrap-feed",
+        "grindshot",
+        "ramjet"
+      ]
+    },
+    {
+      "build": "precision",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 17,
+      "completed": true,
+      "mode": "won",
+      "clear": true,
+      "room": 20,
+      "seconds": 97.25,
+      "hp": 38,
+      "kills": 36,
+      "remaining": [],
+      "player": {
+        "x": 7250,
+        "y": 682
+      },
+      "mods": [
+        "deadeye",
+        "magnum",
+        "rapid",
+        "execute",
+        "rivet",
+        "fracture",
+        "deadlock",
+        "airshot",
+        "light",
+        "leech",
+        "capacitor",
+        "reserve-cell",
+        "rail-spike",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "scatter",
+        "kick",
+        "burst",
+        "banker",
+        "landing",
+        "fold",
+        "rewire",
+        "slingshot",
+        "redline",
+        "shatter",
+        "recall",
+        "homecoming",
+        "grindshot",
+        "retrace",
+        "scrap-feed"
+      ]
+    },
+    {
+      "build": "volley",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 1,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 5,
+      "seconds": 121.33,
+      "hp": 20,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 246
+        },
+        {
+          "kind": "shooter",
+          "hp": 240
+        },
+        {
+          "kind": "hopper",
+          "hp": 205
+        },
+        {
+          "kind": "sniper",
+          "hp": 205
+        }
+      ],
+      "player": {
+        "x": 140,
+        "y": 680.2777777777778
+      },
+      "mods": [
+        "crossfire",
+        "magnum",
+        "rapid",
+        "scatter",
+        "burst",
+        "convergence",
+        "afterimage",
+        "parallax",
+        "bloom",
+        "airshot",
+        "leech",
+        "pierce",
+        "ricochet",
+        "light",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "mass-driver",
+        "banker",
+        "grindshot",
+        "landing"
+      ]
+    },
+    {
+      "build": "volley",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 5,
+      "completed": false,
+      "mode": "playing",
+      "clear": false,
+      "room": 5,
+      "seconds": 299.3,
+      "hp": 71,
+      "kills": 10,
+      "remaining": [
+        {
+          "kind": "shooter",
+          "hp": 1
+        }
+      ],
+      "player": {
+        "x": 1175.1943418586814,
+        "y": 530.4029151963787
+      },
+      "mods": [
+        "crossfire",
+        "magnum",
+        "rapid",
+        "scatter",
+        "burst",
+        "convergence",
+        "afterimage",
+        "parallax",
+        "bloom",
+        "airshot",
+        "leech",
+        "pierce",
+        "ricochet",
+        "light",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether"
+      ]
+    },
+    {
+      "build": "volley",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 9,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 13,
+      "seconds": 84.68,
+      "hp": 90,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "borer",
+          "hp": 378
+        },
+        {
+          "kind": "shooter",
+          "hp": 276
+        },
+        {
+          "kind": "skimmer",
+          "hp": 299
+        }
+      ],
+      "player": {
+        "x": 133.37840577825494,
+        "y": 681.3345257203594
+      },
+      "mods": [
+        "crossfire",
+        "magnum",
+        "rapid",
+        "scatter",
+        "burst",
+        "convergence",
+        "afterimage",
+        "parallax",
+        "bloom",
+        "airshot",
+        "leech",
+        "pierce",
+        "ricochet",
+        "light",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "kick",
+        "banker",
+        "landing",
+        "countershot",
+        "air-brake",
+        "spoof",
+        "crosswind"
+      ]
+    },
+    {
+      "build": "volley",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 13,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 17,
+      "seconds": 74.75,
+      "hp": 65,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 303
+        },
+        {
+          "kind": "shooter",
+          "hp": 295
+        },
+        {
+          "kind": "skimmer",
+          "hp": 319
+        },
+        {
+          "kind": "sifter",
+          "hp": 344
+        }
+      ],
+      "player": {
+        "x": 135.78969813385856,
+        "y": 686.1178739146836
+      },
+      "mods": [
+        "crossfire",
+        "magnum",
+        "rapid",
+        "scatter",
+        "burst",
+        "convergence",
+        "afterimage",
+        "parallax",
+        "bloom",
+        "airshot",
+        "leech",
+        "pierce",
+        "ricochet",
+        "light",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "kick",
+        "banker",
+        "landing",
+        "fold",
+        "rewire",
+        "slingshot",
+        "redline",
+        "shatter",
+        "scrap-feed",
+        "vector",
+        "ramjet"
+      ]
+    },
+    {
+      "build": "volley",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 17,
+      "completed": false,
+      "mode": "dead",
+      "clear": false,
+      "room": 19,
+      "seconds": 85.9,
+      "hp": 0,
+      "kills": 24,
+      "remaining": [
+        {
+          "kind": "skimmer",
+          "hp": 317
+        },
+        {
+          "kind": "sifter",
+          "hp": 355
+        },
+        {
+          "kind": "borer",
+          "hp": 416
+        },
+        {
+          "kind": "shooter",
+          "hp": 368
+        },
+        {
+          "kind": "flyer",
+          "hp": 260
+        },
+        {
+          "kind": "charger",
+          "hp": 312
+        },
+        {
+          "kind": "runner",
+          "hp": 372
+        },
+        {
+          "kind": "sniper",
+          "hp": 260
+        },
+        {
+          "kind": "shooter",
+          "hp": 304
+        },
+        {
+          "kind": "skimmer",
+          "hp": 329
+        }
+      ],
+      "player": {
+        "x": 267.20685586749664,
+        "y": 590.851493039932
+      },
+      "mods": [
+        "crossfire",
+        "magnum",
+        "rapid",
+        "scatter",
+        "burst",
+        "convergence",
+        "afterimage",
+        "parallax",
+        "bloom",
+        "airshot",
+        "leech",
+        "pierce",
+        "ricochet",
+        "light",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "kick",
+        "banker",
+        "landing",
+        "fold",
+        "rewire",
+        "slingshot",
+        "redline",
+        "shatter",
+        "recall",
+        "homecoming",
+        "countershot",
+        "grindshot",
+        "mass-driver"
+      ]
+    },
+    {
+      "build": "explosive",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 1,
+      "completed": false,
+      "mode": "dead",
+      "clear": false,
+      "room": 3,
+      "seconds": 101.3,
+      "hp": 0,
+      "kills": 34,
+      "remaining": [
+        {
+          "kind": "sniper",
+          "hp": 33
+        },
+        {
+          "kind": "shooter",
+          "hp": 34
+        }
+      ],
+      "player": {
+        "x": 1984.0161589780478,
+        "y": 503.75747114479486
+      },
+      "mods": [
+        "shellshock",
+        "magnum",
+        "rapid",
+        "aftershock",
+        "shockfront",
+        "fuse",
+        "linked-fuse",
+        "chain-reaction",
+        "blast-surf",
+        "airshot",
+        "leech",
+        "light",
+        "scatter",
+        "burst",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "cluster-shell",
+        "landing"
+      ]
+    },
+    {
+      "build": "explosive",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 5,
+      "completed": false,
+      "mode": "playing",
+      "clear": false,
+      "room": 5,
+      "seconds": 299.35,
+      "hp": 67,
+      "kills": 11,
+      "remaining": [
+        {
+          "kind": "shooter",
+          "hp": 240
+        }
+      ],
+      "player": {
+        "x": 1229.488552347555,
+        "y": 539.7177428210572
+      },
+      "mods": [
+        "shellshock",
+        "magnum",
+        "rapid",
+        "aftershock",
+        "shockfront",
+        "fuse",
+        "linked-fuse",
+        "chain-reaction",
+        "blast-surf",
+        "airshot",
+        "leech",
+        "light",
+        "scatter",
+        "burst",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil"
+      ]
+    },
+    {
+      "build": "explosive",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 9,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 13,
+      "seconds": 201.98,
+      "hp": 41,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "borer",
+          "hp": 378
+        },
+        {
+          "kind": "shooter",
+          "hp": 276
+        },
+        {
+          "kind": "skimmer",
+          "hp": 299
+        }
+      ],
+      "player": {
+        "x": 140.499968,
+        "y": 680.2777777777778
+      },
+      "mods": [
+        "shellshock",
+        "magnum",
+        "rapid",
+        "aftershock",
+        "shockfront",
+        "fuse",
+        "linked-fuse",
+        "chain-reaction",
+        "blast-surf",
+        "airshot",
+        "leech",
+        "light",
+        "scatter",
+        "burst",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "kick",
+        "countershot",
+        "cluster-shell",
+        "spoof",
+        "crosswind"
+      ]
+    },
+    {
+      "build": "explosive",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 13,
+      "completed": false,
+      "mode": "dead",
+      "clear": false,
+      "room": 16,
+      "seconds": 91.23,
+      "hp": 0,
+      "kills": 37,
+      "remaining": [
+        {
+          "kind": "sorter",
+          "hp": 4449
+        },
+        {
+          "kind": "flyer",
+          "hp": 84
+        }
+      ],
+      "player": {
+        "x": 838.2001440240668,
+        "y": 568.7421334416476
+      },
+      "mods": [
+        "shellshock",
+        "magnum",
+        "rapid",
+        "aftershock",
+        "shockfront",
+        "fuse",
+        "linked-fuse",
+        "chain-reaction",
+        "blast-surf",
+        "airshot",
+        "leech",
+        "light",
+        "scatter",
+        "burst",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "kick",
+        "banker",
+        "landing",
+        "fold",
+        "rewire",
+        "slingshot",
+        "corner-pocket",
+        "tripwire"
+      ]
+    },
+    {
+      "build": "explosive",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 17,
+      "completed": false,
+      "mode": "dead",
+      "clear": false,
+      "room": 18,
+      "seconds": 44.73,
+      "hp": 0,
+      "kills": 11,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 308
+        },
+        {
+          "kind": "shooter",
+          "hp": 118
+        },
+        {
+          "kind": "skimmer",
+          "hp": 288
+        },
+        {
+          "kind": "sifter",
+          "hp": 350
+        }
+      ],
+      "player": {
+        "x": 148.25045063575007,
+        "y": 416.13346880037443
+      },
+      "mods": [
+        "shellshock",
+        "magnum",
+        "rapid",
+        "aftershock",
+        "shockfront",
+        "fuse",
+        "linked-fuse",
+        "chain-reaction",
+        "blast-surf",
+        "airshot",
+        "leech",
+        "light",
+        "scatter",
+        "burst",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "kick",
+        "banker",
+        "landing",
+        "fold",
+        "rewire",
+        "slingshot",
+        "redline",
+        "shatter",
+        "recall",
+        "grindshot"
+      ]
+    },
+    {
+      "build": "mobility",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 1,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 5,
+      "seconds": 91.6,
+      "hp": 84,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 246
+        },
+        {
+          "kind": "shooter",
+          "hp": 240
+        },
+        {
+          "kind": "hopper",
+          "hp": 205
+        },
+        {
+          "kind": "sniper",
+          "hp": 205
+        }
+      ],
+      "player": {
+        "x": 140,
+        "y": 680.2777777777778
+      },
+      "mods": [
+        "light",
+        "kick",
+        "redline",
+        "airshot",
+        "magnum",
+        "rapid",
+        "vector",
+        "afterburner",
+        "landing",
+        "leech",
+        "countershot",
+        "fold",
+        "rewire",
+        "slingshot",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "suspension",
+        "banker",
+        "mass-driver",
+        "burst"
+      ]
+    },
+    {
+      "build": "mobility",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 5,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 9,
+      "seconds": 80.92,
+      "hp": 80,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "skimmer",
+          "hp": 279
+        },
+        {
+          "kind": "shooter",
+          "hp": 258
+        },
+        {
+          "kind": "hopper",
+          "hp": 220
+        },
+        {
+          "kind": "sniper",
+          "hp": 220
+        }
+      ],
+      "player": {
+        "x": 131.63817031089786,
+        "y": 681.8456342920036
+      },
+      "mods": [
+        "light",
+        "kick",
+        "redline",
+        "airshot",
+        "magnum",
+        "rapid",
+        "vector",
+        "afterburner",
+        "landing",
+        "leech",
+        "countershot",
+        "fold",
+        "rewire",
+        "slingshot",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "tether",
+        "scatter",
+        "short-circuit",
+        "deadeye"
+      ]
+    },
+    {
+      "build": "mobility",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 9,
+      "completed": false,
+      "mode": "dead",
+      "clear": false,
+      "room": 12,
+      "seconds": 135.05,
+      "hp": 0,
+      "kills": 39,
+      "remaining": [
+        {
+          "kind": "turbine",
+          "hp": 1604
+        }
+      ],
+      "player": {
+        "x": 775.46333109641,
+        "y": 602.4552060147433
+      },
+      "mods": [
+        "light",
+        "kick",
+        "redline",
+        "airshot",
+        "magnum",
+        "rapid",
+        "vector",
+        "afterburner",
+        "landing",
+        "leech",
+        "countershot",
+        "fold",
+        "rewire",
+        "slingshot",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "coolant-rounds",
+        "recall",
+        "retrace",
+        "scrap-feed"
+      ]
+    },
+    {
+      "build": "mobility",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 13,
+      "completed": true,
+      "mode": "playing",
+      "clear": false,
+      "room": 17,
+      "seconds": 73.98,
+      "hp": 77,
+      "kills": 40,
+      "remaining": [
+        {
+          "kind": "charger",
+          "hp": 303
+        },
+        {
+          "kind": "shooter",
+          "hp": 295
+        },
+        {
+          "kind": "skimmer",
+          "hp": 319
+        },
+        {
+          "kind": "sifter",
+          "hp": 344
+        }
+      ],
+      "player": {
+        "x": 140,
+        "y": 680.2777777777778
+      },
+      "mods": [
+        "light",
+        "kick",
+        "redline",
+        "airshot",
+        "magnum",
+        "rapid",
+        "vector",
+        "afterburner",
+        "landing",
+        "leech",
+        "countershot",
+        "fold",
+        "rewire",
+        "slingshot",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "coolant-rounds",
+        "deep-freeze",
+        "scatter",
+        "burst",
+        "banker",
+        "shatter",
+        "scrap-feed",
+        "mass-driver",
+        "ramjet"
+      ]
+    },
+    {
+      "build": "mobility",
+      "seed": "OT-BALANCE-0",
+      "startRoom": 17,
+      "completed": true,
+      "mode": "won",
+      "clear": true,
+      "room": 20,
+      "seconds": 104.85,
+      "hp": 52,
+      "kills": 37,
+      "remaining": [],
+      "player": {
+        "x": 7250,
+        "y": 682
+      },
+      "mods": [
+        "light",
+        "kick",
+        "redline",
+        "airshot",
+        "magnum",
+        "rapid",
+        "vector",
+        "afterburner",
+        "landing",
+        "leech",
+        "countershot",
+        "fold",
+        "rewire",
+        "slingshot",
+        "pierce",
+        "ricochet",
+        "split",
+        "backblast",
+        "breach",
+        "backfire",
+        "capacitor",
+        "reserve-cell",
+        "arc-coil",
+        "daisy-chain",
+        "tether",
+        "snapback",
+        "coolant-rounds",
+        "deep-freeze",
+        "scatter",
+        "burst",
+        "banker",
+        "shatter",
+        "recall",
+        "homecoming",
+        "reprisal",
+        "icebreaker",
+        "retrace",
+        "scrap-feed"
+      ]
+    }
+  ]
+}

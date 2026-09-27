@@ -1,9 +1,14 @@
 import type Matter from 'matter-js';
 import type { Game } from './game.ts';
 import type { Level, Spawn } from './levels.ts';
-import { ENEMY_STATS } from './enemies.ts';
+import { ENEMY_STATS, isBoss } from './enemies.ts';
 import { areaIndex, distance, seeded } from './rules.ts';
 import { squadSpawns } from './squads.ts';
+import {
+  overtimeEntryDelays,
+  overtimePressure,
+  shapeOvertimeOpening,
+} from './overtime-pressure.ts';
 
 export const REINFORCEMENT_TELL = 0.75;
 export const REINFORCEMENT_ENTRY = 0.65;
@@ -15,6 +20,7 @@ export interface ReinforcementDoor {
   timer: number;
   blocked: number;
   attackDelay: number;
+  delay?: number;
 }
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
@@ -122,6 +128,9 @@ export class ReinforcementSystem {
   get pending() {
     return this.phase === 'opening' || this.phase === 'warning';
   }
+  get pacedOvertime() {
+    return this.game.overtime?.remix === 5 && !this.game.level.freight;
+  }
   release() {
     if (!this.held) return false;
     this.held = false;
@@ -148,6 +157,7 @@ export class ReinforcementSystem {
       g.overtime && level.boss
         ? [level.spawns.slice(0, 1), level.spawns.slice(1)]
         : splitWaves(level, g.roomSeed, g.overtime ? Math.max(8, g.stage) : g.stage);
+    if (this.pacedOvertime && !level.boss) shapeOvertimeOpening(opening, final, g.stage);
     if (g.overtime && !level.boss && !level.freight) {
       // Reuse a few opening anchors in the later wave. The normal occupancy
       // checks wait or relocate before opening a door through a living body.
@@ -167,12 +177,16 @@ export class ReinforcementSystem {
     final.push(...g.shutdown.reinforcements(level));
     this.openingCount = opening.length;
     const random = seeded(this.game.roomSeed + ':reinforcement-timers:' + this.game.stage);
-    this.doors = final.map((spawn) => ({
+    const delays = this.pacedOvertime
+      ? overtimeEntryDelays(final, overtimePressure(g.stage, !!level.boss).spacing)
+      : [];
+    this.doors = final.map((spawn, i) => ({
       spawn,
       state: 'sealed',
       timer: 0,
       blocked: 0,
-      attackDelay: 0.65 + random() * 0.65,
+      attackDelay: (this.pacedOvertime && level.boss ? 1.05 : 0.65) + random() * 0.65,
+      ...(this.pacedOvertime ? { delay: delays[i] } : {}),
     }));
     this.phase = final.length ? 'opening' : 'done';
     return opening;
@@ -235,6 +249,10 @@ export class ReinforcementSystem {
       )
         return;
       this.openingTime += dt;
+      const boss = g.level.boss ? g.enemies.find((e) => isBoss(e.kind)) : undefined;
+      // Start support cues between boss moves, then honor every cue even if
+      // the boss begins its next move. Never cancel or shorten a shown tell.
+      if (this.pacedOvertime && boss && !['idle', 'recover'].includes(boss.state)) return;
       const overlap = g.detour
         ? 2
         : g.stage >= 12 && g.stage < 16
@@ -243,12 +261,21 @@ export class ReinforcementSystem {
       if (
         g.combatEnemyCount === 0 ||
         this.openingTime >=
-          (g.overtime ? (g.level.boss ? 9 : 4.5) : reinforcementDeadline(g.stage)) ||
-        (g.overtime && g.level.boss && g.enemies.some((e) => e.hp < e.maxHp * 0.65)) ||
+          (this.pacedOvertime
+            ? overtimePressure(g.stage, !!g.level.boss).deadline
+            : g.overtime
+              ? g.level.boss
+                ? 9
+                : 4.5
+              : reinforcementDeadline(g.stage)) ||
+        (g.overtime &&
+          g.level.boss &&
+          g.enemies.some((e) => e.hp < e.maxHp * (this.pacedOvertime ? 0.78 : 0.65))) ||
         ((g.stage >= 1 || g.detour) && this.openingCount >= 2 && g.combatEnemyCount <= overlap)
       ) {
         this.phase = 'warning';
         for (const door of this.doors) {
+          if ((door.delay ?? 0) > 0) continue;
           door.state = 'warning';
           door.timer = REINFORCEMENT_TELL;
         }
@@ -257,7 +284,14 @@ export class ReinforcementSystem {
       return;
     }
     for (const door of this.doors) {
-      if (door.state === 'open') {
+      if (door.state === 'sealed' && this.phase === 'warning' && this.pacedOvertime) {
+        door.delay = Math.max(0, (door.delay ?? 0) - dt);
+        if (door.delay === 0) {
+          door.state = 'warning';
+          door.timer = REINFORCEMENT_TELL;
+          g.onSound('reinforce');
+        }
+      } else if (door.state === 'open') {
         door.timer = Math.max(0, door.timer - dt);
         if (door.timer === 0) door.state = 'spent';
       } else if (door.state === 'warning') {

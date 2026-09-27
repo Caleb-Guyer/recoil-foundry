@@ -349,7 +349,10 @@ test('finite squads and real reward exits carry both routes from Reclamation thr
     for (const e of [...g.enemies]) g.hitEnemy(e, 1e6);
     g.waves.update(0.01);
     assert.equal(g.waves.phase, 'warning');
-    g.waves.update(REINFORCEMENT_TELL + 0.01);
+    // Current Overtime staggers door pairs; the squad must still arrive
+    // together through real occupancy checks after its complete warning.
+    for (let frame = 0; frame < 360 && g.enemies.filter((e) => e.squad).length < 2; frame++)
+      g.waves.update(1 / 60);
     assert.equal(g.enemies.filter((e) => e.squad).length, 2);
   }
   for (const route of ['low', 'high'] as const) {

@@ -1,0 +1,95 @@
+{
+  "suite": "rewards",
+  "results": [
+    {
+      "build": "beam",
+      "stage": 0,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "beam",
+      "stage": 8,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "beam",
+      "stage": 16,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "precision",
+      "stage": 0,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "precision",
+      "stage": 8,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "precision",
+      "stage": 16,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "volley",
+      "stage": 0,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "volley",
+      "stage": 8,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "volley",
+      "stage": 16,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "explosive",
+      "stage": 0,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "explosive",
+      "stage": 8,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "explosive",
+      "stage": 16,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "mobility",
+      "stage": 0,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "mobility",
+      "stage": 8,
+      "aligned": 500,
+      "samples": 500
+    },
+    {
+      "build": "mobility",
+      "stage": 16,
+      "aligned": 500,
+      "samples": 500
+    }
+  ]
+}

@@ -806,6 +806,22 @@ export function rewardMods(
     if (power.length && offers.length)
       offers[offers.length - 1] = power[Math.floor(rng() * power.length)];
   }
+  // An established Overtime gun should be able to develop a component it
+  // already owns. Keep two open choices and any earned salvage card. Apply
+  // only to three-card rewards, leaving Daily and full-pool queries intact.
+  const developsBuild = (mod: Mod) => !!MOD_REQUIRES[mod.id] || isFusion(mod.id);
+  if (context.overtime && mods.length >= 19 && count === 3 && !offers.some(developsBuild)) {
+    const developments = pool.filter(developsBuild);
+    let replace = offers.length - 1;
+    while (replace >= 0 && isSalvage(offers[replace].id)) replace--;
+    if (developments.length && replace >= 0) {
+      let roll = rng() * developments.reduce((sum, mod) => sum + weight(mod), 0);
+      let index = 0;
+      while (index < developments.length - 1 && roll >= weight(developments[index]))
+        roll -= weight(developments[index++]);
+      offers[replace] = developments[index];
+    }
+  }
   return offers;
 }
 export function validBuild(mods: readonly string[], legacy = false) {

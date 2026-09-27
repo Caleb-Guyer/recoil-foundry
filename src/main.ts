@@ -1,4 +1,5 @@
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
+import { overtimeBalanceTestFromUrl } from './overtime-balance.ts';
 import { creditsMarkup } from './credits.ts';
 import { installDialogDismissal } from './dialog-dismissal.ts';
 import { annexTestFromUrl } from './annex-layout.ts';
@@ -417,6 +418,7 @@ let linkedRunTest =
   overtimeCoolingTestFromUrl(entryUrl) ??
   overtimeReclamationTestFromUrl(entryUrl) ??
   overtimeRooftopsTestFromUrl(entryUrl) ??
+  overtimeBalanceTestFromUrl(entryUrl) ??
   exitTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??
