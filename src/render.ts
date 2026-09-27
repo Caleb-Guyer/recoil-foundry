@@ -20,6 +20,7 @@ import {
 } from './combat-readability.ts';
 import { drawPressure } from './pressure-art.ts';
 import { drawCrosswind } from './crosswind-art.ts';
+import { drawStormRain, drawStormfront } from './stormfront-art.ts';
 import { drawWorkshopTarget, drawWorkshopMounts } from './workshop-art.ts';
 import { drawTripwires } from './tripwire-art.ts';
 import { drawTorch } from './torch-art.ts';
@@ -199,6 +200,7 @@ export class Renderer {
     c.scale(this.scale, this.scale);
     c.translate(-this.camera.x, -this.camera.y);
     this.worldTransform = c.getTransform();
+    drawStormRain(c, g, this.reduced);
     this.drawBreachBackdrop();
     drawStoryBackdrop(c, g, this.reduced);
     drawShutdownBackdrop(c, g);
@@ -246,6 +248,7 @@ export class Renderer {
     drawMagnets(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
     drawCrosswind(c, g, this.reduced);
+    drawStormfront(c, g, this.reduced);
     drawAnnex(c, g, this.reduced);
     drawSwitchboardArena(c, g);
     drawCallerWarnings(c, g);

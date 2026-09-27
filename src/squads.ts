@@ -28,7 +28,8 @@ export function squadSpawns(spawns: Spawn[], level: Level, seed: string, stage: 
     level.overtimeDocks ||
     level.overtimeFurnace ||
     level.overtimeCooling ||
-    level.overtimeReclamation
+    level.overtimeReclamation ||
+    level.overtimeRooftops
   )
     return structuredClone(spawns);
   const result = spawns.map(({ squad: _old, ...s }) => ({ ...s }) as Spawn);

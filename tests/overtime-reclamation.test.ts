@@ -171,7 +171,7 @@ test('revision 4 saves round-trip; older runs retain their machinery and test en
         ),
       );
     }
-  for (const remix of [0, 5, -1, '4', null, true])
+  for (const remix of [0, 6, -1, '4', null, true])
     assert.equal(
       loadCheckpoint({ ...fixture(), overtime: { ...fixture().overtime, remix } }),
       null,

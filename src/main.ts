@@ -138,6 +138,7 @@ import {
   overtimeFurnaceTestFromUrl,
   overtimeCoolingTestFromUrl,
   overtimeReclamationTestFromUrl,
+  overtimeRooftopsTestFromUrl,
   exitTestFromUrl,
   UPGRADE_TEST_BUILDS,
   FUSION_TEST_BUILDS,
@@ -411,6 +412,7 @@ let linkedRunTest =
   overtimeFurnaceTestFromUrl(entryUrl) ??
   overtimeCoolingTestFromUrl(entryUrl) ??
   overtimeReclamationTestFromUrl(entryUrl) ??
+  overtimeRooftopsTestFromUrl(entryUrl) ??
   exitTestFromUrl(entryUrl) ??
   upgradeTestFromUrl(entryUrl) ??
   reclamationTestFromUrl(entryUrl) ??

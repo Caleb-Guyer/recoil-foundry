@@ -959,3 +959,30 @@ test('friendly and success signals stay distinct from warning cues and respect e
     sound.play(kind);
   assert.equal(context.sources.length, first);
 });
+
+test('Stormfront reserves warning voices, ducks through its full tell and respects mute', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  sound.updateMusic(scene({ area: 'rooftops' }));
+  for (let i = 0; i < 30; i++) sound.tone(180, 40, 0.15, 0.1);
+  const first = context.sources.length;
+  sound.play('storm-warn');
+  const cue = context.sources.slice(first);
+  assert.equal(cue.length, 3);
+  assert(sound.music!.duckUntil >= context.currentTime + 1.5);
+  assert(sound.voices <= 32);
+  context.advance(1.6);
+  assert(cue.every((s) => s.disconnected));
+  assert.equal(sound.voices, 0);
+  sound.play('storm-strike');
+  assert(sound.voices > 0);
+  context.advance(1);
+  assert.equal(sound.voices, 0);
+  sound.effectsVolume = 0;
+  const muted = context.sources.length;
+  sound.play('storm-warn');
+  sound.play('storm-strike');
+  assert.equal(context.sources.length, muted);
+});

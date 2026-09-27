@@ -334,6 +334,37 @@ export function overtimeReclamationTestFromUrl(url: URL): Checkpoint | null {
   return save;
 }
 
+export function overtimeRooftopsTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (p.get('test') !== 'overtime-rooftops') return null;
+  let invalid = false;
+  p.forEach((_, key) => {
+    if (!['test', 'room', 'mirror', 'v'].includes(key) || p.getAll(key).length !== 1)
+      invalid = true;
+  });
+  if (invalid || (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))) return null;
+  const rooms = {
+    antenna: { stage: 16, seeds: [0, 5] },
+    masts: { stage: 17, seeds: [1, 0] },
+    service: { stage: 18, seeds: [1, 0] },
+    skyline: { stage: 18, seeds: [1, 0] },
+    interceptor: { stage: 19, seeds: [0, 1] },
+  };
+  const room = p.get('room') ?? 'antenna';
+  if (!Object.hasOwn(rooms, room)) return null;
+  const plan = rooms[room as keyof typeof rooms];
+  const save = testCheckpoint('OT-STORM-' + plan.seeds[p.get('mirror') === '1' ? 1 : 0], 19);
+  save.stage = plan.stage;
+  save.overtime = { baseMods: save.mods.length, repairs: 0, remix: 5 };
+  if (plan.stage === 18) save.route = room === 'skyline' ? 'high' : 'low';
+  for (let i = 0; i < save.stage; i++) {
+    const mod = availableMods(save.mods)[0];
+    if (mod) save.mods.push(mod.id);
+    else save.overtime.repairs++;
+  }
+  return save;
+}
+
 export function exitTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

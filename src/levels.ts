@@ -95,6 +95,8 @@ export interface Level extends Layout {
   overtimeFurnace?: true;
   overtimeCooling?: true;
   overtimeReclamation?: true;
+  overtimeRooftops?: true;
+  conductors?: import('./stormfront.ts').ConductorPlacement[];
   fans?: import('./crosswind.ts').FanPlacement[];
   annex?: true;
   annexStation?: import('./annex-route.ts').AnnexStation;

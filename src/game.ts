@@ -14,6 +14,7 @@ import { fabricatorLevel } from './fabricator-layout.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { CrosswindSystem } from './crosswind.ts';
+import { StormfrontSystem } from './stormfront.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { WorkshopSystem, workshopLevel, type WorkshopTarget } from './workshop.ts';
@@ -325,6 +326,7 @@ export class Game {
   counterweights = new CounterweightSystem(this);
   pressure = new PressureSystem(this);
   crosswind = new CrosswindSystem(this);
+  stormfront = new StormfrontSystem(this);
   massDriver = new MassDriverSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
@@ -831,6 +833,7 @@ export class Game {
     this.counterweights.clear();
     this.pressure.clear();
     this.crosswind.clear();
+    this.stormfront.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -907,7 +910,8 @@ export class Game {
       !this.level.overtimeDocks &&
       !this.level.overtimeFurnace &&
       !this.level.overtimeCooling &&
-      !this.level.overtimeReclamation
+      !this.level.overtimeReclamation &&
+      !this.level.overtimeRooftops
     ) {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
@@ -997,6 +1001,7 @@ export class Game {
     this.loaderArena.reset();
     this.pressure.reset();
     this.crosswind.reset();
+    this.stormfront.reset();
     this.workshop.reset();
     this.areaEvents.reset(clearedRoom);
     this.mutations.reset(clearedRoom);
@@ -1029,7 +1034,7 @@ export class Game {
     )
       return false;
     this.areaEvents.state = null;
-    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 4 };
+    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 5 };
     this.stage = 0;
     this.route = null;
     this.loadRoom();
@@ -1424,6 +1429,8 @@ export class Game {
     this.pressure.beforeStep(dt);
     if (this.mode !== 'playing') return;
     this.crosswind.beforeStep(dt);
+    this.stormfront.beforeStep(dt);
+    if (this.mode !== 'playing') return;
     this.props.beforeStep();
     this.sappers.beforeStep();
     this.destruction.beforeStep();

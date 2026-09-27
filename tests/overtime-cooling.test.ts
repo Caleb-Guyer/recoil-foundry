@@ -144,7 +144,7 @@ test('saved revisions and both route choices round-trip without migrating existi
           assert.deepEqual(resumed.level, getOvertimeLevel(cp.seed, cp.stage, revision));
       }
     }
-  for (const remix of [0, 5, -1, '3', null, true])
+  for (const remix of [0, 6, -1, '3', null, true])
     assert.equal(
       loadCheckpoint({ ...fixture(), overtime: { ...fixture().overtime, remix } }),
       null,
