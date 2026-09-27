@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Overtime: Scrap Circuit 3.4.0 — 26 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `ae84228ea6f2f554bf5d027272179156b8ca6c57` passed all **1,965 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36281400171). Tag `v3.4.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36281734114); the verified official ZIP is itch.io upload `19419406`. Both public games show 3.4.0 and preserve their existing saves. [Validation and artifact evidence](validation/overtime-reclamation-3.4.0.md) records the checksum, physical machinery and route checks, limited combat probes and browser scope.
+
+Six authored layouts cover Overtime Reclamation, both third-room routes and both boss arenas. Finite rail deliveries carry breakable cover; yellow latches release loads after a full warning. A blocked trolley stops and warns instead of forcing bodies through obstacles. New Overtime entries use `overtime.remix: 4`, including the earlier Docks, Furnace and Cooling remixes. Older saves retain their generation. Campaign, Daily, ordinary Practice and upgrade balance are unchanged. Publication checks are complete.
+
 ## Overtime: Crosswind 3.3.0 — 25 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `84f57552f75bac71208ef641b06bad3043b9b55f` passed all **1,953 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36215488742). Tag `v3.3.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36215895061); the verified official ZIP is itch.io upload `19405125`. Both public games show 3.3.0 and preserve existing saves. [Validation and artifact evidence](validation/overtime-cooling-3.3.0.md) records the checksum, airflow/route checks, limited combat probes and browser scope.
@@ -60,7 +66,8 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.3.0` at `84f57552f75bac71208ef641b06bad3043b9b55f`. Rollbacks must retain revision-3 `overtime.remix` checkpoint decoding and generation, together with Practice records and blueprint profile fields/decoders. Do not deploy an unchanged older build over newer saves.
+- Stable tag: `v3.4.0` at `ae84228ea6f2f554bf5d027272179156b8ca6c57`. Rollbacks must retain revision-4 `overtime.remix` checkpoint decoding and generation, together with Practice records and blueprint profile fields/decoders. Do not deploy an unchanged older build over newer saves.
+- Previous stable reference: `v3.3.0` at `84f57552f75bac71208ef641b06bad3043b9b55f`.
 - Previous stable reference: `v3.2.0` at `91cd643f80092b433c7c66e508f332b3516db46c`.
 - Previous stable reference: `v3.1.0` at `858389fd2109f27a87e5a3e8f90dfd5525f444c2`.
 - Previous stable reference: `v3.0.5` at `b0b2fe9a326ab8fdb7ec212bdf9df7ff6b73129d`.
