@@ -2,12 +2,13 @@ import Matter from 'matter-js';
 import type { Game } from './game.ts';
 import type { Level, Solid } from './levels.ts';
 import { seeded, type Checkpoint } from './rules.ts';
-import { CRUSHER_TELL } from './hazards.ts';
+import { CRUSHER_TELL, LIFT_PERIOD } from './hazards.ts';
 
 export type MaintenanceKind = 'piston' | 'lift';
 export interface MaintenanceSave {
   stage: number;
   kind: MaintenanceKind;
+  revision?: 2;
 }
 export const SHAFT_TOP = -860;
 export const shaftEntry = (kind: MaintenanceKind) => ({
@@ -26,7 +27,11 @@ export function planMaintenance(seed: string): MaintenanceSave | null {
   if (/^RF-D\d+-/.test(seed)) return null;
   const rng = seeded(seed + ':maintenance:1');
   if (rng() >= 0.45) return null;
-  return { stage: [2, 6, 18][Math.floor(rng() * 3)], kind: rng() < 0.5 ? 'piston' : 'lift' };
+  return {
+    stage: [2, 6, 18][Math.floor(rng() * 3)],
+    kind: rng() < 0.5 ? 'piston' : 'lift',
+    revision: 2,
+  };
 }
 export function validMaintenance(d: Checkpoint) {
   const s = d.maintenance;
@@ -38,11 +43,24 @@ export function validMaintenance(d: Checkpoint) {
       !/^RF-D\d+-/.test(d.seed) &&
       [2, 6, 18].includes(s.stage) &&
       (s.kind === 'piston' || s.kind === 'lift') &&
-      Object.keys(s).every((key) => key === 'stage' || key === 'kind'))
+      (s.revision === undefined || s.revision === 2) &&
+      Object.keys(s).every((key) => key === 'stage' || key === 'kind' || key === 'revision'))
   );
 }
 
-export function maintenanceLevel(kind: MaintenanceKind): Level {
+// All four 320-unit sections share their entry/exit heights. Each new shaft
+// includes all three authored patterns, plus one repeat, shuffled independently.
+export function shaftSections(seed: string): number[] {
+  const rng = seeded(seed + ':shaft-sections:2');
+  const sections = [0, 1, 2, Math.floor(rng() * 3)];
+  for (let i = sections.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [sections[i], sections[j]] = [sections[j], sections[i]];
+  }
+  return sections;
+}
+
+export function maintenanceLevel(kind: MaintenanceKind, seed = '', revision?: 2): Level {
   const solids: Solid[] = [
     { x: 0, y: SHAFT_TOP, w: 650, h: 1600 },
     { x: 1350, y: SHAFT_TOP, w: 650, h: 1600 },
@@ -61,6 +79,7 @@ export function maintenanceLevel(kind: MaintenanceKind): Level {
     hazards: [],
     setpiece: { rosters: [], props: [], cargo: [], weak: [] },
   };
+  if (revision === 2) return variedShaft(level, shaftSections(seed));
   if (kind === 'piston') {
     for (let i = 0; i < 8; i++) {
       const left = i % 2 === 0,
@@ -89,11 +108,77 @@ export function maintenanceLevel(kind: MaintenanceKind): Level {
   return level;
 }
 
+function variedShaft(level: Level, sections: number[]): Level {
+  const timing: number[] = [];
+  level.maintenanceTiming = timing;
+  level.id += '-2-' + sections.join('');
+  for (let section = 0; section < 4; section++) {
+    const pattern = sections[section];
+    if (level.maintenance === 'piston') {
+      for (let side = 0; side < 2; side++) {
+        const left = side === 0,
+          y = 580 - section * 320 - side * 160;
+        const width = pattern === 2 ? 320 : 300;
+        level.solids.push({ x: left ? 650 : 1350 - width, y, w: width, h: 22 });
+        level.route.push({ x: left ? 790 : 1210, y: y - 18 });
+        const centers = pattern === 1 ? [866, 924] : [pattern === 2 ? 918 : 900];
+        centers.forEach((center, press) => {
+          level.hazards!.push({
+            kind: 'crusher',
+            x: left ? center : 2000 - center,
+            y: y - 178,
+            w: pattern === 1 ? 48 : 96,
+            h: 24,
+            travel: 154,
+          });
+          // Every head gets a full warning. Paired presses follow one another;
+          // staggered banks ripple upward instead of sharing an index parity.
+          timing.push((section * 0.65 + side * 4 + press * 1.35) % 8);
+        });
+        if (pattern === 2) {
+          // A canopy shields the outer pocket; its top is also a recoil perch.
+          level.solids.push({ x: left ? 650 : 1280, y: y - 96, w: 70, h: 14 });
+        }
+      }
+    } else {
+      const y = 420 - section * 320,
+        left = section % 2 === 1;
+      level.solids.push({ x: left ? 650 : 1120, y, w: 230, h: 22 });
+      const x = 1000 + (left ? -1 : 1) * [35, -45, 55][pattern];
+      const width = pattern === 2 ? 80 : 120;
+      level.hazards!.push({ kind: 'lift', x, y: y + 200, w: width, h: 20, travel: 190 });
+      timing.push(0);
+      level.route.push({ x, y: y + 182 });
+      if (pattern === 1) {
+        const transferX = left ? 895 : 1105;
+        level.hazards!.push({
+          kind: 'crumble',
+          x: transferX,
+          y: y + 100,
+          w: 100,
+          h: 16,
+          travel: 0,
+        });
+        timing.push(0);
+        level.route.push({ x: transferX, y: y + 82 });
+      } else if (pattern === 2) {
+        level.hazards!.push({ kind: 'lift', x: 2000 - x, y: y + 200, w: 80, h: 20, travel: 190 });
+        timing.push(4);
+        // The opposite perch makes a genuine second route with a safe transfer.
+        level.solids.push({ x: left ? 1120 : 650, y: y + 80, w: 230, h: 22 });
+      }
+      level.route.push({ x: left ? 800 : 1200, y: y - 18 });
+    }
+  }
+  return level;
+}
+
 export class MaintenanceSystem {
   game: Game;
   state: MaintenanceSave | null = null;
   pulseAt = 0;
   bank = 0;
+  presses: { index: number; at: number }[] = [];
   constructor(game: Game) {
     this.game = game;
   }
@@ -125,6 +210,19 @@ export class MaintenanceSystem {
     const g = this.game;
     this.pulseAt = g.time + 1.6;
     this.bank = 0;
+    this.presses = [];
+    if (g.level.maintenanceTiming)
+      g.hazards.items.forEach((h, index) => {
+        const offset = g.level.maintenanceTiming![index];
+        if (h.kind === 'crusher') this.presses.push({ index, at: g.time + 1.6 + offset });
+        if (h.kind === 'lift') {
+          h.phase = offset;
+          const top =
+            h.placement.y -
+            (h.placement.travel * (1 - Math.cos((offset * Math.PI * 2) / LIFT_PERIOD))) / 2;
+          Matter.Body.setPosition(h.body, { x: h.placement.x, y: top + h.placement.h / 2 });
+        }
+      });
     for (const h of g.hazards.items) if (h.kind === 'crusher') h.automatic = true;
     Matter.Body.setPosition(
       g.player,
@@ -134,6 +232,22 @@ export class MaintenanceSystem {
   }
   beforeStep() {
     const g = this.game;
+    if (this.active && g.level.maintenanceTiming) {
+      if (g.clear) return;
+      let nearby = false;
+      for (const press of this.presses) {
+        if (g.time < press.at) continue;
+        press.at += 8;
+        const h = g.hazards.items[press.index];
+        if (h.state !== 'idle') continue;
+        h.state = 'warning';
+        h.timer = CRUSHER_TELL;
+        h.hits.clear();
+        nearby ||= Math.abs(g.player.position.y - h.placement.y) < 400;
+      }
+      if (nearby) g.onSound('machine');
+      return;
+    }
     if (!this.active || g.level.maintenance !== 'piston' || g.clear || g.time < this.pulseAt)
       return;
     this.pulseAt += 4;

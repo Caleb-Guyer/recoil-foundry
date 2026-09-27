@@ -7,6 +7,7 @@ import {
   planMaintenance,
   maintenanceLevel,
   shaftEntry,
+  shaftSections,
   type MaintenanceKind,
 } from '../src/maintenance.ts';
 import { maintenanceTestFromUrl } from '../src/maintenance-test.ts';
@@ -26,9 +27,11 @@ function tick(g: Game, input: Partial<Input> = {}) {
     ...input,
   });
 }
-function fixture(kind: MaintenanceKind = 'piston', build = 'standard') {
+function fixture(kind: MaintenanceKind = 'piston', build = 'standard', variant?: number) {
   const save = maintenanceTestFromUrl(
-    new URL(`https://test/?test=maintenance&layout=${kind}&build=${build}`),
+    new URL(
+      `https://test/?test=maintenance&layout=${kind}&build=${build}${variant ? '&variant=' + variant : ''}`,
+    ),
   )!;
   assert(loadCheckpoint(save));
   const g = new Game();
@@ -57,19 +60,48 @@ function climb(g: Game) {
     boost = true;
   for (let frame = 0; frame < 7200 && g.mode === 'playing'; frame++) {
     const p = g.player.position,
-      t = g.level.route[waypoint];
+      point = g.level.route[waypoint];
+    const lift =
+      point &&
+      g.hazards.items.find(
+        (h) => h.kind === 'lift' && h.placement.x === point.x && h.placement.y - 18 === point.y,
+      );
+    const t = point && {
+      x: point.x,
+      y:
+        lift && g.level.maintenanceTiming ? lift.placement.y - lift.placement.travel - 18 : point.y,
+    };
     if (!t) {
       tick(g);
       continue;
     }
-    if (Math.abs(p.x - t.x) < 50 && Math.abs(p.y - t.y) < 12 && g.grounded) {
+    if (
+      g.level.maintenanceTiming &&
+      g.grounded &&
+      waypoint < g.level.route.length - 1 &&
+      p.y < t.y - 30
+    ) {
+      waypoint++;
+      boost = true;
+      continue;
+    }
+    if (
+      g.grounded &&
+      (lift && g.level.maintenanceTiming
+        ? g.hazards.supported(g.player, lift.body) || p.y < t.y - 12
+        : Math.abs(p.x - t.x) < 50 && Math.abs(p.y - t.y) < 12)
+    ) {
       waypoint++;
       boost = true;
       continue;
     }
     let x = t.x;
+    if (lift && g.level.maintenanceTiming && p.y > lift.body.position.y - 42) {
+      x = t.x + (p.x < t.x ? -1 : 1) * (lift.placement.w / 2 + 28);
+    }
     if (
-      g.level.maintenance === 'piston' &&
+      (g.level.maintenance === 'piston' ||
+        (g.level.maintenanceTiming && (t.x < 880 || t.x > 1120))) &&
       p.y > t.y + 25 &&
       ((t.x < 1000 && p.x < 985) || (t.x > 1000 && p.x > 1015))
     )
@@ -147,6 +179,9 @@ test('shaft checkpoints reject malformed schedules without changing existing sav
     { stage: '2', kind: 'lift' },
     { stage: 2, kind: 'unknown' },
     { stage: 2, kind: 'lift', reward: true },
+    { stage: 2, kind: 'lift', revision: 1 },
+    { stage: 2, kind: 'lift', revision: '2' },
+    { stage: 2, kind: 'lift', revision: null },
   ])
     assert.equal(loadCheckpoint({ ...save, maintenance }), null);
   assert.equal(loadCheckpoint({ ...save, version: 5 }), null);
@@ -175,8 +210,163 @@ test('shaft preview URLs are strict, reproducible and isolated by the existing t
     'test=maintenance&layout=lift&layout=piston',
     'test=maintenance&stage=19',
     'test=maintenance&test=maintenance',
+    'test=maintenance&variant=0',
+    'test=maintenance&variant=-1',
+    'test=maintenance&variant=1.2',
+    'test=maintenance&variant=1000',
+    'test=maintenance&variant=01',
+    'test=maintenance&variant=1&variant=2',
   ])
     assert.equal(maintenanceTestFromUrl(new URL('https://test/?' + query)), null);
+});
+
+for (const kind of ['piston', 'lift'] as const) {
+  const arrangements = new Map<string, number>();
+  for (let variant = 1; variant <= 999 && arrangements.size < 36; variant++) {
+    const seed = `MAINTENANCE-${kind}-${variant}`;
+    arrangements.set(shaftSections(seed).join(''), variant);
+  }
+  for (const build of ['standard', 'recoil', 'portal'])
+    test(`${kind}: all 36 authored section orders are reachable with the ${build} gun`, () => {
+      assert.equal(arrangements.size, 36);
+      for (const [order, variant] of arrangements) {
+        const g = fixture(kind, build, variant),
+          result = climb(g);
+        assert.equal(
+          result.mode,
+          'upgrade',
+          JSON.stringify({ kind, order, variant, ...result, position: g.player.position }),
+        );
+        assert(result.hp > 0);
+        assert.equal(g.offers.length, 3);
+      }
+    });
+}
+
+test('new layouts rebuild from their saved revision without altering legacy shafts or reward draws', () => {
+  for (const kind of ['piston', 'lift'] as const) {
+    for (const variant of [1, 2, 83]) {
+      const g = fixture(kind, 'standard', variant),
+        save = snapshot(g);
+      assert.equal(save.maintenance!.revision, 2);
+      const resumed = new Game();
+      resumed.start(save.seed, loadCheckpoint(save)!);
+      assert.deepEqual(resumed.level, g.level);
+      assert.deepEqual(resumed.maintenance.presses, g.maintenance.presses);
+      assert.deepEqual(resumed.player.position, shaftEntry(kind));
+      const original = structuredClone(save);
+      delete original.maintenance!.revision;
+      const old = new Game();
+      old.start(original.seed, loadCheckpoint(original)!);
+      assert.deepEqual(old.level, maintenanceLevel(kind));
+      atGoal(g);
+      atGoal(old);
+      assert.deepEqual(g.offers, old.offers);
+      const pending = snapshot(g);
+      resumed.start(pending.seed, loadCheckpoint(pending)!);
+      assert.equal(resumed.mode, 'upgrade');
+      assert.deepEqual(resumed.offers, g.offers);
+      resumed.chooseMod(resumed.offers[0].id);
+      assert.equal(resumed.stage, 3);
+      assert.deepEqual(resumed.detours, [0]);
+      assert(loadCheckpoint(snapshot(resumed)));
+    }
+  }
+});
+
+test('varied previews preserve progress and each seeded shaft contains all three section families', () => {
+  for (const kind of ['piston', 'lift'] as const)
+    for (const variant of [1, 2, 999]) {
+      const url = new URL(`https://test/?test=maintenance&layout=${kind}&variant=${variant}`);
+      const save = maintenanceTestFromUrl(url)!;
+      assert(loadCheckpoint(save));
+      assert.deepEqual(maintenanceTestFromUrl(url), save);
+      assert.equal(new Set(shaftSections(save.seed)).size, 3);
+      const g = new Game();
+      let writes = 0;
+      g.onCheckpoint = () => writes++;
+      g.start(save.seed, save, null, save);
+      atGoal(g);
+      g.save();
+      g.chooseMod(g.offers[0].id);
+      assert.equal(writes, 0);
+    }
+});
+
+test('every varied press warns for its full tell, cycles independently and leaves a safe landing', () => {
+  const g = fixture('piston', 'standard', 1);
+  const warnings = new Map<number, number>(),
+    cycles = new Map<number, number>();
+  for (let i = 0; i < 1500; i++) {
+    const before = g.hazards.items.map((h) => h.state);
+    tick(g);
+    g.hazards.items.forEach((h, index) => {
+      if (h.state === 'warning' && before[index] === 'idle') {
+        assert(h.timer >= CRUSHER_TELL - 0.02);
+        warnings.set(index, g.time);
+        cycles.set(index, (cycles.get(index) ?? 0) + 1);
+      }
+      if (h.state === 'falling' && before[index] === 'warning')
+        assert(g.time - warnings.get(index)! >= CRUSHER_TELL - 0.02);
+    });
+  }
+  assert.equal(cycles.size, g.hazards.items.length);
+  assert([...cycles.values()].every((n) => n >= 2));
+  for (const point of g.level.route) {
+    const heads = g.hazards.items.filter((h) => h.placement.y + 178 === point.y + 18);
+    assert(heads.length > 0);
+    assert(heads.every((h) => Math.abs(point.x - h.placement.x) > h.placement.w / 2 + 14));
+  }
+  const before = structuredClone(g.maintenance.presses);
+  g.setMode('paused');
+  for (let i = 0; i < 600; i++) tick(g);
+  assert.deepEqual(g.maintenance.presses, before);
+  g.setMode('playing');
+  g.hitStop = 1;
+  tick(g);
+  assert.deepEqual(g.maintenance.presses, before);
+  assert.equal(g.hp, 100);
+});
+
+test('split lifts support either branch and the crumbling transfers can be bypassed with recoil', () => {
+  for (const variant of [1, 6, 83]) {
+    const g = fixture('lift', 'standard', variant);
+    const sections = shaftSections(g.seed);
+    const route = [];
+    for (let section = 0; section < 4; section++) {
+      const y = 420 - section * 320,
+        left = section % 2 === 1;
+      const lifts = g.hazards.items.filter((h) => h.kind === 'lift' && h.placement.y === y + 200);
+      const lift = lifts.at(-1)!;
+      route.push({ x: lift.placement.x, y: lift.placement.y - 18 });
+      if (sections[section] === 2) route.push({ x: left ? 1200 : 800, y: y + 62 });
+      route.push({ x: left ? 800 : 1200, y: y - 18 });
+    }
+    g.level.route = route;
+    const result = climb(g);
+    assert.equal(
+      result.mode,
+      'upgrade',
+      JSON.stringify({ variant, ...result, p: g.player.position }),
+    );
+    assert(result.hp > 0);
+  }
+});
+
+test('crumbling transfer plates regenerate after use and never trap an actor inside the replacement', () => {
+  const g = fixture('lift', 'standard', 1);
+  const plate = g.hazards.items.find((h) => h.kind === 'crumble')!;
+  Body.setPosition(g.player, { x: plate.placement.x, y: plate.placement.y - 18 });
+  Body.setVelocity(g.player, { x: 0, y: 0 });
+  for (let i = 0; i < 50; i++) tick(g);
+  assert.equal(plate.state, 'gone');
+  Body.setPosition(g.player, { x: plate.placement.x, y: plate.body.position.y });
+  Body.setStatic(g.player, true);
+  for (let i = 0; i < 240; i++) tick(g);
+  assert(!plate.visible);
+  Body.setPosition(g.player, shaftEntry('lift'));
+  tick(g);
+  assert(plate.visible);
 });
 
 test('an empty shaft cannot clear early, pay at the bottom or generate combat and random obstructions', () => {

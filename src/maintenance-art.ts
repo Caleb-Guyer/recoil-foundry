@@ -67,9 +67,13 @@ export function drawMaintenanceDetails(c: CanvasRenderingContext2D, g: Game) {
   }
   if (g.level.maintenance === 'lift') {
     for (const h of g.hazards.items) {
+      if (h.kind !== 'lift') continue;
       c.strokeStyle = '#495451';
       c.lineWidth = 2;
-      for (const x of [h.placement.x - 58, h.placement.x + 58]) {
+      for (const x of [
+        h.placement.x - h.placement.w / 2 + 12,
+        h.placement.x + h.placement.w / 2 - 12,
+      ]) {
         c.beginPath();
         c.moveTo(x, h.placement.y - h.placement.travel - 80);
         c.lineTo(x, h.body.position.y - 10);

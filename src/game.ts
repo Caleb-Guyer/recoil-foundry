@@ -928,7 +928,11 @@ export class Game {
           }
         : this.detour
           ? this.maintenance.scheduled
-            ? maintenanceLevel(this.maintenance.state!.kind)
+            ? maintenanceLevel(
+                this.maintenance.state!.kind,
+                this.seed,
+                this.maintenance.state!.revision,
+              )
             : getDetour(this.seed, this.stage)
           : this.overtime
             ? getOvertimeLevel(this.seed, this.stage, this.overtime.remix, this.route)

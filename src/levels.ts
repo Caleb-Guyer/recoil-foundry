@@ -93,6 +93,7 @@ export interface Layout {
 }
 export interface Level extends Layout {
   maintenance?: import('./maintenance.ts').MaintenanceKind;
+  maintenanceTiming?: number[];
   overtimeDocks?: true;
   overtimeFurnace?: true;
   overtimeCooling?: true;
