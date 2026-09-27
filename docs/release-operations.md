@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Shifting Shafts 3.11.0 — 27 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `4353fe008d5075df6c57d060a877c1aaa18b6879` passed all **2,073 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36328508996). Tag `v3.11.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36329728413); the verified archive is itch.io upload `19430037`. Both public games show 3.11.0 and retain their saves. [Validation](validation/shifting-shafts-3.11.0.md) records the checksum, 216 ordinary-input climbs, lifecycle checks and browser scope.
+
+New campaigns shuffle four authored sections into 36 arrangements per shaft. Piston timing, double presses, recoil perches, offset lifts, crumbling transfers and alternate lift branches vary the climb. Older saves retain their original rooms; reward counts and Daily generation remain unchanged. Publication checks are complete.
+
 ## Maintenance Shafts 3.10.0 — 27 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `47e3f9c30ef4a87ae7689ad04119cb249dc2d3f1` passed all **2,062 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36323637942). Tag `v3.10.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36324855436); its verified official ZIP is itch.io upload `19428500`. Both public games show 3.10.0 and preserve their prior saves. [Validation and artifact evidence](validation/maintenance-3.10.0.md) records the checksum, ordinary-input climbs, lifecycle and portal checks, and browser scope.
@@ -108,7 +114,7 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.10.0` at `47e3f9c30ef4a87ae7689ad04119cb249dc2d3f1`. Rollbacks must retain maintenance schedule decoding and shaft/reward reconstruction, Welder and commendation fields, current Overtime generation, Practice records and blueprint profile fields. Do not deploy an unchanged older build over newer saves.
+- Stable tag: `v3.11.0` at `4353fe008d5075df6c57d060a877c1aaa18b6879`. Rollbacks must retain both maintenance layout revisions, schedule decoding and shaft/reward reconstruction, Welder and commendation fields, current Overtime generation, Practice records and blueprint profile fields. Do not deploy an unchanged older build over newer saves.
 - Previous stable reference: `v3.9.1` at `612d20ad6da90d88548709f254249c16830ce9ba`.
 - Earlier stable reference: `v3.6.0` at `4ecc743db218e62b511a42fd11ba301a253372d1`.
 - Previous stable reference: `v3.5.0` at `6a88b6e6b7c2e0ee701e3f9cef213bbcb9ad2ffb`.
