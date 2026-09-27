@@ -182,7 +182,9 @@ export class Renderer {
       viewH = this.height / this.scale;
     const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
     const desiredX = clamp(
-      g.player.position.x - viewW * 0.42 + lead,
+      g.maintenance.active && viewW >= 780
+        ? 1000 - viewW / 2
+        : g.player.position.x - viewW * 0.42 + lead,
       0,
       Math.max(0, g.worldWidth - viewW),
     );
