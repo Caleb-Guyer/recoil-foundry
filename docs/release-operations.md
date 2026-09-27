@@ -1,5 +1,11 @@
 # Browser release operations
 
+## The Welder 3.8.0 — 26 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `0fd3ac86b89fe318aad2401a64f7ac4b431a940e` passed all **2,011 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36289544860). Tag `v3.8.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36289936025); its verified official ZIP is itch.io upload `19421154`. Both public games show 3.8.0 and preserve their existing saves. [Validation and artifact evidence](validation/welder-3.8.0.md) includes the 25-run ordinary-input audit and checksum.
+
+A rare, once-per-Overtime miniboss replaces an authored squad with molten seams, destructible temporary barricades, committed bolt spreads and an exposed cooling window. Its extra compatible upgrade survives Continue; lore and Practice unlock on a real defeat. Existing Overtime saves, first laps and Daily challenges keep their encounter selection. Publication checks are complete.
+
 ## Overtime balance 3.7.0 — 26 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `d592cc71c0da9b71176734e834abdc9c739a2821` passed all **1,995 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36287635994). Tag `v3.7.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36287962617); its verified official ZIP is itch.io upload `19420747`. Both public games show 3.7.0 and preserve their existing saves. [Validation and artifact evidence](validation/overtime-balance-3.7.0.md) includes before/after diagnostics, campaign-pilot limitations, checksums and public checks.
