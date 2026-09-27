@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.11.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Shifting Shafts 3.11.0](validation/shifting-shafts-3.11.0.md).
+Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.12.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Maintenance Trials 3.12.0](validation/maintenance-trials-3.12.0.md).
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
