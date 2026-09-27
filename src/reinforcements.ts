@@ -64,6 +64,7 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
     spawn.elite
       ? 20
       : {
+          welder: 30,
           auditor: 0,
           switchman: 5,
           caller: 6,
@@ -165,6 +166,7 @@ export class ReinforcementSystem {
         ...opening
           .filter(
             (s) =>
+              s.kind !== 'welder' &&
               s.kind !== 'harpooner' &&
               s.kind !== 'sapper' &&
               s.kind !== 'wallcrawler' &&

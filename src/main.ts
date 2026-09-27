@@ -1,3 +1,4 @@
+import { welderTestFromUrl } from './welder-test.ts';
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { overtimeBalanceTestFromUrl } from './overtime-balance.ts';
 import { creditsMarkup } from './credits.ts';
@@ -412,6 +413,7 @@ let linkedRunTest =
   routesTestFromUrl(entryUrl) ??
   harpoonerTestFromUrl(entryUrl) ??
   fusionTestFromUrl(entryUrl) ??
+  welderTestFromUrl(entryUrl) ??
   overtimeTestFromUrl(entryUrl) ??
   overtimeDocksTestFromUrl(entryUrl) ??
   overtimeFurnaceTestFromUrl(entryUrl) ??
@@ -690,6 +692,10 @@ function updateTitle() {
   if (linkedRunTest?.seed.startsWith('CLOCK-OUT-')) {
     $('play').textContent = 'Preview Clock Out';
     $('title-hint').textContent = 'Overtime finale preview. Your progress stays untouched.';
+  }
+  if (linkedRunTest?.welder) {
+    $('play').innerHTML = 'Test The Welder <span aria-hidden="true">↗</span>';
+    $('title-hint').textContent = 'An Overtime encounter. R to retry.';
   }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
@@ -1174,7 +1180,9 @@ game.onHaptic = (kind, strength) => {
 };
 game.onBossDefeated = (kind) => {
   if (game.practice || game.testRun || game.workshop.active) return;
-  const victory = loadEncounters([{ kind, seed: game.layoutSeed }])[0];
+  const victory = loadEncounters([
+    { kind, seed: kind === 'welder' ? game.seed : game.layoutSeed },
+  ])[0];
   if (!victory || encounters.some((record) => record.kind === kind)) return;
   encounters.push(victory);
   write(VICTORIES_KEY, encounters);
@@ -1761,23 +1769,27 @@ function showDialog(kind: string) {
       '<p class="eyebrow">' +
       (activeDaily ? 'DAILY · ' : '') +
       (game.overtime ? 'OVERTIME · ' : '') +
-      (game.auditorReward
-        ? 'COMPANY PROPERTY · NO HEALING'
-        : game.courierReward
-          ? 'RECOVERED CARGO · NO HEALING'
-          : game.detour
-            ? 'BONUS UPGRADE · NO HEALING'
-            : game.enteringDetour
-              ? 'ROOM CLEAR · CHALLENGE NEXT'
-              : 'ROOM CLEAR') +
+      (game.welderReward
+        ? 'WELDER SALVAGE · BONUS UPGRADE'
+        : game.auditorReward
+          ? 'COMPANY PROPERTY · NO HEALING'
+          : game.courierReward
+            ? 'RECOVERED CARGO · NO HEALING'
+            : game.detour
+              ? 'BONUS UPGRADE · NO HEALING'
+              : game.enteringDetour
+                ? 'ROOM CLEAR · CHALLENGE NEXT'
+                : 'ROOM CLEAR') +
       '</p><h2 id="dialog-title">' +
-      (game.auditorReward
-        ? 'Break the seal.'
-        : game.offers[0]?.id === 'repair'
-          ? 'Keep going.'
-          : singleUpgrade
-            ? 'Next upgrade.'
-            : 'Make it kick.') +
+      (game.welderReward
+        ? 'Make it yours.'
+        : game.auditorReward
+          ? 'Break the seal.'
+          : game.offers[0]?.id === 'repair'
+            ? 'Keep going.'
+            : singleUpgrade
+              ? 'Next upgrade.'
+              : 'Make it kick.') +
       '</h2>' +
       (firstRewardHelp && game.stage === 0 && !game.testRun && !game.practice
         ? '<p class="first-reward-note">Choose one. It stays on your gun for this run.</p>'
@@ -1806,6 +1818,7 @@ function showDialog(kind: string) {
       !game.practice &&
       !game.courierReward &&
       !game.auditorReward &&
+      !game.welderReward &&
       game.offers[0]?.id !== 'repair'
         ? '<div class="reward-actions"><button id="reroll" class="quiet"' +
           (game.canReroll ? '' : ' disabled') +

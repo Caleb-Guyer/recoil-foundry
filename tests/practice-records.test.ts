@@ -1,3 +1,4 @@
+import { planWelder } from '../src/welder-layout.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, type Input } from '../src/game.ts';
@@ -35,6 +36,7 @@ function encounter(kind: Encounter['kind'] = 'loader', offset = 0): Encounter {
   for (let i = offset; i < offset + 200; i++) {
     const seed = 'record-' + i;
     if (
+      (kind === 'welder' && planWelder(seed)) ||
       kind === 'switchboard' ||
       getLevel(seed, PRACTICE_BOSSES[kind].stage).spawns[0]?.kind === kind
     )

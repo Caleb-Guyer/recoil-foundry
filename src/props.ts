@@ -19,6 +19,7 @@ export const PROP_STATS = {
   rubble: { w: 26, h: 18, hp: 24 },
 };
 export interface Prop {
+  welded?: true;
   auditCase?: true;
   kind: PropKind;
   body: Matter.Body;
@@ -312,7 +313,8 @@ export class PropSystem {
       return;
     }
     this.remove(prop);
-    if (prop.kind === 'crate' || prop.kind === 'cover') this.game.scrap.collect(source);
+    if (!prop.welded && (prop.kind === 'crate' || prop.kind === 'cover'))
+      this.game.scrap.collect(source);
     if (prop.charge) return;
     if (prop.kind === 'rubble') {
       this.game.burst(prop.body.position, 3, '#a9b5b3', 1.5);
@@ -321,7 +323,7 @@ export class PropSystem {
     this.game.burst(prop.body.position, 16, '#a9b5b3', 4);
     this.game.feedback(2);
     this.game.onSound('break');
-    this.game.demolition.brokenProp(prop.body.position);
+    if (!prop.welded) this.game.demolition.brokenProp(prop.body.position);
   }
   beforeStep() {
     this.impacts = [];

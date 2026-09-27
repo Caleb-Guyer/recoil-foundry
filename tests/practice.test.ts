@@ -1,3 +1,4 @@
+import { planWelder, welderPracticeLevel } from '../src/welder-layout.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { switchboardLevel } from '../src/switchboard-layout.ts';
@@ -33,9 +34,12 @@ function record(kind: PracticeBoss, mirrored = false): Encounter {
   for (let i = 0; i < 100; i++) {
     const seed = 'practice-check-' + i,
       level =
-        kind === 'switchboard'
-          ? switchboardLevel(seed)
-          : getLevel(seed, PRACTICE_BOSSES[kind].stage);
+        kind === 'welder'
+          ? welderPracticeLevel(seed)
+          : kind === 'switchboard'
+            ? switchboardLevel(seed)
+            : getLevel(seed, PRACTICE_BOSSES[kind].stage);
+    if (kind === 'welder' && !planWelder(seed)) continue;
     if (level.spawns[0].kind === kind && level.mirrored === mirrored) return { kind, seed };
   }
   assert.fail('No fixture for ' + kind);
@@ -270,13 +274,14 @@ test('all normal boss defeats unlock practice, but ordinary enemy kills do not',
   g.hitEnemy(g.enemies[0], 99999);
   assert.deepEqual(victories, []);
   for (const kind of Object.keys(PRACTICE_BOSSES) as PracticeBoss[]) {
+    if (kind === 'welder') continue; // Its Overtime wave/unlock is covered in welder.test.ts.
     const entry = record(kind);
     g.start(entry.seed, practiceCheckpoint(entry)!);
     g.enemies[0].spawn = 0;
     g.hitEnemy(g.enemies[0], 99999);
     assert.equal(victories.at(-1), kind);
   }
-  assert.equal(victories.length, Object.keys(PRACTICE_BOSSES).length);
+  assert.equal(victories.length, Object.keys(PRACTICE_BOSSES).length - 1);
 });
 
 test('every practice boss keeps its discovered arena and gets the right number of real upgrades', () => {
@@ -297,7 +302,11 @@ test('every practice boss keeps its discovered arena and gets the right number o
       assert.equal(g.enemies[0].hp, g.enemies[0].maxHp);
       assert.deepEqual(
         g.level,
-        kind === 'switchboard' ? switchboardLevel(entry.seed) : getLevel(entry.seed, g.stage),
+        kind === 'welder'
+          ? welderPracticeLevel(entry.seed)
+          : kind === 'switchboard'
+            ? switchboardLevel(entry.seed)
+            : getLevel(entry.seed, g.stage),
       );
       assert.equal(g.level.mirrored, mirror);
       assert.equal(g.elapsed, 0);

@@ -1,3 +1,4 @@
+import { WELDER_HP } from './welder-rules.ts';
 import type { Level, Spawn } from './levels.ts';
 import { getLevel } from './levels.ts';
 import { areaIndex, seeded, sample, STAGES } from './rules.ts';
@@ -18,6 +19,7 @@ import type { RouteChoice } from './rules.ts';
 export const overtimeSeed = (seed: string) =>
   'OT-' + Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
 export function overtimeHealth(kind: EnemyKind, stage: number, elite?: EliteKind) {
+  if (kind === 'welder') return WELDER_HP;
   return Math.ceil(
     isBoss(kind)
       ? Math.max(enemyHealth(kind, stage) * 1.4, 4200 + areaIndex(stage) * 850)

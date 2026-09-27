@@ -1,0 +1,458 @@
+{
+  "ordinaryInputs": true,
+  "limitSeconds": 90,
+  "results": [
+    {
+      "area": "docks",
+      "build": "beam",
+      "seed": "WELDER-51",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 21.22,
+      "hp": 28,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "docks",
+      "build": "precision",
+      "seed": "WELDER-51",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 22.22,
+      "hp": 42,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "docks",
+      "build": "volley",
+      "seed": "WELDER-51",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 31.68,
+      "hp": 68,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "docks",
+      "build": "explosive",
+      "seed": "WELDER-51",
+      "mode": "dead",
+      "clear": false,
+      "seconds": 23.68,
+      "hp": 0,
+      "welderArrived": true,
+      "welderDefeated": false,
+      "peakSeams": 3,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": [
+        {
+          "kind": "shooter",
+          "hp": 65
+        },
+        {
+          "kind": "sifter",
+          "hp": 15
+        },
+        {
+          "kind": "welder",
+          "hp": 710
+        },
+        {
+          "kind": "shooter",
+          "hp": 178
+        }
+      ]
+    },
+    {
+      "area": "docks",
+      "build": "mobility",
+      "seed": "WELDER-51",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 15.18,
+      "hp": 72,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "furnace",
+      "build": "beam",
+      "seed": "WELDER-8",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 21.57,
+      "hp": 25,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "furnace",
+      "build": "precision",
+      "seed": "WELDER-8",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 14.93,
+      "hp": 90,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "furnace",
+      "build": "volley",
+      "seed": "WELDER-8",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 32.43,
+      "hp": 71,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "furnace",
+      "build": "explosive",
+      "seed": "WELDER-8",
+      "mode": "dead",
+      "clear": false,
+      "seconds": 12.97,
+      "hp": 0,
+      "welderArrived": true,
+      "welderDefeated": false,
+      "peakSeams": 1,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": [
+        {
+          "kind": "shooter",
+          "hp": 244
+        },
+        {
+          "kind": "runner",
+          "hp": 168
+        },
+        {
+          "kind": "sifter",
+          "hp": 148
+        },
+        {
+          "kind": "shooter",
+          "hp": 260
+        },
+        {
+          "kind": "welder",
+          "hp": 2353
+        },
+        {
+          "kind": "charger",
+          "hp": 175
+        },
+        {
+          "kind": "skimmer",
+          "hp": 14
+        },
+        {
+          "kind": "shooter",
+          "hp": 199
+        }
+      ]
+    },
+    {
+      "area": "furnace",
+      "build": "mobility",
+      "seed": "WELDER-8",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 22.18,
+      "hp": 58,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 3,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "cooling",
+      "build": "beam",
+      "seed": "WELDER-27",
+      "mode": "dead",
+      "clear": false,
+      "seconds": 31.33,
+      "hp": 0,
+      "welderArrived": true,
+      "welderDefeated": false,
+      "peakSeams": 3,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": [
+        {
+          "kind": "welder",
+          "hp": 68
+        }
+      ]
+    },
+    {
+      "area": "cooling",
+      "build": "precision",
+      "seed": "WELDER-27",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 18.47,
+      "hp": 90,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "cooling",
+      "build": "volley",
+      "seed": "WELDER-27",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 22.28,
+      "hp": 100,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "cooling",
+      "build": "explosive",
+      "seed": "WELDER-27",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 36.98,
+      "hp": 37,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "cooling",
+      "build": "mobility",
+      "seed": "WELDER-27",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 23.58,
+      "hp": 94,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 1,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "reclamation",
+      "build": "beam",
+      "seed": "WELDER-0",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 20.13,
+      "hp": 70,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 3,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "reclamation",
+      "build": "precision",
+      "seed": "WELDER-0",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 13.3,
+      "hp": 100,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 1,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "reclamation",
+      "build": "volley",
+      "seed": "WELDER-0",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 17.27,
+      "hp": 69,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 1,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "reclamation",
+      "build": "explosive",
+      "seed": "WELDER-0",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 40.23,
+      "hp": 7,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "reclamation",
+      "build": "mobility",
+      "seed": "WELDER-0",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 20.68,
+      "hp": 62,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "rooftops",
+      "build": "beam",
+      "seed": "WELDER-13",
+      "mode": "dead",
+      "clear": false,
+      "seconds": 13.92,
+      "hp": 0,
+      "welderArrived": true,
+      "welderDefeated": false,
+      "peakSeams": 2,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": [
+        {
+          "kind": "shooter",
+          "hp": 143
+        },
+        {
+          "kind": "welder",
+          "hp": 2334
+        },
+        {
+          "kind": "shooter",
+          "hp": 299
+        },
+        {
+          "kind": "skimmer",
+          "hp": 280
+        }
+      ]
+    },
+    {
+      "area": "rooftops",
+      "build": "precision",
+      "seed": "WELDER-13",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 12.97,
+      "hp": 100,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "rooftops",
+      "build": "volley",
+      "seed": "WELDER-13",
+      "mode": "dead",
+      "clear": false,
+      "seconds": 34.65,
+      "hp": 0,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 0,
+      "finite": true,
+      "remaining": [
+        {
+          "kind": "shooter",
+          "hp": 185
+        }
+      ]
+    },
+    {
+      "area": "rooftops",
+      "build": "explosive",
+      "seed": "WELDER-13",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 54.02,
+      "hp": 70,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    },
+    {
+      "area": "rooftops",
+      "build": "mobility",
+      "seed": "WELDER-13",
+      "mode": "playing",
+      "clear": true,
+      "seconds": 27.1,
+      "hp": 39,
+      "welderArrived": true,
+      "welderDefeated": true,
+      "peakSeams": 2,
+      "peakCover": 1,
+      "finite": true,
+      "remaining": []
+    }
+  ]
+}

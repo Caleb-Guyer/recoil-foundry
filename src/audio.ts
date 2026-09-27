@@ -2,6 +2,7 @@ import { Music } from './music.ts';
 import type { MusicScene } from './music-score.ts';
 
 const ATTACK_WARNINGS = new Set([
+  'weld-warn',
   'aim-warn',
   'lock',
   'charge',
@@ -43,6 +44,7 @@ const ATTACK_WARNINGS = new Set([
 
 // Leave space for the whole cue, including delayed notes and long wind-ups.
 const WARNING_HOLD: Record<string, number> = {
+  'weld-warn': 1.25,
   'audit-recall': 1.1,
   'audit-tell': 0.4,
   'train-horn': 0.65,
@@ -381,6 +383,17 @@ export class Sound {
     } else if (kind === 'audit-step') {
       this.tone(75, 40, 0.1, 0.032, 'triangle');
       this.crack(0.04, 0.018, 550);
+    } else if (kind === 'weld-warn') {
+      this.tone(160, 460, 1.1, 0.038, 'sawtooth');
+      this.crack(0.65, 0.024, 2600);
+    } else if (kind === 'weld-fire') {
+      this.crack(0.24, 0.05, 2200);
+      this.tone(210, 75, 0.22, 0.045, 'sawtooth');
+    } else if (kind === 'weld-vent') {
+      this.crack(0.55, 0.025, 1200);
+      this.tone(290, 95, 0.4, 0.025, 'triangle');
+    } else if (kind === 'welder-step') {
+      this.tone(70, 42, 0.09, 0.025, 'triangle');
     } else if (kind === 'audit-tell') {
       this.tone(270, 620, 0.4, 0.055, 'triangle');
     } else if (kind === 'audit-fire') {

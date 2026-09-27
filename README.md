@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Overtime balance — version 3.7.0.** Area-specific openings, staggered reinforcement pairs and better follow-up upgrades give the second lap a steadier challenge. [Release notes and five build test links](docs/releases/3.7.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.7.0).
+**The Welder — version 3.8.0.** A rare Overtime miniboss turns floors into molten seams and welds temporary barricades. Break through its cooling window for an extra build-focused upgrade. [Release notes and test links](docs/releases/3.8.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.8.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 

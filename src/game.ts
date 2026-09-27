@@ -48,6 +48,8 @@ import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
 import { ClockOut, CLOCK_OUT_ENTRY } from './clock-out.ts';
 import Matter from 'matter-js';
+import { WelderSystem, type WelderRig } from './welder.ts';
+import { planWelder, welderLevel, welderPracticeLevel } from './welder-layout.ts';
 import { AuditorSystem, type AuditorRig } from './auditor.ts';
 import { auditorTestLevel } from './auditor-layout.ts';
 import { CommendationTracker, type CommendationId, type KillSource } from './commendations.ts';
@@ -187,6 +189,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  welder?: WelderRig;
   switchboard?: SwitchboardRig;
   caller?: CallerRig;
   auditor?: AuditorRig;
@@ -385,6 +388,8 @@ export class Game {
   mode: Mode = 'title';
   cosmetics: Cosmetics = { gun: 'standard', outfit: 'standard' };
   commendations = new CommendationTracker(this);
+  welder = new WelderSystem(this);
+  welderReward = false;
   auditor = new AuditorSystem(this);
   auditorReward = false;
   practice: PracticeSession | null = null;
@@ -558,6 +563,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.welder.clear();
       this.switchboard.clear();
       this.annex.clear();
       this.spoof.clear();
@@ -652,6 +658,7 @@ export class Game {
     this.story.start(save);
     this.shutdown.start(save);
     this.auditor.start(save);
+    this.welder.state = save?.welder ? structuredClone(save.welder) : null;
     this.fabricators.enabled = save ? save.fabricators === true : true;
     this.stage = save?.stage ?? 0;
     this.overtime = !practice && save?.overtime ? { ...save.overtime } : null;
@@ -688,6 +695,7 @@ export class Game {
     this.lastShot = -100;
     this.offers = [];
     this.auditorReward = false;
+    this.welderReward = false;
     const shutdownInspection =
       !!this.testRun?.shutdown && ['SHUTDOWN-89-RELAY', 'SHUTDOWN-89-ENTRANCE'].includes(this.seed);
     const storyInspection = !!this.testRun?.story && this.testRun.seed.endsWith('-INSPECT');
@@ -735,6 +743,7 @@ export class Game {
       this.rewardRerolled = save.reward.rerolled;
       this.courierReward = save.reward.courier === true;
       this.auditorReward = save.reward.auditor === true;
+      this.welderReward = save.reward.welder === true;
       this.earnedSalvage = save.reward.salvage ?? null;
       this.enteringDetour = save.reward.enteringDetour === true;
       this.enteringRoute = save.reward.enteringRoute ?? null;
@@ -752,6 +761,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.welder.state ? { welder: structuredClone(this.welder.state) } : {}),
       ...(this.auditor.state ? { auditor: structuredClone(this.auditor.state) } : {}),
       ...(this.level.boss && !this.escape ? { cleanBoss: this.commendations.cleanBoss } : {}),
       ...(this.fabricators.enabled ? { fabricators: true as const } : {}),
@@ -783,6 +793,7 @@ export class Game {
               offers: this.offers.map((m) => m.id),
               rerolled: this.rewardRerolled,
               ...(this.courierReward ? { courier: true as const } : {}),
+              ...(this.welderReward ? { welder: true as const } : {}),
               ...(this.auditorReward ? { auditor: true as const } : {}),
               ...(this.earnedSalvage ? { salvage: this.earnedSalvage } : {}),
               ...(this.enteringDetour ? { enteringDetour: true as const } : {}),
@@ -798,6 +809,7 @@ export class Game {
     this.annex.clear();
     this.spoof.clear();
     this.auditor.clear();
+    this.welder.clear();
     this.commendations.resetRoom();
     this.fabricators.clear();
     this.floodgate.clear();
@@ -866,6 +878,7 @@ export class Game {
     this.rewardTaken = false;
     this.courierReward = false;
     this.auditorReward = false;
+    this.welderReward = false;
     this.rewardRerolled = false;
     this.offers = [];
     this.shake = 0;
@@ -941,6 +954,9 @@ export class Game {
     if (this.testRun?.auditor && !escapeRoom && !this.detour)
       this.level = auditorTestLevel(this.level);
     if (this.testRun?.annex && !escapeRoom) this.level = annexLevel(this.testRun.annex);
+    if (!escapeRoom && this.overtime)
+      this.level = welderLevel(this.level, this.welder.state, this.stage);
+    if (this.practice?.kind === 'welder') this.level = welderPracticeLevel(this.seed);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1045,6 +1061,7 @@ export class Game {
       return false;
     this.areaEvents.state = null;
     this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 5 };
+    this.welder.state = planWelder(this.seed);
     this.stage = 0;
     this.route = null;
     this.loadRoom();
@@ -1260,6 +1277,7 @@ export class Game {
     if (kind === 'angler') enemy.angler = createAngler();
     if (kind === 'sapper') enemy.sapper = createSapper();
     if (kind === 'wallcrawler') enemy.crawler = createWallcrawler(this, enemy);
+    if (kind === 'welder') Body.setMass(body, this.player.mass * 3);
     if (kind === 'harpooner') {
       enemy.harpoon = createHarpooner();
       Body.setMass(body, this.player.mass * 1.6);
@@ -1520,6 +1538,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.waves.update(dt);
     this.auditor.update(dt);
+    this.welder.update(dt);
     if (this.mode !== 'playing') return;
     this.floodgate.update(dt);
     if (this.mode !== 'playing') return;
@@ -1907,6 +1926,10 @@ export class Game {
     if (this.massDriver.staggered(e)) return;
     if (e.workshopTarget) {
       this.workshop.move(e);
+      return;
+    }
+    if (e.kind === 'welder') {
+      this.welder.updateEnemy(e, dt);
       return;
     }
     if (e.kind === 'auditor') {
@@ -3025,9 +3048,10 @@ export class Game {
     source?: KillSource,
   ): boolean {
     if (e.hp <= 0 || e.allied) return false;
-    if (e.kind === 'auditor' && e.spawn > 0) return true;
+    if ((e.kind === 'auditor' || e.kind === 'welder') && e.spawn > 0) return true;
     if (e.kind === 'sentry') credited = false;
     const incomingDamage = damage;
+    if (e.kind === 'welder') damage *= e.state === 'recover' ? 1.5 : 0.55;
     if (e.kind === 'auditor')
       damage *=
         e.state === 'recover' ? 1 : e.hp > (e.maxHp * 2) / 3 ? 0.6 : e.hp > e.maxHp / 3 ? 0.8 : 1;
@@ -3078,6 +3102,7 @@ export class Game {
     }
     if (e.hp > 0) return blocked;
     this.auditor.killed(e, credited && source !== 'cleanup');
+    this.welder.killed(e, credited && source !== 'cleanup');
     if (credited) this.commendations.defeated(e, source);
     if (
       isBoss(e.kind) &&
@@ -3087,7 +3112,7 @@ export class Game {
       this.hp > 0 &&
       e.spawn <= 0
     )
-      this.earnedSalvage = SALVAGE_BOSSES[e.kind] ?? null;
+      if (e.kind !== 'welder') this.earnedSalvage = SALVAGE_BOSSES[e.kind] ?? null;
     breakSquad(this, e);
     releaseScrapper(this, e);
     this.harpoons.disrupt(e.body);
@@ -3109,7 +3134,8 @@ export class Game {
       this.mode === 'playing' &&
       this.hp > 0 &&
       e.spawn <= 0 &&
-      e.eventRole !== 'relay'
+      e.eventRole !== 'relay' &&
+      (e.kind !== 'welder' || (credited && source !== 'cleanup'))
     )
       this.onEnemyDefeated(e.kind);
     this.fabricators.killed(e);
@@ -3126,7 +3152,8 @@ export class Game {
       this.hp > 0 &&
       e.spawn <= 0
     )
-      if (e.kind !== 'auditor') this.onBossDefeated(e.kind);
+      if (e.kind !== 'auditor' && (e.kind !== 'welder' || (credited && source !== 'cleanup')))
+        this.onBossDefeated(e.kind);
     this.feedback(isBoss(e.kind) ? 10 : 4);
     this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);
     this.burst(e.body.position, isBoss(e.kind) ? 45 : 16, '#f28371', isBoss(e.kind) ? 8 : 4);
@@ -3141,7 +3168,7 @@ export class Game {
         kind: 'ring',
       });
     this.onSound('kill');
-    if (isBoss(e.kind) && e.kind !== 'auditor')
+    if (isBoss(e.kind) && e.kind !== 'auditor' && e.kind !== 'welder')
       for (const other of [...this.enemies])
         this.hitEnemy(other, 9999, undefined, true, true, true, 'cleanup');
     return blocked;
@@ -3245,25 +3272,30 @@ export class Game {
     if (this.regionChoices.length) this.region = region ?? this.regionChoices[0];
     this.enteringDetour = enterDetour;
     this.auditorReward = false;
+    this.welderReward = false;
     this.enteringRoute = this.canChooseRoute ? (route ?? this.routeChoices[0]) : null;
     this.courier.leave();
     this.courierReward = this.courier.state?.status === 'collected';
+    this.welderReward =
+      this.welder.state?.stage === this.stage && this.welder.state.status === 'defeated';
     this.offers = rewardMods(
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
       seeded(
         this.layoutSeed +
-          (this.courierReward
-            ? ':courier-rewards:'
-            : this.detour
-              ? ':detour-rewards:'
-              : ':rewards:') +
+          (this.welderReward
+            ? ':welder-rewards:'
+            : this.courierReward
+              ? ':courier-rewards:'
+              : this.detour
+                ? ':detour-rewards:'
+                : ':rewards:') +
           this.stage,
       ),
       {
         stage: this.stage,
         overtime: !!this.overtime,
-        salvage: this.courierReward ? null : this.earnedSalvage,
+        salvage: this.courierReward || this.welderReward ? null : this.earnedSalvage,
         seed: this.seed,
       },
     );
@@ -3339,6 +3371,7 @@ export class Game {
       !this.workshop.active &&
       !this.courierReward &&
       !this.auditorReward &&
+      !this.welderReward &&
       this.mode === 'upgrade' &&
       !this.practice &&
       !dailyFromSeed(this.seed) &&
@@ -3385,6 +3418,14 @@ export class Game {
     this.gun = getGun(this.mods);
     if (this.auditorReward) {
       this.auditor.claim();
+      return;
+    }
+    if (this.welderReward) {
+      if (this.welder.state) this.welder.state.status = 'claimed';
+      if (id === 'repair') this.hp = Math.min(100, this.hp + 24);
+      this.mode = 'playing';
+      this.openReward(this.enteringDetour, this.enteringRoute ?? undefined);
+      this.onSound('upgrade');
       return;
     }
     if (this.courierReward) {

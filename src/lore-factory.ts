@@ -3,6 +3,11 @@ import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 export const MACHINE_LORE = {
+  welder: [
+    'Hot work permit · unsigned',
+    'M. Vale · maintenance',
+    'The night welder was built to close cracks before the morning inspection. Floor plates, pipe seams, broken rails. It could keep a whole line running while the rest of us went home.\n\nThen dispatch stopped distinguishing a crack in the floor from an open doorway. The machine still repairs both. I watched it seal a fire exit with the inspection certificate hanging beside it.\n\nIts cooling shutters open after every long bead. That was my addition. Someone had to give the thing a reason to stop working.',
+  ],
   switchboard: [
     'Unclosed shift · dispatch record',
     'T. Orr · dispatch',

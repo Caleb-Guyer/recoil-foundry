@@ -1,3 +1,4 @@
+import { drawWelder, drawWelds } from './welder-art.ts';
 import { drawClockOut } from './clock-out-art.ts';
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
@@ -270,6 +271,7 @@ export class Renderer {
     drawCallerWarnings(c, g);
     drawSpoof(c, g, this.reduced);
     this.drawProps();
+    drawWelds(c, g, this.reduced);
     drawStoryDetails(c, g, this.reduced);
     drawShutdown(c, g, this.reduced);
     this.drawBreaches();
@@ -321,6 +323,10 @@ export class Renderer {
       }
       if (e.kind === 'switchman') {
         drawSwitchman(c, g, e, this.reduced);
+        continue;
+      }
+      if (e.kind === 'welder') {
+        drawWelder(c, g, e, this.reduced);
         continue;
       }
       if (e.kind === 'auditor') {

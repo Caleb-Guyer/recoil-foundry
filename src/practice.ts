@@ -8,6 +8,7 @@ import { bossStage, availableMods, rewardMods, seeded, type Checkpoint } from '.
 // Encounter-only records cannot prove a win; start a separate victory history.
 export const VICTORIES_KEY = 'rf-boss-victories-v1';
 export const PRACTICE_BOSSES = {
+  welder: { name: 'The Welder', stage: 19 },
   switchboard: { name: 'The Switchboard', stage: bossStage(2) },
   loader: { name: 'The Loader', stage: bossStage(0) },
   crane: { name: 'The Crane', stage: bossStage(0) },
@@ -109,6 +110,7 @@ export function loadEncounters(value: unknown): Encounter[] {
     // Existing victories predate alternate bosses. Keep their original arenas
     // available for earned practice even if that seed now selects a new boss.
     if (
+      kind === 'welder' ||
       kind === 'switchboard' ||
       kind === 'condenser' ||
       kind === 'boss' ||

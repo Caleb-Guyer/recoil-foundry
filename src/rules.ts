@@ -2,6 +2,7 @@ import { validAreaEvent } from './area-events.ts';
 import { validReforge } from './reforge-rules.ts';
 import { validShutdown } from './shutdown-layout.ts';
 import { validStory } from './story-layout.ts';
+import { validWelder, welderBonus, type WelderSave } from './welder-rules.ts';
 import { auditorBonus, validAuditor } from './auditor-layout.ts';
 import {
   BRANCH_MODS,
@@ -1057,6 +1058,7 @@ export const isDetourStage = (stage: number) =>
   stage !== 14 &&
   stage % ROOMS_PER_AREA === 2;
 export interface RewardCheckpoint {
+  welder?: true;
   auditor?: true;
   courier?: true;
   offers: string[];
@@ -1066,6 +1068,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  welder?: WelderSave;
   // Isolated development preset; never written by Game.save().
   annex?: import('./annex-layout.ts').AnnexPreview;
   annexRouteTest?: {
@@ -1272,9 +1275,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       overtime.baseMods === STAGES - 1 + completed.length - missed + courierBonus &&
       Number.isInteger(overtime.repairs) &&
       overtime.repairs >= 0 &&
-      overtime.repairs <= d.stage &&
+      overtime.repairs <= d.stage + welderBonus(d.welder) &&
       Array.isArray(d.mods) &&
-      d.mods.length + overtime.repairs === overtime.baseMods + d.stage &&
+      d.mods.length + overtime.repairs === overtime.baseMods + d.stage + welderBonus(d.welder) &&
       d.detour === undefined &&
       typeof d.seed === 'string' &&
       !/^RF-D\d+-/.test(d.seed) &&
@@ -1378,6 +1381,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     !validStory(d) ||
     !validShutdown(d) ||
     !validAuditor(d) ||
+    !validWelder(d) ||
     (d.cleanBoss !== undefined && typeof d.cleanBoss !== 'boolean') ||
     (d.fabricators !== undefined && d.fabricators !== true)
   )

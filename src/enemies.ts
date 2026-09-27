@@ -1,3 +1,4 @@
+import { WELDER_HP } from './welder-rules.ts';
 import type { EnemyKind } from './levels.ts';
 import type { Vec } from './rules.ts';
 import { STAGES, areaIndex } from './rules.ts';
@@ -11,6 +12,7 @@ export const VOLATILE_TELL = 0.9;
 export const VOLATILE_RADIUS = 135;
 
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
+  welder: { w: 58, h: 60, hp: WELDER_HP },
   switchboard: { w: 86, h: 72, hp: 4200 },
   caller: { w: 34, h: 36, hp: 100 },
   switchman: { w: 34, h: 36, hp: 110 },
@@ -61,6 +63,7 @@ export function flakAngles(aim: number, enraged: boolean): number[] {
   );
 }
 export const isBoss = (kind: EnemyKind) =>
+  kind === 'welder' ||
   kind === 'switchboard' ||
   kind === 'auditor' ||
   kind === 'sorter' ||
@@ -73,6 +76,7 @@ export const isBoss = (kind: EnemyKind) =>
   kind === 'interceptor' ||
   kind === 'boss';
 export function enemyHealth(kind: EnemyKind, stage: number, elite?: EliteKind): number {
+  if (kind === 'welder') return WELDER_HP;
   const base = elite ? ELITE_HP[elite] : ENEMY_STATS[kind].hp;
   return Math.ceil(
     base *
