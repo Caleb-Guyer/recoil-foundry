@@ -24,4 +24,12 @@ These limited probes exercise combat and cover navigation, not human difficulty,
 
 All five room types were inspected through the local production build in the embedded browser, including mirrored Maintenance and Interceptor. Rain, fixed lane marks, stepped cover shadows and Interceptor attack warnings were legible. Jump/fire, pause, death and retry controls were exercised. A timed Reduced effects capture retained the lane and charge marks without rain; the setting was restored to Off. Progress remained no saved run and zero discoveries/victories/blueprints/records. Browser warning/error logs were empty.
 
-Public-host and artifact verification pending.
+Runtime commit: `6a88b6e6b7c2e0ee701e3f9cef213bbcb9ad2ffb`. Immutable tag: `v3.5.0`.
+
+- [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36283060075) passed all 1,978 tests, with zero failures/skips in 316,603.682 ms, then built and deployed successfully. Tests completed at 00:43:02 UTC on 27 September 2026 (26 September locally); deployment completed at 00:43:20 UTC.
+- The [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36283380651) succeeded for the same commit. The [official ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v3.5.0/recoil-foundry-v3.5.0-site.zip) was published at 00:44:13 UTC: **9,768,005 bytes**, SHA-256 `f49ce50bd3e2e40eeace4ea803b3dc4e3bd2037514c39176b61388ee37663222`.
+- Download size/checksum match GitHub metadata. All 17 files passed archive checks, with root index.html, four resolved entry references, and no source/tests/private files/maps or unsafe paths. The itch.io upload copy has an identical checksum.
+
+Public Pages About shows 3.5.0. The existing Room 2 save, one discovery and zero Practice victories/blueprints/records remain intact. The published Antenna preset starts at TEST · OT · 17 and shows the fixed warning, stepped cover shadow and flush floor conductor. Pause works. Public main/preset warning/error logs are empty. Proof image: `../stormfront-3.5.0.png` outside the repository.
+
+itch.io upload **19419734** contains the same verified ZIP, displayed as **Recoil Foundry 3.5.0 — Stormfront**. The transport filename remains recoil-foundry-v2.98.0-site.zip for replacement continuity. Browser playback was enabled, the editor confirmed Saved, and the public iframe serves upload 19419734. About shows 3.5.0. Continue Daily remains available with the same Room 1 save and zero discoveries/victories/blueprints/records. Warning/error logs are empty. Store copy/screenshots were retained; no devlog or issue report was submitted. Both hosts were checked through the embedded browser; retained human/hardware limitations still apply.
