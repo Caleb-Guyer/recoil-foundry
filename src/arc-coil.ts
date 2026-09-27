@@ -159,7 +159,7 @@ export class ArcCoilSystem {
         if (g.hitEnemy(target.enemy, step.damage, from)) break;
         if (target.enemy.hp <= 0) this.charges.delete(target.enemy.id);
       } else if (target.prop) {
-        g.props.hit(target.prop, step.damage, direction(from, target.pos));
+        g.props.hit(target.prop, step.damage, direction(from, target.pos), undefined, false, true);
         if (target.prop.kind === 'canister')
           target.prop.detonateAt = Math.min(target.prop.detonateAt, g.time + 0.45);
       }

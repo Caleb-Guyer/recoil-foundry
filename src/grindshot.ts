@@ -150,7 +150,7 @@ export class GrindshotSystem {
     }
     if (block) {
       const prop = g.props.items.find((p) => p.body === block.body);
-      if (prop) g.props.hit(prop, saw.damage, velocity);
+      if (prop) g.props.hit(prop, saw.damage, velocity, undefined, false, true);
       else {
         g.breaches.hitBody(block.body, saw.damage, velocity);
         g.destruction.hitBody(block.body, saw.damage, velocity);

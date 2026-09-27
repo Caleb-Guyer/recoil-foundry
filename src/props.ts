@@ -19,6 +19,7 @@ export const PROP_STATS = {
   rubble: { w: 26, h: 18, hp: 24 },
 };
 export interface Prop {
+  playerArmed?: true;
   welded?: true;
   auditCase?: true;
   kind: PropKind;
@@ -260,7 +261,14 @@ export class PropSystem {
     Composite.remove(this.game.engine.world, prop.body);
     this.items = this.items.filter((p) => p !== prop);
   }
-  hit(prop: Prop, damage: number, velocity: Vec, source?: Shot, directFire = false) {
+  hit(
+    prop: Prop,
+    damage: number,
+    velocity: Vec,
+    source?: Shot,
+    directFire = false,
+    playerDamage = directFire || !!(source?.friendly && !source.allied),
+  ) {
     if (
       prop.auditCase &&
       (!this.game.auditor.caseReady || !(directFire || (source?.friendly && !source.allied)))
@@ -276,6 +284,7 @@ export class PropSystem {
     const g = this.game,
       d = direction({ x: 0, y: 0 }, velocity);
     prop.hp -= damage;
+    if (prop.kind === 'canister' && damage > 0 && playerDamage) prop.playerArmed = true;
     prop.flash = 0.08;
     g.burst(prop.body.position, 4, prop.kind === 'canister' ? '#e4bb6e' : '#9dacaf', 2.3);
     g.onSound('prop');
@@ -299,19 +308,20 @@ export class PropSystem {
           clamp(prop.body.angularVelocity + d.x * 0.05, -0.18, 0.18),
         );
     }
-    if (prop.hp <= 0) this.break(prop, source);
+    if (prop.hp <= 0) this.break(prop, source, damage > 0 && playerDamage);
   }
   // Direct heavy contact shares the same material response across every enemy.
   strike(prop: Prop, damage: number, velocity: Vec) {
     if (prop.kind === 'canister') this.explode(prop);
     else this.hit(prop, damage, velocity);
   }
-  break(prop: Prop, source?: Shot) {
+  break(prop: Prop, source?: Shot, playerDamage = !!(source?.friendly && !source.allied)) {
     if (!this.items.includes(prop)) return;
     if (prop.auditCase) {
       if (prop.hp <= 0 && this.game.auditor.openCase()) this.remove(prop);
       return;
     }
+    if (prop.welded && playerDamage) this.game.welder.brokenBarrier(prop);
     this.remove(prop);
     if (!prop.welded && (prop.kind === 'crate' || prop.kind === 'cover'))
       this.game.scrap.collect(source);
@@ -482,8 +492,18 @@ export class PropSystem {
     for (const ally of allies)
       g.areaEvents.hitAlly(ally, 105 * (1 - distance(p, ally.body.position) / 220));
     for (const other of props) {
-      if (other.kind === 'canister') this.explode(other, credited);
-      else this.hit(other, 80, direction(p, other.body.position));
+      if (other.kind === 'canister') {
+        if (prop.playerArmed && credited) other.playerArmed = true;
+        this.explode(other, credited);
+      } else
+        this.hit(
+          other,
+          80,
+          direction(p, other.body.position),
+          undefined,
+          false,
+          !!prop.playerArmed && credited,
+        );
       if (g.mode !== 'playing') return;
     }
     if (hurtsPlayer)

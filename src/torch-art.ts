@@ -58,7 +58,11 @@ export function drawTorchWeapon(c: CanvasRenderingContext2D, g: Game, reduced: b
   c.fillRect(5, -5, 22, 10);
   c.fillStyle = g.cosmetics.gun === 'standard' ? '#e0e4cf' : finish.face;
   c.fillRect(8, -4, 15, 6);
-  drawFinishMark(c, g.cosmetics.gun);
+  drawFinishMark(
+    c,
+    g.cosmetics.gun,
+    Math.max(0, 1 - Math.max(0, g.time - g.lastShot) / 0.35) * (reduced ? 0.4 : 1),
+  );
   c.fillStyle = '#405c51';
   c.fillRect(9, 4, 10, 3);
   c.fillStyle = '#958e75';

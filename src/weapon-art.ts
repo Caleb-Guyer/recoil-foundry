@@ -177,7 +177,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   c.fillRect(8, -half + 1, 16, half * 2 - 3);
   c.fillStyle = finish.trim;
   c.fillRect(7, half - 1.5, 16, 1.5);
-  drawFinishMark(c, g.cosmetics.gun);
+  drawFinishMark(c, g.cosmetics.gun, clamp(1 - shotAge / 0.35, 0, 1) * (reduced ? 0.4 : 1));
   if (burst) {
     c.fillStyle = '#3b5243';
     c.fillRect(7, -4, 17, 5);

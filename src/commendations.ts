@@ -5,6 +5,18 @@ import { isBoss } from './enemies.ts';
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
   {
+    id: 'hot-work',
+    name: 'Hot Work',
+    objective: 'Destroy both of The Welder’s barricades during one deployment, then defeat it.',
+    reward: 'Forgehand + Kiln',
+    slot: 'Outfit + gun finish',
+    lore: [
+      'MAINTENANCE · DECOMMISSION NOTICE 031',
+      'M. Vale · Maintenance',
+      'I signed the disposal order myself. Jacket, visor, cutting assembly. Permanently withdrawn from service. The word “permanently” was underlined on the form, so I underlined it on the bin.\n\nThis morning the bin was empty. Someone had stitched the jacket back together with copper wire and filed the serial number off the receiver. Two fresh piles of slag blocked the aisle where the machine used to stand.\n\nThe vents still hold heat after you let go of the trigger. Keep your fingers clear. I have left the visor raised; you should be able to see who is asking you to work.\n\nIf anyone asks, I disposed of everything correctly.',
+    ] as Lore,
+  },
+  {
     id: 'closed-account',
     name: 'Closed Account',
     objective: 'Defeat the pursuer summoned by a sealed company case.',

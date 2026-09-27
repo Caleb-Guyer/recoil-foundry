@@ -34,6 +34,14 @@ export const GUN_FINISHES = {
     light: '#efd2a4',
     unlock: 'closed-account',
   },
+  kiln: {
+    name: 'Kiln',
+    shell: '#454e4d',
+    face: '#75817a',
+    trim: '#303b3b',
+    light: '#eeb16e',
+    unlock: 'hot-work',
+  },
 } as const;
 export const OUTFITS = {
   standard: { name: 'Workwear', body: '#e7e8db', boots: '#a6b4ae', trim: '#9bcfc1', unlock: null },
@@ -50,6 +58,13 @@ export const OUTFITS = {
     boots: '#b4bdd3',
     trim: '#e8e6fc',
     unlock: 'after-hours',
+  },
+  forgehand: {
+    name: 'Forgehand',
+    body: '#b08d6f',
+    boots: '#828f86',
+    trim: '#e4a369',
+    unlock: 'hot-work',
   },
 } as const;
 export interface Cosmetics {
@@ -82,7 +97,23 @@ export function drawOutfit(
   c.beginPath();
   c.roundRect(-13, -18, 26, 31, 4);
   c.fill();
-  if (id === 'rigger') {
+  if (id === 'forgehand') {
+    // Scorched leather, copper stitching and a raised welding shield all stay
+    // inside the shared silhouette. The eye slit below remains readable.
+    c.fillStyle = '#625748';
+    c.fillRect(-12, 0, 6, 12);
+    c.fillRect(7, 4, 5, 8);
+    c.fillRect(-2, -1, 3, 14);
+    c.fillStyle = p.trim;
+    c.fillRect(-9, 1, 2, 7);
+    c.fillRect(6, 0, 4, 2);
+    c.fillStyle = '#364343';
+    c.fillRect(-11, -17, 22, 6);
+    c.fillStyle = '#81918a';
+    c.fillRect(-8, -16, 16, 2);
+    c.fillStyle = p.trim;
+    c.fillRect(facing > 0 ? 9 : -11, -14, 2, 4);
+  } else if (id === 'rigger') {
     c.fillStyle = '#5a5141';
     c.fillRect(-10, -1, 4, 14);
     c.fillRect(6, -1, 4, 14);
@@ -104,11 +135,22 @@ export function drawOutfit(
   c.fillRect(-10, 10, 7, 8 + stride);
   c.fillRect(3, 10, 7, 8 - stride);
 }
-export function drawFinishMark(c: CanvasRenderingContext2D, id: Cosmetics['gun']) {
+export function drawFinishMark(c: CanvasRenderingContext2D, id: Cosmetics['gun'], heat = 0) {
   if (id === 'standard') return;
   const p = GUN_FINISHES[id];
   c.fillStyle = p.trim;
-  if (id === 'ledger') {
+  if (id === 'kiln') {
+    c.fillRect(11, 1, 12, 3);
+    c.fillStyle = '#a2937e';
+    for (const x of [12, 16, 20]) c.fillRect(x, 2, 2, 1.5);
+    if (heat > 0) {
+      c.save();
+      c.globalAlpha *= Math.min(1, heat);
+      c.fillStyle = p.light;
+      for (const x of [12, 16, 20]) c.fillRect(x, 2, 2, 1.5);
+      c.restore();
+    }
+  } else if (id === 'ledger') {
     c.strokeStyle = p.light;
     c.lineWidth = 1;
     c.strokeRect(11, -3, 11, 5);

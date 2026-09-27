@@ -33,16 +33,29 @@ export class WelderSystem {
   state: WelderSave | null = null;
   seams: WeldSeam[] = [];
   barriers: WeldBarrier[] = [];
+  private deployment: { owner: Enemy; walls: Set<Prop>; broken: Set<Prop> } | null = null;
+  private hotWork: Enemy | null = null;
   constructor(game: Game) {
     this.game = game;
   }
   clear() {
+    this.deployment = null;
+    this.hotWork = null;
     this.seams = [];
     this.barriers = [];
     for (const p of [...this.game.props.items]) if (p.welded) this.game.props.remove(p);
   }
   killed(e: Enemy, credited: boolean) {
     if (e.kind !== 'welder') return;
+    if (
+      credited &&
+      e === this.hotWork &&
+      e.spawn <= 0 &&
+      !e.allied &&
+      this.state?.stage === this.game.stage &&
+      this.state.status === 'scheduled'
+    )
+      this.game.commendations.award('hot-work');
     this.clear();
     if (
       credited &&
@@ -57,6 +70,25 @@ export class WelderSystem {
       this.state.status = 'defeated';
       this.game.save();
     }
+  }
+  brokenBarrier(prop: Prop) {
+    const d = this.deployment;
+    if (
+      !d ||
+      !d.walls.has(prop) ||
+      prop.hp > 0 ||
+      this.game.time >= (prop.expires ?? 0) ||
+      d.owner.hp <= 0 ||
+      d.owner.spawn > 0 ||
+      d.owner.allied ||
+      !this.game.enemies.includes(d.owner) ||
+      !this.game.commendations.eligible
+    )
+      return;
+    d.broken.add(prop);
+    // Only two actually spawned walls in the same deployment qualify. A
+    // cancelled warning, expiry, replacement or cleanup never enters this set.
+    if (d.walls.size === 2 && d.broken.size === 2) this.hotWork = d.owner;
   }
   private floor(point: Vec) {
     return this.game.terrain
@@ -134,6 +166,7 @@ export class WelderSystem {
   }
   planBarriers(e: Enemy) {
     const g = this.game;
+    this.deployment = { owner: e, walls: new Set(), broken: new Set() };
     this.barriers = [];
     for (const p of [...g.props.items]) if (p.welded) g.props.remove(p);
     for (const offset of [-145, 145]) {
@@ -241,6 +274,7 @@ export class WelderSystem {
       p.welded = true;
       p.expires = g.time + 6;
       p.hp = p.maxHp = 110;
+      this.deployment?.walls.add(p);
     }
     // An occupied warning cancels instead of becoming a delayed, invisible trap.
     this.barriers = this.barriers.filter((b) => b.age < WELD_TELL);

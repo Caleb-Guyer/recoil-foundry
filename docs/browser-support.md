@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.9.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Melt-through 3.9.0](validation/melt-through-3.9.0.md).
+Release target: **Windows desktop/laptop with keyboard and mouse**. The stable browser release is **3.9.1**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and public-browser verification, including [Hot Work 3.9.1](validation/hot-work-3.9.1.md).
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

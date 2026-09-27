@@ -178,7 +178,14 @@ export class SalvageEvolutionSystem {
       for (const prop of props) {
         if (g.mode !== 'playing') break;
         if (!g.props.items.includes(prop)) continue;
-        g.props.hit(prop, 28, { x: prop.body.position.x - pos.x, y: prop.body.position.y - pos.y });
+        g.props.hit(
+          prop,
+          28,
+          { x: prop.body.position.x - pos.x, y: prop.body.position.y - pos.y },
+          undefined,
+          false,
+          true,
+        );
         if (prop.kind === 'canister') prop.detonateAt = Math.min(prop.detonateAt, g.time + 0.35);
       }
     } finally {
@@ -223,7 +230,18 @@ export class SalvageEvolutionSystem {
       if (prop) {
         // Consume the shared enemy/prop contact so it cannot apply damage twice.
         prop.hits.set(wreck.enemy.id, g.time);
-        g.props.strike(prop, amount, this.velocities.get(wreck.body) ?? { x: 0, y: 0 });
+        if (prop.kind === 'canister') {
+          prop.playerArmed = true;
+          g.props.explode(prop);
+        } else
+          g.props.hit(
+            prop,
+            amount,
+            this.velocities.get(wreck.body) ?? { x: 0, y: 0 },
+            undefined,
+            false,
+            true,
+          );
       }
       if (!corpse && wreck.enemy.hp > 0) g.hitEnemy(wreck.enemy, amount * 0.4, other.position);
       g.onSound('crash');

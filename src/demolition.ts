@@ -315,7 +315,14 @@ export class DemolitionSystem {
       }
     }
     for (const { prop, amount } of props) {
-      g.props.hit(prop, damage * amount, direction(pos, prop.body.position));
+      g.props.hit(
+        prop,
+        damage * amount,
+        direction(pos, prop.body.position),
+        undefined,
+        false,
+        true,
+      );
       if (g.mode !== 'playing') return;
     }
     for (const { panel, amount } of panels)
