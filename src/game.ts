@@ -1,3 +1,4 @@
+import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { MutationSystem, type MutationKind, type MutationRig } from './mutations.ts';
 import { CourierSystem } from './courier.ts';
 import { FloodgateSystem, type FloodValve } from './floodgate.ts';
@@ -236,6 +237,9 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  meltSpent?: boolean;
+  meltTransit?: MeltTransit;
+  molten?: boolean;
   signalOwner?: number;
   rebooted?: boolean;
   auditorOwner?: number;
@@ -389,6 +393,7 @@ export class Game {
   cosmetics: Cosmetics = { gun: 'standard', outfit: 'standard' };
   commendations = new CommendationTracker(this);
   welder = new WelderSystem(this);
+  melt = new MeltThroughSystem(this);
   welderReward = false;
   auditor = new AuditorSystem(this);
   auditorReward = false;
@@ -554,6 +559,7 @@ export class Game {
   }
   setMode(mode: Mode) {
     if (mode === 'title') this.clockOut = new ClockOut();
+    if (mode === 'dead' || mode === 'won' || mode === 'title') this.melt.reset();
     if (mode === 'paused' && this.auditor.enemy) this.save();
     if (mode !== 'playing') {
       this.stasis.held = false;
@@ -820,6 +826,7 @@ export class Game {
     this.breachClears = 0;
     this.massDriver.reset();
     this.earnedSalvage = null;
+    this.melt.reset();
     this.arcs.reset();
     this.grind.reset();
     this.torch.reset();
@@ -1127,6 +1134,7 @@ export class Game {
     const lift = overtime ? OVERTIME_LIFT : EXTRACTION;
     if (overtime) this.escape.destination = 'overtime';
     this.escape.phase = 'extracting';
+    this.melt.reset();
     this.arcs.reset();
     this.grind.reset();
     this.torch.reset();
@@ -2546,8 +2554,8 @@ export class Game {
     if (this.mode !== 'playing') return;
     for (const s of [...this.shots]) updateRivalAmmo(this, s, dt);
     for (const s of this.shots) updateAnglerShot(this, s);
-    for (const s of this.shots) this.ballistics.flight(s, dt);
-    for (const s of this.shots) steerVector(s, this.aim, dt);
+    for (const s of this.shots) if (!s.meltTransit) this.ballistics.flight(s, dt);
+    for (const s of this.shots) if (!s.meltTransit) steerVector(s, this.aim, dt);
     this.ballistics.reflect(dt);
     for (const s of [...this.shots]) {
       updateAnglerShot(this, s);
@@ -2557,6 +2565,11 @@ export class Game {
       s.prev = { ...s.pos };
       let remaining = dt * 60;
       for (let attempt = 0; attempt < 4 && remaining > 0.001 && s.life > 0; attempt++) {
+        if (s.meltTransit) {
+          remaining = this.melt.advance(s, remaining);
+          if (s.meltTransit || s.life <= 0) break;
+          continue;
+        }
         this.massDriver.heading(s);
         const retracing = !!s.recall?.returning && !!s.recall.route?.length;
         const waypoint =
@@ -2614,7 +2627,11 @@ export class Game {
         }
         for (const [body, enemy, player] of targets) {
           const h =
-            s.massDriver || s.angler || s.tripwire !== undefined || this.counterweights.owns(body)
+            s.massDriver ||
+            s.angler ||
+            s.tripwire !== undefined ||
+            this.counterweights.owns(body) ||
+            (s.friendly && this.mods.includes('melt-through') && this.terrain.includes(body))
               ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, body)
               : segmentBox(
                   s.pos,
@@ -2740,6 +2757,7 @@ export class Game {
         this.stasis.abandon(s);
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
+        if (nearest.body && !nearest.enemy && this.melt.begin(s, nearest.body)) continue;
         const impactDamage = this.massDriver.impactDamage(s);
         s.impactNormal = { ...nearest.normal };
         if (s.mutationShell) {
@@ -3278,6 +3296,8 @@ export class Game {
     this.courierReward = this.courier.state?.status === 'collected';
     this.welderReward =
       this.welder.state?.stage === this.stage && this.welder.state.status === 'defeated';
+    if (this.welderReward)
+      this.earnedSalvage = this.mods.includes('melt-through') ? null : 'melt-through';
     this.offers = rewardMods(
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
@@ -3295,11 +3315,11 @@ export class Game {
       {
         stage: this.stage,
         overtime: !!this.overtime,
-        salvage: this.courierReward || this.welderReward ? null : this.earnedSalvage,
+        salvage: this.courierReward ? null : this.earnedSalvage,
         seed: this.seed,
       },
     );
-    if (!this.courierReward && this.areaEvents.clearance)
+    if (!this.courierReward && !this.welderReward && this.areaEvents.clearance)
       this.offers = this.areaEvents.preferRewards(
         this.offers,
         rewardMods(
@@ -3421,6 +3441,7 @@ export class Game {
       return;
     }
     if (this.welderReward) {
+      this.earnedSalvage = null;
       if (this.welder.state) this.welder.state.status = 'claimed';
       if (id === 'repair') this.hp = Math.min(100, this.hp + 24);
       this.mode = 'playing';

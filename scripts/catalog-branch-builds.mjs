@@ -170,6 +170,8 @@ const guide = [
   '',
   `For **every upgrade in every new max combo**, use the [${combos.length}-build catalog](max-upgrade-combos.md) or [CSV](max-upgrade-combos.csv).`,
   '',
+  'Melt-through is salvage from The Welder in Overtime. Choose Clean Cut for thicker penetration and less damage loss, or Blowout for molten exit fragments. They share one fork and work with every weapon path.',
+  '',
   '## Quick tests',
   '',
   'These start in a real room with 100 health and a ten-upgrade gun. Each link opens a title-screen test button. R restarts the preset. Boss variants have 19 picks; “max” variants exhaust the legal pool. They preserve ordinary saves, discoveries, Daily records and boss unlocks.',
@@ -185,17 +187,27 @@ guide.push('', '## What to fit', '');
 for (const [key, b] of Object.entries(BRANCH_TEST_BUILDS)) {
   const save = branchTestFromUrl(new URL(link('build=' + key)));
   assert(save && validBuild(save.mods));
-  const mod = MODS.find((m) => m.name === b.name);
+  const featured = {
+    melt: 'melt-through',
+    'melt-beam': 'blowout',
+    'melt-shell': 'blowout',
+    'melt-ball': 'clean-cut',
+  };
+  const mod = MODS.find((m) => m.id === featured[key] || m.name === b.name);
+  assert(mod, 'Missing featured upgrade: ' + key);
   guide.push(
     '### ' + b.name,
     '',
-    tips[key],
+    tips[key] ??
+      (key === 'melt'
+        ? 'Defeat The Welder and choose its salvage. Fire through thin walls and platforms; each round gets one passage.'
+        : 'Aim through thin cover and use the exit to attack sheltered enemies. The preset combines the new salvage with this weapon.'),
     '',
     '**Parents:** ' +
-      (BRANCH_PARENTS[mod.id] ?? FUSION_REQUIRES[mod.id] ?? [MOD_REQUIRES[mod.id]])
+      ((BRANCH_PARENTS[mod.id] ?? FUSION_REQUIRES[mod.id] ?? [MOD_REQUIRES[mod.id]])
         .filter(Boolean)
         .map(name)
-        .join(' + ') +
+        .join(' + ') || 'The Welder bonus reward') +
       '.',
     '',
     '**Complete room build:** ' + save.mods.map(name).join(' → ') + '.',

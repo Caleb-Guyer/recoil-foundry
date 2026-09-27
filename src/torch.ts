@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { meltPass, type MeltPass } from './melt-through.ts';
 import type { Game, Enemy, Shot } from './game.ts';
 import type { Prop } from './props.ts';
 import { firstSolid } from './collisions.ts';
@@ -23,6 +24,7 @@ export const TORCH = {
   segments: 12,
 };
 export interface TorchSegment {
+  melt?: MeltPass;
   portalExit?: TorchOrigin;
   a: Vec;
   b: Vec;
@@ -42,6 +44,7 @@ export interface TorchSegment {
   muzzle?: boolean;
 }
 export interface TorchOrigin {
+  meltSpent?: boolean;
   pocketSpent?: boolean;
   from: Vec;
   dir: Vec;
@@ -79,7 +82,8 @@ export function traceTorch(
     banks = g.gun.bounces,
     pierce = g.gun.pierce + (g.torch?.extraPierce ?? 0),
     gain = 1,
-    pocketSpent = start?.pocketSpent ?? !!start;
+    pocketSpent = start?.pocketSpent ?? !!start,
+    meltSpent = start?.meltSpent ?? false;
   if (start) {
     from = { ...start.from };
     d = { ...start.dir };
@@ -138,6 +142,7 @@ export function traceTorch(
       remaining -= 1;
       segment.portalExit = {
         pocketSpent,
+        meltSpent,
         from: { ...from },
         dir: { ...d },
         remaining,
@@ -191,6 +196,17 @@ export function traceTorch(
     if (prop) {
       segment.prop = prop;
       break;
+    }
+    const melt = !meltSpent && meltPass(g, hit.body, point, d, radius);
+    if (melt && melt.length < remaining) {
+      segment.melt = melt;
+      segment.body = undefined;
+      segment.normal = undefined;
+      meltSpent = true;
+      remaining -= melt.length;
+      gain *= melt.gain;
+      from = { ...melt.exit };
+      continue;
     }
     if (banks-- <= 0 || !g.terrainBodies.includes(hit.body)) break;
     const dot = d.x * hit.normal.x + d.y * hit.normal.y;
@@ -282,6 +298,7 @@ export class TorchSystem {
     this.revision = -1;
   }
   stop() {
+    this.game.melt?.flushBeam();
     this.charging = 0;
     this.chargeHeld = false;
     this.focus = 0;
@@ -356,6 +373,7 @@ export class TorchSystem {
     this.active = this.stepBurn > 1e-8;
     // Pay shot-based charges at the gun's ordinary cadence, never each frame.
     if (due) {
+      g.melt.flushBeam();
       this.pulse = null;
       g.evolutions.settle();
       this.period = g.gun.interval * (lens ? 0.25 : bursting ? TORCH.burstWidth : 1);
@@ -507,7 +525,10 @@ export class TorchSystem {
     }
     // Intentional gaps preserve heat only while the aim still tracks the same
     // exposed target. They deal no damage, thrust, contact procs or deflections.
-    if (!this.active) return;
+    if (!this.active) {
+      g.melt.flushBeam();
+      return;
+    }
     const burn = this.stepBurn;
     const old = this.heat;
     if (g.mods.includes('charge-lens'))
@@ -550,6 +571,13 @@ export class TorchSystem {
         this.payload() *
         segment.gain *
         (segment.enemy?.id === this.target && (segment.ray ?? 0) === 0 ? hot : 1);
+      if (segment.melt)
+        g.melt.beam(
+          s.id,
+          segment.ray ?? (this.rear.includes(segment) ? 1 : 0),
+          segment.melt,
+          (s.damage * burn) / this.period,
+        );
       const object = segment.body ?? segment.cable ?? segment.anchor;
       const first = object && !this.processed.has(object);
       if (first) this.processed.add(object!);

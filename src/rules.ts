@@ -483,6 +483,13 @@ export const MODS = [
       'Falling steel balls build up to 75% more direct-hit damage and slam light targets down.',
     mark: 'drop-forge',
   },
+  {
+    id: 'melt-through',
+    name: 'Melt-through',
+    description:
+      'Shots pass through one thin wall or platform, retaining 65% damage. Thick cover stops them.',
+    mark: 'melt-through',
+  },
   ...BRANCH_MODS,
   ...NEW_PATH_MODS,
   ...WORKSHOP_MODS,
@@ -656,7 +663,8 @@ export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
   sorter: 'ramjet',
   boss: 'cinder',
 };
-export const isSalvage = (id: string) => ['ramjet', 'cinder', 'crosswind'].includes(id);
+export const isSalvage = (id: string) =>
+  ['ramjet', 'cinder', 'crosswind', 'melt-through'].includes(id);
 export const fusionUnlocked = ({ stage, overtime }: RewardContext) => !!overtime || stage >= 7;
 export const MOD_REQUIRES: Record<string, string> = {
   ...Object.fromEntries(Object.entries(BRANCH_PARENTS).map(([id, parents]) => [id, parents[0]])),
@@ -1146,7 +1154,11 @@ function validRewardCheckpoint(d: Checkpoint) {
         !(
           (r.salvage === 'ramjet' && [3, 15].includes(d.stage)) ||
           (r.salvage === 'cinder' && [7, 15].includes(d.stage)) ||
-          (r.salvage === 'crosswind' && d.stage === 11)
+          (r.salvage === 'crosswind' && d.stage === 11) ||
+          (r.salvage === 'melt-through' &&
+            r.welder === true &&
+            d.welder?.status === 'defeated' &&
+            d.welder.stage === d.stage)
         ))) ||
     (r.enteringDetour !== undefined &&
       (r.enteringDetour !== true ||

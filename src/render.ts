@@ -1,3 +1,4 @@
+import { drawMelt } from './melt-through.ts';
 import { drawWelder, drawWelds } from './welder-art.ts';
 import { drawClockOut } from './clock-out-art.ts';
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
@@ -272,6 +273,7 @@ export class Renderer {
     drawSpoof(c, g, this.reduced);
     this.drawProps();
     drawWelds(c, g, this.reduced);
+    drawMelt(c, g, this.reduced);
     drawStoryDetails(c, g, this.reduced);
     drawShutdown(c, g, this.reduced);
     this.drawBreaches();
@@ -708,7 +710,7 @@ export class Renderer {
     drawBallistics(c, g, this.reduced);
     drawFusions(c, g, this.reduced);
     for (const s of g.shots) {
-      if (!s.friendly || s.life <= 0) continue;
+      if (!s.friendly || s.life <= 0 || s.meltTransit) continue;
       if (s.stasis?.phase === 'parked' || s.stasis?.phase === 'queued') {
         drawStoredRound(c, s, g.mods.includes('tripline'));
         continue;
@@ -751,7 +753,11 @@ export class Renderer {
             if (bank && pierce) this.line(points[i - 1], points[i], '#d5ebf2', 0.8);
           }
           c.restore();
-          this.circle(s.pos, s.radius, s.charged ? '#eff5b5' : pierce ? '#e9f4f6' : '#ddedda');
+          this.circle(
+            s.pos,
+            s.radius,
+            s.molten ? '#ffe2b1' : s.charged ? '#eff5b5' : pierce ? '#e9f4f6' : '#ddedda',
+          );
         } else {
           this.line(
             { x: s.pos.x - s.vel.x * 0.55, y: s.pos.y - s.vel.y * 0.55 },

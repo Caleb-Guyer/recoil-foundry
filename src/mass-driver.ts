@@ -122,7 +122,7 @@ export class MassDriverSystem {
     for (const s of balls.slice(0, Math.max(0, balls.length - MASS_DRIVER.limit)))
       this.finish(s, false);
     for (const s of balls) {
-      if (s.life <= 0 || dormant(s)) continue;
+      if (s.life <= 0 || dormant(s) || s.meltTransit) continue;
       const m = s.massDriver!;
       for (const id of m.penetrating) {
         const e = g.enemies.find((e) => e.id === id);

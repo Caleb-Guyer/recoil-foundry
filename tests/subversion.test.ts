@@ -79,7 +79,7 @@ test('all five upgrades are reachable, branch prerequisites are mandatory, and c
     for (const chain of [orders, cross]) assert(validBuild(withParents([path], chain)!));
 });
 
-test('all 510 new upgrade pairs respect prerequisites in either order and leave base gun stats stable', () => {
+test('all Subversion upgrade pairs respect prerequisites in either order and leave base gun stats stable', () => {
   let pairs = 0;
   for (let i = 0; i < MODS.length; i++)
     for (let j = i + 1; j < MODS.length; j++) {
@@ -95,7 +95,7 @@ test('all 510 new upgrade pairs respect prerequisites in either order and leave 
         assert.deepEqual(getGun(ab), getGun(ba));
       }
     }
-  assert.equal(pairs, 510);
+  assert.equal(pairs, 525);
 });
 
 test('reward weighting favors owned Subversion without allowing the opposite fork', () => {

@@ -28,9 +28,9 @@ import {
 import { workshopBuild, discoverBuild } from '../src/workshop-build.ts';
 import { dailyForDate } from '../src/daily.ts';
 
-test('all twelve choices require their complete parents, respect both orders and enter at stage seven', () => {
-  assert.equal(BRANCH_MODS.length, 12);
-  assert.equal(MODS.length, 105);
+test('all branch choices require their complete parents, respect both orders and enter at stage seven', () => {
+  assert.equal(BRANCH_MODS.length, 14);
+  assert.equal(MODS.length, 108);
   for (const mod of BRANCH_MODS) {
     const parents = withParents([], BRANCH_PARENTS[mod.id])!;
     assert(validBuild([...parents, mod.id]));
@@ -63,7 +63,7 @@ test('all twelve choices require their complete parents, respect both orders and
 
 test('every maximal combination is unique, legal, complete, saveable and addressed by its stable choices', () => {
   const combos = maxCombos();
-  assert.equal(combos.length, 2048);
+  assert.equal(combos.length, 4096);
   assert.equal(new Set(combos.map((c) => c.code)).size, combos.length);
   assert.equal(new Set(combos.map((c) => [...c.mods].sort().join(','))).size, combos.length);
   for (const combo of combos) {
@@ -242,5 +242,22 @@ test('damaged legacy reward metadata is rejected without throwing during startup
       loadCheckpoint({ version: 6, mods, legacyOffers: [], reward: { offers: [] } }),
       null,
     );
+  }
+});
+
+test('pre-Melt-through maximal links retain exactly their previous upgrades', () => {
+  for (const path of ['precision', 'bullet-hell', 'demolition', 'cryogenic', 'stasis']) {
+    const c = maxCombos().find((c) => c.path === path && c.choices.includes('clean-cut'))!;
+    const oldCode = c.code
+      .split('.')
+      .filter((id) => id !== 'clean-cut')
+      .join('.');
+    const save = branchTestFromUrl(new URL('https://test/?test=branches&combo=' + oldCode))!;
+    assert(save);
+    assert.deepEqual(
+      save.mods,
+      c.mods.filter((id) => !['melt-through', 'clean-cut'].includes(id)),
+    );
+    assert(loadCheckpoint(save));
   }
 });

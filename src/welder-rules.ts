@@ -32,7 +32,7 @@ export function validWelder(d: Checkpoint) {
       d.reward.rerolled ||
       d.reward.courier ||
       d.reward.auditor ||
-      d.reward.salvage)
+      (d.reward.salvage !== undefined && d.reward.salvage !== 'melt-through'))
   )
     return false;
   return !(s.status === 'defeated' && d.reward && !d.reward.welder);

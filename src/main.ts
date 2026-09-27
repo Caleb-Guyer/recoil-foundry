@@ -1270,6 +1270,9 @@ game.onChange = () => {
 };
 function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'melt-through': 'M22 7v13M22 28v13M32 7v13M32 28v13M5 24h13M36 24h15M44 18l7 6-7 6',
+    'clean-cut': 'M19 7v12M19 29v12M35 7v12M35 29v12M5 24h46M44 18l7 6-7 6',
+    blowout: 'M20 7v13M20 28v13M5 24h23M33 24h17M32 18l14-9M32 30l14 9',
     spoof: 'M12 11h23v26H12zM17 18h10M17 24h7M35 14h8v20h-8M39 20l7 4-7 4',
     'standing-orders': 'M15 9h26v22L28 41 15 31zM21 17h14M21 23h14M24 29h8',
     'priority-target': 'M16 8h-7v8M40 8h7v8M9 32v8h7M47 32v8h-7M17 24h22M28 13v22',

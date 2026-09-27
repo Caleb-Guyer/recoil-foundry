@@ -427,7 +427,7 @@ export class BallisticsSystem {
     const g = this.game;
     if (!this.counterReady) return;
     const friendly = g.shots.filter(
-      (s) => s.life > dt && s.friendly && !dormant(s) && (s.counter ?? 0) > 0,
+      (s) => s.life > dt && s.friendly && !dormant(s) && !s.meltTransit && (s.counter ?? 0) > 0,
     );
     const hostile = g.shots.filter(
       (s) => s.life > dt && !s.friendly && !s.allied && !s.blade && s.radius <= 5,

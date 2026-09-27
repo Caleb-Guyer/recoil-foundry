@@ -75,6 +75,18 @@ export const BRANCH_MODS = [
     description: 'Spent hits send two saws in opposite directions, each at 60% power.',
     mark: 'crosscut',
   },
+  {
+    id: 'clean-cut',
+    name: 'Clean Cut',
+    description: 'Melt-through crosses twice as much material and retains 85% damage.',
+    mark: 'clean-cut',
+  },
+  {
+    id: 'blowout',
+    name: 'Blowout',
+    description: 'Melt-through exits release a short cone of three molten fragments.',
+    mark: 'blowout',
+  },
 ] as const;
 export const BRANCH_GROUPS: Readonly<Record<string, readonly string[]>> = {
   Beam: ['pulse-chamber', 'charge-lens', 'prism-array'],
@@ -91,6 +103,7 @@ export const BRANCH_GROUPS: Readonly<Record<string, readonly string[]>> = {
   Cable: ['snapback', 'grapnel'],
   Volley: ['thread-the-needle', 'convoy'],
   Subversion: ['standing-orders', 'cross-talk'],
+  Weld: ['clean-cut', 'blowout'],
 };
 export const BRANCH_PARENTS: Readonly<Record<string, readonly string[]>> = {
   'pulse-chamber': ['cutting-torch', 'burst'],
@@ -105,6 +118,8 @@ export const BRANCH_PARENTS: Readonly<Record<string, readonly string[]>> = {
   'short-circuit': ['arc-coil'],
   triphammer: ['ramjet'],
   crosscut: ['grindshot'],
+  'clean-cut': ['melt-through'],
+  blowout: ['melt-through'],
 };
 export const BRANCH_PATHS = {
   'pulse-chamber': { path: 'precision' },

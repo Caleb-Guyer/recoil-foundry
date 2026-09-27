@@ -4,6 +4,21 @@ export type Lore = readonly [source: string, author: string, text: string];
 
 // These are original Foundry documents. Mechanical descriptions live in the upgrade catalog.
 export const UPGRADE_LORE = {
+  'melt-through': [
+    'Recovered welding head · unlisted part',
+    'M. Vale · maintenance',
+    'There was no serial number under the Welder’s plating. Just a heat stain shaped like a hand. We fitted the head to a spare tool and fired at the partition.\n\nThe round came out warm on the other side. The partition still passed inspection. I have stopped trusting the partitions.',
+  ],
+  'clean-cut': [
+    'Heat shielding amendment',
+    'Dr. S. Anik · development',
+    'The loss occurs while the round is inside the material. Hold the heat at its surface and there is less left behind. Two plates now behave like one.\n\nHolt has asked us to stop calling the room next door a control group.',
+  ],
+  blowout: [
+    'Exit-side debris report',
+    'E. Holt · safety office',
+    'The entry mark is small enough to cover with a thumb. The exit mark is not. Three pieces of the partition were recovered from the test rig behind it.\n\nFor the next trial, please count the partitions as ammunition. Stores will object. Let them stand behind one.',
+  ],
   spoof: [
     'Dispatch credential test',
     'T. Orr · dispatch',

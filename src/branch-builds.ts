@@ -41,6 +41,96 @@ export function completeBuild(build: readonly string[]) {
 }
 
 export const BRANCH_TEST_BUILDS: Record<string, { name: string; mods: readonly string[] }> = {
+  melt: {
+    name: 'Melt-through',
+    mods: [
+      'melt-through',
+      'magnum',
+      'rapid',
+      'pierce',
+      'light',
+      'leech',
+      'kick',
+      'airshot',
+      'capacitor',
+      'reserve-cell',
+    ],
+  },
+  'clean-cut': {
+    name: 'Clean Cut',
+    mods: [
+      'melt-through',
+      'clean-cut',
+      'magnum',
+      'rapid',
+      'pierce',
+      'light',
+      'leech',
+      'kick',
+      'airshot',
+      'capacitor',
+    ],
+  },
+  blowout: {
+    name: 'Blowout',
+    mods: [
+      'melt-through',
+      'blowout',
+      'magnum',
+      'rapid',
+      'pierce',
+      'light',
+      'leech',
+      'kick',
+      'airshot',
+      'capacitor',
+    ],
+  },
+  'melt-beam': {
+    name: 'Molten Beam',
+    mods: [
+      'melt-through',
+      'blowout',
+      'cutting-torch',
+      'magnum',
+      'rapid',
+      'light',
+      'leech',
+      'kick',
+      'burst',
+      'pulse-chamber',
+    ],
+  },
+  'melt-shell': {
+    name: 'Molten Shells',
+    mods: [
+      'melt-through',
+      'blowout',
+      'shellshock',
+      'magnum',
+      'rapid',
+      'light',
+      'leech',
+      'kick',
+      'aftershock',
+      'shaped-charge',
+    ],
+  },
+  'melt-ball': {
+    name: 'Molten Steel',
+    mods: [
+      'melt-through',
+      'clean-cut',
+      'mass-driver',
+      'magnum',
+      'rapid',
+      'light',
+      'leech',
+      'kick',
+      'pierce',
+      'skid-plate',
+    ],
+  },
   priority: {
     name: 'Priority Target',
     mods: [
@@ -541,7 +631,18 @@ export function branchTestFromUrl(url: URL): Checkpoint | null {
   let mods: string[] | null;
   if (p.has('combo')) {
     if (p.has('build') || p.has('max')) return null;
-    const found = maxCombos().find((combo) => combo.code === p.get('combo'));
+    const requested = p.get('combo')!;
+    const weldIds = ['melt-through', 'clean-cut', 'blowout'];
+    const legacyWeld = !requested.split('.').some((id) => weldIds.includes(id));
+    const found = maxCombos().find(
+      (combo) =>
+        (legacyWeld
+          ? combo.code
+              .split('.')
+              .filter((id) => !weldIds.includes(id))
+              .join('.')
+          : combo.code) === requested,
+    );
     // Existing catalog links keep their original gun without a new support fork.
     const previous = found
       ? undefined
@@ -550,10 +651,11 @@ export function branchTestFromUrl(url: URL): Checkpoint | null {
             combo.choices.includes('standing-orders') &&
             combo.code
               .split('.')
-              .filter((part) => !isSubversion(part))
+              .filter((part) => !isSubversion(part) && (!legacyWeld || !weldIds.includes(part)))
               .join('.') === p.get('combo'),
         );
     mods = [...(found?.mods ?? previous?.mods.filter((id) => !isSubversion(id)) ?? [])];
+    if (legacyWeld) mods = mods.filter((id) => !weldIds.includes(id));
     if (!mods.length) return null;
   } else {
     const key = p.get('build') ?? 'pulse';

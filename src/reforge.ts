@@ -123,6 +123,7 @@ export class ReforgeSystem {
     g.gun = getGun(g.mods);
     // A replaced weapon cannot leave charged, parked or delayed attacks alive.
     // Keep world geometry and the room's spent portal budget intact.
+    g.melt.reset();
     g.massDriver.reset();
     g.arcs.reset();
     g.grind.reset();

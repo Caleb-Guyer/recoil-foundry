@@ -8,13 +8,13 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 ![Recoil flight in the Loading Docks](public/media/loading-docks.png)
 
-- **105 upgrades** with branching paths and combinations that change how your gun works.
+- **108 upgrades** with branching paths and combinations that change how your gun works.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**The Welder — version 3.8.0.** A rare Overtime miniboss turns floors into molten seams and welds temporary barricades. Break through its cooling window for an extra build-focused upgrade. [Release notes and test links](docs/releases/3.8.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.8.0).
+**Melt-through — version 3.9.0.** Earn The Welder’s salvaged cutting head, fire through thin cover, then choose a cleaner cut or a burst of molten fragments. [Release notes and test links](docs/releases/3.9.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.9.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 
