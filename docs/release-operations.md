@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Overtime: Clock Out 3.6.0 — 26 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `4ecc743db218e62b511a42fd11ba301a253372d1` passed all **1,987 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36285354760). Tag `v3.6.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36285692269); the verified official ZIP is itch.io upload `19420240`. Both public games show 3.6.0 and retain their existing saves. [Validation and artifact evidence](validation/clock-out-3.6.0.md) records the checksum, lifecycle/persistence checks and browser scope.
+
+Overtime now ends with a calm departure bay, twelve-second skippable elevator journey, resolving score and Night Shift outfit reveal beside the player's final gun. Victory is recorded at boarding, before presentation; previews remain isolated. Campaign/Daily extraction and save formats are unchanged. Publication checks are complete.
+
 ## Overtime: Stormfront 3.5.0 — 26 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `6a88b6e6b7c2e0ee701e3f9cef213bbcb9ad2ffb` passed all **1,978 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36283060075). Tag `v3.5.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36283380651); the verified official ZIP is itch.io upload `19419734`. Both public games show 3.5.0 and preserve their existing saves. [Validation and artifact evidence](validation/overtime-rooftops-3.5.0.md) records the checksum, lightning/cover/route checks, limited combat probes and browser scope.
@@ -72,8 +78,9 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.5.0` at `6a88b6e6b7c2e0ee701e3f9cef213bbcb9ad2ffb`. Rollbacks must retain revision-5 `overtime.remix` checkpoint decoding and generation, together with Practice records and blueprint profile fields/decoders. Do not deploy an unchanged older build over newer saves.
-- Previous stable reference: `v3.4.0` at `ae84228ea6f2f554bf5d027272179156b8ca6c57`.
+- Stable tag: `v3.6.0` at `4ecc743db218e62b511a42fd11ba301a253372d1`. Rollbacks must retain revision-5 `overtime.remix` checkpoint decoding and generation, together with Practice records and blueprint profile fields/decoders. Do not deploy an unchanged older build over newer saves.
+- Previous stable reference: `v3.5.0` at `6a88b6e6b7c2e0ee701e3f9cef213bbcb9ad2ffb`.
+- Earlier stable reference: `v3.4.0` at `ae84228ea6f2f554bf5d027272179156b8ca6c57`.
 - Previous stable reference: `v3.3.0` at `84f57552f75bac71208ef641b06bad3043b9b55f`.
 - Previous stable reference: `v3.2.0` at `91cd643f80092b433c7c66e508f332b3516db46c`.
 - Previous stable reference: `v3.1.0` at `858389fd2109f27a87e5a3e8f90dfd5525f444c2`.
