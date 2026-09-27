@@ -655,6 +655,7 @@ export class Game {
     workshop = false,
   ) {
     this.workshop.active = workshop;
+    this.maintenance.trial = null;
     this.practice = practice;
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
@@ -734,6 +735,8 @@ export class Game {
           (save.auditor.status !== 'sealed' || !!this.testRun?.auditor)),
     );
     if (save) this.commendations.cleanBoss = save.cleanBoss === true;
+    if (save?.detour && this.maintenance.active)
+      this.maintenance.state!.clean = save.maintenance?.clean === true;
     if (this.testRun?.annexRouteTest?.fork && this.stage === 7) {
       Body.setPosition(this.player, { x: 1660, y: 720 });
       Body.setVelocity(this.player, { x: 0, y: 0 });
@@ -1581,6 +1584,7 @@ export class Game {
     ) {
       this.clear = true;
       this.clearAt = this.time;
+      this.maintenance.completed();
       this.arcs.reset();
       this.grind.reset();
       this.torch.reset();
@@ -1594,7 +1598,7 @@ export class Game {
       this.reforge.arrive();
       this.onChange();
     }
-    if ((this.practice || this.testRun?.switchboardTest) && this.clear) {
+    if ((this.practice || this.maintenance.trial || this.testRun?.switchboardTest) && this.clear) {
       this.setMode('won');
       return;
     }
@@ -3222,6 +3226,7 @@ export class Game {
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     this.hp = Math.max(0, this.hp - amount);
     if (this.practice && amount > 0) this.practiceHits++;
+    if (amount > 0) this.maintenance.damaged();
     if (amount > 0) this.commendations.damaged();
     this.hurtAt = this.time;
     this.feedback(8);
@@ -3489,6 +3494,7 @@ export class Game {
     }
     this.route = this.enteringRoute;
     if (this.detour) {
+      this.maintenance.completed();
       this.detours.push(areaIndex(this.stage));
       this.detour = false;
       this.stage++;

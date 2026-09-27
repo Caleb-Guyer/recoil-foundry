@@ -164,6 +164,21 @@ import {
   type PracticeWin,
 } from './practice-records.ts';
 import { practiceRecordsMenu } from './practice-records-menu.ts';
+import { maintenanceTrialsMenu, trialResultHtml } from './maintenance-trials-menu.ts';
+import {
+  SHAFT_PROFILE_KEY,
+  loadShaftProfile,
+  recordShaftClear,
+  maintenanceCertified,
+  trialFromUrl,
+  trialAccess,
+  snapshotTrial,
+  recordTrial,
+  trialChallenge,
+  type TrialRoute,
+  type TrialChallenge,
+  type ShaftProfile,
+} from './maintenance-trials.ts';
 import { PHYSICS_LAYOUTS } from './physics-layouts.ts';
 import {
   DAILY_BESTS_KEY,
@@ -243,6 +258,12 @@ let activePracticeChallenge: PracticeChallenge | null = null;
 let sharedPracticeChallenge: PracticeChallenge | undefined;
 let practiceRecordsBoss: PracticeBoss | undefined;
 let practiceRecordsParent = 'practice-setup';
+let trialCaptured = false;
+let trialOutcome: ReturnType<typeof recordTrial> | null = null;
+let activeTrialChallenge: TrialChallenge | undefined;
+let trialMenuChallenge: TrialChallenge | undefined;
+let trialMenuShare: TrialChallenge | undefined;
+let trialMenuParent = 'practice';
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let equippedCosmetics = loadCosmetics(read(COSMETICS_KEY), commendations);
@@ -370,6 +391,11 @@ const input: Input = {
   aim: { x: 600, y: 550 },
 };
 const entryUrl = new URL(location.href);
+let linkedTrial = trialFromUrl(entryUrl);
+let invalidTrialLink =
+  (entryUrl.searchParams.has('shaft') ||
+    entryUrl.searchParams.get('test') === 'maintenance-trial') &&
+  !linkedTrial;
 let previewCommendations = commendationPreviewLink(entryUrl);
 if (previewCommendations) logbookView.section = 'commendations';
 const linkedLogbook = logbookLink(entryUrl);
@@ -568,7 +594,8 @@ function updateTitle() {
     ? 'Start a fresh random run'
     : "Today's shared challenge · resets at midnight UTC";
   $('continue').hidden = !checkpoint;
-  $('practice').hidden = encounters.length === 0;
+  $('practice').hidden =
+    encounters.length === 0 && !loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length;
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
   $('title-hint').textContent = linkedRunTest
@@ -703,6 +730,14 @@ function updateTitle() {
   if (linkedRunTest?.maintenance) {
     $('play').textContent = 'Test ' + SHAFT_NAMES[linkedRunTest.maintenance.kind];
     $('title-hint').textContent = 'Reach the top. R to retry. Your progress stays untouched.';
+  }
+  if (linkedTrial || invalidTrialLink) {
+    $('play').textContent = linkedTrial?.preview
+      ? 'Test Maintenance Trial'
+      : 'Maintenance challenge';
+    $('title-hint').textContent = linkedTrial?.preview
+      ? 'Starting gun. Reach the summit. Your progress stays untouched.'
+      : 'A shared climb. Clear its shaft in a normal run to enter.';
   }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
@@ -893,6 +928,10 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     startWorkshop(game.mods, firstSession.warmup);
     return;
   }
+  if (retry && game.maintenance.trial) {
+    startTrial(game.maintenance.trial.route, game.maintenance.trial.preview, activeTrialChallenge);
+    return;
+  }
   if (retry && game.testRun) {
     startRunTest(game.testRun);
     return;
@@ -908,6 +947,8 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   firstSession.stop();
   runCommendations = [];
   linkedTest = null;
+  linkedTrial = null;
+  invalidTrialLink = false;
   linkedRunTest = null;
   linkedWorkshop = false;
   previewCommendations = false;
@@ -930,6 +971,7 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
   } else {
     const url = new URL(location.href);
     url.searchParams.delete('test');
+    url.searchParams.delete('shaft');
     url.searchParams.delete('workshop');
     url.searchParams.delete('area');
     url.searchParams.delete('formation');
@@ -989,6 +1031,64 @@ function startPractice(
 }
 function startPracticeChallenge(challenge: PracticeChallenge) {
   startPractice(challenge, challenge.mods, { challenge });
+}
+function startTrial(route: TrialRoute, preview = false, challenge?: TrialChallenge) {
+  if (progress.restoring) return;
+  progress.checkExternal();
+  if (progress.blocked) {
+    openProgress();
+    return;
+  }
+  const profile = loadShaftProfile(read(SHAFT_PROFILE_KEY));
+  if (!preview && !trialAccess(route, profile)) return;
+  if (
+    preview &&
+    (!linkedTrial?.preview || JSON.stringify(linkedTrial.route) !== JSON.stringify(route))
+  )
+    return;
+  clearInput();
+  firstSession.stop();
+  finishedRun = null;
+  runCommendations = [];
+  trialCaptured = false;
+  trialOutcome = null;
+  activeTrialChallenge = challenge;
+  activeDaily = null;
+  dailyResult = null;
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  if (!game.maintenance.startTrial(route, profile, preview)) return;
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
+  canvas.focus();
+}
+function certifyMaintenance(profile: ShaftProfile) {
+  if (!maintenanceCertified(profile)) return;
+  commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
+  if (!commendations.includes('maintenance-certified')) {
+    runCommendations.push('maintenance-certified');
+    commendations = mergeCommendations(commendations, ['maintenance-certified']);
+    write(COMMENDATIONS_KEY, commendations);
+  }
+}
+function captureTrialResult() {
+  if (trialCaptured) return;
+  const win = snapshotTrial(game, read(SHAFT_PROFILE_KEY));
+  if (!win) return;
+  trialCaptured = true;
+  progress.checkExternal();
+  if (progress.blocked) return;
+  trialOutcome = recordTrial(read(SHAFT_PROFILE_KEY), win.route, win.score);
+  write(SHAFT_PROFILE_KEY, trialOutcome.profile);
+  certifyMaintenance(trialOutcome.profile);
+}
+function openTrials(parent = 'practice', challenge?: TrialChallenge, share?: TrialChallenge) {
+  trialMenuParent = parent;
+  trialMenuChallenge = challenge;
+  trialMenuShare = share;
+  showDialog('shaft-trials');
 }
 function capturePracticeResult() {
   if (practiceCaptured) return;
@@ -1157,6 +1257,14 @@ function updateLogbook(enemy?: EnemyKind) {
     write(LOGBOOK_KEY, logbookProgress);
 }
 game.onEnemyDefeated = updateLogbook;
+game.maintenance.onClear = (clear) => {
+  progress.checkExternal();
+  if (progress.blocked) return;
+  const profile = recordShaftClear(read(SHAFT_PROFILE_KEY), clear);
+  write(SHAFT_PROFILE_KEY, profile);
+  certifyMaintenance(profile);
+  updateTitle();
+};
 game.onCommendation = (id) => {
   if (!game.commendations.eligible) return;
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
@@ -1224,6 +1332,7 @@ game.onChange = () => {
   }
   captureFinishedRun();
   capturePracticeResult();
+  captureTrialResult();
   const finale = game.clockOut;
   document.body.dataset.clockOut = String(finale.active);
   $('clock-out-controls').hidden = !finale.active;
@@ -1267,6 +1376,9 @@ game.onChange = () => {
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${game.level.annex ? REGION_NAMES.annex : AREAS[game.level.area].name} · ${game.level.name}`;
+  if (game.maintenance.trial)
+    $('stage').textContent =
+      (game.maintenance.trial.preview ? 'TEST · ' : '') + 'MAINTENANCE TRIAL';
   if (game.testRun?.annex) {
     $('stage').textContent = 'DEAD SIGNAL · TEST';
     $('stage').title = 'Transmission Annex · One-room prototype';
@@ -1421,13 +1533,14 @@ function showDialog(kind: string) {
       'practice-records',
       'practice-import',
       'practice-share',
+      'shaft-trials',
     ].includes(kind),
   );
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle(
     'ending-dialog',
-    kind === 'result' && game.mode === 'won' && !game.practice,
+    kind === 'result' && game.mode === 'won' && !game.practice && !game.maintenance.trial,
   );
   modal.classList.toggle('controls-dialog', kind === 'controls');
   modal.classList.toggle('progress-dialog', kind === 'progress');
@@ -1650,7 +1763,11 @@ function showDialog(kind: string) {
             '</span><span aria-hidden="true">↗</span></button>',
         )
         .join('') +
+      (loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length
+        ? '<button id="shaft-trials" class="practice-fight"><span>Maintenance Trials</span><span aria-hidden="true">↗</span></button>'
+        : '') +
       '</div><div class="actions"><button id="practice-import" class="quiet">Import challenge</button><button id="practice-back" class="quiet">Back</button></div>';
+    if (document.getElementById('shaft-trials')) $('shaft-trials').onclick = () => openTrials();
     content.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((button) => {
       button.onclick = () => {
         const encounter = encounters.find((record) => record.kind === button.dataset.boss);
@@ -1662,6 +1779,15 @@ function showDialog(kind: string) {
     });
     $('practice-back').onclick = backFromPractice;
     $('practice-import').onclick = () => showDialog('practice-import');
+  } else if (kind === 'shaft-trials') {
+    buildMenu = maintenanceTrialsMenu(content, {
+      profile: loadShaftProfile(read(SHAFT_PROFILE_KEY)),
+      challenge: trialMenuChallenge,
+      share: trialMenuShare,
+      invalid: invalidTrialLink && trialMenuParent === 'title',
+      start: (route, challenge) => startTrial(route, false, challenge),
+      exit: () => (trialMenuParent === 'title' ? closeDialog() : showDialog(trialMenuParent)),
+    });
   } else if (kind === 'practice-setup' && practiceTarget) {
     const encounter = practiceTarget;
     const boss = PRACTICE_BOSSES[encounter.kind];
@@ -1878,6 +2004,54 @@ function showDialog(kind: string) {
           canvas.focus();
         }),
     );
+  } else if (kind === 'result' && game.maintenance.trial) {
+    const session = game.maintenance.trial,
+      won = game.mode === 'won';
+    const timeMs = Math.max(1, Math.round(game.elapsed * 100) * 10);
+    const note = [
+      trialOutcome?.first
+        ? 'First record.'
+        : [
+            trialOutcome?.faster ? 'New fastest climb.' : '',
+            trialOutcome?.efficient ? 'New fewest shots.' : '',
+          ]
+            .filter(Boolean)
+            .join(' '),
+      runCommendations.includes('maintenance-certified')
+        ? 'Servicewear unlocked. Equip it in Appearance.'
+        : '',
+      won && !session.preview && !trialOutcome
+        ? 'Record could not be saved. Check Progress in Settings.'
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    content.innerHTML =
+      trialResultHtml({
+        won,
+        preview: session.preview,
+        timeMs,
+        shots: game.shotCount,
+        hits: session.hits,
+        note,
+        challenge: activeTrialChallenge,
+      }) +
+      '<div class="actions"><button id="retry" class="primary">Retry ↗</button>' +
+      (trialOutcome ? '<button id="shaft-share" class="quiet">Challenge a friend</button>' : '') +
+      (!session.preview
+        ? '<button id="shaft-choose" class="quiet">Trials & records</button>'
+        : '') +
+      '<button id="menu" class="quiet">Menu</button></div>';
+    $('retry').onclick = () => start(undefined, true);
+    if (trialOutcome)
+      $('shaft-share').onclick = () =>
+        openTrials(
+          'result',
+          undefined,
+          trialChallenge(session.route, { timeMs, shots: game.shotCount }),
+        );
+    if (!session.preview) $('shaft-choose').onclick = () => openTrials('result');
+    $('menu').onclick = menu;
   } else if (kind === 'result' && (game.testRun?.annex || game.testRun?.switchboardTest)) {
     content.innerHTML =
       '<p class="eyebrow">DEAD SIGNAL · TEST</p>' +
@@ -2131,25 +2305,27 @@ function showDialog(kind: string) {
         ? firstSession.warmup
           ? 'Targets reset automatically. Reset warm-up starts over. Done returns to the menu.'
           : 'Targets reset automatically. Reset room starts over. Build changes your gun.'
-        : game.practice
-          ? 'Defeat the boss. Retry starts over.'
-          : game.testRun
-            ? game.testRun.annex
-              ? 'Clear the Annex, then leave through the right door. Restart test starts over.'
-              : 'Preset test. Restart test starts over.'
-            : game.escape
-              ? game.canOvertime
-                ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
-                : 'Reach the Exit lift to finish your run.'
-              : game.detour
-                ? game.maintenance.active
-                  ? 'Reach the top for an extra upgrade, without a health refill.'
-                  : 'Survive for an extra upgrade, without a health refill.'
-                : game.overtime
-                  ? 'Second lap. Clear all twenty rooms, then extract.'
-                  : game.canDetour
-                    ? 'After clearing, the upper door offers an optional challenge.'
-                    : 'Clear the room, then leave through the right door.') +
+        : game.maintenance.trial
+          ? 'Reach the summit. Starting gun. Retry repeats this layout.'
+          : game.practice
+            ? 'Defeat the boss. Retry starts over.'
+            : game.testRun
+              ? game.testRun.annex
+                ? 'Clear the Annex, then leave through the right door. Restart test starts over.'
+                : 'Preset test. Restart test starts over.'
+              : game.escape
+                ? game.canOvertime
+                  ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
+                  : 'Reach the Exit lift to finish your run.'
+                : game.detour
+                  ? game.maintenance.active
+                    ? 'Reach the top for an extra upgrade, without a health refill.'
+                    : 'Survive for an extra upgrade, without a health refill.'
+                  : game.overtime
+                    ? 'Second lap. Clear all twenty rooms, then extract.'
+                    : game.canDetour
+                      ? 'After clearing, the upper door offers an optional challenge.'
+                      : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused && game.mods.length
         ? '<details class="build"><summary>Your gun' +
@@ -2175,9 +2351,11 @@ function showDialog(kind: string) {
             '<button id="choose-fight" class="quiet"' +
             (encounters.length ? '' : ' hidden') +
             '>Choose fight</button>'
-          : paused && game.testRun
-            ? '<button id="retry" class="quiet">Restart test</button>'
-            : '') +
+          : paused && game.maintenance.trial
+            ? '<button id="retry" class="quiet">Retry trial</button>'
+            : paused && game.testRun
+              ? '<button id="retry" class="quiet">Restart test</button>'
+              : '') +
       (paused
         ? '<button id="pause-logbook" class="quiet">Logbook</button><button id="menu" class="quiet">Menu</button>'
         : '') +
@@ -2452,17 +2630,22 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedWorkshop
-    ? showDialog('workshop')
-    : linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
-      ? showDialog('layout-test')
-      : linkedRunTest?.seed.startsWith('UPGRADES-') || linkedRunTest?.seed.startsWith('FUSIONS-')
-        ? showDialog('upgrade-test')
-        : linkedRunTest
-          ? startRunTest(linkedRunTest)
-          : linkedTest
-            ? startPractice(linkedTest, null, { test: true })
-            : start();
+  linkedTrial?.preview
+    ? startTrial(linkedTrial.route, true)
+    : linkedTrial || invalidTrialLink
+      ? openTrials('title', linkedTrial?.challenge)
+      : linkedWorkshop
+        ? showDialog('workshop')
+        : linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
+          ? showDialog('layout-test')
+          : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+              linkedRunTest?.seed.startsWith('FUSIONS-')
+            ? showDialog('upgrade-test')
+            : linkedRunTest
+              ? startRunTest(linkedRunTest)
+              : linkedTest
+                ? startPractice(linkedTest, null, { test: true })
+                : start();
 $('daily').onclick = () => {
   if (linkedDaily) {
     linkedDaily = null;
@@ -2491,7 +2674,8 @@ $('dismiss-tip').onclick = () => {
 $('history').onclick = () => showDialog('history');
 $('logbook').onclick = () => showDialog('logbook');
 $('practice').onclick = () => {
-  if (encounters.length) showDialog('practice');
+  if (encounters.length || loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length)
+    showDialog('practice');
 };
 $('workshop').onclick = () => showDialog('workshop');
 $('workshop-edit').onclick = () => showDialog('workshop');

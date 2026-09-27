@@ -5,6 +5,18 @@ import { isBoss } from './enemies.ts';
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
   {
+    id: 'maintenance-certified',
+    name: 'Safe Passage',
+    objective: 'Complete both types of Maintenance Shaft without taking damage.',
+    reward: 'Servicewear',
+    slot: 'Outfit',
+    lore: [
+      'MAINTENANCE · ACCESS CERTIFICATION 032',
+      'M. Vale · Maintenance',
+      'Two shafts. No injuries. I checked the forms twice.\n\nThe presses have not been recalibrated in eleven years. The lifts still answer to a supervisor whose office was bricked up before you arrived. You found a way through both, and brought back the same number of fingers.\n\nThere is a green jacket in the service locker. The pale strips used to tell the machinery that someone was working inside it. They no longer do that.\n\nWear it anyway. It tells me you know how to get back out.',
+    ] as Lore,
+  },
+  {
     id: 'hot-work',
     name: 'Hot Work',
     objective: 'Destroy both of The Welder’s barricades during one deployment, then defeat it.',

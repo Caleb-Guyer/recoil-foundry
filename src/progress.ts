@@ -1,4 +1,5 @@
 import { loadCheckpoint } from './rules.ts';
+import { SHAFT_PROFILE_KEY, loadShaftProfile, validShaftProfile } from './maintenance-trials.ts';
 import {
   DISCOVERIES_KEY,
   WORKSHOP_BUILD_KEY,
@@ -34,6 +35,7 @@ export const PROGRESS_KEYS = [
   WORKSHOP_BUILD_KEY,
   BLUEPRINTS_KEY,
   PRACTICE_RECORDS_KEY,
+  SHAFT_PROFILE_KEY,
 ] as const;
 export type ProgressValues = Record<(typeof PROGRESS_KEYS)[number], unknown>;
 export type SaveState = 'saved' | 'saving' | 'unavailable' | 'conflict' | 'unreadable';
@@ -107,6 +109,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [WORKSHOP_BUILD_KEY]: workshopBuild(read(WORKSHOP_BUILD_KEY), discovered),
     [BLUEPRINTS_KEY]: loadBlueprints(read(BLUEPRINTS_KEY)),
     [PRACTICE_RECORDS_KEY]: loadPracticeRecords(read(PRACTICE_RECORDS_KEY)),
+    [SHAFT_PROFILE_KEY]: loadShaftProfile(read(SHAFT_PROFILE_KEY)),
   };
 }
 export function validateProgress(raw: unknown): ProgressValues | null {
@@ -116,11 +119,17 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       !safeTree(raw) ||
       !keysOnly(raw, PROGRESS_KEYS) ||
       !PROGRESS_KEYS.every(
-        (k) => k === BLUEPRINTS_KEY || k === PRACTICE_RECORDS_KEY || Object.hasOwn(raw, k),
+        (k) =>
+          k === BLUEPRINTS_KEY ||
+          k === PRACTICE_RECORDS_KEY ||
+          k === SHAFT_PROFILE_KEY ||
+          Object.hasOwn(raw, k),
       )
     )
       return null;
     const checkpoint = raw[CHECKPOINT_KEY];
+    if (Object.hasOwn(raw, SHAFT_PROFILE_KEY) && !validShaftProfile(raw[SHAFT_PROFILE_KEY]))
+      return null;
     // Pre-blueprint profiles and backups migrate to six empty slots.
     if (Object.hasOwn(raw, BLUEPRINTS_KEY) && !validBlueprintSlots(raw[BLUEPRINTS_KEY]))
       return null;
@@ -235,6 +244,7 @@ export function progressSummary(values: ProgressValues) {
     runs: loadRunHistory(values[RUN_HISTORY_KEY]).length,
     blueprints: loadBlueprints(values[BLUEPRINTS_KEY]).filter(Boolean).length,
     practiceRecords: loadPracticeRecords(values[PRACTICE_RECORDS_KEY]).length,
+    shaftTrials: loadShaftProfile(values[SHAFT_PROFILE_KEY]).unlocks.length,
   };
 }
 

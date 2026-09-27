@@ -66,6 +66,13 @@ export const OUTFITS = {
     trim: '#e4a369',
     unlock: 'hot-work',
   },
+  servicewear: {
+    name: 'Servicewear',
+    body: '#70968c',
+    boots: '#3e5452',
+    trim: '#e5dcae',
+    unlock: 'maintenance-certified',
+  },
 } as const;
 export interface Cosmetics {
   gun: keyof typeof GUN_FINISHES;
@@ -113,6 +120,13 @@ export function drawOutfit(
     c.fillRect(-8, -16, 16, 2);
     c.fillStyle = p.trim;
     c.fillRect(facing > 0 ? 9 : -11, -14, 2, 4);
+  } else if (id === 'servicewear') {
+    c.fillStyle = '#405e57';
+    c.fillRect(-10, -1, 20, 12);
+    c.fillStyle = p.trim;
+    c.fillRect(-12, 1, 24, 2);
+    c.fillRect(-9, 6, 5, 3);
+    c.fillRect(5, -16, 5, 3);
   } else if (id === 'rigger') {
     c.fillStyle = '#5a5141';
     c.fillRect(-10, -1, 4, 14);

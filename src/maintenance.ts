@@ -3,12 +3,20 @@ import type { Game } from './game.ts';
 import type { Level, Solid } from './levels.ts';
 import { seeded, type Checkpoint } from './rules.ts';
 import { CRUSHER_TELL, LIFT_PERIOD } from './hazards.ts';
+import {
+  trialAccess,
+  trialCheckpoint,
+  type TrialRoute,
+  type TrialSession,
+  type ShaftUnlock,
+} from './maintenance-trials.ts';
 
 export type MaintenanceKind = 'piston' | 'lift';
 export interface MaintenanceSave {
   stage: number;
   kind: MaintenanceKind;
   revision?: 2;
+  clean?: boolean;
 }
 export const SHAFT_TOP = -860;
 export const shaftEntry = (kind: MaintenanceKind) => ({
@@ -44,7 +52,8 @@ export function validMaintenance(d: Checkpoint) {
       [2, 6, 18].includes(s.stage) &&
       (s.kind === 'piston' || s.kind === 'lift') &&
       (s.revision === undefined || s.revision === 2) &&
-      Object.keys(s).every((key) => key === 'stage' || key === 'kind' || key === 'revision'))
+      (s.clean === undefined || typeof s.clean === 'boolean') &&
+      Object.keys(s).every((key) => ['stage', 'kind', 'revision', 'clean'].includes(key)))
   );
 }
 
@@ -179,6 +188,9 @@ export class MaintenanceSystem {
   pulseAt = 0;
   bank = 0;
   presses: { index: number; at: number }[] = [];
+  trial: TrialSession | null = null;
+  onClear: (clear: ShaftUnlock) => void = () => {};
+  private reported = false;
   constructor(game: Game) {
     this.game = game;
   }
@@ -206,7 +218,9 @@ export class MaintenanceSystem {
     return g.grounded && Math.abs(p.x - door.x) < 75 && Math.abs(p.y - (door.floor - 18)) < 8;
   }
   reset(cleared: boolean) {
+    this.reported = false;
     if (!this.active) return;
+    this.state!.clean = true;
     const g = this.game;
     this.pulseAt = g.time + 1.6;
     this.bank = 0;
@@ -229,6 +243,45 @@ export class MaintenanceSystem {
       cleared ? { x: this.exit.x, y: this.exit.floor - 18 } : shaftEntry(g.level.maintenance!),
     );
     Matter.Body.setVelocity(g.player, { x: 0, y: 0 });
+  }
+  startTrial(route: TrialRoute, profile: unknown, preview = false) {
+    const save = trialCheckpoint(route);
+    if (!save || (!preview && !trialAccess(route, profile))) return false;
+    // Reuse the existing test boundary to protect campaign/discovery/history data.
+    this.game.start(save.seed, save, null, save);
+    this.trial = { route: { ...route }, preview, hits: 0 };
+    this.state!.clean = true;
+    this.game.onChange();
+    return true;
+  }
+  damaged() {
+    if (!this.active) return;
+    if (this.trial) this.trial.hits++;
+    if (this.state?.clean !== false) {
+      this.state!.clean = false;
+      this.game.save();
+    }
+  }
+  completed() {
+    const g = this.game;
+    if (
+      this.reported ||
+      !this.active ||
+      !g.clear ||
+      (!this.atExit && g.mode !== 'upgrade') ||
+      g.hp <= 0 ||
+      g.testRun ||
+      g.practice ||
+      g.workshop.active
+    )
+      return;
+    this.reported = true;
+    this.onClear({
+      kind: this.state!.kind,
+      seed: g.seed,
+      revision: this.state!.revision ?? 1,
+      clean: this.state!.clean === true,
+    });
   }
   beforeStep() {
     const g = this.game;
