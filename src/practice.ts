@@ -302,6 +302,38 @@ export function overtimeCoolingTestFromUrl(url: URL): Checkpoint | null {
   return save;
 }
 
+export function overtimeReclamationTestFromUrl(url: URL): Checkpoint | null {
+  const p = url.searchParams;
+  if (p.get('test') !== 'overtime-reclamation') return null;
+  let invalid = false;
+  p.forEach((_, key) => {
+    if (!['test', 'room', 'mirror', 'v'].includes(key) || p.getAll(key).length !== 1)
+      invalid = true;
+  });
+  if (invalid || (p.has('mirror') && !['0', '1'].includes(p.get('mirror')!))) return null;
+  const rooms = {
+    sorting: { stage: 12, seeds: [0, 1] },
+    transfer: { stage: 13, seeds: [0, 1] },
+    service: { stage: 14, seeds: [0, 3] },
+    highline: { stage: 14, seeds: [0, 3] },
+    sorter: { stage: 15, seeds: [6, 0] },
+    reclaimer: { stage: 15, seeds: [1, 5] },
+  };
+  const room = p.get('room') ?? 'sorting';
+  if (!Object.hasOwn(rooms, room)) return null;
+  const plan = rooms[room as keyof typeof rooms];
+  const save = testCheckpoint('OT-SCRAP-' + plan.seeds[p.get('mirror') === '1' ? 1 : 0], 19);
+  save.stage = plan.stage;
+  save.overtime = { baseMods: save.mods.length, repairs: 0, remix: 4 };
+  if (plan.stage === 14) save.route = room === 'highline' ? 'high' : 'low';
+  for (let i = 0; i < save.stage; i++) {
+    const mod = availableMods(save.mods)[0];
+    if (mod) save.mods.push(mod.id);
+    else save.overtime.repairs++;
+  }
+  return save;
+}
+
 export function exitTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (

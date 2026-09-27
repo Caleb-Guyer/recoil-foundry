@@ -1357,6 +1357,13 @@ export class Renderer {
       if (prop.kind === 'cargo') {
         c.fillStyle = '#222e34';
         c.fillRect(-w / 2 + 8, -h / 2 + 8, w - 16, h - 16);
+        if (prop.cargo?.rail) {
+          // Compressed metal plates under two retaining bands.
+          for (let n = 0; n < 4; n++) {
+            c.fillStyle = n % 2 ? '#576455' : '#6c7560';
+            c.fillRect(-w / 2 + 9 + (n % 2) * 6, -h / 2 + 7 + n * 10, w - 24, 7);
+          }
+        }
         c.fillStyle = '#819093';
         for (const x of [-30, 30]) c.fillRect(x - 3, -h / 2, 6, h);
         c.fillStyle = '#b59d72';

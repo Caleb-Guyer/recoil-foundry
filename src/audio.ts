@@ -15,6 +15,7 @@ const ATTACK_WARNINGS = new Set([
   'kiln-wind',
   'strain',
   'cargo-release',
+  'scrap-release',
   'arm',
   'phase',
   'interceptor-lock',
@@ -50,6 +51,7 @@ const WARNING_HOLD: Record<string, number> = {
   'harpoon-lock': 0.5,
   'sapper-lock': 0.45,
   'cargo-release': 0.45,
+  'scrap-release': 1.15,
   'interceptor-lock': 0.35,
   'crane-wind': 0.42,
   'kiln-wind': 0.4,
@@ -530,6 +532,10 @@ export class Sound {
     } else if (kind === 'scrapper-break') {
       this.tone(210, 65, 0.2, 0.07);
       this.crack(0.08, 0.085, 2100);
+    } else if (kind === 'scrap-release') {
+      this.crack(0.13, 0.08, 2400);
+      for (let i = 0; i < 3; i++)
+        this.tone(280 + i * 70, 190 + i * 70, 0.17, 0.055, 'triangle', i * 0.36);
     } else if (kind === 'cargo-release') {
       this.crack(0.13, 0.1, 2500);
       this.tone(310, 170, 0.45, 0.07, 'triangle');

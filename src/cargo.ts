@@ -7,6 +7,7 @@ import { isBoss } from './enemies.ts';
 import { cargoPlacement, CARGO_SIZE } from './cargo-layout.ts';
 import type { CargoPlacement } from './cargo-layout.ts';
 import { hazardBounds } from './hazard-layouts.ts';
+import { updateScrapRail, SCRAP_TELL } from './scrap-circuit.ts';
 
 export const CABLE_HP = 48;
 export const CARGO_TELL = 0.65;
@@ -23,6 +24,7 @@ export interface CargoRig {
   tell?: number;
   disabled?: boolean;
   dropEndedAt?: number;
+  rail?: { fromX: number; toX: number; startsAt: number };
 }
 
 export class CargoSystem {
@@ -73,6 +75,16 @@ export class CargoSystem {
       flash: 0,
       impactAt: -10,
       hits: new Map(),
+      ...(placement.transport
+        ? {
+            tell: SCRAP_TELL,
+            rail: {
+              fromX: placement.x,
+              toX: placement.transport.toX,
+              startsAt: this.game.time + placement.transport.delay,
+            },
+          }
+        : {}),
     };
     Matter.Body.setStatic(p.body, true);
     return p;
@@ -82,11 +94,18 @@ export class CargoSystem {
     for (const p of this.items) {
       const rig = p.cargo!;
       if (rig.state !== 'hanging' || rig.disabled) continue;
+      const joint = Math.max(rig.anchor.y + 14, rig.origin.y - CARGO_SIZE.h / 2 - 48);
       const hit = segmentBox(
         from,
         to,
-        { x: rig.anchor.x - 4 - padding, y: rig.anchor.y - padding },
-        { x: rig.anchor.x + 4 + padding, y: rig.origin.y - CARGO_SIZE.h / 2 + padding },
+        {
+          x: rig.anchor.x - (rig.rail ? 11 : 4) - padding,
+          y: (rig.rail ? joint - 11 : rig.anchor.y) - padding,
+        },
+        {
+          x: rig.anchor.x + (rig.rail ? 11 : 4) + padding,
+          y: (rig.rail ? joint + 11 : rig.origin.y - CARGO_SIZE.h / 2) + padding,
+        },
       );
       if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, prop: p };
     }
@@ -109,13 +128,14 @@ export class CargoSystem {
     if (rig.cableHp > 0) return;
     rig.state = 'warning';
     rig.releaseAt = g.time + (rig.tell ?? CARGO_TELL);
-    g.onSound('cargo-release');
+    g.onSound(rig.rail ? 'scrap-release' : 'cargo-release');
   }
   update(dt: number) {
     const g = this.game;
     if (g.mode !== 'playing') return;
     for (const p of this.items) {
       const rig = p.cargo!;
+      if (rig.rail) updateScrapRail(g, p, dt);
       rig.flash = Math.max(0, rig.flash - dt);
       if (rig.state === 'warning' && g.time >= rig.releaseAt) {
         rig.state = 'loose';

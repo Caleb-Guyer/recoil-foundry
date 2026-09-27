@@ -75,7 +75,7 @@ export interface Layout {
   setpiece?: {
     rosters: number[][];
     props: { kind: 'crate' | 'canister' | 'cover'; x: number; y: number }[];
-    cargo?: { x: number; y: number; anchorY: number }[];
+    cargo?: import('./cargo-layout.ts').CargoPlacement[];
     weak: number[];
   };
   magnets?: MagnetPlacement[];
@@ -94,6 +94,7 @@ export interface Level extends Layout {
   overtimeDocks?: true;
   overtimeFurnace?: true;
   overtimeCooling?: true;
+  overtimeReclamation?: true;
   fans?: import('./crosswind.ts').FanPlacement[];
   annex?: true;
   annexStation?: import('./annex-route.ts').AnnexStation;

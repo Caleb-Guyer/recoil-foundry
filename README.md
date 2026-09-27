@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Crosswind — version 3.3.0.** Overtime Cooling has six authored layouts with cycling industrial fans, recoil-friendly updrafts, coordinated teams and remixed boss arenas. Jump into a draft, steer across a firing lane, or shoot against the flow. New Overtime entries include the Docks, Furnace and Cooling remixes; existing saved laps retain their original rooms. [Release notes and six test links](docs/releases/3.3.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.3.0).
+**Scrap Circuit — version 3.4.0.** Overtime Reclamation has six authored layouts with rail-carried scrap, shootable yellow release latches and changing physical cover. Stop a delivery early, drop its load onto enemies, then fight around the wreckage. New Overtime entries include the Docks, Furnace, Cooling and Reclamation remixes; existing saved laps retain their original rooms. [Release notes and six test links](docs/releases/3.4.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.4.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 

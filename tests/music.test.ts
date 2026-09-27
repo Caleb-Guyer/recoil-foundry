@@ -814,6 +814,29 @@ test('Crosswind spin-up remains audible under gunfire, cleans up and respects ef
   assert.equal(context.sources.length, beforeMute);
 });
 
+test('Scrap Circuit release has reserved warning audio and ducks for its entire tell', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  sound.updateMusic(scene({ area: 'reclamation' }));
+  for (let i = 0; i < 30; i++) sound.tone(180, 40, 0.15, 0.1);
+  const first = context.sources.length;
+  sound.play('scrap-release');
+  const cue = context.sources.slice(first);
+  assert.equal(cue.length, 4);
+  assert(sound.music!.duckUntil >= context.currentTime + 1.15);
+  assert(cue.every((s) => s.stopTime < context.currentTime + 1.2));
+  assert(sound.voices <= 32);
+  context.advance(1.4);
+  assert(cue.every((s) => s.disconnected));
+  assert.equal(sound.voices, 0);
+  sound.effectsVolume = 0;
+  const muted = context.sources.length;
+  sound.play('scrap-release');
+  assert.equal(context.sources.length, muted);
+});
+
 test('completion and defeat cues have reserved voices after a dense fight', (t) => {
   installContext(t);
   const sound = new Sound();

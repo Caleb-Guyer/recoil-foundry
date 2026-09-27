@@ -906,7 +906,8 @@ export class Game {
       !this.detour &&
       !this.level.overtimeDocks &&
       !this.level.overtimeFurnace &&
-      !this.level.overtimeCooling
+      !this.level.overtimeCooling &&
+      !this.level.overtimeReclamation
     ) {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
@@ -1028,7 +1029,7 @@ export class Game {
     )
       return false;
     this.areaEvents.state = null;
-    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 3 };
+    this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 4 };
     this.stage = 0;
     this.route = null;
     this.loadRoom();

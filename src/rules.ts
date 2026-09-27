@@ -1083,7 +1083,7 @@ export interface Checkpoint {
   detour?: true;
   detours?: number[];
   missedUpgrades?: number;
-  overtime?: { baseMods: number; repairs: number; remix?: 1 | 2 | 3 };
+  overtime?: { baseMods: number; repairs: number; remix?: 1 | 2 | 3 | 4 };
   route?: RouteChoice;
   reward?: RewardCheckpoint;
 }
@@ -1248,7 +1248,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       (overtime.remix === undefined ||
         overtime.remix === 1 ||
         overtime.remix === 2 ||
-        overtime.remix === 3) &&
+        overtime.remix === 3 ||
+        overtime.remix === 4) &&
       Array.isArray(completed) &&
       Number.isInteger(overtime.baseMods) &&
       overtime.baseMods === STAGES - 1 + completed.length - missed + courierBonus &&
