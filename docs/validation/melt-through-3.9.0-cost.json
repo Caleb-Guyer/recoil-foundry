@@ -1,0 +1,58 @@
+[
+  {
+    "build": "blowout",
+    "equipped": false,
+    "meanTickMs": 1.575,
+    "maxTickMs": 11.271,
+    "peakShots": 180
+  },
+  {
+    "build": "blowout",
+    "equipped": true,
+    "meanTickMs": 1.483,
+    "maxTickMs": 5.57,
+    "peakShots": 180
+  },
+  {
+    "build": "melt-beam",
+    "equipped": false,
+    "meanTickMs": 0.269,
+    "maxTickMs": 1.672,
+    "peakShots": 16
+  },
+  {
+    "build": "melt-beam",
+    "equipped": true,
+    "meanTickMs": 0.271,
+    "maxTickMs": 1.079,
+    "peakShots": 16
+  },
+  {
+    "build": "melt-shell",
+    "equipped": false,
+    "meanTickMs": 0.777,
+    "maxTickMs": 2.732,
+    "peakShots": 93
+  },
+  {
+    "build": "melt-shell",
+    "equipped": true,
+    "meanTickMs": 0.916,
+    "maxTickMs": 3.048,
+    "peakShots": 93
+  },
+  {
+    "build": "melt-ball",
+    "equipped": false,
+    "meanTickMs": 1.207,
+    "maxTickMs": 4.917,
+    "peakShots": 180
+  },
+  {
+    "build": "melt-ball",
+    "equipped": true,
+    "meanTickMs": 1.5,
+    "maxTickMs": 6.981,
+    "peakShots": 180
+  }
+]

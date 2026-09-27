@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Melt-through 3.9.0 — 26 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `bc4dc45a16339e120aea7643ea03eb96dca3706d` passed all **2,036 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36291517450). Tag `v3.9.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36292474924); its verified official ZIP is itch.io upload `19421686`. Both public games show 3.9.0 and preserve their previous saves. [Validation and artifact evidence](validation/melt-through-3.9.0.md) records the checksum, 18-run combat audit, all 4,096 maximal-build checks, browser checks and limited simulation-cost sample.
+
+The Welder bonus offers optional Melt-through salvage: one thin wall per shot at reduced damage. Clean Cut and Blowout form mutually exclusive follow-ups. Beam pulses, shells, steel balls, portals, Recall and banks retain finite penetration/payload budgets. The three upgrades have icons and factory records; existing pending rewards, Daily choices and historical build links remain compatible. Publication checks are complete.
+
 ## The Welder 3.8.0 — 26 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `0fd3ac86b89fe318aad2401a64f7ac4b431a940e` passed all **2,011 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36289544860). Tag `v3.8.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36289936025); its verified official ZIP is itch.io upload `19421154`. Both public games show 3.8.0 and preserve their existing saves. [Validation and artifact evidence](validation/welder-3.8.0.md) includes the 25-run ordinary-input audit and checksum.
