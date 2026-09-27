@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Overtime balance 3.7.0 — 26 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `d592cc71c0da9b71176734e834abdc9c739a2821` passed all **1,995 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36287635994). Tag `v3.7.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36287962617); its verified official ZIP is itch.io upload `19420747`. Both public games show 3.7.0 and preserve their existing saves. [Validation and artifact evidence](validation/overtime-balance-3.7.0.md) includes before/after diagnostics, campaign-pilot limitations, checksums and public checks.
+
+Current Overtime uses area-specific openings and staggered reinforcement pairs, earlier boss support with full tells, and a compatible follow-up guarantee for established guns' three-card rewards. Older layout revisions, freight scheduling, first-lap/Daily reward rules and save formats retain their prior behavior. Five isolated build links support direct testing. Publication checks are complete; human full-lap balance acceptance remains unverified.
+
 ## Overtime: Clock Out 3.6.0 — 26 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `4ecc743db218e62b511a42fd11ba301a253372d1` passed all **1,987 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36285354760). Tag `v3.6.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36285692269); the verified official ZIP is itch.io upload `19420240`. Both public games show 3.6.0 and retain their existing saves. [Validation and artifact evidence](validation/clock-out-3.6.0.md) records the checksum, lifecycle/persistence checks and browser scope.

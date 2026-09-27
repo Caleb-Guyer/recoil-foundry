@@ -32,4 +32,10 @@ Local production-browser checks verified the Beam component list, the room-20 Pr
 
 ## Publication
 
-Pending the final full suite, Pages deployment and verified official archive upload to the existing itch.io game.
+Runtime commit `d592cc71c0da9b71176734e834abdc9c739a2821` passed all 1,995 tests again, with zero failures or skips, in 303,181.873022 ms in [Pages CI 36287635994](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36287635994). Tests completed at 02:13:44 UTC and the deployment job completed at 02:14:00 UTC on 27 September 2026. Immutable tag `v3.7.0` points to that exact commit. [Release CI 36287962617](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36287962617) succeeded and published the official browser archive at 02:15:20 UTC.
+
+The [official ZIP](https://github.com/Caleb-Guyer/recoil-foundry/releases/download/v3.7.0/recoil-foundry-v3.7.0-site.zip) is 9,771,930 bytes, SHA-256 `551fd09b26292ace4f7146292bbf4524ab841c25b05fb4f5f355914db932e24f`. Its digest matches GitHub's published digest; all 17 files and four entry references passed archive checks. It contains no source, tests, development directories or source maps.
+
+That exact archive replaced the existing itch.io browser upload. Its transport filename remains `recoil-foundry-v2.98.0-site.zip` to replace the file; its displayed name is **Recoil Foundry 3.7.0 — Overtime balance**. Browser play is checked and the editor confirmed Saved. The public iframe is upload `19420747`, observed at `https://html-classic.itch.zone/html/19420747/index.html?v=1790475432`. Store copy, pricing, disclosure and devlog settings were not changed.
+
+Both public About screens report 3.7.0. Pages retains Room 2, one discovery and zero Practice victories, blueprints and records. Itch.io retains Daily Room 1 and zero discoveries, Practice victories, blueprints and records. Live Beam/Volley test links start the correct isolated Overtime run, and the Volley component label and gameplay were inspected. Public Pages, itch.io and preview warning/error logs were empty. The temporary editor/local preview and local server were closed; public menus and the new test link remain ready. Publication is complete.
