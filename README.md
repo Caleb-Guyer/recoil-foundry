@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Shifting Shafts — version 3.11.0.** Maintenance Shafts now shuffle hand-built sections into 36 arrangements per shaft: paired presses, sheltered landings, offset lifts, crumbling transfers and branching climbs. Reach the summit for one extra upgrade. [Release notes and test links](docs/releases/3.11.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.11.0).
+**Maintenance Trials — version 3.12.0.** Clear a shaft to unlock fixed-gun climbs in Practice. Chase personal bests for time and shots, share the same layout with a friend, and earn Servicewear with clean climbs. The shafts retain 36 arrangements each. [Release notes and test links](docs/releases/3.12.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.12.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 

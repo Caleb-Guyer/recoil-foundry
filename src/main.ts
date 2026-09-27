@@ -732,6 +732,8 @@ function updateTitle() {
     $('title-hint').textContent = 'Reach the top. R to retry. Your progress stays untouched.';
   }
   if (linkedTrial || invalidTrialLink) {
+    $('daily').textContent = 'New run';
+    $('daily').title = 'Start a fresh random run';
     $('play').textContent = linkedTrial?.preview
       ? 'Test Maintenance Trial'
       : 'Maintenance challenge';
@@ -1786,6 +1788,7 @@ function showDialog(kind: string) {
       share: trialMenuShare,
       invalid: invalidTrialLink && trialMenuParent === 'title',
       start: (route, challenge) => startTrial(route, false, challenge),
+      startRun: () => start(),
       exit: () => (trialMenuParent === 'title' ? closeDialog() : showDialog(trialMenuParent)),
     });
   } else if (kind === 'practice-setup' && practiceTarget) {
@@ -2647,7 +2650,7 @@ $('play').onclick = () =>
                 ? startPractice(linkedTest, null, { test: true })
                 : start();
 $('daily').onclick = () => {
-  if (linkedDaily) {
+  if (linkedDaily || linkedTrial || invalidTrialLink) {
     linkedDaily = null;
     seedParam = undefined;
     start();

@@ -77,6 +77,7 @@ interface Options {
   share?: TrialChallenge;
   invalid?: boolean;
   start(route: TrialRoute, challenge?: TrialChallenge): void;
+  startRun(): void;
   exit(): void;
 }
 export function maintenanceTrialsMenu(root: HTMLElement, options: Options): MenuBack {
@@ -132,11 +133,12 @@ export function maintenanceTrialsMenu(root: HTMLElement, options: Options): Menu
       trialPreviewHtml(ch, options.profile),
       trialAccess(route, options.profile)
         ? '<button id="shaft-start" class="primary">Climb ↗</button>'
-        : '',
+        : '<button id="shaft-run" class="primary">Start a run ↗</button>',
       back,
     );
     if (trialAccess(route, options.profile))
       get('shaft-start').onclick = () => options.start(route, ch);
+    else get('shaft-run').onclick = options.startRun;
   }
   function importLink() {
     screen(
@@ -260,13 +262,16 @@ export function maintenanceTrialsMenu(root: HTMLElement, options: Options): Menu
               .join('') +
             '</div>'
         : '<p>Clear a Maintenance Shaft in a normal run to unlock its trials.</p>',
-      '<button id="shaft-import" class="quiet">Import challenge</button>',
+      (!options.profile.unlocks.length
+        ? '<button id="shaft-run" class="primary">Start a run ↗</button>'
+        : '') + '<button id="shaft-import" class="quiet">Import challenge</button>',
       options.exit,
     );
     root.querySelectorAll<HTMLButtonElement>('[data-shaft]').forEach((b) => {
       b.onclick = () => setup(b.dataset.shaft as MaintenanceKind);
     });
     get('shaft-import').onclick = importLink;
+    if (!options.profile.unlocks.length) get('shaft-run').onclick = options.startRun;
   }
   if (options.share) share(options.share, options.exit);
   else if (options.challenge) challenge(options.challenge, options.exit);
