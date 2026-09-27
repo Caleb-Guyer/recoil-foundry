@@ -8,6 +8,8 @@ import { ANNEX_ALTERNATES } from './annex-alternates.ts';
 import { REGION_NAMES } from './regions.ts';
 import { createReportDraft, issueReportMenu, type ReportDraft } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
+import { clockOutTestFromUrl, prepareClockOutTest } from './clock-out-test.ts';
+import { drawClockOutReward } from './clock-out-art.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { auditorTestFromUrl } from './auditor-layout.ts';
@@ -281,6 +283,7 @@ document.getElementById('app')!.innerHTML = `
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><div class="title-settings"><button id="controls" class="quiet">Controls</button><button id="logbook" class="quiet">Logbook</button><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
  </section>
+ <div id="clock-out-controls" hidden><span class="sr-only" role="status">Clock Out. Your shift is complete.</span><button id="skip-clock-out" class="quiet">Skip ↗</button></div>
  <button id="save-warning" data-save-warning class="save-warning" hidden></button>
  <div id="first-session-tip" class="first-session-tip" hidden><span id="first-session-copy" role="status"></span><button id="dismiss-tip" class="quiet" aria-label="Hide first-run tips">×</button></div>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
@@ -372,6 +375,7 @@ let linkedRunTest =
   switchboardTestFromUrl(entryUrl) ??
   annexRouteTestFromUrl(entryUrl) ??
   annexTestFromUrl(entryUrl) ??
+  clockOutTestFromUrl(entryUrl) ??
   presentationTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
@@ -680,6 +684,10 @@ function updateTitle() {
   if (linkedRunTest?.seed.startsWith('PRESENTATION-')) {
     $('play').textContent = 'Preview ending';
     $('title-hint').textContent = 'Ending preview. Your save and discoveries stay untouched.';
+  }
+  if (linkedRunTest?.seed.startsWith('CLOCK-OUT-')) {
+    $('play').textContent = 'Preview Clock Out';
+    $('title-hint').textContent = 'Overtime finale preview. Your progress stays untouched.';
   }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
@@ -1023,6 +1031,7 @@ function startRunTest(save: Checkpoint) {
   activeDaily = null;
   dailyResult = null;
   game.startTest(save);
+  prepareClockOutTest(game);
   finishPresentationTest(game);
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
@@ -1056,7 +1065,7 @@ function menu() {
   game.setMode('title');
 }
 function backFromPractice() {
-  if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
+  if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
   else if (game.mode === 'paused') showDialog('pause');
   else resume();
 }
@@ -1100,7 +1109,7 @@ function saveRunBlueprint(run: RunRecap) {
   showDialog('blueprints');
 }
 function backFromHistory() {
-  if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
+  if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
   else resume();
 }
 function backFromLogbook() {
@@ -1114,7 +1123,8 @@ function backFromLogbook() {
   if (game.mode === 'paused') {
     showDialog('pause');
     $('back').focus();
-  } else if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
+  } else if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active))
+    showDialog('result');
   else {
     resume();
     if (game.mode === 'title') $('logbook').focus();
@@ -1186,6 +1196,8 @@ game.onDeath = (origin) => {
     deathReplay.reset();
   }
 };
+let savingClockOut: Game['clockOut'] | null = null;
+$('skip-clock-out').onclick = () => game.skipClockOut();
 game.onChange = () => {
   if (game.mode === 'playing' || game.mode === 'title') reportDraft = undefined;
   updateLogbook();
@@ -1195,6 +1207,20 @@ game.onChange = () => {
   }
   captureFinishedRun();
   capturePracticeResult();
+  const finale = game.clockOut;
+  document.body.dataset.clockOut = String(finale.active);
+  $('clock-out-controls').hidden = !finale.active;
+  if (finale.active && savingClockOut !== finale) {
+    savingClockOut = finale;
+    clearInput();
+    closeDialog();
+    $('skip-clock-out').focus();
+    // History, lore, reward and checkpoint removal are already queued. Start
+    // the presentation only after the existing atomic profile writer settles.
+    void progress.settled().then(() => {
+      if (game.clockOut === finale) game.readyClockOut();
+    });
+  }
   $('history').hidden = runHistory.length === 0;
   updateMusic();
   if (game.mode !== 'playing') controller.stopRumble();
@@ -1230,7 +1256,7 @@ game.onChange = () => {
   updateFirstSession();
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'reforge') showDialog('reforge');
-  if (game.mode === 'dead' || game.mode === 'won') showDialog('result');
+  if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
 };
 function modMark(mod: Mod) {
   const paths: Record<string, string> = {
@@ -1941,7 +1967,7 @@ function showDialog(kind: string) {
       ' <span>·</span> ' +
       game.kills +
       ' kills</p>' +
-      (game.testRun?.seed.startsWith('PRESENTATION-')
+      (game.testRun?.seed.startsWith('PRESENTATION-') || game.testRun?.seed.startsWith('CLOCK-OUT-')
         ? '<p class="presentation-note">Preview · progress is not saved.</p>'
         : '') +
       (win
@@ -1969,6 +1995,26 @@ function showDialog(kind: string) {
       (activeDaily
         ? '<div id="share-fallback" class="share-fallback" hidden><label for="challenge-link">Copy this link</label><input id="challenge-link" class="share-link" readonly spellcheck="false" /></div><span id="share-status" class="sr-only" role="status"></span>'
         : '');
+    if (win && game.overtime && !game.shutdown.complete) {
+      content
+        .querySelector('.actions')!
+        .insertAdjacentHTML(
+          'beforebegin',
+          '<div class="clock-out-reward"><div><canvas id="final-gun" width="360" height="160" role="img" aria-label="Your final gun"></canvas><span>Your final gun</span></div>' +
+            '<div><canvas id="night-shift" width="200" height="160" role="img" aria-label="Night Shift outfit"></canvas><span>Night Shift</span><small>' +
+            (game.testRun
+              ? 'Outfit preview'
+              : runCommendations.includes('after-hours')
+                ? 'Outfit unlocked'
+                : 'Outfit in your Logbook') +
+            '</small></div></div>',
+        );
+      drawClockOutReward(
+        $<HTMLCanvasElement>('final-gun'),
+        $<HTMLCanvasElement>('night-shift'),
+        game,
+      );
+    }
     if (runCommendations.length) {
       content.querySelector('.actions')!.insertAdjacentHTML(
         'beforebegin',
@@ -2335,6 +2381,10 @@ function pollController(now: number) {
   }
   if (sample.activity) useInputDevice('controller');
   if (inputDevice !== 'controller') return null;
+  if (game.clockOut.active) {
+    if (sample.confirm || sample.back || sample.pause) game.skipClockOut();
+    return null;
+  }
   if (sample.pause) {
     if (bindingEditor?.cancel()) return null;
     if (!modal.open || dialogKind === 'pause') pause();
@@ -2500,6 +2550,13 @@ window.addEventListener('keydown', (e) => {
   )
     e.preventDefault();
   if (e.repeat) return;
+  if (game.clockOut.active) {
+    if (['Escape', 'Enter', 'Space'].includes(e.code)) {
+      e.preventDefault();
+      game.skipClockOut();
+    }
+    return;
+  }
   // Let native buttons, checkboxes, sliders and scrolling keep their menu keys,
   // even when those physical keys have also been assigned to gameplay actions.
   if (
@@ -2687,6 +2744,7 @@ function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   const pad = pollController(now);
+  game.updateClockOut(dt, pageActive && document.hasFocus() && !document.hidden);
   if (game.mode === 'playing') {
     accumulator += dt;
     input.left = held(bindings, 'left', keys) || touch.left;

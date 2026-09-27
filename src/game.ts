@@ -46,6 +46,7 @@ import { getRouteLevel, reinforceRoute } from './route-layouts.ts';
 import { getOvertimeLevel, overtimeHealth, overtimeSeed } from './overtime.ts';
 import { createSorter, updateReclamationEnemy } from './reclamation.ts';
 import type { SorterRig } from './reclamation.ts';
+import { ClockOut, CLOCK_OUT_ENTRY } from './clock-out.ts';
 import Matter from 'matter-js';
 import { AuditorSystem, type AuditorRig } from './auditor.ts';
 import { auditorTestLevel } from './auditor-layout.ts';
@@ -352,6 +353,7 @@ export class Game {
   salvage = new BossSalvageSystem(this);
   salvageEvolutions = new SalvageEvolutionSystem(this);
   earnedSalvage: string | null = null;
+  clockOut = new ClockOut();
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   overtimeLift: Matter.Body | null = null;
@@ -546,6 +548,7 @@ export class Game {
     this.loadRoom();
   }
   setMode(mode: Mode) {
+    if (mode === 'title') this.clockOut = new ClockOut();
     if (mode === 'paused' && this.auditor.enemy) this.save();
     if (mode !== 'playing') {
       this.stasis.held = false;
@@ -790,6 +793,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.clockOut = new ClockOut();
     this.switchboard.clear();
     this.annex.clear();
     this.spoof.clear();
@@ -944,15 +948,21 @@ export class Game {
     wall(this.worldWidth / 2, this.worldTop - 40, this.worldWidth, 80);
     for (const solid of this.level.solids)
       wall(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h);
-    this.player = Bodies.rectangle(140, 680, 26, 36, {
-      inertia: Infinity,
-      friction: 0,
-      frictionAir: 0.008,
-      restitution: 0,
-      chamfer: { radius: 4 },
-      label: 'player',
-      collisionFilter: { mask: 0x7fff },
-    });
+    this.player = Bodies.rectangle(
+      escapeRoom && this.overtime ? CLOCK_OUT_ENTRY.x : 140,
+      CLOCK_OUT_ENTRY.y,
+      26,
+      36,
+      {
+        inertia: Infinity,
+        friction: 0,
+        frictionAir: 0.008,
+        restitution: 0,
+        chamfer: { radius: 4 },
+        label: 'player',
+        collisionFilter: { mask: 0x7fff },
+      },
+    );
     Composite.add(this.engine.world, this.player);
     this.counterweights.reset();
     if (clearedRoom) {
@@ -1070,6 +1080,7 @@ export class Game {
     if (!escape) return;
     const before = escape.time;
     escape.time += dt;
+    if (this.overtime) return;
     if (Math.floor(before / 2.8) !== Math.floor(escape.time / 2.8)) {
       this.feedback(1.6);
       this.onSound('collapse');
@@ -1127,7 +1138,23 @@ export class Game {
     Body.setPosition(p, { x: lift.x, y: lift.y - 18 });
     this.grounded = true;
     this.onSound('extract');
+    if (this.overtime && this.escape.destination !== 'overtime') {
+      this.clockOut.begin();
+      this.commendations.extracted();
+      if (!this.testRun) this.onCheckpoint(null);
+      this.setMode('won');
+      return;
+    }
     this.onChange();
+  }
+  readyClockOut() {
+    if (this.clockOut.release()) this.onChange();
+  }
+  skipClockOut() {
+    if (this.clockOut.skip()) this.onChange();
+  }
+  updateClockOut(dt: number, foreground: boolean) {
+    if (this.clockOut.update(dt, foreground)) this.onChange();
   }
   updateExtraction(dt: number) {
     if (!this.escape || !this.extractionLift) return;

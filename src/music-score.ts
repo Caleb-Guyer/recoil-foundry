@@ -3,7 +3,7 @@ import type { AreaId } from './areas.ts';
 import { isBoss } from './enemies.ts';
 import { annexMusicNotes } from './annex-score.ts';
 
-export type MusicTheme = AreaId | 'annex';
+export type MusicTheme = AreaId | 'annex' | 'clock-out';
 
 export interface MusicScene {
   area: AreaId;
@@ -14,6 +14,7 @@ export interface MusicScene {
   boss: boolean;
   clear: boolean;
   bossPhase?: number;
+  outro?: boolean;
 }
 
 export interface MusicNote {
@@ -24,6 +25,7 @@ export interface MusicNote {
 }
 
 export const MUSIC_PROFILES: Record<MusicTheme, { bpm: number }> = {
+  'clock-out': { bpm: 80 },
   docks: { bpm: 88 },
   furnace: { bpm: 104 },
   cooling: { bpm: 98 },
@@ -35,6 +37,18 @@ export const MUSIC_PROFILES: Record<MusicTheme, { bpm: number }> = {
 const unit = (value: number) => (Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0);
 
 export function musicScene(game: Game): MusicScene {
+  if (game.overtime && game.stage === 19 && game.clear) {
+    return {
+      area: 'rooftops',
+      theme: 'clock-out',
+      room: game.seed + (game.clockOut.active ? ':clock-out:ride' : ':clock-out:walk'),
+      mode: game.mode,
+      intensity: 0,
+      boss: false,
+      clear: true,
+      outro: game.clockOut.active && game.clockOut.ready,
+    };
+  }
   if (game.escape) {
     const departing = game.escape.phase === 'extracting';
     return {
@@ -200,6 +214,7 @@ export function musicNotes(
   bossPhase = 0,
 ): MusicNote[] {
   if (!Number.isFinite(step)) return [];
+  if (area === 'clock-out') return clockOutNotes(step);
   if (area === 'annex') return annexMusicNotes(step, unit(intensity), boss, clear, bossPhase);
   const position = ((Math.floor(step) % 64) + 64) % 64;
   const bar = Math.floor(position / 16);
@@ -264,5 +279,24 @@ export function musicNotes(
   }
   const motif = phrase.motif.find(([at]) => at === position);
   if (motif) add('pluck', 0.19 + pressure * 0.04, motif[2], motif[1]);
+  return notes;
+}
+
+// Four bars at 80 BPM: twelve seconds. The last chord resolves to D major.
+function clockOutNotes(step: number): MusicNote[] {
+  const p = ((Math.floor(step) % 64) + 64) % 64;
+  const chords = [
+    [62, 65, 69],
+    [58, 62, 65],
+    [60, 64, 67],
+    [62, 66, 69],
+  ];
+  const notes: MusicNote[] = [];
+  if (p % 16 === 0)
+    for (const midi of chords[Math.floor(p / 16)])
+      notes.push({ part: 'pad', midi, velocity: 0.15, duration: 3.8 });
+  const melody: Record<number, number> = { 4: 81, 12: 77, 20: 74, 28: 77, 36: 76, 44: 72, 48: 74 };
+  if (melody[p])
+    notes.push({ part: 'pluck', midi: melody[p], velocity: 0.17, duration: p === 48 ? 3 : 1.2 });
   return notes;
 }

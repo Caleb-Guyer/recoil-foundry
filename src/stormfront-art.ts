@@ -5,7 +5,8 @@ export function drawStormRain(c: CanvasRenderingContext2D, g: Game, reduced = fa
   if (!g.level.overtimeRooftops || reduced) return;
   c.save();
   c.strokeStyle = '#afc3c6';
-  c.globalAlpha = 0.09;
+  c.globalAlpha =
+    0.09 * (g.stage === 19 && g.clear ? Math.max(0, 1 - (g.time - g.clearAt) / 3) : 1);
   c.lineWidth = 1;
   c.beginPath();
   for (let i = 0; i < 68; i++) {

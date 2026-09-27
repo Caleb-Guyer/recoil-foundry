@@ -185,6 +185,22 @@ function fixture() {
   return { context, music, destination };
 }
 
+test('Clock Out can play during its won presentation, then stops on skip, focus loss or mute', () => {
+  for (const stop of ['result', 'hidden', 'muted'] as const) {
+    const { music, context } = fixture();
+    const outro = scene({ theme: 'clock-out', mode: 'won', outro: true, clear: true });
+    music.update(outro);
+    assert(music.running);
+    assert(music.voiceCount > 0);
+    context.advance(0.2);
+    music.update({ ...outro, outro: stop !== 'result' }, stop !== 'muted', stop !== 'hidden');
+    assert(!music.running);
+    assert.equal(music.targetGain, 0);
+    context.advance(0.1);
+    assert.equal(music.voiceCount, 0);
+  }
+});
+
 function installContext(t: { after(fn: () => void): void }, value: unknown = AudioContextMock) {
   const original = Object.getOwnPropertyDescriptor(globalThis, 'AudioContext');
   Object.defineProperty(globalThis, 'AudioContext', { configurable: true, value });

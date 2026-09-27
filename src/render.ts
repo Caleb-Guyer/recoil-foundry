@@ -1,3 +1,4 @@
+import { drawClockOut } from './clock-out-art.ts';
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
 import { drawAuditor, drawAuditDoor, drawCompanyCase } from './auditor-art.ts';
@@ -126,7 +127,18 @@ export class Renderer {
     return { x: x / this.scale + this.camera.x, y: y / this.scale + this.camera.y };
   }
   reset() {
-    this.camera = { x: 0, y: Math.max(0, WORLD.floor - this.height / this.scale + 90) };
+    const viewW = this.width / this.scale;
+    this.camera = {
+      x:
+        this.game.escape && this.game.overtime
+          ? clamp(
+              this.game.player.position.x - viewW * 0.42,
+              0,
+              Math.max(0, this.game.worldWidth - viewW),
+            )
+          : 0,
+      y: Math.max(0, WORLD.floor - this.height / this.scale + 90),
+    };
   }
   line(a: Vec, b: Vec, color: string, width = 1) {
     const c = this.ctx;
@@ -159,6 +171,10 @@ export class Renderer {
     const threats = g.shots.filter((shot) => !shot.friendly && !shot.allied && shot.life > 0);
     const ratio = this.canvas.width / this.width;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
+    if (g.clockOut.active) {
+      drawClockOut(c, g, this.width, this.height, this.reduced);
+      return;
+    }
     const viewW = this.width / this.scale,
       viewH = this.height / this.scale;
     const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
@@ -898,10 +914,11 @@ export class Renderer {
   drawEscapeScenery(width: number, height: number) {
     const c = this.ctx,
       escape = this.game.escape!,
-      dark = clamp(escape.time / 24, 0, 1);
+      calm = !!this.game.overtime,
+      dark = calm ? 0 : clamp(escape.time / 24, 0, 1);
     const sky = c.createLinearGradient(0, 0, 0, height);
-    sky.addColorStop(0, '#111b23');
-    sky.addColorStop(1, '#303739');
+    sky.addColorStop(0, calm ? '#283e4c' : '#111b23');
+    sky.addColorStop(1, calm ? '#788780' : '#303739');
     c.fillStyle = sky;
     c.fillRect(0, 0, width, height);
     for (const layer of [0, 1]) {
@@ -920,9 +937,11 @@ export class Renderer {
         if (layer === 1) {
           for (const rail of [x + 29, x + w - 29])
             this.line({ x: rail, y: top + 25 }, { x: rail, y: height }, '#2e3e43', 3);
-          const failure = this.reduced
-            ? 0.6
-            : clamp((escape.time - 3 - Math.abs((i * 7) % 16)) / 1.2, 0, 1);
+          const failure = calm
+            ? 0
+            : this.reduced
+              ? 0.6
+              : clamp((escape.time - 3 - Math.abs((i * 7) % 16)) / 1.2, 0, 1);
           c.globalAlpha = 0.6 - failure * 0.48;
           c.fillStyle = '#bd9c6e';
           c.fillRect(x + w / 2 - 9, top + 28, 18, 3);
@@ -932,7 +951,7 @@ export class Renderer {
     }
     c.fillStyle = `rgba(9,17,23,${0.08 + dark * 0.2})`;
     c.fillRect(0, 0, width, height);
-    if (!this.reduced) {
+    if (!this.reduced && !calm) {
       const spacing = 370,
         offset = this.camera.x * 0.45,
         first = Math.floor(offset / spacing) - 1;
@@ -945,7 +964,7 @@ export class Renderer {
   }
   drawEscapeDirections() {
     const g = this.game;
-    for (let x = 520; x < EXTRACTION.x - 220; x += 880) {
+    for (let x = g.overtime ? 6560 : 520; x < EXTRACTION.x - 220; x += g.overtime ? 170 : 880) {
       if (x < this.camera.x - 30 || x > this.camera.x + this.width / this.scale + 30) continue;
       const surface = g.lineEnd({ x, y: 300 }, { x, y: WORLD.floor });
       const y = surface.y - 10;

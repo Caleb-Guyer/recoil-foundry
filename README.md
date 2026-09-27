@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Stormfront — version 3.5.0.** Overtime Rooftops has five authored layouts with fixed, warned lightning lanes, sheltered maintenance routes and a storm-lit Interceptor finale. Lure enemies into a strike, then recoil away. New Overtime entries now include authored remixes across all five areas; existing saved laps retain their original rooms. [Release notes and five test links](docs/releases/3.5.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.5.0).
+**Clock Out — version 3.6.0.** Overtime now ends with a quiet departure, a skippable twelve-second elevator journey and a Night Shift outfit reveal alongside your final gun. [Release notes and test links](docs/releases/3.6.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.6.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 

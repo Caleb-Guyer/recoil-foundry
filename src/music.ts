@@ -122,7 +122,7 @@ export class Music {
       !enabled ||
       !active ||
       this.context.state !== 'running' ||
-      !['playing', 'upgrade'].includes(scene.mode)
+      (!['playing', 'upgrade'].includes(scene.mode) && !(scene.mode === 'won' && scene.outro))
     ) {
       if (this.running || this.targetGain) this.stop();
       this.lastTime = now;

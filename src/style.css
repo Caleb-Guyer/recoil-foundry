@@ -1899,3 +1899,66 @@ dialog.workshop-dialog {
     justify-content: center;
   }
 }
+
+/* The ending has one control, outside the combat HUD. */
+#clock-out-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#clock-out-controls[hidden] {
+  display: none;
+}
+#skip-clock-out {
+  position: absolute;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  pointer-events: auto;
+  color: #c4d1c7;
+  background: #152025;
+  border: 1px solid #455957;
+  padding: 12px 22px;
+}
+body[data-clock-out='true'] .hud,
+body[data-clock-out='true'] .touch-controls {
+  visibility: hidden;
+}
+.clock-out-reward {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 12px;
+  margin: 24px 0;
+  border-block: 1px solid #384845;
+  padding: 16px 0;
+}
+.clock-out-reward > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+.clock-out-reward canvas {
+  width: auto;
+  max-width: 100%;
+  height: 100px;
+  object-fit: contain;
+}
+.clock-out-reward span {
+  font-size: 14px;
+  color: #e5e9db;
+}
+.clock-out-reward small {
+  font-size: 11px;
+  color: #9badab;
+  margin-top: 6px;
+}
+@media (max-height: 650px) {
+  .clock-out-reward {
+    margin: 14px 0;
+    padding: 8px 0;
+  }
+  .clock-out-reward canvas {
+    height: 66px;
+  }
+}
