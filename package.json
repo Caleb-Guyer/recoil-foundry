@@ -1,6 +1,6 @@
 {
   "name": "recoil-foundry",
-  "version": "3.9.1",
+  "version": "3.10.0",
   "private": true,
   "type": "module",
   "description": "One gun. Twenty stages. A physics roguelike with varied obstacle layouts and recoil movement.",

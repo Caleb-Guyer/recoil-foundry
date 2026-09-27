@@ -1,8 +1,13 @@
 import type { Game } from './game.ts';
 import { DETOUR_DOOR } from './detours.ts';
+import { drawMaintenanceHatch } from './maintenance-art.ts';
 
 export function drawDetourDoor(c: CanvasRenderingContext2D, g: Game) {
   if (!g.canBranch || g.canChooseRoute || g.regionChoices.length) return;
+  if (g.maintenance.scheduled) {
+    drawMaintenanceHatch(c, g);
+    return;
+  }
   const { x, floor } = DETOUR_DOOR;
   const color = g.clear ? '#e5b577' : '#73644f';
   c.save();

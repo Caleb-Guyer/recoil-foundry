@@ -26,6 +26,9 @@ const overlap = (
 function entrance(seed = 'detour-test', stage = 2) {
   const g = new Game();
   g.start(seed);
+  // These fixtures exercise the original combat challenges. Shafts have their
+  // own ordinary-input traversal tests and are scheduled independently.
+  g.maintenance.state = null;
   // Traverse directly to the detour; event combat is covered separately.
   g.areaEvents.state = null;
   while (g.stage < stage) {

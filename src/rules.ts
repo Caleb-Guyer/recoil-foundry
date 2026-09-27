@@ -1,4 +1,5 @@
 import { validAreaEvent } from './area-events.ts';
+import { validMaintenance } from './maintenance.ts';
 import { validReforge } from './reforge-rules.ts';
 import { validShutdown } from './shutdown-layout.ts';
 import { validStory } from './story-layout.ts';
@@ -1076,6 +1077,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  maintenance?: import('./maintenance.ts').MaintenanceSave;
   welder?: WelderSave;
   // Isolated development preset; never written by Game.save().
   annex?: import('./annex-layout.ts').AnnexPreview;
@@ -1394,6 +1396,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     !validShutdown(d) ||
     !validAuditor(d) ||
     !validWelder(d) ||
+    !validMaintenance(d) ||
     (d.cleanBoss !== undefined && typeof d.cleanBoss !== 'boolean') ||
     (d.fabricators !== undefined && d.fabricators !== true)
   )

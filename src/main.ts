@@ -1,4 +1,6 @@
 import { welderTestFromUrl } from './welder-test.ts';
+import { maintenanceTestFromUrl } from './maintenance-test.ts';
+import { SHAFT_NAMES } from './maintenance.ts';
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { overtimeBalanceTestFromUrl } from './overtime-balance.ts';
 import { creditsMarkup } from './credits.ts';
@@ -414,6 +416,7 @@ let linkedRunTest =
   harpoonerTestFromUrl(entryUrl) ??
   fusionTestFromUrl(entryUrl) ??
   welderTestFromUrl(entryUrl) ??
+  maintenanceTestFromUrl(entryUrl) ??
   overtimeTestFromUrl(entryUrl) ??
   overtimeDocksTestFromUrl(entryUrl) ??
   overtimeFurnaceTestFromUrl(entryUrl) ??
@@ -696,6 +699,10 @@ function updateTitle() {
   if (linkedRunTest?.welder) {
     $('play').innerHTML = 'Test The Welder <span aria-hidden="true">↗</span>';
     $('title-hint').textContent = 'An Overtime encounter. R to retry.';
+  }
+  if (linkedRunTest?.maintenance) {
+    $('play').textContent = 'Test ' + SHAFT_NAMES[linkedRunTest.maintenance.kind];
+    $('title-hint').textContent = 'Reach the top. R to retry. Your progress stays untouched.';
   }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
@@ -1253,7 +1260,9 @@ game.onChange = () => {
         (game.escape
           ? 'ESCAPE'
           : game.detour
-            ? 'CHALLENGE'
+            ? game.maintenance.active
+              ? 'MAINTENANCE'
+              : 'CHALLENGE'
             : String(game.stage + 1).padStart(2, '0') + ' / ' + String(STAGES).padStart(2, '0'));
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
@@ -1781,7 +1790,9 @@ function showDialog(kind: string) {
             : game.detour
               ? 'BONUS UPGRADE · NO HEALING'
               : game.enteringDetour
-                ? 'ROOM CLEAR · CHALLENGE NEXT'
+                ? game.maintenance.scheduled
+                  ? 'ROOM CLEAR · MAINTENANCE NEXT'
+                  : 'ROOM CLEAR · CHALLENGE NEXT'
                 : 'ROOM CLEAR') +
       '</p><h2 id="dialog-title">' +
       (game.welderReward
@@ -1974,7 +1985,9 @@ function showDialog(kind: string) {
             ' ROOMS' +
             (game.detours.length ? ' · ' + game.detours.length + ' CHALLENGES' : '')
           : game.detour
-            ? 'CHALLENGE'
+            ? game.maintenance.active
+              ? 'MAINTENANCE'
+              : 'CHALLENGE'
             : (game.overtime ? 'OVERTIME · ' : '') +
               'ROOM ' +
               String(game.stage + 1).padStart(2, '0')) +
@@ -2129,7 +2142,9 @@ function showDialog(kind: string) {
                 ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
                 : 'Reach the Exit lift to finish your run.'
               : game.detour
-                ? 'Survive for an extra upgrade, without a health refill.'
+                ? game.maintenance.active
+                  ? 'Reach the top for an extra upgrade, without a health refill.'
+                  : 'Survive for an extra upgrade, without a health refill.'
                 : game.overtime
                   ? 'Second lap. Clear all twenty rooms, then extract.'
                   : game.canDetour

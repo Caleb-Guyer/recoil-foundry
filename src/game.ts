@@ -77,6 +77,7 @@ import { HarpoonSystem, createHarpooner } from './harpooner.ts';
 import type { HarpoonRig } from './harpooner.ts';
 import type { RecallFlight } from './ballistics.ts';
 import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
+import { MaintenanceSystem, maintenanceLevel, planMaintenance, SHAFT_TOP } from './maintenance.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
 import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
 import type { ShellPayload } from './demolition.ts';
@@ -368,7 +369,7 @@ export class Game {
     return this.escape ? ESCAPE_WIDTH : WORLD.width;
   }
   get worldTop() {
-    return this.level?.freight ? FREIGHT.top : 0;
+    return this.level?.maintenance ? SHAFT_TOP : this.level?.freight ? FREIGHT.top : 0;
   }
   get terrainBodies() {
     return [
@@ -406,6 +407,7 @@ export class Game {
   missedUpgrades = 0;
   testRun: Checkpoint | null = null;
   detour = false;
+  maintenance = new MaintenanceSystem(this);
   detours: number[] = [];
   enteringDetour = false;
   route: RouteChoice | null = null;
@@ -671,6 +673,14 @@ export class Game {
     this.missedUpgrades = save?.missedUpgrades ?? 0;
     this.detour = !practice && save?.detour === true;
     this.detours = !practice ? [...(save?.detours ?? [])] : [];
+    this.maintenance.state =
+      practice || workshop
+        ? null
+        : save
+          ? save.maintenance
+            ? { ...save.maintenance }
+            : null
+          : planMaintenance(this.seed);
     this.region =
       save?.region ??
       dailyRegion(this.seed) ??
@@ -767,6 +777,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.maintenance.state ? { maintenance: { ...this.maintenance.state } } : {}),
       ...(this.welder.state ? { welder: structuredClone(this.welder.state) } : {}),
       ...(this.auditor.state ? { auditor: structuredClone(this.auditor.state) } : {}),
       ...(this.level.boss && !this.escape ? { cleanBoss: this.commendations.cleanBoss } : {}),
@@ -916,7 +927,9 @@ export class Game {
             spawns: [],
           }
         : this.detour
-          ? getDetour(this.seed, this.stage)
+          ? this.maintenance.scheduled
+            ? maintenanceLevel(this.maintenance.state!.kind)
+            : getDetour(this.seed, this.stage)
           : this.overtime
             ? getOvertimeLevel(this.seed, this.stage, this.overtime.remix, this.route)
             : getLevel(
@@ -1045,6 +1058,7 @@ export class Game {
     this.shutdown.reset();
     this.auditor.reset();
     this.annex.reset();
+    this.maintenance.reset(clearedRoom);
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active || this.shutdown.chamber) return;
@@ -1346,6 +1360,7 @@ export class Game {
     this.updateEscape(dt);
     this.freight.beforeStep(dt);
     this.crossing.beginStep(dt);
+    this.maintenance.beforeStep();
     this.hazards.beforeStep(dt);
     this.demolition.update();
     if (this.mode !== 'playing') return;
@@ -1557,6 +1572,7 @@ export class Game {
       !this.waves.pending &&
       !this.auditor.pending &&
       !this.clear &&
+      (!this.maintenance.active || this.maintenance.atExit) &&
       (!this.freight.active || this.freight.arrived)
     ) {
       this.clear = true;
@@ -1581,6 +1597,11 @@ export class Game {
     this.shutdown.update(dt);
     if (this.shutdown.chamber || this.mode !== 'playing') return;
     this.extendDetourSteps();
+    if (this.maintenance.active) {
+      if (this.clear && this.time - this.clearAt > 0.4 && this.maintenance.atExit)
+        this.openReward();
+      return;
+    }
     if (
       this.clear &&
       this.canBranch &&

@@ -92,6 +92,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  maintenance?: import('./maintenance.ts').MaintenanceKind;
   overtimeDocks?: true;
   overtimeFurnace?: true;
   overtimeCooling?: true;

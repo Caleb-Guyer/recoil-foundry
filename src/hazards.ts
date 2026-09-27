@@ -22,6 +22,7 @@ export interface Hazard {
   visible: boolean;
   hits: Set<number>;
   permanent?: boolean;
+  automatic?: boolean;
 }
 
 // Read actual hulls: Matter's cached bounds can include velocity padding.
@@ -176,8 +177,10 @@ export class HazardSystem {
   updateCrusher(h: Hazard, dt: number) {
     const g = this.game,
       p = h.placement;
+    const nearby = !g.maintenance.active || Math.abs(g.player.position.y - p.y) < 430;
     const top = h.body.position.y - p.h / 2;
     if (h.state === 'idle') {
+      if (h.automatic) return;
       const player = hull(g.player);
       if (
         Math.abs(g.player.position.x - p.x) < p.w / 2 + 72 &&
@@ -193,7 +196,7 @@ export class HazardSystem {
       h.timer = Math.max(0, h.timer - dt);
       if (h.timer <= 0) {
         h.state = 'falling';
-        g.onSound('press');
+        if (nearby) g.onSound('press');
       }
     } else if (h.state === 'falling') {
       let next = Math.min(p.y + p.travel, top + CRUSHER_SPEED * dt);
@@ -210,9 +213,11 @@ export class HazardSystem {
       if (next >= p.y + p.travel - 0.1 || next < top + CRUSHER_SPEED * dt - 0.1) {
         h.state = 'rest';
         h.timer = CRUSHER_REST;
-        g.feedback(5);
-        g.burst({ x: p.x, y: next + p.h }, 16, '#bfa185', 3.5);
-        g.onSound('slam');
+        if (nearby) {
+          g.feedback(5);
+          g.burst({ x: p.x, y: next + p.h }, 16, '#bfa185', 3.5);
+          g.onSound('slam');
+        }
       }
     } else if (h.state === 'rest') {
       h.timer = Math.max(0, h.timer - dt);

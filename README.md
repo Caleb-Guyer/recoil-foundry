@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Hot Work — version 3.9.1.** Break both of The Welder’s barricades in one deployment and defeat it to earn the Forgehand outfit, Kiln gun finish and a new maintenance record. [Release notes and preview](docs/releases/3.9.1.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.9.1).
+**Maintenance Shafts — version 3.10.0.** Find a service hatch, climb alternating presses or broken elevator platforms, and claim an extra upgrade at the summit. Rare, optional routes built for recoil movement. [Release notes and test links](docs/releases/3.10.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.10.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 

@@ -38,6 +38,7 @@ import { drawRivalShot } from './interceptor-effects.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
+import { drawMaintenanceDetails, drawMaintenanceScenery } from './maintenance-art.ts';
 import { drawRouteExits, drawRegionExits } from './route-art.ts';
 import { drawCracks } from './destruction-art.ts';
 import { drawCrane } from './crane-art.ts';
@@ -200,7 +201,9 @@ export class Renderer {
     }
     c.save();
     c.scale(this.scale, this.scale);
-    if (g.annex.active && g.mode !== 'title') drawAnnexScenery(c, this.camera, viewW, viewH);
+    if (g.maintenance.active && g.mode !== 'title')
+      drawMaintenanceScenery(c, this.camera, viewW, viewH);
+    else if (g.annex.active && g.mode !== 'title') drawAnnexScenery(c, this.camera, viewW, viewH);
     else if (g.level.freight && g.mode !== 'title')
       drawFreightScenery(c, this.camera, viewW, viewH);
     else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
@@ -257,6 +260,7 @@ export class Renderer {
       drawRegionExits(c, g);
     }
     this.drawHazards();
+    drawMaintenanceDetails(c, g);
     drawFreightLift(c, g);
     drawCrossing(c, g, this.reduced);
     drawCounterweights(c, g);
@@ -853,6 +857,7 @@ export class Renderer {
       }
       if (
         g.clear &&
+        !g.maintenance.active &&
         !g.shutdown.chamber &&
         (g.escape ? EXTRACTION.x : 1870) > this.camera.x + viewW - 80
       ) {
@@ -1599,8 +1604,12 @@ export class Renderer {
     }
     const c = this.ctx,
       g = this.game,
-      x = 1930,
-      y = g.level.freight ? FREIGHT.dock : WORLD.floor;
+      x = g.maintenance.active ? g.maintenance.exit.x : 1930,
+      y = g.maintenance.active
+        ? g.maintenance.exit.floor
+        : g.level.freight
+          ? FREIGHT.dock
+          : WORLD.floor;
     c.fillStyle = g.clear ? '#213832' : '#1b2326';
     c.fillRect(x - 36, y - 111, 72, 111);
     c.fillStyle = g.clear ? '#9bd9c2' : '#414e51';
