@@ -92,6 +92,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  sortingPit?: import('./sorting-pit-layout.ts').SortingLayout;
   maintenance?: import('./maintenance.ts').MaintenanceKind;
   maintenanceTiming?: number[];
   overtimeDocks?: true;

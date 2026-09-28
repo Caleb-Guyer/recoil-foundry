@@ -2,6 +2,7 @@ import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { MutationSystem, type MutationKind, type MutationRig } from './mutations.ts';
 import { CourierSystem } from './courier.ts';
 import { FloodgateSystem, type FloodValve } from './floodgate.ts';
+import { SortingPitSystem } from './sorting-pit.ts';
 import { ReforgeSystem } from './reforge.ts';
 import { ShutdownSystem } from './shutdown.ts';
 import { StorySystem } from './story-rooms.ts';
@@ -320,6 +321,7 @@ export class Game {
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
   floodgate = new FloodgateSystem(this);
+  sortingPit = new SortingPitSystem(this);
   reforge = new ReforgeSystem(this);
   story = new StorySystem(this);
   shutdown = new ShutdownSystem(this);
@@ -667,6 +669,7 @@ export class Game {
     this.story.start(save);
     this.shutdown.start(save);
     this.auditor.start(save);
+    this.sortingPit.start(save);
     this.welder.state = save?.welder ? structuredClone(save.welder) : null;
     this.fabricators.enabled = save ? save.fabricators === true : true;
     this.stage = save?.stage ?? 0;
@@ -787,6 +790,7 @@ export class Game {
       ...(this.fabricators.enabled ? { fabricators: true as const } : {}),
       ...(this.courier.state ? { courier: { ...this.courier.state } } : {}),
       ...(this.floodgate.stage !== null ? { floodgate: this.floodgate.stage } : {}),
+      ...(this.sortingPit.stage !== null ? { sortingPit: this.sortingPit.stage } : {}),
       ...(this.reforge.state ? { reforge: { ...this.reforge.state } } : {}),
       ...(this.shutdown.state ? { shutdown: structuredClone(this.shutdown.state) } : {}),
       ...(this.story.state ? { story: { ...this.story.state } } : {}),
@@ -833,6 +837,7 @@ export class Game {
     this.commendations.resetRoom();
     this.fabricators.clear();
     this.floodgate.clear();
+    this.sortingPit.clear();
     this.courier.clear();
     this.areaEvents.clear();
     this.mutations.clear();
@@ -976,6 +981,7 @@ export class Game {
     if (!escapeRoom && !this.inAnnex) this.level = this.courier.level(this.level);
     if (!escapeRoom && !this.inAnnex) this.level = this.floodgate.level(this.level);
     if (!escapeRoom && !this.inAnnex) this.level = this.story.level(this.level);
+    if (!escapeRoom && !this.inAnnex) this.level = this.sortingPit.level(this.level);
     if (!escapeRoom && !this.inAnnex) this.level = fabricatorLevel(this, this.level);
     this.level = this.shutdown.level(this.level);
     if (this.testRun?.auditor && !escapeRoom && !this.detour)
@@ -1060,6 +1066,7 @@ export class Game {
     this.mutations.reset(clearedRoom);
     this.courier.reset(clearedRoom);
     this.floodgate.reset(clearedRoom);
+    this.sortingPit.reset(clearedRoom);
     this.reforge.reset();
     this.story.reset();
     this.shutdown.reset();
@@ -1492,6 +1499,7 @@ export class Game {
     this.cargo.update(dt);
     this.conveyors.beforeStep();
     this.magnets.update();
+    this.sortingPit.update(dt);
     this.fusions.beforeStep(dt);
     this.harpoons.beforeStep(dt);
     this.tethers.beforeStep(dt);
@@ -1764,6 +1772,7 @@ export class Game {
     const valveOrigin = { x: this.player.position.x, y: this.player.position.y - 3 };
     if (this.pressure.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (this.floodgate.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
+    if (this.sortingPit.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (this.shutdown.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (distance(spawn, pos) > 0.01) {
       spawn.x -= d.x * 0.5;
@@ -2618,6 +2627,7 @@ export class Game {
           anchor?: Enemy;
           valve?: PressureVent;
           floodValve?: FloodValve;
+          sortingCoil?: true;
           disconnect?: true;
           annexJunction?: number;
           player?: boolean;
@@ -2690,6 +2700,10 @@ export class Game {
         if (disconnect && (!nearest || disconnect.t < nearest.t))
           nearest = { ...disconnect, disconnect: true };
         const floodValve = s.friendly ? this.floodgate.trace(s.pos, end, s.radius) : undefined;
+        const sortingCoil =
+          s.friendly && !s.allied ? this.sortingPit.trace(s.pos, end, s.radius) : null;
+        if (sortingCoil && (!nearest || sortingCoil.t < nearest.t))
+          nearest = { ...sortingCoil, sortingCoil: true };
         const annexJunction = s.friendly ? this.annex.trace(s.pos, end, s.radius) : null;
         if (annexJunction && (!nearest || annexJunction.t < nearest.t))
           nearest = { ...annexJunction, annexJunction: annexJunction.slot };
@@ -2812,6 +2826,11 @@ export class Game {
           if (this.mode !== 'playing') return;
         } else if (nearest.disconnect) {
           this.shutdown.trigger();
+          s.life = 0;
+          this.demolition.impact(s);
+          if (this.mode !== 'playing') return;
+        } else if (nearest.sortingCoil) {
+          this.sortingPit.trigger();
           s.life = 0;
           this.demolition.impact(s);
           if (this.mode !== 'playing') return;

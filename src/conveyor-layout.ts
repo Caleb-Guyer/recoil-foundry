@@ -20,6 +20,11 @@ export function conveyorPlacements(
   machinery: Solid[] = [],
   fixtures: Solid[] = [],
 ): Conveyor[] {
+  if (level.sortingPit === 'feed')
+    return [
+      { x: 640, y: 740, w: 290, speed: 1.3 },
+      { x: 1070, y: 740, w: 290, speed: -1.3 },
+    ];
   if (level.setpiece) return [];
   if (level.area === 'reclamation') return [];
   stage = formerStage(stage);

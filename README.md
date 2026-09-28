@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Maintenance Trials — version 3.12.0.** Clear a shaft to unlock fixed-gun climbs in Practice. Chase personal bests for time and shots, share the same layout with a friend, and earn Servicewear with clean climbs. The shafts retain 36 arrangements each. [Release notes and test links](docs/releases/3.12.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.12.0).
+**The Sorting Pit — version 3.13.0.** A rare Reclamation fight beneath a scrap magnet. Cover rises, warning shadows appear, and the load falls on anything underneath. Shoot the exposed coil to drop it early. Three layouts include sheltered decks, inward conveyors and a recessed sorting floor. [Release notes and test links](docs/releases/3.13.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.13.0).
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 

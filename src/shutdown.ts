@@ -85,6 +85,7 @@ export class ShutdownSystem {
       level.story ||
       level.courier ||
       level.floodgate ||
+      level.sortingPit ||
       level.fabricatorIntro
     )
       return [];

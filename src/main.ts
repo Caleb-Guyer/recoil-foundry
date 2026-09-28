@@ -18,6 +18,7 @@ import { presentationTestFromUrl, finishPresentationTest } from './presentation-
 import { courierTestFromUrl } from './courier-layout.ts';
 import { auditorTestFromUrl } from './auditor-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
+import { sortingPitTestFromUrl } from './sorting-pit-layout.ts';
 import { reforgeTestFromUrl } from './reforge-rules.ts';
 import { shutdownTestFromUrl } from './shutdown-layout.ts';
 import { STORY_ROOMS, storyTestFromUrl } from './story-layout.ts';
@@ -414,6 +415,7 @@ let linkedRunTest =
   fabricatorTestFromUrl(entryUrl) ??
   reforgeTestFromUrl(entryUrl) ??
   floodgateTestFromUrl(entryUrl) ??
+  sortingPitTestFromUrl(entryUrl) ??
   courierTestFromUrl(entryUrl) ??
   mutationTestFromUrl(entryUrl) ??
   eventTestFromUrl(entryUrl) ??
@@ -730,6 +732,10 @@ function updateTitle() {
   if (linkedRunTest?.maintenance) {
     $('play').textContent = 'Test ' + SHAFT_NAMES[linkedRunTest.maintenance.kind];
     $('title-hint').textContent = 'Reach the top. R to retry. Your progress stays untouched.';
+  }
+  if (linkedRunTest?.sortingPit !== undefined) {
+    $('play').textContent = 'Test the Sorting Pit';
+    $('title-hint').textContent = 'Reclamation. R to restart test. Progress is untouched.';
   }
   if (linkedTrial || invalidTrialLink) {
     $('daily').textContent = 'New run';

@@ -98,6 +98,7 @@ export class MutationSystem {
       g.level.freight ||
       g.level.courier ||
       g.level.floodgate ||
+      g.level.sortingPit ||
       g.level.story ||
       g.level.shutdown ||
       (g.testRun && !g.seed.startsWith('MUTATION-')) ||

@@ -21,6 +21,7 @@ export const auditorEligible = (level: Level) =>
     level.crossing ||
     level.courier ||
     level.floodgate ||
+    level.sortingPit ||
     level.story ||
     level.shutdown ||
     level.fabricatorIntro ||

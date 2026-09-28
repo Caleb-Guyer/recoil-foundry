@@ -1,5 +1,6 @@
 import { validAreaEvent } from './area-events.ts';
 import { validMaintenance } from './maintenance.ts';
+import { validSortingPit } from './sorting-pit-layout.ts';
 import { validReforge } from './reforge-rules.ts';
 import { validShutdown } from './shutdown-layout.ts';
 import { validStory } from './story-layout.ts';
@@ -1097,6 +1098,7 @@ export interface Checkpoint {
   reforge?: import('./reforge-rules.ts').ReforgeSave;
   reforgeRoom?: import('./reforge-rules.ts').ReforgeRoomSave;
   floodgate?: number;
+  sortingPit?: number;
   courier?: import('./courier-layout.ts').CourierSave;
   areaEvent?: import('./area-events.ts').AreaEventSave;
   version: 5 | 6;
@@ -1333,6 +1335,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
+    validSortingPit(d) &&
     (d.floodgate === undefined ||
       ([5, 6].includes(d.version) &&
         [8, 9].includes(d.floodgate) &&

@@ -38,6 +38,7 @@ export interface TorchSegment {
   anchor?: Enemy;
   valve?: PressureVent;
   floodValve?: FloodValve;
+  sortingCoil?: object;
   disconnect?: object;
   annexJunction?: number;
   ray?: number;
@@ -108,6 +109,7 @@ export function traceTorch(
       anchor = g.harpoons.trace(from, end, radius),
       valve = g.pressure.trace(from, end, radius),
       floodValve = g.floodgate.trace(from, end, radius),
+      sortingCoil = g.sortingPit.trace(from, end, radius),
       disconnect = g.shutdown.trace(from, end, radius),
       annexJunction = g.annex.trace(from, end, radius),
       portal = g.portals.trace(from, end, half);
@@ -117,6 +119,7 @@ export function traceTorch(
         anchor?.t ?? 1,
         valve?.t ?? 1,
         floodValve?.t ?? 1,
+        sortingCoil?.t ?? 1,
         disconnect?.t ?? 1,
         annexJunction?.t ?? 1,
       ),
@@ -159,6 +162,10 @@ export function traceTorch(
     }
     if (disconnect && disconnect.t <= t && (!hit || disconnect.t < hit.t)) {
       segment.disconnect = g.shutdown;
+      break;
+    }
+    if (sortingCoil && sortingCoil.t <= t && (!hit || sortingCoil.t < hit.t)) {
+      segment.sortingCoil = g.sortingPit;
       break;
     }
     if (floodValve && floodValve.t <= t && (!hit || floodValve.t < hit.t)) {
@@ -559,6 +566,7 @@ export class TorchSystem {
       const s = this.pulse!;
       if (segment.valve) g.pressure.trigger(segment.valve);
       if (segment.floodValve) g.floodgate.trigger(segment.floodValve);
+      if (segment.sortingCoil) g.sortingPit.trigger();
       if (segment.disconnect) g.shutdown.trigger();
       if (segment.annexJunction !== undefined) g.annex.interrupt(segment.annexJunction);
       s.pos = { ...segment.b };

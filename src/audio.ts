@@ -2,6 +2,7 @@ import { Music } from './music.ts';
 import type { MusicScene } from './music-score.ts';
 
 const ATTACK_WARNINGS = new Set([
+  'sorting-warn',
   'weld-warn',
   'aim-warn',
   'lock',
@@ -44,6 +45,7 @@ const ATTACK_WARNINGS = new Set([
 
 // Leave space for the whole cue, including delayed notes and long wind-ups.
 const WARNING_HOLD: Record<string, number> = {
+  'sorting-warn': 0.85,
   'weld-warn': 1.25,
   'audit-recall': 1.1,
   'audit-tell': 0.4,
@@ -366,6 +368,15 @@ export class Sound {
       this.crack(0.12, 0.09, 1600);
       this.tone(110, 55, 0.3, 0.08, 'triangle');
       this.tone(440, 880, 0.25, 0.045, 'sine', 0.12);
+    } else if (kind === 'sorting-lift') {
+      this.tone(55, 105, 1.3, 0.055, 'triangle');
+      this.tone(110, 210, 0.9, 0.025, 'sine');
+    } else if (kind === 'sorting-warn') {
+      this.tone(165, 82, 0.75, 0.08, 'triangle');
+      for (const delay of [0, 0.24, 0.48]) this.tone(660, 660, 0.1, 0.045, 'sine', delay);
+    } else if (kind === 'sorting-drop') {
+      this.crack(0.17, 0.085, 850);
+      this.tone(110, 42, 0.22, 0.08, 'triangle');
     } else if (kind === 'flood-warn') {
       this.tone(180, 110, 0.65, 0.09, 'triangle');
       this.tone(520, 520, 0.18, 0.045, 'sine', 0.1);

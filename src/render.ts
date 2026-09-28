@@ -5,6 +5,7 @@ import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutati
 import { drawCourier, drawCourierWorld } from './courier-art.ts';
 import { drawAuditor, drawAuditDoor, drawCompanyCase } from './auditor-art.ts';
 import { drawFloodgate, drawFloodwater } from './floodgate-art.ts';
+import { drawSortingPit } from './sorting-pit-art.ts';
 import { drawReforge } from './reforge-art.ts';
 import { drawShutdown, drawShutdownBackdrop } from './shutdown-art.ts';
 import { drawStoryBackdrop, drawStoryDetails } from './story-art.ts';
@@ -270,6 +271,7 @@ export class Renderer {
     drawCoolant(c, g, this.reduced);
     drawFloodgate(c, g, this.reduced);
     drawMagnets(c, g, this.reduced);
+    drawSortingPit(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
     drawCrosswind(c, g, this.reduced);
     drawStormfront(c, g, this.reduced);

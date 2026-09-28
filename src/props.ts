@@ -356,6 +356,10 @@ export class PropSystem {
     for (const prop of this.items) prop.flash = Math.max(0, prop.flash - dt);
     for (const { prop, other, speed, incomingSpeed } of this.impacts) {
       if (!this.items.includes(prop)) continue;
+      if (g.sortingPit.impact(prop, other, speed)) {
+        if (g.mode !== 'playing') return;
+        continue;
+      }
       if (this.game.cargo.impact(prop, other, speed)) {
         if (g.mode !== 'playing') return;
         continue;
