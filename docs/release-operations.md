@@ -1,5 +1,11 @@
 # Browser release operations
 
+## The Sorting Pit 3.13.0 — 27 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `238465e50cad46f51384e2a1d2fb17a24345bc10` passed all **2,097 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36369989022). Tag `v3.13.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36371362750); the verified archive is itch.io upload `19442261`. Both public players show 3.13.0 and retain their existing saves. [Validation](validation/sorting-pit-3.13.0.md) records the archive digest, 18 combat probes, physics/weapon compatibility checks and browser scope.
+
+Fresh normal campaigns can encounter one Reclamation magnet fight in room 15. Three mirrored layouts change cover, warn before dropping physical scrap and expose a shootable release coil. Old saves and Daily runs keep their room plans. Publication checks are complete.
+
 ## Maintenance Trials 3.12.0 — 27 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `1791228c2f05474e0d45c4cdd95760ae841e95e3` passed all **2,084 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36353411913). Tag `v3.12.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36354632344); the verified archive is itch.io upload `19438077`. Both public games show 3.12.0 and retain their saves. [Validation](validation/maintenance-trials-3.12.0.md) records the checksum, fixed-gun climbs, record and backup checks, and browser scope.
@@ -119,7 +125,8 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.12.0` at `1791228c2f05474e0d45c4cdd95760ae841e95e3`. Rollbacks must also retain the Maintenance Trials profile, clean-shaft checkpoint field and Servicewear decoding. Rollbacks must retain both maintenance layout revisions, schedule decoding and shaft/reward reconstruction, Welder and commendation fields, current Overtime generation, Practice records and blueprint profile fields. Do not deploy an unchanged older build over newer saves.
+- Stable tag: `v3.13.0` at `238465e50cad46f51384e2a1d2fb17a24345bc10`. Rollbacks must retain the Sorting Pit checkpoint plan and decoding, the Maintenance Trials profile, clean-shaft checkpoint field and Servicewear decoding. Rollbacks must retain both maintenance layout revisions, schedule decoding and shaft/reward reconstruction, Welder and commendation fields, current Overtime generation, Practice records and blueprint profile fields. Do not deploy an unchanged older build over newer saves.
+- Previous stable reference: `v3.12.0` at `1791228c2f05474e0d45c4cdd95760ae841e95e3`.
 - Previous stable reference: `v3.9.1` at `612d20ad6da90d88548709f254249c16830ce9ba`.
 - Earlier stable reference: `v3.6.0` at `4ecc743db218e62b511a42fd11ba301a253372d1`.
 - Previous stable reference: `v3.5.0` at `6a88b6e6b7c2e0ee701e3f9cef213bbcb9ad2ffb`.
