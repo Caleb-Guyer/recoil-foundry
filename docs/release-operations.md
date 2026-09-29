@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Boss mastery 3.15.0 — 28 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `81ad220b41ad4961e2443e2d2c524534dcc3a101` passed all **2,136 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36513369737). Tag `v3.15.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36514983547); its verified archive is itch.io upload `19460201`. Both public About panels report 3.15.0 and retain their prior saves. [Validation](validation/boss-mastery-3.15.0.md) records the eight ordinary-input challenge completions, unlock/lifecycle checks, archive digest and browser scope.
+
+Unsafe Load rewards a Loader ram into a standing cargo support followed by victory; Clearance rewards a recoil vault over the Crane's sweeping head, a hit in that recovery and victory. The Caution finish, Operator outfit and incident reports are cosmetic. Requirements and locked appearances reveal after the relevant boss's defeat. No combat or Daily/Practice rules changed. Publication checks are complete.
+
 ## Boss pursuit 3.14.0 — 28 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `50a3e08f82a66f41a56ef13903ed31300ee855b5` passed all **2,125 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36509499679). Tag `v3.14.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36510732958); the verified archive is itch.io upload `19459508`. Both public UIs report 3.14.0 and retain their saves. [Validation](validation/boss-camping-3.14.0.md) records the 696-case audit, extended hold checks, archive digest and browser verification scope.
@@ -137,7 +143,9 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.13.0` at `238465e50cad46f51384e2a1d2fb17a24345bc10`. Rollbacks must retain the Sorting Pit checkpoint plan and decoding, the Maintenance Trials profile, clean-shaft checkpoint field and Servicewear decoding. Rollbacks must retain both maintenance layout revisions, schedule decoding and shaft/reward reconstruction, Welder and commendation fields, current Overtime generation, Practice records and blueprint profile fields. Do not deploy an unchanged older build over newer saves.
+- Stable tag: `v3.15.0` at `81ad220b41ad4961e2443e2d2c524534dcc3a101`. Rollbacks must preserve `unsafe-load`/`clearance` rewards and Caution/Operator decoding, Daily rules 85, Practice rules 2 and older records. Retain the Sorting Pit checkpoint plan, Maintenance Trials profile, clean-shaft field, Servicewear decoding, both maintenance layout revisions, shaft/reward reconstruction, Welder and existing commendation fields, Overtime generation and blueprint profiles. Do not deploy an unchanged older build over newer saves.
+- Previous stable reference: `v3.14.0` at `50a3e08f82a66f41a56ef13903ed31300ee855b5`.
+- Previous stable reference: `v3.13.0` at `238465e50cad46f51384e2a1d2fb17a24345bc10`.
 - Previous stable reference: `v3.12.0` at `1791228c2f05474e0d45c4cdd95760ae841e95e3`.
 - Previous stable reference: `v3.9.1` at `612d20ad6da90d88548709f254249c16830ce9ba`.
 - Earlier stable reference: `v3.6.0` at `4ecc743db218e62b511a42fd11ba301a253372d1`.
