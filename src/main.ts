@@ -3054,9 +3054,11 @@ function frame(now: number) {
       !commendationNotice ||
       game.mode !== 'playing' ||
       game.enemies.some((e) => e.hp > 0 && !e.allied);
-    if (!notice.hidden && commendationNotice)
-      notice.textContent =
+    if (!notice.hidden && commendationNotice) {
+      const copy =
         'Commendation earned · ' + COMMENDATIONS.find((c) => c.id === commendationNotice!.id)!.name;
+      if (notice.textContent !== copy) notice.textContent = copy;
+    }
     $('portal-touch').hidden = !game.portals.canPlace;
     if (!game.portals.canPlace && portalTouch) {
       portalTouch = false;
