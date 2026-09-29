@@ -17,8 +17,19 @@ A transient per-enemy climb plan holds a physical route around the shelf after t
 - Six returns from a shelf to the player on the floor, and six brief landings/jumps that retain the ordinary response.
 - Existing Loader arena, boss-pressure, area-boss and Crane suites: both first bosses remain beatable with ordinary input; Crane platform/corner coverage and later-boss cover-pressure checks pass.
 
-The focused files, `game.test.ts`, and `release-balance.test.ts` passed **98 distinct tests** locally (97 together, then the final six-test perch file including its added brief-landing check). All 15 scripted weapon campaigns reached extraction, as did the campaign and preserved Daily 78 with actual rewards/current encounters. The latter finished with 52 health. No campaign assertions or pilot controls were changed. Full CI and public-host verification are recorded after deployment. These are automated simulation checks, not a new Chromebook hardware test.
+The focused files, `game.test.ts`, and `release-balance.test.ts` passed **98 distinct tests** locally (97 together, then the final six-test perch file including its added brief-landing check). All 15 scripted weapon campaigns reached extraction, as did the campaign and preserved Daily 78 with actual rewards/current encounters. The latter finished with 52 health. No campaign assertions or pilot controls were changed. These are automated simulation checks, not a new Chromebook hardware test.
 
 An additional six-case probe used Heavy Hitter + Hair Trigger + Bank Shot from near each shelf edge. Real banked rounds damaged the Loader, but it reached and damaged the stationary shooter in every case. This checks the higher-damage early build without changing the live gun's balance.
 
 The production build passed TypeScript and Vite. The existing large shared-chunk warning remains. In the embedded browser, the local production preview started the isolated Loader fight, paused, and showed version 3.13.1. Its stored Room 1 / 65 discoveries / no Practice victories, blueprints or records remained intact. Pointer activation was unreliable in this tool session; keyboard activation worked. This is a tooling limitation, not evidence of a game input regression.
+
+## Published artifact and host checks — 28 September 2026
+
+- Runtime commit: `dcb008d461aeeec8c66482f1c04d07fe142b52cd`.
+- [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36503320607): **2,103 tests passed**, zero failed, cancelled or skipped; production build and deployment passed. Test duration was 818.079 seconds.
+- [Release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36504684578): passed for tag `v3.13.1` on that exact runtime commit, including its successful-Pages-CI gate.
+- [Official archive](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.13.1): `recoil-foundry-v3.13.1-site.zip`, 9,791,234 bytes, SHA-256 `aecefa357079c03b478c1050cbcf24952c5fc049cb91ce9972cd7a20548ffbaf`. Download size and GitHub's digest matched. Its 17 files include root `index.html` and four valid relative entry assets, with no source, tests, dependency tree, source maps or traversal entries.
+- itch.io upload `19458588` uses those same verified bytes, retaining the historical replacement filename and displaying **Recoil Foundry 3.13.1 — Loader ledge fix**. The browser-playable checkbox was checked and the editor confirmed Saved.
+- Both public players visibly showed **3.13.1** in About & credits. Pages retained Room 2 / 1 discovery / no Practice victories, blueprints or records. itch.io retained Continue daily, Room 1 / no discoveries, Practice victories, blueprints or records. Existing Sound/Music settings were preserved; the updated itch.io player reported no console errors during this check.
+
+Issue #4 is closed as completed. No save schema or weapon balance changed. The previous stable 3.13.0 release remains available for rollback; publication checks for this patch are complete.

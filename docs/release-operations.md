@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Loader ledge fix 3.13.1 — 28 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `dcb008d461aeeec8c66482f1c04d07fe142b52cd` passed all **2,103 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36503320607). Tag `v3.13.1` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36504684578); the verified archive is itch.io upload `19458588`. Both public players show 3.13.1 and retain their existing saves. [Validation](validation/loader-perches-3.13.1.md) records the archive digest, 54 perch positions, ceiling Bank Shot cases, dodge windows, descent checks and browser scope.
+
+Resolves [issue #4](https://github.com/Caleb-Guyer/recoil-foundry/issues/4): the Loader routes around a settled camper's shelf, clears its hull before crossing and follows players back down past hanging cargo. Brief jumps retain the ordinary response. Physical collisions, warning time and player weapon balance remain unchanged. Publication checks are complete; 3.13.0 remains the previous stable rollback release, with no save-schema migration required.
+
 ## The Sorting Pit 3.13.0 — 27 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `238465e50cad46f51384e2a1d2fb17a24345bc10` passed all **2,097 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36369989022). Tag `v3.13.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36371362750); the verified archive is itch.io upload `19442261`. Both public players show 3.13.0 and retain their existing saves. [Validation](validation/sorting-pit-3.13.0.md) records the archive digest, 18 combat probes, physics/weapon compatibility checks and browser scope.
