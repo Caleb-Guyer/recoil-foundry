@@ -20,16 +20,12 @@ function loaderGrounded(g: Game, e: Enemy) {
   if (g.enemyGrounded(e)) return true;
   if (e.body.velocity.y < -1) return false;
   const p = e.body.position,
-    tread = ENEMY_STATS.loader.w / 2 - 10;
-  // Either tread can rest on a prop edge while the center hangs over a gap.
-  return [-tread, tread].some(
-    (offset) =>
-      Query.ray(
-        g.solidBodies,
-        { x: p.x + offset, y: e.body.bounds.max.y - 2 },
-        { x: p.x + offset, y: e.body.bounds.max.y + 5 },
-        12,
-      ).length > 0,
+    tread = ENEMY_STATS.loader.w / 2 - 3,
+    feet = e.body.bounds.max.y + 1.5;
+  // A narrow canister can support any part of the tread, including the gaps
+  // between the old center/edge probes. Use the actual solid geometry.
+  return (
+    Query.ray(g.solidBodies, { x: p.x - tread, y: feet }, { x: p.x + tread, y: feet }, 6).length > 0
   );
 }
 
@@ -62,8 +58,62 @@ function updateFlak(g: Game, e: Enemy) {
   g.onSound('enemy');
 }
 
-function loaderApproach(g: Game, e: Enemy, counter: boolean) {
+function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean) {
   const p = e.body.position;
+  let climb = e.loaderClimb;
+  if (
+    climb &&
+    (!g.terrainBodies.includes(climb.platform) ||
+      g.player.position.y > climb.platform.bounds.min.y ||
+      g.player.position.x < climb.platform.bounds.min.x - 40 ||
+      g.player.position.x > climb.platform.bounds.max.x + 40 ||
+      (grounded && e.body.bounds.max.y < climb.platform.bounds.min.y + 5))
+  )
+    climb = e.loaderClimb = undefined;
+  if (!climb && counter && !visible(g, bossMuzzle(e))) {
+    const platform = g.terrainBodies
+      .filter(
+        (b) =>
+          b.bounds.max.x - b.bounds.min.x < 700 &&
+          b.bounds.min.y >= g.player.position.y &&
+          b.bounds.max.y < p.y &&
+          g.player.position.x >= b.bounds.min.x &&
+          g.player.position.x <= b.bounds.max.x,
+      )
+      .sort((a, b) => a.bounds.min.y - b.bounds.min.y)[0];
+    if (platform) {
+      const margin = ENEMY_STATS.loader.w / 2 + 28;
+      const sides = [platform.bounds.min.x - margin, platform.bounds.max.x + margin]
+        .filter((x) => x > 60 && x < g.worldWidth - 60)
+        .sort((a, b) => Math.abs(a - p.x) - Math.abs(b - p.x));
+      if (sides.length) climb = e.loaderClimb = { platform, x: sides[0], launched: false };
+    }
+  }
+  if (climb) {
+    const top = climb.platform.bounds.min.y;
+    if (climb.launched && grounded && e.body.bounds.max.y > top + 5) climb.launched = false;
+    if (grounded && !climb.launched && Math.abs(p.x - climb.x) < 12) {
+      // Clear the entire hull before steering over the ledge. Account for the
+      // same gravity/air drag used by Matter instead of hopping into its underside.
+      const rise = Math.max(0, e.body.bounds.max.y - top) + 65;
+      let speed = 12.5;
+      for (; speed < 26; speed += 0.25) {
+        let velocity = -speed,
+          height = 0;
+        for (let frame = 0; frame < 100 && velocity < 0; frame++) {
+          velocity =
+            velocity * (1 - e.body.frictionAir) +
+            g.engine.gravity.y * g.engine.gravity.scale * (1000 / 60) ** 2;
+          height -= Math.min(0, velocity);
+        }
+        if (height >= rise) break;
+      }
+      Body.setVelocity(e.body, { x: 0, y: -speed });
+      climb.launched = true;
+      e.timer = Math.max(e.timer, 0.45);
+    }
+    return climb.launched && e.body.bounds.max.y < top - 4 ? g.player.position.x : climb.x;
+  }
   if (!counter || visible(g, bossMuzzle(e))) return g.player.position.x;
   // A ledge remains real cover. Seek its side, then use the existing physical
   // hop to find an elevated angle instead of firing through the platform.
@@ -135,12 +185,13 @@ export function updateLoader(g: Game, e: Enemy) {
       e.timer = 0.15;
     }
   } else {
-    const targetX = loaderApproach(g, e, counter),
+    const targetX = loaderApproach(g, e, counter, grounded),
       sign = Math.sign(targetX - p.x) || Math.sign(g.player.position.x - p.x) || -1;
     e.aim = { x: sign, y: 0 };
-    Body.setVelocity(e.body, { x: v.x + (sign * 3.4 - v.x) * 0.1, y: v.y });
+    const speed = e.loaderClimb ? clamp((targetX - p.x) * 0.2, -3.4, 3.4) : sign * 3.4;
+    Body.setVelocity(e.body, { x: v.x + (speed - v.x) * 0.1, y: v.y });
     const blocked = Math.abs(g.lineEnd(p, { x: p.x + sign * nose, y: p.y }).x - p.x) < nose - 1;
-    if (counter && e.timer <= 0 && visible(g, bossMuzzle(e))) beginFlak(g, e);
+    if (counter && !e.loaderClimb && e.timer <= 0 && visible(g, bossMuzzle(e))) beginFlak(g, e);
     else if (
       grounded &&
       blocked &&
@@ -162,7 +213,7 @@ export function updateLoader(g: Game, e: Enemy) {
     } else if (grounded && blocked) {
       Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
       e.timer = Math.max(e.timer, 0.6);
-    } else if (grounded && e.timer <= 0) {
+    } else if (grounded && e.timer <= 0 && !e.loaderClimb) {
       if (counter) {
         Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
         e.timer = 0.45;

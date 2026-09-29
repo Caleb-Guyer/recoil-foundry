@@ -227,6 +227,7 @@ export interface Enemy {
   attacks: number;
   attack: Attack;
   hunt?: BossHunt;
+  loaderClimb?: { platform: Matter.Body; x: number; launched: boolean };
   crane?: CraneRig;
   kiln?: KilnRig;
   turbine?: TurbineRig;
