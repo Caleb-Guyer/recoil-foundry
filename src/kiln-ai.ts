@@ -3,8 +3,9 @@ import type { Game, Enemy } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, direction, distance, segmentBox } from './rules.ts';
 import { traceProp } from './props.ts';
-import { FLAK_TELL, FLAK_LOCK, flakAngles } from './enemies.ts';
+import { ENEMY_STATS, FLAK_TELL, FLAK_LOCK, flakAngles } from './enemies.ts';
 import { groundBossTarget } from './ground-boss-hunt.ts';
+import { firstSolid } from './collisions.ts';
 
 const { Body, Query } = Matter;
 export const KILN_TELL = 1.1;
@@ -41,6 +42,7 @@ export interface KilnRig {
   shells: KilnShell[];
   patches: KilnPatch[];
   next: number;
+  camp?: { at: Vec; since: number };
 }
 export const createKiln = (): KilnRig => ({ plans: [], shells: [], patches: [], next: 0 });
 export const kilnMuzzle = (e: Enemy): Vec => ({ x: e.body.position.x, y: e.body.position.y - 62 });
@@ -52,6 +54,7 @@ export function kilnPoint(arc: KilnArc, t: number): Vec {
 }
 export function clearKiln(e: Enemy) {
   if (e.kiln) {
+    delete e.kiln.camp;
     e.kiln.plans = [];
     e.kiln.shells = [];
     e.kiln.patches = [];
@@ -131,7 +134,12 @@ function planArc(g: Game, e: Enemy, x: number, from = kilnMuzzle(e)): KilnArc {
   return best!;
 }
 function planVolley(g: Game, e: Enemy) {
-  let center = clamp(g.player.position.x + clamp(g.player.velocity.x * 12, -100, 100), 26, 1974);
+  const settled = g.adaptiveBosses && e.kiln!.camp && g.time - e.kiln!.camp.since >= 3;
+  let center = clamp(
+    g.player.position.x + (settled ? 0 : clamp(g.player.velocity.x * 12, -100, 100)),
+    26,
+    1974,
+  );
   const predicted = planArc(g, e, center);
   // Do not repeatedly lead a tread-braced player into the neighboring cover.
   // The live position is a valid fallback; every resulting arc is still warned.
@@ -193,7 +201,16 @@ function approach(g: Game, e: Enemy, counter: boolean) {
   }
   const dx = target - p.x,
     sign = Math.sign(dx) || Math.sign(player.x - p.x) || 1,
-    blocked = Query.ray(g.solidBodies, p, { x: p.x + sign * 80, y: p.y + 10 }, 14).length > 0;
+    blocked =
+      Query.ray(g.solidBodies, p, { x: p.x + sign * 80, y: p.y + 10 }, 14).length > 0 ||
+      (g.adaptiveBosses &&
+        !!e.groundHunt &&
+        !!firstSolid(
+          p,
+          { x: p.x + sign * 25, y: p.y },
+          { x: ENEMY_STATS.kiln.w / 2, y: ENEMY_STATS.kiln.h / 2 - 3 },
+          g.solidBodies,
+        ));
   Body.setVelocity(e.body, {
     x: e.body.velocity.x + ((Math.abs(dx) < 12 ? 0 : sign * 2.8) - e.body.velocity.x) * 0.12,
     y: e.body.velocity.y,
@@ -311,6 +328,8 @@ function updateHazards(g: Game, e: Enemy, dt: number) {
 
 export function updateKiln(g: Game, e: Enemy, dt: number) {
   const rig = e.kiln!;
+  if (!rig.camp || distance(rig.camp.at, g.player.position) > 75)
+    rig.camp = { at: { ...g.player.position }, since: g.time };
   updateHazards(g, e, dt);
   if (g.mode !== 'playing' || e.hp <= 0) return;
   if (e.state === 'windup') {

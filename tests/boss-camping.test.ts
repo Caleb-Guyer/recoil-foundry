@@ -193,6 +193,22 @@ test('Turbine breaks loose cover instead of abandoning a boxed-in player', () =>
   assert(taken >= 44 && e.attacks > 0, 'pressure stopped after the first hit');
 });
 
+test('Kiln clears low debris and cannot repeat a blocked mortar forever at a cover edge', () => {
+  const { g, e } = campingRoom('kiln', false),
+    shelf = g.level.solids[3];
+  const home = shelf.x + shelf.w / 2;
+  Body.setPosition(g.player, { x: home, y: shelf.y - 18 });
+  let taken = 0;
+  const damage = g.damagePlayer.bind(g);
+  g.damagePlayer = (...args) => {
+    const hp = g.hp;
+    damage(...args);
+    taken += Math.max(0, hp - g.hp);
+  };
+  for (let n = 0; n < 3600 && g.mode === 'playing' && e.hp > 0 && taken < 52; n++) step(g, home);
+  assert(taken >= 52, 'Kiln stalled after the first hit while a low prop pinned its treads');
+});
+
 test('Crane direct tests select both real mirrors without saving or granting Practice victories', () => {
   for (const mirror of [0, 1]) {
     const entry = testEncounterFromUrl(new URL(`https://test/?test=crane&mirror=${mirror}`));
