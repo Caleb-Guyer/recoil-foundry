@@ -99,7 +99,7 @@ test('a Loader that climbs a ledge still warns its ram and a normal jump can eva
 
 test('climbing freezes with pause and hitstop, abandons a departed perch, and resets on retry', () => {
   const { g, e, x } = room(false, 2);
-  step(g, x);
+  for (let n = 0; n < 180 && !e.loaderClimb; n++) step(g, x);
   assert(e.loaderClimb);
   const saved = { pos: { ...e.body.position }, route: { ...e.loaderClimb } };
   g.setMode('paused');
@@ -115,4 +115,37 @@ test('climbing freezes with pause and hitstop, abandons a departed perch, and re
   assert.equal(e.loaderClimb, undefined);
   g.start(g.seed, testCheckpoint(g.seed, 3));
   assert.equal(g.enemies[0].loaderClimb, undefined);
+});
+
+test('the Loader leaves every shelf when the player returns to the floor below it', () => {
+  for (const mirror of [false, true])
+    for (const shelfIndex of [2, 3, 4]) {
+      const { g, e, x, shelf } = room(mirror, shelfIndex);
+      Body.setPosition(e.body, { x, y: shelf.y - 34 - 0.1 });
+      Body.setPosition(g.player, { x, y: 722 });
+      for (let n = 0; n < 1080 && g.hp === 100; n++) {
+        const before = { ...e.body.position };
+        step(g, x);
+        assert(distance(before, e.body.position) < 27);
+        assert(Query.collides(e.body, g.terrain).every((c) => c.depth < 2));
+      }
+      assert(g.hp < 100, `${mirror}/${shelfIndex}: player below the shelf remained safe`);
+      assert.equal(e.loaderDrop, undefined, 'descent plan survived landing');
+    }
+});
+
+test('brief landings and jumps do not trigger the committed perch climb', () => {
+  for (const mirror of [false, true])
+    for (const shelf of [2, 3, 4]) {
+      const { g, e, x } = room(mirror, shelf);
+      for (let n = 0; n < 20; n++) {
+        step(g, x);
+        assert.equal(e.loaderClimb, undefined);
+      }
+      step(g, x, { jump: true });
+      for (let n = 0; n < 25; n++) {
+        step(g, x);
+        assert.equal(e.loaderClimb, undefined);
+      }
+    }
 });

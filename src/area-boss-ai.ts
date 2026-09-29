@@ -24,8 +24,21 @@ function loaderGrounded(g: Game, e: Enemy) {
     feet = e.body.bounds.max.y + 1.5;
   // A narrow canister can support any part of the tread, including the gaps
   // between the old center/edge probes. Use the actual solid geometry.
-  return (
-    Query.ray(g.solidBodies, { x: p.x - tread, y: feet }, { x: p.x + tread, y: feet }, 6).length > 0
+  if (e.loaderClimb || e.loaderDrop)
+    return (
+      Query.ray(g.solidBodies, { x: p.x - tread, y: feet }, { x: p.x + tread, y: feet }, 6).length >
+      0
+    );
+  // Preserve ordinary charge/low-bumper timing outside a climb.
+  const edge = ENEMY_STATS.loader.w / 2 - 10;
+  return [-edge, edge].some(
+    (offset) =>
+      Query.ray(
+        g.solidBodies,
+        { x: p.x + offset, y: e.body.bounds.max.y - 2 },
+        { x: p.x + offset, y: e.body.bounds.max.y + 5 },
+        12,
+      ).length > 0,
   );
 }
 
@@ -60,6 +73,54 @@ function updateFlak(g: Game, e: Enemy) {
 
 function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean) {
   const p = e.body.position;
+  let drop = e.loaderDrop;
+  if (
+    drop &&
+    (!g.solidBodies.includes(drop.platform) ||
+      g.player.position.y < p.y + 80 ||
+      e.body.bounds.min.y > drop.platform.bounds.max.y + 5)
+  )
+    drop = e.loaderDrop = undefined;
+  if (!drop && grounded && g.player.position.y > p.y + 130 && !visible(g, bossMuzzle(e))) {
+    const platform = g.solidBodies.find(
+      (b) =>
+        b.bounds.max.x - b.bounds.min.x < 700 &&
+        Math.abs(b.bounds.min.y - e.body.bounds.max.y) < 5 &&
+        b.bounds.min.x < e.body.bounds.max.x &&
+        b.bounds.max.x > e.body.bounds.min.x,
+    );
+    if (platform) {
+      const margin = ENEMY_STATS.loader.w / 2 + 28;
+      const sides = [platform.bounds.min.x - margin, platform.bounds.max.x + margin]
+        .filter((x) => x > 60 && x < g.worldWidth - 60)
+        .sort((a, b) => Math.abs(a - g.player.position.x) - Math.abs(b - g.player.position.x));
+      if (sides.length) drop = e.loaderDrop = { platform, x: sides[0] };
+    }
+  }
+  if (drop) {
+    e.loaderClimb = undefined;
+    // Hanging cargo can catch a descent. Continue past its outside edge too,
+    // rather than stopping on top of the next piece of cover.
+    if (grounded) {
+      const side = Math.sign(drop.x - drop.platform.position.x);
+      for (const b of g.solidBodies) {
+        if (
+          b.bounds.max.x - b.bounds.min.x >= 700 ||
+          Math.abs(b.bounds.min.y - e.body.bounds.max.y) >= 5 ||
+          b.bounds.min.x >= e.body.bounds.max.x ||
+          b.bounds.max.x <= e.body.bounds.min.x
+        )
+          continue;
+        const margin = ENEMY_STATS.loader.w / 2 + 28;
+        drop.x =
+          side < 0
+            ? Math.min(drop.x, b.bounds.min.x - margin)
+            : Math.max(drop.x, b.bounds.max.x + margin);
+      }
+      drop.x = clamp(drop.x, 60, g.worldWidth - 60);
+    }
+    return drop.x;
+  }
   let climb = e.loaderClimb;
   if (
     climb &&
@@ -71,16 +132,12 @@ function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean) 
   )
     climb = e.loaderClimb = undefined;
   if (!climb && counter && !visible(g, bossMuzzle(e))) {
-    const platform = g.terrainBodies
-      .filter(
-        (b) =>
-          b.bounds.max.x - b.bounds.min.x < 700 &&
-          b.bounds.min.y >= g.player.position.y &&
-          b.bounds.max.y < p.y &&
-          g.player.position.x >= b.bounds.min.x &&
-          g.player.position.x <= b.bounds.max.x,
-      )
-      .sort((a, b) => a.bounds.min.y - b.bounds.min.y)[0];
+    const platform =
+      e.loaderPerch &&
+      g.time - e.loaderPerch.since >= 0.6 &&
+      e.loaderPerch.platform.bounds.max.y < p.y
+        ? e.loaderPerch.platform
+        : undefined;
     if (platform) {
       const margin = ENEMY_STATS.loader.w / 2 + 28;
       const sides = [platform.bounds.min.x - margin, platform.bounds.max.x + margin]
@@ -132,6 +189,19 @@ export function updateLoader(g: Game, e: Enemy) {
     counter = above || corner,
     grounded = loaderGrounded(g, e),
     nose = ENEMY_STATS.loader.w / 2 + 24;
+  // Commit to a climb only after the player has settled on the ledge. Brief
+  // recoil flights keep the existing flak response and ordinary charge pacing.
+  const perch = g.grounded
+    ? g.terrainBodies.find(
+        (b) =>
+          b.bounds.max.x - b.bounds.min.x < 700 &&
+          Math.abs(b.bounds.min.y - g.player.bounds.max.y) < 5 &&
+          g.player.position.x >= b.bounds.min.x &&
+          g.player.position.x <= b.bounds.max.x,
+      )
+    : undefined;
+  if (perch !== e.loaderPerch?.platform)
+    e.loaderPerch = perch ? { platform: perch, since: g.time } : undefined;
   if (e.state === 'rush') {
     const contact =
       e.timer > 0
