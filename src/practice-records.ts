@@ -5,7 +5,7 @@ import { loadEncounters, practiceCheckpoint, PRACTICE_BOSSES, type Encounter } f
 export const PRACTICE_RECORDS_KEY = 'rf-practice-records-v1';
 // Bump whenever physics, boss AI, arenas, presets or upgrade balance changes.
 // Previous records remain readable, but never compete with a new ruleset.
-export const PRACTICE_RULESET = 1;
+export const PRACTICE_RULESET = 2;
 export const PRACTICE_RECORD_LIMIT = 200;
 export const CHALLENGE_CODE_LIMIT = 8192;
 export interface PracticeBuild extends Encounter {

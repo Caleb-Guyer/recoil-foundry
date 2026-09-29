@@ -4,6 +4,7 @@ import type { Vec } from './rules.ts';
 import { clamp, direction, distance, segmentBox } from './rules.ts';
 import { traceProp } from './props.ts';
 import { FLAK_TELL, FLAK_LOCK, flakAngles } from './enemies.ts';
+import { groundBossTarget } from './ground-boss-hunt.ts';
 
 const { Body, Query } = Matter;
 export const KILN_TELL = 1.1;
@@ -107,9 +108,8 @@ function surface(g: Game, x: number, feet: number) {
       .map((b) => b.bounds.min.y),
   );
 }
-function planArc(g: Game, e: Enemy, x: number): KilnArc {
-  const from = kilnMuzzle(e),
-    to = {
+function planArc(g: Game, e: Enemy, x: number, from = kilnMuzzle(e)): KilnArc {
+  const to = {
       x: clamp(x, 26, g.worldWidth - 26),
       y: surface(g, x, g.player.position.y + 18) - KILN_RADIUS,
     },
@@ -131,8 +131,13 @@ function planArc(g: Game, e: Enemy, x: number): KilnArc {
   return best!;
 }
 function planVolley(g: Game, e: Enemy) {
-  const center = clamp(g.player.position.x + clamp(g.player.velocity.x * 12, -100, 100), 26, 1974),
-    offsets = e.phase === 1 ? [0, -145, 145, e.attacks % 2 ? -290 : 290] : [0, -130, 130];
+  let center = clamp(g.player.position.x + clamp(g.player.velocity.x * 12, -100, 100), 26, 1974);
+  const predicted = planArc(g, e, center);
+  // Do not repeatedly lead a tread-braced player into the neighboring cover.
+  // The live position is a valid fallback; every resulting arc is still warned.
+  if (g.adaptiveBosses && distance(predicted.impact, predicted.to) > 12)
+    center = clamp(g.player.position.x, 26, 1974);
+  const offsets = e.phase === 1 ? [0, -145, 145, e.attacks % 2 ? -290 : 290] : [0, -130, 130];
   return offsets.map((offset) => planArc(g, e, clamp(center + offset, 26, 1974)));
 }
 function grounded(g: Game, e: Enemy) {
@@ -159,21 +164,32 @@ function approach(g: Game, e: Enemy, counter: boolean) {
   if (counter) {
     // Seek an actual standing position on the ground or a low stack. The
     // boiler gets there with physical tread movement and hops, never a warp.
-    const positions = [
-      p.x,
-      player.x,
-      ...[-850, -550, -300, 300, 550, 850].map((x) => player.x + x),
-      100,
-      1900,
-    ];
-    const choices = positions
-      .map((x) => clamp(x, 65, 1935))
-      .filter((x) => {
-        const floor = surface(g, x, 605);
-        return lane(g, { x, y: floor - 42 - 62 });
-      });
-    choices.sort((a, b) => Math.abs(a - p.x) - Math.abs(b - p.x));
-    target = choices[0] ?? clamp(player.x, 65, 1935);
+    if (g.adaptiveBosses) {
+      target = groundBossTarget(
+        g,
+        e,
+        62,
+        (from) =>
+          lane(g, from) ||
+          distance(planArc(g, e, player.x, from).impact, {
+            x: player.x,
+            y: surface(g, player.x, player.y + 18) - KILN_RADIUS,
+          }) < 30,
+      );
+    } else {
+      const positions = [
+        p.x,
+        player.x,
+        ...[-850, -550, -300, 300, 550, 850].map((x) => player.x + x),
+        100,
+        1900,
+      ];
+      const choices = positions
+        .map((x) => clamp(x, 65, 1935))
+        .filter((x) => lane(g, { x, y: surface(g, x, 605) - 42 - 62 }));
+      choices.sort((a, b) => Math.abs(a - p.x) - Math.abs(b - p.x));
+      target = choices[0] ?? clamp(player.x, 65, 1935);
+    }
   }
   const dx = target - p.x,
     sign = Math.sign(dx) || Math.sign(player.x - p.x) || 1,
@@ -361,15 +377,19 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
   }
   const above = g.player.position.y < e.body.position.y - 155;
   let plans: KilnArc[] = [];
-  if (!above && e.timer <= 0 && grounded(g, e)) {
+  if ((!above || g.adaptiveBosses) && e.timer <= 0 && grounded(g, e)) {
     e.phase = g.overtime || e.hp < e.maxHp / 2 ? 1 : 0;
     plans = planVolley(g, e);
   }
   const sheltered =
       plans.length > 0 &&
-      (plans[0].impact.y < g.player.position.y - 45 ||
-        Math.abs(plans[0].impact.x - plans[0].to.x) > 65),
-    counter = above || sheltered;
+      (g.adaptiveBosses
+        ? distance(plans[0].impact, plans[0].to) > 12
+        : plans[0].impact.y < g.player.position.y - 45 ||
+          Math.abs(plans[0].impact.x - plans[0].to.x) > 65),
+    counter = g.adaptiveBosses
+      ? sheltered || (above && (!g.grounded || lane(g, kilnMuzzle(e))))
+      : above || sheltered;
   if (e.timer <= 0 && grounded(g, e) && counter && lane(g, kilnMuzzle(e))) {
     e.phase = g.overtime || e.hp < e.maxHp / 2 ? 1 : 0;
     e.attack = 'flak';
@@ -386,5 +406,5 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
     rig.plans = plans;
     Body.setVelocity(e.body, { x: 0, y: 0 });
     g.onSound('kiln-wind');
-  } else approach(g, e, counter);
+  } else approach(g, e, counter || !!e.groundHunt);
 }

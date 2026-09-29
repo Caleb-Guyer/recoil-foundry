@@ -92,7 +92,12 @@ function segmentDistance(p: Vec, a: Vec, b: Vec) {
 // A conservative escape corridor: ordinary movement, one jump or a fall, with
 // a clear player hull and enough separation from every still-pending lane.
 export function signalEscape(g: Game, plans: SignalPlan[]): Vec | null {
-  const from = { x: g.player.position.x, y: clamp(g.player.position.y - 1, 18.1, 721.9) };
+  const from = {
+    x: g.adaptiveBosses
+      ? clamp(g.player.position.x, 13.1, g.worldWidth - 13.1)
+      : g.player.position.x,
+    y: clamp(g.player.position.y - 1, 18.1, 721.9),
+  };
   const lines = plans
     .filter((p) => !p.cut && !p.done)
     .flatMap((p) =>
@@ -113,7 +118,12 @@ export function signalEscape(g: Game, plans: SignalPlan[]): Vec | null {
     for (const x of [-150, 150, -240, 240, -80, 80, 0]) {
       const to = { x: from.x + x, y: falling ? clamp(from.y + y, 18.1, 721.9) : from.y + y };
       if (to.x < 20 || to.x > 1980 || to.y < 18 || to.y > 722) continue;
-      if (g.solidBodies.some((b) => sweepBox(from, to, { x: 14, y: 18 }, b))) continue;
+      // Match the player's actual 26px hull. The old extra pixel started
+      // inside a boundary wall and rejected every escape from a floor corner.
+      if (
+        g.solidBodies.some((b) => sweepBox(from, to, { x: g.adaptiveBosses ? 13 : 14, y: 18 }, b))
+      )
+        continue;
       if (
         lines.every((l) =>
           falling

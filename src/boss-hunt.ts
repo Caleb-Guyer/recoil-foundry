@@ -8,9 +8,10 @@ export interface BossHunt {
   route: Vec[];
   nextPlan: number;
   nearPlayer: boolean;
+  breakCover?: boolean;
 }
 
-function firingLane(g: Game, from: Vec, padding = 9, nearPlayer = false) {
+function firingLane(g: Game, from: Vec, padding = 9, nearPlayer = false, breakCover = false) {
   // A center ray can skim a platform that still catches the five-pixel bolt.
   // Leave a little clearance for both the projectile and the braking drift.
   const radius = padding === 16 ? 11 : 5;
@@ -24,7 +25,7 @@ function firingLane(g: Game, from: Vec, padding = 9, nearPlayer = false) {
     );
   // A shot only needs to reach the near side of the player. Testing all the
   // way to their center makes adjacent cover erase every possible firing lane.
-  return !g.solidBodies.some((body) => {
+  return !(breakCover ? g.terrainBodies : g.solidBodies).some((body) => {
     const hit = segmentBox(
       from,
       g.player.position,
@@ -38,13 +39,25 @@ function firingLane(g: Game, from: Vec, padding = 9, nearPlayer = false) {
 export function bossHasLane(g: Game, e: Enemy) {
   return (
     distance(e.body.position, g.player.position) < 760 &&
-    firingLane(g, e.body.position, e.kind === 'turbine' ? 16 : 9, e.hunt?.nearPlayer)
+    firingLane(
+      g,
+      e.body.position,
+      e.kind === 'turbine' ? 16 : 9,
+      e.hunt?.nearPlayer,
+      e.hunt?.breakCover,
+    )
   );
 }
 
 // Navigate the hull around solid corners. Shots still use the ordinary swept
 // collision path; acquiring an angle never grants permission to fire through cover.
-function plan(g: Game, e: Enemy, relocate = false, flankSide = 0) {
+function plan(
+  g: Game,
+  e: Enemy,
+  relocate = false,
+  flankSide = 0,
+  expanded = false,
+): Pick<BossHunt, 'route' | 'nearPlayer' | 'breakCover'> {
   const start = e.body.position,
     player = g.player.position;
   const halfW = ENEMY_STATS[e.kind].w / 2 - 0.5,
@@ -65,12 +78,18 @@ function plan(g: Game, e: Enemy, relocate = false, flankSide = 0) {
   const heights = [
     ...new Set([
       ...[-300, -180, -80, 80].map((y) => clamp(player.y + y, 52, 695)),
-      ...g.terrainBodies.flatMap((body) => [body.bounds.min.y - 42, body.bounds.max.y + 42]),
+      ...g.terrainBodies.flatMap((body) => [
+        body.bounds.min.y - (expanded ? halfH + 6 : 42),
+        body.bounds.max.y + (expanded ? halfH + 6 : 42),
+      ]),
     ]),
   ].filter((y) => y >= 52 && y <= 695);
   const candidates = [
     start,
-    ...[-420, -280, -160, 0, 160, 280, 420].flatMap((x) =>
+    ...(expanded
+      ? [-420, -280, -160, -80, 0, 80, 160, 280, 420]
+      : [-420, -280, -160, 0, 160, 280, 420]
+    ).flatMap((x) =>
       heights.map((y) => ({
         x: clamp(player.x + x, 52, g.worldWidth - 52),
         y,
@@ -91,6 +110,11 @@ function plan(g: Game, e: Enemy, relocate = false, flankSide = 0) {
   // Keep the usual generous clearance whenever possible. A player hugging
   // cover may leave only a shot at their exposed edge; seek that angle then.
   if (nearPlayer) goals = candidates.filter((p) => firingLane(g, p, padding, true));
+  // Loose cover can temporarily close the only lane into a narrow pocket.
+  // Warn and shoot that cover from a reachable position; ordinary projectile
+  // collision still absorbs the impact, including the shot that breaks it.
+  const breakCover = expanded && goals.length === 0 && isBoss(e.kind);
+  if (breakCover) goals = candidates.filter((p) => firingLane(g, p, padding, true, true));
   const corners = blocks
     .flatMap((b) => [
       { x: b.min.x - 5, y: b.min.y - 5 },
@@ -133,13 +157,27 @@ function plan(g: Game, e: Enemy, relocate = false, flankSide = 0) {
     route.unshift(nodes[goal]);
     goal = previous[goal];
   }
-  return { route, nearPlayer };
+  if (
+    g.adaptiveBosses &&
+    !route.length &&
+    !expanded &&
+    (e.kind === 'turbine' || e.kind === 'interceptor')
+  )
+    return plan(g, e, relocate, flankSide, true);
+  return { route, nearPlayer, ...(breakCover ? { breakCover: true } : {}) };
 }
 
 export function bossHuntTarget(g: Game, e: Enemy, relocate = false, flankSide = 0): Vec {
+  const missedLane =
+    g.adaptiveBosses &&
+    e.kind === 'interceptor' &&
+    e.hunt?.route.length === 1 &&
+    distance(e.body.position, e.hunt.route[0]) < 8 &&
+    !bossHasLane(g, e);
+  if (missedLane) e.hunt = undefined;
   if (!e.hunt || e.hunt.nextPlan <= g.time)
     e.hunt = {
-      ...plan(g, e, relocate, flankSide),
+      ...plan(g, e, relocate || missedLane, flankSide),
       nextPlan: g.time + 0.45,
     };
   const p = e.body.position;

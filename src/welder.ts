@@ -3,6 +3,7 @@ import type { Enemy, Game } from './game.ts';
 import type { Prop } from './props.ts';
 import { clamp, direction, distance, segmentBox, type Vec } from './rules.ts';
 import type { WelderSave } from './welder-rules.ts';
+import { groundBossTarget } from './ground-boss-hunt.ts';
 
 const { Body, Query } = Matter;
 export const WELD_TELL = 1.25;
@@ -103,12 +104,17 @@ export class WelderSystem {
       .sort((a, b) => a.bounds.min.y - b.bounds.min.y)[0];
   }
   private seam(point: Vec) {
-    const support = this.floor(point);
+    const support = this.floor(
+      this.game.adaptiveBosses
+        ? { ...point, x: clamp(point.x, 34, this.game.worldWidth - 34) }
+        : point,
+    );
     if (!support) return;
     const x = clamp(point.x, 70, this.game.worldWidth - 70),
       y = support.bounds.min.y - 2;
-    const a = { x: Math.max(40, support.bounds.min.x + 8, x - 95), y };
-    const b = { x: Math.min(this.game.worldWidth - 40, support.bounds.max.x - 8, x + 95), y };
+    const edge = this.game.adaptiveBosses ? 8 : 40;
+    const a = { x: Math.max(edge, support.bounds.min.x + 8, x - 95), y };
+    const b = { x: Math.min(this.game.worldWidth - edge, support.bounds.max.x - 8, x + 95), y };
     if (b.x - a.x < 45 || this.seams.some((s) => distance(s.a, a) < 120)) return;
     this.seams.push({ a, b, normal: { x: 0, y: -1 }, support, age: 0, ignited: false });
   }
@@ -183,7 +189,12 @@ export class WelderSystem {
     const rig = (e.welder ??= { attack: 'seam', jumpAt: 0, stepAt: 0 });
     e.timer -= dt;
     if (e.state === 'idle') {
-      const d = direction(p, g.player.position);
+      const blockedLane = distance(g.lineEnd(p, g.player.position, 7), g.player.position) > 1;
+      const targetX =
+        g.adaptiveBosses && (blockedLane || (e.groundHunt && !g.enemyGrounded(e)))
+          ? groundBossTarget(g, e, 0)
+          : g.player.position.x;
+      const d = direction(p, g.adaptiveBosses ? { x: targetX, y: p.y } : g.player.position);
       e.facing = Math.sign(d.x) || e.facing;
       Body.setVelocity(e.body, {
         x:
@@ -208,6 +219,8 @@ export class WelderSystem {
       }
       if (e.timer <= 0) {
         rig.attack = (['seam', 'arc', 'cover', 'seam', 'arc'] as const)[e.attacks++ % 5];
+        if (g.adaptiveBosses && rig.attack === 'seam' && g.player.position.y < p.y - 180)
+          rig.attack = 'arc';
         e.state = 'windup';
         e.timer = WELD_TELL;
         e.aim = direction(p, g.player.position);

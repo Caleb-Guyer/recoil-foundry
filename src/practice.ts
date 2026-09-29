@@ -52,7 +52,7 @@ export function practiceBuild(
 export function testEncounterFromUrl(url: URL): Encounter | null {
   const params = url.searchParams;
   const requested = params.get('test');
-  if (requested === 'loader') {
+  if (requested === 'loader' || requested === 'crane') {
     if (
       params.getAll('test').length !== 1 ||
       params.getAll('mirror').length > 1 ||
@@ -63,8 +63,15 @@ export function testEncounterFromUrl(url: URL): Encounter | null {
     return (
       loadEncounters([
         {
-          kind: 'loader',
-          seed: params.get('mirror') === '1' ? 'LOADER-SHIFT-0' : 'LOADER-SHIFT-5',
+          kind: requested,
+          seed:
+            requested === 'crane'
+              ? params.get('mirror') === '1'
+                ? 'crane-camp-5'
+                : 'crane-camp-1'
+              : params.get('mirror') === '1'
+                ? 'LOADER-SHIFT-0'
+                : 'LOADER-SHIFT-5',
         },
       ])[0] ?? null
     );

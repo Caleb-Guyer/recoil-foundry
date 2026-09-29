@@ -1,5 +1,6 @@
 import Matter from 'matter-js';
 import { firstSolid } from './collisions.ts';
+import { groundBossTarget } from './ground-boss-hunt.ts';
 import type { Enemy, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, direction, distance, segmentBox } from './rules.ts';
@@ -71,7 +72,7 @@ function updateFlak(g: Game, e: Enemy) {
   g.onSound('enemy');
 }
 
-function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean) {
+function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean, camping: boolean) {
   const p = e.body.position;
   let drop = e.loaderDrop;
   if (
@@ -174,6 +175,7 @@ function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean) 
   if (!counter || visible(g, bossMuzzle(e))) return g.player.position.x;
   // A ledge remains real cover. Seek its side, then use the existing physical
   // hop to find an elevated angle instead of firing through the platform.
+  if (camping) return groundBossTarget(g, e, 42);
   const candidates = [220, -220, 380, -380, 560, -560]
     .map((offset) => clamp(g.player.position.x + offset, 70, g.worldWidth - 70))
     .filter((x) => visible(g, { x, y: p.y - 42 - 140 }));
@@ -182,6 +184,11 @@ function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean) 
 }
 
 export function updateLoader(g: Game, e: Enemy) {
+  if (!e.loaderCamp || distance(e.loaderCamp.at, g.player.position) > 75) {
+    e.loaderCamp = { at: { ...g.player.position }, since: g.time };
+    e.groundHunt = undefined;
+  }
+  const camping = g.adaptiveBosses && g.time - e.loaderCamp.since >= 2;
   const p = e.body.position,
     v = e.body.velocity,
     above = g.player.position.y < p.y - 130,
@@ -191,15 +198,25 @@ export function updateLoader(g: Game, e: Enemy) {
     nose = ENEMY_STATS.loader.w / 2 + 24;
   // Commit to a climb only after the player has settled on the ledge. Brief
   // recoil flights keep the existing flak response and ordinary charge pacing.
-  const perch = g.grounded
-    ? g.terrainBodies.find(
-        (b) =>
-          b.bounds.max.x - b.bounds.min.x < 700 &&
-          Math.abs(b.bounds.min.y - g.player.bounds.max.y) < 5 &&
-          g.player.position.x >= b.bounds.min.x &&
-          g.player.position.x <= b.bounds.max.x,
-      )
-    : undefined;
+  const observedPerch = g.terrainBodies.find(
+    (b) =>
+      b.bounds.max.x - b.bounds.min.x < 700 &&
+      (camping || g.grounded) &&
+      Math.abs(b.bounds.min.y - g.player.bounds.max.y) < (camping ? 10 : 5) &&
+      g.player.position.x >= b.bounds.min.x &&
+      g.player.position.x <= b.bounds.max.x,
+  );
+  const previousPerch = e.loaderPerch?.platform;
+  const perch =
+    observedPerch ??
+    (camping &&
+    previousPerch &&
+    g.terrainBodies.includes(previousPerch) &&
+    Math.abs(previousPerch.bounds.min.y - g.player.bounds.max.y) < 45 &&
+    g.player.position.x >= previousPerch.bounds.min.x &&
+    g.player.position.x <= previousPerch.bounds.max.x
+      ? previousPerch
+      : undefined);
   if (perch !== e.loaderPerch?.platform)
     e.loaderPerch = perch ? { platform: perch, since: g.time } : undefined;
   if (e.state === 'rush') {
@@ -255,13 +272,20 @@ export function updateLoader(g: Game, e: Enemy) {
       e.timer = 0.15;
     }
   } else {
-    const targetX = loaderApproach(g, e, counter, grounded),
+    const targetX = loaderApproach(g, e, counter, grounded, camping),
       sign = Math.sign(targetX - p.x) || Math.sign(g.player.position.x - p.x) || -1;
     e.aim = { x: sign, y: 0 };
     const speed = e.loaderClimb ? clamp((targetX - p.x) * 0.2, -3.4, 3.4) : sign * 3.4;
     Body.setVelocity(e.body, { x: v.x + (speed - v.x) * 0.1, y: v.y });
     const blocked = Math.abs(g.lineEnd(p, { x: p.x + sign * nose, y: p.y }).x - p.x) < nose - 1;
-    if (counter && !e.loaderClimb && e.timer <= 0 && visible(g, bossMuzzle(e))) beginFlak(g, e);
+    if (
+      counter &&
+      (!camping || grounded) &&
+      !e.loaderClimb &&
+      e.timer <= 0 &&
+      visible(g, bossMuzzle(e))
+    )
+      beginFlak(g, e);
     else if (
       grounded &&
       blocked &&
@@ -285,8 +309,10 @@ export function updateLoader(g: Game, e: Enemy) {
       e.timer = Math.max(e.timer, 0.6);
     } else if (grounded && e.timer <= 0 && !e.loaderClimb) {
       if (counter) {
-        Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
-        e.timer = 0.45;
+        if (!e.groundHunt) {
+          Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
+          e.timer = 0.45;
+        }
       } else if (Math.abs(g.player.position.y - p.y) < 180) {
         e.attack = 'aimed';
         e.state = 'windup';

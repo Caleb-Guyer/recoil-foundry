@@ -146,6 +146,7 @@ import { huntBoss, bossHasLane } from './boss-hunt.ts';
 import type { BossHunt } from './boss-hunt.ts';
 import { createCrane, updateCrane } from './crane-ai.ts';
 import type { CraneRig } from './crane-ai.ts';
+import type { GroundBossHunt } from './ground-boss-hunt.ts';
 import { createKiln, updateKiln, clearKiln } from './kiln-ai.ts';
 import type { KilnRig } from './kiln-ai.ts';
 import { practiceCheckpoint } from './practice.ts';
@@ -230,7 +231,9 @@ export interface Enemy {
   loaderClimb?: { platform: Matter.Body; x: number; launched: boolean };
   loaderDrop?: { platform: Matter.Body; x: number };
   loaderPerch?: { platform: Matter.Body; since: number };
+  loaderCamp?: { at: Vec; since: number };
   crane?: CraneRig;
+  groundHunt?: GroundBossHunt;
   kiln?: KilnRig;
   turbine?: TurbineRig;
   interceptor?: InterceptorRig;
@@ -441,6 +444,12 @@ export class Game {
       return [];
     const daily = dailyFromSeed(this.seed);
     return daily ? [dailyRegion(this.seed)!].filter(Boolean) : ['cooling', 'annex'];
+  }
+  // Archived Daily links retain their encounter rules; current Practice has
+  // its own versioned record table and always uses the corrected behavior.
+  get adaptiveBosses() {
+    const daily = /^RF-D(\d+)-/.exec(this.seed);
+    return !!this.practice || !daily || Number(daily[1]) >= 85;
   }
   get canChooseRoute() {
     return (

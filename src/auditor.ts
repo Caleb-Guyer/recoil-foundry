@@ -11,6 +11,7 @@ import {
   type Vec,
 } from './rules.ts';
 import { dailyFromSeed } from './daily.ts';
+import { groundBossTarget } from './ground-boss-hunt.ts';
 import {
   AUDITOR_HP,
   COMPANY_CASE,
@@ -316,34 +317,45 @@ export class AuditorSystem {
       Body.setVelocity(e.body, { x: e.body.velocity.x * 0.85, y: e.body.velocity.y });
       return;
     }
-    const lane = distance(g.lineEnd(p, g.player.position), g.player.position) < 1;
+    const lane =
+      distance(g.lineEnd(p, g.player.position, g.adaptiveBosses ? 7 : 0), g.player.position) < 1;
     const range = distance(p, g.player.position);
     if (e.state === 'idle') {
       e.aim = direction(p, g.player.position);
       e.facing = Math.sign(e.aim.x) || e.facing;
-      const sign = Math.sign(g.player.position.x - p.x);
+      if (grounded && lane && !e.groundHunt?.climb) e.groundHunt = undefined;
+      const targetX =
+        !g.adaptiveBosses || (lane && !e.groundHunt)
+          ? g.player.position.x
+          : groundBossTarget(g, e, 0);
+      const sign = Math.sign(targetX - p.x);
       const blocked =
         Query.ray(g.solidBodies, { x: p.x, y: p.y + 8 }, { x: p.x + sign * 65, y: p.y + 8 }, 22)
           .length > 0;
       const speed =
-        range > 350 || !lane ? sign * (3.8 + e.phase * 0.45) : range < 175 ? -sign * 2 : 0;
+        e.groundHunt || range > 350 || !lane
+          ? sign * (3.8 + e.phase * 0.45)
+          : range < 175
+            ? -sign * 2
+            : 0;
       Body.setVelocity(e.body, {
         x: e.body.velocity.x + (speed - e.body.velocity.x) * 0.12,
-        y: clamp(e.body.velocity.y, -15, 16),
+        y: clamp(e.body.velocity.y, e.groundHunt?.climb ? -26 : -15, 16),
       });
       if (
         grounded &&
+        (!e.groundHunt?.climb || (!e.groundHunt.climb.launched && Math.abs(targetX - p.x) > 25)) &&
         g.time >= rig.jumpAt &&
         (blocked || (g.player.position.y < p.y - 95 && Math.abs(g.player.position.x - p.x) < 300))
       ) {
-        Body.setVelocity(e.body, { x: sign * 5.5, y: -12.6 });
+        Body.setVelocity(e.body, { x: sign * 5.5, y: g.adaptiveBosses ? -15 : -12.6 });
         rig.jumpAt = g.time + 1.3;
       }
       if (grounded && Math.abs(e.body.velocity.x) > 1.5 && g.time >= rig.stepAt) {
         g.onSound('audit-step');
         rig.stepAt = g.time + 0.43;
       }
-      if (e.timer <= 0 && lane && range < 850) {
+      if (e.timer <= 0 && (!g.adaptiveBosses || grounded) && lane && range < 850) {
         const decks: AuditAttack[][] = [
           ['burst', 'charge'],
           ['fan', 'charge', 'burst'],
@@ -360,10 +372,14 @@ export class AuditorSystem {
         e.state = 'windup';
         e.timer = 1.05;
         e.target = { ...g.player.position };
+        if (g.adaptiveBosses) Body.setVelocity(e.body, { x: 0, y: e.body.velocity.y });
         g.onSound('audit-tell');
       }
     } else if (e.state === 'windup') {
-      Body.setVelocity(e.body, { x: e.body.velocity.x * 0.8, y: e.body.velocity.y });
+      Body.setVelocity(e.body, {
+        x: g.adaptiveBosses ? 0 : e.body.velocity.x * 0.8,
+        y: e.body.velocity.y,
+      });
       if (e.timer > 0.5) {
         e.target = { ...g.player.position };
         e.aim = direction(p, e.target);

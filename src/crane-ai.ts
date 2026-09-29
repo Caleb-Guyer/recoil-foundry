@@ -20,6 +20,7 @@ export interface CraneRig {
   body: Matter.Body;
   route: Vec[];
   planAt: number;
+  camp?: { at: Vec; since: number };
 }
 
 export function createCrane(g: Game, e: Enemy): CraneRig {
@@ -255,6 +256,8 @@ function recover(g: Game, e: Enemy, impact: boolean) {
 
 export function updateCrane(g: Game, e: Enemy) {
   const rig = e.crane!;
+  if (!rig.camp || distance(rig.camp.at, g.player.position) > 75)
+    rig.camp = { at: { ...g.player.position }, since: g.time };
   if (e.state === 'rush') {
     const d = direction(rig.head, rig.to),
       travel = Math.min(e.attack === 'slam' ? 19 : 16, distance(rig.head, rig.to));
@@ -352,8 +355,18 @@ export function updateCrane(g: Game, e: Enemy) {
     }
     return;
   }
-  const nextAttack = e.attacks % 2 ? 'slam' : 'sweep';
+  let nextAttack: 'slam' | 'sweep' = e.attacks % 2 ? 'slam' : 'sweep';
   let plan = g.player.position.y < 215 ? null : primaryPlan(g, e, nextAttack);
+  if (g.adaptiveBosses && !plan && g.player.position.y >= 215 && g.time - rig.camp.since >= 3) {
+    // A settled camper may block one setup while leaving the other exposed.
+    // Reposition the physical head before starting the full, unchanged tell.
+    const alternate = nextAttack === 'slam' ? 'sweep' : 'slam';
+    const alternative = primaryPlan(g, e, alternate);
+    if (alternative) {
+      nextAttack = alternate;
+      plan = alternative;
+    }
+  }
   if (plan && e.timer <= 0 && !moveHead(g, rig, plan.from)) plan = null;
   moveMotor(g, e, !plan);
   if (e.hp <= 0 || g.mode !== 'playing') return;

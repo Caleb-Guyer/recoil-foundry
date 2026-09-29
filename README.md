@@ -14,7 +14,9 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**The Sorting Pit — version 3.13.1.** A rare Reclamation fight beneath a scrap magnet. Cover rises, warning shadows appear, and the load falls on anything underneath. Shoot the exposed coil to drop it early. Three layouts include sheltered decks, inward conveyors and a recessed sorting floor. [Release notes and test links](docs/releases/3.13.1.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.13.1).
+**Boss pursuit — version 3.14.0.** The Crane adapts its strike setup to persistent campers, and bosses pursue more reliably around platforms, corners and loose cover. Their health, damage and attack warnings are unchanged. [Release notes and test links](docs/releases/3.14.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.14.0).
+
+The **Sorting Pit** is a rare Reclamation fight beneath a scrap magnet. Cover rises, warning shadows appear, and the load falls on anything underneath. Shoot the exposed coil to drop it early. Three layouts include sheltered decks, inward conveyors and a recessed sorting floor.
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 
