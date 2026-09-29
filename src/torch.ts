@@ -434,10 +434,12 @@ export class TorchSystem {
       this.pulseGain *
       (g.grounded ? 0.21 : 1) *
       this.recoilBoost;
+    const beforeRecoil = g.player.velocity.y;
     Matter.Body.setVelocity(g.player, {
       x: clamp(g.player.velocity.x - d.x * impulse, -23, 23),
       y: clamp(g.player.velocity.y - d.y * impulse, -21, 20),
     });
+    g.commendations.mastery.recoiled(beforeRecoil - g.player.velocity.y);
     // Ramjet still requires fast travel; a beam renews its launch, not its hits.
     g.salvage.launch(d, g.gun.recoil * (g.grounded ? 0.21 : 1));
     g.feedback(this.stepBurn * (g.grounded ? 2 : 5), d);

@@ -9,7 +9,7 @@ import { UPGRADE_LORE, type Lore } from './lore-upgrades.ts';
 import { MACHINE_LORE, PLACE_LORE, RECORDS, TOOL_LORE } from './lore-factory.ts';
 import { DISCONNECT_STAGES } from './shutdown-layout.ts';
 import { STORY_KINDS, type StoryKind } from './story-layout.ts';
-import { COMMENDATIONS, type CommendationId } from './commendations.ts';
+import { COMMENDATIONS, commendationVisible, type CommendationId } from './commendations.ts';
 import { annexRevision, isAnnexStage, REGION_NAMES } from './regions.ts';
 
 export const LOGBOOK_KEY = 'rf-logbook-v1';
@@ -215,16 +215,18 @@ export function logbookEntries(
       description: '',
       lore: record.lore,
     })),
-    ...COMMENDATIONS.map((c) => ({
-      id: 'commendation:' + c.id,
-      name: c.name,
-      section: 'commendations' as const,
-      label: commendations.includes(c.id) ? 'Commendation earned' : 'Commendation · Pending',
-      description: c.objective,
-      earned: commendations.includes(c.id),
-      reward: c.reward + ' · ' + c.slot,
-      lore: c.lore,
-    })),
+    ...COMMENDATIONS.filter((c) => commendationVisible(c.id, safe.enemies, commendations)).map(
+      (c) => ({
+        id: 'commendation:' + c.id,
+        name: c.name,
+        section: 'commendations' as const,
+        label: commendations.includes(c.id) ? 'Commendation earned' : 'Commendation · Pending',
+        description: c.objective,
+        earned: commendations.includes(c.id),
+        reward: c.reward + ' · ' + c.slot,
+        lore: c.lore,
+      }),
+    ),
   ];
 }
 export const LOGBOOK_TOTALS: Record<LogbookSection, number> = {

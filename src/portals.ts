@@ -289,6 +289,7 @@ export class PortalSystem {
       g.sappers.disrupt(body);
       g.tethers.disrupt(body);
       if (body === g.player) {
+        g.commendations.mastery.teleported();
         g.grapnel.detach();
         g.stasis.teleported();
       }

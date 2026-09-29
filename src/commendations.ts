@@ -1,9 +1,37 @@
 import type { Lore } from './lore-upgrades.ts';
 import type { Game, Enemy } from './game.ts';
 import { isBoss } from './enemies.ts';
+import { BossMastery } from './boss-mastery.ts';
 
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
+  {
+    id: 'unsafe-load',
+    name: 'Unsafe Load',
+    boss: 'loader',
+    objective: 'Bait the Loader into ramming a standing cargo support, then defeat it.',
+    reward: 'Caution',
+    slot: 'Gun finish',
+    lore: [
+      'LIFTING OPERATIONS · INCIDENT 033',
+      'E. Holt · Safety',
+      'The driver was instructed to keep the aisle clear. It interpreted this as permission to remove the aisle supports. You appear to have encouraged that interpretation.\n\nI have watched the recording. You waited until it committed, then moved. The machine continued to follow an instruction that no longer made sense. I am required to call this unacceptable handling of company equipment.\n\nThere was enough warning paint left on the broken brace for one receiver. Vale put it on yours.\n\nThe stripes mean keep your distance. Perhaps something down here will finally read them.',
+    ] as Lore,
+  },
+  {
+    id: 'clearance',
+    name: 'Clearance',
+    boss: 'crane',
+    objective:
+      'Recoil-vault over the Crane’s sweeping head, hit it during that recovery, then defeat it.',
+    reward: 'Operator',
+    slot: 'Outfit',
+    lore: [
+      'OVERHEAD HANDLING · INCIDENT 034',
+      'T. Orr · Dispatch',
+      'The clearance diagram allows for a load, a hook and a generous margin of empty air. It does not allow for a worker crossing above the hook while firing a service tool at the floor.\n\nYou were already turning when the head stopped. One shot into the motor before it could wind the cable back in. I replayed that part. Twice.\n\nThe operator’s coat was still hanging in the empty control booth. Blue canvas, pale shoulder tape, the little headset nobody answered. I have crossed out the old employee number.\n\nFor once, someone on the floor was operating the crane.',
+    ] as Lore,
+  },
   {
     id: 'maintenance-certified',
     name: 'Safe Passage',
@@ -90,6 +118,14 @@ export const COMMENDATIONS = [
   },
 ] as const;
 export type CommendationId = (typeof COMMENDATIONS)[number]['id'];
+export function commendationVisible(
+  id: CommendationId,
+  defeated: readonly string[],
+  earned: readonly CommendationId[],
+) {
+  const entry = COMMENDATIONS.find((c) => c.id === id)!;
+  return earned.includes(id) || !('boss' in entry) || defeated.includes(entry.boss);
+}
 export function loadCommendations(raw: unknown): CommendationId[] {
   return COMMENDATIONS.filter((c) => Array.isArray(raw) && raw.includes(c.id)).map((c) => c.id);
 }
@@ -111,12 +147,15 @@ export class CommendationTracker {
   cleanBoss = true;
   private loads = new Map<number, number>();
   private awarded = new Set<CommendationId>();
+  mastery: BossMastery;
   constructor(game: Game) {
     this.game = game;
+    this.mastery = new BossMastery(game);
   }
   resetRoom() {
     this.cleanBoss = true;
     this.loads.clear();
+    this.mastery.reset();
   }
   get eligible() {
     const g = this.game;
@@ -147,6 +186,7 @@ export class CommendationTracker {
     )
       return;
     if (isBoss(e.kind)) {
+      this.mastery.defeated(e);
       if (this.cleanBoss && g.level.boss && !g.escape) this.award('clean-work');
       if (source === 'reflection') this.award('return-to-sender');
     }

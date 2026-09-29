@@ -233,7 +233,10 @@ test('preview links are strict, return fresh data and expose only a small early-
   );
   preview.pop();
   assert.equal(logbookPreviewEntries().length, preview.length + 1);
-  assert.equal(logbookEntries([], loadLogbook(null)).length, 2 + COMMENDATIONS.length);
+  assert.equal(
+    logbookEntries([], loadLogbook(null)).length,
+    2 + COMMENDATIONS.filter((c) => !('boss' in c)).length,
+  );
 });
 
 test('record rendering escapes names, descriptions, signatures and recovered prose', () => {

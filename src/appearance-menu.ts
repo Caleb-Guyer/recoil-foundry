@@ -1,5 +1,5 @@
 import type { Game } from './game.ts';
-import { COMMENDATIONS, type CommendationId } from './commendations.ts';
+import { COMMENDATIONS, commendationVisible, type CommendationId } from './commendations.ts';
 import { GUN_FINISHES, OUTFITS, drawOutfit, loadCosmetics, type Cosmetics } from './cosmetics.ts';
 import { drawWeapon } from './weapon-art.ts';
 
@@ -7,6 +7,7 @@ export interface AppearanceOptions {
   game: Game;
   earned: readonly CommendationId[];
   preview: boolean;
+  defeated?: readonly string[];
   equip: (selection: Cosmetics) => void;
   logbook: () => void;
 }
@@ -31,6 +32,10 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
           (slot === 'gun' ? 'Gun finish' : 'Outfit') +
           '</legend><div class="appearance-choices">' +
           Object.entries(choices)
+            .filter(
+              ([, item]) =>
+                !item.unlock || commendationVisible(item.unlock, options.defeated ?? [], earned),
+            )
             .map(([id, item]) => {
               const locked = item.unlock && !earned.includes(item.unlock);
               const challenge = COMMENDATIONS.find((c) => c.id === item.unlock);

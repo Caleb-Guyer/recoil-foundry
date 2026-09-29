@@ -267,6 +267,11 @@ let trialMenuShare: TrialChallenge | undefined;
 let trialMenuParent = 'practice';
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
+let commendationNotice: {
+  id: (typeof commendations)[number];
+  until: number;
+  stage: number;
+} | null = null;
 let equippedCosmetics = loadCosmetics(read(COSMETICS_KEY), commendations);
 let logbookFromWorkshop = false;
 let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
@@ -311,6 +316,7 @@ document.getElementById('app')!.innerHTML = `
  </section>
  <div id="clock-out-controls" hidden><span class="sr-only" role="status">Clock Out. Your shift is complete.</span><button id="skip-clock-out" class="quiet">Skip ↗</button></div>
  <button id="save-warning" data-save-warning class="save-warning" hidden></button>
+ <div id="commendation-notice" class="commendation-notice" role="status" hidden></div>
  <div id="first-session-tip" class="first-session-tip" hidden><span id="first-session-copy" role="status"></span><button id="dismiss-tip" class="quiet" aria-label="Hide first-run tips">×</button></div>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
 </main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div><button data-save-warning class="save-warning modal-save-warning" hidden></button></dialog><span id="save-status" class="sr-only" role="status"></span>`;
@@ -1276,7 +1282,11 @@ game.maintenance.onClear = (clear) => {
 game.onCommendation = (id) => {
   if (!game.commendations.eligible) return;
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
-  if (!commendations.includes(id)) runCommendations.push(id);
+  if (!commendations.includes(id)) {
+    runCommendations.push(id);
+    if (id === 'unsafe-load' || id === 'clearance')
+      commendationNotice = { id, until: game.time + 5, stage: game.stage };
+  }
   commendations = mergeCommendations(commendations, [id]);
   write(COMMENDATIONS_KEY, commendations);
 };
@@ -1664,6 +1674,7 @@ function showDialog(kind: string) {
       {
         game,
         earned: visibleCommendations,
+        defeated: logbookProgress.enemies,
         preview: previewCommendations,
         equip: (selection) => {
           game.cosmetics = selection;
@@ -3030,6 +3041,22 @@ function frame(now: number) {
   if (now - hudAt > 80) {
     hudAt = now;
     updateFirstSession();
+    const notice = $('commendation-notice');
+    if (
+      commendationNotice &&
+      (game.time >= commendationNotice.until ||
+        game.stage !== commendationNotice.stage ||
+        game.mode === 'title' ||
+        game.mode === 'dead')
+    )
+      commendationNotice = null;
+    notice.hidden =
+      !commendationNotice ||
+      game.mode !== 'playing' ||
+      game.enemies.some((e) => e.hp > 0 && !e.allied);
+    if (!notice.hidden && commendationNotice)
+      notice.textContent =
+        'Commendation earned · ' + COMMENDATIONS.find((c) => c.id === commendationNotice!.id)!.name;
     $('portal-touch').hidden = !game.portals.canPlace;
     if (!game.portals.canPlace && portalTouch) {
       portalTouch = false;

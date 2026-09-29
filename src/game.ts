@@ -1711,10 +1711,12 @@ export class Game {
       (this.grounded ? 0.21 : 1) *
       (charged ? 1.25 : 1) *
       (rail ? RAIL_RECOIL : 1);
+    const beforeRecoil = this.player.velocity.y;
     Body.setVelocity(this.player, {
       x: clamp(this.player.velocity.x - d.x * impulse, -23, 23),
       y: clamp(this.player.velocity.y - d.y * impulse, -21, 20),
     });
+    this.commendations.mastery.recoiled(beforeRecoil - this.player.velocity.y);
     this.salvage.launch(d, impulse);
     this.onHaptic('shot', Math.min(1, 0.3 + impulse / 12));
     this.feedback(
@@ -3157,6 +3159,8 @@ export class Game {
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
     e.hp -= damage;
+    if (credited && from && damage > 0 && source !== 'cleanup' && typeof source !== 'object')
+      this.commendations.mastery.hit(e);
     this.auditor.damaged(e);
     if (damage > 0 && e.hp > 0 && e.fabricator) this.fabricators.interrupt(e);
     if (feedback) {

@@ -256,6 +256,7 @@ function recover(g: Game, e: Enemy, impact: boolean) {
 
 export function updateCrane(g: Game, e: Enemy) {
   const rig = e.crane!;
+  g.commendations.mastery.sampleSweep(e);
   if (!rig.camp || distance(rig.camp.at, g.player.position) > 75)
     rig.camp = { at: { ...g.player.position }, since: g.time };
   if (e.state === 'rush') {
@@ -277,6 +278,7 @@ export function updateCrane(g: Game, e: Enemy) {
       if (g.mode !== 'playing') return;
     }
     setHead(rig, end);
+    g.commendations.mastery.sampleSweep(e);
     const finished = distance(rig.head, rig.to) < 1;
     // A warned path stops just outside cover. Resolve that final contact too,
     // without extending player damage beyond the marked endpoint.
@@ -390,6 +392,7 @@ export function updateCrane(g: Game, e: Enemy) {
     rig.from = plan.from;
     rig.to = plan.to;
     rig.hit = false;
+    g.commendations.mastery.beginSweep(e);
     g.onSound('crane-wind');
   }
 }

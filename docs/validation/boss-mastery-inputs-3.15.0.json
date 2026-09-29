@@ -1,0 +1,134 @@
+{
+  "ordinaryInputs": true,
+  "alteredCombatState": false,
+  "results": [
+    {
+      "kind": "loader",
+      "mirror": false,
+      "build": "round",
+      "seed": "mastery-0",
+      "qualified": true,
+      "vaults": 0,
+      "recoveryHits": 0,
+      "awards": [
+        "unsafe-load"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 100,
+      "seconds": 13.98
+    },
+    {
+      "kind": "loader",
+      "mirror": false,
+      "build": "beam",
+      "seed": "mastery-0",
+      "qualified": true,
+      "vaults": 0,
+      "recoveryHits": 0,
+      "awards": [
+        "unsafe-load"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 100,
+      "seconds": 20.52
+    },
+    {
+      "kind": "loader",
+      "mirror": true,
+      "build": "round",
+      "seed": "mastery-1",
+      "qualified": true,
+      "vaults": 0,
+      "recoveryHits": 0,
+      "awards": [
+        "unsafe-load"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 100,
+      "seconds": 19.93
+    },
+    {
+      "kind": "loader",
+      "mirror": true,
+      "build": "beam",
+      "seed": "mastery-1",
+      "qualified": true,
+      "vaults": 0,
+      "recoveryHits": 0,
+      "awards": [
+        "unsafe-load"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 100,
+      "seconds": 17.28
+    },
+    {
+      "kind": "crane",
+      "mirror": false,
+      "build": "round",
+      "seed": "mastery-2",
+      "qualified": true,
+      "vaults": 4,
+      "recoveryHits": 33,
+      "awards": [
+        "clearance"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 28,
+      "seconds": 19.72
+    },
+    {
+      "kind": "crane",
+      "mirror": false,
+      "build": "beam",
+      "seed": "mastery-2",
+      "qualified": true,
+      "vaults": 4,
+      "recoveryHits": 492,
+      "awards": [
+        "clearance"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 28,
+      "seconds": 20.67
+    },
+    {
+      "kind": "crane",
+      "mirror": true,
+      "build": "round",
+      "seed": "mastery-4",
+      "qualified": true,
+      "vaults": 4,
+      "recoveryHits": 25,
+      "awards": [
+        "clearance"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 28,
+      "seconds": 18.45
+    },
+    {
+      "kind": "crane",
+      "mirror": true,
+      "build": "beam",
+      "seed": "mastery-4",
+      "qualified": true,
+      "vaults": 5,
+      "recoveryHits": 415,
+      "awards": [
+        "clearance"
+      ],
+      "clear": true,
+      "mode": "playing",
+      "hp": 4,
+      "seconds": 23
+    }
+  ]
+}

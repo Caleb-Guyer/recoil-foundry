@@ -254,7 +254,11 @@ export function updateLoader(g: Game, e: Enemy) {
         g.feedback(5);
         g.onSound('crash');
         if (prop) g.props.strike(prop, 160, e.aim);
-        if (weak) g.destruction.hitBody(contact!.body, 160, e.aim);
+        if (weak) {
+          const support = g.loaderArena.supports.find((s) => s.barrier.body === contact!.body);
+          g.destruction.hitBody(contact!.body, 160, e.aim);
+          if (support) g.commendations.mastery.loaderRam(e, support);
+        }
       }
     } else Body.setVelocity(e.body, { x: e.aim.x * 15, y: v.y });
   } else if (e.state === 'windup') {

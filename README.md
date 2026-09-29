@@ -14,7 +14,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Boss pursuit — version 3.14.0.** The Crane adapts its strike setup to persistent campers, and bosses pursue more reliably around platforms, corners and loose cover. Their health, damage and attack warnings are unchanged. [Release notes and test links](docs/releases/3.14.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.14.0).
+**Boss mastery — version 3.15.0.** Two new challenges reward turning a Loader ram against its cargo supports and recoil-vaulting the Crane’s sweep. Earn the Caution gun finish, Operator outfit and factory incident reports. Objectives reveal after the corresponding boss’s first defeat. [Release notes and preview links](docs/releases/3.15.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.15.0).
 
 The **Sorting Pit** is a rare Reclamation fight beneath a scrap magnet. Cover rises, warning shadows appear, and the load falls on anything underneath. Shoot the exposed coil to drop it early. Three layouts include sheltered decks, inward conveyors and a recessed sorting floor.
 

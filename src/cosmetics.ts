@@ -42,6 +42,14 @@ export const GUN_FINISHES = {
     light: '#eeb16e',
     unlock: 'hot-work',
   },
+  caution: {
+    name: 'Caution',
+    shell: '#c5a35f',
+    face: '#efcf80',
+    trim: '#303b39',
+    light: '#f5e5ab',
+    unlock: 'unsafe-load',
+  },
 } as const;
 export const OUTFITS = {
   standard: { name: 'Workwear', body: '#e7e8db', boots: '#a6b4ae', trim: '#9bcfc1', unlock: null },
@@ -72,6 +80,13 @@ export const OUTFITS = {
     boots: '#3e5452',
     trim: '#e5dcae',
     unlock: 'maintenance-certified',
+  },
+  operator: {
+    name: 'Operator',
+    body: '#8aaeb9',
+    boots: '#536e7a',
+    trim: '#f0e3b9',
+    unlock: 'clearance',
   },
 } as const;
 export interface Cosmetics {
@@ -120,6 +135,16 @@ export function drawOutfit(
     c.fillRect(-8, -16, 16, 2);
     c.fillStyle = p.trim;
     c.fillRect(facing > 0 ? 9 : -11, -14, 2, 4);
+  } else if (id === 'operator') {
+    c.fillStyle = '#405c6a';
+    c.fillRect(-10, 0, 20, 12);
+    c.fillRect(-11, -16, 3, 10);
+    c.fillRect(8, -16, 3, 10);
+    c.fillStyle = p.trim;
+    c.fillRect(-12, -1, 7, 3);
+    c.fillRect(5, -1, 7, 3);
+    c.fillRect(-1, 3, 2, 9);
+    c.fillRect(facing > 0 ? 8 : -10, -7, 2, 6);
   } else if (id === 'servicewear') {
     c.fillStyle = '#405e57';
     c.fillRect(-10, -1, 20, 12);
@@ -153,7 +178,23 @@ export function drawFinishMark(c: CanvasRenderingContext2D, id: Cosmetics['gun']
   if (id === 'standard') return;
   const p = GUN_FINISHES[id];
   c.fillStyle = p.trim;
-  if (id === 'kiln') {
+  if (id === 'caution') {
+    // The narrow receiver panel leaves the sight and charge lamps unobscured.
+    c.save();
+    c.beginPath();
+    c.rect(11, -3, 13, 6);
+    c.clip();
+    for (const x of [8, 14, 20, 26]) {
+      c.beginPath();
+      c.moveTo(x, -3);
+      c.lineTo(x + 3, -3);
+      c.lineTo(x - 1, 3);
+      c.lineTo(x - 4, 3);
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+  } else if (id === 'kiln') {
     c.fillRect(11, 1, 12, 3);
     c.fillStyle = '#a2937e';
     for (const x of [12, 16, 20]) c.fillRect(x, 2, 2, 1.5);
