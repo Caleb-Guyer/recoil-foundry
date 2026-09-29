@@ -1,0 +1,129 @@
+{
+  "baselineCommit": "dcb008d461aeeec8c66482f1c04d07fe142b52cd",
+  "runtimeCommit": "50a3e08f82a66f41a56ef13903ed31300ee855b5",
+  "cases": 696,
+  "durationLimitSeconds": 40,
+  "note": "One non-firing overhead Auditor start reaches its ordinary timed retreat untouched. Zero no-damage kills. See the validation document for scope and extended hold checks.",
+  "bosses": [
+    {
+      "boss": "welder",
+      "cases": 58,
+      "beforeUntouched": 6,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 2,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 8,
+      "afterGapsOver15s": 1
+    },
+    {
+      "boss": "switchboard",
+      "cases": 52,
+      "beforeUntouched": 4,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 4,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 9,
+      "afterGapsOver15s": 1
+    },
+    {
+      "boss": "loader",
+      "cases": 62,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 5,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "crane",
+      "cases": 60,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 0,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "press",
+      "cases": 60,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 0,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "kiln",
+      "cases": 58,
+      "beforeUntouched": 13,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 16,
+      "afterGapsOver15s": 3
+    },
+    {
+      "boss": "condenser",
+      "cases": 66,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 0,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "turbine",
+      "cases": 60,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 1,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "sorter",
+      "cases": 56,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 0,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "interceptor",
+      "cases": 66,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 2,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "boss",
+      "cases": 66,
+      "beforeUntouched": 0,
+      "afterUntouched": 0,
+      "beforeNoDamageKills": 0,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 0,
+      "afterGapsOver15s": 0
+    },
+    {
+      "boss": "auditor",
+      "cases": 32,
+      "beforeUntouched": 23,
+      "afterUntouched": 1,
+      "beforeNoDamageKills": 1,
+      "afterNoDamageKills": 0,
+      "beforeGapsOver15s": 24,
+      "afterGapsOver15s": 1
+    }
+  ]
+}

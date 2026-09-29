@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Boss pursuit 3.14.0 — 28 September 2026
+
+**Published on Pages and itch.io.** Runtime commit `50a3e08f82a66f41a56ef13903ed31300ee855b5` passed all **2,125 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36509499679). Tag `v3.14.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36510732958); the verified archive is itch.io upload `19459508`. Both public UIs report 3.14.0 and retain their saves. [Validation](validation/boss-camping-3.14.0.md) records the 696-case audit, extended hold checks, archive digest and browser verification scope.
+
+The Crane adapts obstructed strike setups after sustained camping. Ground bosses pursue physical standing positions and platform routes; the Switchboard's extreme-wall escape probe and Turbine/Interceptor route fallbacks are corrected. Kiln pursuit clears low debris and no longer repeats blocked mortars indefinitely. Health, damage, warnings and weapon balance are unchanged. Daily rules 85 and Practice rules 2 distinguish the new behavior while preserving archived Daily encounters and earlier records. Publication checks are complete; 3.13.1 remains the previous stable release, with no save-schema migration required.
+
 ## Loader ledge fix 3.13.1 — 28 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `dcb008d461aeeec8c66482f1c04d07fe142b52cd` passed all **2,103 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36503320607). Tag `v3.13.1` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36504684578); the verified archive is itch.io upload `19458588`. Both public players show 3.13.1 and retain their existing saves. [Validation](validation/loader-perches-3.13.1.md) records the archive digest, 54 perch positions, ceiling Bank Shot cases, dodge windows, descent checks and browser scope.
