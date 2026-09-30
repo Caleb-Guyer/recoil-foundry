@@ -50,6 +50,30 @@ export const GUN_FINISHES = {
     light: '#f5e5ab',
     unlock: 'unsafe-load',
   },
+  carom: {
+    name: 'Carom',
+    shell: '#466953',
+    face: '#b5c5a5',
+    trim: '#caab69',
+    light: '#e6d5a2',
+    unlock: 'bank-job',
+  },
+  airmail: {
+    name: 'Airmail',
+    shell: '#607e9b',
+    face: '#d9e4df',
+    trim: '#374c67',
+    light: '#ebf3df',
+    unlock: 'air-traffic',
+  },
+  waybill: {
+    name: 'Waybill',
+    shell: '#71677e',
+    face: '#d8cab1',
+    trim: '#423a50',
+    light: '#ece1ce',
+    unlock: 'special-delivery',
+  },
 } as const;
 export const OUTFITS = {
   redline: {
@@ -196,7 +220,29 @@ export function drawFinishMark(c: CanvasRenderingContext2D, id: Cosmetics['gun']
   if (id === 'standard') return;
   const p = GUN_FINISHES[id];
   c.fillStyle = p.trim;
-  if (id === 'caution') {
+  if (id === 'carom') {
+    c.fillRect(12, -3, 3, 6);
+    c.fillRect(12, 1, 11, 2);
+  } else if (id === 'airmail') {
+    c.fillStyle = p.light;
+    c.beginPath();
+    c.moveTo(11, 2);
+    c.lineTo(16, -3);
+    c.lineTo(23, -3);
+    c.lineTo(18, 2);
+    c.closePath();
+    c.fill();
+    c.fillStyle = p.trim;
+    c.fillRect(18, -2, 3, 1);
+  } else if (id === 'waybill') {
+    c.fillStyle = p.light;
+    c.fillRect(11, -3, 13, 6);
+    c.fillStyle = p.trim;
+    c.fillRect(12, -1, 3, 2);
+    c.fillRect(20, -1, 3, 2);
+    c.fillRect(14, -2, 1, 4);
+    c.fillRect(20, -2, 1, 4);
+  } else if (id === 'caution') {
     // The narrow receiver panel leaves the sight and charge lamps unobscured.
     c.save();
     c.beginPath();

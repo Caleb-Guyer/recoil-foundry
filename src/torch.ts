@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import type { WeaponTrace } from './weapon-mastery.ts';
 import { meltPass, type MeltPass } from './melt-through.ts';
 import type { Game, Enemy, Shot } from './game.ts';
 import type { Prop } from './props.ts';
@@ -24,6 +25,7 @@ export const TORCH = {
   segments: 12,
 };
 export interface TorchSegment {
+  weaponTrace?: WeaponTrace;
   melt?: MeltPass;
   portalExit?: TorchOrigin;
   a: Vec;
@@ -45,6 +47,7 @@ export interface TorchSegment {
   muzzle?: boolean;
 }
 export interface TorchOrigin {
+  weaponTrace?: WeaponTrace;
   meltSpent?: boolean;
   pocketSpent?: boolean;
   from: Vec;
@@ -93,6 +96,7 @@ export function traceTorch(
     pierce = start.pierce;
     gain = start.gain;
   }
+  let weaponTrace: WeaponTrace = { ...start?.weaponTrace };
   const result: TorchSegment[] = [],
     visited = new Set<Matter.Body>();
   const radius = start?.radius ?? torchRadius(g),
@@ -126,6 +130,7 @@ export function traceTorch(
       through = portal && portal.t <= t + 1e-6,
       point = add(from, d, remaining * (through ? portal!.t : t));
     const segment: TorchSegment = {
+      weaponTrace,
       a: { ...from },
       b: point,
       dir: { ...d },
@@ -135,6 +140,7 @@ export function traceTorch(
     result.push(segment);
     remaining -= distance(from, point);
     if (through) {
+      weaponTrace = { ...weaponTrace, portaled: true };
       if (!relay.used && g.mods.includes('relay-gate')) {
         relay.used = true;
         banks++;
@@ -144,6 +150,7 @@ export function traceTorch(
       d = portalVector(d, portal!.entry, portal!.exit);
       remaining -= 1;
       segment.portalExit = {
+        weaponTrace,
         pocketSpent,
         meltSpent,
         from: { ...from },
@@ -216,6 +223,7 @@ export function traceTorch(
       continue;
     }
     if (banks-- <= 0 || !g.terrainBodies.includes(hit.body)) break;
+    weaponTrace = { ...weaponTrace, banked: true };
     const dot = d.x * hit.normal.x + d.y * hit.normal.y;
     d = { x: d.x - 2 * dot * hit.normal.x, y: d.y - 2 * dot * hit.normal.y };
     gain *= 1 + g.gun.bankGrowth;
@@ -566,6 +574,7 @@ export class TorchSystem {
         return;
       }
       const s = this.pulse!;
+      s.weaponTrace = segment.weaponTrace;
       if (segment.valve) g.pressure.trigger(segment.valve);
       if (segment.floodValve) g.floodgate.trigger(segment.floodValve);
       if (segment.sortingCoil) g.sortingPit.trigger();
@@ -605,7 +614,16 @@ export class TorchSystem {
           (this.fracture.get(e.id) ?? 1) *
           (g.gun.execute && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
         const previousHp = e.hp;
-        const blocked = g.hitEnemy(e, damage, add(e.body.position, segment.dir, -30), !!first);
+        const blocked = g.hitEnemy(
+          e,
+          damage,
+          add(e.body.position, segment.dir, -30),
+          !!first,
+          true,
+          true,
+          undefined,
+          segment.weaponTrace,
+        );
         g.spoof.hit(e, previousHp, true);
         if (!blocked) {
           g.evolutions.hit(s);

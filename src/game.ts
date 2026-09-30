@@ -63,6 +63,7 @@ import { planWelder, welderLevel, welderPracticeLevel } from './welder-layout.ts
 import { AuditorSystem, type AuditorRig } from './auditor.ts';
 import { auditorTestLevel } from './auditor-layout.ts';
 import { CommendationTracker, type CommendationId, type KillSource } from './commendations.ts';
+import { markShot, shotTrace, type WeaponTrace } from './weapon-mastery.ts';
 import type { Cosmetics } from './cosmetics.ts';
 import { CryogenicSystem } from './cryogenic.ts';
 import { StasisSystem, suspended, type StasisFlight } from './stasis.ts';
@@ -253,6 +254,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  weaponTrace?: WeaponTrace;
   meltSpent?: boolean;
   meltTransit?: MeltTransit;
   molten?: boolean;
@@ -606,6 +608,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.commendations.weapons.reset();
       this.welder.clear();
       this.switchboard.clear();
       this.annex.clear();
@@ -1435,6 +1438,7 @@ export class Game {
       return;
     }
     this.massDriver.beforeStep(dt);
+    this.commendations.weapons.sampleGround();
     this.time += dt;
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
@@ -1596,6 +1600,7 @@ export class Game {
     this.portals.beforeStep();
     this.counterweights.beforeStep();
     Engine.update(this.engine, 1000 / 60);
+    this.commendations.weapons.sampleGround();
     this.counterweights.afterStep();
     this.salvage.afterStep();
     this.salvageEvolutions.afterStep();
@@ -2804,6 +2809,7 @@ export class Game {
               : (nearest?.t ?? 1)),
         );
         if (passage && (!nearest || passage.t <= nearest.t + 1e-6)) {
+          markShot(s, 'portaled');
           const entryPoint = {
             x: s.pos.x + (end.x - s.pos.x) * passage.t + passage.entry.normal.x * 0.5,
             y: s.pos.y + (end.y - s.pos.y) * passage.t + passage.entry.normal.y * 0.5,
@@ -2980,6 +2986,7 @@ export class Game {
             true,
             true,
             s.reflected ? 'reflection' : undefined,
+            shotTrace(s),
           );
           this.spoof.hit(e, previousHp, primaryGunShot(s));
           if (blocked) {
@@ -3103,6 +3110,7 @@ export class Game {
             redirectVector(s);
             s.bounces--;
             s.banks++;
+            markShot(s, 'banked');
             s.damage *= 1 + s.bankGrowth;
             if (s.shell) s.shell.damage *= 1 + s.bankGrowth;
             if (s.bankGrowth > 0) {
@@ -3152,6 +3160,7 @@ export class Game {
           : { ...s.pos },
         vel: { x: Math.cos(a) * (shatter ? 20 : 16), y: Math.sin(a) * (shatter ? 20 : 16) },
         damage: s.damage * (shatter ? 0.3 : 0.2),
+        weaponTrace: shotTrace(s),
         // Splinter shares its originating discharge's scrap credit. Echo and
         // reflected fragments cannot turn secondary damage into a fresh charge.
         feedGeneration: !s.echo && !s.reflected ? (s.feedGeneration ?? s.discharge) : undefined,
@@ -3191,6 +3200,7 @@ export class Game {
     killEffects = true,
     credited = true,
     source?: KillSource,
+    trace?: WeaponTrace,
   ): boolean {
     if (e.hp <= 0 || e.allied) return false;
     if ((e.kind === 'auditor' || e.kind === 'welder') && e.spawn > 0) return true;
@@ -3223,7 +3233,9 @@ export class Game {
     if (e.kind === 'boss')
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
+    const healthLost = Math.min(e.hp, Math.max(0, damage));
     e.hp -= damage;
+    if (credited && source !== 'cleanup') this.commendations.weapons.hit(e, healthLost, trace);
     if (credited && from && damage > 0 && source !== 'cleanup' && typeof source !== 'object')
       this.commendations.mastery.hit(e);
     this.auditor.damaged(e);
@@ -3250,7 +3262,7 @@ export class Game {
     if (e.hp > 0) return blocked;
     this.auditor.killed(e, credited && source !== 'cleanup');
     this.welder.killed(e, credited && source !== 'cleanup');
-    if (credited) this.commendations.defeated(e, source);
+    if (credited) this.commendations.defeated(e, source, trace);
     if (
       isBoss(e.kind) &&
       !this.practice &&

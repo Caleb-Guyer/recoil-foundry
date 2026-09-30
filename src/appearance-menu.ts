@@ -8,6 +8,7 @@ export interface AppearanceOptions {
   earned: readonly CommendationId[];
   preview: boolean;
   defeated?: readonly string[];
+  discovered?: readonly string[];
   equip: (selection: Cosmetics) => void;
   logbook: () => void;
 }
@@ -34,7 +35,13 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
           Object.entries(choices)
             .filter(
               ([, item]) =>
-                !item.unlock || commendationVisible(item.unlock, options.defeated ?? [], earned),
+                !item.unlock ||
+                commendationVisible(
+                  item.unlock,
+                  options.defeated ?? [],
+                  earned,
+                  options.discovered,
+                ),
             )
             .map(([id, item]) => {
               const locked = item.unlock && !earned.includes(item.unlock);

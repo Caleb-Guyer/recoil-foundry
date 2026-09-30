@@ -215,18 +215,18 @@ export function logbookEntries(
       description: '',
       lore: record.lore,
     })),
-    ...COMMENDATIONS.filter((c) => commendationVisible(c.id, safe.enemies, commendations)).map(
-      (c) => ({
-        id: 'commendation:' + c.id,
-        name: c.name,
-        section: 'commendations' as const,
-        label: commendations.includes(c.id) ? 'Commendation earned' : 'Commendation · Pending',
-        description: c.objective,
-        earned: commendations.includes(c.id),
-        reward: c.reward + ' · ' + c.slot,
-        lore: c.lore,
-      }),
-    ),
+    ...COMMENDATIONS.filter((c) =>
+      commendationVisible(c.id, safe.enemies, commendations, known),
+    ).map((c) => ({
+      id: 'commendation:' + c.id,
+      name: c.name,
+      section: 'commendations' as const,
+      label: commendations.includes(c.id) ? 'Commendation earned' : 'Commendation · Pending',
+      description: c.objective,
+      earned: commendations.includes(c.id),
+      reward: c.reward + ' · ' + c.slot,
+      lore: c.lore,
+    })),
   ];
 }
 export const LOGBOOK_TOTALS: Record<LogbookSection, number> = {

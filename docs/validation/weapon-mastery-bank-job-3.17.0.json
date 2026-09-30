@@ -1,0 +1,189 @@
+{
+  "ordinaryInputs": true,
+  "alteredCombatState": false,
+  "results": [
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-0",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Crane bay",
+      "mirrored": true,
+      "awards": [
+        "bank-job",
+        "clearance"
+      ],
+      "mode": "playing",
+      "clear": true,
+      "hp": 28,
+      "seconds": 41.75,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-1",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Crane bay",
+      "mirrored": true,
+      "awards": [
+        "bank-job"
+      ],
+      "mode": "playing",
+      "clear": true,
+      "hp": 52,
+      "seconds": 47.43,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-2",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Crane bay",
+      "mirrored": true,
+      "awards": [
+        "bank-job"
+      ],
+      "mode": "playing",
+      "clear": true,
+      "hp": 52,
+      "seconds": 47.43,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-3",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Loader bay",
+      "mirrored": true,
+      "awards": [],
+      "mode": "playing",
+      "clear": true,
+      "hp": 100,
+      "seconds": 23.65,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-4",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Crane bay",
+      "mirrored": true,
+      "awards": [
+        "bank-job",
+        "clearance"
+      ],
+      "mode": "playing",
+      "clear": true,
+      "hp": 76,
+      "seconds": 27.05,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-5",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Loader bay",
+      "mirrored": false,
+      "awards": [],
+      "mode": "playing",
+      "clear": true,
+      "hp": 100,
+      "seconds": 13.12,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-6",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Crane bay",
+      "mirrored": true,
+      "awards": [
+        "bank-job"
+      ],
+      "mode": "playing",
+      "clear": true,
+      "hp": 10,
+      "seconds": 57.18,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "bank-job",
+      "seed": "weapon-mastery-7",
+      "stage": 3,
+      "mods": [
+        "ricochet",
+        "banker",
+        "magnum"
+      ],
+      "layout": "Crane bay",
+      "mirrored": false,
+      "awards": [
+        "bank-job",
+        "clearance"
+      ],
+      "mode": "playing",
+      "clear": true,
+      "hp": 76,
+      "seconds": 37.65,
+      "kills": 1,
+      "maxAir": 1,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    }
+  ]
+}

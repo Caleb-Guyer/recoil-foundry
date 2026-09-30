@@ -1,5 +1,9 @@
 # Browser release operations
 
+## Weapon Mastery 3.17.0 — 29 September 2026
+
+Implementation, the 140-test focused suite, build and local browser checks are complete; full-suite verification and publication are in progress. Bank Job, Air Traffic and Special Delivery reward the Carom, Airmail and Waybill finishes plus three factory reports. Discovery gates keep requirements in the Logbook, and notifications wait until combat clears. [Validation](validation/weapon-mastery-3.17.0.md) includes 24 ordinary-input attempts and provenance, lifecycle and backup checks. This publication also replaces the pending itch.io 3.16.0 upload with the cumulative 3.17.0 build.
+
 ## Security Levels 3.16.0 — 29 September 2026
 
 **Published on GitHub Pages; itch.io upload pending.** Runtime commit `276001f1e9932c2c3fdd6f6677077c8f6f022d36` passed all **2,150 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36653774531). Public test URLs and entry-asset digests match the tested build. Browser control failed before the itch.io upload; its previous verified release remains 3.15.0.

@@ -7,6 +7,7 @@ import type { Prop } from './props.ts';
 import { firstSolid } from './collisions.ts';
 import { STORM_CELL } from './cross-fusions.ts';
 import { primaryGunShot } from './spoof.ts';
+import { shotTrace, type WeaponTrace } from './weapon-mastery.ts';
 
 export const SHELL_DIRECT = 0.55;
 export const SHELL_BLAST = 0.85;
@@ -22,6 +23,7 @@ export interface ShellPayload {
   launch: number;
 }
 export interface DemolitionBlast {
+  weaponTrace?: WeaponTrace;
   primaryGun?: boolean;
   pos: Vec;
   damage: number;
@@ -33,6 +35,7 @@ export interface DemolitionBlast {
   shaped?: boolean;
 }
 export interface Bomblet {
+  weaponTrace?: WeaponTrace;
   primaryGun?: boolean;
   cell?: number;
   pos: Vec;
@@ -114,6 +117,7 @@ export class DemolitionSystem {
       radius: SHELL_RADIUS,
       kind: 'shell',
       primaryGun: primaryGunShot(shot),
+      weaponTrace: shotTrace(shot),
       direction: direction({ x: 0, y: 0 }, shot.vel),
       normal: body && shot.impactNormal ? shot.impactNormal : direction(shot.vel, { x: 0, y: 0 }),
     });
@@ -161,6 +165,7 @@ export class DemolitionSystem {
           launch: b.launch,
           kind: 'cluster',
           primaryGun: b.primaryGun,
+          weaponTrace: b.weaponTrace,
         });
         if (g.mode !== 'playing') return;
       }
@@ -203,6 +208,7 @@ export class DemolitionSystem {
         );
         this.bomblets.push({
           primaryGun: blast.primaryGun,
+          weaponTrace: blast.weaponTrace,
           cell,
           pos,
           prev: { ...pos },
@@ -296,7 +302,7 @@ export class DemolitionSystem {
     for (const { enemy, amount } of enemies) {
       if (!g.enemies.includes(enemy) || enemy.hp <= 0) continue;
       const previousHp = enemy.hp;
-      g.hitEnemy(enemy, damage * amount, pos);
+      g.hitEnemy(enemy, damage * amount, pos, true, true, true, undefined, blast.weaponTrace);
       g.spoof.hit(
         enemy,
         previousHp,

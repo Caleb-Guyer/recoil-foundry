@@ -92,7 +92,10 @@ test('commendations validate and merge persistent IDs; rewards only equip with t
 
 test('locked commendations expose objectives and rewards, but only earned reports are rendered', () => {
   const locked = logbookEntries([], loadLogbook(null)).filter((e) => e.section === 'commendations');
-  assert.equal(locked.length, COMMENDATIONS.filter((c) => !('boss' in c)).length);
+  assert.equal(
+    locked.length,
+    COMMENDATIONS.filter((c) => !('boss' in c) && !('upgrades' in c)).length,
+  );
   for (const entry of locked) {
     const html = logbookArticle(entry, () => '');
     assert(html.includes(entry.description));

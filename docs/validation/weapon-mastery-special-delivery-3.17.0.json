@@ -1,0 +1,235 @@
+{
+  "ordinaryInputs": true,
+  "alteredCombatState": false,
+  "results": [
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-0",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "Pump Room",
+      "mirrored": true,
+      "awards": [],
+      "mode": "dead",
+      "clear": false,
+      "hp": 0,
+      "seconds": 21.8,
+      "kills": 7,
+      "maxAir": 3,
+      "maxDeliveries": 0,
+      "portalPlacements": 3
+    },
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-1",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "Balance House",
+      "mirrored": false,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "dead",
+      "clear": false,
+      "hp": 0,
+      "seconds": 26.82,
+      "kills": 7,
+      "maxAir": 6,
+      "maxDeliveries": 3,
+      "portalPlacements": 3
+    },
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-2",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "The Dropworks",
+      "mirrored": false,
+      "awards": [
+        "air-traffic",
+        "special-delivery"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 75,
+      "seconds": 10.7,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 4,
+      "portalPlacements": 2
+    },
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-3",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "Balance House",
+      "mirrored": true,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": true,
+      "hp": 21,
+      "seconds": 20.98,
+      "kills": 10,
+      "maxAir": 6,
+      "maxDeliveries": 2,
+      "portalPlacements": 2
+    },
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-4",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "Cable Yard",
+      "mirrored": false,
+      "awards": [
+        "special-delivery"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 90,
+      "seconds": 14.18,
+      "kills": 6,
+      "maxAir": 4,
+      "maxDeliveries": 4,
+      "portalPlacements": 3
+    },
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-5",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "Return channel",
+      "mirrored": false,
+      "awards": [],
+      "mode": "dead",
+      "clear": false,
+      "hp": 0,
+      "seconds": 13.63,
+      "kills": 2,
+      "maxAir": 2,
+      "maxDeliveries": 0,
+      "portalPlacements": 2
+    },
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-6",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "Pump Room",
+      "mirrored": true,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "dead",
+      "clear": false,
+      "hp": 0,
+      "seconds": 28.4,
+      "kills": 8,
+      "maxAir": 8,
+      "maxDeliveries": 0,
+      "portalPlacements": 2
+    },
+    {
+      "challenge": "special-delivery",
+      "seed": "weapon-mastery-7",
+      "stage": 9,
+      "mods": [
+        "fold",
+        "rewire",
+        "ricochet",
+        "pierce",
+        "magnum",
+        "rapid",
+        "scatter",
+        "leech",
+        "light"
+      ],
+      "layout": "Pump Room",
+      "mirrored": true,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "dead",
+      "clear": false,
+      "hp": 0,
+      "seconds": 38.83,
+      "kills": 7,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 2
+    }
+  ]
+}

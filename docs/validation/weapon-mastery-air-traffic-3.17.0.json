@@ -1,0 +1,238 @@
+{
+  "ordinaryInputs": true,
+  "alteredCombatState": false,
+  "results": [
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-0",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "Pump Room",
+      "mirrored": true,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 100,
+      "seconds": 9.03,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-1",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "Balance House",
+      "mirrored": false,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 88,
+      "seconds": 11.72,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-2",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "The Dropworks",
+      "mirrored": false,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 100,
+      "seconds": 11.3,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-3",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "Balance House",
+      "mirrored": true,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 100,
+      "seconds": 6.78,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-4",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "Cable Yard",
+      "mirrored": false,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 100,
+      "seconds": 9.02,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-5",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "Return channel",
+      "mirrored": false,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 100,
+      "seconds": 9.35,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-6",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "Pump Room",
+      "mirrored": true,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 100,
+      "seconds": 8.6,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    },
+    {
+      "challenge": "air-traffic",
+      "seed": "weapon-mastery-7",
+      "stage": 9,
+      "mods": [
+        "kick",
+        "airshot",
+        "rapid",
+        "scatter",
+        "magnum",
+        "leech",
+        "light",
+        "pierce",
+        "ricochet"
+      ],
+      "layout": "Pump Room",
+      "mirrored": true,
+      "awards": [
+        "air-traffic"
+      ],
+      "mode": "playing",
+      "clear": false,
+      "hp": 100,
+      "seconds": 9.53,
+      "kills": 6,
+      "maxAir": 6,
+      "maxDeliveries": 0,
+      "portalPlacements": 0
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import {
   type SecurityLevel,
 } from './security.ts';
 import { securityTestFromUrl } from './security-test.ts';
+import { weaponMasteryTestFromUrl } from './weapon-mastery-test.ts';
 import { maintenanceTestFromUrl } from './maintenance-test.ts';
 import { SHAFT_NAMES } from './maintenance.ts';
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
@@ -279,7 +280,7 @@ let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let commendationNotice: {
   id: (typeof commendations)[number];
-  until: number;
+  until: number | null;
   stage: number;
 } | null = null;
 let equippedCosmetics = loadCosmetics(read(COSMETICS_KEY), commendations);
@@ -427,6 +428,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  weaponMasteryTestFromUrl(entryUrl) ??
   securityTestFromUrl(entryUrl) ??
   switchboardTestFromUrl(entryUrl) ??
   annexRouteTestFromUrl(entryUrl) ??
@@ -1329,8 +1331,8 @@ game.onCommendation = (id) => {
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   if (!commendations.includes(id)) {
     runCommendations.push(id);
-    if (id === 'unsafe-load' || id === 'clearance')
-      commendationNotice = { id, until: game.time + 5, stage: game.stage };
+    if (['unsafe-load', 'clearance', 'bank-job', 'air-traffic', 'special-delivery'].includes(id))
+      commendationNotice = { id, until: null, stage: game.stage };
   }
   commendations = mergeCommendations(commendations, [id]);
   write(COMMENDATIONS_KEY, commendations);
@@ -1745,6 +1747,7 @@ function showDialog(kind: string) {
         game,
         earned: visibleCommendations,
         defeated: logbookProgress.enemies,
+        discovered,
         preview: previewCommendations,
         equip: (selection) => {
           game.cosmetics = selection;
@@ -3121,7 +3124,7 @@ function frame(now: number) {
     const notice = $('commendation-notice');
     if (
       commendationNotice &&
-      (game.time >= commendationNotice.until ||
+      ((commendationNotice.until !== null && game.time >= commendationNotice.until) ||
         game.stage !== commendationNotice.stage ||
         game.mode === 'title' ||
         game.mode === 'dead')
@@ -3132,6 +3135,7 @@ function frame(now: number) {
       game.mode !== 'playing' ||
       game.enemies.some((e) => e.hp > 0 && !e.allied);
     if (!notice.hidden && commendationNotice) {
+      commendationNotice.until ??= game.time + 5;
       const copy =
         'Commendation earned · ' + COMMENDATIONS.find((c) => c.id === commendationNotice!.id)!.name;
       if (notice.textContent !== copy) notice.textContent = copy;

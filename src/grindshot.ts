@@ -3,9 +3,11 @@ import type { Game, Shot } from './game.ts';
 import { firstSolid, sweepBox } from './collisions.ts';
 import { clamp, direction, distance, type Vec } from './rules.ts';
 import { FLYWHEEL_DISTANCE } from './mass-driver.ts';
+import { shotTrace, type WeaponTrace } from './weapon-mastery.ts';
 
 export const GRIND = { speed: 420, life: 1.2, radius: 7, offset: 8.5, limit: 8 };
 export interface GrindSaw {
+  weaponTrace?: WeaponTrace;
   body: Matter.Body;
   edge: number;
   along: number;
@@ -103,6 +105,7 @@ export class GrindshotSystem {
     if (flywheel) flywheel.spent = true;
     for (const sign of signs)
       this.saws.push({
+        weaponTrace: shotTrace(shot),
         body,
         edge,
         along,
@@ -145,7 +148,16 @@ export class GrindshotSystem {
       };
       // Secondary damage retains armor, directional shields and Bloodwork;
       // it never creates more saws or repeats the primary round's upgrade procs.
-      const shielded = g.hitEnemy(e, saw.damage, source);
+      const shielded = g.hitEnemy(
+        e,
+        saw.damage,
+        source,
+        true,
+        true,
+        true,
+        undefined,
+        saw.weaponTrace,
+      );
       if (shielded || g.mode !== 'playing') return false;
     }
     if (block) {

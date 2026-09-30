@@ -235,7 +235,7 @@ test('preview links are strict, return fresh data and expose only a small early-
   assert.equal(logbookPreviewEntries().length, preview.length + 1);
   assert.equal(
     logbookEntries([], loadLogbook(null)).length,
-    2 + COMMENDATIONS.filter((c) => !('boss' in c)).length,
+    2 + COMMENDATIONS.filter((c) => !('boss' in c) && !('upgrades' in c)).length,
   );
 });
 

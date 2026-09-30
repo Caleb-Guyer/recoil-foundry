@@ -2,9 +2,49 @@ import type { Lore } from './lore-upgrades.ts';
 import type { Game, Enemy } from './game.ts';
 import { isBoss } from './enemies.ts';
 import { BossMastery } from './boss-mastery.ts';
+import { WeaponMastery, type WeaponTrace } from './weapon-mastery.ts';
 
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
+  {
+    id: 'bank-job',
+    name: 'Bank Job',
+    upgrades: ['ricochet'],
+    objective: 'Defeat a boss with at least half your damage coming from ricocheted shots.',
+    reward: 'Carom',
+    slot: 'Gun finish',
+    lore: [
+      'TOOLROOM · SURFACE DAMAGE CLAIM 036',
+      'M. Vale · Maintenance',
+      'The wall repairs came out of my budget. The security replacement came out of theirs. I have put both invoices on the same desk.\n\nYou marked the concrete before you marked the machine. Every strike on the receiver arrived from somewhere the machine was not watching. There is a diagram attached to the complaint. Someone has drawn the same angle seventeen times.\n\nI used the green enamel from the toolroom lockers, then inlaid a brass corner along the receiver. It is a reminder to check the surroundings before blaming the tool.\n\nPlease aim for a different wall next time.',
+    ] as Lore,
+  },
+  {
+    id: 'air-traffic',
+    name: 'Air Traffic',
+    upgrades: ['kick', 'airshot'],
+    objective: 'Defeat six enemies in one room without touching the ground between kills.',
+    reward: 'Airmail',
+    slot: 'Gun finish',
+    lore: [
+      'DISPATCH · UNSCHEDULED AIR MOVEMENT 037',
+      'T. Orr · Dispatch',
+      'Six separate reports came in from the same aisle. Every unit requested assistance with a target above its assigned search area. By the sixth report, the first five units were unavailable.\n\nI checked the lift schedule. Nothing had moved. I checked the overhead camera and found you correcting your height with the gun. The recoil figures on the service sheet suddenly look less like a defect.\n\nThere was blue paint left from the roof beacons. Vale added a pale flight stripe. I have entered the receiver as an aerial delivery device.\n\nThis should stop Purchasing asking why it has no stock.',
+    ] as Lore,
+  },
+  {
+    id: 'special-delivery',
+    name: 'Special Delivery',
+    upgrades: ['fold'],
+    objective: 'Defeat four enemies in one room with shots that traveled through your portals.',
+    reward: 'Waybill',
+    slot: 'Gun finish',
+    lore: [
+      'INTERNAL MAIL · ROUTING EXCEPTION 038',
+      'Dr. S. Anik · Development',
+      'Four deliveries. One entrance. One exit. No recorded transit time.\n\nThe receiving department insists the parcels originated inside its own perimeter. Dispatch insists they left a loading door on the other side of the room. Both statements are accurate. I would prefer that the incident report contain neither.\n\nThe receiver is now violet with a cream routing label. Orr drew an arrow into one end of the label and another out of the opposite end. There is no line between them.\n\nWe used to spend months trying to explain that gap. You appear to have found a practical use for it.',
+    ] as Lore,
+  },
   {
     id: 'redline',
     name: 'Beyond Clearance',
@@ -134,9 +174,15 @@ export function commendationVisible(
   id: CommendationId,
   defeated: readonly string[],
   earned: readonly CommendationId[],
+  discovered: readonly string[] = [],
 ) {
   const entry = COMMENDATIONS.find((c) => c.id === id)!;
-  return earned.includes(id) || !('boss' in entry) || defeated.includes(entry.boss);
+  return (
+    earned.includes(id) ||
+    ('upgrades' in entry
+      ? entry.upgrades.some((upgrade) => discovered.includes(upgrade))
+      : !('boss' in entry) || defeated.includes(entry.boss))
+  );
 }
 export function loadCommendations(raw: unknown): CommendationId[] {
   return COMMENDATIONS.filter((c) => Array.isArray(raw) && raw.includes(c.id)).map((c) => c.id);
@@ -160,14 +206,17 @@ export class CommendationTracker {
   private loads = new Map<number, number>();
   private awarded = new Set<CommendationId>();
   mastery: BossMastery;
+  weapons: WeaponMastery;
   constructor(game: Game) {
     this.game = game;
     this.mastery = new BossMastery(game);
+    this.weapons = new WeaponMastery(game);
   }
   resetRoom() {
     this.cleanBoss = true;
     this.loads.clear();
     this.mastery.reset();
+    this.weapons.reset();
   }
   get eligible() {
     const g = this.game;
@@ -185,7 +234,7 @@ export class CommendationTracker {
     // are conservatively ineligible until the player enters the next boss room.
     if (this.game.level.boss && this.eligible) this.game.save();
   }
-  defeated(e: Enemy, source?: KillSource) {
+  defeated(e: Enemy, source?: KillSource, trace?: WeaponTrace) {
     const g = this.game;
     if (
       !this.eligible ||
@@ -197,6 +246,7 @@ export class CommendationTracker {
       source === 'cleanup'
     )
       return;
+    this.weapons.killed(e, trace);
     if (isBoss(e.kind)) {
       this.mastery.defeated(e);
       if (this.cleanBoss && g.level.boss && !g.escape) this.award('clean-work');

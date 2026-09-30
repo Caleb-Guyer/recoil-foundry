@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { markShot } from './weapon-mastery.ts';
 import { pocketBank } from './corner-pocket.ts';
 import { dormant } from './stasis.ts';
 import type { Enemy, Game, Shot } from './game.ts';
@@ -283,6 +284,7 @@ export class MassDriverSystem {
     s.bounces--;
     if (bank) {
       s.banks++;
+      markShot(s, 'banked');
       s.damage *= 1 + s.bankGrowth;
       if (s.shell) s.shell.damage *= 1 + s.bankGrowth;
     }
