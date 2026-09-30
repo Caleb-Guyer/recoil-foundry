@@ -708,6 +708,7 @@ export class Renderer {
       c.fillStyle = `rgba(242,184,116,${life * 1.8})`;
       c.fill();
     }
+    g.securityCombat.draw(c);
     this.drawPlayer();
     drawFloodwater(c, g, this.reduced);
     drawNewPaths(c, g);

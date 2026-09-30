@@ -1,4 +1,5 @@
 import type { Game } from './game.ts';
+import { isSecurityLevel, securityLabel, type SecurityLevel } from './security.ts';
 import { AREAS, type AreaId } from './areas.ts';
 import { DAILY_RULESET, dailyFromSeed, isUnsupportedDailySeed } from './daily.ts';
 import { STAGES, validBuild, validLegacyBuild, validSavedBuild } from './rules.ts';
@@ -9,6 +10,7 @@ export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
   version: 1;
+  security?: SecurityLevel;
   id: string;
   finishedAt: number;
   seed: string;
@@ -70,9 +72,16 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     )
       continue;
     const daily = !!dailyFromSeed(raw.seed) || isUnsupportedDailySeed(raw.seed);
-    if ((raw.mode === 'daily') !== daily || (daily && raw.overtime)) continue;
+    if (
+      (raw.mode === 'daily') !== daily ||
+      (daily && raw.overtime) ||
+      (raw.security !== undefined &&
+        (!isSecurityLevel(raw.security) || raw.security === 0 || daily))
+    )
+      continue;
     records.push({
       version: 1,
+      ...(raw.security ? { security: raw.security } : {}),
       id: raw.id,
       finishedAt: raw.finishedAt,
       seed: raw.seed,
@@ -116,6 +125,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        ...(game.security ? { security: game.security.level } : {}),
         id,
         finishedAt,
         seed: game.seed,
@@ -156,6 +166,7 @@ export function canPracticeRunBuild(run: RunRecap, known: readonly string[]) {
 }
 export function reachedRoom(run: RunRecap) {
   return (
+    (run.security ? securityLabel(run.security).split(' · ')[0] + ' · ' : '') +
     (run.overtime ? 'Overtime · ' : '') +
     (run.shutdown
       ? 'Continuity control'

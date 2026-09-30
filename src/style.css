@@ -1981,3 +1981,44 @@ body[data-clock-out='true'] .touch-controls {
     height: 66px;
   }
 }
+.security-selector {
+  display: block;
+  margin: 10px 0 2px;
+  font-size: 13px;
+}
+.security-selector[hidden] {
+  display: none;
+}
+.security-levels {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0;
+}
+.security-choice {
+  text-align: left;
+  display: grid;
+  gap: 7px;
+  padding: 16px 20px;
+  background: transparent;
+  border: 1px solid #455653;
+  border-radius: 3px;
+}
+.security-choice[aria-pressed='true'] {
+  border-color: #e7e8db;
+  background: #293936;
+}
+.security-choice span {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #bdc9c3;
+}
+.security-choice small {
+  font-size: 12px;
+  font-weight: 400;
+  color: #a4b5ad;
+}
+.security-choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

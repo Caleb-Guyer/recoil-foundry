@@ -1,4 +1,5 @@
 import { loadCheckpoint } from './rules.ts';
+import { SECURITY_KEY, loadSecurityProfile, validSecurityProfile } from './security.ts';
 import { SHAFT_PROFILE_KEY, loadShaftProfile, validShaftProfile } from './maintenance-trials.ts';
 import {
   DISCOVERIES_KEY,
@@ -36,6 +37,7 @@ export const PROGRESS_KEYS = [
   BLUEPRINTS_KEY,
   PRACTICE_RECORDS_KEY,
   SHAFT_PROFILE_KEY,
+  SECURITY_KEY,
 ] as const;
 export type ProgressValues = Record<(typeof PROGRESS_KEYS)[number], unknown>;
 export type SaveState = 'saved' | 'saving' | 'unavailable' | 'conflict' | 'unreadable';
@@ -110,6 +112,13 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [BLUEPRINTS_KEY]: loadBlueprints(read(BLUEPRINTS_KEY)),
     [PRACTICE_RECORDS_KEY]: loadPracticeRecords(read(PRACTICE_RECORDS_KEY)),
     [SHAFT_PROFILE_KEY]: loadShaftProfile(read(SHAFT_PROFILE_KEY)),
+    [SECURITY_KEY]: loadSecurityProfile(
+      read(SECURITY_KEY),
+      !!checkpoint?.overtime ||
+        !!loadLogbook(read(LOGBOOK_KEY)).escaped ||
+        !!loadLogbook(read(LOGBOOK_KEY)).shutdown ||
+        history.some((r) => r.outcome === 'won'),
+    ),
   };
 }
 export function validateProgress(raw: unknown): ProgressValues | null {
@@ -123,11 +132,13 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === BLUEPRINTS_KEY ||
           k === PRACTICE_RECORDS_KEY ||
           k === SHAFT_PROFILE_KEY ||
+          k === SECURITY_KEY ||
           Object.hasOwn(raw, k),
       )
     )
       return null;
     const checkpoint = raw[CHECKPOINT_KEY];
+    if (Object.hasOwn(raw, SECURITY_KEY) && !validSecurityProfile(raw[SECURITY_KEY])) return null;
     if (Object.hasOwn(raw, SHAFT_PROFILE_KEY) && !validShaftProfile(raw[SHAFT_PROFILE_KEY]))
       return null;
     // Pre-blueprint profiles and backups migrate to six empty slots.
@@ -236,7 +247,7 @@ export function progressSummary(values: ProgressValues) {
   const save = loadCheckpoint(values[CHECKPOINT_KEY]);
   return {
     run: save
-      ? `Room ${save.stage + 1}${save.overtime ? ' · Overtime' : ''}${save.reward ? ' · upgrade waiting' : ''}`
+      ? `Room ${save.stage + 1}${save.security ? ' · Security ' + save.security.level : ''}${save.overtime ? ' · Overtime' : ''}${save.reward ? ' · upgrade waiting' : ''}`
       : 'No saved run',
     upgrades: loadDiscoveries(values[DISCOVERIES_KEY]).length,
     victories: loadEncounters(values[VICTORIES_KEY]).length,
@@ -245,6 +256,7 @@ export function progressSummary(values: ProgressValues) {
     blueprints: loadBlueprints(values[BLUEPRINTS_KEY]).filter(Boolean).length,
     practiceRecords: loadPracticeRecords(values[PRACTICE_RECORDS_KEY]).length,
     shaftTrials: loadShaftProfile(values[SHAFT_PROFILE_KEY]).unlocks.length,
+    security: loadSecurityProfile(values[SECURITY_KEY]).unlocked,
   };
 }
 

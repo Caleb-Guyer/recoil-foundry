@@ -1,5 +1,9 @@
 # Browser release operations
 
+## Security Levels 3.16.0 — 29 September 2026
+
+Implementation and local verification complete; final exact-commit CI and publication are in progress. Three cumulative campaign levels add coordinated elite squads, warned boss counters and five machinery checkpoints. First-lap records remain separate by level, both elevators bank the clearance, and Security III awards the Redline outfit. Daily/Practice retain their current rules. [Validation](validation/security-3.16.0.md) includes the 50-case ordinary-input audit and save/backup compatibility coverage.
+
 ## Boss mastery 3.15.0 — 28 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `81ad220b41ad4961e2443e2d2c524534dcc3a101` passed all **2,136 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36513369737). Tag `v3.15.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36514983547); its verified archive is itch.io upload `19460201`. Both public About panels report 3.15.0 and retain their prior saves. [Validation](validation/boss-mastery-3.15.0.md) records the eight ordinary-input challenge completions, unlock/lifecycle checks, archive digest and browser scope.

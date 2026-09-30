@@ -1,4 +1,12 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
+import {
+  campaignClearScore,
+  type SecurityLevel,
+  type SecurityRun,
+  type SecurityScore,
+} from './security.ts';
+import { SecurityCombat } from './security-combat.ts';
+import { redlineLayout, reinforceSecurity } from './security-layouts.ts';
 import { MutationSystem, type MutationKind, type MutationRig } from './mutations.ts';
 import { CourierSystem } from './courier.ts';
 import { FloodgateSystem, type FloodValve } from './floodgate.ts';
@@ -412,6 +420,17 @@ export class Game {
   seed = '';
   stage = 0;
   overtime: Checkpoint['overtime'] | null = null;
+  security: SecurityRun | null = null;
+  securityCombat = new SecurityCombat(this);
+  private securityRecorded = false;
+  onCampaignClear: (score: SecurityScore) => void = () => {};
+  recordCampaignClear() {
+    const score = campaignClearScore(this);
+    if (!score || this.securityRecorded) return;
+    this.securityRecorded = true;
+    this.onCampaignClear(score);
+    if (score.level === 3) this.onCommendation('redline');
+  }
   missedUpgrades = 0;
   testRun: Checkpoint | null = null;
   detour = false;
@@ -574,6 +593,8 @@ export class Game {
     this.loadRoom();
   }
   setMode(mode: Mode) {
+    if (mode === 'won') this.recordCampaignClear();
+    if (mode === 'dead' || mode === 'won' || mode === 'title') this.securityCombat.reset();
     if (mode === 'title') this.clockOut = new ClockOut();
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.melt.reset();
     if (mode === 'paused' && this.auditor.enemy) this.save();
@@ -667,6 +688,7 @@ export class Game {
     practice: PracticeSession | null = null,
     testRun: Checkpoint | null = null,
     workshop = false,
+    securityLevel: SecurityLevel = 0,
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
@@ -674,6 +696,15 @@ export class Game {
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
+    this.security =
+      !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
+        ? save?.security
+          ? { ...save.security }
+          : !save && securityLevel
+            ? { level: securityLevel, rules: 1 }
+            : null
+        : null;
+    this.securityRecorded = !!save?.overtime;
     this.areaEvents.start(save);
     this.courier.start(save);
     this.floodgate.start(save);
@@ -795,6 +826,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.security ? { security: { ...this.security } } : {}),
       ...(this.maintenance.state ? { maintenance: { ...this.maintenance.state } } : {}),
       ...(this.welder.state ? { welder: structuredClone(this.welder.state) } : {}),
       ...(this.auditor.state ? { auditor: structuredClone(this.auditor.state) } : {}),
@@ -896,6 +928,7 @@ export class Game {
       clearCaller(enemy);
     }
     Composite.clear(this.engine.world, false);
+    this.securityCombat.reset();
     Engine.clear(this.engine);
     this.escape = escapeRoom ? { phase: 'route', time: 0, depart: 0 } : null;
     this.extractionLift = null;
@@ -1002,6 +1035,29 @@ export class Game {
     if (!escapeRoom && this.overtime)
       this.level = welderLevel(this.level, this.welder.state, this.stage);
     if (this.practice?.kind === 'welder') this.level = welderPracticeLevel(this.seed);
+    if (
+      !escapeRoom &&
+      !this.overtime &&
+      !this.detour &&
+      !this.practice &&
+      !this.workshop.active &&
+      this.security
+    ) {
+      if (
+        this.security.level === 3 &&
+        this.stage % 4 === 0 &&
+        !this.level.annex &&
+        !this.level.story &&
+        !this.level.shutdown &&
+        !this.level.courier &&
+        !this.level.floodgate &&
+        !this.level.sortingPit &&
+        !this.areaEvents.encounter
+      )
+        this.level = redlineLayout(this.level, this.stage);
+      if (!this.areaEvents.encounter)
+        this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
+    }
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1032,7 +1088,14 @@ export class Game {
       this.clearAt = this.time;
     } else {
       for (const spawn of this.waves.reset(this.level))
-        this.spawnEnemy(spawn.kind, spawn.x, spawn.y, spawn.elite);
+        this.spawnEnemy(
+          spawn.kind,
+          spawn.x,
+          spawn.y,
+          spawn.elite,
+          undefined,
+          this.level.security ? spawn.squad : undefined,
+        );
     }
     if (escapeRoom) {
       this.hazards.clear();
@@ -1106,6 +1169,7 @@ export class Game {
       this.mode !== 'playing'
     )
       return false;
+    this.recordCampaignClear();
     this.areaEvents.state = null;
     this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 5 };
     this.welder.state = planWelder(this.seed);
@@ -1999,6 +2063,7 @@ export class Game {
     if (this.areaEvents.updateEnemy(e, dt)) return;
     if (this.courier.updateEnemy(e, dt)) return;
     if (this.mutations.updateEnemy(e, dt)) return;
+    this.securityCombat.update(e, dt);
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *

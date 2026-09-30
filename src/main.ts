@@ -1,4 +1,14 @@
 import { welderTestFromUrl } from './welder-test.ts';
+import {
+  SECURITY_KEY,
+  isSecurityLevel,
+  loadSecurityProfile,
+  recordSecurityClear,
+  securityLabel,
+  securityMenu,
+  type SecurityLevel,
+} from './security.ts';
+import { securityTestFromUrl } from './security-test.ts';
 import { maintenanceTestFromUrl } from './maintenance-test.ts';
 import { SHAFT_NAMES } from './maintenance.ts';
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
@@ -276,6 +286,13 @@ let equippedCosmetics = loadCosmetics(read(COSMETICS_KEY), commendations);
 let logbookFromWorkshop = false;
 let runHistory = loadRunHistory(read(RUN_HISTORY_KEY));
 let logbookProgress = migrateLogbook(read(LOGBOOK_KEY), storedCheckpoint, runHistory, encounters);
+let selectedSecurity: SecurityLevel = 0;
+function securityProfile() {
+  return loadSecurityProfile(
+    read(SECURITY_KEY),
+    logbookProgress.escaped || !!logbookProgress.shutdown || !!checkpoint?.overtime,
+  );
+}
 const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', query: '' };
 let finishedRun: RunRecap | null = null;
 let creditsParent = 'settings';
@@ -309,6 +326,7 @@ document.getElementById('app')!.innerHTML = `
  <section id="title-screen">
   <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Dead Signal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
+   <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button><button id="learn" class="quiet" hidden>Learn to play</button></div>
    <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
@@ -409,6 +427,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  securityTestFromUrl(entryUrl) ??
   switchboardTestFromUrl(entryUrl) ??
   annexRouteTestFromUrl(entryUrl) ??
   annexTestFromUrl(entryUrl) ??
@@ -477,6 +496,18 @@ let activeDaily = dailyFromSeed(game.seed);
 let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = null;
 
 function updateTitle() {
+  const security = securityProfile();
+  if (selectedSecurity > security.unlocked) selectedSecurity = 0;
+  $('security').hidden =
+    !security.unlocked ||
+    !!linkedDaily ||
+    !!linkedTest ||
+    !!linkedRunTest ||
+    linkedWorkshop ||
+    !!linkedTrial;
+  $('security').textContent = selectedSecurity
+    ? securityLabel(selectedSecurity)
+    : 'Security · Standard';
   $('play').innerHTML =
     `${linkedRunTest ? (linkedRunTest.seed.startsWith('SCRAPPER-') ? 'Test the Scrapper' : linkedRunTest.seed.startsWith('FREIGHT-') ? 'Test freight elevator' : linkedRunTest.seed.startsWith('BELT-') ? 'Test conveyor belts' : linkedRunTest.seed.startsWith('SQUAD-') ? 'Test enemy squads' : linkedRunTest.seed === 'CARGO-DROP' ? 'Test hanging cargo' : 'Test new rooms') : linkedTest ? 'Test ' + PRACTICE_BOSSES[linkedTest.kind].name.replace(/^The /, 'the ') : linkedDaily ? 'Play daily' : 'Play'} <span aria-hidden="true">↗</span>`;
   $('daily').textContent = linkedDaily ? 'Random run' : 'Daily run';
@@ -629,6 +660,11 @@ function updateTitle() {
             : 'Shoot down. Go up.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
+  if (linkedRunTest?.security) {
+    $('play').textContent =
+      'Test ' + securityLabel(linkedRunTest.security.level).split(' · ')[0] + ' ↗';
+    $('title-hint').textContent = 'Isolated preview · progress is not saved. R to retry.';
+  }
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
   if (linkedRunTest?.annex)
@@ -931,7 +967,12 @@ function updateMusic(active = pageActive && document.hasFocus() && !document.hid
     game.torch.heat,
   );
 }
-function start(save?: Checkpoint, retry = false, seedOverride?: string) {
+function start(
+  save?: Checkpoint,
+  retry = false,
+  seedOverride?: string,
+  securityOverride?: SecurityLevel,
+) {
   if (progress.restoring) return;
   progress.checkExternal();
   if (progress.state === 'conflict') {
@@ -999,7 +1040,11 @@ function start(save?: Checkpoint, retry = false, seedOverride?: string) {
     history.replaceState(null, '', url);
   }
   dailyResult = null;
-  game.start(seed, save);
+  const requestedSecurity =
+    securityOverride ?? (retry ? (game.security?.level ?? 0) : selectedSecurity);
+  const security = requestedSecurity <= securityProfile().unlocked ? requestedSecurity : 0;
+  if (!activeDaily) selectedSecurity = save?.security?.level ?? security;
+  game.start(seed, save, null, null, false, activeDaily ? 0 : security);
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
   renderer.reset();
@@ -1225,7 +1270,7 @@ function replayFinishedRun(run: RunRecap) {
   history.replaceState(null, '', url);
   linkedDaily = null;
   seedParam = run.seed;
-  start(undefined, false, run.seed);
+  start(undefined, false, run.seed, run.security ?? 0);
 }
 function workshopFromRun(run: RunRecap) {
   discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
@@ -1307,6 +1352,13 @@ game.onCheckpoint = (s) => {
   write(CHECKPOINT_KEY, s);
 };
 game.onSound = (kind) => sound.play(kind);
+game.onCampaignClear = (score) => {
+  progress.checkExternal();
+  if (progress.blocked) return;
+  const profile = recordSecurityClear(read(SECURITY_KEY), score, securityProfile().unlocked > 0);
+  write(SECURITY_KEY, profile);
+  updateTitle();
+};
 game.onHaptic = (kind, strength) => {
   if (inputDevice === 'controller' && pageActive && document.hasFocus() && !document.hidden)
     controller.rumble(kind, strength, performance.now());
@@ -1384,6 +1436,7 @@ game.onChange = () => {
       ? 'PRACTICE'
       : (game.testRun ? 'TEST · ' : activeDaily ? 'DAILY · ' : '') +
         (game.overtime ? 'OT · ' : '') +
+        (game.security ? 'S' + game.security.level + ' · ' : '') +
         (game.escape
           ? 'ESCAPE'
           : game.detour
@@ -1649,6 +1702,23 @@ function showDialog(kind: string) {
     replayView = new ReplayView(deathReplay, content);
     $('retry').onclick = () => start(undefined, true);
     $('back').onclick = () => showDialog('result');
+  } else if (kind === 'security') {
+    const profile = securityProfile();
+    content.innerHTML = securityMenu(profile, selectedSecurity);
+    content.querySelectorAll<HTMLButtonElement>('[data-security]').forEach((button) => {
+      button.onclick = () => {
+        const level = Number(button.dataset.security);
+        if (!isSecurityLevel(level) || level > securityProfile().unlocked) return;
+        selectedSecurity = level;
+        updateTitle();
+        closeDialog();
+        $('security').focus();
+      };
+    });
+    $('back').onclick = () => {
+      closeDialog();
+      $('security').focus();
+    };
   } else if (kind === 'history') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     runHistory = loadRunHistory([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))]);
@@ -2171,6 +2241,7 @@ function showDialog(kind: string) {
     }
     content.innerHTML =
       '<p class="eyebrow">' +
+      (game.security ? securityLabel(game.security.level).split(' · ')[0] + ' · ' : '') +
       (activeDaily
         ? 'DAILY · ' + activeDaily.date
         : win
@@ -2692,6 +2763,7 @@ $('dismiss-tip').onclick = () => {
   updateFirstSession();
 };
 $('history').onclick = () => showDialog('history');
+$('security').onclick = () => showDialog('security');
 $('logbook').onclick = () => showDialog('logbook');
 $('practice').onclick = () => {
   if (encounters.length || loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length)
@@ -2752,6 +2824,11 @@ function cancelDialog() {
   }
   if (dialogKind === 'history') {
     backFromHistory();
+    return;
+  }
+  if (dialogKind === 'security') {
+    closeDialog();
+    $('security').focus();
     return;
   }
   if (dialogKind === 'practice') {

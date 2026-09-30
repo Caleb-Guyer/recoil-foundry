@@ -1,4 +1,5 @@
 import { validAreaEvent } from './area-events.ts';
+import { validSecurityRun } from './security.ts';
 import { validMaintenance } from './maintenance.ts';
 import { validSortingPit } from './sorting-pit-layout.ts';
 import { validReforge } from './reforge-rules.ts';
@@ -1078,6 +1079,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  security?: import('./security.ts').SecurityRun;
   maintenance?: import('./maintenance.ts').MaintenanceSave;
   welder?: WelderSave;
   // Isolated development preset; never written by Game.save().
@@ -1335,6 +1337,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
+    validSecurityRun(d) &&
     validSortingPit(d) &&
     (d.floodgate === undefined ||
       ([5, 6].includes(d.version) &&

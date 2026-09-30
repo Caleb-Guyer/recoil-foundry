@@ -25,6 +25,7 @@ export const SQUAD_LOCK = 0.35;
 // health, and the combat/reward random stream remain unchanged.
 export function squadSpawns(spawns: Spawn[], level: Level, seed: string, stage: number): Spawn[] {
   if (
+    level.security ||
     level.overtimeDocks ||
     level.overtimeFurnace ||
     level.overtimeCooling ||

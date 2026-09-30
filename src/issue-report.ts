@@ -43,6 +43,7 @@ export function issueDetails(game: Game, type: FeedbackType = 'bug'): string {
     lines.push(
       `Mode: ${mode}${game.overtime ? ' / Overtime' : ''}`,
       `State: ${game.mode}`,
+      ...(game.security ? [`Security: ${game.security.level} / rules ${game.security.rules}`] : []),
       `Seed: ${JSON.stringify(game.seed)}`,
       `Room: ${game.stage + 1} / ${game.level.area} / ${game.level.id}`,
       `Route: ${game.escape ? 'Extraction' : game.detour ? 'Detour' : 'Main'}`,

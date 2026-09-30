@@ -52,6 +52,13 @@ export const GUN_FINISHES = {
   },
 } as const;
 export const OUTFITS = {
+  redline: {
+    name: 'Redline',
+    body: '#68716f',
+    boots: '#a5b4ad',
+    trim: '#f4d6a4',
+    unlock: 'redline',
+  },
   standard: { name: 'Workwear', body: '#e7e8db', boots: '#a6b4ae', trim: '#9bcfc1', unlock: null },
   rigger: {
     name: 'Rigger',
@@ -119,7 +126,18 @@ export function drawOutfit(
   c.beginPath();
   c.roundRect(-13, -18, 26, 31, 4);
   c.fill();
-  if (id === 'forgehand') {
+  if (id === 'redline') {
+    c.fillStyle = '#293b3c';
+    c.fillRect(-10, 0, 20, 13);
+    c.fillStyle = '#c99972';
+    c.fillRect(-7, 0, 2, 13);
+    c.fillRect(5, 0, 2, 13);
+    c.fillStyle = '#eff1df';
+    c.fillRect(-12, -1, 7, 3);
+    c.fillRect(5, -1, 7, 3);
+    c.fillStyle = '#aa594a';
+    c.fillRect(-7, -2, 14, 2);
+  } else if (id === 'forgehand') {
     // Scorched leather, copper stitching and a raised welding shield all stay
     // inside the shared silhouette. The eye slit below remains readable.
     c.fillStyle = '#625748';

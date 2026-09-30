@@ -6,6 +6,18 @@ import { BossMastery } from './boss-mastery.ts';
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
   {
+    id: 'redline',
+    name: 'Beyond Clearance',
+    objective: 'Clear the full campaign on Security III.',
+    reward: 'Redline',
+    slot: 'Outfit',
+    lore: [
+      'SECURITY · EXCEPTION REPORT 035',
+      'T. Orr · Dispatch',
+      'They raised the inspection grade three times. More guards. Revised firing protocols. Machinery diverted from production to the checkpoints.\n\nEvery morning I received another list of doors you were not authorised to open. Every evening the list came back with the doors missing.\n\nVale found the supervisor’s coat in the security office. Charcoal cloth, copper seams, a white stripe along each shoulder. The red line inside the collar used to mean nobody could question the person wearing it.\n\nI have crossed out the job title. You have already demonstrated the relevant qualifications.',
+    ] as Lore,
+  },
+  {
     id: 'unsafe-load',
     name: 'Unsafe Load',
     boss: 'loader',

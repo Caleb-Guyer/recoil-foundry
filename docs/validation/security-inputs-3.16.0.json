@@ -1,0 +1,910 @@
+{
+  "ordinaryInputs": true,
+  "alteredCombatState": false,
+  "results": [
+    {
+      "kind": "loader",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-1",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 11.533333333333486,
+      "shots": 40,
+      "player": {
+        "x": 272.372724094098,
+        "y": 25.654569845118683
+      },
+      "enemies": []
+    },
+    {
+      "kind": "loader",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-1",
+      "counters": 2,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 12.03333333333351,
+      "shots": 40,
+      "player": {
+        "x": 278.1677612299521,
+        "y": 25.65456984511862
+      },
+      "enemies": []
+    },
+    {
+      "kind": "loader",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-2",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 13.616666666666923,
+      "shots": 55,
+      "player": {
+        "x": 297.01818402768123,
+        "y": 25.65456984511866
+      },
+      "enemies": []
+    },
+    {
+      "kind": "loader",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-2",
+      "counters": 1,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 12.816666666666883,
+      "shots": 51,
+      "player": {
+        "x": 308.6983970287098,
+        "y": 25.654569845118633
+      },
+      "enemies": []
+    },
+    {
+      "kind": "crane",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-0",
+      "counters": 0,
+      "clear": false,
+      "hp": 0,
+      "kills": 0,
+      "time": 14.96666666666699,
+      "shots": 66,
+      "player": {
+        "x": 173.46011629536918,
+        "y": 722
+      },
+      "enemies": [
+        {
+          "kind": "crane",
+          "hp": 602.480000000001,
+          "pos": {
+            "x": 166.9170414610246,
+            "y": 150
+          }
+        }
+      ]
+    },
+    {
+      "kind": "crane",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-0",
+      "counters": 2,
+      "clear": false,
+      "hp": 0,
+      "kills": 0,
+      "time": 17.150000000000308,
+      "shots": 75,
+      "player": {
+        "x": 703.7950391379528,
+        "y": 634.7794420203325
+      },
+      "enemies": [
+        {
+          "kind": "crane",
+          "hp": 488.1728000000013,
+          "pos": {
+            "x": 698.9808504542186,
+            "y": 150
+          }
+        }
+      ]
+    },
+    {
+      "kind": "crane",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-4",
+      "counters": 0,
+      "clear": false,
+      "hp": 0,
+      "kills": 0,
+      "time": 12.333333333333526,
+      "shots": 57,
+      "player": {
+        "x": 213.3589515017999,
+        "y": 722
+      },
+      "enemies": [
+        {
+          "kind": "crane",
+          "hp": 627.881600000001,
+          "pos": {
+            "x": 213.35791942499728,
+            "y": 150
+          }
+        }
+      ]
+    },
+    {
+      "kind": "crane",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-4",
+      "counters": 2,
+      "clear": false,
+      "hp": 0,
+      "kills": 0,
+      "time": 17.3000000000003,
+      "shots": 80,
+      "player": {
+        "x": 735.7841502413822,
+        "y": 721.9999999999998
+      },
+      "enemies": [
+        {
+          "kind": "crane",
+          "hp": 564.3776000000012,
+          "pos": {
+            "x": 746.0665944884167,
+            "y": 150
+          }
+        }
+      ]
+    },
+    {
+      "kind": "press",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-0",
+      "counters": 0,
+      "clear": true,
+      "hp": 70,
+      "kills": 1,
+      "time": 16.55000000000034,
+      "shots": 60,
+      "player": {
+        "x": 1581.8424689292144,
+        "y": 41.549911666743256
+      },
+      "enemies": []
+    },
+    {
+      "kind": "press",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-0",
+      "counters": 2,
+      "clear": true,
+      "hp": 70,
+      "kills": 1,
+      "time": 16.36666666666702,
+      "shots": 58,
+      "player": {
+        "x": 1719.9716973015047,
+        "y": 18.8311111111113
+      },
+      "enemies": []
+    },
+    {
+      "kind": "press",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-2",
+      "counters": 0,
+      "clear": true,
+      "hp": 40,
+      "kills": 1,
+      "time": 17.933333333333596,
+      "shots": 65,
+      "player": {
+        "x": 1607.087535229985,
+        "y": 656.9293167176556
+      },
+      "enemies": []
+    },
+    {
+      "kind": "press",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-2",
+      "counters": 2,
+      "clear": true,
+      "hp": 70,
+      "kills": 1,
+      "time": 17.166666666666973,
+      "shots": 63,
+      "player": {
+        "x": 1000.3078072494496,
+        "y": 302.5991622926312
+      },
+      "enemies": []
+    },
+    {
+      "kind": "kiln",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-5",
+      "counters": 0,
+      "clear": false,
+      "hp": 0,
+      "kills": 0,
+      "time": 33.31666666666606,
+      "shots": 76,
+      "player": {
+        "x": 706.0875185556575,
+        "y": 685.0140109919379
+      },
+      "enemies": [
+        {
+          "kind": "kiln",
+          "hp": 543.1821440000018,
+          "pos": {
+            "x": 1427.1803344830982,
+            "y": 698.050000277778
+          }
+        }
+      ]
+    },
+    {
+      "kind": "kiln",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-5",
+      "counters": 3,
+      "clear": false,
+      "hp": 0,
+      "kills": 0,
+      "time": 21.15000000000008,
+      "shots": 52,
+      "player": {
+        "x": 600.0205318644232,
+        "y": 582.2662519827605
+      },
+      "enemies": [
+        {
+          "kind": "kiln",
+          "hp": 1265.5165568000004,
+          "pos": {
+            "x": 1419.011908291381,
+            "y": 698.050000277778
+          }
+        }
+      ]
+    },
+    {
+      "kind": "kiln",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-16",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 17.150000000000308,
+      "shots": 53,
+      "player": {
+        "x": 472.5420848850236,
+        "y": 23.756174799066397
+      },
+      "enemies": []
+    },
+    {
+      "kind": "kiln",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-16",
+      "counters": 1,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 16.75000000000033,
+      "shots": 58,
+      "player": {
+        "x": 776.5826292094946,
+        "y": 20.755644302221853
+      },
+      "enemies": []
+    },
+    {
+      "kind": "condenser",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-1",
+      "counters": 0,
+      "clear": true,
+      "hp": 81,
+      "kills": 1,
+      "time": 26.083333333333133,
+      "shots": 70,
+      "player": {
+        "x": 236.0948407090153,
+        "y": 533.4199639532146
+      },
+      "enemies": []
+    },
+    {
+      "kind": "condenser",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-1",
+      "counters": 3,
+      "clear": true,
+      "hp": 84,
+      "kills": 1,
+      "time": 19.700000000000163,
+      "shots": 53,
+      "player": {
+        "x": 259.2433763935574,
+        "y": 614.0361295706466
+      },
+      "enemies": []
+    },
+    {
+      "kind": "condenser",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-2",
+      "counters": 0,
+      "clear": true,
+      "hp": 60,
+      "kills": 1,
+      "time": 31.399999999999498,
+      "shots": 61,
+      "player": {
+        "x": 569.3597681262858,
+        "y": 710.770577777777
+      },
+      "enemies": []
+    },
+    {
+      "kind": "condenser",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-2",
+      "counters": 4,
+      "clear": true,
+      "hp": 81,
+      "kills": 1,
+      "time": 23.166666666666632,
+      "shots": 63,
+      "player": {
+        "x": 426.25862812571773,
+        "y": 722
+      },
+      "enemies": []
+    },
+    {
+      "kind": "turbine",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-9",
+      "counters": 0,
+      "clear": true,
+      "hp": 85,
+      "kills": 1,
+      "time": 20.266666666666797,
+      "shots": 66,
+      "player": {
+        "x": 1132.6385459550536,
+        "y": 721.9999999999995
+      },
+      "enemies": []
+    },
+    {
+      "kind": "turbine",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-9",
+      "counters": 2,
+      "clear": true,
+      "hp": 63,
+      "kills": 1,
+      "time": 17.966666666666928,
+      "shots": 57,
+      "player": {
+        "x": 1059.3049892443748,
+        "y": 632.0500002777776
+      },
+      "enemies": []
+    },
+    {
+      "kind": "turbine",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-0",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 17.850000000000268,
+      "shots": 57,
+      "player": {
+        "x": 623.5934814291278,
+        "y": 23.756174799066404
+      },
+      "enemies": []
+    },
+    {
+      "kind": "turbine",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-0",
+      "counters": 2,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 18.15000000000025,
+      "shots": 52,
+      "player": {
+        "x": 609.1306497614183,
+        "y": 35.444690732593656
+      },
+      "enemies": []
+    },
+    {
+      "kind": "sorter",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-0",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 18.23333333333358,
+      "shots": 49,
+      "player": {
+        "x": 394.91126993131905,
+        "y": 651.0118085389746
+      },
+      "enemies": []
+    },
+    {
+      "kind": "sorter",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-0",
+      "counters": 3,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 16.683333333333668,
+      "shots": 43,
+      "player": {
+        "x": 507.00782519612386,
+        "y": 542.6106367687801
+      },
+      "enemies": []
+    },
+    {
+      "kind": "sorter",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-2",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 13.783333333333598,
+      "shots": 38,
+      "player": {
+        "x": 570.3925122451471,
+        "y": 30.033312527725702
+      },
+      "enemies": []
+    },
+    {
+      "kind": "sorter",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-2",
+      "counters": 2,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 13.450000000000248,
+      "shots": 37,
+      "player": {
+        "x": 607.5619317160074,
+        "y": 37.35826175849162
+      },
+      "enemies": []
+    },
+    {
+      "kind": "boss",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-5",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 16.800000000000328,
+      "shots": 46,
+      "player": {
+        "x": 1073.834183213405,
+        "y": 18.000000000001677
+      },
+      "enemies": []
+    },
+    {
+      "kind": "boss",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-5",
+      "counters": 3,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 16.36666666666702,
+      "shots": 43,
+      "player": {
+        "x": 1084.8125186485527,
+        "y": 31.23179148512518
+      },
+      "enemies": []
+    },
+    {
+      "kind": "boss",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-1",
+      "counters": 0,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 16.116666666667033,
+      "shots": 43,
+      "player": {
+        "x": 620.8471420536627,
+        "y": 25.892960920176346
+      },
+      "enemies": []
+    },
+    {
+      "kind": "boss",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-1",
+      "counters": 3,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 16.116666666667033,
+      "shots": 43,
+      "player": {
+        "x": 438.1707769855878,
+        "y": 46.33929789763947
+      },
+      "enemies": []
+    },
+    {
+      "kind": "interceptor",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-1",
+      "counters": 0,
+      "clear": true,
+      "hp": 78,
+      "kills": 1,
+      "time": 18.866666666666877,
+      "shots": 51,
+      "player": {
+        "x": 894.8695225485819,
+        "y": 392.67856522040245
+      },
+      "enemies": []
+    },
+    {
+      "kind": "interceptor",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-1",
+      "counters": 2,
+      "clear": true,
+      "hp": 56,
+      "kills": 1,
+      "time": 20.18333333333347,
+      "shots": 54,
+      "player": {
+        "x": 787.9478338764559,
+        "y": 346.7150770663851
+      },
+      "enemies": []
+    },
+    {
+      "kind": "interceptor",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-0",
+      "counters": 0,
+      "clear": true,
+      "hp": 82,
+      "kills": 1,
+      "time": 28.266666666666342,
+      "shots": 65,
+      "player": {
+        "x": 1004.1609857370152,
+        "y": 33.59741164329024
+      },
+      "enemies": []
+    },
+    {
+      "kind": "interceptor",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-0",
+      "counters": 3,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 23.99999999999992,
+      "shots": 56,
+      "player": {
+        "x": 359.8120275849178,
+        "y": 643.6766044578145
+      },
+      "enemies": []
+    },
+    {
+      "kind": "switchboard",
+      "mirror": false,
+      "security": 0,
+      "seed": "security-audit-2",
+      "counters": 0,
+      "clear": true,
+      "hp": 76,
+      "kills": 1,
+      "time": 36.6499999999992,
+      "shots": 57,
+      "player": {
+        "x": 155.22948200772495,
+        "y": 721.9999999999993
+      },
+      "enemies": []
+    },
+    {
+      "kind": "switchboard",
+      "mirror": false,
+      "security": 2,
+      "seed": "security-audit-2",
+      "counters": 4,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 33.7833333333327,
+      "shots": 61,
+      "player": {
+        "x": 142.7618253729678,
+        "y": 671.7026690578771
+      },
+      "enemies": []
+    },
+    {
+      "kind": "switchboard",
+      "mirror": true,
+      "security": 0,
+      "seed": "security-audit-0",
+      "counters": 0,
+      "clear": true,
+      "hp": 72,
+      "kills": 1,
+      "time": 23.616666666666607,
+      "shots": 54,
+      "player": {
+        "x": 109.08764877579934,
+        "y": 625.2670461828039
+      },
+      "enemies": []
+    },
+    {
+      "kind": "switchboard",
+      "mirror": true,
+      "security": 2,
+      "seed": "security-audit-0",
+      "counters": 3,
+      "clear": true,
+      "hp": 100,
+      "kills": 1,
+      "time": 25.43333333333317,
+      "shots": 53,
+      "player": {
+        "x": 181.0945814881215,
+        "y": 492.04947368056077
+      },
+      "enemies": []
+    },
+    {
+      "area": "docks",
+      "mirror": 0,
+      "security": 3,
+      "seed": "SECURITY-3-0-1",
+      "layout": "security-docks",
+      "clear": true,
+      "hp": 100,
+      "kills": 5,
+      "time": 11.483333333333483,
+      "shots": 37,
+      "player": {
+        "x": 1419.179536249498,
+        "y": 21.067519525290024
+      },
+      "enemies": []
+    },
+    {
+      "area": "docks",
+      "mirror": 1,
+      "security": 3,
+      "seed": "SECURITY-3-0-0",
+      "layout": "security-docks",
+      "clear": true,
+      "hp": 100,
+      "kills": 5,
+      "time": 12.83333333333355,
+      "shots": 41,
+      "player": {
+        "x": 535.1195954251557,
+        "y": 259.3245814850856
+      },
+      "enemies": []
+    },
+    {
+      "area": "furnace",
+      "mirror": 0,
+      "security": 3,
+      "seed": "SECURITY-3-1-2",
+      "layout": "security-furnace",
+      "clear": true,
+      "hp": 46,
+      "kills": 6,
+      "time": 21.750000000000046,
+      "shots": 36,
+      "player": {
+        "x": 619.4102577154838,
+        "y": 121.07667193348951
+      },
+      "enemies": []
+    },
+    {
+      "area": "furnace",
+      "mirror": 1,
+      "security": 3,
+      "seed": "SECURITY-3-1-0",
+      "layout": "security-furnace",
+      "clear": true,
+      "hp": 100,
+      "kills": 6,
+      "time": 17.600000000000282,
+      "shots": 53,
+      "player": {
+        "x": 682.2067059162098,
+        "y": 34.77735298389325
+      },
+      "enemies": []
+    },
+    {
+      "area": "cooling",
+      "mirror": 0,
+      "security": 3,
+      "seed": "SECURITY-3-2-0",
+      "layout": "security-cooling",
+      "clear": true,
+      "hp": 100,
+      "kills": 7,
+      "time": 11.050000000000129,
+      "shots": 28,
+      "player": {
+        "x": 1618.8603531184929,
+        "y": 605.4999816240856
+      },
+      "enemies": []
+    },
+    {
+      "area": "cooling",
+      "mirror": 1,
+      "security": 3,
+      "seed": "SECURITY-3-2-1",
+      "layout": "security-cooling",
+      "clear": true,
+      "hp": 100,
+      "kills": 7,
+      "time": 15.200000000000335,
+      "shots": 67,
+      "player": {
+        "x": 171.86497691121306,
+        "y": 17.99999999999984
+      },
+      "enemies": []
+    },
+    {
+      "area": "reclamation",
+      "mirror": 0,
+      "security": 3,
+      "seed": "SECURITY-3-3-1",
+      "layout": "security-reclamation",
+      "clear": true,
+      "hp": 100,
+      "kills": 7,
+      "time": 16.266666666667025,
+      "shots": 21,
+      "player": {
+        "x": 1022.0383718428238,
+        "y": 63.413949990328234
+      },
+      "enemies": []
+    },
+    {
+      "area": "reclamation",
+      "mirror": 1,
+      "security": 3,
+      "seed": "SECURITY-3-3-0",
+      "layout": "security-reclamation",
+      "clear": true,
+      "hp": 85,
+      "kills": 7,
+      "time": 14.266666666666955,
+      "shots": 47,
+      "player": {
+        "x": 1061.8900921716845,
+        "y": 103.34194185636824
+      },
+      "enemies": []
+    },
+    {
+      "area": "rooftops",
+      "mirror": 0,
+      "security": 3,
+      "seed": "SECURITY-3-4-0",
+      "layout": "security-rooftops",
+      "clear": true,
+      "hp": 34,
+      "kills": 8,
+      "time": 20.516666666666783,
+      "shots": 19,
+      "player": {
+        "x": 1244.8961800593033,
+        "y": 220.99579399640436
+      },
+      "enemies": []
+    },
+    {
+      "area": "rooftops",
+      "mirror": 1,
+      "security": 3,
+      "seed": "SECURITY-3-4-2",
+      "layout": "security-rooftops",
+      "clear": true,
+      "hp": 100,
+      "kills": 8,
+      "time": 8.500000000000002,
+      "shots": 10,
+      "player": {
+        "x": 700.0547279453905,
+        "y": 420.1775426336729
+      },
+      "enemies": []
+    }
+  ]
+}
