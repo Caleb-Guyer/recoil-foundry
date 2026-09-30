@@ -2,7 +2,11 @@
 
 ## Security Levels 3.16.0 — 29 September 2026
 
-Implementation and local verification complete; final exact-commit CI and publication are in progress. Three cumulative campaign levels add coordinated elite squads, warned boss counters and five machinery checkpoints. First-lap records remain separate by level, both elevators bank the clearance, and Security III awards the Redline outfit. Daily/Practice retain their current rules. [Validation](validation/security-3.16.0.md) includes the 50-case ordinary-input audit and save/backup compatibility coverage.
+**Published on GitHub Pages; itch.io upload pending.** Runtime commit `276001f1e9932c2c3fdd6f6677077c8f6f022d36` passed all **2,150 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36653774531). Public test URLs and entry-asset digests match the tested build. Browser control failed before the itch.io upload; its previous verified release remains 3.15.0.
+
+Tag `v3.16.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36655375814). Its official ZIP is verified and an identical replacement upload is prepared; the [validation record](validation/security-3.16.0.md) includes its checksum and the remaining upload steps.
+
+Three cumulative campaign levels add coordinated elite squads, warned boss counters and five machinery checkpoints. First-lap records remain separate by level, both elevators bank the clearance, and Security III awards the Redline outfit. Daily/Practice retain their current rules. [Validation](validation/security-3.16.0.md) includes the 50-case ordinary-input audit, four full-campaign attempts and save/backup compatibility coverage.
 
 ## Boss mastery 3.15.0 — 28 September 2026
 
@@ -147,7 +151,7 @@ The owner authorized publication of Dead Signal 3.0 to both hosts, including the
 
 ## Stable release and rollback points
 
-- Stable tag: `v3.15.0` at `81ad220b41ad4961e2443e2d2c524534dcc3a101`. Rollbacks must preserve `unsafe-load`/`clearance` rewards and Caution/Operator decoding, Daily rules 85, Practice rules 2 and older records. Retain the Sorting Pit checkpoint plan, Maintenance Trials profile, clean-shaft field, Servicewear decoding, both maintenance layout revisions, shaft/reward reconstruction, Welder and existing commendation fields, Overtime generation and blueprint profiles. Do not deploy an unchanged older build over newer saves.
+- Stable Pages tag: `v3.16.0` at `276001f1e9932c2c3fdd6f6677077c8f6f022d36`. Rollbacks must preserve the Security profile, checkpoint/recap level, first-lap records and Redline outfit/commendation. The previous stable tag, `v3.15.0` at `81ad220b41ad4961e2443e2d2c524534dcc3a101`, remains the verified itch.io release while upload is pending. Preserve `unsafe-load`/`clearance` rewards and Caution/Operator decoding, Daily rules 85, Practice rules 2 and older records. Retain the Sorting Pit checkpoint plan, Maintenance Trials profile, clean-shaft field, Servicewear decoding, both maintenance layout revisions, shaft/reward reconstruction, Welder and existing commendation fields, Overtime generation and blueprint profiles. Do not deploy an unchanged older build over newer saves.
 - Previous stable reference: `v3.14.0` at `50a3e08f82a66f41a56ef13903ed31300ee855b5`.
 - Previous stable reference: `v3.13.0` at `238465e50cad46f51384e2a1d2fb17a24345bc10`.
 - Previous stable reference: `v3.12.0` at `1791228c2f05474e0d45c4cdd95760ae841e95e3`.

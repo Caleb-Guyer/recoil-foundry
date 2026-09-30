@@ -15,6 +15,8 @@ Both departure elevators record the base campaign before Overtime starts. The no
 - TypeScript and production build pass. Vite retains the existing large-chunk advisory.
 - The [50-case input audit](security-inputs-3.16.0.json) uses normal player controls, legal room-count builds, unchanged health and unmodified AI/terrain. It compares Standard and Adapted across ten boss variants and both mirrors, then plays all Redline checkpoints. All ten checkpoint cases clear. The saved JSON contains boss failures as well as wins; it is not a claim of universal human playability.
 - Final focused rerun: **66 passed**, including persistence, cosmetics, lore and recent-run regressions.
+- Final exact-commit [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36653774531): **2,150 passed**, zero failures/skips/cancellations, followed by a successful production build and deployment. Runtime commit: `276001f1e9932c2c3fdd6f6677077c8f6f022d36`.
+- A [four-campaign input audit](security-campaigns-3.16.0.json) uses seed `path-run-67`, normal health and actually offered upgrades. Standard, Adapted and Redline reach extraction and record the correct first-lap clearance; Reinforced ends in room 14 from a Borer shot. All 163 saved checkpoints validate. These are reproducible pilot outcomes, not estimates of human win rates or evidence that difficulty increases monotonically for every build.
 
 The initial counter prototype added its whole warning on top of a full recovery, unintentionally extending free damage windows. Final pacing consumes the existing recovery during the counter warning and guarantees 0.55 seconds afterward. Tells, shot damage and health remain unchanged. The generic pilot also loses some Crane/Kiln baseline fights, so those paired losses do not establish an impossible Security encounter.
 
@@ -22,4 +24,12 @@ The initial counter prototype added its whole warning on top of a full recovery,
 
 The in-app browser verifies the built title selector, per-level records, real Redline start, preview isolation, pause and Progress restore. UI fixtures are confined to localhost and removed through Undo restore after testing. No public saved profile is replaced. Physical standalone-browser/hardware checks are not claimed.
 
-Publication evidence will be recorded after the final Pages and release workflows complete.
+## Publication
+
+GitHub Pages serves the final 3.16.0 build. All seven squad, boss and regional Redline test URLs return HTTP 200 and the current entry assets. The three entry JavaScript/CSS assets match the local production build by SHA-256. This is an HTTP/artifact check; no fresh public browser UI check is claimed.
+
+Tag `v3.16.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36655375814). The [official release](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.16.0) archive has 17 files, a root `index.html`, all four referenced entry assets and no source/test/dependency directories, source maps or path traversal. Its 9,800,002 bytes and SHA-256 `83108df149303ac484c75e7d5819efc72bc5fa94528fcfd29c12f0bc6e51a5c7` match GitHub's asset metadata. [Artifact receipt](security-3.16.0-artifact.json).
+
+The itch.io update remains pending. The in-app browser control became unavailable during publication. The available Windows helper could not restore Edge: state capture reported `window is minimized`, and activation repeatedly reported `user input was detected in this window; call get_window_state before continuing`. No itch.io upload or page changes were submitted. The previous verified itch.io release remains 3.15.0; this limitation does not affect the published Pages build.
+
+The identical upload copy is prepared locally at `.release-assets/itch-3.16.0/recoil-foundry-v2.98.0-site.zip`, retaining the historical basename for replacement. When browser control is available, replace the existing browser upload, set its display name to `Recoil Foundry 3.16.0 — Security Levels`, recheck **This file will be played in the browser**, save and verify the embedded About version and existing profile. No devlog or public message is needed.

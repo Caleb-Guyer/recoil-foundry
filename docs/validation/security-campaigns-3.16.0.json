@@ -1,0 +1,177 @@
+{
+  "ordinaryInputs": true,
+  "alteredCombatState": false,
+  "results": [
+    {
+      "grade": 0,
+      "checkpoints": 43,
+      "clears": [
+        {
+          "level": 0,
+          "timeMs": 498183,
+          "seed": "path-run-67"
+        }
+      ],
+      "mode": "won",
+      "stage": 19,
+      "hp": 100,
+      "elapsed": 498.1833333332089,
+      "mods": [
+        "magnum",
+        "rapid",
+        "leech",
+        "banker",
+        "light",
+        "ricochet",
+        "deadeye",
+        "cinder",
+        "countershot",
+        "execute",
+        "backblast",
+        "crosswind",
+        "airshot",
+        "landing",
+        "burst",
+        "ramjet",
+        "vector",
+        "pierce",
+        "capacitor"
+      ],
+      "cause": null,
+      "escapeSeen": true,
+      "fusionUsed": false,
+      "tetherUsed": false,
+      "arcUsed": false,
+      "flashUsed": false,
+      "slipUsed": false,
+      "cinderUsed": true,
+      "windUsed": true
+    },
+    {
+      "grade": 1,
+      "checkpoints": 30,
+      "clears": [],
+      "mode": "dead",
+      "stage": 13,
+      "hp": 0,
+      "elapsed": 309.9666666667134,
+      "mods": [
+        "magnum",
+        "rapid",
+        "leech",
+        "banker",
+        "light",
+        "ricochet",
+        "deadeye",
+        "cinder",
+        "countershot",
+        "execute",
+        "backblast",
+        "crosswind",
+        "airshot"
+      ],
+      "cause": {
+        "type": "shot",
+        "enemy": "borer"
+      },
+      "escapeSeen": false,
+      "fusionUsed": false,
+      "tetherUsed": false,
+      "arcUsed": false,
+      "flashUsed": false,
+      "slipUsed": false,
+      "cinderUsed": true,
+      "windUsed": true
+    },
+    {
+      "grade": 2,
+      "checkpoints": 45,
+      "clears": [
+        {
+          "level": 2,
+          "timeMs": 547933,
+          "seed": "path-run-67"
+        }
+      ],
+      "mode": "won",
+      "stage": 19,
+      "hp": 68,
+      "elapsed": 547.9333333331637,
+      "mods": [
+        "magnum",
+        "rapid",
+        "leech",
+        "banker",
+        "light",
+        "ricochet",
+        "deadeye",
+        "cinder",
+        "countershot",
+        "execute",
+        "backblast",
+        "crosswind",
+        "airshot",
+        "landing",
+        "burst",
+        "ramjet",
+        "vector",
+        "pierce",
+        "capacitor"
+      ],
+      "cause": null,
+      "escapeSeen": true,
+      "fusionUsed": false,
+      "tetherUsed": false,
+      "arcUsed": false,
+      "flashUsed": false,
+      "slipUsed": false,
+      "cinderUsed": true,
+      "windUsed": true
+    },
+    {
+      "grade": 3,
+      "checkpoints": 45,
+      "clears": [
+        {
+          "level": 3,
+          "timeMs": 513883,
+          "seed": "path-run-67"
+        }
+      ],
+      "mode": "won",
+      "stage": 19,
+      "hp": 68,
+      "elapsed": 513.8833333331946,
+      "mods": [
+        "magnum",
+        "rapid",
+        "leech",
+        "banker",
+        "light",
+        "ricochet",
+        "deadeye",
+        "cinder",
+        "countershot",
+        "execute",
+        "backblast",
+        "crosswind",
+        "airshot",
+        "landing",
+        "burst",
+        "ramjet",
+        "vector",
+        "pierce",
+        "capacitor"
+      ],
+      "cause": null,
+      "escapeSeen": true,
+      "fusionUsed": false,
+      "tetherUsed": false,
+      "arcUsed": false,
+      "flashUsed": false,
+      "slipUsed": false,
+      "cinderUsed": true,
+      "windUsed": true
+    }
+  ]
+}
