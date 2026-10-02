@@ -204,7 +204,9 @@ export class ReinforcementSystem {
       spawn.y - h / 2 - margin < body.bounds.max.y - 0.5;
     return (
       !g.solidBodies.some((body) => overlaps(body, 0)) &&
-      !g.enemies.some((e) => overlaps(e.body, 8))
+      ![...g.enemies, ...(g.factory?.version === 2 ? g.factions.allies : [])].some((e) =>
+        overlaps(e.body, 8),
+      )
     );
   }
   relocate(door: ReinforcementDoor) {

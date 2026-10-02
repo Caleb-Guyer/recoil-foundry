@@ -309,15 +309,28 @@ export class AreaEventSystem {
   spawnTurf() {
     const g = this.game;
     const small = !!g.factory && g.stage < 8;
-    const redCount = small ? (g.stage < 4 ? 3 : 6) : TURF_RED_COUNT;
+    const reinforced = g.factory?.version === 2;
+    const redCount = small
+      ? g.stage < 4
+        ? reinforced
+          ? 6
+          : 3
+        : reinforced
+          ? 10
+          : 6
+      : TURF_RED_COUNT;
     const blueCount = small ? (g.stage < 4 ? 3 : 5) : TURF_BLUE_COUNT;
     if (small) {
       this.formation = 'ground';
       for (const allied of [false, true]) {
         const count = allied ? blueCount : redCount;
         for (let i = 0; i < count; i++) {
-          const kind: TurfKind = i % 3 === 0 ? 'shooter' : 'runner';
-          const p = this.turfSpot(kind, allied);
+          let kind: TurfKind = i % 3 === 0 ? 'shooter' : 'runner';
+          let p = this.turfSpot(kind, allied);
+          if (!p && reinforced) {
+            kind = 'flyer';
+            p = this.turfSpot(kind, allied);
+          }
           if (p) {
             if (allied) this.spawnAlly(kind, p);
             else this.spawn(kind, p);
@@ -363,6 +376,7 @@ export class AreaEventSystem {
       this.formation = selected.formation;
       for (const unit of selected.red) this.spawn(unit.kind, unit);
       for (const unit of selected.blue) this.spawnAlly(unit.kind, unit);
+      if (reinforced) this.reserveTurfWave();
       return;
     }
     // Future unusually crowded layouts still get a safe simultaneous battle.
@@ -381,6 +395,29 @@ export class AreaEventSystem {
         }
       }
     }
+    if (reinforced) this.reserveTurfWave();
+  }
+  private reserveTurfWave() {
+    const g = this.game;
+    // Reuse the real door warnings, occupancy checks and enemy cap. A later
+    // push adds pressure without starting every combatant simultaneously.
+    const sites = this.turfSites('flyer', false);
+    const rng = seeded(g.roomSeed + ':turf-reserves-v2');
+    const chosen: Vec[] = [];
+    for (let i = 0; i < 6; i++) {
+      const available = sites.filter((p) => chosen.every((q) => distance(p, q) >= TURF_SPACING));
+      if (!available.length) break;
+      chosen.push(available[Math.floor(rng() * available.length)]);
+    }
+    g.waves.doors = chosen.map((p) => ({
+      spawn: { kind: 'flyer', ...p },
+      state: 'sealed',
+      timer: 0,
+      blocked: 0,
+      attackDelay: 1.1,
+    }));
+    g.waves.openingCount = g.enemies.length;
+    g.waves.phase = chosen.length ? 'opening' : 'done';
   }
   spawnAlly(kind: TurfKind, p: Vec) {
     return this.game.factions.spawn(kind, p);
@@ -443,7 +480,12 @@ export class AreaEventSystem {
     const g = this.game;
     if (!this.active || g.mode !== 'playing') return;
     if (this.active === 'turf') {
-      if (!g.enemies.length && !g.mutations.pending.length && this.departingAt === null) {
+      if (
+        !g.enemies.length &&
+        !g.mutations.pending.length &&
+        !g.waves.pending &&
+        this.departingAt === null
+      ) {
         this.departingAt = g.time;
         this.cacheReady = true;
         g.shots = g.shots.filter((s) => !s.allied);

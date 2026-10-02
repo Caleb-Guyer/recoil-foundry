@@ -694,7 +694,7 @@ export class Game {
     testRun: Checkpoint | null = null,
     workshop = false,
     securityLevel: SecurityLevel = 0,
-    factoryRules = true,
+    factoryRules: boolean | 1 | 2 = true,
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
@@ -718,7 +718,7 @@ export class Game {
             ? structuredClone(save.factory)
             : null
           : factoryRules
-            ? planFactory(this.seed)
+            ? planFactory(this.seed, typeof factoryRules === 'number' ? factoryRules : undefined)
             : null
         : null;
     this.areaEvents.start(save);

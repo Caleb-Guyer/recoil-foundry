@@ -988,7 +988,7 @@ function start(
   retry = false,
   seedOverride?: string,
   securityOverride?: SecurityLevel,
-  factoryRules?: boolean,
+  factoryRules?: boolean | 1 | 2,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1075,7 +1075,12 @@ function start(
     null,
     false,
     activeDaily ? 0 : security,
-    factoryRules ?? !(seedParam === seed && entryUrl.searchParams.get('fv') === '0'),
+    factoryRules ??
+      (seedParam === seed && entryUrl.searchParams.get('fv') === '0'
+        ? false
+        : seedParam === seed && entryUrl.searchParams.get('fv') === '1'
+          ? 1
+          : true),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1299,11 +1304,17 @@ function replayFinishedRun(run: RunRecap) {
   url.search = '';
   url.hash = '';
   url.searchParams.set('seed', run.seed);
-  url.searchParams.set('fv', run.factory ? '1' : '0');
+  url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   history.replaceState(null, '', url);
   linkedDaily = null;
   seedParam = run.seed;
-  start(undefined, false, run.seed, run.security ?? 0, !!run.factory);
+  start(
+    undefined,
+    false,
+    run.seed,
+    run.security ?? 0,
+    run.factory ? (run.factoryVersion ?? 1) : false,
+  );
 }
 function workshopFromRun(run: RunRecap) {
   discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);

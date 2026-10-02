@@ -139,6 +139,7 @@ test('old rules remain readable while replay stays disabled; Workshop requires t
   const daily = {
     ...old,
     factory: undefined,
+    factoryVersion: undefined,
     mode: 'daily' as const,
     seed: `RF-D${DAILY_RULESET - 1}-2026-09-13`,
   };

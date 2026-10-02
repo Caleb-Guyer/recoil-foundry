@@ -112,9 +112,9 @@ test('opening signatures and later recurrences actually load, leaving adjacent r
       condition === 'power' ? 'blackout' : condition === 'conflict' ? 'turf' : null,
     );
     if (condition === 'conflict') {
-      assert.equal(g.enemies.length, 3);
+      assert.equal(g.enemies.length, 6);
       assert.equal(g.areaEvents.allies.length, 3);
-      assert(g.enemies.every((e) => ['runner', 'shooter'].includes(e.kind)));
+      assert(g.enemies.every((e) => ['runner', 'shooter', 'flyer'].includes(e.kind)));
     }
     g.stage = 2;
     g.route = 'low';
@@ -196,7 +196,7 @@ test('malformed plans, future claims, duplicate claims and conflicting special e
   assert(loadCheckpoint(saved));
   for (const mutate of [
     (f: any) => {
-      f.version = 2;
+      f.version = 3;
     },
     (f: any) => {
       f.condition = 'conflict';
@@ -361,6 +361,7 @@ test('recaps retain and display factory conditions, while legacy recaps remain l
   assert.deepEqual(loadRunHistory([recap]), [recap]);
   const legacy = { ...recap };
   delete legacy.factory;
+  delete legacy.factoryVersion;
   assert.equal(loadRunHistory([legacy]).length, 1);
   assert.equal(loadRunHistory([{ ...recap, factory: 'power' }]).length, 0);
 });
@@ -395,7 +396,7 @@ for (const condition of Object.keys(FACTORY_CONDITIONS) as FactoryCondition[]) {
       const common = Matter.Common as typeof Matter.Common & { _nextId: number; _seed: number };
       common._nextId = common._seed = 0;
       const g = new Game();
-      g.start(seedFor(condition));
+      g.start(condition === 'conflict' ? 'NRW1FY' : seedFor(condition));
       const priorities = [
         'leech',
         'countershot',

@@ -11,6 +11,7 @@ export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
   factory?: FactoryCondition;
+  factoryVersion?: 1 | 2;
   version: 1;
   security?: SecurityLevel;
   id: string;
@@ -79,12 +80,14 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       (daily && raw.overtime) ||
       (raw.security !== undefined &&
         (!isSecurityLevel(raw.security) || raw.security === 0 || daily)) ||
-      (raw.factory !== undefined && (daily || raw.factory !== planFactory(raw.seed).condition))
+      (raw.factory !== undefined && (daily || raw.factory !== planFactory(raw.seed).condition)) ||
+      (raw.factoryVersion !== undefined && (!raw.factory || ![1, 2].includes(raw.factoryVersion)))
     )
       continue;
     records.push({
       version: 1,
       ...(raw.factory ? { factory: raw.factory as FactoryCondition } : {}),
+      ...(raw.factoryVersion ? { factoryVersion: raw.factoryVersion as 1 | 2 } : {}),
       ...(raw.security ? { security: raw.security } : {}),
       id: raw.id,
       finishedAt: raw.finishedAt,
@@ -130,6 +133,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
       {
         version: 1,
         ...(game.factory ? { factory: game.factory.condition } : {}),
+        ...(game.factory ? { factoryVersion: game.factory.version } : {}),
         ...(game.security ? { security: game.security.level } : {}),
         id,
         finishedAt,

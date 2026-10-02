@@ -10,13 +10,15 @@ export const FACTORY_CONDITIONS = {
   conflict: { name: 'Faction conflict', description: 'Rival crews fight over the factory.' },
 } as const;
 export type FactoryCondition = keyof typeof FACTORY_CONDITIONS;
+export const FACTORY_RULESET = 2;
+export type FactoryVersion = 1 | 2;
 export type FactoryEncounterKind = AreaEventKind | 'crossing' | 'freight';
 export interface FactoryEncounter {
   stage: number;
   kind: FactoryEncounterKind;
 }
 export interface FactoryRun {
-  version: 1;
+  version: FactoryVersion;
   condition: FactoryCondition;
   encounters: FactoryEncounter[];
   events: AreaEventSave[];
@@ -24,7 +26,7 @@ export interface FactoryRun {
 
 // Separate streams leave combat, rewards, bosses and old Daily seeds intact.
 // Room one teaches the controls; room two introduces the shift's signature.
-export function planFactory(seed: string): FactoryRun {
+export function planFactory(seed: string, version: FactoryVersion = FACTORY_RULESET): FactoryRun {
   const rng = seeded(seed + ':factory-v1');
   const condition = (Object.keys(FACTORY_CONDITIONS) as FactoryCondition[])[Math.floor(rng() * 3)];
   const signature: FactoryEncounterKind =
@@ -40,7 +42,7 @@ export function planFactory(seed: string): FactoryRun {
     encounters.push({ stage: 12, kind: alternatives[Math.floor(rng() * alternatives.length)] });
   }
   return {
-    version: 1,
+    version,
     condition,
     encounters,
     events: encounters.flatMap(({ stage, kind }) =>
@@ -71,14 +73,14 @@ export function validFactory(d: Checkpoint): boolean {
   if (
     !f ||
     typeof f !== 'object' ||
-    f.version !== 1 ||
+    (f.version !== 1 && f.version !== 2) ||
     d.version !== 6 ||
     typeof d.seed !== 'string' ||
     /^RF-D\d+-/.test(d.seed) ||
     d.areaEvent !== undefined
   )
     return false;
-  const expected = planFactory(d.seed);
+  const expected = planFactory(d.seed, f.version);
   if (
     f.condition !== expected.condition ||
     !Array.isArray(f.encounters) ||
