@@ -22,6 +22,7 @@ import {
 } from './fabricator.ts';
 import { fabricatorLevel } from './fabricator-layout.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
+import { planFactory, factoryEncounter, type FactoryRun } from './factory.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { CrosswindSystem } from './crosswind.ts';
 import { StormfrontSystem } from './stormfront.ts';
@@ -330,6 +331,7 @@ export class Game {
   level!: Level;
   terrain: Matter.Body[] = [];
   areaEvents = new AreaEventSystem(this);
+  factory: FactoryRun | null = null;
   factions = new FactionSystem(this);
   annex = new AnnexSystem(this);
   switchboard = new SwitchboardSystem(this);
@@ -692,6 +694,7 @@ export class Game {
     testRun: Checkpoint | null = null,
     workshop = false,
     securityLevel: SecurityLevel = 0,
+    factoryRules = true,
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
@@ -708,6 +711,16 @@ export class Game {
             : null
         : null;
     this.securityRecorded = !!save?.overtime;
+    this.factory =
+      !practice && !testRun && !workshop && !/^RF-D\d+-/.test(this.seed)
+        ? save
+          ? save.factory
+            ? structuredClone(save.factory)
+            : null
+          : factoryRules
+            ? planFactory(this.seed)
+            : null
+        : null;
     this.areaEvents.start(save);
     this.courier.start(save);
     this.floodgate.start(save);
@@ -829,6 +842,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
       ...(this.security ? { security: { ...this.security } } : {}),
       ...(this.maintenance.state ? { maintenance: { ...this.maintenance.state } } : {}),
       ...(this.welder.state ? { welder: structuredClone(this.welder.state) } : {}),
@@ -842,7 +856,9 @@ export class Game {
       ...(this.shutdown.state ? { shutdown: structuredClone(this.shutdown.state) } : {}),
       ...(this.story.state ? { story: { ...this.story.state } } : {}),
       ...(this.reforge.roomSave ? { reforgeRoom: this.reforge.roomSave } : {}),
-      ...(this.areaEvents.state ? { areaEvent: structuredClone(this.areaEvents.state) } : {}),
+      ...(!this.factory && this.areaEvents.state
+        ? { areaEvent: structuredClone(this.areaEvents.state) }
+        : {}),
       ...(this.legacyMods ? { legacyMods: [...this.legacyMods] } : {}),
       ...(this.legacyOffers ? { legacyOffers: [...this.legacyOffers] } : {}),
       seed: this.seed,
@@ -973,6 +989,11 @@ export class Game {
       this.terrain.push(b);
       Composite.add(this.engine.world, b);
     };
+    this.areaEvents.selectFactoryEvent();
+    const planned =
+      !escapeRoom && !this.detour && !this.overtime
+        ? factoryEncounter(this.factory, this.stage)
+        : undefined;
     this.level = this.workshop.active
       ? workshopLevel()
       : escapeRoom
@@ -999,7 +1020,17 @@ export class Game {
                 this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
                   ? this.practice.kind
                   : undefined,
+                planned
+                  ? {
+                      crossing: planned.kind === 'crossing',
+                      freight: planned.kind === 'freight',
+                      ordinary: true,
+                    }
+                  : undefined,
               );
+    // The opening faction fight teaches one mechanic with a small roster;
+    // its authored crew replaces the standard patrol rather than piling on.
+    if (planned?.kind === 'turf' && this.stage === 1) this.level.spawns = [];
     if (
       this.route &&
       !escapeRoom &&
@@ -3459,6 +3490,7 @@ export class Game {
         overtime: !!this.overtime,
         salvage: this.courierReward ? null : this.earnedSalvage,
         seed: this.seed,
+        factory: !!this.factory,
       },
     );
     if (!this.courierReward && !this.welderReward && this.areaEvents.clearance)
@@ -3514,7 +3546,7 @@ export class Game {
       seeded(
         this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage + ':reroll',
       ),
-      { stage: this.stage, overtime: !!this.overtime, seed: this.seed },
+      { stage: this.stage, overtime: !!this.overtime, seed: this.seed, factory: !!this.factory },
       this.offers.map((m) => m.id),
     );
     if (!this.areaEvents.clearance) return replacements;

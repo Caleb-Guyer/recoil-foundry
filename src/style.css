@@ -95,6 +95,27 @@ progress.low::-moz-progress-bar {
   letter-spacing: 2px;
   pointer-events: auto;
 }
+.factory-condition {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  max-width: min(400px, 100%);
+  padding: 7px 10px;
+  background: #101416d9;
+  border-left: 2px solid #c7a56d;
+  color: #dce5d9;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.factory-condition strong {
+  display: block;
+  color: #e4c388;
+  font-weight: 500;
+}
+.factory-condition span {
+  display: block;
+  color: #aebeb6;
+}
 .icon {
   display: grid;
   place-items: center;

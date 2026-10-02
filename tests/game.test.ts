@@ -241,7 +241,7 @@ test('damage grants brief immunity and lethal damage freezes the run', () => {
 });
 test('cleared exits advance automatically and choices modify the same gun', () => {
   const g = new Game();
-  g.start('progress');
+  g.start('progress', undefined, null, null, false, 0, false);
   let saves = 0,
     rewardsSaved = 0,
     reforgeSaves = 0,
@@ -755,7 +755,7 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     common._nextId = 0;
     common._seed = 0;
     const g = new Game();
-    g.start(seed);
+    g.start(seed, undefined, null, null, false, 0, false);
     // Keep this weapon-progression battery on its original event-free course.
     // Area event combat, objectives and rewards have their own ordinary-input tests.
     g.areaEvents.state = null;

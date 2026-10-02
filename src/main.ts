@@ -74,6 +74,7 @@ import {
   unseenAppearances,
 } from './appearance-notices.ts';
 import { Game } from './game.ts';
+import { FACTORY_CONDITIONS, factoryHint, freshFactorySeed } from './factory.ts';
 import {
   DISCOVERIES_KEY,
   WORKSHOP_BUILD_KEY,
@@ -328,7 +329,7 @@ function backFromUpdate() {
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
- <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
+ <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
   <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Dead Signal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
@@ -987,6 +988,7 @@ function start(
   retry = false,
   seedOverride?: string,
   securityOverride?: SecurityLevel,
+  factoryRules?: boolean,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1028,9 +1030,15 @@ function start(
   sound.unlock();
   sound.resetMusic();
   closeDialog();
+  const previousFactory = game.factory?.condition ?? runHistory.find((run) => run.factory)?.factory;
+  const freshSeed = () => freshFactorySeed(() => newSeed(game.seed), previousFactory);
   const seed =
     save?.seed ??
-    (retry ? retrySeed(game.seed) : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? newSeed()));
+    (retry
+      ? dailyFromSeed(game.seed)
+        ? retrySeed(game.seed)
+        : freshSeed()
+      : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? freshSeed()));
   activeDaily = dailyFromSeed(seed);
   linkedDaily = activeDaily;
   invalidDailyLink = false;
@@ -1051,6 +1059,7 @@ function start(
     if (seedParam !== seed) {
       seedParam = undefined;
       url.searchParams.delete('seed');
+      url.searchParams.delete('fv');
     }
     history.replaceState(null, '', url);
   }
@@ -1059,7 +1068,15 @@ function start(
     securityOverride ?? (retry ? (game.security?.level ?? 0) : selectedSecurity);
   const security = requestedSecurity <= securityProfile().unlocked ? requestedSecurity : 0;
   if (!activeDaily) selectedSecurity = save?.security?.level ?? security;
-  game.start(seed, save, null, null, false, activeDaily ? 0 : security);
+  game.start(
+    seed,
+    save,
+    null,
+    null,
+    false,
+    activeDaily ? 0 : security,
+    factoryRules ?? !(seedParam === seed && entryUrl.searchParams.get('fv') === '0'),
+  );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
   renderer.reset();
@@ -1282,10 +1299,11 @@ function replayFinishedRun(run: RunRecap) {
   url.search = '';
   url.hash = '';
   url.searchParams.set('seed', run.seed);
+  url.searchParams.set('fv', run.factory ? '1' : '0');
   history.replaceState(null, '', url);
   linkedDaily = null;
   seedParam = run.seed;
-  start(undefined, false, run.seed, run.security ?? 0);
+  start(undefined, false, run.seed, run.security ?? 0, !!run.factory);
 }
 function workshopFromRun(run: RunRecap) {
   discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
@@ -1463,6 +1481,11 @@ game.onChange = () => {
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${game.level.annex ? REGION_NAMES.annex : AREAS[game.level.area].name} · ${game.level.name}`;
+  $('factory-condition').hidden = !game.factory || !!game.overtime || !!game.escape || game.detour;
+  if (game.factory) {
+    $('factory-name').textContent = FACTORY_CONDITIONS[game.factory.condition].name;
+    $('factory-hint').textContent = factoryHint(game.factory, game.stage);
+  }
   if (game.maintenance.trial)
     $('stage').textContent =
       (game.maintenance.trial.preview ? 'TEST · ' : '') + 'MAINTENANCE TRIAL';

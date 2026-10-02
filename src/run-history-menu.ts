@@ -3,6 +3,7 @@ import { REGION_NAMES } from './regions.ts';
 import { MODS } from './rules.ts';
 import { damageCauseText } from './damage-cause.ts';
 import { canPracticeRunBuild, canReplayRun, reachedRoom, type RunRecap } from './run-history.ts';
+import { FACTORY_CONDITIONS } from './factory.ts';
 
 export const escapeRecapText = (value: string) =>
   value.replace(
@@ -36,7 +37,9 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
     '</dd>' +
     '<dt>Seed</dt><dd class="recap-seed">' +
     escapeRecapText(run.seed) +
-    '</dd></dl>' +
+    '</dd>' +
+    (run.factory ? '<dt>Factory</dt><dd>' + FACTORY_CONDITIONS[run.factory].name + '</dd>' : '') +
+    '</dl>' +
     '<h3>Your gun</h3>' +
     (run.legacyMods
       ? '<p class="recap-note">Legacy build · Preserved from earlier upgrade rules.</p>'

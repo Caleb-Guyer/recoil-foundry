@@ -658,16 +658,22 @@ export const BOSS_LAYOUTS: Layout[] = [
     ),
   },
 ];
+export interface LevelSelection {
+  crossing?: boolean;
+  freight?: boolean;
+  ordinary?: boolean;
+}
 function buildLevel(
   seed: string,
   stage: number,
   coolingBoss?: 'condenser' | 'turbine',
   bossVariant?: 'boss' | 'interceptor' | 'sorter',
+  selection?: LevelSelection,
 ): Level {
   const pick = seeded(seed + ':layouts');
   if (!Number.isInteger(stage) || stage < 0 || stage >= STAGES)
     throw new RangeError('Invalid stage');
-  const crossing = crossingLevel(seed, stage);
+  const crossing = crossingLevel(seed, stage, selection?.crossing);
   if (crossing) return crossing;
   if (stage >= 12 && stage < 16) {
     const selected =
@@ -683,7 +689,7 @@ function buildLevel(
         : undefined;
     return reclamationLevel(seed, stage, alternate);
   }
-  if (freightSelected(seed, stage))
+  if (stage === 5 && (selection?.freight ?? freightSelected(seed, stage)))
     return {
       ...FREIGHT_LAYOUT,
       mirrored: false,
@@ -729,10 +735,10 @@ function buildLevel(
       ? TURBINE_ARENA
       : COOLING_BOSS;
   const source =
-    physicsLayout(seed, stage) ??
-    counterweightLayout(seed, stage) ??
-    pressureLayout(seed, stage) ??
-    dropworksLayout(seed, stage) ??
+    (!selection?.ordinary ? physicsLayout(seed, stage) : undefined) ??
+    (!selection?.ordinary ? counterweightLayout(seed, stage) : undefined) ??
+    (!selection?.ordinary ? pressureLayout(seed, stage) : undefined) ??
+    (!selection?.ordinary ? dropworksLayout(seed, stage) : undefined) ??
     (slot === 2
       ? ADDED_LAYOUTS[area]
       : legacyStage === 11
@@ -875,8 +881,9 @@ export function getLevel(
   stage: number,
   coolingBoss?: 'condenser' | 'turbine',
   bossVariant?: 'boss' | 'interceptor' | 'sorter',
+  selection?: LevelSelection,
 ): Level {
-  const level = buildLevel(seed, stage, coolingBoss, bossVariant);
+  const level = buildLevel(seed, stage, coolingBoss, bossVariant, selection);
   if (level.boss || stage < 4) return level;
   // Reconstruct elite encounters independently of room, combat, and reward RNG.
   const rng = seeded(seed + ':elites');

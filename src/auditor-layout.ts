@@ -38,12 +38,14 @@ export function planAuditor(
     courier?: number;
     floodgate?: number | null;
     story?: number;
+    reserved?: readonly number[];
   } = {},
 ): AuditorSave | null {
   const rng = seeded(seed + ':auditor-v1');
   if (rng() >= 0.3) return null;
   const stages = Array.from({ length: 18 }, (_, i) => i + 1).filter(
     (stage) =>
+      !exclusions.reserved?.includes(stage) &&
       stage !== 13 &&
       Math.floor(stage / 4) !== exclusions.event?.area &&
       stage !== exclusions.courier &&

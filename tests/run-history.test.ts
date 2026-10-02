@@ -136,7 +136,12 @@ test('old rules remain readable while replay stays disabled; Workshop requires t
   const old = { ...run(), ruleset: DAILY_RULESET - 1 };
   assert.equal(loadRunHistory([old]).length, 1);
   assert(!canReplayRun(old));
-  const daily = { ...old, mode: 'daily' as const, seed: `RF-D${DAILY_RULESET - 1}-2026-09-13` };
+  const daily = {
+    ...old,
+    factory: undefined,
+    mode: 'daily' as const,
+    seed: `RF-D${DAILY_RULESET - 1}-2026-09-13`,
+  };
   assert.equal(loadRunHistory([daily]).length, 1);
   assert(!canReplayRun(daily));
   assert(canPracticeRunBuild(old, ['fold', 'magnum']));

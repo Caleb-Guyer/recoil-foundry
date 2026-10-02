@@ -81,7 +81,7 @@ test('early real rewards offer shared firepower without forcing a path or changi
           )!.seed
         : `release-opening-${i}`;
       const g = new Game();
-      g.start(seed);
+      g.start(seed, undefined, null, null, false, 0, false);
       for (let stage = 0; stage < 3; stage++) {
         g.openReward();
         assert.equal(g.offers.length, daily ? 1 : 3);
@@ -269,7 +269,7 @@ for (const daily of [false, true])
     assert.equal(rewards - courierRewards, 19);
     assert(validBuild(g.mods));
     assert.equal(g.mods.length, 19 + courierRewards);
-    assert(g.areaEvents.state);
+    assert(daily ? g.areaEvents.state : g.factory);
     assert(g.fabricators.enabled);
     assert.equal(g.story.state, plannedStory);
     assert(g.hp > 0 && g.hp <= 100);

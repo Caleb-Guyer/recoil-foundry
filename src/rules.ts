@@ -1,4 +1,5 @@
 import { validAreaEvent } from './area-events.ts';
+import { validFactory } from './factory.ts';
 import { validSecurityRun } from './security.ts';
 import { validMaintenance } from './maintenance.ts';
 import { validSortingPit } from './sorting-pit-layout.ts';
@@ -650,6 +651,7 @@ export const FUSION_REQUIRES: Record<string, readonly string[]> = {
 };
 export const isFusion = (id: string) => Object.hasOwn(FUSION_REQUIRES, id);
 export interface RewardContext {
+  factory?: boolean;
   stage: number;
   seed?: string;
   overtime?: boolean;
@@ -767,6 +769,18 @@ export const OPENING_POWER_MODS: readonly string[] = [
   'backblast',
   'burst',
 ];
+export const OPENING_IDENTITY_MODS: readonly string[] = [
+  'crossfire',
+  'shellshock',
+  'coolant-rounds',
+  'suspension',
+  'cutting-torch',
+  'grapnel',
+  'bounce',
+  'recall',
+  'fold',
+  'vector',
+];
 // A small preference for the chosen path, sampled without replacement.
 export function rewardMods(
   mods: readonly string[],
@@ -817,6 +831,26 @@ export function rewardMods(
     const power = pool.filter((mod) => OPENING_POWER_MODS.includes(mod.id));
     if (power.length && offers.length)
       offers[offers.length - 1] = power[Math.floor(rng() * power.length)];
+  }
+  // New normal campaigns introduce a different firing or movement mechanic
+  // on both opening screens. Retain the power option and any salvage card.
+  if (
+    context.factory &&
+    !context.overtime &&
+    !/^RF-D\d+-/.test(context.seed ?? '') &&
+    context.stage >= 0 &&
+    context.stage <= 1 &&
+    count === 3 &&
+    !offers.some((mod) => OPENING_IDENTITY_MODS.includes(mod.id))
+  ) {
+    const identities = pool.filter((mod) => OPENING_IDENTITY_MODS.includes(mod.id));
+    let replace = offers.findIndex(
+      (mod) => !OPENING_POWER_MODS.includes(mod.id) && !isSalvage(mod.id),
+    );
+    if (replace < 0 && offers.filter((mod) => OPENING_POWER_MODS.includes(mod.id)).length > 1)
+      replace = offers.findIndex((mod) => OPENING_POWER_MODS.includes(mod.id));
+    if (identities.length && replace >= 0)
+      offers[replace] = identities[Math.floor(rng() * identities.length)];
   }
   // An established Overtime gun should be able to develop a component it
   // already owns. Keep two open choices and any earned salvage card. Apply
@@ -1079,6 +1113,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  factory?: import('./factory.ts').FactoryRun;
   security?: import('./security.ts').SecurityRun;
   maintenance?: import('./maintenance.ts').MaintenanceSave;
   welder?: WelderSave;
@@ -1337,6 +1372,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
+    validFactory(d) &&
     validSecurityRun(d) &&
     validSortingPit(d) &&
     (d.floodgate === undefined ||

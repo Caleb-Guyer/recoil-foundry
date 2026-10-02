@@ -32,7 +32,13 @@ export class StorySystem {
       ? save.story
         ? { ...save.story }
         : null
-      : planStory(g.seed, g.areaEvents.state, g.courier.state, g.floodgate.stage);
+      : planStory(
+          g.seed,
+          g.areaEvents.state,
+          g.courier.state,
+          g.floodgate.stage,
+          g.factory?.encounters.map((e) => e.stage),
+        );
   }
   level(source: Level) {
     const g = this.game;

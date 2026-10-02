@@ -362,7 +362,7 @@ test('accepting a daily upgrade twice advances and heals only once', () => {
 test('ordinary runs retain three distinct upgrade choices after every eligible room', () => {
   for (const seed of ['ordinary-run', '2026-09-06', `RF-D${DAILY_RULESET}-invalid`]) {
     const game = new Game();
-    game.start(seed);
+    game.start(seed, undefined, null, null, false, 0, false);
     // This fixture skips combat to test rewards; event fights have their own playtests.
     game.areaEvents.state = null;
     for (let stage = 0; stage < STAGES - 1; stage++) {

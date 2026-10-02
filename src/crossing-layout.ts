@@ -57,9 +57,10 @@ export const CROSSING_LAYOUT: Layout = {
     { x: 1850, y: 722 },
   ],
 };
-export function crossingLevel(seed: string, stage: number): Level | undefined {
-  if (![1, 13].includes(stage) || seeded(seed + ':crossing:' + stage)() >= 0.3) return;
-  if (stage === 13 && seeded(seed + ':crossing:1')() < 0.3) return;
+export function crossingLevel(seed: string, stage: number, selected?: boolean): Level | undefined {
+  if (selected === false || ![1, 13].includes(stage)) return;
+  if (selected !== true && seeded(seed + ':crossing:' + stage)() >= 0.3) return;
+  if (selected !== true && stage === 13 && seeded(seed + ':crossing:1')() < 0.3) return;
   const mirrored = seeded(seed + ':crossing-mirror:' + stage)() > 0.5;
   const flip = (x: number) => (mirrored ? 2000 - x : x);
   const variant = Math.floor(seeded(seed + ':crossing-roster:' + stage)() * 3);

@@ -125,7 +125,7 @@ for (const chain of [orders, cross])
       g.onCheckpoint = (s) => {
         save = s;
       };
-      g.start('subversion-save');
+      g.start('subversion-save', undefined, null, null, false, 0, false);
       for (const id of chain) {
         g.openReward();
         g.offers = rewardMods(g.mods, 200, seeded('all'), { stage: g.stage });

@@ -63,6 +63,7 @@ export class AuditorSystem {
           courier: g.courier.state?.stage,
           floodgate: g.floodgate.stage,
           story: g.story.state?.stage,
+          reserved: g.factory?.encounters.map((e) => e.stage),
         });
   }
   get eligible() {

@@ -18,11 +18,18 @@ export const courierEligible = (level: Level) =>
     level.sapperIntro
   );
 
-export function planCourier(seed: string, event?: AreaEventSave | null): CourierSave | null {
+export function planCourier(
+  seed: string,
+  event?: AreaEventSave | null,
+  reserved: readonly number[] = [],
+): CourierSave | null {
   const rng = seeded(seed + ':courier-v1');
   if (rng() >= 0.35) return null;
   const stages = COURIER_STAGES.filter(
-    (s) => (!event || Math.floor(s / 4) !== event.area) && courierEligible(getLevel(seed, s)),
+    (s) =>
+      !reserved.includes(s) &&
+      (!event || Math.floor(s / 4) !== event.area) &&
+      courierEligible(getLevel(seed, s)),
   );
   if (!stages.length) return null;
   return { stage: stages[Math.floor(rng() * stages.length)], status: 'pending' };

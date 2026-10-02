@@ -57,7 +57,16 @@ test('story plans are uncommon, deterministic, and avoid events, routes, introdu
     const g = new Game();
     g.start('story-plan-' + i);
     const p = g.story.state;
-    assert.deepEqual(p, planStory(g.seed, g.areaEvents.state, g.courier.state, g.floodgate.stage));
+    assert.deepEqual(
+      p,
+      planStory(
+        g.seed,
+        g.areaEvents.state,
+        g.courier.state,
+        g.floodgate.stage,
+        g.factory?.encounters.map((e) => e.stage),
+      ),
+    );
     if (!p) continue;
     count++;
     seen.add(p.kind);

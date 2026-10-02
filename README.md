@@ -22,6 +22,8 @@ The **Sorting Pit** is a rare Reclamation fight beneath a scrap magnet. Cover ri
 
 The **Dead Signal** update also includes the alternate Transmission Annex route, five Subversion upgrades and new factory records. Save build blueprints, track Practice bests, and challenge friends to the same arena and gun. [Watch the Dead Signal trailer](https://caleb-guyer.github.io/recoil-foundry/media/dead-signal.mp4).
 
+**Factory Shifts — version 3.18.0.** Fresh normal runs start under Freight surge, Power failure or Faction conflict. Room two introduces moving loads, power restoration or a small crew battle; the condition returns in Furnace, with ordinary rooms between encounters. Random restarts change condition, and the first two reward screens offer a distinct shooting or movement mechanic alongside the existing power safeguard. Continue preserves the chosen plan. Daily, Practice, Workshop and existing saves keep their rules. [Release notes](docs/releases/3.18.0.md).
+
 ## Controls
 
 | Input                        | Action                     |

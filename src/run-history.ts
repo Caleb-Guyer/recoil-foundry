@@ -1,4 +1,5 @@
 import type { Game } from './game.ts';
+import { planFactory, type FactoryCondition } from './factory.ts';
 import { isSecurityLevel, securityLabel, type SecurityLevel } from './security.ts';
 import { AREAS, type AreaId } from './areas.ts';
 import { DAILY_RULESET, dailyFromSeed, isUnsupportedDailySeed } from './daily.ts';
@@ -9,6 +10,7 @@ import { workshopBuild } from './workshop-build.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  factory?: FactoryCondition;
   version: 1;
   security?: SecurityLevel;
   id: string;
@@ -76,11 +78,13 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       (raw.mode === 'daily') !== daily ||
       (daily && raw.overtime) ||
       (raw.security !== undefined &&
-        (!isSecurityLevel(raw.security) || raw.security === 0 || daily))
+        (!isSecurityLevel(raw.security) || raw.security === 0 || daily)) ||
+      (raw.factory !== undefined && (daily || raw.factory !== planFactory(raw.seed).condition))
     )
       continue;
     records.push({
       version: 1,
+      ...(raw.factory ? { factory: raw.factory as FactoryCondition } : {}),
       ...(raw.security ? { security: raw.security } : {}),
       id: raw.id,
       finishedAt: raw.finishedAt,
@@ -125,6 +129,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        ...(game.factory ? { factory: game.factory.condition } : {}),
         ...(game.security ? { security: game.security.level } : {}),
         id,
         finishedAt,

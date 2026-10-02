@@ -29,13 +29,18 @@ export function planStory(
   event?: AreaEventSave | null,
   courier?: CourierSave | null,
   floodgate?: number | null,
+  reserved: readonly number[] = [],
 ): StorySave | null {
   const rng = seeded(seed + ':story-rooms-v1');
   if (rng() >= 0.5) return null;
   const choices = STORY_KINDS.flatMap((kind) =>
-    STORY_ROOMS[kind].stages
+    (kind === 'dispatch' && reserved.includes(1)
+      ? [...STORY_ROOMS.dispatch.stages, 8, 9, 16, 17]
+      : STORY_ROOMS[kind].stages
+    )
       .filter(
         (stage) =>
+          !reserved.includes(stage) &&
           Math.floor(stage / 4) !== event?.area &&
           stage !== courier?.stage &&
           stage !== floodgate &&
@@ -59,7 +64,8 @@ export function validStory(d: Checkpoint) {
       !!s &&
       typeof s === 'object' &&
       STORY_KINDS.includes(s.kind) &&
-      (STORY_ROOMS[s.kind].stages as readonly number[]).includes(s.stage) &&
+      ((STORY_ROOMS[s.kind].stages as readonly number[]).includes(s.stage) ||
+        (!!d.factory && s.kind === 'dispatch' && [8, 9, 16, 17].includes(s.stage))) &&
       typeof s.recovered === 'boolean' &&
       (!s.recovered || !!d.overtime || d.stage >= s.stage) &&
       d.areaEvent?.area !== Math.floor(s.stage / 4) &&

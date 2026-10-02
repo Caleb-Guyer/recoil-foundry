@@ -99,7 +99,7 @@ test('random and forced daily rewards stay legal and plentiful throughout comple
         )!.seed
       : 'path-' + i;
     const g = new Game();
-    g.start(seed);
+    g.start(seed, undefined, null, null, false, 0, false);
     // This fixture skips combat to test rewards; event fights have their own playtests.
     g.areaEvents.state = null;
     for (let stage = 0; stage < 19; stage++) {

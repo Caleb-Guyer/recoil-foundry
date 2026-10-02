@@ -53,17 +53,22 @@ export function planAreaEvent(seed: string): AreaEventSave | null {
     rerolls: 0,
   };
 }
-export function validAreaEvent(value: unknown, stage: number, atReward: boolean): boolean {
+export function validAreaEvent(
+  value: unknown,
+  stage: number,
+  atReward: boolean,
+  factory = false,
+): boolean {
   if (value === undefined) return true;
   if (!value || typeof value !== 'object') return false;
   const s = value as AreaEventSave;
   if (
     !Object.hasOwn(AREA_EVENTS, s.kind) ||
     !Number.isInteger(s.area) ||
-    s.area < 1 ||
+    s.area < (factory ? 0 : 1) ||
     s.area > 3 ||
     (s.room !== undefined &&
-      (s.kind !== 'blackout' ||
+      ((!factory && s.kind !== 'blackout') ||
         !Number.isInteger(s.room) ||
         areaIndex(s.room) !== s.area ||
         s.room % 4 === 3)) ||
@@ -175,11 +180,19 @@ export class AreaEventSystem {
     this.game = game;
   }
   start(save?: Checkpoint) {
+    if (this.game.factory) {
+      this.state = null;
+      return;
+    }
     this.state = save?.areaEvent
       ? structuredClone(save.areaEvent)
       : save
         ? null
         : planAreaEvent(this.game.seed);
+  }
+  selectFactoryEvent() {
+    const g = this.game;
+    if (g.factory) this.state = g.factory.events.find((event) => event.room === g.stage) ?? null;
   }
   get encounter(): AreaEventKind | null {
     const g = this.game,
@@ -198,7 +211,8 @@ export class AreaEventSystem {
       areaIndex(g.stage) !== s.area
     )
       return null;
-    if (s.kind === 'blackout' && g.stage !== (s.room ?? s.area * 4)) return null;
+    if ((s.room !== undefined || s.kind === 'blackout') && g.stage !== (s.room ?? s.area * 4))
+      return null;
     return s.kind;
   }
   get dark() {
@@ -294,6 +308,24 @@ export class AreaEventSystem {
   }
   spawnTurf() {
     const g = this.game;
+    const small = !!g.factory && g.stage < 8;
+    const redCount = small ? (g.stage < 4 ? 3 : 6) : TURF_RED_COUNT;
+    const blueCount = small ? (g.stage < 4 ? 3 : 5) : TURF_BLUE_COUNT;
+    if (small) {
+      this.formation = 'ground';
+      for (const allied of [false, true]) {
+        const count = allied ? blueCount : redCount;
+        for (let i = 0; i < count; i++) {
+          const kind: TurfKind = i % 3 === 0 ? 'shooter' : 'runner';
+          const p = this.turfSpot(kind, allied);
+          if (p) {
+            if (allied) this.spawnAlly(kind, p);
+            else this.spawn(kind, p);
+          }
+        }
+      }
+      return;
+    }
     const sites = (allied: boolean): TurfSites => ({
       runner: this.turfSites('runner', allied),
       shooter: this.turfSites('shooter', allied),
@@ -356,7 +388,10 @@ export class AreaEventSystem {
   findSite(): Vec {
     const g = this.game,
       candidates: Vec[] = [];
-    for (let x = 540; x <= 1720; x += 40) {
+    // Introduce the outage with a visible, floor-level objective near the
+    // entrance. Later outages retain their exploration-sized placement pool.
+    const opening = !!g.factory && g.stage === 1 && this.active === 'blackout';
+    for (let x = opening ? 340 : 540; x <= (opening ? 700 : 1720); x += 40) {
       if (
         !Query.region(g.solidBodies, { min: { x: x - 45, y: 642 }, max: { x: x + 45, y: 738 } })
           .length
@@ -364,7 +399,7 @@ export class AreaEventSystem {
         candidates.push({ x, y: 724 });
     }
     const rng = seeded(g.roomSeed + ':event-site:' + g.stage);
-    return candidates[Math.floor(rng() * candidates.length)] ?? { x: 1840, y: 724 };
+    return candidates[Math.floor(rng() * candidates.length)] ?? { x: opening ? 200 : 1840, y: 724 };
   }
   free(p: Vec, margin = 28) {
     const g = this.game;
@@ -512,12 +547,21 @@ export class AreaEventSystem {
     );
   }
   get freeReroll() {
+    if (this.game.factory)
+      return !this.game.overtime && this.game.factory.events.some((event) => event.rerolls > 0);
     return (this.state?.rerolls ?? 0) > 0;
   }
   spendReroll() {
+    if (this.game.factory) {
+      const event = this.game.factory.events.find((event) => event.rerolls > 0);
+      if (event) event.rerolls--;
+      return;
+    }
     if (this.freeReroll) this.state!.rerolls--;
   }
   get roomHeal() {
+    if (this.game.factory)
+      return !this.game.overtime && this.state?.relays.includes(this.game.stage) ? 6 : 0;
     return (
       this.state?.room !== undefined
         ? this.state.relays.length === 1
