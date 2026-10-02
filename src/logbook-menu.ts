@@ -43,6 +43,24 @@ const entryMark = (entry: LogbookEntry, mark: (mod: Mod) => string) =>
       : entry.earned !== undefined
         ? commendationMark(entry.earned)
         : archiveMark(entry.id) || fileMark;
+const goalMark = (entry: LogbookEntry) =>
+  entry.goal
+    ? '<div class="logbook-goal"><strong>' +
+      (entry.goal.unlocked ? 'Unlocked for new Campaign runs' : 'Unlock progress') +
+      '</strong><progress max="' +
+      entry.goal.target +
+      '" value="' +
+      entry.goal.current +
+      '" aria-label="' +
+      escapeLogbook(entry.goal.requirement) +
+      '"></progress><span>' +
+      entry.goal.current +
+      ' / ' +
+      entry.goal.target +
+      '</span><p>' +
+      escapeLogbook(entry.goal.requirement) +
+      '</p></div>'
+    : '';
 export interface LogbookViewState {
   section: LogbookSection;
   selected: string;
@@ -69,7 +87,8 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
             : entry.section === 'commendations'
               ? 'Explore more of the Foundry to reveal this challenge.'
               : 'Explore the Foundry to recover this document.') +
-      '</p>'
+      '</p>' +
+      goalMark(entry)
     );
   return (
     '<div class="logbook-entry-top">' +
@@ -82,9 +101,10 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
     (entry.description
       ? '<p class="logbook-function">' + escapeLogbook(entry.description) + '</p>'
       : '') +
-    (entry.unlock && entry.unlock !== entry.description
+    (entry.unlock && !entry.goal && entry.unlock !== entry.description
       ? '<p class="logbook-unlock"><strong>Unlock:</strong> ' + escapeLogbook(entry.unlock) + '</p>'
       : '') +
+    goalMark(entry) +
     (entry.reward
       ? '<p class="commendation-reward">' +
         escapeLogbook(entry.reward) +
@@ -147,6 +167,7 @@ export function logbookMenu(
         '</button>',
     ).join('') +
     '</nav>' +
+    '<section id="logbook-goals" class="logbook-goals" aria-label="Next goals"></section>' +
     '<div class="logbook-layout"><section class="logbook-index" aria-label="Recovered entries">' +
     '<label class="sr-only" for="logbook-search">Find a discovered entry</label><input id="logbook-search" type="search" placeholder="Find a record" autocomplete="off" maxlength="80">' +
     '<div class="logbook-filters" role="group" aria-label="Collection filters">' +
@@ -175,6 +196,41 @@ export function logbookMenu(
   const family = content.querySelector<HTMLSelectElement>('#logbook-family')!;
   family.value = state.family ?? 'all';
   function render() {
+    const goals = entries.filter((e) => e.goal && !e.goal.unlocked);
+    const goalsPanel = content.querySelector<HTMLElement>('#logbook-goals')!;
+    goalsPanel.hidden = state.section !== 'equipment' || preview;
+    goalsPanel.innerHTML =
+      '<strong>' +
+      (goals.length ? 'Next goals' : 'All five achievement fittings unlocked') +
+      '</strong>' +
+      goals
+        .slice(0, 3)
+        .map(
+          (e) =>
+            '<button class="quiet" data-goal="' +
+            e.id +
+            '">' +
+            escapeLogbook(e.name) +
+            '<span>' +
+            e.goal!.current +
+            ' / ' +
+            e.goal!.target +
+            '</span></button>',
+        )
+        .join('') +
+      '<p>Campaign and Daily count toward goals. New fittings enter the next Campaign draft; existing runs keep their starting pool.</p>';
+    goalsPanel.querySelectorAll<HTMLButtonElement>('[data-goal]').forEach(
+      (button) =>
+        (button.onclick = () => {
+          state.section = 'equipment';
+          state.selected = button.dataset.goal!;
+          state.query = search.value = '';
+          state.filter = 'locked';
+          state.family = family.value = 'all';
+          render();
+          detail.focus();
+        }),
+    );
     const sectionEntries = entries.filter((entry) => entry.section === state.section);
     const filtered = entries.map((e) => ({
       ...e,

@@ -4,6 +4,31 @@ export type Lore = readonly [source: string, author: string, text: string];
 
 // These are original Foundry documents. Mechanical descriptions live in the upgrade catalog.
 export const UPGRADE_LORE = {
+  'double-jump': [
+    'Personnel lift · second attempt',
+    'M. Vale · maintenance',
+    'The emergency actuator carried one more stroke than the lift needed. Purchasing asked us to remove it. Holt asked what happened if the first stroke failed.\n\nThere is enough pressure for one correction before the boots touch a solid surface again. I have mounted the release where you already reach for the jump control. Please keep the spare stroke. Someone paid for it.',
+  ],
+  'wing-harness': [
+    'Roof access · descent allowance',
+    'E. Holt · safety office',
+    'We issued the folding vanes to workers inspecting three separate production zones. Familiarity with the floor seemed a reasonable qualification for leaving it.\n\nThey slow a fall for a little over a second. They do not lift anyone. The service tool supplies the part of the demonstration that the vanes cannot. Land before the fabric reaches its limit; the stitching deserves a rest.',
+  ],
+  'ground-fault': [
+    'Earthing revision · shared return',
+    'Dr. S. Anik · development',
+    'The insulated lead was carrying charge between frames. We moved the return to the floor and found three frames answering at once. The airborne test rig answered nothing.\n\nThe signal loses strength across the shared return and cannot cross a partition. I have written both limitations on the fitting. Dispatch considers them useful distinctions. Maintenance considers them a reason to keep the floor dry.',
+  ],
+  'static-reservoir': [
+    'Dispatch · aerial reserve',
+    'T. Orr · dispatch',
+    'The roof beacon held a spare cell for the moments between deliveries. We watched you make six deliveries without using the floor and decided the beacon could spare it.\n\nThree recoil strokes charge the cell. The next discharge gets one additional destination, at reduced power. Ground contact drains what remains. I would rather have one predictable reserve than another circuit that insists it can keep everyone waiting forever.',
+  ],
+  'conductive-tether': [
+    'Coupling cable · electrical endorsement',
+    'M. Vale · maintenance',
+    'You connected two machines with the cable while carrying a charged coil. Nobody put that combination on the requisition form. I checked.\n\nThe new braid carries part of the discharge directly to the frame at the other end. It carries it once. The insulation stops the return journey, and the old cable tension limits still apply. I have added the combination to the form. Please stop making me chase the forms.',
+  ],
   'melt-through': [
     'Recovered welding head · unlisted part',
     'M. Vale · maintenance',

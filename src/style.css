@@ -2130,3 +2130,62 @@ body[data-clock-out='true'] .touch-controls {
   opacity: 0.55;
   cursor: default;
 }
+
+.logbook-goals {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+  padding: 12px;
+  background: #121b1d;
+  border: 1px solid #344448;
+  border-radius: 8px;
+}
+.logbook-goals[hidden] {
+  display: none;
+}
+.logbook-goals > strong {
+  font-size: 12px;
+  color: #b8ddc9;
+}
+.logbook-goals button {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.logbook-goals button span {
+  margin-left: 9px;
+  color: #b8ddc9;
+}
+.logbook-goals p {
+  width: 100%;
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #9caeae;
+  line-height: 1.5;
+}
+.logbook-goal {
+  padding: 12px;
+  margin: 16px 0;
+  background: #10191a;
+  border: 1px solid #344448;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.logbook-goal strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #b8ddc9;
+}
+.logbook-goal progress {
+  width: calc(100% - 55px);
+  height: 8px;
+  accent-color: #b8ddc9;
+}
+.logbook-goal span {
+  margin-left: 12px;
+}
+.logbook-goal p {
+  line-height: 1.6;
+  margin-bottom: 0;
+}

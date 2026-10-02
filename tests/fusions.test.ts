@@ -1,3 +1,4 @@
+import { LONGEVITY_IDS } from '../src/longevity.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
@@ -180,6 +181,7 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
       (m) =>
         !isFusion(m.id) &&
         !isSubversion(m.id) &&
+        !LONGEVITY_IDS.includes(m.id as never) &&
         ![
           'vector',
           'afterburner',

@@ -12,7 +12,8 @@ import { LOGBOOK_KEY, loadLogbook, migrateLogbook } from './logbook.ts';
 import { COMMENDATIONS_KEY, loadCommendations } from './commendations.ts';
 import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
 import { APPEARANCE_SEEN_KEY, loadSeenAppearances } from './appearance-notices.ts';
-import { ARCHIVE_KEY, migrateArchive, validArchive } from './archive.ts';
+import { ARCHIVE_KEY, migrateArchive, validArchive, encounterArchive } from './archive.ts';
+import { MILESTONES_KEY, loadMilestones, validMilestones, unlockGoals } from './longevity.ts';
 import { VICTORIES_KEY, loadEncounters } from './practice.ts';
 import { RUN_HISTORY_KEY, loadRunHistory } from './run-history.ts';
 import { DAILY_BESTS_KEY, dailyForDate, dailyFromSeed } from './daily.ts';
@@ -34,6 +35,7 @@ export const PROGRESS_KEYS = [
   COSMETICS_KEY,
   APPEARANCE_SEEN_KEY,
   ARCHIVE_KEY,
+  MILESTONES_KEY,
   VICTORIES_KEY,
   RUN_HISTORY_KEY,
   DAILY_BESTS_KEY,
@@ -111,7 +113,18 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [COMMENDATIONS_KEY]: earned,
     [COSMETICS_KEY]: loadCosmetics(read(COSMETICS_KEY), earned),
     [APPEARANCE_SEEN_KEY]: loadSeenAppearances(read(APPEARANCE_SEEN_KEY), earned),
-    [ARCHIVE_KEY]: migrateArchive(read(ARCHIVE_KEY), discovered, book, earned),
+    [ARCHIVE_KEY]: encounterArchive(
+      migrateArchive(read(ARCHIVE_KEY), discovered, book, earned),
+      unlockGoals(
+        book,
+        earned,
+        victories.map((v) => v.kind),
+        read(MILESTONES_KEY),
+      )
+        .filter((g) => g.unlocked)
+        .map((g) => 'mod:' + g.id + ':unlocked'),
+    ),
+    [MILESTONES_KEY]: loadMilestones(read(MILESTONES_KEY)),
     [VICTORIES_KEY]: victories,
     [RUN_HISTORY_KEY]: history,
     [DAILY_BESTS_KEY]: dailyRecords(read(DAILY_BESTS_KEY)),
@@ -142,12 +155,14 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === SECURITY_KEY ||
           k === APPEARANCE_SEEN_KEY ||
           k === ARCHIVE_KEY ||
+          k === MILESTONES_KEY ||
           Object.hasOwn(raw, k),
       )
     )
       return null;
     const checkpoint = raw[CHECKPOINT_KEY];
     if (Object.hasOwn(raw, ARCHIVE_KEY) && !validArchive(raw[ARCHIVE_KEY])) return null;
+    if (Object.hasOwn(raw, MILESTONES_KEY) && !validMilestones(raw[MILESTONES_KEY])) return null;
     // Older profiles have not acknowledged the Appearance section yet.
     if (
       Object.hasOwn(raw, APPEARANCE_SEEN_KEY) &&

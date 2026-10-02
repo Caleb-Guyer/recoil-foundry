@@ -48,6 +48,12 @@ export function issueDetails(game: Game, type: FeedbackType = 'bug'): string {
       `Room: ${game.stage + 1} / ${game.level.area} / ${game.level.id}`,
       `Route: ${game.escape ? 'Extraction' : game.detour ? 'Detour' : 'Main'}`,
       `Gun: ${game.mods.join(', ') || 'Starting gun'}`,
+      ...(mode === 'Campaign'
+        ? [`Achievement fitting pool: ${game.unlocks.join(', ') || 'Original fittings'}`]
+        : []),
+      ...(game.factory
+        ? [`Factory: ${game.factory.condition} / rules ${game.factory.version}`]
+        : []),
     );
     if (game.region)
       lines.push(

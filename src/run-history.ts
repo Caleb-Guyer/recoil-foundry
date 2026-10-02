@@ -6,10 +6,12 @@ import { DAILY_RULESET, dailyFromSeed, isUnsupportedDailySeed } from './daily.ts
 import { STAGES, validBuild, validLegacyBuild, validSavedBuild } from './rules.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { workshopBuild } from './workshop-build.ts';
+import { validUnlocks, type LongevityId } from './longevity.ts';
 
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  unlocks?: LongevityId[];
   factory?: FactoryCondition;
   factoryVersion?: 1 | 2;
   version: 1;
@@ -81,11 +83,15 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       (raw.security !== undefined &&
         (!isSecurityLevel(raw.security) || raw.security === 0 || daily)) ||
       (raw.factory !== undefined && (daily || raw.factory !== planFactory(raw.seed).condition)) ||
-      (raw.factoryVersion !== undefined && (!raw.factory || ![1, 2].includes(raw.factoryVersion)))
+      (raw.factoryVersion !== undefined &&
+        (!raw.factory || ![1, 2].includes(raw.factoryVersion))) ||
+      (raw.unlocks !== undefined &&
+        (!validUnlocks(raw.unlocks) || (daily && raw.unlocks.length > 0)))
     )
       continue;
     records.push({
       version: 1,
+      ...(raw.unlocks && !daily ? { unlocks: [...raw.unlocks] } : {}),
       ...(raw.factory ? { factory: raw.factory as FactoryCondition } : {}),
       ...(raw.factoryVersion ? { factoryVersion: raw.factoryVersion as 1 | 2 } : {}),
       ...(raw.security ? { security: raw.security } : {}),
@@ -132,6 +138,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        ...(!dailyFromSeed(game.seed) ? { unlocks: [...game.unlocks] } : {}),
         ...(game.factory ? { factory: game.factory.condition } : {}),
         ...(game.factory ? { factoryVersion: game.factory.version } : {}),
         ...(game.security ? { security: game.security.level } : {}),

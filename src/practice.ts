@@ -1,3 +1,4 @@
+import { loadUnlocks } from './longevity.ts';
 import { breakableSolids } from './destruction-layout.ts';
 import { getLevel } from './levels.ts';
 import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
@@ -139,6 +140,7 @@ export function practiceCheckpoint(
   const stage = PRACTICE_BOSSES[encounter.kind].stage;
   const save = testCheckpoint(encounter.seed, stage);
   if (mods !== null) save.mods = practiceBuild(encounter.kind, mods, known);
+  if (loadUnlocks(save.mods).length) save.unlocks = loadUnlocks(save.mods);
   return encounter.kind === 'switchboard'
     ? { ...save, version: 6, region: 'annex', annexVersion: 5 }
     : save;

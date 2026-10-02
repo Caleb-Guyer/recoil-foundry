@@ -143,6 +143,7 @@ export interface LogbookEntry {
   unread?: boolean;
   notification?: string;
   unlock?: string;
+  goal?: import('./longevity.ts').UnlockGoal;
 }
 export function logbookEntries(
   known: readonly string[],

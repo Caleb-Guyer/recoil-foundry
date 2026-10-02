@@ -6,6 +6,14 @@ export function drawArcs(c: CanvasRenderingContext2D, g: Game, reduced: boolean)
   c.save();
   c.strokeStyle = '#b5d9e5';
   c.lineWidth = 1.3;
+  if (g.mods.includes('static-reservoir')) {
+    const p = g.player.position;
+    c.globalAlpha = 0.9;
+    for (let i = 0; i < 3; i++) {
+      c.fillStyle = g.arcs.reservoirReady || i < g.arcs.reservoirShots ? '#b9e4ed' : '#37545d';
+      c.fillRect(p.x - 9 + i * 7, p.y - 32, 4, 5);
+    }
+  }
   for (const charge of g.arcs.charges.values()) {
     if (charge.enemy.hp <= 0 || charge.until <= g.time) continue;
     const flash = clamp(1 - (g.time - charge.flashAt) / 0.24, 0, 1);

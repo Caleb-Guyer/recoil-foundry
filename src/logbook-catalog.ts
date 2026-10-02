@@ -14,6 +14,7 @@ import {
 } from './logbook.ts';
 import { loadArchive, archiveToken, archiveUnread } from './archive.ts';
 import { ENEMY_GUIDES } from './archive-art.ts';
+import { type UnlockGoal } from './longevity.ts';
 
 const EMPTY_LORE: Lore = ['', '', ''];
 export const VARIANT_RECORDS = [
@@ -105,6 +106,7 @@ export function logbookCatalog(
   progress: LogbookProgress,
   earned: readonly CommendationId[],
   rawArchive: unknown,
+  goals: readonly UnlockGoal[] = [],
 ): LogbookEntry[] {
   const archive = loadArchive(rawArchive),
     base = loadLogbook(progress);
@@ -124,6 +126,21 @@ export function logbookCatalog(
     recovered.get('tool')!,
     ...MODS.map((mod, index) => {
       const existing = recovered.get('mod:' + mod.id);
+      const goal = goals.find((g) => g.id === mod.id);
+      if (goal && !goal.unlocked && !existing)
+        return {
+          id: 'mod:' + mod.id,
+          name: mod.name,
+          section: 'equipment' as const,
+          label: 'Achievement locked',
+          description: '',
+          lore: EMPTY_LORE,
+          mod,
+          state: 'locked' as const,
+          family: 'general',
+          unlock: goal.requirement,
+          goal,
+        };
       return {
         ...(existing ?? {
           id: 'mod:' + mod.id,
@@ -135,6 +152,18 @@ export function logbookCatalog(
           mod,
         }),
         state: existing ? ('known' as const) : ('unseen' as const),
+        ...(goal
+          ? {
+              goal,
+              ...(!existing
+                ? {
+                    name: mod.name,
+                    label: 'Unlocked · not yet encountered',
+                    notification: 'mod:' + mod.id + ':unlocked',
+                  }
+                : {}),
+            }
+          : {}),
         family: MOD_PATHS[mod.id]?.path ?? 'general',
       };
     }),

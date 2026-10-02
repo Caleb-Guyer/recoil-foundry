@@ -21,6 +21,7 @@ import { WORKSHOP_MODS, WORKSHOP_PARENTS } from './workshop-upgrades.ts';
 import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
 import { SUBVERSION_MODS, SUBVERSION_PARENTS, isSubversion } from './subversion-rules.ts';
 import { isLegacyDaily } from './daily.ts';
+import { LONGEVITY_MODS, draftUnlocked, validUnlocks } from './longevity.ts';
 import {
   dailyRegion,
   annexRevision,
@@ -497,6 +498,7 @@ export const MODS = [
   ...BRANCH_MODS,
   ...NEW_PATH_MODS,
   ...WORKSHOP_MODS,
+  ...LONGEVITY_MODS,
   ...SUBVERSION_MODS,
   {
     id: 'resonator',
@@ -651,6 +653,7 @@ export const FUSION_REQUIRES: Record<string, readonly string[]> = {
 };
 export const isFusion = (id: string) => Object.hasOwn(FUSION_REQUIRES, id);
 export interface RewardContext {
+  unlocks?: readonly string[];
   factory?: boolean;
   stage: number;
   seed?: string;
@@ -683,6 +686,9 @@ export const MOD_REQUIRES: Record<string, string> = {
   slipstream: 'crosswind',
   'daisy-chain': 'arc-coil',
   snapback: 'tether',
+  'static-reservoir': 'arc-coil',
+  'conductive-tether': 'tether',
+  'ground-fault': 'arc-coil',
   'blast-surf': 'shellshock',
   aftershock: 'shellshock',
   'chain-reaction': 'shellshock',
@@ -770,6 +776,8 @@ export const OPENING_POWER_MODS: readonly string[] = [
   'burst',
 ];
 export const OPENING_IDENTITY_MODS: readonly string[] = [
+  'double-jump',
+  'wing-harness',
   'crossfire',
   'shellshock',
   'coolant-rounds',
@@ -792,6 +800,7 @@ export function rewardMods(
   const path = buildPath(mods),
     pool = availableMods(mods).filter(
       (mod) =>
+        draftUnlocked(mod.id, context.unlocks, context.seed) &&
         !excluded.includes(mod.id) &&
         (!isLegacyDaily(context.seed ?? '') || !isSubversion(mod.id)) &&
         (!isFusion(mod.id) || fusionUnlocked(context)) &&
@@ -1113,6 +1122,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  unlocks?: import('./longevity.ts').LongevityId[];
   factory?: import('./factory.ts').FactoryRun;
   security?: import('./security.ts').SecurityRun;
   maintenance?: import('./maintenance.ts').MaintenanceSave;
@@ -1228,11 +1238,15 @@ function validRewardCheckpoint(d: Checkpoint) {
   } else if (r.enteringRoute !== undefined) return false;
   if (r.offers.includes('repair'))
     return (
-      !!d.overtime && !r.rerolled && r.offers.length === 1 && availableMods(d.mods).length === 0
+      !!d.overtime &&
+      !r.rerolled &&
+      r.offers.length === 1 &&
+      availableMods(d.mods).filter((m) => draftUnlocked(m.id, d.unlocks, d.seed)).length === 0
     );
   const legal = availableMods(d.mods, true, !!d.legacyOffers);
   return r.offers.every(
     (id) =>
+      draftUnlocked(id, d.unlocks, d.seed) &&
       legal.some((m) => m.id === id) &&
       (!isSalvage(id) || (!r.rerolled && id === r.salvage)) &&
       (!isFusion(id) || fusionUnlocked({ stage: d.stage, overtime: !!d.overtime })) &&
@@ -1338,27 +1352,29 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       // existed. They may resume and earn those additions on their next clear.
       (overtime.repairs === 0 ||
         (validSavedBuild(d.mods, d.legacyMods) &&
-          availableMods(d.mods).every(
-            (m) =>
-              isFusion(m.id) ||
-              isBranch(m.id) ||
-              NEW_PATH_MODS.some((mod) => mod.id === m.id) ||
-              isSubversion(m.id) ||
-              WORKSHOP_MODS.some((mod) => mod.id === m.id) ||
-              m.id === 'arc-coil' ||
-              m.id === 'daisy-chain' ||
-              m.id === 'grindshot' ||
-              m.id === 'corner-cutter' ||
-              m.id === 'vector' ||
-              m.id === 'afterburner' ||
-              m.id === 'cutting-torch' ||
-              m.id === 'thermal-runaway' ||
-              m.id === 'tripwire' ||
-              m.id === 'tension' ||
-              m.id === 'mass-driver' ||
-              m.id === 'drop-forge' ||
-              isSalvage(MOD_REQUIRES[m.id]),
-          ))));
+          availableMods(d.mods)
+            .filter((m) => draftUnlocked(m.id, d.unlocks, d.seed))
+            .every(
+              (m) =>
+                isFusion(m.id) ||
+                isBranch(m.id) ||
+                NEW_PATH_MODS.some((mod) => mod.id === m.id) ||
+                isSubversion(m.id) ||
+                WORKSHOP_MODS.some((mod) => mod.id === m.id) ||
+                m.id === 'arc-coil' ||
+                m.id === 'daisy-chain' ||
+                m.id === 'grindshot' ||
+                m.id === 'corner-cutter' ||
+                m.id === 'vector' ||
+                m.id === 'afterburner' ||
+                m.id === 'cutting-torch' ||
+                m.id === 'thermal-runaway' ||
+                m.id === 'tripwire' ||
+                m.id === 'tension' ||
+                m.id === 'mass-driver' ||
+                m.id === 'drop-forge' ||
+                isSalvage(MOD_REQUIRES[m.id]),
+            ))));
   const validDetours =
     Array.isArray(completed) &&
     completed.length <= 4 &&
@@ -1431,6 +1447,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
           (oldEscape && completed.length === 0))));
   if (
     !valid ||
+    (d.unlocks !== undefined &&
+      (!validUnlocks(d.unlocks) || (/^RF-D\d+-/.test(d.seed) && d.unlocks.length > 0))) ||
+    d.mods.some((id) => !draftUnlocked(id, d.unlocks, d.seed)) ||
     !validRewardCheckpoint(d) ||
     !validRegion(d) ||
     !validReforge(d) ||

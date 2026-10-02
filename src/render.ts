@@ -1589,6 +1589,34 @@ export class Renderer {
       squash = this.reduced ? 0 : g.land / 0.13;
     c.save();
     c.translate(p.x, p.y);
+    if (g.mods.includes('wing-harness')) {
+      const spread = g.mobility.gliding ? 28 : 11;
+      c.strokeStyle = g.mobility.glideLeft > 0 ? '#b8ddc9' : '#52665d';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      for (const side of [-1, 1]) {
+        c.moveTo(side * 5, -7);
+        c.lineTo(side * spread, g.mobility.gliding ? -13 : 3);
+        c.lineTo(side * 13, 10);
+        c.lineTo(side * 5, 0);
+      }
+      c.stroke();
+      if (!g.grounded) {
+        c.fillStyle = '#31483d';
+        c.fillRect(-12, 25, 24, 2);
+        c.fillStyle = '#b8ddc9';
+        c.fillRect(-12, 25, (24 * g.mobility.glideLeft) / 1.2, 2);
+      }
+    }
+    if (g.mods.includes('double-jump') && !g.grounded) {
+      c.strokeStyle = g.mobility.airJumpReady ? '#b8ddc9' : '#52665d';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.moveTo(-4, 21);
+      c.lineTo(0, 17);
+      c.lineTo(4, 21);
+      c.stroke();
+    }
     if (g.time - g.hurtAt < 0.75) c.globalAlpha = 0.4 + Math.abs(Math.sin(g.time * 28)) * 0.6;
     c.save();
     c.rotate(clamp(g.player.velocity.x * 0.012, -0.18, 0.18));

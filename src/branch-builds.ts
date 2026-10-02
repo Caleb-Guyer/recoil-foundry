@@ -9,6 +9,7 @@ import {
 import { BRANCH_GROUPS, BRANCH_PARENTS } from './upgrade-branches.ts';
 import { getLevel } from './levels.ts';
 import { isSubversion } from './subversion-rules.ts';
+import { LONGEVITY_IDS, loadUnlocks } from './longevity.ts';
 
 export function withParents(build: readonly string[], wanted: readonly string[]): string[] | null {
   const result = [...build],
@@ -664,6 +665,10 @@ export function branchTestFromUrl(url: URL): Checkpoint | null {
     mods = p.get('max') === '1' ? completeBuild(preset.mods) : [...preset.mods];
   }
   if (!mods || !validBuild(mods)) return null;
+  // Published catalog links name their release; keep those historical guns.
+  const version = /^(\d+)\.(\d+)\./.exec(p.get('v') ?? '');
+  if (version && (+version[1] < 3 || (+version[1] === 3 && +version[2] < 20)))
+    mods = mods.filter((id) => !LONGEVITY_IDS.includes(id as never));
   const stage = p.get('room') === 'boss' ? 19 : 10;
   for (let i = 0; i < 4096; i++) {
     const seed = 'BRANCHES-71-' + i;
@@ -679,6 +684,7 @@ export function branchTestFromUrl(url: URL): Checkpoint | null {
       stage,
       hp: 100,
       mods,
+      ...(loadUnlocks(mods).length ? { unlocks: loadUnlocks(mods) } : {}),
       kills: 0,
       elapsed: 0,
       ...(p.get('room') === 'boss' ? {} : { route: 'low' as const }),

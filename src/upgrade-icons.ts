@@ -107,6 +107,12 @@ export function modMark(mod: Mod) {
     afterburner: 'M7 36h9c13 0 7-20 20-20h13M41 8l8 8-8 8M12 26h9M16 18h8',
     'corner-cutter': 'M8 40V16h30v24M18 31V8h28v20M41 23l5 5 5-5',
     'arc-coil': 'M8 24h10l9-15-3 13h9l-9 17 3-13H8M40 17h8v14h-8z',
+    'double-jump': 'M10 37l8-8 8 8M18 29v13M30 16l8-8 8 8M38 8v22M8 44h18M30 32h18',
+    'wing-harness':
+      'M25 18h6v20h-6zM25 20L8 9l-3 14 15 9M31 20L48 9l3 14-15 9M12 15l8 10M44 15l-8 10',
+    'ground-fault': 'M30 5l-9 15h11l-7 14M5 39h46M12 34v10M24 34v10M36 34v10M48 34v10',
+    'static-reservoir': 'M10 13h36v27H10zM21 8h14v5M28 17l-6 10h10l-6 10M5 23h5M46 30h5',
+    'conductive-tether': 'M5 10h12v12H5zM39 27h12v12H39zM17 16l7 6-3 7 14-8-4 9 8 3',
     'daisy-chain': 'M5 12h8v8H5zM25 29h8v8h-8zM43 10h8v8h-8zM13 16l8 3-3 5 7 9M33 33l8-7-4-5 6-7',
     snapback: 'M7 13h10v10H7zM39 26h10v10H39zM17 18l7 3M32 27l7 4M24 12l8 6-8 5 8 5-8 7',
     'rail-spike': 'M7 12l14 9M7 36l14-9M7 24h42M23 19h17l9 5-9 5H23M33 9v7M33 32v7',

@@ -86,6 +86,8 @@ export class TetherSystem {
     if (
       g.mode !== 'playing' ||
       !g.mods.includes('tether') ||
+      e.allied ||
+      s.allied ||
       g.mods.includes('grapnel') ||
       !(s.damage > 0) ||
       !s.friendly ||
@@ -113,6 +115,22 @@ export class TetherSystem {
         tension: 0,
       };
       this.mark = null;
+      if (
+        g.mods.includes('arc-coil') &&
+        g.commendations.eligible &&
+        !a.allied &&
+        !e.allied &&
+        !a.courier &&
+        !e.courier &&
+        !a.workshopTarget &&
+        !e.workshopTarget &&
+        a.kind !== 'sentry' &&
+        e.kind !== 'sentry' &&
+        a.eventRole !== 'relay' &&
+        e.eventRole !== 'relay' &&
+        !s.allied
+      )
+        g.onMilestone('circuit');
       g.onSound('tether-link');
     } else {
       this.mark = { enemy: e, until: g.time + TETHER_MARK_LIFE };

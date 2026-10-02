@@ -8,13 +8,13 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 ![Recoil flight in the Loading Docks](public/media/loading-docks.png)
 
-- **108 upgrades** with branching paths and combinations that change how your gun works.
+- **113 upgrades** with branching paths and combinations that change how your gun works.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Weapon Mastery — version 3.17.0.** Earn three gun finishes and factory incident reports through ricochets, sustained recoil flight and portal deliveries. Discover the relevant upgrades to reveal requirements in the Logbook, then earn the rewards during real runs. [Release notes and preview links](docs/releases/3.17.0.md) · [Download the static site](https://github.com/Caleb-Guyer/recoil-foundry/releases/tag/v3.17.0).
+**Foundry Archive — version 3.20.0.** Earn Double Jump, Wing Harness and three electrical fittings through Campaign and Daily achievements. Browse the Logbook grid for exact progress, new records and your next goals. Reward sightings and per-entry New badges persist independently of Workshop collection. Daily retains its shared pool; Continue keeps your run’s original choices. [Release notes](docs/releases/3.20.0.md).
 
 **Security Levels** unlock after your first victory: coordinated elite squads, warned boss counterattacks, then machinery checkpoints across the full campaign. Each clearance unlocks the next level, with separate best times and a Redline outfit reward; Overtime remains available.
 

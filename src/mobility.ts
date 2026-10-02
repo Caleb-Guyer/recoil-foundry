@@ -5,6 +5,9 @@ import { clamp, distance, type Vec } from './rules.ts';
 
 export const MOBILITY = { grip: 0.32, shotWindow: 0.24, brake: 0.25, launch: 1.35 };
 export class MobilitySystem {
+  airJumpReady = true;
+  glideLeft = 1.2;
+  gliding = false;
   game: Game;
   grip: { body: Matter.Body; normal: Vec; until: number } | null = null;
   lastWall: number | null = null;
@@ -18,6 +21,9 @@ export class MobilitySystem {
     this.game = game;
   }
   reset() {
+    this.airJumpReady = true;
+    this.glideLeft = 1.2;
+    this.gliding = false;
     this.grip = null;
     this.lastWall = null;
     this.brakeUsed = this.launchReady = this.held = false;
@@ -27,9 +33,16 @@ export class MobilitySystem {
   }
   pause() {
     this.held = false;
+    this.gliding = false;
+  }
+  land() {
+    this.airJumpReady = true;
+    this.glideLeft = 1.2;
+    this.gliding = false;
   }
   shot(d: Vec) {
     const g = this.game;
+    g.arcs.recoiled();
     this.thrust(d);
     const boost = this.launchReady && !g.grounded ? MOBILITY.launch : 1;
     this.launchReady = false;
@@ -82,6 +95,39 @@ export class MobilitySystem {
       g.burst(p.position, 5, '#b8ddc9', 1.5);
     }
     this.held = input.fire;
+    this.wall(input);
+    if (
+      g.mods.includes('double-jump') &&
+      !g.grounded &&
+      !this.grip &&
+      g.jumpBuffer > 0 &&
+      this.airJumpReady &&
+      g.time > g.jumpAt + 1 / 60
+    ) {
+      this.airJumpReady = false;
+      Matter.Body.setVelocity(p, { x: p.velocity.x, y: Math.min(-10.4, p.velocity.y) });
+      g.jumpBuffer = g.coyote = 0;
+      g.jumpAt = g.time;
+      g.jumpCut = false;
+      this.flash = 0.18;
+      g.onSound('jump');
+      g.burst(p.position, 7, '#b8ddc9', 2);
+    }
+    this.gliding =
+      g.mods.includes('wing-harness') &&
+      !g.grounded &&
+      !this.grip &&
+      input.jumpHeld &&
+      p.velocity.y > 0 &&
+      this.glideLeft > 0;
+    if (this.gliding) {
+      this.glideLeft = Math.max(0, this.glideLeft - 1 / 60);
+      Matter.Body.setVelocity(p, { x: p.velocity.x, y: Math.min(3.2, p.velocity.y) });
+    }
+  }
+  private wall(input: Input) {
+    const g = this.game,
+      p = g.player;
     if (!g.mods.includes('wallrunner') || g.grounded) return;
     const side = [-1, 1]
       .map((x) =>

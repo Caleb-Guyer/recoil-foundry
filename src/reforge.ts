@@ -44,7 +44,9 @@ export class ReforgeSystem {
   arrive(save = true) {
     const g = this.game;
     if (!this.eligible || !g.clear || this.site) return;
-    this.offers = this.state!.used ? [] : reforgeOffers(g.mods, g.seed, g.stage, g.legacyMods);
+    this.offers = this.state!.used
+      ? []
+      : reforgeOffers(g.mods, g.seed, g.stage, g.legacyMods, g.unlocks);
     if (!this.state!.used && !this.offers.length) return;
     for (const x of [1830, 1800, 1770, 1740, 1710, 1680, 1650, 1620, 1590, 1560]) {
       const supports = g.terrain
@@ -92,7 +94,7 @@ export class ReforgeSystem {
       !this.nearby
     )
       return false;
-    this.offers = reforgeOffers(g.mods, g.seed, g.stage, g.legacyMods);
+    this.offers = reforgeOffers(g.mods, g.seed, g.stage, g.legacyMods, g.unlocks);
     if (!this.offers.length) return false;
     g.setMode('reforge');
     g.save();
@@ -113,7 +115,7 @@ export class ReforgeSystem {
       !g.clear ||
       g.mode !== 'reforge' ||
       this.state!.used ||
-      !reforgeOffers(g.mods, g.seed, g.stage, g.legacyMods).some(
+      !reforgeOffers(g.mods, g.seed, g.stage, g.legacyMods, g.unlocks).some(
         (s) => s.from === swap.from && s.to === swap.to,
       )
     )

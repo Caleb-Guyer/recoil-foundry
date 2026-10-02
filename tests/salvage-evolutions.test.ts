@@ -1,3 +1,4 @@
+import { LONGEVITY_IDS, draftUnlocked } from '../src/longevity.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isSubversion } from '../src/subversion-rules.ts';
@@ -475,6 +476,7 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
       (m) =>
         !isBranch(m.id) &&
         !isSubversion(m.id) &&
+        !LONGEVITY_IDS.includes(m.id as never) &&
         ![
           'wrecking-ball',
           'flashpoint',
@@ -508,7 +510,9 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
   assert(save.overtime.repairs > 0);
   assert(loadCheckpoint(save));
   assert.deepEqual(
-    availableMods(mods).map((m) => m.id),
+    availableMods(mods)
+      .filter((m) => draftUnlocked(m.id))
+      .map((m) => m.id),
     [
       'wrecking-ball',
       'flashpoint',

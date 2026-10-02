@@ -6,6 +6,7 @@ import { COMMENDATIONS } from './commendations.ts';
 import { logbookEntries, type LogbookEntry, type LogbookProgress } from './logbook.ts';
 import type { CommendationId } from './commendations.ts';
 import type { Enemy } from './game.ts';
+import { LONGEVITY_IDS } from './longevity.ts';
 
 export const ARCHIVE_KEY = 'rf-archive-v1';
 export const VARIANT_IDS = [
@@ -19,6 +20,7 @@ export const VARIANT_IDS = [
 const ids = [
   'tool',
   ...MODS.map((m) => 'mod:' + m.id),
+  ...LONGEVITY_IDS.map((id) => 'mod:' + id + ':unlocked'),
   ...Object.keys(ENEMY_NAMES).map((id) => 'enemy:' + id),
   ...Object.keys(AREAS).map((id) => 'area:' + id),
   'region:annex',
@@ -75,6 +77,12 @@ export function encounterArchive(raw: unknown, encountered: readonly string[]): 
 export function readArchiveEntry(raw: unknown, token: string): ArchiveProgress {
   const before = loadArchive(raw);
   return loadArchive({ ...before, read: [...before.read, token] });
+}
+export function acknowledgeArchiveEntry(raw: unknown, entry: LogbookEntry): ArchiveProgress {
+  const opened = readArchiveEntry(raw, archiveToken(entry));
+  // A fitting may be encountered before its unlock notice was opened. Both
+  // notices belong to this card; unrelated cards and future events stay unread.
+  return entry.goal ? readArchiveEntry(opened, entry.id + ':unlocked') : opened;
 }
 export function archiveUnread(raw: unknown, token: string) {
   const progress = loadArchive(raw);

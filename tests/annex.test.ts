@@ -100,7 +100,7 @@ test('Annex links select legal isolated presets, rejecting ambiguous or mixed ru
   const g = new Game();
   g.start('normal-campaign');
   assert(!g.annex.active && !g.spoof.equipped);
-  assert.equal(MODS.length, 108);
+  assert.equal(MODS.length, 113);
   const disabled = preset();
   disabled.annex!.spoof = false;
   disabled.mods = disabled.mods.filter((id) => id !== 'spoof');

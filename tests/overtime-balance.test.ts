@@ -1,3 +1,4 @@
+import { draftUnlocked } from '../src/longevity.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.ts';
@@ -87,7 +88,9 @@ test('Overtime rewards develop an owned component whenever a legal follow-up rem
             { stage, overtime: true },
             removed,
           );
-          const eligible = availableMods(mods).filter((m) => !removed.includes(m.id));
+          const eligible = availableMods(mods)
+            .filter((m) => draftUnlocked(m.id))
+            .filter((m) => !removed.includes(m.id));
           assert.equal(new Set(offers.map((m) => m.id)).size, offers.length);
           assert(offers.every((m) => eligible.some((candidate) => candidate.id === m.id)));
           if (eligible.some((m) => develops(m.id))) assert(offers.some((m) => develops(m.id)));
@@ -109,9 +112,10 @@ test('salvage is retained, full-pool queries stay exhaustive and exhausted rewar
   }
   assert.equal(
     rewardMods(mods, MODS.length, seeded('pool'), { stage: 0, overtime: true }).length,
-    availableMods(mods).length,
+    availableMods(mods).filter((m) => draftUnlocked(m.id)).length,
   );
-  while (availableMods(mods).length) mods.push(availableMods(mods)[0].id);
+  while (availableMods(mods).filter((m) => draftUnlocked(m.id)).length)
+    mods.push(availableMods(mods).filter((m) => draftUnlocked(m.id))[0].id);
   assert.deepEqual(rewardMods(mods, 3, seeded('empty'), { stage: 19, overtime: true }), []);
 });
 

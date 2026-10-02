@@ -13,6 +13,7 @@ import {
 } from './rules.ts';
 import { BRANCH_STAGE, BRANCH_PARENTS, isBranch } from './upgrade-branches.ts';
 import { dailyForDate } from './daily.ts';
+import { draftUnlocked } from './longevity.ts';
 
 export const REFORGE_STAGES = [3, 7, 11];
 export interface ReforgeSave {
@@ -39,6 +40,8 @@ export function legalSwaps(
   mods: readonly string[],
   stage: number,
   legacyMods?: readonly string[],
+  unlocks: readonly string[] = [],
+  seed = '',
 ): ReforgeSwap[] {
   if (!validSavedBuild(mods, legacyMods)) return [];
   const path = buildPath(mods),
@@ -56,6 +59,7 @@ export function legalSwaps(
     const remaining = mods.filter((id) => id !== from);
     for (const mod of availableMods(remaining)) {
       if (
+        !draftUnlocked(mod.id, unlocks, seed) ||
         mod.id === from ||
         (isFusion(mod.id) && !fusionUnlocked({ stage })) ||
         (isBranch(mod.id) && stage < BRANCH_STAGE)
@@ -76,9 +80,10 @@ export function reforgeOffers(
   seed: string,
   stage: number,
   legacyMods?: readonly string[],
+  unlocks: readonly string[] = [],
 ): ReforgeSwap[] {
   const rng = seeded(seed + ':reforge-offers:' + stage + ':' + mods.join(','));
-  const pool = sample(legalSwaps(mods, stage, legacyMods), 10000, rng);
+  const pool = sample(legalSwaps(mods, stage, legacyMods, unlocks, seed), 10000, rng);
   const count = /^RF-D\d+-/.test(seed) ? 1 : 3,
     chosen: ReforgeSwap[] = [];
   // Prefer different sacrifices and rewards; a build with one removable leaf
@@ -120,7 +125,7 @@ export function validReforge(d: Checkpoint) {
         ({ 3: 'ramjet', 7: 'cinder', 11: 'crosswind' } as Record<number, string>)[d.stage])
   )
     return false;
-  return !room.open || reforgeOffers(d.mods, d.seed, d.stage, d.legacyMods).length > 0;
+  return !room.open || reforgeOffers(d.mods, d.seed, d.stage, d.legacyMods, d.unlocks).length > 0;
 }
 
 export function reforgeTestFromUrl(url: URL): Checkpoint | null {

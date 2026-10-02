@@ -137,7 +137,7 @@ export class AuditorSystem {
       g.mods,
       dailyFromSeed(g.seed) ? 1 : 3,
       seeded(g.seed + ':company-case:' + g.stage),
-      { stage: g.stage, seed: g.seed },
+      { stage: g.stage, seed: g.seed, unlocks: g.unlocks },
     );
     if (!offers.length) return false;
     s.status = 'offered';

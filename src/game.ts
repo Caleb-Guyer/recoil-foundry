@@ -69,6 +69,7 @@ import type { Cosmetics } from './cosmetics.ts';
 import { CryogenicSystem } from './cryogenic.ts';
 import { StasisSystem, suspended, type StasisFlight } from './stasis.ts';
 import { MobilitySystem } from './mobility.ts';
+import { loadUnlocks, draftUnlocked, type LongevityId, type MilestoneId } from './longevity.ts';
 import { GrapnelSystem } from './grapnel.ts';
 import { ScrapFeedSystem } from './scrap-feed.ts';
 import { pocketBank } from './corner-pocket.ts';
@@ -367,6 +368,8 @@ export class Game {
   cryogenic = new CryogenicSystem(this);
   stasis = new StasisSystem(this);
   mobility = new MobilitySystem(this);
+  unlocks: LongevityId[] = [];
+  onMilestone: (id: MilestoneId) => void = () => {};
   grapnel = new GrapnelSystem(this);
   scrap = new ScrapFeedSystem(this);
   fusions = new FusionSystem(this);
@@ -697,6 +700,7 @@ export class Game {
     workshop = false,
     securityLevel: SecurityLevel = 0,
     factoryRules: boolean | 1 | 2 = true,
+    unlocks: readonly string[] = [],
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
@@ -704,6 +708,7 @@ export class Game {
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
+    this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
     this.security =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
         ? save?.security
@@ -844,6 +849,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
       ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
       ...(this.security ? { security: { ...this.security } } : {}),
       ...(this.maintenance.state ? { maintenance: { ...this.maintenance.state } } : {}),
@@ -1522,6 +1528,10 @@ export class Game {
       this.landingSpeed = 0;
     }
     this.coyote = this.grounded ? 0.1 : Math.max(0, this.coyote - dt);
+    if (this.grounded) {
+      this.mobility.land();
+      this.arcs.land();
+    }
     this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
     this.fireBuffer = Math.max(0, this.fireBuffer - dt);
     this.conveyors.beginStep();
@@ -3309,6 +3319,16 @@ export class Game {
     this.welder.killed(e, credited && source !== 'cleanup');
     if (credited) this.commendations.defeated(e, source, trace);
     if (
+      credited &&
+      source !== 'cleanup' &&
+      isBoss(e.kind) &&
+      this.mods.includes('arc-coil') &&
+      this.commendations.eligible &&
+      !e.allied &&
+      e.spawn <= 0
+    )
+      this.onMilestone('arcBoss');
+    if (
       isBoss(e.kind) &&
       !this.practice &&
       !this.workshop.active &&
@@ -3504,6 +3524,7 @@ export class Game {
         overtime: !!this.overtime,
         salvage: this.courierReward ? null : this.earnedSalvage,
         seed: this.seed,
+        unlocks: this.unlocks,
         factory: !!this.factory,
       },
     );
@@ -3519,6 +3540,7 @@ export class Game {
             overtime: !!this.overtime,
             salvage: this.earnedSalvage,
             seed: this.seed,
+            unlocks: this.unlocks,
           },
         ),
       );
@@ -3560,7 +3582,13 @@ export class Game {
       seeded(
         this.layoutSeed + (this.detour ? ':detour-rewards:' : ':rewards:') + this.stage + ':reroll',
       ),
-      { stage: this.stage, overtime: !!this.overtime, seed: this.seed, factory: !!this.factory },
+      {
+        stage: this.stage,
+        overtime: !!this.overtime,
+        seed: this.seed,
+        factory: !!this.factory,
+        unlocks: this.unlocks,
+      },
       this.offers.map((m) => m.id),
     );
     if (!this.areaEvents.clearance) return replacements;
@@ -3569,6 +3597,7 @@ export class Game {
       rewardMods(this.mods, MODS.length, seeded(this.layoutSeed + ':event-reroll:' + this.stage), {
         stage: this.stage,
         seed: this.seed,
+        unlocks: this.unlocks,
         overtime: !!this.overtime,
       }),
       this.offers.map((m) => m.id),
@@ -3613,7 +3642,12 @@ export class Game {
       (isSalvage(id) && id !== this.earnedSalvage) ||
       (isFusion(id) && !fusionUnlocked({ stage: this.stage, overtime: !!this.overtime })) ||
       (isBranch(id) && !this.overtime && this.stage < BRANCH_STAGE) ||
-      (!(id === 'repair' && this.overtime && availableMods(this.mods).length === 0) &&
+      (!(
+        id === 'repair' &&
+        this.overtime &&
+        availableMods(this.mods).filter((m) => draftUnlocked(m.id, this.unlocks, this.seed))
+          .length === 0
+      ) &&
         !availableMods(this.mods, true, !!this.legacyOffers?.includes(id)).some((m) => m.id === id))
     )
       return;

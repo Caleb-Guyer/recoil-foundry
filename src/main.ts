@@ -2,11 +2,19 @@ import { modMark } from './upgrade-icons.ts';
 import {
   ARCHIVE_KEY,
   encounterArchive,
-  readArchiveEntry,
+  acknowledgeArchiveEntry,
   enemyArchiveIds,
   archiveToken,
+  loadArchive,
 } from './archive.ts';
 import { logbookCatalog } from './logbook-catalog.ts';
+import {
+  MILESTONES_KEY,
+  loadMilestones,
+  loadUnlocks,
+  unlockGoals,
+  type LongevityId,
+} from './longevity.ts';
 import { welderTestFromUrl } from './welder-test.ts';
 import {
   SECURITY_KEY,
@@ -293,6 +301,7 @@ let trialMenuShare: TrialChallenge | undefined;
 let trialMenuParent = 'practice';
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
+let fittingNotice: { name: string; until: number | null; stage: number } | null = null;
 let commendationNotice: {
   id: (typeof commendations)[number];
   until: number | null;
@@ -340,7 +349,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Dead Signal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Foundry Archive</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -999,6 +1008,7 @@ function start(
   seedOverride?: string,
   securityOverride?: SecurityLevel,
   factoryRules?: boolean | 1 | 2,
+  unlockOverride?: readonly LongevityId[],
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1070,6 +1080,7 @@ function start(
       seedParam = undefined;
       url.searchParams.delete('seed');
       url.searchParams.delete('fv');
+      url.searchParams.delete('ul');
     }
     history.replaceState(null, '', url);
   }
@@ -1091,6 +1102,14 @@ function start(
         : seedParam === seed && entryUrl.searchParams.get('fv') === '1'
           ? 1
           : true),
+    unlockOverride ??
+      (retry && seed === game.seed
+        ? game.unlocks
+        : seedParam === seed && entryUrl.searchParams.has('ul')
+          ? loadUnlocks(entryUrl.searchParams.get('ul')?.split(',').filter(Boolean))
+          : currentGoals()
+              .filter((g) => g.unlocked)
+              .map((g) => g.id)),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1315,6 +1334,7 @@ function replayFinishedRun(run: RunRecap) {
   url.hash = '';
   url.searchParams.set('seed', run.seed);
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
+  url.searchParams.set('ul', (run.unlocks ?? []).join(','));
   history.replaceState(null, '', url);
   linkedDaily = null;
   seedParam = run.seed;
@@ -1324,6 +1344,7 @@ function replayFinishedRun(run: RunRecap) {
     run.seed,
     run.security ?? 0,
     run.factory ? (run.factoryVersion ?? 1) : false,
+    run.unlocks ?? [],
   );
 }
 function workshopFromRun(run: RunRecap) {
@@ -1372,10 +1393,22 @@ function updateLogbook(enemy?: EnemyKind) {
 }
 function updateArchive(ids: readonly string[] = []) {
   const before = read(ARCHIVE_KEY);
+  const newlyUnlocked = currentGoals().filter(
+    (g) => g.unlocked && !loadArchive(before).encountered.includes('mod:' + g.id + ':unlocked'),
+  );
+  if (newlyUnlocked.length && game.commendations.eligible)
+    fittingNotice = {
+      name: newlyUnlocked.map((g) => g.name).join(' + '),
+      until: null,
+      stage: game.stage,
+    };
   const entries = logbookEntries(discovered, logbookProgress, commendations);
   const next = encounterArchive(before, [
     ...entries.map(archiveToken),
     ...ids,
+    ...currentGoals()
+      .filter((g) => g.unlocked)
+      .map((g) => 'mod:' + g.id + ':unlocked'),
     ...(logbookProgress.shutdown ? ['region:shutdown'] : []),
   ]);
   if (JSON.stringify(before) !== JSON.stringify(next)) {
@@ -1383,12 +1416,21 @@ function updateArchive(ids: readonly string[] = []) {
     updateLogbookBadge();
   }
 }
+function currentGoals() {
+  return unlockGoals(
+    mergeLogbook(logbookProgress, loadLogbook(read(LOGBOOK_KEY))),
+    mergeCommendations(commendations, read(COMMENDATIONS_KEY)),
+    loadEncounters(read(VICTORIES_KEY)).map((e) => e.kind),
+    read(MILESTONES_KEY),
+  );
+}
 function updateLogbookBadge() {
   const unread = logbookCatalog(
     discovered,
     logbookProgress,
     commendations,
     read(ARCHIVE_KEY),
+    currentGoals(),
   ).filter((e) => e.unread).length;
   const badge = document.getElementById('logbook-badge');
   if (badge) badge.hidden = !unread;
@@ -1397,6 +1439,15 @@ function updateLogbookBadge() {
   else button?.removeAttribute('aria-label');
 }
 game.onEnemyDefeated = updateLogbook;
+game.onMilestone = (id) => {
+  if (!game.commendations.eligible) return;
+  progress.checkExternal();
+  if (progress.blocked) return;
+  const before = loadMilestones(read(MILESTONES_KEY));
+  if (before[id]) return;
+  write(MILESTONES_KEY, { ...before, [id]: true });
+  updateArchive();
+};
 game.onEnemyEncountered = (enemy) => {
   if (!game.practice && !game.testRun && !game.workshop.active && game.mode === 'playing')
     updateArchive(enemyArchiveIds(enemy));
@@ -1459,6 +1510,7 @@ game.onBossDefeated = (kind) => {
   if (!victory || encounters.some((record) => record.kind === kind)) return;
   encounters.push(victory);
   write(VICTORIES_KEY, encounters);
+  updateArchive();
   updateTitle();
 };
 deathReplay.onReady = () => {
@@ -1599,11 +1651,11 @@ function showDialog(kind: string) {
     : commendations;
   if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Dead Signal.</h2>' +
-      '<p class="update-tagline">The shift ended. The orders didn’t.</p>' +
-      '<dl class="update-notes"><div><dt>A different way through.</dt><dd>After Furnace, take the upper exit into the Transmission Annex. Four rooms. Six possible layouts. Something is still issuing orders.</dd></div>' +
-      '<div><dt>Make them change sides.</dt><dd>Five Subversion upgrades let your gun reboot fallen machines. Keep one stronger ally, or command a short-lived pair.</dd></div>' +
-      '<div><dt>Follow the transmission.</dt><dd>New machines, an original synth-rock theme, and factory records to discover. Your saved progress stays with you.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Foundry Archive.</h2>' +
+      '<p class="update-tagline">Every shift leaves something to discover.</p>' +
+      '<dl class="update-notes"><div><dt>Five new fittings to earn.</dt><dd>Double Jump, Wing Harness and three electrical fittings unlock through Campaign and Daily goals. The Logbook shows your progress and what to try next.</dd></div>' +
+      '<div><dt>A collection worth exploring.</dt><dd>Browse upgrade icons, machines, variants, places and records. New badges stay until you open each entry. Seeing a reward now reveals its record before you collect it.</dd></div>' +
+      '<div><dt>The faction fight needs you.</dt><dd>Factory battles have more hostile pressure and warned reserves. Daily remains a shared challenge; saved runs keep their existing upgrade pool and encounter rules.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -1661,6 +1713,7 @@ function showDialog(kind: string) {
               : logbookProgress,
             visibleCommendations,
             read(ARCHIVE_KEY),
+            currentGoals(),
           ),
       logbookView,
       modMark,
@@ -1673,7 +1726,7 @@ function showDialog(kind: string) {
       },
       (entry) => {
         if (previewLogbook || previewCommendations || game.testRun) return;
-        write(ARCHIVE_KEY, readArchiveEntry(read(ARCHIVE_KEY), archiveToken(entry)));
+        write(ARCHIVE_KEY, acknowledgeArchiveEntry(read(ARCHIVE_KEY), entry));
         updateLogbookBadge();
       },
     );
@@ -2598,6 +2651,22 @@ function updateControlHints() {
   const copy = document.getElementById('device-controls');
   const grid = document.getElementById('controls-grid');
   if (grid) grid.innerHTML = controlsIntro(controlDevice(), bindings);
+  const jumpName = pad
+    ? 'LB / L1 or A / ✕'
+    : controlDevice() === 'touch'
+      ? '↑'
+      : bindingLabel(bindings, 'jump');
+  const flightHints =
+    (game.mods.includes('double-jump')
+      ? '<p>Double Jump: press ' +
+        jumpName +
+        ' again in the air. Landing restores the extra jump.</p>'
+      : '') +
+    (game.mods.includes('wing-harness')
+      ? '<p>Wing Harness: hold ' +
+        jumpName +
+        ' while descending. Landing restores 1.2 seconds of glide.</p>'
+      : '');
   const equipped = document.getElementById('equipped-controls');
   if (equipped)
     equipped.innerHTML =
@@ -2612,7 +2681,8 @@ function updateControlHints() {
           (game.mods.includes('rewire') ? 'Reposition freely.' : 'One pair per room.') +
           '</p>'
         : '') +
-      (game.mods.includes('charge-lens') ? '<p>Hold fire to charge. Release to shoot.</p>' : '');
+      (game.mods.includes('charge-lens') ? '<p>Hold fire to charge. Release to shoot.</p>' : '') +
+      flightHints;
   if (copy)
     copy.innerHTML =
       (game.portals.equipped
@@ -2634,7 +2704,8 @@ function updateControlHints() {
         ? '<p>Hold ' +
           (pad ? 'RT / R2' : 'left click or ' + bindingLabel(bindings, 'fire')) +
           ' to charge. Release to fire.</p><p>Release downward in the air to climb.</p>'
-        : '<p>Shoot down in the air to climb.</p>');
+        : '<p>Shoot down in the air to climb.</p>') +
+      flightHints;
   const status = document.getElementById('controller-status');
   $('workshop-reset').title = 'Reset room · ' + bindingLabel(bindings, 'retry');
   const retry = document.getElementById('retry');
@@ -3115,14 +3186,25 @@ function frame(now: number) {
         game.mode === 'dead')
     )
       commendationNotice = null;
+    if (
+      fittingNotice &&
+      ((fittingNotice.until !== null && game.time >= fittingNotice.until) ||
+        fittingNotice.stage !== game.stage ||
+        game.mode === 'title' ||
+        game.mode === 'dead')
+    )
+      fittingNotice = null;
     notice.hidden =
-      !commendationNotice ||
+      (!commendationNotice && !fittingNotice) ||
       game.mode !== 'playing' ||
       game.enemies.some((e) => e.hp > 0 && !e.allied);
-    if (!notice.hidden && commendationNotice) {
-      commendationNotice.until ??= game.time + 5;
-      const copy =
-        'Commendation earned · ' + COMMENDATIONS.find((c) => c.id === commendationNotice!.id)!.name;
+    if (!notice.hidden && (commendationNotice || fittingNotice)) {
+      if (fittingNotice) fittingNotice.until ??= game.time + 5;
+      if (commendationNotice) commendationNotice.until ??= game.time + 5;
+      const copy = fittingNotice
+        ? 'Fitting unlocked · ' + fittingNotice.name + ' · next Campaign'
+        : 'Commendation earned · ' +
+          COMMENDATIONS.find((c) => c.id === commendationNotice!.id)!.name;
       if (notice.textContent !== copy) notice.textContent = copy;
     }
     $('portal-touch').hidden = !game.portals.canPlace;
