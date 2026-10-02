@@ -9,6 +9,8 @@ export interface AppearanceOptions {
   preview: boolean;
   defeated?: readonly string[];
   discovered?: readonly string[];
+  unseen?: readonly CommendationId[];
+  viewed?: () => void;
   equip: (selection: Cosmetics) => void;
   logbook: () => void;
 }

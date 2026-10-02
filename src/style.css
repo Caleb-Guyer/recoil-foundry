@@ -231,6 +231,19 @@ h1 > small {
 .quiet:hover {
   color: var(--ink);
 }
+.new-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 2px 5px;
+  border: 1px solid #bca877;
+  border-radius: 3px;
+  color: #f0dfb2;
+  background: #36352b;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  vertical-align: middle;
+}
 .title-actions {
   display: flex;
   flex-wrap: wrap;

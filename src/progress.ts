@@ -11,6 +11,7 @@ import {
 import { LOGBOOK_KEY, loadLogbook, migrateLogbook } from './logbook.ts';
 import { COMMENDATIONS_KEY, loadCommendations } from './commendations.ts';
 import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
+import { APPEARANCE_SEEN_KEY, loadSeenAppearances } from './appearance-notices.ts';
 import { VICTORIES_KEY, loadEncounters } from './practice.ts';
 import { RUN_HISTORY_KEY, loadRunHistory } from './run-history.ts';
 import { DAILY_BESTS_KEY, dailyForDate, dailyFromSeed } from './daily.ts';
@@ -30,6 +31,7 @@ export const PROGRESS_KEYS = [
   LOGBOOK_KEY,
   COMMENDATIONS_KEY,
   COSMETICS_KEY,
+  APPEARANCE_SEEN_KEY,
   VICTORIES_KEY,
   RUN_HISTORY_KEY,
   DAILY_BESTS_KEY,
@@ -105,6 +107,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [LOGBOOK_KEY]: migrateLogbook(read(LOGBOOK_KEY), checkpoint, history, victories),
     [COMMENDATIONS_KEY]: earned,
     [COSMETICS_KEY]: loadCosmetics(read(COSMETICS_KEY), earned),
+    [APPEARANCE_SEEN_KEY]: loadSeenAppearances(read(APPEARANCE_SEEN_KEY), earned),
     [VICTORIES_KEY]: victories,
     [RUN_HISTORY_KEY]: history,
     [DAILY_BESTS_KEY]: dailyRecords(read(DAILY_BESTS_KEY)),
@@ -133,11 +136,22 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === PRACTICE_RECORDS_KEY ||
           k === SHAFT_PROFILE_KEY ||
           k === SECURITY_KEY ||
+          k === APPEARANCE_SEEN_KEY ||
           Object.hasOwn(raw, k),
       )
     )
       return null;
     const checkpoint = raw[CHECKPOINT_KEY];
+    // Older profiles have not acknowledged the Appearance section yet.
+    if (
+      Object.hasOwn(raw, APPEARANCE_SEEN_KEY) &&
+      (!Array.isArray(raw[APPEARANCE_SEEN_KEY]) ||
+        !same(
+          raw[APPEARANCE_SEEN_KEY],
+          loadSeenAppearances(raw[APPEARANCE_SEEN_KEY], loadCommendations(raw[COMMENDATIONS_KEY])),
+        ))
+    )
+      return null;
     if (Object.hasOwn(raw, SECURITY_KEY) && !validSecurityProfile(raw[SECURITY_KEY])) return null;
     if (Object.hasOwn(raw, SHAFT_PROFILE_KEY) && !validShaftProfile(raw[SHAFT_PROFILE_KEY]))
       return null;

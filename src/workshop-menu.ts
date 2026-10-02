@@ -37,7 +37,13 @@ export function workshopMenu(
   content.innerHTML =
     '<h2 id="dialog-title"></h2>' +
     (appearance
-      ? '<nav class="workshop-tabs" aria-label="Workshop sections"><button class="quiet" data-workshop-tab="build" aria-pressed="true">Build</button><button class="quiet" data-workshop-tab="appearance" aria-pressed="false">Appearance</button></nav>'
+      ? '<nav class="workshop-tabs" aria-label="Workshop sections"><button class="quiet" data-workshop-tab="build" aria-pressed="true">Build</button><button class="quiet" data-workshop-tab="appearance" aria-pressed="false"' +
+        (appearance.unseen?.length ? ' aria-label="Appearance, new options available"' : '') +
+        '>Appearance' +
+        (appearance.unseen?.length
+          ? ' <span class="new-badge" aria-hidden="true">New</span>'
+          : '') +
+        '</button></nav>'
       : '') +
     '<div id="workshop-build">' +
     '<p class="practice-note" id="workshop-note"></p>' +
@@ -208,6 +214,11 @@ export function workshopMenu(
         const build = button.dataset.workshopTab === 'build';
         content.querySelector<HTMLElement>('#workshop-build')!.hidden = !build;
         content.querySelector<HTMLElement>('#workshop-appearance')!.hidden = build;
+        if (!build && !appearance.preview) {
+          appearance.viewed?.();
+          button.querySelector<HTMLElement>('.new-badge')?.remove();
+          button.removeAttribute('aria-label');
+        }
         for (const id of ['workshop-status', 'workshop-clear', 'workshop-blueprints']) {
           const element = content.querySelector<HTMLElement>('#' + id);
           if (element) element.hidden = !build;

@@ -68,6 +68,11 @@ import {
   commendationPreviewLink,
 } from './commendations.ts';
 import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
+import {
+  APPEARANCE_SEEN_KEY,
+  loadSeenAppearances,
+  unseenAppearances,
+} from './appearance-notices.ts';
 import { Game } from './game.ts';
 import {
   DISCOVERIES_KEY,
@@ -328,7 +333,7 @@ document.getElementById('app')!.innerHTML = `
   <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Dead Signal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
-   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop</button><button id="learn" class="quiet" hidden>Learn to play</button></div>
+   <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
    <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
   </div><div class="title-settings"><button id="controls" class="quiet">Controls</button><button id="logbook" class="quiet">Logbook</button><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
@@ -497,7 +502,15 @@ let seedParam = entryUrl.searchParams.has('daily')
 let activeDaily = dailyFromSeed(game.seed);
 let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = null;
 
+function updateAppearanceBadge() {
+  const pending = unseenAppearances(commendations, read(APPEARANCE_SEEN_KEY)).length > 0;
+  $('workshop-badge').hidden = !pending;
+  if (pending)
+    $('workshop').setAttribute('aria-label', 'Workshop, new appearance options available');
+  else $('workshop').removeAttribute('aria-label');
+}
 function updateTitle() {
+  updateAppearanceBadge();
   const security = securityProfile();
   if (selectedSecurity > security.unlocked) selectedSecurity = 0;
   $('security').hidden =
@@ -1336,6 +1349,7 @@ game.onCommendation = (id) => {
   }
   commendations = mergeCommendations(commendations, [id]);
   write(COMMENDATIONS_KEY, commendations);
+  updateAppearanceBadge();
 };
 game.onCheckpoint = (s) => {
   if (game.practice || game.testRun || game.workshop.active) return;
@@ -1749,6 +1763,14 @@ function showDialog(kind: string) {
         defeated: logbookProgress.enemies,
         discovered,
         preview: previewCommendations,
+        unseen: previewCommendations
+          ? []
+          : unseenAppearances(visibleCommendations, read(APPEARANCE_SEEN_KEY)),
+        viewed: () => {
+          if (previewCommendations) return;
+          write(APPEARANCE_SEEN_KEY, loadSeenAppearances(visibleCommendations, commendations));
+          updateAppearanceBadge();
+        },
         equip: (selection) => {
           game.cosmetics = selection;
           if (!previewCommendations) {
