@@ -138,6 +138,11 @@ export interface LogbookEntry {
   mod?: Mod;
   earned?: boolean;
   reward?: string;
+  state?: 'locked' | 'unseen' | 'known';
+  family?: string;
+  unread?: boolean;
+  notification?: string;
+  unlock?: string;
 }
 export function logbookEntries(
   known: readonly string[],

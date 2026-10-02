@@ -77,10 +77,19 @@ class Input extends Element {
 class Details extends Element {
   open = false;
 }
+class Select extends Element {
+  selectedIndex = 0;
+  options = [{}, {}, {}];
+  events: string[] = [];
+  dispatchEvent(event: Event) {
+    this.events.push(event.type);
+  }
+}
 const dom: { activeElement: Element | null } = { activeElement: null };
 Object.assign(globalThis, {
   HTMLInputElement: Input,
   HTMLDetailsElement: Details,
+  HTMLSelectElement: Select,
   document: dom,
   getComputedStyle: (el: Element) => ({ visibility: el.visibility }),
 });
@@ -194,4 +203,16 @@ test('on a narrow layout the controller scrolls the enclosing logbook dialog', (
   assert.equal(article.dialog.scrollTop, 150);
   navigateControllerMenu(page, 'up');
   assert.equal(article.dialog.scrollTop, 0);
+});
+
+test('controller changes a native collection family selector without leaving it or exceeding its bounds', () => {
+  const family = new Select(0, 0);
+  const menu = root(family, new Element(120, 0));
+  family.focus();
+  navigateControllerMenu(menu, 'left');
+  assert.equal(family.selectedIndex, 0);
+  for (let i = 0; i < 5; i++) navigateControllerMenu(menu, 'right');
+  assert.equal(family.selectedIndex, 2);
+  assert.equal(dom.activeElement, family);
+  assert(family.events.every((event) => event === 'change'));
 });

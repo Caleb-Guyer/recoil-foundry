@@ -587,6 +587,8 @@ export class Game {
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
   onBossDefeated: (kind: EnemyKind) => void = () => {};
   onEnemyDefeated: (kind: EnemyKind) => void = () => {};
+  onEnemyEncountered: (enemy: Enemy) => void = () => {};
+  private reportedEncounters = new Set<number>();
   onCommendation: (id: CommendationId) => void = () => {};
   constructor() {
     Matter.Events.on(this.engine, 'beforeSolve', () => {
@@ -891,6 +893,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.reportedEncounters.clear();
     this.clockOut = new ClockOut();
     this.switchboard.clear();
     this.annex.clear();
@@ -1596,6 +1599,17 @@ export class Game {
     for (const e of [...this.enemies]) {
       const slow = this.cryogenic.slow(e);
       this.updateEnemy(e, dt * slow);
+      if (
+        e.spawn <= 0 &&
+        e.hp > 0 &&
+        !e.allied &&
+        !e.courier &&
+        e.eventRole !== 'relay' &&
+        !this.reportedEncounters.has(e.id)
+      ) {
+        this.reportedEncounters.add(e.id);
+        this.onEnemyEncountered(e);
+      }
       if (slow < 1 && !e.body.isStatic && e.spawn <= 0)
         Body.setVelocity(e.body, {
           x: e.body.velocity.x * slow,

@@ -24,6 +24,8 @@ The **Dead Signal** update also includes the alternate Transmission Annex route,
 
 **Factory Shifts — version 3.18.0.** Fresh normal runs start under Freight surge, Power failure or Faction conflict. Room two introduces moving loads, power restoration or a small crew battle; the condition returns in Furnace, with ordinary rooms between encounters. Random restarts change condition, and the first two reward screens offer a distinct shooting or movement mechanic alongside the existing power safeguard. Continue preserves the chosen plan. Daily, Practice, Workshop and existing saves keep their rules. [Release notes](docs/releases/3.18.0.md).
 
+**Foundry Archive — version 3.19.0.** Explore a Logbook grid of equipment, machines, variants, sites, documents and commendations. New discoveries have individual unread badges; open an entry to acknowledge it. Undiscovered entries keep their names and records concealed. Encountering an offered upgrade reveals its records, while collecting it unlocks Workshop ownership. [Release notes](docs/releases/3.19.0.md).
+
 ## Controls
 
 | Input                        | Action                     |

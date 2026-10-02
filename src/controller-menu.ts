@@ -3,7 +3,7 @@ import type { MenuDirection } from './controller.ts';
 function controls(root: HTMLElement): HTMLElement[] {
   return Array.from(
     root.querySelectorAll<HTMLElement>(
-      'button:not(:disabled), a[href], input[type="checkbox"], input[type="range"], summary, [data-controller-scroll]',
+      'button:not(:disabled), a[href], input[type="checkbox"], input[type="range"], select:not(:disabled), summary, [data-controller-scroll]',
     ),
   ).filter((el) => {
     if (
@@ -52,6 +52,21 @@ export function navigateControllerMenu(root: HTMLElement, direction: MenuDirecti
     if (direction === 'right') current.stepUp();
     else current.stepDown();
     current.dispatchEvent(new Event('input', { bubbles: true }));
+    current.dispatchEvent(new Event('change', { bubbles: true }));
+    return;
+  }
+  if (
+    horizontal &&
+    typeof HTMLSelectElement !== 'undefined' &&
+    current instanceof HTMLSelectElement
+  ) {
+    current.selectedIndex = Math.max(
+      0,
+      Math.min(
+        current.options.length - 1,
+        current.selectedIndex + (direction === 'right' ? 1 : -1),
+      ),
+    );
     current.dispatchEvent(new Event('change', { bubbles: true }));
     return;
   }
