@@ -4,6 +4,7 @@ import type { Prop } from './props.ts';
 import { distance, type Vec } from './rules.ts';
 import {
   uprisingRoute,
+  uprisingFork,
   uprisingChoices,
   successfulUprising,
   uprisingFinale,
@@ -106,7 +107,8 @@ export class UprisingSystem {
     this.clear();
     if (!this.active || !this.run) return;
     const g = this.game;
-    this.mission = this.run.choices.find((id) => uprisingRoute(id).fork + 1 === g.stage) ?? null;
+    this.mission =
+      this.run.choices.find((id) => uprisingFork(this.run!, id) + 1 === g.stage) ?? null;
     this.startedAt = g.time;
     this.deadline = g.time + 40;
     this.anchors = (this.room?.machines ?? []).map((index) => {

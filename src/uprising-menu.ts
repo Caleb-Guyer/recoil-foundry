@@ -1,6 +1,6 @@
 import type { Game } from './game.ts';
 import {
-  UPRISING_FORKS,
+  uprisingForks,
   UPRISING_DISTRICTS,
   FINALE_NAMES,
   uprisingRoute,
@@ -11,33 +11,34 @@ import {
 export function uprisingMap(game: Game) {
   const run = game.uprising.run;
   if (!run) return '';
+  const forks = uprisingForks(run);
   return (
     '<ol class="uprising-map" aria-label="Factory route">' +
-    UPRISING_FORKS.map((fork, i) => {
-      const id = run.choices[i],
-        outcome = run.outcomes.find((o) => o.route === id);
-      return (
-        '<li' +
-        (game.stage >= fork && game.stage < (UPRISING_FORKS[i + 1] ?? 20)
-          ? ' aria-current="step"'
-          : '') +
-        '><span>Room ' +
-        (fork + 2) +
-        '</span><strong>' +
-        (id
-          ? uprisingRoute(id).name
-          : ['Railworks', 'Foundry Core', 'Reclamation', 'Rooftops'][i]) +
-        '</strong><small>' +
-        (outcome
-          ? outcome.result === 'success'
-            ? 'Complete' + (outcome.clean ? ' · no damage' : '')
-            : 'Objective missed'
-          : id
-            ? 'Route committed'
-            : 'Choose after room ' + (fork + 1)) +
-        '</small></li>'
-      );
-    }).join('') +
+    forks
+      .map((fork, i) => {
+        const id = run.choices[i],
+          outcome = run.outcomes.find((o) => o.route === id);
+        return (
+          '<li' +
+          (game.stage >= fork && game.stage < (forks[i + 1] ?? 20) ? ' aria-current="step"' : '') +
+          '><span>Room ' +
+          (fork + 2) +
+          '</span><strong>' +
+          (id
+            ? uprisingRoute(id).name
+            : ['Railworks', 'Foundry Core', 'Reclamation', 'Rooftops'][i]) +
+          '</strong><small>' +
+          (outcome
+            ? outcome.result === 'success'
+              ? 'Complete' + (outcome.clean ? ' · no damage' : '')
+              : 'Objective missed'
+            : id
+              ? 'Route committed'
+              : 'Choose after room ' + (fork + 1)) +
+          '</small></li>'
+        );
+      })
+      .join('') +
     '</ol><p class="uprising-finale">Final defense: <strong>' +
     FINALE_NAMES[uprisingFinale(run)] +
     '</strong>. Successful objectives can change this response.</p>'

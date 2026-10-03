@@ -24,7 +24,7 @@ import { fabricatorLevel } from './fabricator-layout.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { planFactory, factoryEncounter, type FactoryRun } from './factory.ts';
 import { UprisingSystem } from './uprising-system.ts';
-import { UPRISING_FORKS, type UprisingRun, type UprisingRouteId } from './uprising-model.ts';
+import { uprisingForks, type UprisingRun, type UprisingRouteId } from './uprising-model.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { CrosswindSystem } from './crosswind.ts';
 import { StormfrontSystem } from './stormfront.ts';
@@ -516,7 +516,9 @@ export class Game {
   }
   get reservedEncounterStages() {
     const stages = this.factory?.encounters.map((e) => e.stage);
-    return this.uprising.run ? [...(stages ?? []), ...UPRISING_FORKS.map((f) => f + 1)] : stages;
+    return this.uprising.run
+      ? [...(stages ?? []), ...uprisingForks(this.uprising.run).map((f) => f + 1)]
+      : stages;
   }
   get layoutSeed() {
     return this.overtime ? overtimeSeed(this.seed) : this.seed;

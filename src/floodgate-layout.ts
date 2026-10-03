@@ -7,10 +7,13 @@ export function planFloodgate(
   seed: string,
   event?: AreaEventSave | null,
   courier?: CourierSave | null,
+  reserved: readonly number[] = [],
 ) {
   const rng = seeded(seed + ':floodgate-v1');
   if (rng() >= 0.35 || event?.area === 2) return null;
-  const stages = [8, 9].filter((s) => s !== courier?.stage && courierEligible(getLevel(seed, s)));
+  const stages = [8, 9].filter(
+    (s) => s !== courier?.stage && !reserved.includes(s) && courierEligible(getLevel(seed, s)),
+  );
   return stages.length ? stages[Math.floor(rng() * stages.length)] : null;
 }
 

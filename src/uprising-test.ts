@@ -1,6 +1,7 @@
 import type { Checkpoint } from './rules.ts';
 import {
   UPRISING_ROUTES,
+  UPRISING_FORKS,
   UPRISING_FINALES,
   UPRISING_CONTRACTS,
   newUprising,
@@ -34,7 +35,7 @@ export function uprisingTestFromUrl(url: URL): Checkpoint | null {
     return {
       version: 6,
       seed: 'UPRISING-' + route,
-      stage: [0, 4, 12, 16][index],
+      stage: UPRISING_FORKS[index],
       hp: 100,
       mods: index ? ['magnum', 'light', 'airshot'] : [],
       kills: 0,
@@ -65,7 +66,7 @@ export function uprisingTestFromUrl(url: URL): Checkpoint | null {
     stage: job ? job.fork + 1 : 19,
     hp: 100,
     mods:
-      job && job.fork < 4
+      job && job.district === 'railworks'
         ? ['magnum', 'light', 'airshot']
         : ['magnum', 'light', 'airshot', 'rapid', 'scatter', 'ricochet', 'pierce', 'leech'],
     kills: 0,

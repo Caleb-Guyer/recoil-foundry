@@ -3,6 +3,7 @@ import { UPRISING_ROOMS } from './uprising-rooms.ts';
 import {
   UPRISING_DISTRICTS,
   uprisingRoute,
+  uprisingFork,
   uprisingFinale,
   successfulUprising,
   type UprisingRun,
@@ -10,7 +11,7 @@ import {
 
 export function uprisingLevel(base: Level, run: UprisingRun, stage: number): Level {
   const level = structuredClone(base);
-  const choice = run.choices.find((id) => uprisingRoute(id).fork + 1 === stage);
+  const choice = run.choices.find((id) => uprisingFork(run, id) + 1 === stage);
   if (choice) {
     const route = uprisingRoute(choice);
     const room = structuredClone(UPRISING_ROOMS[choice]);

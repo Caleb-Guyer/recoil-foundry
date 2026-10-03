@@ -1733,7 +1733,7 @@ function showDialog(kind: string) {
     content.innerHTML =
       '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Factory Uprising.</h2>' +
       '<p class="update-tagline">Choose the jobs. Change the factory.</p>' +
-      '<dl class="update-notes"><div><dt>Four decisions. Twenty rooms.</dt><dd>Choose jobs in Railworks, Foundry Core, Reclamation and Rooftops. Steal a prototype, sabotage relays, protect a generator or race for an evacuation platform. Check your route map from Pause.</dd></div>' +
+      '<dl class="update-notes"><div><dt>Four decisions. Twenty rooms.</dt><dd>Jobs begin in the second zone. Choose routes in Railworks, Foundry Core, Reclamation and Rooftops. Steal a prototype, sabotage relays, protect a generator or race for an evacuation platform. Check your route map from Pause.</dd></div>' +
       '<div><dt>A factory that remembers.</dt><dd>Stolen cargo draws pursuit crews. Cutting Core power shuts down later machinery. Rescuing crews adds boss barricades. Your completed jobs shape the final security response.</dd></div>' +
       '<div><dt>More routes to earn.</dt><dd>Campaign contracts unlock three additional jobs. Discover the new districts and track contracts in the Logbook. Existing saves and Daily runs keep their rules.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';

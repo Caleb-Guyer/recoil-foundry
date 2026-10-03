@@ -83,6 +83,8 @@ test('Floodgate plans are seeded, uncommon, one Cooling room, and respect introd
     };
     assert.equal(planFloodgate(seed, event), null);
     assert.notEqual(planFloodgate(seed, null, { stage: 8, status: 'pending' }), 8);
+    assert.notEqual(planFloodgate(seed, null, null, [9]), 9);
+    assert.equal(planFloodgate(seed, null, null, [8, 9]), null);
   }
   assert(count > 110 && count < 215, String(count));
   assert.equal(seen.size, 2);

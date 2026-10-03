@@ -13,6 +13,8 @@ import {
   loadUprisingRecords,
   recordUprising,
   uprisingChoices,
+  uprisingFork,
+  uprisingForks,
   uprisingContracts,
   uprisingFinale,
   uprisingPlan,
@@ -82,10 +84,10 @@ test('four campaign forks expose eight jobs initially; contracts snapshot three 
   for (const f of ['isolated', 'hunted', 'mutiny'] as const)
     records = recordUprising(records, undefined, false, f);
   assert(uprisingContracts(records).every((c) => c.unlocked));
-  assert.equal(uprisingChoices(run, 0).length, 2);
+  assert.equal(uprisingChoices(run, 4).length, 2);
   const next = newUprising(records);
-  assert.equal(uprisingChoices(next, 0).length, 3);
   assert.equal(uprisingChoices(next, 4).length, 3);
+  assert.equal(uprisingChoices(next, 8).length, 3);
   assert.equal(uprisingChoices(next, 16).length, 3);
   assert(validUprisingRecords(records));
   assert(!validUprisingRecords({ ...records, clean: ['rail-guard'] }));
@@ -105,6 +107,77 @@ test('four campaign forks expose eight jobs initially; contracts snapshot three 
       outcomes: [{ route: 'rail-escape', result: 'success' }],
     }),
   );
+});
+
+test('new campaigns keep the first zone free of jobs and offer all four districts afterward', () => {
+  const run = newUprising();
+  assert.equal(run.version, 2);
+  assert.deepEqual(UPRISING_FORKS, [4, 8, 12, 16]);
+  const g = new Game();
+  g.start('second-zone-jobs', undefined, null, null, false, 0, true, [], run);
+  for (let stage = 0; stage < 4; stage++) {
+    assert.equal(g.stage, stage);
+    assert(!g.level.uprising);
+    assert.equal(g.uprising.mission, null);
+    assert.equal(g.uprising.status, '');
+    emptyPatrol(g);
+    g.clear = true;
+    g.openReward();
+    assert.equal(g.mode, 'upgrade');
+    assert.equal(g.uprising.choices.length, 0);
+    assert.equal(uprisingChoices(run, stage).length, 0);
+    assert(!g.uprising.choose('rail-heist'));
+    assert(loadCheckpoint(checkpoint(g)));
+    g.chooseMod(g.offers[0].id);
+  }
+  assert.equal(g.stage, 4);
+  emptyPatrol(g);
+  g.clear = true;
+  g.openReward();
+  assert.equal(g.uprising.choices[0].district, 'railworks');
+  assert(g.uprising.choose('rail-escape'));
+  g.chooseMod(g.offers[0].id);
+  assert.equal(g.stage, 5);
+  assert.equal(g.level.uprising, 'railworks');
+  assert(loadCheckpoint(checkpoint(g)));
+  const map = uprisingMap(g);
+  for (const room of [6, 10, 14, 18]) assert(map.includes('Room ' + room));
+  assert(!map.includes('Room 2<'));
+  for (const route of UPRISING_ROUTES) assert(route.fork >= 4);
+});
+
+test('Continue keeps version-one job schedules, checkpoints and map labels intact', () => {
+  const offer = uprisingTestFromUrl(new URL('?test=uprising&route=choose&v=1', base))!;
+  offer.stage = 0;
+  offer.uprising!.version = 1;
+  assert(loadCheckpoint(offer));
+  const g = new Game();
+  g.start(offer.seed, offer);
+  assert.equal(g.uprising.choices[0].district, 'railworks');
+  assert.deepEqual(uprisingForks(g.uprising.run!), [0, 4, 12, 16]);
+  assert(g.uprising.choose('rail-escape'));
+  const committed = checkpoint(g);
+  const copy = new Game();
+  copy.start(committed.seed, committed);
+  copy.chooseMod(copy.offers[0].id);
+  assert.equal(copy.stage, 1);
+  assert.equal(copy.uprising.mission, 'rail-escape');
+  assert(uprisingMap(copy).includes('Room 2<'));
+  assert(copy.reservedEncounterStages!.includes(1));
+  assert(copy.reservedEncounterStages!.includes(5));
+  assert(loadCheckpoint(checkpoint(copy)));
+  for (const route of UPRISING_ROUTES) {
+    const save = uprisingTestFromUrl(new URL('?test=uprising&route=' + route.id + '&v=1', base))!;
+    save.uprising!.version = 1;
+    save.stage = uprisingFork(save.uprising!, route.id) + 1;
+    assert(loadCheckpoint(save), route.id);
+    const continued = new Game();
+    continued.start(save.seed, save);
+    assert.equal(continued.uprising.mission, route.id);
+    assert.equal(continued.level.id, 'uprising-' + route.id);
+    assert(loadCheckpoint(checkpoint(continued)));
+  }
+  assert(!validUprisingRun({ ...newUprising(), version: 3 }));
 });
 
 test('strict preview links, saved run chronology and shared plan access', () => {
@@ -134,6 +207,7 @@ test('strict preview links, saved run chronology and shared plan access', () => 
   const save = uprisingTestFromUrl(new URL('?test=uprising&route=rail-heist&v=1', base))!;
   assert.equal(loadCheckpoint({ ...save, stage: 0 }), null);
   assert.equal(loadCheckpoint({ ...save, stage: 2 }), null);
+  assert.equal(loadCheckpoint({ ...save, stage: 1 }), null);
   assert.equal(
     loadCheckpoint({ ...save, reward: { offers: ['rapid', 'ricochet', 'kick'], rerolled: false } }),
     null,
@@ -145,7 +219,7 @@ test('strict preview links, saved run chronology and shared plan access', () => 
   const shared = newUprising(null, uprisingPlan('rail-guard,core-recovery')!);
   assert(validUprisingRun(shared));
   assert.deepEqual(
-    uprisingChoices(shared, 0).map((r) => r.id),
+    uprisingChoices(shared, 4).map((r) => r.id),
     ['rail-guard'],
   );
 });
@@ -154,7 +228,7 @@ test('choosing a route precedes the fitting; Continue restores either side of th
   const g = preset('choose');
   const offer = g.offers[0].id;
   g.chooseMod(offer);
-  assert.equal(g.stage, 0);
+  assert.equal(g.stage, 4);
   assert.equal(g.mods.length, 0);
   assert(!g.uprising.choose('rail-guard'));
   assert(g.uprising.choose('rail-heist'));
@@ -165,7 +239,7 @@ test('choosing a route precedes the fitting; Continue restores either side of th
   continued.start(saved.seed, saved);
   assert.equal(continued.uprising.choices.length, 0);
   continued.chooseMod(offer);
-  assert.equal(continued.stage, 1);
+  assert.equal(continued.stage, 5);
   assert.equal(continued.uprising.kind, 'steal');
   assert.equal(continued.level.uprising, 'railworks');
   assert.equal(continued.uprising.anchors.length, 3);
@@ -253,7 +327,7 @@ test('evacuation bypasses patrol kills, while a late arrival loses only the obje
   assert(failed.clear);
   failed.openReward();
   failed.chooseMod(failed.offers[0].id);
-  assert.equal(failed.stage, 2);
+  assert.equal(failed.stage, 6);
   assert(loadCheckpoint(checkpoint(failed)));
 });
 
@@ -366,7 +440,7 @@ test('evacuation geometry is owned by its job and never leaks into later rooms o
   const g = preset('rail-escape');
   assert(g.uprising.evacuation);
   g.uprising.abandon();
-  g.stage = 2;
+  g.stage = 6;
   g.loadRoom();
   assert.equal(g.uprising.evacuation, undefined);
   assert.equal(g.uprising.switchTarget, undefined);
@@ -404,7 +478,7 @@ test('defense ignores friendly fire, warns bounded waves, respects pause and fai
   emptyPatrol(g);
   const p = g.uprising.nodes[0];
   g.props.hit(p, 999, { x: 1, y: 0 }, undefined, true);
-  assert.equal(p.hp, 230);
+  assert.equal(p.hp, 280);
   Body.setPosition(g.player, { x: 970, y: 720 });
   tick(g, 1, { jump: true });
   assert.notEqual(g.uprising.armedAt, null);
@@ -646,6 +720,9 @@ test('new Factory plans retain their condition outside mission slots and reserve
       [0, 4],
     );
     const reserved = g.reservedEncounterStages!;
+    assert.deepEqual(uprisingForks(g.uprising.run!), [4, 8, 12, 16]);
+    assert(reserved.includes(9));
+    if (g.floodgate.stage !== null) assert(!reserved.includes(g.floodgate.stage));
     for (const stage of [
       g.courier.state?.stage,
       g.auditor.state?.caseStage,
@@ -665,9 +742,12 @@ for (const condition of ['freight', 'power'] as const)
     });
     const common = Matter.Common as typeof Matter.Common & { _nextId: number; _seed: number };
     common._nextId = common._seed = 0;
-    // Reuse the existing Factory campaign seeds to check both rulesets together.
+    // Isolate Power signatures from the optional late contrasting encounter;
+    // the finale campaigns separately exercise a Faction conflict shift.
     const seed = Array.from({ length: 100 }, (_, i) => 'factory-test-' + i).find(
-      (seed) => planFactory(seed).condition === condition,
+      (seed) =>
+        planFactory(seed).condition === condition &&
+        (condition !== 'power' || planFactory(seed).encounters.length === 2),
     )!;
     const g = new Game();
     g.start(seed, undefined, null, null, false, 0, true, [], newUprising(null, campaigns.isolated));

@@ -1,10 +1,11 @@
 import type { Checkpoint } from './rules.ts';
 
-export const UPRISING_FORKS = [0, 4, 12, 16] as const;
+export const UPRISING_FORKS = [4, 8, 12, 16] as const;
+const LEGACY_UPRISING_FORKS = [0, 4, 12, 16] as const;
 export const UPRISING_ROUTES = [
   {
     id: 'rail-heist',
-    fork: 0,
+    fork: 4,
     district: 'railworks',
     name: 'Prototype train',
     mission: 'steal',
@@ -13,7 +14,7 @@ export const UPRISING_ROUTES = [
   },
   {
     id: 'rail-escape',
-    fork: 0,
+    fork: 4,
     district: 'railworks',
     name: 'Last train out',
     mission: 'escape',
@@ -22,7 +23,7 @@ export const UPRISING_ROUTES = [
   },
   {
     id: 'rail-guard',
-    fork: 0,
+    fork: 4,
     district: 'railworks',
     name: 'Convoy watch',
     mission: 'defend',
@@ -32,7 +33,7 @@ export const UPRISING_ROUTES = [
   },
   {
     id: 'core-sabotage',
-    fork: 4,
+    fork: 8,
     district: 'core',
     name: 'Cut production',
     mission: 'sabotage',
@@ -42,7 +43,7 @@ export const UPRISING_ROUTES = [
   },
   {
     id: 'core-defense',
-    fork: 4,
+    fork: 8,
     district: 'core',
     name: 'Keep the lights on',
     mission: 'defend',
@@ -52,7 +53,7 @@ export const UPRISING_ROUTES = [
   },
   {
     id: 'core-recovery',
-    fork: 4,
+    fork: 8,
     district: 'core',
     name: 'Research salvage',
     mission: 'steal',
@@ -154,7 +155,7 @@ export interface UprisingOutcome {
   clean?: true;
 }
 export interface UprisingRun {
-  version: 1;
+  version: 1 | 2;
   choices: UprisingRouteId[];
   outcomes: UprisingOutcome[];
   unlocks: UprisingContractId[];
@@ -176,6 +177,11 @@ const unique = (v: unknown, allowed: readonly string[]) =>
   v.every((id) => typeof id === 'string' && allowed.includes(id)) &&
   new Set(v).size === v.length;
 export const uprisingRoute = (id: UprisingRouteId) => UPRISING_ROUTES.find((r) => r.id === id)!;
+// Continue preserves the schedule committed by an older run.
+export const uprisingForks = (run: UprisingRun) =>
+  run.version === 1 ? LEGACY_UPRISING_FORKS : UPRISING_FORKS;
+export const uprisingFork = (run: UprisingRun, id: UprisingRouteId) =>
+  uprisingForks(run)[UPRISING_FORKS.indexOf(uprisingRoute(id).fork)];
 export function loadUprisingRecords(raw: unknown): UprisingRecords {
   const v = object(raw) && raw.version === 1 ? raw : {};
   const routes = routeIds.filter((id) => Array.isArray(v.routes) && v.routes.includes(id));
@@ -217,7 +223,7 @@ export function newUprising(raw: unknown = null, plan?: readonly UprisingRouteId
     if ('contract' in route && !unlocks.includes(route.contract)) unlocks.push(route.contract);
   }
   return {
-    version: 1,
+    version: 2,
     choices: [],
     outcomes: [],
     unlocks,
@@ -227,7 +233,7 @@ export function newUprising(raw: unknown = null, plan?: readonly UprisingRouteId
 export function validUprisingRun(raw: unknown): raw is UprisingRun {
   if (
     !object(raw) ||
-    raw.version !== 1 ||
+    ![1, 2].includes(raw.version as number) ||
     !Object.keys(raw).every((k) =>
       ['version', 'choices', 'outcomes', 'unlocks', 'plan'].includes(k),
     ) ||
@@ -270,11 +276,10 @@ export function validUprisingCheckpoint(d: Checkpoint) {
   if (d.uprising === undefined) return true;
   const u = d.uprising;
   if (d.version !== 6 || /^RF-D\d+-/.test(d.seed) || !validUprisingRun(u)) return false;
-  const minimum = UPRISING_FORKS.filter((f) => f < d.stage).length;
-  const maximum = UPRISING_FORKS.filter((f) => f <= d.stage).length;
-  const resolved = UPRISING_FORKS.filter(
-    (f) => f + 1 < d.stage || (f + 1 === d.stage && !!d.reward),
-  ).length;
+  const forks = uprisingForks(u);
+  const minimum = forks.filter((f) => f < d.stage).length;
+  const maximum = forks.filter((f) => f <= d.stage).length;
+  const resolved = forks.filter((f) => f + 1 < d.stage || (f + 1 === d.stage && !!d.reward)).length;
   return (
     u.choices.length >= minimum &&
     u.choices.length <= maximum &&
@@ -285,16 +290,17 @@ export function validUprisingCheckpoint(d: Checkpoint) {
         !d.reward.welder &&
         !d.reward.enteringDetour)) &&
     u.outcomes.length >= resolved &&
-    u.outcomes.length <= UPRISING_FORKS.filter((f) => f + 1 <= d.stage).length
+    u.outcomes.length <= forks.filter((f) => f + 1 <= d.stage).length
   );
 }
 export function uprisingChoices(run: UprisingRun | null, stage: number) {
-  if (!run || !UPRISING_FORKS.includes(stage as never)) return [];
-  const index = UPRISING_FORKS.indexOf(stage as never);
+  if (!run) return [];
+  const index = uprisingForks(run).indexOf(stage as never);
+  if (index === -1) return [];
   if (run.choices[index]) return [];
   return UPRISING_ROUTES.filter(
     (r) =>
-      r.fork === stage &&
+      uprisingFork(run, r.id) === stage &&
       (!('contract' in r) || run.unlocks.includes(r.contract)) &&
       (!run.plan?.[index] || run.plan[index] === r.id),
   );

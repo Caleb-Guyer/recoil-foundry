@@ -35,7 +35,12 @@ export class FloodgateSystem {
   start(save?: Checkpoint) {
     this.stage = save
       ? (save.floodgate ?? null)
-      : planFloodgate(this.game.seed, this.game.areaEvents.state, this.game.courier.state);
+      : planFloodgate(
+          this.game.seed,
+          this.game.areaEvents.state,
+          this.game.courier.state,
+          this.game.reservedEncounterStages,
+        );
   }
   clear() {
     this.active = false;
