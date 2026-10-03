@@ -1,5 +1,17 @@
 import { modMark } from './upgrade-icons.ts';
 import {
+  UPRISING_RECORDS_KEY,
+  UPRISING_DISTRICTS,
+  newUprising,
+  recordUprising,
+  uprisingContracts,
+  uprisingFinale,
+  uprisingPlan,
+  type UprisingRun,
+} from './uprising-model.ts';
+import { uprisingMap, uprisingRouteMenu } from './uprising-menu.ts';
+import { uprisingTestFromUrl } from './uprising-test.ts';
+import {
   ARCHIVE_KEY,
   encounterArchive,
   acknowledgeArchiveEntry,
@@ -349,7 +361,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Foundry Archive</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Factory Uprising</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -360,6 +372,7 @@ document.getElementById('app')!.innerHTML = `
  <div id="clock-out-controls" hidden><span class="sr-only" role="status">Clock Out. Your shift is complete.</span><button id="skip-clock-out" class="quiet">Skip ↗</button></div>
  <button id="save-warning" data-save-warning class="save-warning" hidden></button>
  <div id="commendation-notice" class="commendation-notice" role="status" hidden></div>
+ <p id="uprising-status" class="uprising-status" hidden></p>
  <div id="first-session-tip" class="first-session-tip" hidden><span id="first-session-copy" role="status"></span><button id="dismiss-tip" class="quiet" aria-label="Hide first-run tips">×</button></div>
  <div class="touch-controls" aria-label="Touch controls"><div><button data-touch="left" aria-label="Move left">←</button><button data-touch="right" aria-label="Move right">→</button></div><div><button id="portal-touch" aria-label="Place portal: select, then tap a surface" aria-pressed="false" hidden>◎</button><button data-touch="jump" aria-label="Jump">↑</button></div></div>
 </main><dialog id="modal" aria-labelledby="dialog-title"><div id="dialog-content"></div><button data-save-warning class="save-warning modal-save-warning" hidden></button></dialog><span id="save-status" class="sr-only" role="status"></span>`;
@@ -467,6 +480,7 @@ let linkedRunTest =
   reforgeTestFromUrl(entryUrl) ??
   floodgateTestFromUrl(entryUrl) ??
   sortingPitTestFromUrl(entryUrl) ??
+  uprisingTestFromUrl(entryUrl) ??
   courierTestFromUrl(entryUrl) ??
   mutationTestFromUrl(entryUrl) ??
   eventTestFromUrl(entryUrl) ??
@@ -614,6 +628,8 @@ function updateTitle() {
     $('play').innerHTML = 'Test the Auditor <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'EXITS-73')
     $('play').innerHTML = 'Test exit elevators <span aria-hidden="true">↗</span>';
+  if (linkedRunTest?.uprising)
+    $('play').innerHTML = 'Test Factory Uprising <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('FUSIONS-'))
     $('play').innerHTML = 'Test fusions <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('HARPOONER-'))
@@ -1007,8 +1023,9 @@ function start(
   retry = false,
   seedOverride?: string,
   securityOverride?: SecurityLevel,
-  factoryRules?: boolean | 1 | 2,
+  factoryRules?: boolean | 1 | 2 | 3,
   unlockOverride?: readonly LongevityId[],
+  uprisingOverride?: UprisingRun | null,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1081,6 +1098,8 @@ function start(
       url.searchParams.delete('seed');
       url.searchParams.delete('fv');
       url.searchParams.delete('ul');
+      url.searchParams.delete('uv');
+      url.searchParams.delete('ur');
     }
     history.replaceState(null, '', url);
   }
@@ -1101,7 +1120,9 @@ function start(
         ? false
         : seedParam === seed && entryUrl.searchParams.get('fv') === '1'
           ? 1
-          : true),
+          : seedParam === seed && ['2', '3'].includes(entryUrl.searchParams.get('fv') ?? '')
+            ? (Number(entryUrl.searchParams.get('fv')) as 2 | 3)
+            : true),
     unlockOverride ??
       (retry && seed === game.seed
         ? game.unlocks
@@ -1110,6 +1131,18 @@ function start(
           : currentGoals()
               .filter((g) => g.unlocked)
               .map((g) => g.id)),
+    uprisingOverride !== undefined
+      ? uprisingOverride
+      : seedParam === seed &&
+          (entryUrl.searchParams.get('uv') === '0' ||
+            (entryUrl.searchParams.has('fv') && !entryUrl.searchParams.has('uv')))
+        ? null
+        : newUprising(
+            read(UPRISING_RECORDS_KEY),
+            seedParam === seed
+              ? (uprisingPlan(entryUrl.searchParams.get('ur')) ?? undefined)
+              : undefined,
+          ),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1323,8 +1356,24 @@ function captureFinishedRun() {
   ).join('');
   finishedRun = snapshotRun(game, id);
   if (!finishedRun) return;
+  if (
+    finishedRun.outcome === 'won' &&
+    finishedRun.uprising &&
+    !finishedRun.overtime &&
+    !finishedRun.shutdown
+  )
+    write(
+      UPRISING_RECORDS_KEY,
+      recordUprising(
+        read(UPRISING_RECORDS_KEY),
+        undefined,
+        false,
+        uprisingFinale(finishedRun.uprising),
+      ),
+    );
   runHistory = addRun([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))], finishedRun);
   write(RUN_HISTORY_KEY, runHistory);
+  updateArchive();
 }
 function replayFinishedRun(run: RunRecap) {
   if (!canReplayRun(run)) return;
@@ -1335,6 +1384,8 @@ function replayFinishedRun(run: RunRecap) {
   url.searchParams.set('seed', run.seed);
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   url.searchParams.set('ul', (run.unlocks ?? []).join(','));
+  url.searchParams.set('uv', run.uprising ? '1' : '0');
+  if (run.uprising) url.searchParams.set('ur', run.uprising.choices.join(','));
   history.replaceState(null, '', url);
   linkedDaily = null;
   seedParam = run.seed;
@@ -1345,6 +1396,9 @@ function replayFinishedRun(run: RunRecap) {
     run.security ?? 0,
     run.factory ? (run.factoryVersion ?? 1) : false,
     run.unlocks ?? [],
+    run.uprising
+      ? { ...newUprising(null, run.uprising.choices), unlocks: [...run.uprising.unlocks] }
+      : null,
   );
 }
 function workshopFromRun(run: RunRecap) {
@@ -1410,6 +1464,16 @@ function updateArchive(ids: readonly string[] = []) {
       .filter((g) => g.unlocked)
       .map((g) => 'mod:' + g.id + ':unlocked'),
     ...(logbookProgress.shutdown ? ['region:shutdown'] : []),
+    ...uprisingContracts(read(UPRISING_RECORDS_KEY))
+      .filter((c) => c.unlocked)
+      .map((c) => 'uprising:' + c.id + ':unlocked'),
+    ...(!game.practice &&
+    !game.testRun &&
+    !game.workshop.active &&
+    game.mode !== 'title' &&
+    ['railworks', 'core'].includes(game.level.uprising ?? '')
+      ? ['region:' + game.level.uprising]
+      : []),
   ]);
   if (JSON.stringify(before) !== JSON.stringify(next)) {
     write(ARCHIVE_KEY, next);
@@ -1431,6 +1495,7 @@ function updateLogbookBadge() {
     commendations,
     read(ARCHIVE_KEY),
     currentGoals(),
+    read(UPRISING_RECORDS_KEY),
   ).filter((e) => e.unread).length;
   const badge = document.getElementById('logbook-badge');
   if (badge) badge.hidden = !unread;
@@ -1439,6 +1504,13 @@ function updateLogbookBadge() {
   else button?.removeAttribute('aria-label');
 }
 game.onEnemyDefeated = updateLogbook;
+game.onUprisingMission = (route, clean) => {
+  if (game.practice || game.testRun || game.workshop.active || game.overtime) return;
+  progress.checkExternal();
+  if (progress.blocked) return;
+  write(UPRISING_RECORDS_KEY, recordUprising(read(UPRISING_RECORDS_KEY), route, clean));
+  updateArchive();
+};
 game.onMilestone = (id) => {
   if (!game.commendations.eligible) return;
   progress.checkExternal();
@@ -1589,8 +1661,14 @@ game.onChange = () => {
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${game.level.annex ? REGION_NAMES.annex : AREAS[game.level.area].name} · ${game.level.name}`;
   $('factory-condition').hidden = !game.factory || !!game.overtime || !!game.escape || game.detour;
   if (game.factory) {
-    $('factory-name').textContent = FACTORY_CONDITIONS[game.factory.condition].name;
-    $('factory-hint').textContent = factoryHint(game.factory, game.stage);
+    $('factory-name').textContent = game.level.uprising
+      ? UPRISING_DISTRICTS[game.level.uprising]
+      : FACTORY_CONDITIONS[game.factory.condition].name;
+    $('factory-hint').textContent = game.level.uprising
+      ? game.stage === 19
+        ? 'Your completed jobs shaped this defense.'
+        : 'Complete the job, then clear the patrol or reach evacuation.'
+      : factoryHint(game.factory, game.stage);
   }
   if (game.maintenance.trial)
     $('stage').textContent =
@@ -1606,6 +1684,7 @@ game.onChange = () => {
   if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
 };
 function showDialog(kind: string) {
+  if (kind === 'upgrade' && game.uprising.choices.length) kind = 'uprising';
   buildMenu = null;
   modal.setAttribute('aria-labelledby', 'dialog-title');
   bindingEditor?.cancel();
@@ -1651,11 +1730,11 @@ function showDialog(kind: string) {
     : commendations;
   if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Foundry Archive.</h2>' +
-      '<p class="update-tagline">Every shift leaves something to discover.</p>' +
-      '<dl class="update-notes"><div><dt>Five new fittings to earn.</dt><dd>Double Jump, Wing Harness and three electrical fittings unlock through Campaign and Daily goals. The Logbook shows your progress and what to try next.</dd></div>' +
-      '<div><dt>A collection worth exploring.</dt><dd>Browse upgrade icons, machines, variants, places and records. New badges stay until you open each entry. Seeing a reward now reveals its record before you collect it.</dd></div>' +
-      '<div><dt>The faction fight needs you.</dt><dd>Factory battles have more hostile pressure and warned reserves. Daily remains a shared challenge; saved runs keep their existing upgrade pool and encounter rules.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Factory Uprising.</h2>' +
+      '<p class="update-tagline">Choose the jobs. Change the factory.</p>' +
+      '<dl class="update-notes"><div><dt>Four decisions. Twenty rooms.</dt><dd>Choose jobs in Railworks, Foundry Core, Reclamation and Rooftops. Steal a prototype, sabotage relays, protect a generator or race for an evacuation platform. Check your route map from Pause.</dd></div>' +
+      '<div><dt>A factory that remembers.</dt><dd>Stolen cargo draws pursuit crews. Cutting Core power shuts down later machinery. Rescuing crews adds boss barricades. Your completed jobs shape the final security response.</dd></div>' +
+      '<div><dt>More routes to earn.</dt><dd>Campaign contracts unlock three additional jobs. Discover the new districts and track contracts in the Logbook. Existing saves and Daily runs keep their rules.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -1714,6 +1793,7 @@ function showDialog(kind: string) {
             visibleCommendations,
             read(ARCHIVE_KEY),
             currentGoals(),
+            read(UPRISING_RECORDS_KEY),
           ),
       logbookView,
       modMark,
@@ -2033,6 +2113,14 @@ function showDialog(kind: string) {
       game.reforge.close();
       canvas.focus();
     };
+  } else if (kind === 'uprising') {
+    uprisingRouteMenu(content, game);
+  } else if (kind === 'uprising-map') {
+    content.innerHTML =
+      '<h2 id="dialog-title">Factory routes.</h2>' +
+      uprisingMap(game) +
+      '<div class="actions"><button id="back" class="primary">Back</button></div>';
+    $('back').onclick = () => showDialog('pause');
   } else if (kind === 'upgrade') {
     content.innerHTML =
       '<p class="eyebrow">' +
@@ -2489,7 +2577,14 @@ function showDialog(kind: string) {
               ? '<button id="retry" class="quiet">Restart test</button>'
               : '') +
       (paused
-        ? '<button id="pause-logbook" class="quiet">Logbook</button><button id="menu" class="quiet">Menu</button>'
+        ? '<button id="pause-logbook" class="quiet">Logbook</button>' +
+          (game.uprising.run && !game.overtime
+            ? '<button id="factory-map" class="quiet">Factory routes</button>'
+            : '') +
+          (game.uprising.waiting
+            ? '<button id="skip-job" class="quiet">Skip current job</button>'
+            : '') +
+          '<button id="menu" class="quiet">Menu</button>'
         : '') +
       '</div>';
     $('open-credits').onclick = openCredits;
@@ -2556,6 +2651,14 @@ function showDialog(kind: string) {
     if (paused) {
       $('menu').onclick = menu;
       $('pause-logbook').onclick = () => showDialog('logbook');
+      const map = document.getElementById('factory-map');
+      if (map) map.onclick = () => showDialog('uprising-map');
+      const skip = document.getElementById('skip-job');
+      if (skip)
+        skip.onclick = () => {
+          game.uprising.abandon();
+          showDialog('pause');
+        };
     }
   }
   if (kind === 'result' && game.mode === 'dead') {
@@ -2588,6 +2691,10 @@ function showDialog(kind: string) {
   if (['upgrade', 'reforge', 'practice', 'practice-setup', 'result'].includes(kind))
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'practice-build') $('workshop-apply').focus({ preventScroll: true });
+  if (kind === 'uprising' || kind === 'uprising-map') {
+    content.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+    modal.scrollTop = 0;
+  }
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (kind === 'replay') $('replay-play').focus();
   if (kind === 'logbook')
@@ -2842,6 +2949,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'uprising-map') {
+    showDialog('pause');
+    return;
+  }
   if (buildMenu?.back()) return;
   if (dialogKind === 'update') {
     backFromUpdate();
@@ -2990,6 +3101,14 @@ window.addEventListener('keydown', (e) => {
   }
   if (game.mode === 'upgrade') {
     const i = Number(e.key) - 1;
+    if (game.uprising.choices.length) {
+      const route = game.uprising.choices[i];
+      if (route) {
+        sound.unlock();
+        game.uprising.choose(route.id);
+      }
+      return;
+    }
     if (i >= 0 && i < game.offers.length) {
       const id = game.offers[i].id;
       firstRewardHelp = false;
@@ -3213,6 +3332,10 @@ function frame(now: number) {
       $('portal-touch').setAttribute('aria-pressed', 'false');
     }
     $<HTMLProgressElement>('health').value = game.hp;
+    const objective = game.uprising.status;
+    $('uprising-status').hidden = game.mode !== 'playing' || !objective;
+    if ($('uprising-status').textContent !== objective)
+      $('uprising-status').textContent = objective;
     $('health').setAttribute('aria-valuetext', Math.ceil(game.hp) + ' health');
     $('health').classList.toggle('low', game.hp <= 30);
   }

@@ -11,7 +11,7 @@ export const FACTORY_CONDITIONS = {
 } as const;
 export type FactoryCondition = keyof typeof FACTORY_CONDITIONS;
 export const FACTORY_RULESET = 2;
-export type FactoryVersion = 1 | 2;
+export type FactoryVersion = 1 | 2 | 3;
 export type FactoryEncounterKind = AreaEventKind | 'crossing' | 'freight';
 export interface FactoryEncounter {
   stage: number;
@@ -25,15 +25,16 @@ export interface FactoryRun {
 }
 
 // Separate streams leave combat, rewards, bosses and old Daily seeds intact.
-// Room one teaches the controls; room two introduces the shift's signature.
+// Legacy campaigns introduce signatures in rooms two and six. Uprising brings
+// them forward one room so the following jobs keep their authored encounters.
 export function planFactory(seed: string, version: FactoryVersion = FACTORY_RULESET): FactoryRun {
   const rng = seeded(seed + ':factory-v1');
   const condition = (Object.keys(FACTORY_CONDITIONS) as FactoryCondition[])[Math.floor(rng() * 3)];
   const signature: FactoryEncounterKind =
     condition === 'freight' ? 'crossing' : condition === 'power' ? 'blackout' : 'turf';
   const encounters: FactoryEncounter[] = [
-    { stage: 1, kind: signature },
-    { stage: 5, kind: condition === 'freight' ? 'freight' : signature },
+    { stage: version === 3 ? 0 : 1, kind: signature },
+    { stage: version === 3 ? 4 : 5, kind: condition === 'freight' ? 'freight' : signature },
   ];
   // A later contrasting encounter preserves the other event types. Keep a
   // normal room between signatures rather than applying an event area-wide.
@@ -73,7 +74,7 @@ export function validFactory(d: Checkpoint): boolean {
   if (
     !f ||
     typeof f !== 'object' ||
-    (f.version !== 1 && f.version !== 2) ||
+    ![1, 2, 3].includes(f.version) ||
     d.version !== 6 ||
     typeof d.seed !== 'string' ||
     /^RF-D\d+-/.test(d.seed) ||

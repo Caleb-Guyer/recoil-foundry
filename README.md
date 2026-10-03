@@ -10,11 +10,12 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 - **113 upgrades** with branching paths and combinations that change how your gun works.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
+- **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Foundry Archive — version 3.20.0.** Earn Double Jump, Wing Harness and three electrical fittings through Campaign and Daily achievements. Browse the Logbook grid for exact progress, new records and your next goals. Reward sightings and per-entry New badges persist independently of Workshop collection. Daily retains its shared pool; Continue keeps your run’s original choices. [Release notes](docs/releases/3.20.0.md).
+**Factory Uprising — version 4.0.0.** New Campaign runs branch into recovery, sabotage, defense and evacuation jobs after rooms 1, 5, 13 and 17. Moving railcars and powered Core platforms change the terrain. Successful jobs bring pursuit crews, shut down machinery or add crew barricades; your choices shape four possible final defenses. Campaign contracts unlock three additional jobs. Check **Pause → Factory routes** and **Logbook → Records** for your route and contract progress. The campaign remains twenty rooms. Old Continue saves, Daily, Practice and Workshop keep their rules. [Release notes](docs/releases/4.0.0.md).
 
 **Security Levels** unlock after your first victory: coordinated elite squads, warned boss counterattacks, then machinery checkpoints across the full campaign. Each clearance unlocks the next level, with separate best times and a Redline outfit reward; Overtime remains available.
 
@@ -37,7 +38,7 @@ The **Dead Signal** update also includes the alternate Transmission Annex route,
 | Right click or E             | Equipped secondary action  |
 | Escape / P                   | Pause                      |
 | H                            | Controls                   |
-| 1–3 at a reward              | Choose an upgrade          |
+| 1–3 at a reward              | Choose a route or upgrade  |
 
 Shooting downward while airborne lifts you up. Shooting sideways pushes you the other way. **Controls → Try controls** gives you a safe place to learn. Rebind keys in **Settings → Keyboard & mouse**.
 

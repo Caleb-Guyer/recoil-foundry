@@ -145,6 +145,10 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
       retreatWaypoint = undefined;
     }
     if (g.mode === 'upgrade') {
+      if (g.uprising.choices.length) {
+        g.uprising.choose(g.uprising.choices[0].id);
+        continue;
+      }
       g.chooseMod(
         options.chooseUpgrade?.(g) ??
           extendedRewards?.[g.stage] ??

@@ -116,7 +116,11 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
       : '') +
     (entry.earned ? '<button class="quiet commendation-equip">Open Appearance ↗</button>' : '') +
     (entry.earned === false || entry.state === 'locked'
-      ? '<p class="logbook-locked">Report not yet filed.<br><span>Campaign and Daily runs count. Practice, Workshop and test runs do not.</span></p>'
+      ? '<p class="logbook-locked">Report not yet filed.<br><span>' +
+        (entry.id.startsWith('uprising:')
+          ? 'Campaign jobs count. Extra routes enter your next Campaign.'
+          : 'Campaign and Daily runs count. Practice, Workshop and test runs do not.') +
+        '</span></p>'
       : '<div class="logbook-document"><p class="logbook-source">' +
         escapeLogbook(entry.lore[0]) +
         '</p>' +

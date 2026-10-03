@@ -1,4 +1,5 @@
 import { drawMelt } from './melt-through.ts';
+import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
 import { drawWelder, drawWelds } from './welder-art.ts';
 import { drawClockOut } from './clock-out-art.ts';
 import { drawMutationBody, drawMutationTells, drawMutationShell } from './mutation-art.ts';
@@ -210,6 +211,12 @@ export class Renderer {
     else if (g.level.freight && g.mode !== 'title')
       drawFreightScenery(c, this.camera, viewW, viewH);
     else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
+    else if (
+      g.uprising.active &&
+      g.mode !== 'title' &&
+      (g.level.uprising === 'railworks' || g.level.uprising === 'core')
+    )
+      drawUprisingScenery(c, g.level.uprising, this.camera, viewW, viewH);
     else drawScenery(c, g.level.area, this.camera, viewW, viewH);
     c.restore();
     c.save();
@@ -230,7 +237,13 @@ export class Renderer {
     drawShutdownBackdrop(c, g);
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);
-    const palette = g.annex.active ? ANNEX_PALETTE : AREAS[g.level.area];
+    const palette = g.annex.active
+      ? ANNEX_PALETTE
+      : g.uprising.active &&
+          g.mode !== 'title' &&
+          (g.level.uprising === 'railworks' || g.level.uprising === 'core')
+        ? UPRISING_PALETTES[g.level.uprising]
+        : AREAS[g.level.area];
     for (const b of g.terrain) {
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
         continue;
@@ -280,6 +293,7 @@ export class Renderer {
     drawCallerWarnings(c, g);
     drawSpoof(c, g, this.reduced);
     this.drawProps();
+    drawUprising(c, g);
     drawWelds(c, g, this.reduced);
     drawMelt(c, g, this.reduced);
     drawStoryDetails(c, g, this.reduced);

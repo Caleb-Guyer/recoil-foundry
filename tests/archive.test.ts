@@ -45,14 +45,14 @@ test('the collection contains every upgrade, enemy, variant and zone without exp
     entries.filter((e) => e.id.startsWith('elite:') || e.id.startsWith('mutation:')).length,
     6,
   );
-  assert.equal(entries.filter((e) => e.section === 'places').length, 7);
+  assert.equal(entries.filter((e) => e.section === 'places').length, 9);
   const html = entries
     .filter((e) => e.state === 'unseen')
     .map((e) => logbookArticle(e, modMark))
     .join('');
   assert.doesNotMatch(
     html,
-    /Interceptor|Charge Lens|Pulse Chamber|Transmission Annex|Continuity control|Rooftops/,
+    /Interceptor|Charge Lens|Pulse Chamber|Transmission Annex|Continuity control|Rooftops|Railworks|Foundry Core/,
   );
   assert.equal(catalogMatches(entries, 'equipment', 'charge lens').length, 0);
   assert.equal(catalogMatches(entries, 'machines', 'interceptor').length, 0);

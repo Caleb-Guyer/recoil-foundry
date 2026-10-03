@@ -92,6 +92,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  uprising?: import('./uprising-model.ts').UprisingDistrict;
   security?: true;
   sortingPit?: import('./sorting-pit-layout.ts').SortingLayout;
   maintenance?: import('./maintenance.ts').MaintenanceKind;

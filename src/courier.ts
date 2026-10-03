@@ -33,7 +33,7 @@ export class CourierSystem {
         : planCourier(
             this.game.seed,
             this.game.areaEvents.state,
-            this.game.factory?.encounters.map((e) => e.stage),
+            this.game.reservedEncounterStages,
           );
   }
   clear() {

@@ -23,6 +23,8 @@ import {
 import { fabricatorLevel } from './fabricator-layout.ts';
 import { AreaEventSystem, type EventRole } from './area-events.ts';
 import { planFactory, factoryEncounter, type FactoryRun } from './factory.ts';
+import { UprisingSystem } from './uprising-system.ts';
+import { UPRISING_FORKS, type UprisingRun, type UprisingRouteId } from './uprising-model.ts';
 import { PressureSystem, type PressureVent } from './pressure.ts';
 import { CrosswindSystem } from './crosswind.ts';
 import { StormfrontSystem } from './stormfront.ts';
@@ -447,6 +449,8 @@ export class Game {
   route: RouteChoice | null = null;
   enteringRoute: RouteChoice | null = null;
   region: RegionDecision | null = null;
+  uprising = new UprisingSystem(this);
+  onUprisingMission: (route: UprisingRouteId, clean: boolean) => void = () => {};
   annexVersion: import('./regions.ts').AnnexVersion = 6;
   get inAnnex() {
     return (
@@ -509,6 +513,10 @@ export class Game {
   }
   get roomSeed() {
     return this.layoutSeed + (this.detour ? ':detour:' + this.stage : '');
+  }
+  get reservedEncounterStages() {
+    const stages = this.factory?.encounters.map((e) => e.stage);
+    return this.uprising.run ? [...(stages ?? []), ...UPRISING_FORKS.map((f) => f + 1)] : stages;
   }
   get layoutSeed() {
     return this.overtime ? overtimeSeed(this.seed) : this.seed;
@@ -699,8 +707,9 @@ export class Game {
     testRun: Checkpoint | null = null,
     workshop = false,
     securityLevel: SecurityLevel = 0,
-    factoryRules: boolean | 1 | 2 = true,
+    factoryRules: boolean | 1 | 2 | 3 = true,
     unlocks: readonly string[] = [],
+    uprising: UprisingRun | null = null,
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
@@ -709,6 +718,10 @@ export class Game {
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
     this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
+    this.uprising.run =
+      !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
+        ? structuredClone(save ? (save.uprising ?? null) : uprising)
+        : null;
     this.security =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
         ? save?.security
@@ -725,7 +738,10 @@ export class Game {
             ? structuredClone(save.factory)
             : null
           : factoryRules
-            ? planFactory(this.seed, typeof factoryRules === 'number' ? factoryRules : undefined)
+            ? planFactory(
+                this.seed,
+                typeof factoryRules === 'number' ? factoryRules : this.uprising.run ? 3 : undefined,
+              )
             : null
         : null;
     this.areaEvents.start(save);
@@ -851,6 +867,7 @@ export class Game {
       version: 6,
       ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
       ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
+      ...(this.uprising.run ? { uprising: structuredClone(this.uprising.run) } : {}),
       ...(this.security ? { security: { ...this.security } } : {}),
       ...(this.maintenance.state ? { maintenance: { ...this.maintenance.state } } : {}),
       ...(this.welder.state ? { welder: structuredClone(this.welder.state) } : {}),
@@ -899,6 +916,7 @@ export class Game {
     });
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.uprising.clear();
     this.reportedEncounters.clear();
     this.clockOut = new ClockOut();
     this.switchboard.clear();
@@ -1039,7 +1057,8 @@ export class Game {
               );
     // The opening faction fight teaches one mechanic with a small roster;
     // its authored crew replaces the standard patrol rather than piling on.
-    if (planned?.kind === 'turf' && this.stage === 1) this.level.spawns = [];
+    if (planned?.kind === 'turf' && this.stage === (this.factory?.version === 3 ? 0 : 1))
+      this.level.spawns = [];
     if (
       this.route &&
       !escapeRoom &&
@@ -1101,6 +1120,7 @@ export class Game {
       if (!this.areaEvents.encounter)
         this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
     }
+    this.level = this.uprising.level(this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1191,6 +1211,7 @@ export class Game {
     this.auditor.reset();
     this.annex.reset();
     this.maintenance.reset(clearedRoom);
+    this.uprising.reset(clearedRoom);
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active || this.shutdown.chamber) return;
@@ -1654,6 +1675,7 @@ export class Game {
     this.destruction.beforeStep();
     this.portals.beforeStep();
     this.counterweights.beforeStep();
+    this.uprising.update(input, dt);
     Engine.update(this.engine, 1000 / 60);
     this.commendations.weapons.sampleGround();
     this.counterweights.afterStep();
@@ -1717,12 +1739,13 @@ export class Game {
     this.floodgate.update(dt);
     if (this.mode !== 'playing') return;
     if (
-      !this.combatEnemyCount &&
+      (!this.combatEnemyCount || this.uprising.escapeReady) &&
       !this.areaEvents.waiting &&
       !this.mutations.pending.length &&
-      !this.waves.pending &&
+      (!this.waves.pending || this.uprising.escapeReady) &&
       !this.auditor.pending &&
       !this.clear &&
+      !this.uprising.waiting &&
       (!this.maintenance.active || this.maintenance.atExit) &&
       (!this.freight.active || this.freight.arrived)
     ) {
@@ -2131,7 +2154,7 @@ export class Game {
         ? 1.12
         : 1);
     const p = e.body.position,
-      target = this.areaEvents.combatTarget(e),
+      target = this.uprising.target(e) ?? this.areaEvents.combatTarget(e),
       d = direction(p, target),
       dist = distance(p, target);
     if (e.elite === 'volatile') {
@@ -2629,7 +2652,7 @@ export class Game {
       if (e.timer <= 0) {
         for (const angle of attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)))
           this.enemyShot(e, angle, e.attack === 'ring' ? 7.8 : 11.2, 23);
-        if (!second && e.attack !== 'ring') {
+        if (!second && e.attack !== 'ring' && this.uprising.finale !== 'mutiny') {
           e.state = 'followup';
           e.timer = 0.7;
           e.aim = d;
@@ -2643,6 +2666,9 @@ export class Game {
       }
     } else if (e.timer <= 0 && bossHasLane(this, e)) {
       e.attack = bossAttack(e.phase, e.attacks);
+      if (this.uprising.finale === 'overloaded')
+        e.attack = ['fan', 'ring', 'aimed'][e.attacks % 3] as Enemy['attack'];
+      if (this.uprising.finale === 'isolated' && e.attack === 'ring') e.attack = 'fan';
       e.aim = d;
       e.state = 'windup';
       e.timer = attackTell(e.attack);
@@ -3405,6 +3431,7 @@ export class Game {
     if (this.practice && amount > 0) this.practiceHits++;
     if (amount > 0) this.maintenance.damaged();
     if (amount > 0) this.commendations.damaged();
+    if (amount > 0) this.uprising.damage();
     this.hurtAt = this.time;
     this.feedback(8);
     this.hitStop = 0.045;
@@ -3474,8 +3501,8 @@ export class Game {
       (enterDetour ||
         !this.routeChoices.includes(route) ||
         !this.clear ||
-        this.combatEnemyCount ||
-        this.waves.pending)
+        (this.combatEnemyCount && !this.uprising.escapeReady) ||
+        (this.waves.pending && !this.uprising.escapeReady))
     )
       return;
     if (
@@ -3634,6 +3661,7 @@ export class Game {
     return true;
   }
   chooseMod(id: string) {
+    if (this.uprising.choices.length) return;
     if (this.practice || this.workshop.active) return;
     if (
       this.mode !== 'upgrade' ||

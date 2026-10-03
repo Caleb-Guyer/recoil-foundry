@@ -19,6 +19,7 @@ export const PROP_STATS = {
   rubble: { w: 26, h: 18, hp: 24 },
 };
 export interface Prop {
+  uprising?: 'generator' | 'relay' | 'prototype';
   playerArmed?: true;
   welded?: true;
   auditCase?: true;
@@ -269,6 +270,10 @@ export class PropSystem {
     directFire = false,
     playerDamage = directFire || !!(source?.friendly && !source.allied),
   ) {
+    if (prop.uprising) {
+      this.game.uprising.hit(prop, damage, velocity, source, directFire, playerDamage);
+      return;
+    }
     if (
       prop.auditCase &&
       (!this.game.auditor.caseReady || !(directFire || (source?.friendly && !source.allied)))

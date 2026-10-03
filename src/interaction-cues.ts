@@ -8,6 +8,16 @@ export interface InteractionCue {
 export function interactionCues(g: Game): InteractionCue[] {
   if (g.mode === 'title' || g.workshop.active || g.practice) return [];
   const cues: InteractionCue[] = [];
+  if (g.uprising.waiting)
+    for (const node of g.uprising.nodes) {
+      if (node.hp <= 0 || distance(g.player.position, node.body.position) > 210) continue;
+      if (node.uprising === 'generator') {
+        if (g.uprising.armedAt === null) cues.push({ pos: node.body.position, kind: 'jump' });
+      } else if (
+        distance(g.lineEnd(g.player.position, node.body.position, 0, node), node.body.position) < 1
+      )
+        cues.push({ pos: node.body.position, kind: 'shoot' });
+    }
   const reachable = (pos: Vec, range: number) =>
     distance(g.player.position, pos) <= range &&
     distance(g.lineEnd(g.player.position, pos), pos) < 1;

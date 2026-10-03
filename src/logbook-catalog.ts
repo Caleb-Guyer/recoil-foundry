@@ -1,4 +1,5 @@
 import { MODS, MOD_PATHS, PATH_NAMES } from './rules.ts';
+import { uprisingCatalog } from './uprising-catalog.ts';
 import { AREAS } from './areas.ts';
 import { ENEMY_NAMES } from './damage-cause.ts';
 import type { EnemyKind } from './levels.ts';
@@ -107,6 +108,7 @@ export function logbookCatalog(
   earned: readonly CommendationId[],
   rawArchive: unknown,
   goals: readonly UnlockGoal[] = [],
+  uprisingRecords: unknown = null,
 ): LogbookEntry[] {
   const archive = loadArchive(rawArchive),
     base = loadLogbook(progress);
@@ -123,6 +125,7 @@ export function logbookCatalog(
   });
   const recovered = new Map(logbookEntries(knownMods, book, earned).map((e) => [e.id, e]));
   const entries: LogbookEntry[] = [
+    ...uprisingCatalog(rawArchive, uprisingRecords),
     recovered.get('tool')!,
     ...MODS.map((mod, index) => {
       const existing = recovered.get('mod:' + mod.id);

@@ -75,6 +75,11 @@ const machinePaths: Record<EnemyKind, string> = {
   boss: 'M12 9h32v30H12zM19 16h18M20 25h5M31 25h5M20 39v6M36 39v6M7 12v20M49 12v20',
 };
 const otherPaths: Record<string, string> = {
+  'region:railworks': 'M7 38h42M12 15h32v18H12zM20 20h7M31 20h7M19 33v9M37 33v9M7 42h42',
+  'region:core': 'M28 7a17 17 0 1 0 0 34 17 17 0 0 0 0-34M28 15v18M20 24h16M7 8v32M49 8v32',
+  'uprising:rail-license': 'M10 8h30v32H10zM17 16h16M17 24h10M32 32l5 5 12-14',
+  'uprising:core-license': 'M10 8h30v32H10zM17 16h16M17 24h10M32 32l5 5 12-14',
+  'uprising:uprising-veteran': 'M28 7l6 12 14 2-10 10 2 14-12-7-12 7 2-14L8 21l14-2z',
   'area:docks': 'M7 39h42M12 39V20h17v19M29 24h16v15M12 20l9-11 8 11M17 28h7',
   'area:furnace': 'M10 41V15h15V7h8v8h13v26M19 41V29h18v12M20 20h5M32 20h5',
   'area:cooling': 'M11 8h34v33H11zM19 15v19M28 15v19M37 15v19M7 24h4M45 24h4',

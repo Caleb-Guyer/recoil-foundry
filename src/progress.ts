@@ -1,4 +1,9 @@
 import { loadCheckpoint } from './rules.ts';
+import {
+  UPRISING_RECORDS_KEY,
+  loadUprisingRecords,
+  validUprisingRecords,
+} from './uprising-model.ts';
 import { SECURITY_KEY, loadSecurityProfile, validSecurityProfile } from './security.ts';
 import { SHAFT_PROFILE_KEY, loadShaftProfile, validShaftProfile } from './maintenance-trials.ts';
 import {
@@ -28,6 +33,7 @@ export const PROGRESS_KEY = 'rf-progress-v1';
 export const CHECKPOINT_KEY = 'rf-checkpoint-v5';
 export const BACKUP_LIMIT = 1024 * 1024;
 export const PROGRESS_KEYS = [
+  UPRISING_RECORDS_KEY,
   CHECKPOINT_KEY,
   DISCOVERIES_KEY,
   LOGBOOK_KEY,
@@ -108,6 +114,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
   const book = migrateLogbook(read(LOGBOOK_KEY), checkpoint, history, victories);
   return {
     [CHECKPOINT_KEY]: checkpoint,
+    [UPRISING_RECORDS_KEY]: loadUprisingRecords(read(UPRISING_RECORDS_KEY)),
     [DISCOVERIES_KEY]: discovered,
     [LOGBOOK_KEY]: book,
     [COMMENDATIONS_KEY]: earned,
@@ -149,6 +156,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       !keysOnly(raw, PROGRESS_KEYS) ||
       !PROGRESS_KEYS.every(
         (k) =>
+          k === UPRISING_RECORDS_KEY ||
           k === BLUEPRINTS_KEY ||
           k === PRACTICE_RECORDS_KEY ||
           k === SHAFT_PROFILE_KEY ||
@@ -161,6 +169,11 @@ export function validateProgress(raw: unknown): ProgressValues | null {
     )
       return null;
     const checkpoint = raw[CHECKPOINT_KEY];
+    if (
+      Object.hasOwn(raw, UPRISING_RECORDS_KEY) &&
+      !validUprisingRecords(raw[UPRISING_RECORDS_KEY])
+    )
+      return null;
     if (Object.hasOwn(raw, ARCHIVE_KEY) && !validArchive(raw[ARCHIVE_KEY])) return null;
     if (Object.hasOwn(raw, MILESTONES_KEY) && !validMilestones(raw[MILESTONES_KEY])) return null;
     // Older profiles have not acknowledged the Appearance section yet.

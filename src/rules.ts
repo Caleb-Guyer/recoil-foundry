@@ -1,5 +1,6 @@
 import { validAreaEvent } from './area-events.ts';
 import { validFactory } from './factory.ts';
+import { validUprisingCheckpoint } from './uprising-model.ts';
 import { validSecurityRun } from './security.ts';
 import { validMaintenance } from './maintenance.ts';
 import { validSortingPit } from './sorting-pit-layout.ts';
@@ -1122,6 +1123,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  uprising?: import('./uprising-model.ts').UprisingRun;
   unlocks?: import('./longevity.ts').LongevityId[];
   factory?: import('./factory.ts').FactoryRun;
   security?: import('./security.ts').SecurityRun;
@@ -1389,6 +1391,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     );
   const valid =
     validFactory(d) &&
+    validUprisingCheckpoint(d) &&
     validSecurityRun(d) &&
     validSortingPit(d) &&
     (d.floodgate === undefined ||

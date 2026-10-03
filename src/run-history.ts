@@ -1,4 +1,5 @@
 import type { Game } from './game.ts';
+import { validUprisingRun, type UprisingRun } from './uprising-model.ts';
 import { planFactory, type FactoryCondition } from './factory.ts';
 import { isSecurityLevel, securityLabel, type SecurityLevel } from './security.ts';
 import { AREAS, type AreaId } from './areas.ts';
@@ -11,9 +12,10 @@ import { validUnlocks, type LongevityId } from './longevity.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  uprising?: UprisingRun;
   unlocks?: LongevityId[];
   factory?: FactoryCondition;
-  factoryVersion?: 1 | 2;
+  factoryVersion?: 1 | 2 | 3;
   version: 1;
   security?: SecurityLevel;
   id: string;
@@ -80,20 +82,22 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     if (
       (raw.mode === 'daily') !== daily ||
       (daily && raw.overtime) ||
+      (raw.uprising !== undefined && (daily || !validUprisingRun(raw.uprising))) ||
       (raw.security !== undefined &&
         (!isSecurityLevel(raw.security) || raw.security === 0 || daily)) ||
       (raw.factory !== undefined && (daily || raw.factory !== planFactory(raw.seed).condition)) ||
       (raw.factoryVersion !== undefined &&
-        (!raw.factory || ![1, 2].includes(raw.factoryVersion))) ||
+        (!raw.factory || ![1, 2, 3].includes(raw.factoryVersion))) ||
       (raw.unlocks !== undefined &&
         (!validUnlocks(raw.unlocks) || (daily && raw.unlocks.length > 0)))
     )
       continue;
     records.push({
       version: 1,
+      ...(raw.uprising ? { uprising: structuredClone(raw.uprising) } : {}),
       ...(raw.unlocks && !daily ? { unlocks: [...raw.unlocks] } : {}),
       ...(raw.factory ? { factory: raw.factory as FactoryCondition } : {}),
-      ...(raw.factoryVersion ? { factoryVersion: raw.factoryVersion as 1 | 2 } : {}),
+      ...(raw.factoryVersion ? { factoryVersion: raw.factoryVersion as 1 | 2 | 3 } : {}),
       ...(raw.security ? { security: raw.security } : {}),
       id: raw.id,
       finishedAt: raw.finishedAt,
@@ -138,6 +142,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        ...(game.uprising.run ? { uprising: structuredClone(game.uprising.run) } : {}),
         ...(!dailyFromSeed(game.seed) ? { unlocks: [...game.unlocks] } : {}),
         ...(game.factory ? { factory: game.factory.condition } : {}),
         ...(game.factory ? { factoryVersion: game.factory.version } : {}),

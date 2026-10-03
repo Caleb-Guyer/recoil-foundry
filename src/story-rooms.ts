@@ -37,7 +37,7 @@ export class StorySystem {
           g.areaEvents.state,
           g.courier.state,
           g.floodgate.stage,
-          g.factory?.encounters.map((e) => e.stage),
+          g.reservedEncounterStages,
         );
   }
   level(source: Level) {

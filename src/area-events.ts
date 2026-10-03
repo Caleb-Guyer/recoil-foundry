@@ -208,6 +208,7 @@ export class AreaEventSystem {
       g.level?.annex ||
       g.level?.shutdown ||
       g.level?.freight ||
+      g.level?.uprising ||
       areaIndex(g.stage) !== s.area
     )
       return null;
@@ -309,7 +310,7 @@ export class AreaEventSystem {
   spawnTurf() {
     const g = this.game;
     const small = !!g.factory && g.stage < 8;
-    const reinforced = g.factory?.version === 2;
+    const reinforced = (g.factory?.version ?? 0) >= 2;
     const redCount = small
       ? g.stage < 4
         ? reinforced
@@ -427,7 +428,8 @@ export class AreaEventSystem {
       candidates: Vec[] = [];
     // Introduce the outage with a visible, floor-level objective near the
     // entrance. Later outages retain their exploration-sized placement pool.
-    const opening = !!g.factory && g.stage === 1 && this.active === 'blackout';
+    const opening =
+      !!g.factory && g.stage === (g.factory.version === 3 ? 0 : 1) && this.active === 'blackout';
     for (let x = opening ? 340 : 540; x <= (opening ? 700 : 1720); x += 40) {
       if (
         !Query.region(g.solidBodies, { min: { x: x - 45, y: 642 }, max: { x: x + 45, y: 738 } })

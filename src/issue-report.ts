@@ -48,6 +48,12 @@ export function issueDetails(game: Game, type: FeedbackType = 'bug'): string {
       `Room: ${game.stage + 1} / ${game.level.area} / ${game.level.id}`,
       `Route: ${game.escape ? 'Extraction' : game.detour ? 'Detour' : 'Main'}`,
       `Gun: ${game.mods.join(', ') || 'Starting gun'}`,
+      ...(game.uprising.run
+        ? [
+            `Uprising route: ${game.uprising.run.choices.join(', ') || 'Not chosen'}`,
+            `Objectives: ${game.uprising.run.outcomes.map((o) => o.route + '=' + o.result).join(', ') || 'None completed'}`,
+          ]
+        : []),
       ...(mode === 'Campaign'
         ? [`Achievement fitting pool: ${game.unlocks.join(', ') || 'Original fittings'}`]
         : []),

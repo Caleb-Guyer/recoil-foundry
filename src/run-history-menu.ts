@@ -1,4 +1,5 @@
 import { AREAS } from './areas.ts';
+import { uprisingRoute, uprisingFinale, FINALE_NAMES } from './uprising-model.ts';
 import { REGION_NAMES } from './regions.ts';
 import { MODS } from './rules.ts';
 import { damageCauseText } from './damage-cause.ts';
@@ -40,6 +41,22 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
     '</dd>' +
     (run.factory ? '<dt>Factory</dt><dd>' + FACTORY_CONDITIONS[run.factory].name + '</dd>' : '') +
     '</dl>' +
+    (run.uprising
+      ? '<h3>Factory route</h3><ul class="recap-build">' +
+        run.uprising.choices
+          .map(
+            (id) =>
+              '<li>' +
+              uprisingRoute(id).name +
+              ' · ' +
+              (run.uprising!.outcomes.find((o) => o.route === id)?.result ?? 'unfinished') +
+              '</li>',
+          )
+          .join('') +
+        '</ul><p class="recap-note">Final defense: ' +
+        FINALE_NAMES[uprisingFinale(run.uprising)] +
+        '</p>'
+      : '') +
     '<h3>Your gun</h3>' +
     (run.legacyMods
       ? '<p class="recap-note">Legacy build · Preserved from earlier upgrade rules.</p>'

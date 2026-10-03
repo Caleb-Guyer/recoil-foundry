@@ -17,6 +17,7 @@ export interface AuditorSave {
 export const auditorEligible = (level: Level) =>
   !(
     level.boss ||
+    level.uprising ||
     level.freight ||
     level.crossing ||
     level.courier ||
