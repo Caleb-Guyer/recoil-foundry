@@ -2,6 +2,7 @@ import type { Checkpoint } from './rules.ts';
 import {
   UPRISING_ROUTES,
   UPRISING_FINALES,
+  UPRISING_CONTRACTS,
   newUprising,
   uprisingRoute,
   type UprisingRouteId,
@@ -17,18 +18,34 @@ export function uprisingTestFromUrl(url: URL): Checkpoint | null {
   if (p.get('test') !== 'uprising' || invalid || p.get('v') !== '1') return null;
   const route = p.get('route');
   const defaults: UprisingRouteId[] = ['rail-escape', 'core-defense', 'crew-relief', 'roof-escape'];
-  if (route === 'choose')
+  const choose = [
+    'choose',
+    'choose-core',
+    'choose-reclamation',
+    'choose-rooftops',
+    'choose-unlocked',
+  ].indexOf(route ?? '');
+  if (choose !== -1) {
+    const index = choose === 4 ? 0 : choose;
+    const uprising = newUprising();
+    uprising.choices = defaults.slice(0, index);
+    uprising.outcomes = uprising.choices.map((route) => ({ route, result: 'success' }));
+    if (choose === 4) uprising.unlocks = UPRISING_CONTRACTS.map((c) => c.id);
     return {
       version: 6,
-      seed: 'UPRISING-choose',
-      stage: 0,
+      seed: 'UPRISING-' + route,
+      stage: [0, 4, 12, 16][index],
       hp: 100,
-      mods: [],
+      mods: index ? ['magnum', 'light', 'airshot'] : [],
       kills: 0,
       elapsed: 0,
-      uprising: newUprising(),
-      reward: { offers: ['magnum', 'ricochet', 'light'], rerolled: false },
+      uprising,
+      reward: {
+        offers: index ? ['rapid', 'ricochet', 'pierce'] : ['magnum', 'ricochet', 'light'],
+        rerolled: false,
+      },
     };
+  }
   const job = UPRISING_ROUTES.find((r) => r.id === route),
     finale = UPRISING_FINALES.find((f) => f === route);
   if (!job && !finale) return null;

@@ -8,7 +8,7 @@ export const UPRISING_ROUTES = [
     district: 'railworks',
     name: 'Prototype train',
     mission: 'steal',
-    objective: 'Break the prototype case, then collect it.',
+    objective: 'Reach the cargo platform, break the prototype case, then collect it.',
     consequence: 'Recover 8 health. Pursuit crews appear in later transit rooms.',
   },
   {
@@ -17,7 +17,7 @@ export const UPRISING_ROUTES = [
     district: 'railworks',
     name: 'Last train out',
     mission: 'escape',
-    objective: 'Reach the far platform within 40 seconds. You can leave enemies behind.',
+    objective: 'Jump beside both route switches, then board the marked platform within 40 seconds.',
     consequence: 'Recover 8 health. Avoid a cargo pursuit.',
   },
   {
@@ -93,7 +93,7 @@ export const UPRISING_ROUTES = [
     district: 'rooftops',
     name: 'Rooftop evacuation',
     mission: 'escape',
-    objective: 'Reach the far platform within 40 seconds. You can leave enemies behind.',
+    objective: 'Jump beside both route switches, then board the marked platform within 40 seconds.',
     consequence: 'Recover 8 health. Reach the finale without another pursuit.',
   },
   {

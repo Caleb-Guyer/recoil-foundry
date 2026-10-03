@@ -12,6 +12,7 @@ import {
   type UprisingRouteId,
 } from './uprising-model.ts';
 import { uprisingLevel } from './uprising-layout.ts';
+import { UPRISING_ROOMS } from './uprising-rooms.ts';
 
 export class UprisingSystem {
   run: UprisingRun | null = null;
@@ -22,6 +23,8 @@ export class UprisingSystem {
   deadline = 0;
   hurt = false;
   defenseWave = 0;
+  routeStep = 0;
+  startedAt = 0;
   anchors: { body: Matter.Body; x: number; y: number }[] = [];
   game: Game;
   constructor(game: Game) {
@@ -64,6 +67,28 @@ export class UprisingSystem {
   get finale() {
     return this.active && this.game.stage === 19 && this.run ? uprisingFinale(this.run) : null;
   }
+  get room() {
+    return this.active && this.mission && this.game.level.id === 'uprising-' + this.mission
+      ? UPRISING_ROOMS[this.mission]
+      : null;
+  }
+  get switchTarget() {
+    return this.waiting ? this.room?.switches?.[this.routeStep] : undefined;
+  }
+  get evacuation() {
+    return this.room?.evacuation;
+  }
+  get onEvacuationPad() {
+    const zone = this.evacuation,
+      g = this.game;
+    return (
+      !!zone &&
+      g.grounded &&
+      g.player.position.x > zone.x + 16 &&
+      g.player.position.x < zone.x + zone.w - 16 &&
+      Math.abs(g.player.bounds.max.y - (zone.y + zone.h)) < 8
+    );
+  }
   level(base: Game['level']) {
     return this.active && this.run ? uprisingLevel(base, this.run, this.game.stage) : base;
   }
@@ -75,21 +100,19 @@ export class UprisingSystem {
     this.collected = false;
     this.hurt = false;
     this.defenseWave = 0;
+    this.routeStep = 0;
   }
   reset(cleared: boolean) {
     this.clear();
     if (!this.active || !this.run) return;
     const g = this.game;
     this.mission = this.run.choices.find((id) => uprisingRoute(id).fork + 1 === g.stage) ?? null;
+    this.startedAt = g.time;
     this.deadline = g.time + 40;
-    if (g.level.uprising === 'railworks')
-      this.anchors = g.terrain
-        .slice(4, 7)
-        .map((body) => ({ body, x: body.position.x, y: body.position.y }));
-    if (g.level.uprising === 'core' && g.stage === 5)
-      this.anchors = g.terrain
-        .slice(4, 8)
-        .map((body) => ({ body, x: body.position.x, y: body.position.y }));
+    this.anchors = (this.room?.machines ?? []).map((index) => {
+      const body = g.terrain[index + 4];
+      return { body, x: body.position.x, y: body.position.y };
+    });
     if (cleared || this.outcome || !this.mission) {
       if (
         g.level.boss &&
@@ -105,13 +128,8 @@ export class UprisingSystem {
       return;
     }
     if (this.kind === 'escape') return;
-    const xs = this.kind === 'sabotage' ? [710, 1480] : [1080];
-    for (const x of xs) {
-      const prop = g.props.spawn(
-        this.kind === 'defend' ? 'cargo' : 'crate',
-        x,
-        this.kind === 'defend' ? 697 : 716,
-      );
+    for (const { x, y } of this.room?.objectives ?? []) {
+      const prop = g.props.spawn(this.kind === 'defend' ? 'cargo' : 'crate', x, y);
       Matter.Body.setStatic(prop.body, true);
       prop.uprising =
         this.kind === 'defend' ? 'generator' : this.kind === 'steal' ? 'prototype' : 'relay';
@@ -202,8 +220,8 @@ export class UprisingSystem {
         (this.outcome?.result === 'success' ||
           (this.nodes.length > 0 && this.nodes.every((p) => p.hp <= 0)));
       const goal = rail
-        ? { x: a.x + Math.sin(g.time * 0.55) * 85, y: a.y }
-        : { x: a.x, y: a.y + (powered ? 70 : Math.sin(g.time * 0.6 + i) * 25) };
+        ? { x: a.x + Math.sin((g.time - this.startedAt) * 0.55) * 85, y: a.y }
+        : { x: a.x, y: a.y + (powered ? 70 : Math.sin((g.time - this.startedAt) * 0.6 + i) * 25) };
       const previous = { ...a.body.position };
       const limit = 90 * dt;
       const pos = {
@@ -238,9 +256,20 @@ export class UprisingSystem {
       return;
     }
     if (this.kind === 'escape') {
-      if (g.player.position.x > 1820 && g.player.position.y > 590)
-        this.resolve(g.time <= this.deadline);
-      else if (g.time >= this.deadline) this.resolve(false);
+      if (g.time >= this.deadline) this.resolve(false);
+      else {
+        const target = this.switchTarget;
+        if (
+          target &&
+          input.jump &&
+          distance(g.player.position, target) < 70 &&
+          distance(g.lineEnd(g.player.position, target), target) < 1
+        ) {
+          this.routeStep++;
+          g.onSound('prop');
+        }
+        if (!this.switchTarget && this.onEvacuationPad) this.resolve(true);
+      }
     } else if (this.kind === 'sabotage') {
       if (this.nodes.every((p) => p.hp <= 0)) this.resolve(true);
     } else if (this.kind === 'steal') {
@@ -267,7 +296,7 @@ export class UprisingSystem {
           g.enemies.length < 10
         ) {
           this.defenseWave++;
-          for (const x of [380, 1640]) g.spawnEnemy('flyer', x, 380);
+          for (const { x, y } of this.room?.defenseEntries ?? []) g.spawnEnemy('flyer', x, y);
         }
         if (this.armedAt !== null && g.time - this.armedAt >= 18) this.resolve(true);
       }
@@ -297,7 +326,16 @@ export class UprisingSystem {
       );
     if (this.kind === 'escape')
       return (
-        'Reach the far platform · ' + Math.max(0, Math.ceil(this.deadline - this.game.time)) + 's'
+        (this.switchTarget
+          ? 'Open route switch ' +
+            (this.routeStep + 1) +
+            ' / ' +
+            this.room!.switches!.length +
+            ' · jump beside it'
+          : 'Board the marked evacuation platform') +
+        ' · ' +
+        Math.max(0, Math.ceil(this.deadline - this.game.time)) +
+        's'
       );
     if (this.kind === 'sabotage')
       return (

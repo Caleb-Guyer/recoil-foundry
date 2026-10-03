@@ -1,4 +1,5 @@
 import type { Level } from './levels.ts';
+import { UPRISING_ROOMS } from './uprising-rooms.ts';
 import {
   UPRISING_DISTRICTS,
   uprisingRoute,
@@ -12,6 +13,7 @@ export function uprisingLevel(base: Level, run: UprisingRun, stage: number): Lev
   const choice = run.choices.find((id) => uprisingRoute(id).fork + 1 === stage);
   if (choice) {
     const route = uprisingRoute(choice);
+    const room = structuredClone(UPRISING_ROOMS[choice]);
     return {
       id: 'uprising-' + choice,
       name: UPRISING_DISTRICTS[route.district] + ' · ' + route.name,
@@ -19,44 +21,18 @@ export function uprisingLevel(base: Level, run: UprisingRun, stage: number): Lev
       mirrored: false,
       boss: false,
       uprising: route.district,
-      solids:
-        route.district === 'railworks'
-          ? [
-              { x: 360, y: 620, w: 300, h: 28 },
-              { x: 790, y: 620, w: 300, h: 28 },
-              { x: 1220, y: 620, w: 300, h: 28 },
-              { x: 1680, y: 520, w: 150, h: 22 },
-            ]
-          : [
-              { x: 360, y: 590, w: 260, h: 24 },
-              { x: 800, y: 510, w: 220, h: 24 },
-              { x: 1180, y: 590, w: 260, h: 24 },
-              { x: 1600, y: 480, w: 200, h: 24 },
-            ],
-      route: [
-        { x: 260, y: 700 },
-        { x: 700, y: 700 },
-        { x: 1120, y: 700 },
-        { x: 1520, y: 700 },
-        { x: 1880, y: 700 },
-      ],
-      spawns: [
-        { kind: 'shooter', x: 680, y: 724 },
-        { kind: 'runner', x: 1200, y: 724 },
-        { kind: 'flyer', x: 1420, y: 350 },
-        ...(stage > 4
-          ? [
-              { kind: 'shooter' as const, x: 1540, y: 724 },
-              { kind: 'flyer' as const, x: 600, y: 320 },
-            ]
-          : []),
-      ],
+      solids: room.solids,
+      route: room.route,
+      spawns: room.spawns,
       setpiece: {
-        rosters: [[0, 1], [2], ...(stage > 4 ? [[3, 4]] : [])],
-        props: [
-          { kind: 'crate', x: 520, y: 597 },
-          { kind: 'cover', x: 1550, y: 697 },
-        ],
+        rosters:
+          room.spawns.length > 3
+            ? [
+                [0, 1, 2],
+                [3, 4],
+              ]
+            : [[0, 1], [2]],
+        props: room.props,
         weak: [],
       },
     };

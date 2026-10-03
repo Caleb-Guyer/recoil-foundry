@@ -1661,6 +1661,7 @@ game.onChange = () => {
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${game.level.annex ? REGION_NAMES.annex : AREAS[game.level.area].name} · ${game.level.name}`;
   $('factory-condition').hidden = !game.factory || !!game.overtime || !!game.escape || game.detour;
   if (game.factory) {
+    $('factory-hint').hidden = !!game.level.uprising;
     $('factory-name').textContent = game.level.uprising
       ? UPRISING_DISTRICTS[game.level.uprising]
       : FACTORY_CONDITIONS[game.factory.condition].name;

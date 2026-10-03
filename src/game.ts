@@ -1121,6 +1121,8 @@ export class Game {
         this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
     }
     this.level = this.uprising.level(this.level);
+    if (this.security && this.level.id.startsWith('uprising-'))
+      this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);

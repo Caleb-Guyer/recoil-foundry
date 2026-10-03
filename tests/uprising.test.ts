@@ -21,6 +21,8 @@ import {
   type UprisingRun,
 } from '../src/uprising-model.ts';
 import { uprisingLevel } from '../src/uprising-layout.ts';
+import { UPRISING_ROOMS } from '../src/uprising-rooms.ts';
+import { ENEMY_STATS } from '../src/enemies.ts';
 import { uprisingTestFromUrl } from '../src/uprising-test.ts';
 import { uprisingMap } from '../src/uprising-menu.ts';
 import { uprisingCatalog } from '../src/uprising-catalog.ts';
@@ -109,6 +111,10 @@ test('strict preview links, saved run chronology and shared plan access', () => 
   for (const route of [
     ...UPRISING_ROUTES.map((r) => r.id),
     'choose',
+    'choose-core',
+    'choose-reclamation',
+    'choose-rooftops',
+    'choose-unlocked',
     'isolated',
     'hunted',
     'mutiny',
@@ -209,7 +215,7 @@ test('stolen prototypes need pickup; normal damage records a non-clean mission w
   assert(g.props.items.includes(p));
   g.damagePlayer(12);
   g.hp = 70;
-  Body.setPosition(g.player, { x: p.body.position.x - 60, y: 720 });
+  Body.setPosition(g.player, { x: p.body.position.x - 60, y: p.body.position.y });
   tick(g, 8);
   assert.equal(g.uprising.outcome?.result, 'success');
   assert.equal(g.uprising.outcome?.clean, undefined);
@@ -225,8 +231,15 @@ test('stolen prototypes need pickup; normal damage records a non-clean mission w
 test('evacuation bypasses patrol kills, while a late arrival loses only the objective', () => {
   const success = preset('rail-escape');
   const kills = success.kills;
-  Body.setPosition(success.player, { x: 1830, y: 720 });
-  tick(success);
+  for (const p of success.uprising.room!.switches!) {
+    Body.setPosition(success.player, p);
+    Body.setVelocity(success.player, { x: 0, y: 0 });
+    tick(success, 1, { jump: true });
+  }
+  const zone = success.uprising.evacuation!;
+  Body.setPosition(success.player, { x: zone.x + zone.w / 2, y: zone.y + zone.h - 18 });
+  Body.setVelocity(success.player, { x: 0, y: 0 });
+  tick(success, 3);
   assert.equal(success.uprising.outcome?.result, 'success');
   assert(success.enemies.length > 0);
   assert(success.clear);
@@ -242,6 +255,148 @@ test('evacuation bypasses patrol kills, while a late arrival loses only the obje
   failed.chooseMod(failed.offers[0].id);
   assert.equal(failed.stage, 2);
   assert(loadCheckpoint(checkpoint(failed)));
+});
+
+test('each job has distinct supported geometry, clear objectives and an unobstructed exit lane', () => {
+  const layouts = new Set<string>();
+  for (const route of UPRISING_ROUTES) {
+    const g = preset(route.id),
+      room = UPRISING_ROOMS[route.id];
+    layouts.add(JSON.stringify(room.solids));
+    for (const p of [...g.props.items])
+      assert.equal(Matter.Query.collides(p.body, g.terrain).length, 0, route.id + ' prop overlap');
+    for (const spawn of g.level.spawns) {
+      const { w, h } = ENEMY_STATS[spawn.kind],
+        body = Matter.Bodies.rectangle(spawn.x, spawn.y, w, h);
+      assert.equal(Matter.Query.collides(body, g.terrain).length, 0, route.id + ' spawn overlap');
+    }
+    for (const p of [...room.objectives, ...(room.switches ?? [])])
+      assert(
+        room.solids.some(
+          (s) => p.x > s.x + 22 && p.x < s.x + s.w - 22 && Math.abs(p.y + 22 - s.y) < 2,
+        ) ||
+          (route.mission === 'defend' && Math.abs(p.y + 28 - 740) < 2),
+        route.id + ' unsupported objective',
+      );
+    assert(
+      room.solids.every((s) => s.x + s.w <= 1780),
+      route.id + ' exit obstruction',
+    );
+    if (room.evacuation) {
+      const zone = room.evacuation;
+      assert(zone.x + zone.w < 1860);
+      assert(
+        room.solids.some(
+          (s) => s.x <= zone.x && s.x + s.w >= zone.x + zone.w && s.y === zone.y + zone.h,
+        ),
+      );
+    }
+    for (const site of room.defenseEntries ?? []) {
+      const body = Matter.Bodies.rectangle(
+        site.x,
+        site.y,
+        ENEMY_STATS.flyer.w,
+        ENEMY_STATS.flyer.h,
+      );
+      assert.equal(Matter.Query.collides(body, g.terrain).length, 0, route.id + ' defense entry');
+    }
+  }
+  assert.equal(layouts.size, 11);
+});
+
+test('evacuation cannot be rushed along the floor, triggered through a platform, or boarded out of order', () => {
+  for (const id of ['rail-escape', 'roof-escape']) {
+    const g = preset(id),
+      u = g.uprising,
+      switches = u.room!.switches!,
+      zone = u.evacuation!;
+    Body.setPosition(g.player, switches[1]);
+    tick(g, 1, { jump: true });
+    assert.equal(u.routeStep, 0);
+    Body.setPosition(g.player, { x: switches[0].x, y: switches[0].y + 52 });
+    tick(g, 1, { jump: true });
+    assert.equal(u.routeStep, 0, 'cannot interact through the supporting platform');
+    Body.setPosition(g.player, { x: zone.x + zone.w / 2, y: 720 });
+    tick(g, 3);
+    assert.equal(u.outcome, undefined);
+    Body.setPosition(g.player, { x: 1930, y: 720 });
+    tick(g, 3);
+    assert.equal(u.outcome, undefined, 'the room exit is not the evacuation pad');
+    const rush = preset(id);
+    tick(rush, 300, { right: true });
+    assert.equal(
+      rush.uprising.outcome,
+      undefined,
+      'five seconds of running cannot complete the job',
+    );
+  }
+});
+
+test('moving machinery keeps its entire sweep clear and leaves standing clearance after sabotage', () => {
+  for (const route of UPRISING_ROUTES) {
+    const g = preset(route.id);
+    for (const a of g.uprising.anchors) {
+      const rail = g.level.uprising === 'railworks';
+      const start = rail ? -85 : -25,
+        end = rail ? 85 : route.id === 'core-sabotage' ? 70 : 25;
+      for (let offset = start; offset <= end; offset += 5) {
+        Body.setPosition(a.body, { x: a.x + (rail ? offset : 0), y: a.y + (rail ? 0 : offset) });
+        assert.equal(
+          Matter.Query.collides(
+            a.body,
+            g.terrain.filter((b) => b !== a.body),
+          ).length,
+          0,
+          route.id + ' machinery sweep',
+        );
+        assert(740 - a.body.bounds.max.y >= 44, route.id + ' floor clearance');
+      }
+      Body.setPosition(a.body, { x: a.x, y: a.y });
+    }
+    for (const lower of g.level.solids)
+      for (const upper of g.level.solids) {
+        const gap = lower.y - upper.y - upper.h;
+        const overlap = Math.min(lower.x + lower.w, upper.x + upper.w) - Math.max(lower.x, upper.x);
+        assert(!(gap > 0 && gap < 44 && overlap > 30), route.id + ' narrow standing corridor');
+      }
+  }
+});
+
+test('evacuation geometry is owned by its job and never leaks into later rooms or extraction', () => {
+  const g = preset('rail-escape');
+  assert(g.uprising.evacuation);
+  g.uprising.abandon();
+  g.stage = 2;
+  g.loadRoom();
+  assert.equal(g.uprising.evacuation, undefined);
+  assert.equal(g.uprising.switchTarget, undefined);
+  g.stage = 19;
+  g.loadRoom();
+  g.clear = true;
+  g.startEscape();
+  assert(g.escape);
+  assert.equal(g.uprising.evacuation, undefined);
+  assert.equal(g.uprising.room, null);
+});
+
+test('authored jobs retain Security squads without replacing their objective geometry', () => {
+  for (const route of UPRISING_ROUTES) {
+    const save = uprisingTestFromUrl(new URL('?test=uprising&route=' + route.id + '&v=1', base))!;
+    save.security = { level: 2, rules: 1 };
+    const g = new Game();
+    g.start(save.seed, save);
+    assert(g.level.security, route.id);
+    assert(
+      g.level.spawns.some((s) => s.squad?.role === 'lead'),
+      route.id,
+    );
+    assert(
+      g.level.spawns.some((s) => s.squad?.role === 'support'),
+      route.id,
+    );
+    assert.deepEqual(g.level.solids, UPRISING_ROOMS[route.id].solids);
+    assert.equal(g.level.spawns.length, UPRISING_ROOMS[route.id].spawns.length);
+  }
 });
 
 test('defense ignores friendly fire, warns bounded waves, respects pause and failure, and never softlocks a clear room', () => {
@@ -407,13 +562,13 @@ test('profile backup migration, contract badges and recent run snapshots keep ca
 });
 
 for (const route of UPRISING_ROUTES)
-  test('ordinary controls complete ' + route.name, () => {
+  test('ordinary controls complete and exit ' + route.name, (t) => {
     const g = preset(route.id);
     playCampaign(g, {
       pathMods: ['magnum', 'light', 'airshot', 'swift'],
       seconds: 120,
       beforeInput: uprisingInput,
-      stop: () => !!g.uprising.outcome,
+      stop: () => g.mode === 'upgrade',
     });
     assert.equal(
       g.uprising.outcome?.result,
@@ -429,8 +584,35 @@ for (const route of UPRISING_ROUTES)
       }),
     );
     assert(g.hp > 0);
+    assert.equal(g.mode, 'upgrade');
     assert(loadCheckpoint(checkpoint(g)));
+    t.diagnostic(
+      JSON.stringify({ job: route.id, seconds: Math.round(g.time * 10) / 10, hp: g.hp }),
+    );
   });
+
+test('the train evacuation is reachable with a starting gun and requires a real route traversal', (t) => {
+  const save = uprisingTestFromUrl(new URL('?test=uprising&route=rail-escape&v=1', base))!;
+  save.mods = [];
+  const g = new Game();
+  g.start(save.seed, save);
+  playCampaign(g, {
+    pathMods: [],
+    seconds: 60,
+    beforeInput: uprisingInput,
+    stop: () => g.mode === 'upgrade',
+  });
+  assert.equal(
+    g.uprising.outcome?.result,
+    'success',
+    JSON.stringify({ hp: g.hp, time: g.time, step: g.uprising.routeStep, p: g.player.position }),
+  );
+  assert.equal(g.mode, 'upgrade');
+  assert(g.time > 5 && g.time < 40);
+  t.diagnostic(
+    JSON.stringify({ job: 'rail-escape', build: 'starting gun', seconds: g.time, hp: g.hp }),
+  );
+});
 
 test('skipping a recovery or sabotage job at a cleared exit records failure and preserves Continue', () => {
   for (const id of ['rail-heist', 'core-sabotage', 'core-defense']) {

@@ -115,7 +115,7 @@ export function drawUprising(c: CanvasRenderingContext2D, g: Game) {
     }
   }
   for (const p of u.nodes) {
-    if (u.collected || (u.outcome && p.uprising !== 'relay')) continue;
+    if (u.outcome || !g.props.items.includes(p)) continue;
     const pos = p.body.position,
       width = p.body.bounds.max.x - p.body.bounds.min.x,
       height = p.body.bounds.max.y - p.body.bounds.min.y;
@@ -144,13 +144,26 @@ export function drawUprising(c: CanvasRenderingContext2D, g: Game) {
       4,
     );
   }
-  if (u.kind === 'escape' && !u.outcome) {
-    c.strokeStyle = '#aedcb6';
-    c.strokeRect(1820, 625, 120, 110);
-    c.fillStyle = '#aedcb6';
+  if (u.waiting && u.kind === 'escape' && u.evacuation) {
+    for (const [i, p] of (u.room?.switches ?? []).entries()) {
+      c.strokeStyle = i < u.routeStep ? '#aedcb6' : i === u.routeStep ? '#e4bc77' : '#637b83';
+      c.fillStyle = '#17222a';
+      c.fillRect(p.x - 16, p.y - 20, 32, 40);
+      c.strokeRect(p.x - 16, p.y - 20, 32, 40);
+      c.fillStyle = c.strokeStyle;
+      c.font = 'bold 12px monospace';
+      c.textAlign = 'center';
+      c.fillText(i < u.routeStep ? '✓' : String(i + 1), p.x, p.y + 4);
+    }
+    const { x, y, w, h } = u.evacuation;
+    c.strokeStyle = u.switchTarget ? '#637b83' : '#aedcb6';
+    c.fillStyle = u.switchTarget ? '#637b8314' : '#aedcb618';
+    c.fillRect(x, y, w, h);
+    c.strokeRect(x, y, w, h);
+    c.fillStyle = c.strokeStyle;
     c.font = 'bold 14px monospace';
     c.textAlign = 'center';
-    c.fillText('EVACUATE', 1880, 615);
+    c.fillText(u.switchTarget ? 'ROUTE LOCKED' : 'BOARD HERE', x + w / 2, y - 12);
   }
   c.restore();
 }

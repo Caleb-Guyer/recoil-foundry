@@ -21,6 +21,8 @@ export function interactionCues(g: Game): InteractionCue[] {
   const reachable = (pos: Vec, range: number) =>
     distance(g.player.position, pos) <= range &&
     distance(g.lineEnd(g.player.position, pos), pos) < 1;
+  if (g.uprising.switchTarget && reachable(g.uprising.switchTarget, 100))
+    cues.push({ pos: g.uprising.switchTarget, kind: 'jump' });
   const box = g.auditor.caseProp;
   if (
     box &&
