@@ -14,8 +14,8 @@ const names = {
   commendations: 'Commendations',
 };
 const hints = {
-  equipment: 'Collect upgrades to recover their records.',
-  machines: 'Defeat machines during runs to recover their records.',
+  equipment: 'Encounter upgrade offers during runs to recover their records.',
+  machines: 'Encounter machines during runs to recover their records.',
   places: 'Reach new areas to recover their records.',
   records: 'Explore the Foundry to recover more documents.',
   commendations: 'Earn commendations in campaign or Daily runs.',
@@ -169,7 +169,7 @@ export function logbookMenu(
     '</nav>' +
     '<section id="logbook-goals" class="logbook-goals" aria-label="Next goals"></section>' +
     '<div class="logbook-layout"><section class="logbook-index" aria-label="Recovered entries">' +
-    '<label class="sr-only" for="logbook-search">Find a discovered entry</label><input id="logbook-search" type="search" placeholder="Find a record" autocomplete="off" maxlength="80">' +
+    '<label class="sr-only" for="logbook-search">Find a record</label><input id="logbook-search" type="search" placeholder="Find a record" autocomplete="off" maxlength="80">' +
     '<div class="logbook-filters" role="group" aria-label="Collection filters">' +
     filters
       .map(
@@ -310,12 +310,28 @@ export function logbookMenu(
       (!matches.length
         ? '<p class="logbook-locked">No matching entries.<br><span>Try another filter or clear the search.</span></p>'
         : '');
+    const emptyHeading = state.query.trim()
+      ? 'No matching records.'
+      : state.filter === 'unread'
+        ? 'No new records.'
+        : state.filter === 'locked'
+          ? 'No locked entries.'
+          : state.filter === 'unseen'
+            ? 'No undiscovered entries.'
+            : 'No records recovered.';
+    const emptyHint = state.query.trim()
+      ? 'Try another name or clear the search.'
+      : state.filter === 'unread'
+        ? 'You are caught up in this view. New discoveries will appear here.'
+        : state.filter === 'locked' || state.filter === 'unseen'
+          ? 'Choose All to browse the records in this view.'
+          : hints[state.section];
     detail.innerHTML = selected
       ? logbookArticle(selected, mark)
       : '<div class="logbook-empty"><h3 id="logbook-entry-title">' +
-        (state.query.trim() ? 'No matching records.' : 'No records recovered.') +
+        emptyHeading +
         '</h3><p>' +
-        (state.query.trim() ? 'Try another name or clear the search.' : hints[state.section]) +
+        emptyHint +
         '</p></div>';
     detail.scrollTop = 0;
     const equip = detail.querySelector<HTMLButtonElement>('.commendation-equip');
