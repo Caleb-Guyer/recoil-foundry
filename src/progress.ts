@@ -8,6 +8,7 @@ import {
 } from './uprising-model.ts';
 import { SECURITY_KEY, loadSecurityProfile, validSecurityProfile } from './security.ts';
 import { SHAFT_PROFILE_KEY, loadShaftProfile, validShaftProfile } from './maintenance-trials.ts';
+import { RECOIL_TRIALS_KEY, loadRecoilProfile, validRecoilProfile } from './recoil-trial-rules.ts';
 import {
   DISCOVERIES_KEY,
   WORKSHOP_BUILD_KEY,
@@ -53,6 +54,7 @@ export const PROGRESS_KEYS = [
   BLUEPRINTS_KEY,
   PRACTICE_RECORDS_KEY,
   SHAFT_PROFILE_KEY,
+  RECOIL_TRIALS_KEY,
   SECURITY_KEY,
 ] as const;
 export type ProgressValues = Record<(typeof PROGRESS_KEYS)[number], unknown>;
@@ -152,6 +154,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [BLUEPRINTS_KEY]: loadBlueprints(read(BLUEPRINTS_KEY)),
     [PRACTICE_RECORDS_KEY]: loadPracticeRecords(read(PRACTICE_RECORDS_KEY)),
     [SHAFT_PROFILE_KEY]: loadShaftProfile(read(SHAFT_PROFILE_KEY)),
+    [RECOIL_TRIALS_KEY]: loadRecoilProfile(read(RECOIL_TRIALS_KEY)),
     [SECURITY_KEY]: loadSecurityProfile(
       read(SECURITY_KEY),
       !!checkpoint?.overtime ||
@@ -175,6 +178,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === BLUEPRINTS_KEY ||
           k === PRACTICE_RECORDS_KEY ||
           k === SHAFT_PROFILE_KEY ||
+          k === RECOIL_TRIALS_KEY ||
           k === SECURITY_KEY ||
           k === APPEARANCE_SEEN_KEY ||
           k === ARCHIVE_KEY ||
@@ -206,6 +210,8 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       return null;
     if (Object.hasOwn(raw, SECURITY_KEY) && !validSecurityProfile(raw[SECURITY_KEY])) return null;
     if (Object.hasOwn(raw, SHAFT_PROFILE_KEY) && !validShaftProfile(raw[SHAFT_PROFILE_KEY]))
+      return null;
+    if (Object.hasOwn(raw, RECOIL_TRIALS_KEY) && !validRecoilProfile(raw[RECOIL_TRIALS_KEY]))
       return null;
     // Pre-blueprint profiles and backups migrate to six empty slots.
     if (Object.hasOwn(raw, BLUEPRINTS_KEY) && !validBlueprintSlots(raw[BLUEPRINTS_KEY]))
@@ -311,6 +317,7 @@ export function parseProgressBackup(text: string): ProgressBackup {
 }
 export function progressSummary(values: ProgressValues) {
   const save = loadCheckpoint(values[CHECKPOINT_KEY]);
+  const recoil = loadRecoilProfile(values[RECOIL_TRIALS_KEY]);
   return {
     run: save
       ? `Room ${save.stage + 1}${save.security ? ' · Security ' + save.security.level : ''}${save.overtime ? ' · Overtime' : ''}${save.reward ? ' · upgrade waiting' : ''}`
@@ -322,6 +329,8 @@ export function progressSummary(values: ProgressValues) {
     blueprints: loadBlueprints(values[BLUEPRINTS_KEY]).filter(Boolean).length,
     practiceRecords: loadPracticeRecords(values[PRACTICE_RECORDS_KEY]).length,
     shaftTrials: loadShaftProfile(values[SHAFT_PROFILE_KEY]).unlocks.length,
+    recoilTrials: recoil.clears.length,
+    recoilRecords: recoil.records.length,
     security: loadSecurityProfile(values[SECURITY_KEY]).unlocked,
   };
 }

@@ -7,6 +7,43 @@ import { WeaponMastery, type WeaponTrace } from './weapon-mastery.ts';
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
   {
+    id: 'launch-certified',
+    name: 'Launch Certified',
+    objective: 'Clear Launch shaft in 35 seconds without damage or a reset.',
+    reward: 'Aeronaut',
+    slot: 'Gun finish',
+    lore: [
+      'MAINTENANCE · ASCENT CERTIFICATE',
+      'M. Vale · Maintenance',
+      'The lift was out of service. You signed the top landing anyway. Six separate stamps, all above the point where the cable stopped working.\n\nI painted an upward stripe on the receiver so Dispatch can stop asking which way it travels. The enamel is blue, the sight line pale enough to see against the shaft walls.\n\nKeep the certificate with the tool. The lift repair is still awaiting approval.',
+    ] as Lore,
+  },
+  {
+    id: 'cargo-certified',
+    name: 'Cargo Certified',
+    objective: 'Clear Cargo crossing in 30 seconds without damage or touching the return floor.',
+    reward: 'Transit',
+    slot: 'Gun finish',
+    lore: [
+      'DISPATCH · TRANSFER CERTIFICATE',
+      'T. Orr · Dispatch',
+      'Five loads. Five recorded landings. No request to stop the motors. I checked the transfer schedule and found no entry for a passenger.\n\nThe receiver has the same brass finish as our cargo tags. Vale added a pale band where the destination code normally goes. Yours says onward.\n\nPlease keep it with its assigned operator. We have enough trouble finding things that travel by the approved route.',
+    ] as Lore,
+  },
+  {
+    id: 'flight-certified',
+    name: 'Flight Certified',
+    objective:
+      'Clear Airborne targets in 12 seconds without damage or landing before all three targets break.',
+    reward: 'Skyline',
+    slot: 'Outfit',
+    lore: [
+      'SAFETY · OVERHEAD WORK CERTIFICATE',
+      'E. Holt · Safety',
+      'All three indicators went dark before your boots came down. The overhead work form asks which platform you used. There is no box for that answer.\n\nThe new jacket has pale straps at the shoulders and blue cloth from the roof crew stores. Anyone checking the rafters should be able to see you coming.\n\nI have entered the exercise as completed. Please land before you come to collect the paperwork.',
+    ] as Lore,
+  },
+  {
     id: 'bank-job',
     name: 'Bank Job',
     upgrades: ['ricochet'],

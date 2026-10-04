@@ -95,6 +95,9 @@ import type { HarpoonRig } from './harpooner.ts';
 import type { RecallFlight } from './ballistics.ts';
 import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
 import { MaintenanceSystem, maintenanceLevel, planMaintenance, SHAFT_TOP } from './maintenance.ts';
+import { RecoilTrials } from './recoil-trials.ts';
+import { planRecoilTrial } from './recoil-trial-rules.ts';
+import { recoilTrialLevel, TRIAL_TOP } from './recoil-trial-layouts.ts';
 import { onCoolant, updateCoolingEnemy } from './cooling.ts';
 import { DemolitionSystem, SHELL_DIRECT } from './demolition.ts';
 import type { ShellPayload } from './demolition.ts';
@@ -209,6 +212,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  recoilTarget?: number;
   hitDirection?: Vec;
   welder?: WelderRig;
   switchboard?: SwitchboardRig;
@@ -401,7 +405,13 @@ export class Game {
     return this.escape ? ESCAPE_WIDTH : WORLD.width;
   }
   get worldTop() {
-    return this.level?.maintenance ? SHAFT_TOP : this.level?.freight ? FREIGHT.top : 0;
+    return this.level?.recoilTrial === 'launch'
+      ? TRIAL_TOP
+      : this.level?.maintenance
+        ? SHAFT_TOP
+        : this.level?.freight
+          ? FREIGHT.top
+          : 0;
   }
   get terrainBodies() {
     return [
@@ -452,6 +462,7 @@ export class Game {
   testRun: Checkpoint | null = null;
   detour = false;
   maintenance = new MaintenanceSystem(this);
+  recoil = new RecoilTrials(this);
   detours: number[] = [];
   enteringDetour = false;
   route: RouteChoice | null = null;
@@ -626,6 +637,7 @@ export class Game {
     if (mode === 'title') this.clockOut = new ClockOut();
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.melt.reset();
     if (mode === 'paused' && this.auditor.enemy) this.save();
+    if (mode === 'paused' && this.recoil.active) this.save();
     if (mode !== 'playing') {
       this.stasis.held = false;
       this.mobility.pause();
@@ -737,9 +749,11 @@ export class Game {
     uprising: UprisingRun | null = null,
     startingGun: StartingGun = 'pistol',
     encounterRules: 0 | 1 = 1,
+    recoilRules = true,
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
+    this.recoil.practice = null;
     this.practice = practice;
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
@@ -809,6 +823,16 @@ export class Game {
             ? { ...save.maintenance }
             : null
           : planMaintenance(this.seed);
+    this.recoil.state =
+      practice || workshop
+        ? null
+        : save
+          ? save.recoilTrial
+            ? { ...save.recoilTrial }
+            : null
+          : !testRun && recoilRules && encounterRules === 1
+            ? planRecoilTrial(this.seed, this.maintenance.state?.stage)
+            : null;
     this.region =
       save?.region ??
       dailyRegion(this.seed) ??
@@ -914,6 +938,7 @@ export class Game {
       ...(this.uprising.run ? { uprising: structuredClone(this.uprising.run) } : {}),
       ...(this.security ? { security: { ...this.security } } : {}),
       ...(this.maintenance.state ? { maintenance: { ...this.maintenance.state } } : {}),
+      ...(this.recoil.state ? { recoilTrial: this.recoil.snapshot()! } : {}),
       ...(this.welder.state ? { welder: structuredClone(this.welder.state) } : {}),
       ...(this.auditor.state ? { auditor: structuredClone(this.auditor.state) } : {}),
       ...(this.level.boss && !this.escape ? { cleanBoss: this.commendations.cleanBoss } : {}),
@@ -1076,13 +1101,15 @@ export class Game {
             spawns: [],
           }
         : this.detour
-          ? this.maintenance.scheduled
-            ? maintenanceLevel(
-                this.maintenance.state!.kind,
-                this.seed,
-                this.maintenance.state!.revision,
-              )
-            : getDetour(this.seed, this.stage)
+          ? this.recoil.scheduled
+            ? recoilTrialLevel(this.recoil.state!.kind)
+            : this.maintenance.scheduled
+              ? maintenanceLevel(
+                  this.maintenance.state!.kind,
+                  this.seed,
+                  this.maintenance.state!.revision,
+                )
+              : getDetour(this.seed, this.stage)
           : this.overtime
             ? getOvertimeLevel(this.seed, this.stage, this.overtime.remix, this.route)
             : getLevel(
@@ -1258,6 +1285,7 @@ export class Game {
     this.auditor.reset();
     this.annex.reset();
     this.maintenance.reset(clearedRoom);
+    this.recoil.reset(clearedRoom);
     this.uprising.reset(clearedRoom);
   }
   startEscape() {
@@ -1687,6 +1715,7 @@ export class Game {
         !e.allied &&
         !e.courier &&
         e.eventRole !== 'relay' &&
+        e.recoilTarget === undefined &&
         !this.reportedEncounters.has(e.id)
       ) {
         this.reportedEncounters.add(e.id);
@@ -1742,6 +1771,7 @@ export class Game {
     this.tethers.afterStep();
     if (this.mode !== 'playing') return;
     this.hazards.afterStep(dt);
+    this.recoil.afterStep();
     this.containPlayer();
     this.harpoons.afterStep(dt);
     if (this.mode !== 'playing') return;
@@ -1803,11 +1833,13 @@ export class Game {
       !this.clear &&
       !this.uprising.waiting &&
       (!this.maintenance.active || this.maintenance.atExit) &&
+      (!this.recoil.active || this.recoil.atExit) &&
       (!this.freight.active || this.freight.arrived)
     ) {
       this.clear = true;
       this.clearAt = this.time;
       this.maintenance.completed();
+      this.recoil.completed();
       this.arcs.reset();
       this.grind.reset();
       this.torch.reset();
@@ -1821,13 +1853,23 @@ export class Game {
       this.reforge.arrive();
       this.onChange();
     }
-    if ((this.practice || this.maintenance.trial || this.testRun?.switchboardTest) && this.clear) {
+    if (
+      (this.practice ||
+        this.maintenance.trial ||
+        this.recoil.practice ||
+        this.testRun?.switchboardTest) &&
+      this.clear
+    ) {
       this.setMode('won');
       return;
     }
     this.shutdown.update(dt);
     if (this.shutdown.chamber || this.mode !== 'playing') return;
     this.extendDetourSteps();
+    if (this.recoil.active) {
+      if (this.clear && this.time - this.clearAt > 0.4 && this.recoil.atExit) this.openReward();
+      return;
+    }
     if (this.maintenance.active) {
       if (this.clear && this.time - this.clearAt > 0.4 && this.maintenance.atExit)
         this.openReward();
@@ -3371,6 +3413,10 @@ export class Game {
     trace?: WeaponTrace,
   ): boolean {
     if (e.hp <= 0 || e.allied) return false;
+    if (e.recoilTarget !== undefined) {
+      if (!this.recoil.canHitTarget(e) || source === 'cleanup') return true;
+      credited = false;
+    }
     if ((e.kind === 'auditor' || e.kind === 'welder') && e.spawn > 0) return true;
     if (e.kind === 'sentry') credited = false;
     const incomingDamage = damage;
@@ -3473,6 +3519,7 @@ export class Game {
       this.hp > 0 &&
       e.spawn <= 0 &&
       e.eventRole !== 'relay' &&
+      e.recoilTarget === undefined &&
       (e.kind !== 'welder' || (credited && source !== 'cleanup'))
     )
       this.onEnemyDefeated(e.kind);
@@ -3518,6 +3565,7 @@ export class Game {
     this.hp = Math.max(0, this.hp - amount);
     if (this.practice && amount > 0) this.practiceHits++;
     if (amount > 0) this.maintenance.damaged();
+    if (amount > 0) this.recoil.damaged();
     if (amount > 0) this.commendations.damaged();
     if (amount > 0) this.uprising.damage();
     this.hurtAt = this.time;
@@ -3599,6 +3647,7 @@ export class Game {
     )
       return;
     if (this.detour && (!this.clear || this.enemies.length || this.waves.pending)) return;
+    if (this.recoil.active && !this.recoil.atExit) return;
     if (
       region &&
       (!this.regionChoices.includes(region) ||

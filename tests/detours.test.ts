@@ -26,9 +26,10 @@ const overlap = (
 function entrance(seed = 'detour-test', stage = 2) {
   const g = new Game();
   g.start(seed, undefined, null, null, false, 0, false);
-  // These fixtures exercise the original combat challenges. Shafts have their
-  // own ordinary-input traversal tests and are scheduled independently.
+  // These fixtures exercise the original combat challenges. Shafts and Recoil
+  // Trials have their own ordinary-input traversal tests.
   g.maintenance.state = null;
+  g.recoil.state = null;
   // Traverse directly to the detour; event combat is covered separately.
   g.areaEvents.state = null;
   while (g.stage < stage) {
@@ -135,6 +136,7 @@ test('challenge geometry leaves spawns, machinery sweeps, entry and ground exit 
 test('normal rewards and direct exits skip every detour while preserving twenty stages and nineteen picks', () => {
   const g = new Game();
   g.start('direct-route', undefined, null, null, false, 0, false);
+  g.recoil.state = null;
   // This fixture skips combat to test rewards; event fights have their own playtests.
   g.areaEvents.state = null;
   for (let stage = 0; stage < 19; stage++) {
@@ -182,6 +184,7 @@ test('entering pays only the regular room reward, bonus pays one upgrade without
 test('each challenge can be taken once and all four detours preserve the complete escape checkpoint', () => {
   const g = new Game();
   g.start('all-detours', undefined, null, null, false, 0, false);
+  g.recoil.state = null;
   // This fixture skips combat to test rewards; event fights have their own playtests.
   g.areaEvents.state = null;
   while (g.stage < 19) {

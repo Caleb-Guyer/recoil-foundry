@@ -96,6 +96,7 @@ export interface Level extends Layout {
   security?: true;
   sortingPit?: import('./sorting-pit-layout.ts').SortingLayout;
   maintenance?: import('./maintenance.ts').MaintenanceKind;
+  recoilTrial?: import('./recoil-trial-rules.ts').RecoilTrialKind;
   maintenanceTiming?: number[];
   overtimeDocks?: true;
   overtimeFurnace?: true;

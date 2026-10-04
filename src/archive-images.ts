@@ -6,6 +6,7 @@ import type { EnemyKind } from './levels.ts';
 import type { Checkpoint } from './rules.ts';
 import { testCheckpoint } from './practice.ts';
 import { newUprising } from './uprising-model.ts';
+import { isRecoilTrial, recoilTrialCheckpoint } from './recoil-trial-rules.ts';
 
 const images = new Map<string, HTMLCanvasElement>();
 export const ARCHIVE_STAGES: Record<string, number> = {
@@ -20,6 +21,8 @@ export const ARCHIVE_STAGES: Record<string, number> = {
   'region:core': 9,
 };
 export function archiveCheckpoint(id: string): Checkpoint {
+  if (id.startsWith('trial:') && isRecoilTrial(id.slice(6)))
+    return recoilTrialCheckpoint(id.slice(6) as import('./recoil-trial-rules.ts').RecoilTrialKind);
   const save: Checkpoint = {
     ...testCheckpoint('ARCHIVE-PHOTO', ARCHIVE_STAGES[id] ?? 0),
     version: 6,

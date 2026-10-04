@@ -1,9 +1,14 @@
 import type { Game } from './game.ts';
 import { DETOUR_DOOR } from './detours.ts';
 import { drawMaintenanceHatch } from './maintenance-art.ts';
+import { drawRecoilTrialHatch } from './recoil-trial-art.ts';
 
 export function drawDetourDoor(c: CanvasRenderingContext2D, g: Game) {
   if (!g.canBranch || g.canChooseRoute || g.regionChoices.length) return;
+  if (g.recoil.scheduled) {
+    drawRecoilTrialHatch(c, g);
+    return;
+  }
   if (g.maintenance.scheduled) {
     drawMaintenanceHatch(c, g);
     return;

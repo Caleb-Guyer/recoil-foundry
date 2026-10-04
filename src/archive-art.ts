@@ -43,7 +43,7 @@ export const ENEMY_GUIDES: Record<EnemyKind, string> = {
 
 // Images are filled by archive-images using the production renderer.
 export function archiveMark(id: string) {
-  return /^(enemy|elite|mutation|area|region):/.test(id)
+  return /^(enemy|elite|mutation|area|region|trial):/.test(id)
     ? '<canvas class="archive-image" width="640" height="320" data-archive-image="' +
         id +
         '" aria-hidden="true"></canvas>'

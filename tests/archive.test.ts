@@ -45,7 +45,7 @@ test('the collection contains every upgrade, enemy, variant and zone without exp
     entries.filter((e) => e.id.startsWith('elite:') || e.id.startsWith('mutation:')).length,
     6,
   );
-  assert.equal(entries.filter((e) => e.section === 'places').length, 9);
+  assert.equal(entries.filter((e) => e.section === 'places').length, 12);
   const html = entries
     .filter((e) => e.state === 'unseen')
     .map((e) => logbookArticle(e, modMark))

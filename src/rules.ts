@@ -3,6 +3,7 @@ import { validFactory } from './factory.ts';
 import { validUprisingCheckpoint } from './uprising-model.ts';
 import { validSecurityRun } from './security.ts';
 import { validMaintenance } from './maintenance.ts';
+import { validRecoilTrialSave } from './recoil-trial-rules.ts';
 import { validSortingPit } from './sorting-pit-layout.ts';
 import { validReforge } from './reforge-rules.ts';
 import { validShutdown } from './shutdown-layout.ts';
@@ -1141,6 +1142,7 @@ export interface Checkpoint {
   factory?: import('./factory.ts').FactoryRun;
   security?: import('./security.ts').SecurityRun;
   maintenance?: import('./maintenance.ts').MaintenanceSave;
+  recoilTrial?: import('./recoil-trial-rules.ts').RecoilTrialSave;
   welder?: WelderSave;
   // Isolated development preset; never written by Game.save().
   annex?: import('./annex-layout.ts').AnnexPreview;
@@ -1476,6 +1478,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     !validAuditor(d) ||
     !validWelder(d) ||
     !validMaintenance(d) ||
+    !validRecoilTrialSave(d) ||
     (d.cleanBoss !== undefined && typeof d.cleanBoss !== 'boolean') ||
     (d.fabricators !== undefined && d.fabricators !== true)
   )

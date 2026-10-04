@@ -2,6 +2,22 @@ import type { CommendationId } from './commendations.ts';
 
 export const COSMETICS_KEY = 'rf-cosmetics-v1';
 export const GUN_FINISHES = {
+  aeronaut: {
+    name: 'Aeronaut',
+    shell: '#476e78',
+    face: '#cde5df',
+    trim: '#d9b975',
+    light: '#dcf3e1',
+    unlock: 'launch-certified',
+  },
+  transit: {
+    name: 'Transit',
+    shell: '#a88e56',
+    face: '#ebd6a3',
+    trim: '#394e52',
+    light: '#f0e4be',
+    unlock: 'cargo-certified',
+  },
   standard: {
     name: 'Standard issue',
     shell: '#819b89',
@@ -76,6 +92,13 @@ export const GUN_FINISHES = {
   },
 } as const;
 export const OUTFITS = {
+  skyline: {
+    name: 'Skyline',
+    body: '#748e9b',
+    boots: '#3b545d',
+    trim: '#ead9a8',
+    unlock: 'flight-certified',
+  },
   redline: {
     name: 'Redline',
     body: '#68716f',
@@ -150,7 +173,16 @@ export function drawOutfit(
   c.beginPath();
   c.roundRect(-13, -18, 26, 31, 4);
   c.fill();
-  if (id === 'redline') {
+  if (id === 'skyline') {
+    c.fillStyle = '#3b545d';
+    c.fillRect(-10, 0, 20, 12);
+    c.fillStyle = p.trim;
+    c.fillRect(-12, -2, 24, 3);
+    c.fillRect(-9, 4, 3, 8);
+    c.fillRect(6, 4, 3, 8);
+    c.fillStyle = '#dbe7e3';
+    c.fillRect(facing > 0 ? 6 : -11, -15, 5, 2);
+  } else if (id === 'redline') {
     c.fillStyle = '#293b3c';
     c.fillRect(-10, 0, 20, 13);
     c.fillStyle = '#c99972';

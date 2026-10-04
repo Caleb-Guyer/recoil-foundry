@@ -1,4 +1,6 @@
 import { STARTING_GUNS } from './starting-guns.ts';
+import { RECOIL_TRIALS, loadRecoilProfile, type RecoilTrialKind } from './recoil-trial-rules.ts';
+import { practiceTime } from './practice-records.ts';
 import { unlockedStartingGuns, WEAPON_REQUIREMENTS, type WeaponUnlocks } from './weapon-unlocks.ts';
 import { MODS, MOD_PATHS, PATH_NAMES } from './rules.ts';
 import { uprisingCatalog } from './uprising-catalog.ts';
@@ -112,6 +114,7 @@ export function logbookCatalog(
   goals: readonly UnlockGoal[] = [],
   uprisingRecords: unknown = null,
   weapons?: WeaponUnlocks,
+  recoilProfile: unknown = null,
 ): LogbookEntry[] {
   const archive = loadArchive(rawArchive),
     base = loadLogbook(progress);
@@ -128,6 +131,45 @@ export function logbookCatalog(
   });
   const recovered = new Map(logbookEntries(knownMods, book, earned).map((e) => [e.id, e]));
   const entries: LogbookEntry[] = [
+    ...(Object.keys(RECOIL_TRIALS) as RecoilTrialKind[]).map((kind) => {
+      const profile = loadRecoilProfile(recoilProfile),
+        known = profile.clears.includes(kind),
+        info = RECOIL_TRIALS[kind];
+      return {
+        id: 'trial:' + kind,
+        name: known ? info.name : 'Unvisited course',
+        section: 'places' as const,
+        label: known ? 'Recoil Trial' : 'Clear in Campaign',
+        state: known ? ('known' as const) : ('unseen' as const),
+        description: known
+          ? info.instruction +
+            ' Clean clear ≤ ' +
+            info.mastery / 1000 +
+            's earns a cosmetic. Replay in Practice → Recoil Trials.'
+          : '',
+        lore: known
+          ? ([
+              info.name + ' · course records',
+              'Maintenance training',
+              profile.records
+                .filter((r) => r.kind === kind)
+                .map(
+                  (r) =>
+                    STARTING_GUNS[r.gun].name +
+                    ' · ' +
+                    practiceTime(r.timeMs) +
+                    ' · ' +
+                    r.shots +
+                    ' shots\n' +
+                    (r.mods.length
+                      ? r.mods.map((id) => MODS.find((m) => m.id === id)!.name).join(', ')
+                      : 'Starting gun · no upgrades'),
+                )
+                .join('\n\n') || 'Course cleared.',
+            ] as Lore)
+          : EMPTY_LORE,
+      };
+    }),
     ...uprisingCatalog(rawArchive, uprisingRecords),
     recovered.get('tool')!,
     ...(weapons?.started

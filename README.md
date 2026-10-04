@@ -16,6 +16,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Recoil Trials — version 4.6.0.** Fresh Campaigns offer one optional movement course from zone two through the existing upper challenge door. Climb the Launch shaft, cross moving cargo or break three targets in one flight. Completion awards an extra upgrade; clean timed clears earn three cosmetic rewards. Cleared courses unlock in Practice, with best times for matching guns and builds and real course photographs in the Logbook. [Release notes](docs/releases/4.6.0.md).
+
 **See the Difference — version 4.5.0.** Hover or focus an upgrade to compare your current gun with the combined build in a real firing range. Changed values show the tradeoffs, and combination hints use upgrades you already own. Reforge comparisons include the fitting you give up. Reduced effects uses a still preview. [Release notes](docs/releases/4.5.0.md).
 
 **Room to Move — version 4.4.0.** Campaign fights alternate between ambushes, crossfire and elevated encounters, with quieter patrols after bosses. Reinforcements enter in staggered groups, and ordinary attack warnings leave more space to move. Defense jobs separate patrol clearance from the generator hold; boss recovery leaves time for each starting gun’s firing cycle. [Release notes](docs/releases/4.4.0.md).

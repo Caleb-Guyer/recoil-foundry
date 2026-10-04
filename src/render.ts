@@ -42,6 +42,7 @@ import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
 import { drawMaintenanceDetails, drawMaintenanceScenery } from './maintenance-art.ts';
+import { drawRecoilTrial } from './recoil-trial-art.ts';
 import { drawRouteExits, drawRegionExits } from './route-art.ts';
 import { drawCracks } from './destruction-art.ts';
 import { drawCrane } from './crane-art.ts';
@@ -588,7 +589,7 @@ export class Renderer {
       viewH = this.height / this.scale;
     const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
     const desiredX = clamp(
-      g.maintenance.active && viewW >= 780
+      (g.maintenance.active || (g.recoil.active && g.recoil.kind === 'launch')) && viewW >= 780
         ? 1000 - viewW / 2
         : g.player.position.x - viewW * 0.42 + lead,
       0,
@@ -682,6 +683,7 @@ export class Renderer {
     }
     this.drawHazards();
     drawMaintenanceDetails(c, g);
+    drawRecoilTrial(c, g);
     drawFreightLift(c, g);
     drawCrossing(c, g, this.reduced);
     drawCounterweights(c, g);
@@ -1691,12 +1693,14 @@ export class Renderer {
     }
     const c = this.ctx,
       g = this.game,
-      x = g.maintenance.active ? g.maintenance.exit.x : 1930,
-      y = g.maintenance.active
-        ? g.maintenance.exit.floor
-        : g.level.freight
-          ? FREIGHT.dock
-          : WORLD.floor;
+      x = g.recoil.active ? g.recoil.exit.x : g.maintenance.active ? g.maintenance.exit.x : 1930,
+      y = g.recoil.active
+        ? g.recoil.exit.floor
+        : g.maintenance.active
+          ? g.maintenance.exit.floor
+          : g.level.freight
+            ? FREIGHT.dock
+            : WORLD.floor;
     c.fillStyle = g.clear ? '#213832' : '#1b2326';
     c.fillRect(x - 36, y - 111, 72, 111);
     c.fillStyle = g.clear ? '#9bd9c2' : '#414e51';
