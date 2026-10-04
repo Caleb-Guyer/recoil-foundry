@@ -634,7 +634,10 @@ export class Game {
   setMode(mode: Mode) {
     if (mode === 'won') this.recordCampaignClear();
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.securityCombat.reset();
-    if (mode === 'title') this.clockOut = new ClockOut();
+    if (mode === 'title') {
+      this.clockOut = new ClockOut();
+      this.recoil.race.reset();
+    }
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.melt.reset();
     if (mode === 'paused' && this.auditor.enemy) this.save();
     if (mode === 'paused' && this.recoil.active) this.save();
@@ -1824,6 +1827,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.floodgate.update(dt);
     if (this.mode !== 'playing') return;
+    this.recoil.race.afterStep();
     if (
       (!this.combatEnemyCount || this.uprising.escapeReady) &&
       !this.areaEvents.waiting &&

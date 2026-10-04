@@ -249,6 +249,15 @@ import {
 } from './recoil-trial-rules.ts';
 import { recoilTrialMenu } from './recoil-trial-menu.ts';
 import {
+  RECOIL_GHOSTS_KEY,
+  loadRecoilGhosts,
+  recordRecoilGhost,
+  recoilChallengeAccess,
+  recoilChallengeFromUrl,
+  recoilDelta,
+  type RecoilChallenge,
+} from './recoil-race-rules.ts';
+import {
   SHAFT_PROFILE_KEY,
   loadShaftProfile,
   recordShaftClear,
@@ -350,6 +359,10 @@ let trialMenuShare: TrialChallenge | undefined;
 let trialMenuParent = 'practice';
 let recoilMenuParent = 'practice';
 let recoilOutcome: ReturnType<typeof recordRecoilTrial> | null = null;
+let recoilMenuChallenge: RecoilChallenge | undefined;
+let recoilMenuShare: RecoilChallenge | undefined;
+let recoilGhostEnabled = true;
+let recoilGhostSaved = false;
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let fittingNotice: { name: string; until: number | null; stage: number } | null = null;
@@ -400,7 +413,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Recoil Trials</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Ghost Races</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -496,6 +509,8 @@ const input: Input = {
 };
 const entryUrl = new URL(location.href);
 let linkedTrial = trialFromUrl(entryUrl);
+let linkedRecoilChallenge = recoilChallengeFromUrl(entryUrl);
+let invalidRecoilLink = entryUrl.searchParams.has('recoil') && !linkedRecoilChallenge;
 let invalidTrialLink =
   (entryUrl.searchParams.has('shaft') ||
     entryUrl.searchParams.get('test') === 'maintenance-trial') &&
@@ -604,7 +619,9 @@ function updateTitle() {
     !!linkedTest ||
     !!linkedRunTest ||
     linkedWorkshop ||
-    !!linkedTrial;
+    !!linkedTrial ||
+    !!linkedRecoilChallenge ||
+    invalidRecoilLink;
   $('security').textContent = selectedSecurity
     ? securityLabel(selectedSecurity)
     : 'Security · Standard';
@@ -897,6 +914,13 @@ function updateTitle() {
       ? 'Starting gun. Reach the summit. Your progress stays untouched.'
       : 'A shared climb. Clear its shaft in a normal run to enter.';
   }
+  if (linkedRecoilChallenge || invalidRecoilLink) {
+    $('daily').textContent = 'New run';
+    $('daily').title = 'Start a fresh random run';
+    $('play').textContent = 'Trial challenge';
+    $('title-hint').textContent =
+      'A shared course and starting gun. Open the challenge to check access.';
+  }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
     bindingLabel(bindings, 'retry') + ' to ',
@@ -1104,7 +1128,11 @@ function start(
     return;
   }
   if (retry && game.recoil.practice) {
-    startRecoilPractice(game.recoil.practice.kind, game.recoil.practice.gun);
+    startRecoilPractice(
+      game.recoil.practice.kind,
+      game.recoil.practice.gun,
+      game.recoil.race.challenge ?? undefined,
+    );
     return;
   }
   if (retry && game.testRun) {
@@ -1311,11 +1339,17 @@ function certifyMaintenance(profile: ShaftProfile) {
     write(COMMENDATIONS_KEY, commendations);
   }
 }
-function openRecoilTrials(parent = 'practice') {
+function openRecoilTrials(
+  parent = 'practice',
+  challenge?: RecoilChallenge,
+  share?: RecoilChallenge,
+) {
   recoilMenuParent = parent;
+  recoilMenuChallenge = challenge;
+  recoilMenuShare = share;
   showDialog('recoil-trials');
 }
-function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun) {
+function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun, challenge?: RecoilChallenge) {
   progress.checkExternal();
   if (progress.blocked) {
     openProgress();
@@ -1323,7 +1357,15 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun) {
   }
   if (
     !loadRecoilProfile(read(RECOIL_TRIALS_KEY)).clears.includes(kind) ||
-    !unlockedStartingGuns(weaponUnlocks()).includes(gun)
+    !unlockedStartingGuns(weaponUnlocks()).includes(gun) ||
+    (challenge &&
+      (!recoilChallengeAccess(
+        challenge,
+        read(RECOIL_TRIALS_KEY),
+        unlockedStartingGuns(weaponUnlocks()),
+      ) ||
+        challenge.kind !== kind ||
+        challenge.gun !== gun))
   )
     return;
   clearInput();
@@ -1331,12 +1373,22 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun) {
   finishedRun = null;
   runCommendations = [];
   recoilOutcome = null;
+  recoilGhostSaved = false;
   activeDaily = null;
   dailyResult = null;
   sound.unlock();
   sound.resetMusic();
   closeDialog();
-  game.recoil.startPractice(kind, gun, read(RECOIL_TRIALS_KEY));
+  const ghost =
+    loadRecoilGhosts(read(RECOIL_GHOSTS_KEY)).find((r) => r.kind === kind && r.gun === gun) ?? null;
+  game.recoil.startPractice(
+    kind,
+    gun,
+    read(RECOIL_TRIALS_KEY),
+    ghost,
+    challenge ?? null,
+    recoilGhostEnabled,
+  );
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -1709,6 +1761,13 @@ game.recoil.onComplete = (result) => {
   if (progress.blocked) return;
   recoilOutcome = recordRecoilTrial(read(RECOIL_TRIALS_KEY), result);
   write(RECOIL_TRIALS_KEY, recoilOutcome.profile);
+  if (game.recoil.practice && recoilOutcome.best && game.recoil.race.recording) {
+    write(
+      RECOIL_GHOSTS_KEY,
+      recordRecoilGhost(read(RECOIL_GHOSTS_KEY), game.recoil.race.recording),
+    );
+    recoilGhostSaved = true;
+  }
   const id = RECOIL_TRIALS[result.kind].commendation;
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   if (recoilOutcome.newMastery && !commendations.includes(id)) {
@@ -1798,7 +1857,10 @@ game.onDeath = (origin) => {
 let savingClockOut: Game['clockOut'] | null = null;
 $('skip-clock-out').onclick = () => game.skipClockOut();
 game.onChange = () => {
-  if (!game.recoil.result) recoilOutcome = null;
+  if (!game.recoil.result) {
+    recoilOutcome = null;
+    recoilGhostSaved = false;
+  }
   if (game.mode === 'playing' || game.mode === 'title') reportDraft = undefined;
   updateLogbook();
   if (replayRoom !== game.level || game.mode === 'title' || game.mode === 'won') {
@@ -1949,11 +2011,11 @@ function showDialog(kind: string) {
     );
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Find your footing.</h2>' +
-      '<p class="update-tagline">Three courses. One way to fly.</p>' +
-      '<dl class="update-notes"><div><dt>Take the upper door.</dt><dd>Fresh Campaigns offer one optional Recoil Trial from zone two: Launch shaft, Cargo crossing or Airborne targets. The ground exit keeps you on the main route.</dd></div>' +
-      '<div><dt>Earn your extra upgrade.</dt><dd>Climb marked landings, cross moving loads or break three targets in one flight. Complete the course for a bonus upgrade. Pause → Leave trial lets you skip it.</dd></div>' +
-      '<div><dt>Master the course.</dt><dd>Clean, quick clears earn Aeronaut, Transit and Skyline appearances. Your matching gun and build records are saved. Cleared courses open in Practice, with real course pictures in the Logbook.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Chase your best.</h2>' +
+      '<p class="update-tagline">Your last best clear. Your next challenge.</p>' +
+      '<dl class="update-notes"><div><dt>Race your ghost.</dt><dd>A new Practice best records your movement in each Recoil Trial, separately for each starting gun. Turn the ghost on or off in Practice → Recoil Trials.</dd></div>' +
+      '<div><dt>Find the faster line.</dt><dd>Brief checkpoint comparisons show how far ahead or behind you are. Pausing freezes the race clock and your ghost.</dd></div>' +
+      '<div><dt>Challenge a friend.</dt><dd>Share a course, starting gun and checkpoint target using a code or link. Import a code in Recoil Trials to race the same unmodified gun. Courses and guns still need to be unlocked.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2229,6 +2291,16 @@ function showDialog(kind: string) {
       unlockedStartingGuns(weaponUnlocks()),
       startRecoilPractice,
       () => showDialog(recoilMenuParent),
+      {
+        ghosts: read(RECOIL_GHOSTS_KEY),
+        showGhost: recoilGhostEnabled,
+        ghostChange: (show) => {
+          recoilGhostEnabled = show;
+        },
+        challenge: recoilMenuChallenge,
+        share: recoilMenuShare,
+        invalid: invalidRecoilLink && recoilMenuParent === 'title',
+      },
     );
   } else if (kind === 'shaft-trials') {
     buildMenu = maintenanceTrialsMenu(content, {
@@ -2531,8 +2603,19 @@ function showDialog(kind: string) {
       'Clean clear ≤ ' +
       RECOIL_TRIALS[game.recoil.kind].mastery / 1000 +
       's earns a cosmetic.</p>' +
+      (won && result && game.recoil.race.target
+        ? '<p class="practice-record-note">' +
+          recoilDelta(result.timeMs - game.recoil.race.target.timeMs) +
+          (game.recoil.race.challenge ? ' · Shared target.' : ' · Your previous ghost.') +
+          '</p>'
+        : '') +
+      (recoilGhostSaved ? '<p class="practice-record-note">New ghost saved.</p>' : '') +
       (recoilOutcome?.newMastery ? rewardCards(commendationRewards(id)) : '') +
-      '<div class="actions"><button id="retry" class="primary">Retry course ↗</button><button id="recoil-records" class="quiet">Trials & records</button><button id="menu" class="quiet">Menu</button></div>';
+      '<div class="actions"><button id="retry" class="primary">Retry course ↗</button><button id="recoil-records" class="quiet">Trials & records</button>' +
+      (won && game.recoil.race.score
+        ? '<button id="recoil-share" class="quiet">Share this clear</button>'
+        : '') +
+      '<button id="menu" class="quiet">Menu</button></div>';
     drawRewardImages(content, game);
     const reward = document.getElementById('earned-rewards');
     if (reward)
@@ -2543,6 +2626,10 @@ function showDialog(kind: string) {
       };
     $('retry').onclick = () => start(undefined, true);
     $('recoil-records').onclick = () => openRecoilTrials('result');
+    const share = document.getElementById('recoil-share');
+    if (share)
+      share.onclick = () =>
+        openRecoilTrials('result', undefined, game.recoil.race.score ?? undefined);
     $('menu').onclick = menu;
   } else if (kind === 'result' && game.maintenance.trial) {
     const session = game.maintenance.trial,
@@ -2909,11 +2996,13 @@ function showDialog(kind: string) {
             '<button id="choose-fight" class="quiet"' +
             (encounters.length ? '' : ' hidden') +
             '>Choose fight</button>'
-          : paused && game.maintenance.trial
-            ? '<button id="retry" class="quiet">Retry trial</button>'
-            : paused && game.testRun
-              ? '<button id="retry" class="quiet">Restart test</button>'
-              : '') +
+          : paused && game.recoil.practice
+            ? '<button id="retry" class="quiet">Retry course</button>'
+            : paused && game.maintenance.trial
+              ? '<button id="retry" class="quiet">Retry trial</button>'
+              : paused && game.testRun
+                ? '<button id="retry" class="quiet">Restart test</button>'
+                : '') +
       (paused
         ? '<button id="pause-logbook" class="quiet">Logbook</button>' +
           (game.uprising.run && !game.overtime
@@ -3237,29 +3326,39 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedTrial?.preview
-    ? startTrial(linkedTrial.route, true)
-    : linkedTrial || invalidTrialLink
-      ? openTrials('title', linkedTrial?.challenge)
-      : linkedWorkshop
-        ? showDialog('workshop')
-        : linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
-          ? showDialog('layout-test')
-          : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-              linkedRunTest?.seed.startsWith('FUSIONS-')
-            ? showDialog('upgrade-test')
-            : linkedRunTest
-              ? startRunTest(linkedRunTest)
-              : linkedTest
-                ? startPractice(linkedTest, null, { test: true })
-                : linkedDaily
-                  ? start()
-                  : startFreshCampaign();
+  linkedRecoilChallenge || invalidRecoilLink
+    ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+    : linkedTrial?.preview
+      ? startTrial(linkedTrial.route, true)
+      : linkedTrial || invalidTrialLink
+        ? openTrials('title', linkedTrial?.challenge)
+        : linkedWorkshop
+          ? showDialog('workshop')
+          : linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
+            ? showDialog('layout-test')
+            : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                linkedRunTest?.seed.startsWith('FUSIONS-')
+              ? showDialog('upgrade-test')
+              : linkedRunTest
+                ? startRunTest(linkedRunTest)
+                : linkedTest
+                  ? startPractice(linkedTest, null, { test: true })
+                  : linkedDaily
+                    ? start()
+                    : startFreshCampaign();
 $('daily').onclick = () => {
-  if (linkedDaily || linkedTrial || invalidTrialLink) {
+  if (
+    linkedDaily ||
+    linkedTrial ||
+    invalidTrialLink ||
+    linkedRecoilChallenge ||
+    invalidRecoilLink
+  ) {
     linkedDaily = null;
     linkedTrial = null;
     invalidTrialLink = false;
+    linkedRecoilChallenge = null;
+    invalidRecoilLink = false;
     seedParam = undefined;
     const url = new URL(location.href);
     url.search = '';

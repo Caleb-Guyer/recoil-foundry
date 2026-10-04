@@ -43,6 +43,7 @@ import { drawPortals } from './portal-art.ts';
 import { drawDetourDoor } from './detour-art.ts';
 import { drawMaintenanceDetails, drawMaintenanceScenery } from './maintenance-art.ts';
 import { drawRecoilTrial } from './recoil-trial-art.ts';
+import { drawRecoilRace } from './recoil-race-art.ts';
 import { drawRouteExits, drawRegionExits } from './route-art.ts';
 import { drawCracks } from './destruction-art.ts';
 import { drawCrane } from './crane-art.ts';
@@ -761,7 +762,10 @@ export class Renderer {
       c.fill();
     }
     g.securityCombat.draw(c);
-    if (!framing || framing.player) this.drawPlayer();
+    if (!framing || framing.player) {
+      drawRecoilRace(c, g);
+      this.drawPlayer();
+    }
     drawFloodwater(c, g, this.reduced);
     drawNewPaths(c, g);
     drawTethers(c, g, this.reduced);

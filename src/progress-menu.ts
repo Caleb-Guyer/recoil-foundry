@@ -38,7 +38,7 @@ export function progressMenu(
     `${summary.run} · ${summary.upgrades} upgrade${summary.upgrades === 1 ? '' : 's'} discovered · ${summary.victories} Practice ${summary.victories === 1 ? 'victory' : 'victories'} · ${summary.blueprints} blueprints · ${summary.practiceRecords} Practice records` +
     (summary.shaftTrials ? ` · ${summary.shaftTrials} shaft trials` : '') +
     (summary.recoilTrials
-      ? ` · ${summary.recoilTrials} Recoil Trials · ${summary.recoilRecords} course records`
+      ? ` · ${summary.recoilTrials} Recoil Trials · ${summary.recoilRecords} course records · ${summary.recoilGhosts} ghosts`
       : '') +
     (summary.security ? ` · Security ${summary.security} unlocked` : '');
   const feedback = get('progress-feedback');
@@ -106,7 +106,7 @@ export function progressMenu(
         `${imported.run} · ${imported.upgrades} upgrade${imported.upgrades === 1 ? '' : 's'} · ${imported.victories} Practice ${imported.victories === 1 ? 'victory' : 'victories'} · ${imported.commendations} commendations · ${imported.runs} recent runs · ${imported.blueprints} blueprints · ${imported.practiceRecords} Practice records` +
         (imported.shaftTrials ? ` · ${imported.shaftTrials} shaft trials` : '') +
         (imported.recoilTrials
-          ? ` · ${imported.recoilTrials} Recoil Trials · ${imported.recoilRecords} course records`
+          ? ` · ${imported.recoilTrials} Recoil Trials · ${imported.recoilRecords} course records · ${imported.recoilGhosts} ghosts`
           : '') +
         (imported.security ? ` · Security ${imported.security} unlocked` : '');
       panel.hidden = false;

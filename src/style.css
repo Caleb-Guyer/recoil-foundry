@@ -401,6 +401,31 @@ dialog.practice-dialog {
 .practice-fight > span:last-child {
   color: var(--muted);
 }
+.recoil-course-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.recoil-course-actions .practice-fight {
+  min-width: 0;
+  flex: 1;
+  gap: 12px;
+}
+.recoil-course-actions > .quiet {
+  flex: 0 0 auto;
+  padding: 10px;
+  font-size: 13px;
+}
+.recoil-race-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px;
+  font-size: 14px;
+}
+.recoil-race-option input {
+  accent-color: var(--accent);
+}
 .single-upgrade .choices {
   grid-template-columns: minmax(0, 1fr);
 }

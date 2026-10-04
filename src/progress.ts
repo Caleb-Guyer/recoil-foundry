@@ -10,6 +10,12 @@ import { SECURITY_KEY, loadSecurityProfile, validSecurityProfile } from './secur
 import { SHAFT_PROFILE_KEY, loadShaftProfile, validShaftProfile } from './maintenance-trials.ts';
 import { RECOIL_TRIALS_KEY, loadRecoilProfile, validRecoilProfile } from './recoil-trial-rules.ts';
 import {
+  RECOIL_GHOSTS_KEY,
+  loadRecoilGhosts,
+  serializeRecoilGhosts,
+  validRecoilGhosts,
+} from './recoil-race-rules.ts';
+import {
   DISCOVERIES_KEY,
   WORKSHOP_BUILD_KEY,
   discoverBuild,
@@ -55,6 +61,7 @@ export const PROGRESS_KEYS = [
   PRACTICE_RECORDS_KEY,
   SHAFT_PROFILE_KEY,
   RECOIL_TRIALS_KEY,
+  RECOIL_GHOSTS_KEY,
   SECURITY_KEY,
 ] as const;
 export type ProgressValues = Record<(typeof PROGRESS_KEYS)[number], unknown>;
@@ -155,6 +162,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [PRACTICE_RECORDS_KEY]: loadPracticeRecords(read(PRACTICE_RECORDS_KEY)),
     [SHAFT_PROFILE_KEY]: loadShaftProfile(read(SHAFT_PROFILE_KEY)),
     [RECOIL_TRIALS_KEY]: loadRecoilProfile(read(RECOIL_TRIALS_KEY)),
+    [RECOIL_GHOSTS_KEY]: serializeRecoilGhosts(read(RECOIL_GHOSTS_KEY)),
     [SECURITY_KEY]: loadSecurityProfile(
       read(SECURITY_KEY),
       !!checkpoint?.overtime ||
@@ -179,6 +187,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === PRACTICE_RECORDS_KEY ||
           k === SHAFT_PROFILE_KEY ||
           k === RECOIL_TRIALS_KEY ||
+          k === RECOIL_GHOSTS_KEY ||
           k === SECURITY_KEY ||
           k === APPEARANCE_SEEN_KEY ||
           k === ARCHIVE_KEY ||
@@ -212,6 +221,8 @@ export function validateProgress(raw: unknown): ProgressValues | null {
     if (Object.hasOwn(raw, SHAFT_PROFILE_KEY) && !validShaftProfile(raw[SHAFT_PROFILE_KEY]))
       return null;
     if (Object.hasOwn(raw, RECOIL_TRIALS_KEY) && !validRecoilProfile(raw[RECOIL_TRIALS_KEY]))
+      return null;
+    if (Object.hasOwn(raw, RECOIL_GHOSTS_KEY) && !validRecoilGhosts(raw[RECOIL_GHOSTS_KEY]))
       return null;
     // Pre-blueprint profiles and backups migrate to six empty slots.
     if (Object.hasOwn(raw, BLUEPRINTS_KEY) && !validBlueprintSlots(raw[BLUEPRINTS_KEY]))
@@ -331,6 +342,7 @@ export function progressSummary(values: ProgressValues) {
     shaftTrials: loadShaftProfile(values[SHAFT_PROFILE_KEY]).unlocks.length,
     recoilTrials: recoil.clears.length,
     recoilRecords: recoil.records.length,
+    recoilGhosts: loadRecoilGhosts(values[RECOIL_GHOSTS_KEY]).length,
     security: loadSecurityProfile(values[SECURITY_KEY]).unlocked,
   };
 }

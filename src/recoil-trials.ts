@@ -10,12 +10,19 @@ import {
   type RecoilTrialSave,
 } from './recoil-trial-rules.ts';
 import type { StartingGun } from './starting-guns.ts';
+import { RecoilRace } from './recoil-race.ts';
+import {
+  validRecoilChallenge,
+  type RecoilGhost,
+  type RecoilChallenge,
+} from './recoil-race-rules.ts';
 const { Body, Composite } = Matter;
 
 export class RecoilTrials {
   state: RecoilTrialSave | null = null;
   practice: { kind: RecoilTrialKind; gun: StartingGun } | null = null;
   result: RecoilTrialResult | null = null;
+  race = new RecoilRace(this);
   waypoint = 0;
   attempts = 0;
   flying = false;
@@ -78,6 +85,7 @@ export class RecoilTrials {
       : null;
   }
   reset(cleared: boolean) {
+    this.race.reset();
     this.waypoint = 0;
     this.attempts = 0;
     this.flying = false;
@@ -206,6 +214,7 @@ export class RecoilTrials {
       shots: this.shots,
       clean: this.state!.clean === true,
     };
+    this.race.completed(this.result);
     if (!g.testRun || this.practice) this.onComplete(structuredClone(this.result));
   }
   abandon() {
@@ -222,11 +231,24 @@ export class RecoilTrials {
     g.save();
     return true;
   }
-  startPractice(kind: RecoilTrialKind, gun: StartingGun, profile: unknown) {
+  startPractice(
+    kind: RecoilTrialKind,
+    gun: StartingGun,
+    profile: unknown,
+    ghost: RecoilGhost | null = null,
+    challenge: RecoilChallenge | null = null,
+    showGhost = true,
+  ) {
     if (!loadRecoilProfile(profile).clears.includes(kind)) return false;
+    if (
+      challenge &&
+      (!validRecoilChallenge(challenge) || challenge.kind !== kind || challenge.gun !== gun)
+    )
+      return false;
     const save = recoilTrialCheckpoint(kind, gun);
     this.game.start(save.seed, save, null, save);
     this.practice = { kind, gun };
+    this.race.begin(ghost, challenge, showGhost);
     this.game.onChange();
     return true;
   }
