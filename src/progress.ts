@@ -1,3 +1,5 @@
+import { WEAPON_UNLOCKS_KEY, migrateWeaponUnlocks, validWeaponUnlocks } from './weapon-unlocks.ts';
+import { RUN_REWARDS_KEY, loadRunRewards, validRunRewards } from './run-rewards.ts';
 import { loadCheckpoint } from './rules.ts';
 import {
   UPRISING_RECORDS_KEY,
@@ -33,6 +35,8 @@ export const PROGRESS_KEY = 'rf-progress-v1';
 export const CHECKPOINT_KEY = 'rf-checkpoint-v5';
 export const BACKUP_LIMIT = 1024 * 1024;
 export const PROGRESS_KEYS = [
+  WEAPON_UNLOCKS_KEY,
+  RUN_REWARDS_KEY,
   UPRISING_RECORDS_KEY,
   CHECKPOINT_KEY,
   DISCOVERIES_KEY,
@@ -113,6 +117,15 @@ function normalize(read: (key: string) => unknown): ProgressValues {
   const history = loadRunHistory(read(RUN_HISTORY_KEY));
   const book = migrateLogbook(read(LOGBOOK_KEY), checkpoint, history, victories);
   return {
+    [WEAPON_UNLOCKS_KEY]: migrateWeaponUnlocks(
+      read(WEAPON_UNLOCKS_KEY),
+      checkpoint,
+      history,
+      book,
+      earned,
+      loadSecurityProfile(read(SECURITY_KEY)).unlocked > 0,
+    ),
+    [RUN_REWARDS_KEY]: loadRunRewards(read(RUN_REWARDS_KEY)),
     [CHECKPOINT_KEY]: checkpoint,
     [UPRISING_RECORDS_KEY]: loadUprisingRecords(read(UPRISING_RECORDS_KEY)),
     [DISCOVERIES_KEY]: discovered,
@@ -156,6 +169,8 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       !keysOnly(raw, PROGRESS_KEYS) ||
       !PROGRESS_KEYS.every(
         (k) =>
+          k === WEAPON_UNLOCKS_KEY ||
+          k === RUN_REWARDS_KEY ||
           k === UPRISING_RECORDS_KEY ||
           k === BLUEPRINTS_KEY ||
           k === PRACTICE_RECORDS_KEY ||
@@ -168,6 +183,9 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       )
     )
       return null;
+    if (Object.hasOwn(raw, WEAPON_UNLOCKS_KEY) && !validWeaponUnlocks(raw[WEAPON_UNLOCKS_KEY]))
+      return null;
+    if (Object.hasOwn(raw, RUN_REWARDS_KEY) && !validRunRewards(raw[RUN_REWARDS_KEY])) return null;
     const checkpoint = raw[CHECKPOINT_KEY];
     if (
       Object.hasOwn(raw, UPRISING_RECORDS_KEY) &&

@@ -167,175 +167,9 @@ export class Renderer {
       c.stroke();
     }
   }
-  draw(now = performance.now()) {
+  drawEnemies(portrait = false) {
     const c = this.ctx,
-      g = this.game,
-      dt = Math.min(0.05, (now - this.last) / 1000 || 1 / 60);
-    this.last = now;
-    if (g.mode === 'playing' || g.mode === 'title') this.clock += dt;
-    const threats = g.shots.filter((shot) => !shot.friendly && !shot.allied && shot.life > 0);
-    const ratio = this.canvas.width / this.width;
-    c.setTransform(ratio, 0, 0, ratio, 0, 0);
-    if (g.clockOut.active) {
-      drawClockOut(c, g, this.width, this.height, this.reduced);
-      return;
-    }
-    const viewW = this.width / this.scale,
-      viewH = this.height / this.scale;
-    const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
-    const desiredX = clamp(
-      g.maintenance.active && viewW >= 780
-        ? 1000 - viewW / 2
-        : g.player.position.x - viewW * 0.42 + lead,
-      0,
-      Math.max(0, g.worldWidth - viewW),
-    );
-    const desiredY = clamp(
-      g.player.position.y - viewH * 0.58,
-      g.worldTop,
-      Math.max(g.worldTop, 835 - viewH),
-    );
-    const follow = this.portalRevision !== g.portals.revision ? 1 : 1 - Math.exp(-dt * 9);
-    this.portalRevision = g.portals.revision;
-    this.camera.x += (desiredX - this.camera.x) * follow;
-    this.camera.y += (desiredY - this.camera.y) * follow;
-    if (g.mode === 'title') {
-      this.camera.x = 200;
-      this.camera.y = Math.max(0, 825 - viewH);
-    }
-    c.save();
-    c.scale(this.scale, this.scale);
-    if (g.maintenance.active && g.mode !== 'title')
-      drawMaintenanceScenery(c, this.camera, viewW, viewH);
-    else if (g.annex.active && g.mode !== 'title') drawAnnexScenery(c, this.camera, viewW, viewH);
-    else if (g.level.freight && g.mode !== 'title')
-      drawFreightScenery(c, this.camera, viewW, viewH);
-    else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
-    else if (
-      g.uprising.active &&
-      g.mode !== 'title' &&
-      (g.level.uprising === 'railworks' || g.level.uprising === 'core')
-    )
-      drawUprisingScenery(c, g.level.uprising, this.camera, viewW, viewH);
-    else drawScenery(c, g.level.area, this.camera, viewW, viewH);
-    c.restore();
-    c.save();
-    if (!this.reduced && g.mode !== 'title') {
-      const a = this.clock * 95,
-        shake = g.shake;
-      c.translate(
-        Math.sin(a) * shake * 0.48 + g.kick.x,
-        Math.cos(a * 1.3) * shake * 0.32 + g.kick.y,
-      );
-    }
-    c.scale(this.scale, this.scale);
-    c.translate(-this.camera.x, -this.camera.y);
-    this.worldTransform = c.getTransform();
-    drawStormRain(c, g, this.reduced);
-    this.drawBreachBackdrop();
-    drawStoryBackdrop(c, g, this.reduced);
-    drawShutdownBackdrop(c, g);
-    if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
-    drawCounterweightMounts(c, g);
-    const palette = g.annex.active
-      ? ANNEX_PALETTE
-      : g.uprising.active &&
-          g.mode !== 'title' &&
-          (g.level.uprising === 'railworks' || g.level.uprising === 'core')
-        ? UPRISING_PALETTES[g.level.uprising]
-        : AREAS[g.level.area];
-    for (const b of g.terrain) {
-      if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
-        continue;
-      const x = b.bounds.min.x,
-        y = b.bounds.min.y,
-        w = b.bounds.max.x - x,
-        h = b.bounds.max.y - y;
-      c.fillStyle = palette.body;
-      c.fillRect(x, y, w, h);
-      c.fillStyle = palette.face;
-      c.fillRect(x, y + 5, w, h - 5);
-      this.line({ x, y }, { x: x + w, y }, palette.surface, 2);
-      if (h >= 30 && y < WORLD.floor) {
-        this.line({ x, y: y + 2 }, { x, y: y + h }, palette.edge);
-        this.line({ x: x + w, y: y + 2 }, { x: x + w, y: y + h }, palette.edge);
-        if (y + h < WORLD.floor) this.line({ x, y: y + h }, { x: x + w, y: y + h }, palette.edge);
-      }
-      if (!g.annex.active) drawSurfaceDetails(c, g.level.area, x, y, w, h);
-      const weak = g.destruction.pieces.find((piece) => piece.body === b);
-      if (weak) drawCracks(c, weak, this.reduced);
-    }
-    drawLoaderSupports(c, g, this.reduced);
-    if (g.escape?.phase === 'route') this.drawEscapeDirections();
-    if (!g.workshop.active && !g.areaEvents.dark && !g.shutdown.chamber) this.drawExit();
-    drawWorkshopMounts(c, g);
-    drawReforge(c, g, this.reduced);
-    if (!g.areaEvents.dark) {
-      drawDetourDoor(c, g);
-      drawRouteExits(c, g);
-      drawRegionExits(c, g);
-    }
-    this.drawHazards();
-    drawMaintenanceDetails(c, g);
-    drawFreightLift(c, g);
-    drawCrossing(c, g, this.reduced);
-    drawCounterweights(c, g);
-    drawConveyors(c, g, this.reduced);
-    drawCoolant(c, g, this.reduced);
-    drawFloodgate(c, g, this.reduced);
-    drawMagnets(c, g, this.reduced);
-    drawSortingPit(c, g, this.reduced);
-    drawPressure(c, g, this.reduced);
-    drawCrosswind(c, g, this.reduced);
-    drawStormfront(c, g, this.reduced);
-    drawAnnex(c, g, this.reduced);
-    drawSwitchboardArena(c, g);
-    drawCallerWarnings(c, g);
-    drawSpoof(c, g, this.reduced);
-    this.drawProps();
-    drawUprising(c, g);
-    drawWelds(c, g, this.reduced);
-    drawMelt(c, g, this.reduced);
-    drawStoryDetails(c, g, this.reduced);
-    drawShutdown(c, g, this.reduced);
-    this.drawBreaches();
-    drawPortals(c, g, this.clock, this.reduced, this.portalAim);
-    drawTripwires(c, g, this.reduced);
-    drawDemolition(c, g, this.reduced);
-    drawSapperBlasts(c, g, this.reduced);
-    if (!this.reduced && !g.grounded && g.player.speed > 8) {
-      g.trail.forEach((p, i) => {
-        c.globalAlpha = (1 - i / 9) * 0.1;
-        c.fillStyle = '#d1e2dd';
-        c.fillRect(p.x - 11, p.y - 15, 22, 30);
-      });
-      c.globalAlpha = 1;
-    }
-    for (const p of g.particles) {
-      if (this.reduced && p.kind === 'shell') continue;
-      c.globalAlpha =
-        (this.reduced ? 0.3 : 1) *
-        clamp(p.life / p.max, 0, 1) *
-        effectOpacity(p.pos, p.kind === 'ring' ? p.size * (1 - p.life / p.max) : p.size, threats);
-      if (p.kind === 'ring') this.circle(p.pos, p.size * (1 - p.life / p.max), p.color, false, 1.5);
-      else if (p.kind === 'shell') {
-        c.save();
-        c.translate(p.pos.x, p.pos.y);
-        c.rotate((1 - p.life / p.max) * 9);
-        c.fillStyle = p.color;
-        c.fillRect(-3, -1, 6, 2);
-        c.restore();
-      } else
-        this.line(
-          p.pos,
-          { x: p.pos.x - p.vel.x * 1.7, y: p.pos.y - p.vel.y * 1.7 },
-          p.color,
-          p.size,
-        );
-    }
-    c.globalAlpha = 1;
-    drawCourierWorld(c, g);
-    drawAuditDoor(c, g, this.reduced);
+      g = this.game;
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
       if (e.kind === 'switchboard') {
         drawSwitchboard(c, e, this.reduced);
@@ -407,7 +241,7 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'crane') {
-        drawCrane(c, g, e, this.reduced);
+        drawCrane(c, g, e, this.reduced, !portrait);
         continue;
       }
       if (e.kind === 'kiln') {
@@ -707,6 +541,180 @@ export class Renderer {
         );
       }
     }
+  }
+  // Archive photographs use the identical world renderer with a fixed camera.
+  draw(now = performance.now(), framing?: { camera: Vec; scale: number }) {
+    if (framing) this.scale = framing.scale;
+    const c = this.ctx,
+      g = this.game,
+      dt = Math.min(0.05, (now - this.last) / 1000 || 1 / 60);
+    this.last = now;
+    if (g.mode === 'playing' || g.mode === 'title') this.clock += dt;
+    const threats = g.shots.filter((shot) => !shot.friendly && !shot.allied && shot.life > 0);
+    const ratio = this.canvas.width / this.width;
+    c.setTransform(ratio, 0, 0, ratio, 0, 0);
+    if (g.clockOut.active) {
+      drawClockOut(c, g, this.width, this.height, this.reduced);
+      return;
+    }
+    const viewW = this.width / this.scale,
+      viewH = this.height / this.scale;
+    const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
+    const desiredX = clamp(
+      g.maintenance.active && viewW >= 780
+        ? 1000 - viewW / 2
+        : g.player.position.x - viewW * 0.42 + lead,
+      0,
+      Math.max(0, g.worldWidth - viewW),
+    );
+    const desiredY = clamp(
+      g.player.position.y - viewH * 0.58,
+      g.worldTop,
+      Math.max(g.worldTop, 835 - viewH),
+    );
+    const follow = this.portalRevision !== g.portals.revision ? 1 : 1 - Math.exp(-dt * 9);
+    this.portalRevision = g.portals.revision;
+    this.camera.x += (desiredX - this.camera.x) * follow;
+    this.camera.y += (desiredY - this.camera.y) * follow;
+    if (g.mode === 'title') {
+      this.camera.x = 200;
+      this.camera.y = Math.max(0, 825 - viewH);
+    }
+    if (framing) this.camera = { ...framing.camera };
+    c.save();
+    c.scale(this.scale, this.scale);
+    if (g.maintenance.active && g.mode !== 'title')
+      drawMaintenanceScenery(c, this.camera, viewW, viewH);
+    else if (g.annex.active && g.mode !== 'title') drawAnnexScenery(c, this.camera, viewW, viewH);
+    else if (g.level.freight && g.mode !== 'title')
+      drawFreightScenery(c, this.camera, viewW, viewH);
+    else if (g.escape && g.mode !== 'title') this.drawEscapeScenery(viewW, viewH);
+    else if (
+      g.uprising.active &&
+      g.mode !== 'title' &&
+      (g.level.uprising === 'railworks' || g.level.uprising === 'core')
+    )
+      drawUprisingScenery(c, g.level.uprising, this.camera, viewW, viewH);
+    else drawScenery(c, g.level.area, this.camera, viewW, viewH);
+    c.restore();
+    c.save();
+    if (!this.reduced && g.mode !== 'title') {
+      const a = this.clock * 95,
+        shake = g.shake;
+      c.translate(
+        Math.sin(a) * shake * 0.48 + g.kick.x,
+        Math.cos(a * 1.3) * shake * 0.32 + g.kick.y,
+      );
+    }
+    c.scale(this.scale, this.scale);
+    c.translate(-this.camera.x, -this.camera.y);
+    this.worldTransform = c.getTransform();
+    drawStormRain(c, g, this.reduced);
+    this.drawBreachBackdrop();
+    drawStoryBackdrop(c, g, this.reduced);
+    drawShutdownBackdrop(c, g);
+    if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
+    drawCounterweightMounts(c, g);
+    const palette = g.annex.active
+      ? ANNEX_PALETTE
+      : g.uprising.active &&
+          g.mode !== 'title' &&
+          (g.level.uprising === 'railworks' || g.level.uprising === 'core')
+        ? UPRISING_PALETTES[g.level.uprising]
+        : AREAS[g.level.area];
+    for (const b of g.terrain) {
+      if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
+        continue;
+      const x = b.bounds.min.x,
+        y = b.bounds.min.y,
+        w = b.bounds.max.x - x,
+        h = b.bounds.max.y - y;
+      c.fillStyle = palette.body;
+      c.fillRect(x, y, w, h);
+      c.fillStyle = palette.face;
+      c.fillRect(x, y + 5, w, h - 5);
+      this.line({ x, y }, { x: x + w, y }, palette.surface, 2);
+      if (h >= 30 && y < WORLD.floor) {
+        this.line({ x, y: y + 2 }, { x, y: y + h }, palette.edge);
+        this.line({ x: x + w, y: y + 2 }, { x: x + w, y: y + h }, palette.edge);
+        if (y + h < WORLD.floor) this.line({ x, y: y + h }, { x: x + w, y: y + h }, palette.edge);
+      }
+      if (!g.annex.active) drawSurfaceDetails(c, g.level.area, x, y, w, h);
+      const weak = g.destruction.pieces.find((piece) => piece.body === b);
+      if (weak) drawCracks(c, weak, this.reduced);
+    }
+    drawLoaderSupports(c, g, this.reduced);
+    if (g.escape?.phase === 'route') this.drawEscapeDirections();
+    if (!g.workshop.active && !g.areaEvents.dark && !g.shutdown.chamber) this.drawExit();
+    drawWorkshopMounts(c, g);
+    drawReforge(c, g, this.reduced);
+    if (!g.areaEvents.dark) {
+      drawDetourDoor(c, g);
+      drawRouteExits(c, g);
+      drawRegionExits(c, g);
+    }
+    this.drawHazards();
+    drawMaintenanceDetails(c, g);
+    drawFreightLift(c, g);
+    drawCrossing(c, g, this.reduced);
+    drawCounterweights(c, g);
+    drawConveyors(c, g, this.reduced);
+    drawCoolant(c, g, this.reduced);
+    drawFloodgate(c, g, this.reduced);
+    drawMagnets(c, g, this.reduced);
+    drawSortingPit(c, g, this.reduced);
+    drawPressure(c, g, this.reduced);
+    drawCrosswind(c, g, this.reduced);
+    drawStormfront(c, g, this.reduced);
+    drawAnnex(c, g, this.reduced);
+    drawSwitchboardArena(c, g);
+    drawCallerWarnings(c, g);
+    drawSpoof(c, g, this.reduced);
+    this.drawProps();
+    drawUprising(c, g);
+    drawWelds(c, g, this.reduced);
+    drawMelt(c, g, this.reduced);
+    drawStoryDetails(c, g, this.reduced);
+    drawShutdown(c, g, this.reduced);
+    this.drawBreaches();
+    drawPortals(c, g, this.clock, this.reduced, this.portalAim);
+    drawTripwires(c, g, this.reduced);
+    drawDemolition(c, g, this.reduced);
+    drawSapperBlasts(c, g, this.reduced);
+    if (!this.reduced && !g.grounded && g.player.speed > 8) {
+      g.trail.forEach((p, i) => {
+        c.globalAlpha = (1 - i / 9) * 0.1;
+        c.fillStyle = '#d1e2dd';
+        c.fillRect(p.x - 11, p.y - 15, 22, 30);
+      });
+      c.globalAlpha = 1;
+    }
+    for (const p of g.particles) {
+      if (this.reduced && p.kind === 'shell') continue;
+      c.globalAlpha =
+        (this.reduced ? 0.3 : 1) *
+        clamp(p.life / p.max, 0, 1) *
+        effectOpacity(p.pos, p.kind === 'ring' ? p.size * (1 - p.life / p.max) : p.size, threats);
+      if (p.kind === 'ring') this.circle(p.pos, p.size * (1 - p.life / p.max), p.color, false, 1.5);
+      else if (p.kind === 'shell') {
+        c.save();
+        c.translate(p.pos.x, p.pos.y);
+        c.rotate((1 - p.life / p.max) * 9);
+        c.fillStyle = p.color;
+        c.fillRect(-3, -1, 6, 2);
+        c.restore();
+      } else
+        this.line(
+          p.pos,
+          { x: p.pos.x - p.vel.x * 1.7, y: p.pos.y - p.vel.y * 1.7 },
+          p.color,
+          p.size,
+        );
+    }
+    c.globalAlpha = 1;
+    drawCourierWorld(c, g);
+    drawAuditDoor(c, g, this.reduced);
+    this.drawEnemies();
     drawTorch(c, g, this.reduced);
     if (g.blast.life > 0) {
       const { pos, dir, life } = g.blast,
@@ -723,7 +731,7 @@ export class Renderer {
       c.fill();
     }
     g.securityCombat.draw(c);
-    this.drawPlayer();
+    if (!framing) this.drawPlayer();
     drawFloodwater(c, g, this.reduced);
     drawNewPaths(c, g);
     drawTethers(c, g, this.reduced);

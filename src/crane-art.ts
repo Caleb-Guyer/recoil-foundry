@@ -124,7 +124,13 @@ function drawFlak(c: CanvasRenderingContext2D, g: Game, e: Enemy) {
   c.restore();
 }
 
-export function drawCrane(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean): void {
+export function drawCrane(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  includeRail = true,
+): void {
   const rig = e.crane;
   if (!rig) return;
   const p = e.body.position,
@@ -133,15 +139,17 @@ export function drawCrane(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduce
     lit = e.flash > 0;
   c.save();
 
-  // The dim overhead rail has no bright, walkable surface edge.
-  c.fillStyle = '#25353c';
-  c.fillRect(CRANE_RAIL.left, CRANE_RAIL.y - 41, CRANE_RAIL.right - CRANE_RAIL.left, 8);
-  c.fillStyle = '#34464e';
-  c.fillRect(CRANE_RAIL.left, CRANE_RAIL.y - 44, CRANE_RAIL.right - CRANE_RAIL.left, 3);
-  c.fillRect(CRANE_RAIL.left, CRANE_RAIL.y - 33, CRANE_RAIL.right - CRANE_RAIL.left, 3);
-  for (let x = CRANE_RAIL.left + 90; x < CRANE_RAIL.right; x += 320) {
-    c.fillStyle = '#24343c';
-    c.fillRect(x, CRANE_RAIL.y - 71, 5, 27);
+  if (includeRail) {
+    // The dim overhead rail has no bright, walkable surface edge.
+    c.fillStyle = '#25353c';
+    c.fillRect(CRANE_RAIL.left, CRANE_RAIL.y - 41, CRANE_RAIL.right - CRANE_RAIL.left, 8);
+    c.fillStyle = '#34464e';
+    c.fillRect(CRANE_RAIL.left, CRANE_RAIL.y - 44, CRANE_RAIL.right - CRANE_RAIL.left, 3);
+    c.fillRect(CRANE_RAIL.left, CRANE_RAIL.y - 33, CRANE_RAIL.right - CRANE_RAIL.left, 3);
+    for (let x = CRANE_RAIL.left + 90; x < CRANE_RAIL.right; x += 320) {
+      c.fillStyle = '#24343c';
+      c.fillRect(x, CRANE_RAIL.y - 71, 5, 27);
+    }
   }
 
   if (e.spawn > 0) c.globalAlpha *= clamp(1 - e.spawn / 0.65, 0.15, 1);

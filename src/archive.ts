@@ -19,6 +19,8 @@ export const VARIANT_IDS = [
 ] as const;
 const ids = [
   'tool',
+  'gun:shotgun',
+  'gun:nailgun',
   ...MODS.map((m) => 'mod:' + m.id),
   ...LONGEVITY_IDS.map((id) => 'mod:' + id + ':unlocked'),
   ...Object.keys(ENEMY_NAMES).map((id) => 'enemy:' + id),

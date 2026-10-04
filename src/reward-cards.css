@@ -1,0 +1,106 @@
+.starting-gun-choice:disabled {
+  opacity: 1;
+  background: #121c20;
+  border-color: #344443;
+  cursor: default;
+}
+.starting-gun-choice:disabled strong {
+  color: #bac2bc;
+}
+.starting-gun-choice:disabled svg {
+  opacity: 0.45;
+}
+.starting-gun-choice:disabled span {
+  color: #b4bdb4;
+}
+.run-rewards {
+  margin: 22px 0;
+}
+.run-rewards h3 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+.reward-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.reward-card {
+  overflow: hidden;
+  padding: 14px;
+  border: 1px solid #546557;
+  background: #192624;
+  border-radius: 5px;
+  text-align: left;
+}
+.reward-card small,
+.reward-card strong {
+  display: block;
+}
+.reward-card small {
+  color: #e8b56c;
+  font-size: 11px;
+  margin: 12px 0 7px;
+}
+.reward-card strong {
+  font-size: 18px;
+}
+.reward-card p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #bac8bd;
+  margin: 8px 0 0;
+}
+.reward-image,
+.reward-card .archive-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2;
+  border-radius: 3px;
+  background: #111c20;
+}
+.reward-card .mod-mark {
+  width: 100%;
+  height: 100px;
+}
+.logbook-item .archive-image {
+  width: 100%;
+  max-width: 180px;
+  aspect-ratio: 2;
+  height: auto;
+  border-radius: 3px;
+}
+.logbook-entry-top:has(.archive-image) {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.logbook-entry-top .archive-image {
+  width: 100%;
+  aspect-ratio: 2;
+  height: auto;
+  border-radius: 4px;
+}
+.silhouette .archive-image {
+  filter: brightness(0) opacity(0.3);
+}
+.logbook-reward-pictures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.logbook-reward-pictures figure {
+  margin: 0;
+}
+.logbook-reward-pictures figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #bdc9bd;
+}
+@media (max-width: 480px) {
+  .reward-cards {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,3 +1,4 @@
+import { WEAPON_REQUIREMENTS } from './weapon-unlocks.ts';
 import {
   MODS,
   MOD_REQUIRES,
@@ -19,6 +20,8 @@ interface BuildOptions {
   applyLabel?: string;
   change?: (mods: string[], startingGun: StartingGun) => void;
   startingGun?: StartingGun;
+  unlockedGuns?: readonly StartingGun[];
+  showStartingGuns?: boolean;
   blueprints?: BlueprintStore;
 }
 
@@ -34,8 +37,11 @@ export function workshopMenu(
 ) {
   const limit = options.limit ?? MODS.length;
   let draft = workshopBuild(initial, known);
+  const unlockedGuns = options.unlockedGuns ?? ['pistol'];
   const allowStartingGuns = options.limit === undefined;
+  const showGunSelector = allowStartingGuns && options.showStartingGuns !== false;
   let draftGun: StartingGun = allowStartingGuns ? (options.startingGun ?? 'pistol') : 'pistol';
+  if (!unlockedGuns.includes(draftGun)) draftGun = 'pistol';
   let library: MenuBack | null = null;
   const discovered = MODS.filter((mod) => known.includes(mod.id));
   content.innerHTML =
@@ -51,10 +57,11 @@ export function workshopMenu(
       : '') +
     '<div id="workshop-build">' +
     '<p class="practice-note" id="workshop-note"></p>' +
-    (allowStartingGuns
+    (showGunSelector
       ? '<label class="workshop-starter">Starting gun <select id="workshop-starting-gun" aria-label="Starting gun">' +
         STARTING_GUN_IDS.map(
-          (id) => `<option value="${id}">${STARTING_GUNS[id].name}</option>`,
+          (id) =>
+            `<option value="${id}" ${unlockedGuns.includes(id) ? '' : 'disabled'}>${STARTING_GUNS[id].name}${unlockedGuns.includes(id) ? '' : ' · Locked · ' + WEAPON_REQUIREMENTS[id]}</option>`,
         ).join('') +
         '</select></label>'
       : '') +
@@ -229,6 +236,7 @@ export function workshopMenu(
         false,
         draftGun,
         allowStartingGuns,
+        unlockedGuns,
       );
     };
   }

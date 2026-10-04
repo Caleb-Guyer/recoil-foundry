@@ -1,3 +1,5 @@
+import { drawArchiveImages } from './archive-images.ts';
+import { commendationRewards, REWARD_CATALOG } from './run-rewards.ts';
 import { LOGBOOK_SECTIONS } from './logbook.ts';
 import type { LogbookEntry, LogbookSection } from './logbook.ts';
 import type { Mod } from './rules.ts';
@@ -36,13 +38,19 @@ const commendationMark = (earned: boolean) =>
 const questionMark =
   '<svg class="mod-mark" viewBox="0 0 56 48" aria-hidden="true"><path d="M18 15c0-12 23-12 23 0 0 7-13 8-13 15M28 37v4"/></svg>';
 const entryMark = (entry: LogbookEntry, mark: (mod: Mod) => string) =>
-  entry.state === 'locked'
-    ? questionMark
-    : entry.mod
-      ? mark(entry.mod)
-      : entry.earned !== undefined
-        ? commendationMark(entry.earned)
-        : archiveMark(entry.id) || fileMark;
+  entry.weapon
+    ? '<canvas class="archive-image" width="640" height="320" data-reward-image="gun:' +
+      entry.weapon +
+      '" aria-hidden="true"></canvas>'
+    : entry.id === 'tool'
+      ? '<canvas class="archive-image" width="640" height="320" data-reward-image="gun:pistol" aria-hidden="true"></canvas>'
+      : entry.state === 'locked'
+        ? questionMark
+        : entry.mod
+          ? mark(entry.mod)
+          : entry.earned !== undefined
+            ? commendationMark(entry.earned)
+            : archiveMark(entry.id) || fileMark;
 const goalMark = (entry: LogbookEntry) =>
   entry.goal
     ? '<div class="logbook-goal"><strong>' +
@@ -98,6 +106,26 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
     '</p><h3 id="logbook-entry-title" tabindex="-1">' +
     escapeLogbook(entry.name) +
     '</h3></div></div>' +
+    (entry.earned !== undefined && entry.id.startsWith('commendation:')
+      ? '<div class="logbook-reward-pictures">' +
+        REWARD_CATALOG.filter((r) =>
+          commendationRewards(
+            entry.id.slice(13) as import('./commendations.ts').CommendationId,
+          ).includes(r.id),
+        )
+          .map(
+            (r) =>
+              '<figure><canvas class="reward-image" width="640" height="320" data-reward-image="' +
+              r.image +
+              '" role="img" aria-label="' +
+              escapeLogbook(r.name) +
+              '"></canvas><figcaption>' +
+              escapeLogbook(r.name) +
+              '</figcaption></figure>',
+          )
+          .join('') +
+        '</div>'
+      : '') +
     (entry.description
       ? '<p class="logbook-function">' + escapeLogbook(entry.description) + '</p>'
       : '') +
@@ -117,9 +145,11 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
     (entry.earned ? '<button class="quiet commendation-equip">Open Appearance ↗</button>' : '') +
     (entry.earned === false || entry.state === 'locked'
       ? '<p class="logbook-locked">Report not yet filed.<br><span>' +
-        (entry.id.startsWith('uprising:')
-          ? 'Campaign jobs count. Extra routes enter your next Campaign.'
-          : 'Campaign and Daily runs count. Practice, Workshop and test runs do not.') +
+        (entry.weapon
+          ? 'Earn this tool to choose it for Campaign and Workshop.'
+          : entry.id.startsWith('uprising:')
+            ? 'Campaign jobs count. Extra routes enter your next Campaign.'
+            : 'Campaign and Daily runs count. Practice, Workshop and test runs do not.') +
         '</span></p>'
       : '<div class="logbook-document"><p class="logbook-source">' +
         escapeLogbook(entry.lore[0]) +
@@ -142,6 +172,7 @@ export function logbookMenu(
   preview = false,
   appearance?: () => void,
   openEntry?: (entry: LogbookEntry) => void,
+  paintRewards?: (root: HTMLElement) => void,
 ) {
   const opened = new Set<string>();
   const filters: { id: CatalogFilter; name: string }[] = [
@@ -337,6 +368,8 @@ export function logbookMenu(
         '</h3><p>' +
         emptyHint +
         '</p></div>';
+    if (paintRewards) paintRewards(content);
+    else drawArchiveImages(content);
     detail.scrollTop = 0;
     const equip = detail.querySelector<HTMLButtonElement>('.commendation-equip');
     if (equip) {

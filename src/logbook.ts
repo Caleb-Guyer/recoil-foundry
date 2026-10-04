@@ -136,6 +136,7 @@ export interface LogbookEntry {
   description: string;
   lore: Lore;
   mod?: Mod;
+  weapon?: import('./starting-guns.ts').StartingGun;
   earned?: boolean;
   reward?: string;
   state?: 'locked' | 'unseen' | 'known';

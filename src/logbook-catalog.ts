@@ -1,3 +1,5 @@
+import { STARTING_GUNS } from './starting-guns.ts';
+import { unlockedStartingGuns, WEAPON_REQUIREMENTS, type WeaponUnlocks } from './weapon-unlocks.ts';
 import { MODS, MOD_PATHS, PATH_NAMES } from './rules.ts';
 import { uprisingCatalog } from './uprising-catalog.ts';
 import { AREAS } from './areas.ts';
@@ -109,6 +111,7 @@ export function logbookCatalog(
   rawArchive: unknown,
   goals: readonly UnlockGoal[] = [],
   uprisingRecords: unknown = null,
+  weapons?: WeaponUnlocks,
 ): LogbookEntry[] {
   const archive = loadArchive(rawArchive),
     base = loadLogbook(progress);
@@ -127,6 +130,30 @@ export function logbookCatalog(
   const entries: LogbookEntry[] = [
     ...uprisingCatalog(rawArchive, uprisingRecords),
     recovered.get('tool')!,
+    ...(weapons?.started
+      ? (['shotgun', 'nailgun'] as const).map((gun) => ({
+          id: 'gun:' + gun,
+          name: STARTING_GUNS[gun].name,
+          section: 'equipment' as const,
+          weapon: gun,
+          family: 'general',
+          label: unlockedStartingGuns(weapons).includes(gun)
+            ? 'Starting gun · Unlocked'
+            : 'Starting gun · Locked',
+          description: STARTING_GUNS[gun].description,
+          unlock: unlockedStartingGuns(weapons).includes(gun)
+            ? undefined
+            : WEAPON_REQUIREMENTS[gun],
+          state: unlockedStartingGuns(weapons).includes(gun)
+            ? ('known' as const)
+            : ('locked' as const),
+          lore: [
+            'Toolroom register',
+            'M. Vale · maintenance',
+            'Available in Campaign and Workshop. Every collected fitting uses the same mount.',
+          ] as Lore,
+        }))
+      : []),
     ...MODS.map((mod, index) => {
       const existing = recovered.get('mod:' + mod.id);
       const goal = goals.find((g) => g.id === mod.id);

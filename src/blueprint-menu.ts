@@ -1,3 +1,4 @@
+import { WEAPON_REQUIREMENTS } from './weapon-unlocks.ts';
 import {
   BLUEPRINT_NAME_LIMIT,
   BLUEPRINT_CODE_LIMIT,
@@ -35,6 +36,7 @@ export function blueprintMenu(
   saveOnly = false,
   startingGun: StartingGun = 'pistol',
   allowStartingGuns = true,
+  unlockedGuns: readonly StartingGun[] = ['pistol', 'shotgun', 'nailgun'],
 ): MenuBack {
   let busy = false;
   let backAction = exit;
@@ -177,6 +179,11 @@ export function blueprintMenu(
       (!allowStartingGuns && blueprint.startingGun && blueprint.startingGun !== 'pistol'
         ? '<p class="practice-note">Load this starting gun in the Workshop. Boss challenges use the Service pistol.</p>'
         : '') +
+      (!unlockedGuns.includes(blueprint.startingGun ?? 'pistol')
+        ? '<p class="practice-note">Locked · ' +
+          WEAPON_REQUIREMENTS[blueprint.startingGun ?? 'pistol'] +
+          '</p>'
+        : '') +
       (preview.labels.length
         ? '<ul class="recap-build">' +
           preview.labels.map((label) => '<li>' + escape(label) + '</li>').join('') +
@@ -196,7 +203,8 @@ export function blueprintMenu(
     const preview = blueprintPreview(blueprint, known);
     return (
       '<button id="blueprint-load" class="primary"' +
-      ((preview.unavailable && !preview.mods.length) ||
+      (!unlockedGuns.includes(blueprint.startingGun ?? 'pistol') ||
+      (preview.unavailable && !preview.mods.length) ||
       (!allowStartingGuns && blueprint.startingGun && blueprint.startingGun !== 'pistol')
         ? ' disabled'
         : '') +
@@ -207,7 +215,12 @@ export function blueprintMenu(
   }
   function bindLoad(blueprint: Blueprint) {
     const button = root.querySelector<HTMLButtonElement>('#blueprint-load');
-    if (button && load)
+    if (
+      button &&
+      load &&
+      unlockedGuns.includes(blueprint.startingGun ?? 'pistol') &&
+      (allowStartingGuns || !blueprint.startingGun || blueprint.startingGun === 'pistol')
+    )
       button.onclick = () =>
         load(blueprintPreview(blueprint, known).mods, blueprint.startingGun ?? 'pistol');
   }

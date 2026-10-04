@@ -34,6 +34,9 @@ export interface AuditorRig {
   jumpAt: number;
   stepAt: number;
 }
+export function createAuditorRig(): AuditorRig {
+  return { attack: 'burst', phase: 0, rounds: 0, fired: 0, nextShot: 0, jumpAt: 0, stepAt: 0 };
+}
 export function auditPhase(hp: number, visits: number) {
   return Math.max(visits - 1, hp < AUDITOR_HP / 3 ? 2 : hp < (AUDITOR_HP * 2) / 3 ? 1 : 0);
 }
@@ -214,15 +217,7 @@ export class AuditorSystem {
             e.hp = s.hp;
             e.maxHp = AUDITOR_HP;
             e.timer = 0.8;
-            e.auditor = {
-              attack: 'burst',
-              phase: 0,
-              rounds: 0,
-              fired: 0,
-              nextShot: 0,
-              jumpAt: 0,
-              stepAt: 0,
-            };
+            e.auditor = createAuditorRig();
             Body.setMass(e.body, g.player.mass * 8);
             this.door = null;
             this.age = this.recall = 0;
