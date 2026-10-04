@@ -1,0 +1,117 @@
+dialog.upgrade-dialog {
+  width: min(820px, calc(100% - 40px));
+}
+.upgrade-dialog .mod {
+  padding: 17px;
+}
+.upgrade-dialog .mod-top {
+  margin-bottom: 14px;
+}
+.upgrade-dialog .reforge-choice .mod-top {
+  margin-bottom: 8px;
+}
+.upgrade-dialog .reforge-arrow {
+  margin: 6px 0;
+}
+.upgrade-dialog .mod.mod-inspected {
+  border-color: var(--accent);
+}
+.upgrade-preview {
+  margin-top: 18px;
+  border-top: 1px solid #354440;
+  padding-top: 12px;
+  min-height: 234px;
+}
+.upgrade-preview-idle {
+  color: var(--muted);
+  font-size: 13px;
+  padding-top: 10px;
+}
+.upgrade-preview-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.upgrade-preview-heading span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.upgrade-preview-scenes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.upgrade-preview-scenes figure {
+  margin: 0;
+  min-width: 0;
+}
+.upgrade-preview-scenes figcaption {
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.upgrade-preview-scenes canvas {
+  display: block;
+  position: static;
+  width: 100%;
+  height: 132px;
+  border: 1px solid #354440;
+  border-radius: 2px;
+  cursor: default;
+}
+.upgrade-preview-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 10px 0 0;
+}
+.upgrade-preview-stats div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+}
+.upgrade-preview-stats dt {
+  color: var(--muted);
+}
+.upgrade-preview-stats dd {
+  margin: 0;
+  color: #e7e8dc;
+  font-variant-numeric: tabular-nums;
+}
+.upgrade-preview-summary p {
+  color: #b0bdb5;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 7px 0 0;
+}
+@media (max-width: 600px) {
+  dialog.upgrade-dialog {
+    width: calc(100% - 28px);
+  }
+  .upgrade-preview-scenes {
+    gap: 8px;
+  }
+  .upgrade-preview-scenes canvas {
+    height: 100px;
+  }
+  .upgrade-preview {
+    min-height: 216px;
+  }
+  .upgrade-dialog .mod {
+    padding: 12px;
+  }
+  .upgrade-dialog .mod-top {
+    margin-bottom: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .upgrade-dialog .mod {
+    transition: none;
+  }
+  .upgrade-dialog .mod:hover {
+    transform: none;
+  }
+}

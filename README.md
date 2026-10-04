@@ -16,6 +16,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
+**See the Difference — version 4.5.0.** Hover or focus an upgrade to compare your current gun with the combined build in a real firing range. Changed values show the tradeoffs, and combination hints use upgrades you already own. Reforge comparisons include the fitting you give up. Reduced effects uses a still preview. [Release notes](docs/releases/4.5.0.md).
+
 **Room to Move — version 4.4.0.** Campaign fights alternate between ambushes, crossfire and elevated encounters, with quieter patrols after bosses. Reinforcements enter in staggered groups, and ordinary attack warnings leave more space to move. Defense jobs separate patrol clearance from the generator hold; boss recovery leaves time for each starting gun’s firing cycle. [Release notes](docs/releases/4.4.0.md).
 
 **Starting Guns — version 4.1.0.** Choose your tool when you start a Campaign: the Service pistol for balanced aim and recoil, the Recoil shotgun for close fights and strong launches, or the Burst nailgun for precise bursts with smaller kicks. All three use the same upgrades. Continue, Retry, replays and Workshop blueprints keep your choice; each new Daily fixes one gun for everyone. Older Continue saves and Daily links keep the pistol. [Release notes](docs/releases/4.1.0.md).

@@ -13,6 +13,10 @@ import {
 } from './run-rewards.ts';
 import { rewardCards, drawRewardImages } from './reward-cards.ts';
 import { modMark } from './upgrade-icons.ts';
+import './upgrade-preview.css';
+import { inspectUpgrade } from './upgrade-inspection.ts';
+import { UpgradePreviewView, upgradePreviewMarkup } from './upgrade-preview-view.ts';
+import { upgradePreviewTestFromUrl } from './upgrade-preview-test.ts';
 import {
   UPRISING_RECORDS_KEY,
   UPRISING_DISTRICTS,
@@ -385,7 +389,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Room to Move</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>See the Difference</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -419,6 +423,8 @@ let updateProgressPanel: (() => void) | undefined;
 let allowProgressReload = false;
 game.cosmetics = { ...equippedCosmetics };
 let replayView: ReplayView | null = null;
+let upgradePreview: UpgradePreviewView | null = null;
+const previewMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let replayRoom = game.level;
 const workshopTools = document.createElement('div');
 workshopTools.className = 'workshop-tools';
@@ -498,6 +504,7 @@ let linkedRunTest =
   presentationTestFromUrl(entryUrl) ??
   combatFeelTestFromUrl(entryUrl) ??
   encounterTestFromUrl(entryUrl) ??
+  upgradePreviewTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
   storyTestFromUrl(entryUrl) ??
@@ -893,6 +900,8 @@ function clearInput(disarm = true) {
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
+  upgradePreview?.dispose();
+  upgradePreview = null;
   buildMenu = null;
   bindingEditor?.cancel();
   bindingEditor = null;
@@ -1793,6 +1802,8 @@ game.onChange = () => {
   if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
 };
 function showDialog(kind: string) {
+  upgradePreview?.dispose();
+  upgradePreview = null;
   if (kind === 'upgrade' && game.uprising.choices.length) kind = 'uprising';
   buildMenu = null;
   modal.setAttribute('aria-labelledby', 'dialog-title');
@@ -1807,6 +1818,7 @@ function showDialog(kind: string) {
     (kind === 'upgrade' && game.offers.length === 1) ||
     (kind === 'reforge' && game.reforge.offers.length === 1);
   modal.classList.toggle('single-upgrade', singleUpgrade);
+  modal.classList.toggle('upgrade-dialog', kind === 'upgrade' || kind === 'reforge');
   modal.classList.toggle('practice-dialog', kind === 'practice' || kind === 'practice-setup');
   modal.classList.toggle(
     'workshop-dialog',
@@ -1847,11 +1859,11 @@ function showDialog(kind: string) {
     );
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Room to move.</h2>' +
-      '<p class="update-tagline">Different fights. Clear openings. A moment to breathe.</p>' +
-      '<dl class="update-notes"><div><dt>A changing combat rhythm.</dt><dd>New Campaigns mix rushing ambushes, ranged crossfire and elevated fights. Quieter patrols follow bosses, and reinforcements arrive in staggered groups.</dd></div>' +
-      '<div><dt>Space to react.</dt><dd>Ordinary firing lanes and heavy attacks take turns before their warnings begin. Every shown warning keeps its full timing. Boss recovery gives each starting gun an opening.</dd></div>' +
-      '<div><dt>Jobs with clearer phases.</dt><dd>Clear the patrol before activating a defense generator, then protect it for eighteen seconds. Moving deliberately through the cleared exit skips a job.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">See the difference.</h2>' +
+      '<p class="update-tagline">Your gun. Your next upgrade.</p>' +
+      '<dl class="update-notes"><div><dt>Compare before you choose.</dt><dd>Hover or focus an upgrade to watch your current gun beside the combined build in a firing range. Reforge includes the fitting you give up.</dd></div>' +
+      '<div><dt>Understand the tradeoffs.</dt><dd>Only changed values appear: hits, firing speed, pellets, kick and more. Combination hints explain upgrades already on your gun.</dd></div>' +
+      '<div><dt>Keep it quiet.</dt><dd>One shared comparison follows the focused choice. Reduced effects uses a still preview. Your run waits while you decide.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2206,8 +2218,6 @@ function showDialog(kind: string) {
             (i + 1) +
             '</kbd></span><span class="reforge-from">Give up ' +
             from.name +
-            '</span><span class="reforge-loss">' +
-            modDescription(from, game.mods, game.startingGun) +
             '</span><span class="reforge-arrow" aria-hidden="true">↓</span><strong>' +
             to.name +
             '</strong><span class="mod-copy">' +
@@ -2224,7 +2234,19 @@ function showDialog(kind: string) {
           );
         })
         .join('') +
-      '</div><div class="dialog-actions"><button id="back" class="quiet">Walk away</button></div>';
+      '</div>' +
+      upgradePreviewMarkup() +
+      '<div class="dialog-actions"><button id="back" class="quiet">Walk away</button></div>';
+    upgradePreview = new UpgradePreviewView(
+      content.querySelector('.upgrade-preview')!,
+      new Map(
+        Array.from(content.querySelectorAll<HTMLButtonElement>('[data-swap]')).map((button) => {
+          const swap = game.reforge.offers[Number(button.dataset.swap)],
+            mod = MODS.find((m) => m.id === swap.to)!;
+          return [button, inspectUpgrade(game.mods, mod, game.startingGun, game.hp, swap.from)];
+        }),
+      ),
+    );
     content.querySelectorAll<HTMLButtonElement>('[data-swap]').forEach((button) => {
       button.onclick = () => {
         sound.unlock();
@@ -2299,6 +2321,7 @@ function showDialog(kind: string) {
         )
         .join('') +
       '</div>' +
+      upgradePreviewMarkup() +
       (!activeDaily &&
       !game.practice &&
       !game.courierReward &&
@@ -2323,6 +2346,20 @@ function showDialog(kind: string) {
               : 'Reroll · −' + REROLL_COST + ' health') +
           '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
         : '');
+    upgradePreview = new UpgradePreviewView(
+      content.querySelector('.upgrade-preview')!,
+      new Map(
+        Array.from(content.querySelectorAll<HTMLButtonElement>('[data-mod]')).map((button) => [
+          button,
+          inspectUpgrade(
+            game.mods,
+            game.offers.find((m) => m.id === button.dataset.mod)!,
+            game.startingGun,
+            game.hp,
+          ),
+        ]),
+      ),
+    );
     const reroll = document.getElementById('reroll');
     if (reroll)
       reroll.onclick = () => {
@@ -3383,6 +3420,12 @@ function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   const pad = pollController(now);
+  upgradePreview?.frame(
+    dt,
+    now,
+    renderer.reduced || previewMotion.matches,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+  );
   game.updateClockOut(dt, pageActive && document.hasFocus() && !document.hidden);
   if (game.mode === 'playing') {
     accumulator += dt;

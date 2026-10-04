@@ -570,7 +570,7 @@ export class Renderer {
     }
   }
   // Archive photographs use the identical world renderer with a fixed camera.
-  draw(now = performance.now(), framing?: { camera: Vec; scale: number }) {
+  draw(now = performance.now(), framing?: { camera: Vec; scale: number; player?: boolean }) {
     if (framing) this.scale = framing.scale;
     const c = this.ctx,
       g = this.game,
@@ -759,7 +759,7 @@ export class Renderer {
       c.fill();
     }
     g.securityCombat.draw(c);
-    if (!framing) this.drawPlayer();
+    if (!framing || framing.player) this.drawPlayer();
     drawFloodwater(c, g, this.reduced);
     drawNewPaths(c, g);
     drawTethers(c, g, this.reduced);
