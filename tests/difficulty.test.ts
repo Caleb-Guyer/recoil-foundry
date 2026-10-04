@@ -5,6 +5,7 @@ import { enemyHealth } from '../src/enemies.ts';
 import { Game } from '../src/game.ts';
 import type { Input } from '../src/game.ts';
 import { dailyForDate } from '../src/daily.ts';
+import { dailyStartingGun } from '../src/starting-guns.ts';
 import { getGun, loadCheckpoint } from '../src/rules.ts';
 import type { Checkpoint } from '../src/rules.ts';
 
@@ -180,7 +181,8 @@ test('daily continuation rebuilds the same scaled waves and gun regardless of co
   assert(!a.waves.pending && !b.waves.pending);
   assert.deepEqual(roster(a), roster(b));
   assert.deepEqual(a.gun, b.gun);
-  assert.deepEqual(a.gun, getGun(save.mods));
+  assert.equal(a.startingGun, dailyStartingGun(save.seed));
+  assert.deepEqual(a.gun, getGun(save.mods, dailyStartingGun(save.seed)));
   assert.equal(a.hp, b.hp);
 });
 

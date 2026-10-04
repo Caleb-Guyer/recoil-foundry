@@ -10,6 +10,7 @@ import {
   type Blueprint,
   type BlueprintSlots,
 } from './blueprints.ts';
+import { STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 
 export interface BlueprintStore {
   read(): BlueprintSlots;
@@ -29,9 +30,11 @@ export function blueprintMenu(
   store: BlueprintStore,
   known: readonly string[],
   current: readonly string[],
-  load: ((mods: string[]) => void) | null,
+  load: ((mods: string[], startingGun: StartingGun) => void) | null,
   exit: () => void,
   saveOnly = false,
+  startingGun: StartingGun = 'pistol',
+  allowStartingGuns = true,
 ): MenuBack {
   let busy = false;
   let backAction = exit;
@@ -102,7 +105,7 @@ export function blueprintMenu(
     const input = get<HTMLInputElement>('blueprint-name');
     input.value = rename ? blueprint.name : (existing?.name ?? blueprint.name);
     const save = () => {
-      void commit(index, { name: input.value.trim(), mods: [...blueprint.mods] });
+      void commit(index, { ...blueprint, name: input.value.trim(), mods: [...blueprint.mods] });
     };
     get<HTMLButtonElement>('blueprint-save').onclick = save;
     input.onkeydown = (event) => {
@@ -131,7 +134,11 @@ export function blueprintMenu(
               '</small> ' +
               escape(slot?.name ?? 'Empty slot') +
               '</span><span>' +
-              (slot ? (slot.mods.length ? slot.mods.length + ' upgrades' : 'Starting gun') : '—') +
+              (slot
+                ? slot.mods.length
+                  ? slot.mods.length + ' upgrades'
+                  : STARTING_GUNS[slot.startingGun ?? 'pistol'].name
+                : '—') +
               '</span></button>',
           )
           .join('') +
@@ -153,13 +160,23 @@ export function blueprintMenu(
     });
     if (!pending) {
       get<HTMLButtonElement>('blueprint-save-current').onclick = () =>
-        list({ name: 'Build', mods: [...current] });
+        list({
+          name: 'Build',
+          mods: [...current],
+          ...(startingGun === 'pistol' ? {} : { startingGun }),
+        });
       if (!saveOnly) get<HTMLButtonElement>('blueprint-import').onclick = importCode;
     }
   }
   function previewBody(blueprint: Blueprint) {
     const preview = blueprintPreview(blueprint, known);
     return (
+      '<p class="practice-note">' +
+      STARTING_GUNS[blueprint.startingGun ?? 'pistol'].name +
+      '</p>' +
+      (!allowStartingGuns && blueprint.startingGun && blueprint.startingGun !== 'pistol'
+        ? '<p class="practice-note">Load this starting gun in the Workshop. Boss challenges use the Service pistol.</p>'
+        : '') +
       (preview.labels.length
         ? '<ul class="recap-build">' +
           preview.labels.map((label) => '<li>' + escape(label) + '</li>').join('') +
@@ -179,7 +196,10 @@ export function blueprintMenu(
     const preview = blueprintPreview(blueprint, known);
     return (
       '<button id="blueprint-load" class="primary"' +
-      (preview.unavailable && !preview.mods.length ? ' disabled' : '') +
+      ((preview.unavailable && !preview.mods.length) ||
+      (!allowStartingGuns && blueprint.startingGun && blueprint.startingGun !== 'pistol')
+        ? ' disabled'
+        : '') +
       '>' +
       (preview.unavailable ? 'Load available upgrades' : 'Load build') +
       '</button>'
@@ -187,7 +207,9 @@ export function blueprintMenu(
   }
   function bindLoad(blueprint: Blueprint) {
     const button = root.querySelector<HTMLButtonElement>('#blueprint-load');
-    if (button && load) button.onclick = () => load(blueprintPreview(blueprint, known).mods);
+    if (button && load)
+      button.onclick = () =>
+        load(blueprintPreview(blueprint, known).mods, blueprint.startingGun ?? 'pistol');
   }
   function detail(index: number) {
     const blueprint = store.read()[index];
@@ -225,7 +247,7 @@ export function blueprintMenu(
       () => detail(index),
     );
     const field = get<HTMLTextAreaElement>('blueprint-code');
-    field.value = blueprintCode(blueprint.mods);
+    field.value = blueprintCode(blueprint.mods, blueprint.startingGun);
     get<HTMLButtonElement>('blueprint-copy').onclick = async () => {
       try {
         await navigator.clipboard.writeText(field.value);
@@ -243,7 +265,7 @@ export function blueprintMenu(
       'Import build.',
       '<label for="blueprint-code">Blueprint code</label><textarea id="blueprint-code" class="workshop-search blueprint-code" maxlength="' +
         BLUEPRINT_CODE_LIMIT +
-        '" placeholder="RF1.…" spellcheck="false"></textarea>',
+        '" placeholder="RF1.… or RF2.…" spellcheck="false"></textarea>',
       '<button id="blueprint-preview" class="primary">Preview build</button>',
       () => list(),
     );

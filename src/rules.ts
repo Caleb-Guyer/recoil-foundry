@@ -22,6 +22,7 @@ import { WORKSHOP_MODS, WORKSHOP_PARENTS } from './workshop-upgrades.ts';
 import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
 import { SUBVERSION_MODS, SUBVERSION_PARENTS, isSubversion } from './subversion-rules.ts';
 import { isLegacyDaily } from './daily.ts';
+import { applyStartingGun, validStartingGunSave, type StartingGun } from './starting-guns.ts';
 import { LONGEVITY_MODS, draftUnlocked, validUnlocks } from './longevity.ts';
 import {
   dailyRegion,
@@ -531,7 +532,13 @@ export const REPAIR_REWARD = {
 } as const;
 export type Mod = (typeof MODS)[number] | typeof REPAIR_REWARD;
 // Conversion-specific copy describes what the owned gun will actually do.
-export function modDescription(mod: Mod, mods: readonly string[]): string {
+export function modDescription(
+  mod: Mod,
+  mods: readonly string[],
+  startingGun: StartingGun = 'pistol',
+): string {
+  if (startingGun === 'nailgun' && mod.id === 'burst')
+    return '20% shorter burst recovery. 10% lighter hits and 20% lighter kicks.';
   if (mod.id === 'tether' && mods.includes('grapnel'))
     return 'Airborne wall hits anchor your swing cable. Recoil builds momentum; jump to detach. One anchor per airtime.';
   if (mod.id === 'suspension' && mods.includes('convoy'))
@@ -569,7 +576,7 @@ export function modDescription(mod: Mod, mods: readonly string[]): string {
     return 'Charged pellets merge into a piercing rail. Backfire keeps a separate rear rail.';
   if (mods.includes('rail-spike')) {
     if (mod.id === 'scatter')
-      return 'Five pellets merge into a stronger charged rail. Uncharged fire stays a spread.';
+      return `${startingGun === 'shotgun' ? 'Nine' : 'Five'} pellets merge into a stronger charged rail. Uncharged fire stays a spread.`;
     if (mod.id === 'backfire')
       return 'Add a charged rear rail or an uncharged rear volley. 20% longer shot delay.';
     if (mod.id === 'grindshot')
@@ -584,10 +591,14 @@ export function modDescription(mod: Mod, mods: readonly string[]): string {
   if (mod.id === 'breach')
     return 'Rear blasts clear up to two small bullets every 0.45 seconds. Heavy rounds resist.';
   if (mod.id === 'cutting-torch')
-    return mods.includes('burst')
+    return mods.includes('burst') || startingGun === 'nailgun'
       ? 'A laser with three concentrated pulses, then recovery. Hold fire to cut.'
       : mod.description;
-  if (!beam) return mod.description;
+  if (!beam) {
+    if (startingGun === 'shotgun' && mod.id === 'scatter')
+      return 'Nine pellets. 60% more total damage. Wider spread and a longer shot delay.';
+    return mod.description;
+  }
   switch (mod.id) {
     case 'scatter':
       return 'A wider beam. 28% more sustained damage. Slower pulses.';
@@ -915,7 +926,7 @@ export function modPathLabel(id: string): string {
     ? PATH_NAMES[branch.path] + (isFusion(id) ? ' · Fusion' : group ? ' · ' + group : '')
     : (group ?? (isFusion(id) ? 'Fusion' : ''));
 }
-export function getGun(mods: readonly string[]): Gun {
+export function getGun(mods: readonly string[], startingGun: StartingGun = 'pistol'): Gun {
   const g: Gun = {
     damage: 24,
     interval: 0.22,
@@ -1089,7 +1100,7 @@ export function getGun(mods: readonly string[]): Gun {
   // Recall's extra penetration must compose in either acquisition order.
   if (mods.includes('recall') && mods.includes('pierce')) g.pierce = 3;
   if (mods.includes('flywheel')) g.bounces = Math.max(0, g.bounces - 2);
-  return g;
+  return applyStartingGun(g, startingGun, mods);
 }
 export const STAGES = 20;
 export const ROOMS_PER_AREA = 4;
@@ -1123,6 +1134,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  startingGun?: StartingGun;
   uprising?: import('./uprising-model.ts').UprisingRun;
   unlocks?: import('./longevity.ts').LongevityId[];
   factory?: import('./factory.ts').FactoryRun;
@@ -1302,6 +1314,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   )
     return null;
   const stages = legacy ? 12 : previous ? 16 : STAGES;
+  if (!validStartingGunSave(d.startingGun, d.seed)) return null;
   const rooms = legacy ? 3 : ROOMS_PER_AREA;
   const missed = d.missedUpgrades ?? 0;
   const courierBonus = (d.courier?.status === 'claimed' ? 1 : 0) + auditorBonus(d.auditor);

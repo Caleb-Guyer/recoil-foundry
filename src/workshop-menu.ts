@@ -7,6 +7,7 @@ import {
   modDescription,
 } from './rules.ts';
 import { workshopBuild } from './workshop-build.ts';
+import { STARTING_GUNS, STARTING_GUN_IDS, type StartingGun } from './starting-guns.ts';
 import { BRANCH_PARENTS } from './upgrade-branches.ts';
 import { appearanceMenu, type AppearanceOptions } from './appearance-menu.ts';
 import { blueprintMenu, type BlueprintStore, type MenuBack } from './blueprint-menu.ts';
@@ -16,7 +17,8 @@ interface BuildOptions {
   note?: string;
   limit?: number;
   applyLabel?: string;
-  change?: (mods: string[]) => void;
+  change?: (mods: string[], startingGun: StartingGun) => void;
+  startingGun?: StartingGun;
   blueprints?: BlueprintStore;
 }
 
@@ -25,13 +27,15 @@ export function workshopMenu(
   known: readonly string[],
   initial: readonly string[],
   active: boolean,
-  apply: (mods: string[]) => void,
+  apply: (mods: string[], startingGun: StartingGun) => void,
   back: () => void,
   appearance?: AppearanceOptions,
   options: BuildOptions = {},
 ) {
   const limit = options.limit ?? MODS.length;
   let draft = workshopBuild(initial, known);
+  const allowStartingGuns = options.limit === undefined;
+  let draftGun: StartingGun = allowStartingGuns ? (options.startingGun ?? 'pistol') : 'pistol';
   let library: MenuBack | null = null;
   const discovered = MODS.filter((mod) => known.includes(mod.id));
   content.innerHTML =
@@ -47,6 +51,13 @@ export function workshopMenu(
       : '') +
     '<div id="workshop-build">' +
     '<p class="practice-note" id="workshop-note"></p>' +
+    (allowStartingGuns
+      ? '<label class="workshop-starter">Starting gun <select id="workshop-starting-gun" aria-label="Starting gun">' +
+        STARTING_GUN_IDS.map(
+          (id) => `<option value="${id}">${STARTING_GUNS[id].name}</option>`,
+        ).join('') +
+        '</select></label>'
+      : '') +
     (discovered.length > 12
       ? '<label class="sr-only" for="workshop-search">Find a collected upgrade</label><input id="workshop-search" class="workshop-search" type="search" placeholder="Find an upgrade" autocomplete="off">'
       : '') +
@@ -69,6 +80,15 @@ export function workshopMenu(
   const list = content.querySelector<HTMLElement>('#workshop-list')!;
   const search = content.querySelector<HTMLInputElement>('#workshop-search');
   const status = content.querySelector<HTMLElement>('#workshop-status')!;
+  const gunSelect = content.querySelector<HTMLSelectElement>('#workshop-starting-gun');
+  if (gunSelect) {
+    gunSelect.value = draftGun;
+    gunSelect.onchange = () => {
+      draftGun = gunSelect.value as StartingGun;
+      render();
+      options.change?.([...draft], draftGun);
+    };
+  }
   const clear = content.querySelector<HTMLButtonElement>('#workshop-clear')!;
   function render() {
     const eligible = new Set(availableMods(draft, true).map((mod) => mod.id));
@@ -97,7 +117,7 @@ export function workshopMenu(
               : 'Incompatible with this build.'
             : full
               ? 'Build full. Remove an upgrade to swap.'
-              : modDescription(mod, draft);
+              : modDescription(mod, draft, draftGun);
           return (
             '<button class="workshop-mod" data-workshop-mod="' +
             mod.id +
@@ -112,7 +132,7 @@ export function workshopMenu(
             '</strong><span aria-hidden="true">' +
             (picked ? '✓' : '+') +
             '</span></span><span class="workshop-mod-copy">' +
-            (compatible ? modDescription(mod, draft) : reason) +
+            (compatible ? modDescription(mod, draft, draftGun) : reason) +
             '</span>' +
             (modPathLabel(mod.id)
               ? '<span class="mod-path">' + modPathLabel(mod.id) + '</span>'
@@ -126,7 +146,7 @@ export function workshopMenu(
       options.limit === undefined
         ? draft.length
           ? draft.length + ' fitted'
-          : 'Starting gun'
+          : STARTING_GUNS[draftGun].name
         : draft.length +
           ' / ' +
           limit +
@@ -148,7 +168,7 @@ export function workshopMenu(
           known,
         );
         render();
-        options.change?.([...draft]);
+        options.change?.([...draft], draftGun);
         if (before - draft.length > 1) status.textContent += ' · Dependent upgrades removed';
         list.querySelector<HTMLButtonElement>('[data-workshop-mod="' + id + '"]')?.focus();
       };
@@ -162,11 +182,11 @@ export function workshopMenu(
   clear.onclick = () => {
     draft = [];
     render();
-    options.change?.([]);
+    options.change?.([], draftGun);
     content.querySelector<HTMLButtonElement>('#workshop-apply')!.focus();
   };
   content.querySelector<HTMLButtonElement>('#workshop-apply')!.onclick = () => {
-    if (draft.length <= limit) apply([...draft]);
+    if (draft.length <= limit) apply([...draft], draftGun);
   };
   content.querySelector<HTMLButtonElement>('#workshop-back')!.onclick = back;
   render();
@@ -195,15 +215,20 @@ export function workshopMenu(
         options.blueprints!,
         known,
         draft,
-        (mods) => {
+        (mods, startingGun) => {
           draft = workshopBuild(mods, known);
+          draftGun = startingGun;
+          if (gunSelect) gunSelect.value = draftGun;
           if (search) search.value = '';
           render();
-          options.change?.([...draft]);
+          options.change?.([...draft], draftGun);
           returnToEditor();
           content.querySelector<HTMLElement>('#workshop-build')!.scrollTop = 0;
         },
         returnToEditor,
+        false,
+        draftGun,
+        allowStartingGuns,
       );
     };
   }

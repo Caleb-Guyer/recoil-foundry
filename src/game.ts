@@ -1,4 +1,5 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
+import { dailyStartingGun, isStartingGun, type StartingGun } from './starting-guns.ts';
 import {
   campaignClearScore,
   type SecurityLevel,
@@ -557,6 +558,7 @@ export class Game {
   mods: string[] = [];
   legacyMods?: string[];
   legacyOffers?: string[];
+  startingGun: StartingGun = 'pistol';
   gun: Gun = getGun([]);
   elapsed = 0;
   time = 0;
@@ -678,12 +680,25 @@ export class Game {
     });
     return true;
   }
-  startWorkshop(discovered: readonly string[], mods: readonly string[] = []) {
+  startWorkshop(
+    discovered: readonly string[],
+    mods: readonly string[] = [],
+    startingGun: StartingGun = 'pistol',
+  ) {
     this.workshop.discovered = loadDiscoveries(discovered);
     const build = workshopBuild(mods, this.workshop.discovered);
     this.start(
       'WORKSHOP',
-      { version: 5, seed: 'WORKSHOP', stage: 0, hp: 100, mods: build, kills: 0, elapsed: 0 },
+      {
+        version: 6,
+        seed: 'WORKSHOP',
+        startingGun,
+        stage: 0,
+        hp: 100,
+        mods: build,
+        kills: 0,
+        elapsed: 0,
+      },
       null,
       null,
       true,
@@ -712,6 +727,7 @@ export class Game {
     factoryRules: boolean | 1 | 2 | 3 | 4 = true,
     unlocks: readonly string[] = [],
     uprising: UprisingRun | null = null,
+    startingGun: StartingGun = 'pistol',
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
@@ -719,6 +735,13 @@ export class Game {
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
+    const requestedGun = save
+      ? (save.startingGun ?? 'pistol')
+      : practice || testRun || workshop
+        ? 'pistol'
+        : startingGun;
+    this.startingGun =
+      dailyStartingGun(this.seed) ?? (isStartingGun(requestedGun) ? requestedGun : 'pistol');
     this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
     this.uprising.run =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
@@ -789,7 +812,7 @@ export class Game {
     this.mods = save ? [...save.mods] : [];
     this.legacyMods = save?.legacyMods ? [...save.legacyMods] : undefined;
     this.legacyOffers = save?.legacyOffers ? [...save.legacyOffers] : undefined;
-    this.gun = getGun(this.mods);
+    this.gun = getGun(this.mods, this.startingGun);
     this.elapsed = save?.elapsed ?? 0;
     this.kills = save?.kills ?? 0;
     this.time = 0;
@@ -867,6 +890,7 @@ export class Game {
     if (this.practice || this.testRun || this.workshop.active) return;
     this.onCheckpoint({
       version: 6,
+      startingGun: this.startingGun,
       ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
       ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
       ...(this.uprising.run ? { uprising: structuredClone(this.uprising.run) } : {}),
@@ -1885,7 +1909,7 @@ export class Game {
             ? 'shell-shot'
             : this.mods.includes('magnum')
               ? 'heavy'
-              : this.mods.includes('scatter')
+              : this.startingGun === 'shotgun' || this.mods.includes('scatter')
                 ? 'scatter'
                 : 'shot',
     );
@@ -3689,7 +3713,7 @@ export class Game {
     else this.mods.push(id);
     if (this.legacyOffers?.includes(id)) this.legacyMods = [...this.mods];
     this.legacyOffers = undefined;
-    this.gun = getGun(this.mods);
+    this.gun = getGun(this.mods, this.startingGun);
     if (this.auditorReward) {
       this.auditor.claim();
       return;

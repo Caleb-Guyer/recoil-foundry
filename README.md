@@ -9,11 +9,14 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 ![Recoil flight in the Loading Docks](public/media/loading-docks.png)
 
 - **113 upgrades** with branching paths and combinations that change how your gun works.
+- **Three starting guns:** a balanced pistol, a hard-kicking shotgun, and a precise burst nailgun.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
+
+**Starting Guns — version 4.1.0.** Choose your tool when you start a Campaign: the Service pistol for balanced aim and recoil, the Recoil shotgun for close fights and strong launches, or the Burst nailgun for precise bursts with smaller kicks. All three use the same upgrades. Continue, Retry, replays and Workshop blueprints keep your choice; each new Daily fixes one gun for everyone. Older Continue saves and Daily links keep the pistol. [Release notes](docs/releases/4.1.0.md).
 
 **Power and projectile lighting — version 4.0.3.** The first room stays free of Factory events, including in older Continue saves. Blackout fuse boxes are solid cabinets placed clear of machinery and coolant; shooting disables their circuit, restores the lights and leaves the inert housing in place. Bullets, shells, ice, electricity, molten rounds and beams cast light matching their ammunition. [Release notes](docs/releases/4.0.3.md).
 

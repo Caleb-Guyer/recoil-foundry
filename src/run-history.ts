@@ -1,4 +1,5 @@
 import type { Game } from './game.ts';
+import { validStartingGunSave, type StartingGun } from './starting-guns.ts';
 import { validUprisingRun, type UprisingRun } from './uprising-model.ts';
 import { planFactory, type FactoryCondition } from './factory.ts';
 import { isSecurityLevel, securityLabel, type SecurityLevel } from './security.ts';
@@ -12,6 +13,7 @@ import { validUnlocks, type LongevityId } from './longevity.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  startingGun?: StartingGun;
   uprising?: UprisingRun;
   unlocks?: LongevityId[];
   factory?: FactoryCondition;
@@ -81,6 +83,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     const daily = !!dailyFromSeed(raw.seed) || isUnsupportedDailySeed(raw.seed);
     if (
       (raw.mode === 'daily') !== daily ||
+      !validStartingGunSave(raw.startingGun, raw.seed) ||
       (daily && raw.overtime) ||
       (raw.uprising !== undefined && (daily || !validUprisingRun(raw.uprising))) ||
       (raw.security !== undefined &&
@@ -94,6 +97,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       continue;
     records.push({
       version: 1,
+      ...(raw.startingGun ? { startingGun: raw.startingGun as StartingGun } : {}),
       ...(raw.uprising ? { uprising: structuredClone(raw.uprising) } : {}),
       ...(raw.unlocks && !daily ? { unlocks: [...raw.unlocks] } : {}),
       ...(raw.factory ? { factory: raw.factory as FactoryCondition } : {}),
@@ -142,6 +146,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        startingGun: game.startingGun,
         ...(game.uprising.run ? { uprising: structuredClone(game.uprising.run) } : {}),
         ...(!dailyFromSeed(game.seed) ? { unlocks: [...game.unlocks] } : {}),
         ...(game.factory ? { factory: game.factory.condition } : {}),

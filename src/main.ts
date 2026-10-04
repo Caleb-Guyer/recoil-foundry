@@ -89,6 +89,7 @@ import { wallcrawlerTestFromUrl } from './practice.ts';
 import { counterweightTestFromUrl } from './practice.ts';
 import { grindshotTestFromUrl, interceptorGrindTestFromUrl } from './practice.ts';
 import './style.css';
+import './starting-gun.css';
 import {
   COMMENDATIONS,
   COMMENDATIONS_KEY,
@@ -114,6 +115,13 @@ import {
 } from './workshop-build.ts';
 import { workshopMenu } from './workshop-menu.ts';
 import { BLUEPRINTS_KEY, loadBlueprints } from './blueprints.ts';
+import {
+  STARTING_GUNS,
+  dailyStartingGun,
+  isStartingGun,
+  type StartingGun,
+} from './starting-guns.ts';
+import { startingGunMenu } from './starting-gun-menu.ts';
 import { blueprintMenu, type BlueprintStore, type MenuBack } from './blueprint-menu.ts';
 import {
   RUN_HISTORY_KEY,
@@ -282,6 +290,7 @@ let discovered = discoverBuild(
   storedCheckpoint?.legacyMods,
 );
 let workshopMods = workshopBuild(read(WORKSHOP_BUILD_KEY), discovered);
+let workshopStartingGun: StartingGun = 'pistol';
 const blueprintStore: BlueprintStore = {
   read: () => loadBlueprints(read(BLUEPRINTS_KEY)),
   write: (slots) => {
@@ -361,7 +370,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Factory Uprising</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Starting Guns</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -533,6 +542,12 @@ let seedParam = entryUrl.searchParams.has('daily')
   ? undefined
   : entryUrl.searchParams.get('seed')?.slice(0, 40);
 let activeDaily = dailyFromSeed(game.seed);
+let selectedStartingGun: StartingGun =
+  seedParam &&
+  entryUrl.searchParams.getAll('sg').length === 1 &&
+  isStartingGun(entryUrl.searchParams.get('sg'))
+    ? (entryUrl.searchParams.get('sg') as StartingGun)
+    : 'pistol';
 let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = null;
 
 function updateAppearanceBadge() {
@@ -682,7 +697,7 @@ function updateTitle() {
     $('play').innerHTML = 'Test Freight Crossing <span aria-hidden="true">↗</span>';
   $('daily').title = linkedDaily
     ? 'Start a fresh random run'
-    : "Today's shared challenge · resets at midnight UTC";
+    : `Today's shared challenge · ${STARTING_GUNS[dailyStartingGun(todayDaily().seed) ?? 'pistol'].name} · resets at midnight UTC`;
   $('continue').hidden = !checkpoint;
   $('practice').hidden =
     encounters.length === 0 && !loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length;
@@ -703,7 +718,7 @@ function updateTitle() {
     : linkedTest
       ? `Full health. ${PRACTICE_BOSSES[linkedTest.kind].stage} upgrades. R to retry.`
       : linkedDaily
-        ? `Daily · ${linkedDaily.date}`
+        ? `Daily · ${linkedDaily.date} · ${STARTING_GUNS[dailyStartingGun(linkedDaily.seed) ?? 'pistol'].name}`
         : invalidDailyLink
           ? 'Challenge link unavailable. Start a fresh run.'
           : unavailableDailySave
@@ -1026,6 +1041,7 @@ function start(
   factoryRules?: boolean | 1 | 2 | 3 | 4,
   unlockOverride?: readonly LongevityId[],
   uprisingOverride?: UprisingRun | null,
+  startingGunOverride?: StartingGun,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1034,7 +1050,7 @@ function start(
     return;
   }
   if (retry && game.workshop.active) {
-    startWorkshop(game.mods, firstSession.warmup);
+    startWorkshop(game.mods, firstSession.warmup, game.startingGun);
     return;
   }
   if (retry && game.maintenance.trial) {
@@ -1077,6 +1093,8 @@ function start(
         : freshSeed()
       : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? freshSeed()));
   activeDaily = dailyFromSeed(seed);
+  const startingGun = startingGunOverride ?? (retry ? game.startingGun : selectedStartingGun);
+  if (!activeDaily) selectedStartingGun = save ? (save.startingGun ?? 'pistol') : startingGun;
   linkedDaily = activeDaily;
   invalidDailyLink = false;
   unavailableDailySave = false;
@@ -1100,6 +1118,9 @@ function start(
       url.searchParams.delete('ul');
       url.searchParams.delete('uv');
       url.searchParams.delete('ur');
+      url.searchParams.delete('sg');
+    } else {
+      url.searchParams.set('sg', selectedStartingGun);
     }
     history.replaceState(null, '', url);
   }
@@ -1143,6 +1164,7 @@ function start(
               ? (uprisingPlan(entryUrl.searchParams.get('ur')) ?? undefined)
               : undefined,
           ),
+    startingGun,
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1311,7 +1333,11 @@ function startRunTest(save: Checkpoint) {
   pointer.y = canvas.clientHeight * 0.6;
   if (game.mode === 'playing') canvas.focus();
 }
-function startWorkshop(mods: readonly string[] = workshopMods, warmup = false) {
+function startWorkshop(
+  mods: readonly string[] = workshopMods,
+  warmup = false,
+  startingGun: StartingGun = workshopStartingGun,
+) {
   firstSession.stop();
   finishedRun = null;
   runCommendations = [];
@@ -1322,9 +1348,10 @@ function startWorkshop(mods: readonly string[] = workshopMods, warmup = false) {
   dailyResult = null;
   if (!warmup) {
     workshopMods = workshopBuild(mods, discovered);
+    workshopStartingGun = startingGun;
     if (!previewCommendations) write(WORKSHOP_BUILD_KEY, workshopMods);
   }
-  game.startWorkshop(discovered, warmup ? [] : workshopMods);
+  game.startWorkshop(discovered, warmup ? [] : workshopMods, warmup ? 'pistol' : startingGun);
   if (warmup) firstSession.start(game, true);
   updateFirstSession();
   renderer.reset();
@@ -1382,6 +1409,7 @@ function replayFinishedRun(run: RunRecap) {
   url.search = '';
   url.hash = '';
   url.searchParams.set('seed', run.seed);
+  url.searchParams.set('sg', run.startingGun ?? 'pistol');
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   url.searchParams.set('ul', (run.unlocks ?? []).join(','));
   url.searchParams.set('uv', run.uprising ? '1' : '0');
@@ -1399,11 +1427,13 @@ function replayFinishedRun(run: RunRecap) {
     run.uprising
       ? { ...newUprising(null, run.uprising.choices), unlocks: [...run.uprising.unlocks] }
       : null,
+    run.startingGun ?? 'pistol',
   );
 }
 function workshopFromRun(run: RunRecap) {
   discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
-  if (canPracticeRunBuild(run, discovered)) startWorkshop(run.mods);
+  if (canPracticeRunBuild(run, discovered))
+    startWorkshop(run.mods, false, run.startingGun ?? 'pistol');
 }
 function saveRunBlueprint(run: RunRecap) {
   if (!canPracticeRunBuild(run, discovered)) return;
@@ -1730,13 +1760,20 @@ function showDialog(kind: string) {
   const visibleCommendations = previewCommendations
     ? COMMENDATIONS.map((c) => c.id)
     : commendations;
-  if (kind === 'update') {
+  if (kind === 'starting-gun') {
+    startingGunMenu(
+      content,
+      selectedStartingGun,
+      (gun) => start(undefined, false, undefined, undefined, undefined, undefined, undefined, gun),
+      closeDialog,
+    );
+  } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Factory Uprising.</h2>' +
-      '<p class="update-tagline">Choose the jobs. Change the factory.</p>' +
-      '<dl class="update-notes"><div><dt>Four decisions. Twenty rooms.</dt><dd>Jobs begin in the second zone. Choose routes in Railworks, Foundry Core, Reclamation and Rooftops. Steal a prototype, sabotage relays, protect a generator or race for an evacuation platform. Check your route map from Pause.</dd></div>' +
-      '<div><dt>A factory that remembers.</dt><dd>Stolen cargo draws pursuit crews. Cutting Core power shuts down later machinery. Rescuing crews adds boss barricades. Your completed jobs shape the final security response.</dd></div>' +
-      '<div><dt>More routes to earn.</dt><dd>Campaign contracts unlock three additional jobs. Discover the new districts and track contracts in the Logbook. Existing saves and Daily runs keep their rules.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Choose your starting gun.</h2>' +
+      '<p class="update-tagline">A different tool. A different way through.</p>' +
+      '<dl class="update-notes"><div><dt>Three ways to start.</dt><dd>The Service pistol balances aim and recoil. The Recoil shotgun trades range and firing speed for a hard kick. The Burst nailgun fires three precise nails with smaller kicks. Choose when you start a Campaign.</dd></div>' +
+      '<div><dt>Build on your choice.</dt><dd>The same upgrade pool changes each gun throughout the run. Continue, Retry, run replays and Workshop blueprints remember your starting tool.</dd></div>' +
+      '<div><dt>A shared Daily tool.</dt><dd>Each new Daily fixes the same starting gun for everyone. Earlier Daily links and old Continue saves keep the Service pistol. Factory Uprising jobs still begin in the second zone; check Pause → Factory routes.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -1853,7 +1890,7 @@ function showDialog(kind: string) {
       discovered,
       game.workshop.active ? game.mods : workshopMods,
       game.workshop.active,
-      startWorkshop,
+      (mods, gun) => startWorkshop(mods, false, gun),
       backFromHistory,
       {
         game,
@@ -1884,7 +1921,10 @@ function showDialog(kind: string) {
           showDialog('logbook');
         },
       },
-      { blueprints: blueprintStore },
+      {
+        blueprints: blueprintStore,
+        startingGun: game.workshop.active ? game.startingGun : workshopStartingGun,
+      },
     );
   } else if (kind === 'blueprints' && blueprintSource) {
     buildMenu = blueprintMenu(
@@ -1895,6 +1935,7 @@ function showDialog(kind: string) {
       null,
       () => showDialog(blueprintParent),
       true,
+      blueprintSource.startingGun ?? 'pistol',
     );
   } else if (kind === 'layout-test') {
     const descriptions = [
@@ -1998,7 +2039,7 @@ function showDialog(kind: string) {
       share: trialMenuShare,
       invalid: invalidTrialLink && trialMenuParent === 'title',
       start: (route, challenge) => startTrial(route, false, challenge),
-      startRun: () => start(),
+      startRun: () => showDialog('starting-gun'),
       exit: () => (trialMenuParent === 'title' ? closeDialog() : showDialog(trialMenuParent)),
     });
   } else if (kind === 'practice-setup' && practiceTarget) {
@@ -2084,13 +2125,14 @@ function showDialog(kind: string) {
             '</kbd></span><span class="reforge-from">Give up ' +
             from.name +
             '</span><span class="reforge-loss">' +
-            modDescription(from, game.mods) +
+            modDescription(from, game.mods, game.startingGun) +
             '</span><span class="reforge-arrow" aria-hidden="true">↓</span><strong>' +
             to.name +
             '</strong><span class="mod-copy">' +
             modDescription(
               to,
               game.mods.filter((id) => id !== swap.from),
+              game.startingGun,
             ) +
             '</span>' +
             (modPathLabel(to.id)
@@ -2168,7 +2210,7 @@ function showDialog(kind: string) {
             '</kbd></span><strong>' +
             m.name +
             '</strong><span class="mod-copy">' +
-            modDescription(m, game.mods) +
+            modDescription(m, game.mods, game.startingGun) +
             '</span>' +
             (modPathLabel(m.id) ? '<span class="mod-path">' + modPathLabel(m.id) + '</span>' : '') +
             '</button>',
@@ -2549,8 +2591,9 @@ function showDialog(kind: string) {
                       ? 'After clearing, the upper door offers an optional challenge.'
                       : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
-      (paused && game.mods.length
-        ? '<details class="build"><summary>Your gun' +
+      (paused
+        ? '<details class="build"><summary>Your gun · ' +
+          STARTING_GUNS[game.startingGun].name +
           (buildPath(game.mods) ? ' · ' + PATH_NAMES[buildPath(game.mods)!] : '') +
           '</summary><ul>' +
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
@@ -2642,7 +2685,8 @@ function showDialog(kind: string) {
     if (paused && game.workshop.active) {
       const edit = document.getElementById('workshop-pause-build');
       if (edit) edit.onclick = () => showDialog('workshop');
-      $('workshop-pause-reset').onclick = () => startWorkshop(game.mods, firstSession.warmup);
+      $('workshop-pause-reset').onclick = () =>
+        startWorkshop(game.mods, firstSession.warmup, game.startingGun);
     }
     if (paused && (game.practice || game.testRun)) {
       $('retry').onclick = () => start(undefined, true);
@@ -2904,12 +2948,21 @@ $('play').onclick = () =>
               ? startRunTest(linkedRunTest)
               : linkedTest
                 ? startPractice(linkedTest, null, { test: true })
-                : start();
+                : linkedDaily
+                  ? start()
+                  : showDialog('starting-gun');
 $('daily').onclick = () => {
   if (linkedDaily || linkedTrial || invalidTrialLink) {
     linkedDaily = null;
+    linkedTrial = null;
+    invalidTrialLink = false;
     seedParam = undefined;
-    start();
+    const url = new URL(location.href);
+    url.search = '';
+    url.hash = '';
+    history.replaceState(null, '', url);
+    updateTitle();
+    showDialog('starting-gun');
   } else start(undefined, false, todayDaily().seed);
 };
 $('continue').onclick = () => {
@@ -2939,7 +2992,7 @@ $('practice').onclick = () => {
 };
 $('workshop').onclick = () => showDialog('workshop');
 $('workshop-edit').onclick = () => showDialog('workshop');
-$('workshop-reset').onclick = () => startWorkshop(game.mods);
+$('workshop-reset').onclick = () => startWorkshop(game.mods, false, game.startingGun);
 $('pause').onclick = pause;
 installDialogDismissal(
   modal,

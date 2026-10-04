@@ -1,5 +1,6 @@
 import type { Game } from './game.ts';
 import { GAME_VERSION } from './version.ts';
+import { STARTING_GUNS } from './starting-guns.ts';
 import { dailyFromSeed } from './daily.ts';
 import { REGION_NAMES } from './regions.ts';
 
@@ -48,6 +49,7 @@ export function issueDetails(game: Game, type: FeedbackType = 'bug'): string {
       `Room: ${game.stage + 1} / ${game.level.area} / ${game.level.id}`,
       `Route: ${game.escape ? 'Extraction' : game.detour ? 'Detour' : 'Main'}`,
       `Gun: ${game.mods.join(', ') || 'Starting gun'}`,
+      `Starting gun: ${STARTING_GUNS[game.startingGun].name}`,
       ...(game.uprising.run
         ? [
             `Uprising route: ${game.uprising.run.choices.join(', ') || 'Not chosen'}`,

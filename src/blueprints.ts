@@ -1,4 +1,5 @@
 import { MODS } from './rules.ts';
+import { isStartingGun, type StartingGun } from './starting-guns.ts';
 import { workshopBuild } from './workshop-build.ts';
 
 export const BLUEPRINTS_KEY = 'rf-blueprints-v1';
@@ -6,6 +7,7 @@ export const BLUEPRINT_SLOTS = 6;
 export const BLUEPRINT_NAME_LIMIT = 32;
 export const BLUEPRINT_CODE_LIMIT = 8192;
 export interface Blueprint {
+  startingGun?: StartingGun;
   name: string;
   mods: string[];
 }
@@ -25,7 +27,8 @@ export function validBlueprint(value: unknown): value is Blueprint {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
   return (
-    Object.keys(record).length === 2 &&
+    Object.keys(record).every((key) => ['name', 'mods', 'startingGun'].includes(key)) &&
+    (record.startingGun === undefined || isStartingGun(record.startingGun)) &&
     typeof record.name === 'string' &&
     record.name.length > 0 &&
     record.name.length <= BLUEPRINT_NAME_LIMIT &&
@@ -37,7 +40,7 @@ export function validBlueprint(value: unknown): value is Blueprint {
 export function loadBlueprints(value: unknown): BlueprintSlots {
   return Array.from({ length: BLUEPRINT_SLOTS }, (_, i) => {
     const item = Array.isArray(value) ? value[i] : null;
-    return validBlueprint(item) ? { name: item.name, mods: [...item.mods] } : null;
+    return validBlueprint(item) ? { ...item, mods: [...item.mods] } : null;
   });
 }
 export function validBlueprintSlots(value: unknown): value is BlueprintSlots {
@@ -60,25 +63,40 @@ export function setBlueprint(
   )
     throw new Error('Choose a slot and a name of 1–32 characters.');
   const next = loadBlueprints(slots);
-  next[index] = value ? { name: value.name, mods: [...value.mods] } : null;
+  next[index] = value ? { ...value, mods: [...value.mods] } : null;
   return next;
 }
-// Names stay local. Codes contain only the versioned upgrade sequence.
-export function blueprintCode(mods: readonly string[]): string {
-  if (!validBlueprintMods(mods))
+// Names stay local. RF1 remains the pistol format; RF2 carries a starting tool.
+export function blueprintCode(
+  mods: readonly string[],
+  startingGun: StartingGun = 'pistol',
+): string {
+  if (!validBlueprintMods(mods) || !isStartingGun(startingGun))
     throw new Error('This build cannot be shared under the current upgrade rules.');
   return (
-    'RF1.' + btoa(JSON.stringify(mods)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    (startingGun === 'pistol' ? 'RF1.' : 'RF2.') +
+    btoa(JSON.stringify(startingGun === 'pistol' ? mods : [startingGun, mods]))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
   );
 }
 export function parseBlueprintCode(text: string): Blueprint {
   const code = text.trim();
-  if (code.length > BLUEPRINT_CODE_LIMIT || !/^RF1\.[A-Za-z0-9_-]+$/.test(code))
-    throw new Error('Enter a valid RF1 blueprint code.');
+  if (code.length > BLUEPRINT_CODE_LIMIT || !/^RF[12]\.[A-Za-z0-9_-]+$/.test(code))
+    throw new Error('Enter a valid RF1 or RF2 blueprint code.');
   try {
     const data: unknown = JSON.parse(atob(code.slice(4).replace(/-/g, '+').replace(/_/g, '/')));
-    if (!validBlueprintMods(data) || blueprintCode(data) !== code) throw new Error();
-    return { name: 'Shared build', mods: [...data] };
+    const gun = code.startsWith('RF2.') && Array.isArray(data) ? data[0] : 'pistol';
+    const mods =
+      code.startsWith('RF2.') && Array.isArray(data) && data.length === 2 ? data[1] : data;
+    if (!isStartingGun(gun) || !validBlueprintMods(mods) || blueprintCode(mods, gun) !== code)
+      throw new Error();
+    return {
+      name: 'Shared build',
+      mods: [...mods],
+      ...(gun === 'pistol' ? {} : { startingGun: gun }),
+    };
   } catch {
     throw new Error('This code is damaged or uses unsupported upgrade rules.');
   }

@@ -1,4 +1,5 @@
 import { AREAS } from './areas.ts';
+import { STARTING_GUNS } from './starting-guns.ts';
 import { uprisingRoute, uprisingFinale, FINALE_NAMES } from './uprising-model.ts';
 import { REGION_NAMES } from './regions.ts';
 import { MODS } from './rules.ts';
@@ -57,7 +58,9 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
         FINALE_NAMES[uprisingFinale(run.uprising)] +
         '</p>'
       : '') +
-    '<h3>Your gun</h3>' +
+    '<h3>Your gun</h3><p class="recap-note">' +
+    STARTING_GUNS[run.startingGun ?? 'pistol'].name +
+    '</p>' +
     (run.legacyMods
       ? '<p class="recap-note">Legacy build · Preserved from earlier upgrade rules.</p>'
       : '') +

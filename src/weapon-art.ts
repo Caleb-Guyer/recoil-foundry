@@ -19,8 +19,8 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   }
   const massDriver = g.massDriver.equipped,
     heavy = g.mods.includes('magnum') || massDriver,
-    scatter = g.mods.includes('scatter'),
-    burst = g.mods.includes('burst'),
+    scatter = g.startingGun === 'shotgun' || g.mods.includes('scatter'),
+    burst = g.startingGun === 'nailgun' || g.mods.includes('burst'),
     rapid = g.mods.includes('rapid'),
     backblast = g.mods.includes('backblast'),
     piercing = g.mods.includes('pierce'),
