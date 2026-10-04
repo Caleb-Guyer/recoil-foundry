@@ -1,4 +1,5 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
+import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
 import { dailyStartingGun, isStartingGun, type StartingGun } from './starting-guns.ts';
 import {
   campaignClearScore,
@@ -207,6 +208,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  hitDirection?: Vec;
   welder?: WelderRig;
   switchboard?: SwitchboardRig;
   caller?: CallerRig;
@@ -259,6 +261,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  feel?: RoundFeel;
   weaponTrace?: WeaponTrace;
   meltSpent?: boolean;
   meltTransit?: MeltTransit;
@@ -415,6 +418,7 @@ export class Game {
   enemies: Enemy[] = [];
   shots: Shot[] = [];
   particles: Particle[] = [];
+  combatFeel = new CombatFeel();
   trail: Vec[] = [];
   mode: Mode = 'title';
   cosmetics: Cosmetics = { gun: 'standard', outfit: 'standard' };
@@ -627,6 +631,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.combatFeel.reset();
       this.commendations.weapons.reset();
       this.welder.clear();
       this.switchboard.clear();
@@ -1010,6 +1015,7 @@ export class Game {
     this.enemies = [];
     this.shots = [];
     this.particles = [];
+    this.combatFeel.reset();
     this.trail = [];
     this.clear = false;
     this.coyote = 0;
@@ -1352,6 +1358,7 @@ export class Game {
     this.shots = [];
     this.trail = [];
     this.particles = [];
+    this.combatFeel.reset();
     this.burstRemaining = 0;
     this.fireBuffer = this.jumpBuffer = 0;
     this.blast.life = this.muzzle = this.hitStop = 0;
@@ -1562,6 +1569,7 @@ export class Game {
         ).length > 0);
     if (this.grounded && !wasGrounded) {
       const impact = Math.max(vy, this.landingSpeed);
+      this.combatFeel.land(this.time, impact);
       if (impact > 2) {
         this.land = 0.13;
         this.feedback(Math.min(3, impact * 0.15));
@@ -1740,6 +1748,11 @@ export class Game {
       p.vel.y += p.kind === 'shell' ? 0.15 : 0.035;
       return p.life > 0;
     });
+    this.combatFeel.update(
+      this.time,
+      this.combatFeel.nails.length ? Composite.allBodies(this.engine.world) : [],
+      this.onSound,
+    );
     this.trail.unshift({ ...this.player.position });
     if (this.trail.length > 9) this.trail.pop();
     if (this.player.position.y > 900 || !Number.isFinite(this.player.position.x)) {
@@ -1909,10 +1922,25 @@ export class Game {
             ? 'shell-shot'
             : this.mods.includes('magnum')
               ? 'heavy'
-              : this.startingGun === 'shotgun' || this.mods.includes('scatter')
-                ? 'scatter'
-                : 'shot',
+              : this.startingGun === 'shotgun'
+                ? 'shotgun-shot'
+                : this.startingGun === 'nailgun'
+                  ? 'nail-shot'
+                  : this.mods.includes('scatter')
+                    ? 'scatter'
+                    : 'shot',
     );
+    this.combatFeel.pumpAt = null;
+    this.combatFeel.pumpStartedAt = -100;
+    if (
+      this.startingGun === 'shotgun' &&
+      !rail &&
+      !this.gun.shellshock &&
+      !this.massDriver.equipped
+    ) {
+      this.combatFeel.pumpStartedAt = this.time;
+      this.combatFeel.pumpAt = this.time + clamp(this.gun.interval * 0.72, 0.02, 0.42) * 0.65;
+    }
     const damage =
       this.gun.damage *
       (this.grounded ? 1 : this.gun.airDamage) *
@@ -2005,6 +2033,12 @@ export class Game {
           }
         }
         this.addShot({
+          feel:
+            this.startingGun === 'shotgun'
+              ? 'pellet'
+              : this.startingGun === 'nailgun'
+                ? 'nail'
+                : undefined,
           pos: { ...spawn },
           vel: {
             x: Math.cos(a) * this.gun.projectileSpeed,
@@ -2997,6 +3031,7 @@ export class Game {
         if (nearest.body && !nearest.enemy && this.melt.begin(s, nearest.body)) continue;
         const impactDamage = this.massDriver.impactDamage(s);
         s.impactNormal = { ...nearest.normal };
+        this.combatFeel.impact(s, nearest.normal, this.time);
         if (s.mutationShell) {
           this.mutations.explode(s);
           if (this.mode !== 'playing') return;
@@ -3235,6 +3270,10 @@ export class Game {
             s.pos.y += nearest.normal.y;
           } else {
             s.life = 0;
+            if (impactBody && roundFeel(s) === 'nail') {
+              this.combatFeel.impact(s, nearest.normal, this.time, impactBody);
+              this.onSound('nail-impact');
+            }
             this.grind.impact(s, nearest.body, nearest.normal);
             rivalImpact(this, s, nearest.prop?.body ?? nearest.body);
             this.demolition.impact(s, nearest.prop?.body ?? nearest.body);
@@ -3359,6 +3398,7 @@ export class Game {
           }
         : e.body.position;
       e.flash = 0.08;
+      e.hitDirection = { x: -directionToHit.x, y: -directionToHit.y };
       this.burst(
         impact,
         4,

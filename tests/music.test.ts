@@ -344,6 +344,62 @@ test('armor, impact and kill cues use different voices and rapid hits are bounde
   assert.equal(sound.voices, 0);
 });
 
+test('native shotgun and nailgun cues are distinct, with all three burst ticks audible', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const signatures: number[][] = [];
+  for (const kind of ['shot', 'shotgun-shot', 'shotgun-pump', 'nail-shot', 'nail-impact']) {
+    const first = context.sources.length;
+    sound.play(kind);
+    signatures.push(
+      context.sources
+        .slice(first)
+        .filter((s) => s.kind === 'oscillator')
+        .map((s) => s.frequency.value),
+    );
+    assert(context.sources.length > first, kind);
+    context.advance(0.5);
+  }
+  for (let i = 1; i < signatures.length; i++) assert.notDeepEqual(signatures[0], signatures[i]);
+  for (let i = 0; i < 3; i++) {
+    const first = context.sources.length;
+    sound.play('nail-shot');
+    assert.equal(context.sources.length - first, 3);
+    context.advance(0.066);
+  }
+  context.advance(1);
+  assert.equal(sound.voices, 0);
+  assert(context.sources.every((s) => s.disconnected));
+});
+
+test('native gun effects cannot borrow warning voices or bypass the ducked effects bus', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  sound.play('interceptor-lock');
+  const reaches = (node: AudioNodeMock, target: unknown): boolean =>
+    node === target || node.connections.some((next) => reaches(next, target));
+  const first = context.sources.length;
+  for (const kind of ['shotgun-shot', 'shotgun-pump', 'nail-shot', 'nail-impact']) sound.play(kind);
+  assert(context.sources.slice(first).every((s) => reaches(s, sound.effects)));
+  context.advance(1);
+  for (let i = 0; i < 30; i++) {
+    sound.play(i % 2 ? 'shotgun-shot' : 'nail-shot');
+    context.currentTime += 0.02;
+  }
+  assert(sound.voices <= 24);
+  const occupied = context.sources.length;
+  sound.play('shotgun-pump');
+  sound.play('nail-impact');
+  assert.equal(context.sources.length, occupied);
+  sound.play('signal-charge');
+  assert(context.sources.length > occupied);
+  assert(sound.voices <= 32);
+});
+
 test('torch sound reuses one voice, follows heat, and releases its entire graph on stop or mute', (t) => {
   installContext(t);
   const sound = new Sound();

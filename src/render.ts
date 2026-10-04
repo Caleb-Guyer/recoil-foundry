@@ -1,4 +1,5 @@
 import { drawMelt } from './melt-through.ts';
+import { drawCombatImpacts, drawNail, enemyPose, playerPose, roundFeel } from './combat-feel.ts';
 import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
 import { drawWelder, drawWelds } from './welder-art.ts';
 import { drawClockOut } from './clock-out-art.ts';
@@ -273,6 +274,10 @@ export class Renderer {
               : e.kind === 'boss' && e.phase === 2
                 ? '#ffbc83'
                 : '#ee7965';
+      const pose = enemyPose(e, this.reduced);
+      c.save();
+      c.translate(0, pose.crouch);
+      c.rotate(pose.angle);
       if (e.kind === 'loader') {
         c.save();
         c.scale(e.aim.x < 0 ? -1 : 1, 1);
@@ -407,8 +412,9 @@ export class Renderer {
         } else {
           this.circle({ x: 0, y: 0 }, 18, e.allied ? '#18344b' : '#392a2a');
           this.circle({ x: 0, y: 0 }, 18, color, false, 2.5);
-          this.line({ x: -26, y: -5 }, { x: -18, y: 2 }, color, 3);
-          this.line({ x: 18, y: 2 }, { x: 26, y: -5 }, color, 3);
+          const rotor = this.reduced ? 0 : Math.sin(g.time * 32 + e.id) * 2;
+          this.line({ x: -26, y: -5 + rotor }, { x: -18, y: 2 }, color, 3);
+          this.line({ x: 18, y: 2 }, { x: 26, y: -5 - rotor }, color, 3);
         }
       } else {
         c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : e.allied ? '#18344b' : '#33282a';
@@ -434,7 +440,23 @@ export class Renderer {
             this.line({ x: 45, y: -20 }, { x: 54, y: -30 }, color, 3);
           }
         }
+        if (e.kind === 'runner' || e.kind === 'shooter') {
+          c.fillStyle = '#172125';
+          c.fillRect(-size / 2 + 4, 10, size - 8, 6);
+          for (const side of [-1, 1]) {
+            const lift = Math.max(0, side * pose.stride);
+            this.line(
+              { x: side * 7, y: 9 },
+              { x: side * (9 + pose.stride * 0.3), y: 15 - lift },
+              color,
+              3,
+            );
+            c.fillStyle = '#9b7b70';
+            c.fillRect(side * 9 - 3, 14 - lift, 6, 2);
+          }
+        }
       }
+      c.restore();
       if (e.elite === 'shielded') {
         c.save();
         c.scale(e.facing, 1);
@@ -478,6 +500,7 @@ export class Renderer {
           this.circle({ x: 0, y: 0 }, 6, '#4c5351');
         }
         c.rotate(Math.atan2(aim.y, aim.x));
+        c.translate(-pose.brace * 2, 0);
         if (e.elite === 'twin') {
           c.fillStyle = e.state === 'followup' ? '#85624e' : color;
           c.fillRect(7, -8, 30, 4);
@@ -491,6 +514,10 @@ export class Renderer {
             e.kind === 'boss' ? 38 : e.kind === 'sniper' ? 30 : 22,
             e.kind === 'sniper' ? 4 : 6,
           );
+        }
+        if (pose.brace > 0) {
+          c.fillStyle = '#ffe0a0';
+          c.fillRect(9, -1, 6 * pose.brace, 2);
         }
         c.restore();
       }
@@ -715,6 +742,7 @@ export class Renderer {
     drawCourierWorld(c, g);
     drawAuditDoor(c, g, this.reduced);
     this.drawEnemies();
+    drawCombatImpacts(c, g, this.reduced, threats);
     drawTorch(c, g, this.reduced);
     if (g.blast.life > 0) {
       const { pos, dir, life } = g.blast,
@@ -801,11 +829,14 @@ export class Renderer {
                   ? '#9bdbe5'
                   : s.stasis
                     ? '#c3b4f0'
-                    : '#f6d49a',
+                    : roundFeel(s) === 'nail'
+                      ? '#b5d4d0'
+                      : '#f6d49a',
             s.radius * 1.15 + (s.charged ? 1 : 0),
           );
-          this.circle(s.pos, s.radius, '#fff2d5');
+          if (roundFeel(s) !== 'nail') this.circle(s.pos, s.radius, '#fff2d5');
         }
+        if (roundFeel(s) === 'nail') drawNail(c, s);
         if (s.shell) {
           const d = direction({ x: 0, y: 0 }, s.vel);
           this.line(
@@ -1609,7 +1640,7 @@ export class Renderer {
       p = g.player.position,
       d = direction(p, g.aim),
       a = Math.atan2(d.y, d.x),
-      squash = this.reduced ? 0 : g.land / 0.13;
+      pose = playerPose(g, this.reduced);
     c.save();
     c.translate(p.x, p.y);
     if (g.mods.includes('wing-harness')) {
@@ -1642,10 +1673,10 @@ export class Renderer {
     }
     if (g.time - g.hurtAt < 0.75) c.globalAlpha = 0.4 + Math.abs(Math.sin(g.time * 28)) * 0.6;
     c.save();
-    c.rotate(clamp(g.player.velocity.x * 0.012, -0.18, 0.18));
-    c.scale(1 + squash * 0.16, 1 - squash * 0.16);
-    const stride = g.grounded ? Math.sin(p.x * 0.14) * 3 : 2;
-    drawOutfit(c, g.cosmetics.outfit, d.x, stride);
+    c.translate(pose.x, pose.y);
+    c.rotate(pose.angle);
+    c.scale(pose.scaleX, pose.scaleY);
+    drawOutfit(c, g.cosmetics.outfit, d.x, pose.stride);
     c.restore();
     c.translate(0, -3);
     c.rotate(a);

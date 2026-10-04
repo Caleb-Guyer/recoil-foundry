@@ -285,7 +285,7 @@ export class Sound {
     const warning = ATTACK_WARNINGS.has(kind);
     const cooldown = warning
       ? 0.12
-      : kind === 'hit' || kind === 'armor' || kind === 'kill'
+      : kind === 'hit' || kind === 'armor' || kind === 'kill' || kind === 'nail-impact'
         ? 0.055
         : 0.015;
     if (c.currentTime - previous < cooldown) return;
@@ -449,6 +449,21 @@ export class Sound {
     } else if (kind === 'mass-impact') {
       this.tone(420, 180, 0.085, 0.045, 'triangle');
       this.crack(0.035, 0.035, 1100);
+    } else if (kind === 'shotgun-shot') {
+      this.tone(92, 28, 0.19, 0.23);
+      this.crack(0.14, 0.19, 1000);
+      this.tone(185, 65, 0.065, 0.045, 'triangle');
+    } else if (kind === 'shotgun-pump') {
+      this.crack(0.065, 0.045, 2400);
+      this.tone(330, 155, 0.055, 0.027, 'square');
+      this.tone(180, 320, 0.04, 0.024, 'triangle', 0.045);
+    } else if (kind === 'nail-shot') {
+      this.crack(0.025, 0.09, 3500);
+      this.tone(650, 210, 0.035, 0.055, 'square');
+      this.tone(145, 75, 0.045, 0.09, 'triangle');
+    } else if (kind === 'nail-impact') {
+      this.tone(1250, 620, 0.045, 0.03, 'triangle');
+      this.crack(0.02, 0.035, 3100);
     } else if (['shot', 'scatter', 'heavy', 'charged'].includes(kind)) {
       const heavy = kind === 'heavy' || kind === 'charged',
         scatter = kind === 'scatter';

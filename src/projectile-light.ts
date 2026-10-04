@@ -1,6 +1,7 @@
 import type { Game, Shot } from './game.ts';
 import type { Vec } from './rules.ts';
 import { INTERCEPTOR_WEAPONS } from './interceptor-weapons.ts';
+import { roundFeel } from './combat-feel.ts';
 
 export interface ProjectileLight {
   pos: Vec;
@@ -56,6 +57,10 @@ export function shotLight(s: Shot, mods: readonly string[]): Omit<ProjectileLigh
   } else if (s.reflected || s.banks > 0) {
     color = '#9dccb5';
     radius = 42;
+  } else if (roundFeel(s) === 'nail') {
+    color = '#b5d4d0';
+    radius = 28;
+    strength = 0.55;
   }
   if (s.fragment) {
     radius *= 0.45;

@@ -3,6 +3,7 @@ import { GUN_FINISHES, drawFinishMark } from './cosmetics.ts';
 import type { Game } from './game.ts';
 import { clamp } from './rules.ts';
 import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
+import { pumpCycle } from './combat-feel.ts';
 
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
@@ -18,6 +19,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     return;
   }
   const massDriver = g.massDriver.equipped,
+    shotgun = g.startingGun === 'shotgun' && !massDriver && !g.gun.shellshock,
     heavy = g.mods.includes('magnum') || massDriver,
     scatter = g.startingGun === 'shotgun' || g.mods.includes('scatter'),
     burst = g.startingGun === 'nailgun' || g.mods.includes('burst'),
@@ -30,8 +32,8 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     spring = clamp(1 - shotAge / (heavy ? 0.18 : 0.11), 0, 1),
     punch = Math.max(flash, spring * spring),
     motion = reduced ? 0.16 : 1,
-    receiverKick = punch * (heavy ? 2.2 : 2.8) * motion,
-    barrelKick = punch * (heavy ? 4.8 : 0.4) * motion,
+    receiverKick = punch * (shotgun ? 4.2 : heavy ? 2.2 : 2.8) * motion,
+    barrelKick = punch * (shotgun ? 1.5 : heavy ? 4.8 : 0.4) * motion,
     muzzle = massDriver ? 45 : heavy ? 40 : scatter ? 35 : 31,
     muzzleHalf = massDriver ? 8 : scatter ? 8.5 : heavy ? 5.5 : 4,
     cycling = burst && shotAge < Math.max(0.13, g.gun.interval * 0.35),
@@ -225,14 +227,28 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   }
   drawCapacitor(c, g);
   drawCountershot(c, g, reduced, heavy ? -8 : -half - 1);
+  if (shotgun) {
+    const pull = pumpCycle(g.time - g.combatFeel.pumpStartedAt, g.gun.interval) * (reduced ? 1 : 7);
+    c.fillStyle = '#293c35';
+    c.fillRect(18, 5, 17, 2);
+    c.fillStyle = finish.shell;
+    c.fillRect(22 - pull, 6, 11, 5);
+    c.fillStyle = finish.trim;
+    for (let i = 0; i < 3; i++) c.fillRect(24 - pull + i * 3, 7, 1, 3);
+    c.fillStyle = '#97a59c';
+    c.fillRect(24 - pull, 10, 6, 2);
+  }
   if (flash > 0) {
     const tip = muzzle - barrelKick;
     c.globalAlpha *= flash * (reduced ? 0.28 : 0.9);
     c.fillStyle = g.chargedFlash ? '#edf5b9' : '#ffe4ad';
     if (reduced) c.fillRect(tip, -2, 3, 4);
     else {
-      const length = (heavy ? 20 : 14) + (g.chargedFlash ? 7 : 0) + (g.shotCount % 3) * 1.5,
-        width = scatter ? 8 : heavy ? 5.5 : 4;
+      const length =
+          (shotgun ? 23 : heavy ? 20 : burst ? 10 : 14) +
+          (g.chargedFlash ? 7 : 0) +
+          (g.shotCount % 3) * 1.5,
+        width = shotgun ? 9 : scatter ? 8 : heavy ? 5.5 : burst ? 2.5 : 4;
       c.beginPath();
       c.moveTo(tip - 0.5, -width);
       c.lineTo(tip + length * 0.48, -width * 0.22);

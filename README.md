@@ -16,7 +16,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Earn Your Tools — version 4.2.0.** Your first Campaign starts directly with the pistol. Later attempts show all guns with clear unlock requirements. End screens collect new tools, outfits, finishes, fittings and contracts in visual reward cards, saved across Continue. The Logbook shows production-rendered machine, variant and district images, plus appearance previews. [Release notes](docs/releases/4.2.0.md).
+**Feel Every Shot — version 4.3.0.** A deeper shotgun blast and visible pump action, mechanical nailgun bursts with nails that briefly stick into scenery, and clearer player and patrol animation. Existing damage, recoil physics and unlock requirements stay the same. [Release notes](docs/releases/4.3.0.md).
 
 **Starting Guns — version 4.1.0.** Choose your tool when you start a Campaign: the Service pistol for balanced aim and recoil, the Recoil shotgun for close fights and strong launches, or the Burst nailgun for precise bursts with smaller kicks. All three use the same upgrades. Continue, Retry, replays and Workshop blueprints keep your choice; each new Daily fixes one gun for everyone. Older Continue saves and Daily links keep the pistol. [Release notes](docs/releases/4.1.0.md).
 

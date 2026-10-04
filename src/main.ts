@@ -68,6 +68,7 @@ import { createReportDraft, issueReportMenu, type ReportDraft } from './issue-re
 import { endingCopy } from './ending.ts';
 import { clockOutTestFromUrl, prepareClockOutTest } from './clock-out-test.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
+import { combatFeelTestFromUrl } from './combat-feel-test.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { auditorTestFromUrl } from './auditor-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
@@ -383,7 +384,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Earn Your Tools</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Feel Every Shot</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -494,6 +495,7 @@ let linkedRunTest =
   annexTestFromUrl(entryUrl) ??
   clockOutTestFromUrl(entryUrl) ??
   presentationTestFromUrl(entryUrl) ??
+  combatFeelTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
   storyTestFromUrl(entryUrl) ??
@@ -1838,11 +1840,11 @@ function showDialog(kind: string) {
     );
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Earn your next tool.</h2>' +
-      '<p class="update-tagline">New tools, visible rewards, and a closer look at the Foundry.</p>' +
-      '<dl class="update-notes"><div><dt>Start with the Service pistol.</dt><dd>Your first Campaign begins immediately. Later attempts show all three tools and their unlock conditions. Beat the Campaign for the Recoil shotgun; complete Overtime for the Burst nailgun.</dd></div>' +
-      '<div><dt>See what you earned.</dt><dd>End screens collect newly unlocked tools, outfits, gun finishes, fittings and contracts into reward cards. Rewards earned before Continue stay on the run’s card list.</dd></div>' +
-      '<div><dt>The Foundry, as it looks in play.</dt><dd>Logbook machine and site pictures now use the game renderer, including variants and alternate districts. Commendations show their actual appearance rewards.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Feel every shot.</h2>' +
+      '<p class="update-tagline">Tools with weight. Machines with readable movement.</p>' +
+      '<dl class="update-notes"><div><dt>A shotgun with a kick.</dt><dd>A deeper blast, a sliding pump and compact pellet impacts give the Recoil shotgun its own feel. Clear the Campaign to earn it.</dd></div>' +
+      '<div><dt>A mechanical three-round burst.</dt><dd>The Burst nailgun fires sharp metal ticks. Spent nails stick briefly into scenery and ride along with moving objects. Complete Overtime to earn it.</dd></div>' +
+      '<div><dt>Movement you can read.</dt><dd>Player takeoffs, landings and recoil have new body poses. Patrol machines walk, brace their weapons and react to the direction of a hit. Reduced effects keeps motion restrained.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
