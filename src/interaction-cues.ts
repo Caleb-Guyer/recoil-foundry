@@ -32,7 +32,7 @@ export function interactionCues(g: Game): InteractionCue[] {
     cues.push({ pos: box.body.position, kind: 'shoot' });
   const panel = g.shutdown.target;
   if (panel && reachable(panel, 190)) cues.push({ pos: panel, kind: 'shoot' });
-  const relay = g.enemies.find((e) => e.eventRole === 'relay' && e.spawn <= 0);
+  const relay = g.areaEvents.dark ? g.areaEvents.fuseBox : null;
   if (relay && reachable(relay.body.position, 190))
     cues.push({ pos: relay.body.position, kind: 'shoot' });
   if (g.areaEvents.terminalReady && distance(g.player.position, g.areaEvents.site) <= 65)

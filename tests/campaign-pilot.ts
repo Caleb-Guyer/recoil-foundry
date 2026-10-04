@@ -9,6 +9,7 @@ import { dodgePilot } from './combat-pilot.ts';
 import { pressurePilot } from './pressure-pilot.ts';
 import { freightPilot } from './freight-pilot.ts';
 import type { RegionChoice } from '../src/regions.ts';
+import { blackoutInput } from './blackout-pilot.ts';
 const { Query } = Matter;
 const tick = (g: Game, n = 1, p: Partial<Input> = {}) => {
   for (let i = 0; i < n; i++)
@@ -123,6 +124,11 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     const custom = options.beforeInput?.(g);
     if (custom) {
       g.tick(1 / 60, custom);
+      continue;
+    }
+    const blackout = blackoutInput(g);
+    if (blackout) {
+      g.tick(1 / 60, blackout);
       continue;
     }
     if (g.mode === 'reforge') {

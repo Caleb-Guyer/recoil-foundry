@@ -15,7 +15,7 @@ export interface RunRecap {
   uprising?: UprisingRun;
   unlocks?: LongevityId[];
   factory?: FactoryCondition;
-  factoryVersion?: 1 | 2 | 3;
+  factoryVersion?: 1 | 2 | 3 | 4;
   version: 1;
   security?: SecurityLevel;
   id: string;
@@ -87,7 +87,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
         (!isSecurityLevel(raw.security) || raw.security === 0 || daily)) ||
       (raw.factory !== undefined && (daily || raw.factory !== planFactory(raw.seed).condition)) ||
       (raw.factoryVersion !== undefined &&
-        (!raw.factory || ![1, 2, 3].includes(raw.factoryVersion))) ||
+        (!raw.factory || ![1, 2, 3, 4].includes(raw.factoryVersion))) ||
       (raw.unlocks !== undefined &&
         (!validUnlocks(raw.unlocks) || (daily && raw.unlocks.length > 0)))
     )
@@ -97,7 +97,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       ...(raw.uprising ? { uprising: structuredClone(raw.uprising) } : {}),
       ...(raw.unlocks && !daily ? { unlocks: [...raw.unlocks] } : {}),
       ...(raw.factory ? { factory: raw.factory as FactoryCondition } : {}),
-      ...(raw.factoryVersion ? { factoryVersion: raw.factoryVersion as 1 | 2 | 3 } : {}),
+      ...(raw.factoryVersion ? { factoryVersion: raw.factoryVersion as 1 | 2 | 3 | 4 } : {}),
       ...(raw.security ? { security: raw.security } : {}),
       id: raw.id,
       finishedAt: raw.finishedAt,

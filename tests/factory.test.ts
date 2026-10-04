@@ -56,6 +56,7 @@ const idle = {
   aim: { x: 1000, y: 400 },
 };
 function clearPatrol(g: Game) {
+  if (g.areaEvents.fuseBox) g.props.hit(g.areaEvents.fuseBox, 1, { x: 1, y: 0 }, undefined, true);
   g.waves.clear();
   for (const e of [...g.enemies]) {
     e.spawn = 0;
@@ -292,9 +293,15 @@ test('the opening power objective stays in sight and clear of terrain across see
       elapsed: 0,
       factory: planFactory(seed),
     });
-    const relay = g.enemies.find((enemy) => enemy.eventRole === 'relay')!;
+    const relay = g.areaEvents.fuseBox!;
     assert(relay && relay.body.position.x >= 200 && relay.body.position.x <= 700);
-    assert.equal(Matter.Query.collides(relay.body, g.solidBodies).length, 0);
+    assert.equal(
+      Matter.Query.collides(
+        relay.body,
+        g.solidBodies.filter((b) => b !== relay.body),
+      ).length,
+      0,
+    );
   }
 });
 

@@ -9,8 +9,9 @@ import { CARGO_SIZE } from './cargo-layout.ts';
 import { disruptScrapperBody, SCRAPPER_DAMAGE } from './scrapper.ts';
 
 const { Bodies, Body, Composite, Events } = Matter;
-export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo' | 'rubble' | 'charge';
+export type PropKind = 'crate' | 'canister' | 'cover' | 'cargo' | 'rubble' | 'charge' | 'fuse';
 export const PROP_STATS = {
+  fuse: { w: 40, h: 40, hp: Infinity },
   charge: { w: 18, h: 18, hp: Infinity },
   crate: { w: 44, h: 44, hp: 120 },
   canister: { w: 24, h: 38, hp: Infinity },
@@ -238,7 +239,7 @@ export class PropSystem {
     });
     // Store finite mass and inertia before anchoring cover, so it can become
     // an ordinary falling body if its supporting ledge breaks.
-    if (kind === 'cover') Body.setStatic(body, true);
+    if (kind === 'cover' || kind === 'fuse') Body.setStatic(body, true);
     const prop: Prop = {
       kind,
       body,
@@ -270,6 +271,10 @@ export class PropSystem {
     directFire = false,
     playerDamage = directFire || !!(source?.friendly && !source.allied),
   ) {
+    if (prop.kind === 'fuse') {
+      this.game.areaEvents.hitFuse(prop, damage, playerDamage);
+      return;
+    }
     if (prop.uprising) {
       this.game.uprising.hit(prop, damage, velocity, source, directFire, playerDamage);
       return;
@@ -321,6 +326,7 @@ export class PropSystem {
     else this.hit(prop, damage, velocity);
   }
   break(prop: Prop, source?: Shot, playerDamage = !!(source?.friendly && !source.allied)) {
+    if (prop.kind === 'fuse') return;
     if (!this.items.includes(prop)) return;
     if (prop.auditCase) {
       if (prop.hp <= 0 && this.game.auditor.openCase()) this.remove(prop);
@@ -361,6 +367,7 @@ export class PropSystem {
     for (const prop of this.items) prop.flash = Math.max(0, prop.flash - dt);
     for (const { prop, other, speed, incomingSpeed } of this.impacts) {
       if (!this.items.includes(prop)) continue;
+      if (prop.kind === 'fuse') continue;
       if (g.sortingPit.impact(prop, other, speed)) {
         if (g.mode !== 'playing') return;
         continue;
@@ -444,6 +451,7 @@ export class PropSystem {
     }
   }
   explode(prop: Prop, credited = true) {
+    if (prop.kind === 'fuse') return;
     if (this.game.mode !== 'playing' || !this.items.includes(prop)) return;
     const g = this.game,
       p = { ...prop.body.position };

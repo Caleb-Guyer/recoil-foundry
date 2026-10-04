@@ -11,7 +11,7 @@ export const FACTORY_CONDITIONS = {
 } as const;
 export type FactoryCondition = keyof typeof FACTORY_CONDITIONS;
 export const FACTORY_RULESET = 2;
-export type FactoryVersion = 1 | 2 | 3;
+export type FactoryVersion = 1 | 2 | 3 | 4;
 export type FactoryEncounterKind = AreaEventKind | 'crossing' | 'freight';
 export interface FactoryEncounter {
   stage: number;
@@ -25,8 +25,8 @@ export interface FactoryRun {
 }
 
 // Separate streams leave combat, rewards, bosses and old Daily seeds intact.
-// Legacy campaigns introduce signatures in rooms two and six. Uprising brings
-// them forward one room so the following jobs keep their authored encounters.
+// The first room teaches the gun. Version four keeps Uprising signatures in
+// rooms two and five, clear of the jobs that now begin in room six.
 export function planFactory(seed: string, version: FactoryVersion = FACTORY_RULESET): FactoryRun {
   const rng = seeded(seed + ':factory-v1');
   const condition = (Object.keys(FACTORY_CONDITIONS) as FactoryCondition[])[Math.floor(rng() * 3)];
@@ -34,7 +34,7 @@ export function planFactory(seed: string, version: FactoryVersion = FACTORY_RULE
     condition === 'freight' ? 'crossing' : condition === 'power' ? 'blackout' : 'turf';
   const encounters: FactoryEncounter[] = [
     { stage: version === 3 ? 0 : 1, kind: signature },
-    { stage: version === 3 ? 4 : 5, kind: condition === 'freight' ? 'freight' : signature },
+    { stage: version >= 3 ? 4 : 5, kind: condition === 'freight' ? 'freight' : signature },
   ];
   // A later contrasting encounter preserves the other event types. Keep a
   // normal room between signatures rather than applying an event area-wide.
@@ -65,6 +65,7 @@ export function planFactory(seed: string, version: FactoryVersion = FACTORY_RULE
 }
 
 export function factoryEncounter(factory: FactoryRun | null | undefined, stage: number) {
+  if (stage === 0) return undefined;
   return factory?.encounters.find((encounter) => encounter.stage === stage);
 }
 
@@ -74,7 +75,7 @@ export function validFactory(d: Checkpoint): boolean {
   if (
     !f ||
     typeof f !== 'object' ||
-    ![1, 2, 3].includes(f.version) ||
+    ![1, 2, 3, 4].includes(f.version) ||
     d.version !== 6 ||
     typeof d.seed !== 'string' ||
     /^RF-D\d+-/.test(d.seed) ||

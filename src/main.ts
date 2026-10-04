@@ -1023,7 +1023,7 @@ function start(
   retry = false,
   seedOverride?: string,
   securityOverride?: SecurityLevel,
-  factoryRules?: boolean | 1 | 2 | 3,
+  factoryRules?: boolean | 1 | 2 | 3 | 4,
   unlockOverride?: readonly LongevityId[],
   uprisingOverride?: UprisingRun | null,
 ) {
@@ -1120,8 +1120,8 @@ function start(
         ? false
         : seedParam === seed && entryUrl.searchParams.get('fv') === '1'
           ? 1
-          : seedParam === seed && ['2', '3'].includes(entryUrl.searchParams.get('fv') ?? '')
-            ? (Number(entryUrl.searchParams.get('fv')) as 2 | 3)
+          : seedParam === seed && ['2', '3', '4'].includes(entryUrl.searchParams.get('fv') ?? '')
+            ? (Number(entryUrl.searchParams.get('fv')) as 2 | 3 | 4)
             : true),
     unlockOverride ??
       (retry && seed === game.seed
@@ -1659,7 +1659,8 @@ game.onChange = () => {
   $('stage').title = game.practice
     ? PRACTICE_BOSSES[game.practice.kind].name
     : `${activeDaily ? 'Daily · ' + activeDaily.date + ' · ' : ''}${game.level.annex ? REGION_NAMES.annex : AREAS[game.level.area].name} · ${game.level.name}`;
-  $('factory-condition').hidden = !game.factory || !!game.overtime || !!game.escape || game.detour;
+  $('factory-condition').hidden =
+    !game.factory || game.stage === 0 || !!game.overtime || !!game.escape || game.detour;
   if (game.factory) {
     $('factory-hint').hidden = !!game.level.uprising;
     $('factory-name').textContent = game.level.uprising

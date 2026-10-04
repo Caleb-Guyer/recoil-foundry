@@ -36,6 +36,8 @@ function game(kind: AreaEventKind) {
   return g;
 }
 function kill(g: Game, keepBox = false) {
+  if (!keepBox && g.areaEvents.fuseBox)
+    g.props.hit(g.areaEvents.fuseBox, 1, { x: 1, y: 0 }, undefined, true);
   for (const e of [...g.enemies])
     if (!keepBox || e.eventRole !== 'relay') {
       e.spawn = 0;
@@ -50,7 +52,7 @@ function settle(g: Game, frames = 160) {
   }
 }
 
-test('reported cooling blackout keeps its relay anchored on a conveyor until shot', () => {
+test('reported cooling blackout keeps its fuse box solid and anchored before and after switching off', () => {
   const g = new Game(),
     seed = '1OUSOYR';
   g.start(seed, {
@@ -66,17 +68,15 @@ test('reported cooling blackout keeps its relay anchored on a conveyor until sho
   });
   assert.equal(g.level.id, 'cooling-high-road');
   assert.equal(g.areaEvents.active, 'blackout');
-  const relay = g.enemies.find((e) => e.eventRole === 'relay')!;
+  const relay = g.areaEvents.fuseBox!;
   assert(relay);
   const origin = { ...relay.body.position };
+  assert(g.conveyors.items.length > 0, 'the reported room still contains conveyors');
   assert(
-    g.conveyors.items.some(
-      (belt) =>
-        origin.x >= belt.x &&
-        origin.x <= belt.x + belt.w &&
-        Math.abs(belt.y - relay.body.bounds.max.y) < 3,
+    !g.conveyors.items.some(
+      (belt) => origin.x > belt.x - 20 && origin.x < belt.x + belt.w + 20 && belt.y > 700,
     ),
-    'the report exercises a real belt underneath the relay',
+    'the cabinet is mounted beside the conveyor lane',
   );
   kill(g, true);
   settle(g, 600);
@@ -84,9 +84,11 @@ test('reported cooling blackout keeps its relay anchored on a conveyor until sho
   assert.deepEqual(relay.body.position, origin);
   assert(!g.areaEvents.powered);
   assert(g.waves.held);
-  g.hitEnemy(relay, 1);
+  g.props.hit(relay, 1, { x: 1, y: 0 }, undefined, true);
   assert(g.areaEvents.powered);
   assert(!g.waves.held);
+  assert(g.props.items.includes(relay));
+  assert(!relay.body.isSensor);
   settle(g, 120);
   assert(
     g.enemies.some((e) => e.eventRole !== 'relay'),
@@ -96,7 +98,7 @@ test('reported cooling blackout keeps its relay anchored on a conveyor until sho
 
 test('destroyed footing does not release the fixed blackout relay', () => {
   const g = game('blackout');
-  const relay = g.enemies.find((e) => e.eventRole === 'relay')!;
+  const relay = g.areaEvents.fuseBox!;
   const origin = { ...relay.body.position };
   g.destruction.broken.push({ x: origin.x - 30, y: relay.body.bounds.max.y, w: 60, h: 20 });
   g.destruction.releaseUnsupported();
@@ -181,7 +183,37 @@ test('old checkpoints, Workshop, detours, bosses and Overtime do not gain event 
   assert.equal(g.areaEvents.active, null);
 });
 test('event boxes and terminals occupy clear floor across areas, routes and mirrored seeded layouts', () => {
-  for (let i = 0; i < 20; i++)
+  const assertCabinet = (g: Game) => {
+    const box = g.areaEvents.fuseBox!;
+    assert(box);
+    const x = box.body.position.x;
+    assert.equal(box.body.bounds.max.y, 739);
+    assert.equal(
+      Matter.Query.collides(
+        box.body,
+        g.solidBodies.filter((b) => b !== box.body),
+      ).length,
+      0,
+      g.level.id,
+    );
+    assert(
+      !g.conveyors.items.some((b) => b.y > 700 && x + 30 > b.x && x - 30 < b.x + b.w),
+      g.level.id,
+    );
+    assert(!g.level.coolant?.some((p) => x + 30 > p.x && x - 30 < p.x + p.w), g.level.id);
+    assert(
+      !g.hazards.items.some(({ placement: h }) => Math.abs(h.x - x) < h.w / 2 + 75),
+      JSON.stringify({
+        seed: g.seed,
+        stage: g.stage,
+        route: g.route,
+        site: g.areaEvents.site,
+        hazards: g.hazards.items.map((h) => h.placement),
+      }),
+    );
+    assert(!g.level.spawns.some((s) => Math.abs(s.x - x) < 100 && s.y > 600), g.level.id);
+  };
+  for (let i = 0; i < 100; i++)
     for (const area of [1, 2, 3])
       for (const offset of [0, 1, 2]) {
         const save = preset('blackout');
@@ -196,16 +228,12 @@ test('event boxes and terminals occupy clear floor across areas, routes and mirr
           assert(!g.waves.held);
           continue;
         }
-        const box = g.enemies.find((e) => e.eventRole === 'relay')!;
-        assert(box);
-        assert.equal(box.body.bounds.max.y, 740);
-        assert.equal(Matter.Query.collides(box.body, g.solidBodies).length, 0, g.level.id);
+        assertCabinet(g);
         if (offset === 2)
           for (const route of ['low', 'high'] as const) {
             g.route = route;
             g.loadRoom();
-            const e = g.enemies.find((e) => e.eventRole === 'relay')!;
-            assert.equal(Matter.Query.collides(e.body, g.solidBodies).length, 0, g.level.id);
+            assertCabinet(g);
           }
       }
 });
@@ -238,17 +266,17 @@ test('Blackout holds its reserve indefinitely and a single shot reveals the exit
   assert(g.waves.doors.every((d) => d.state === 'sealed'));
   g.openReward();
   assert.equal(g.mode, 'playing');
-  const box = g.enemies.find((e) => e.eventRole === 'relay')!,
+  const box = g.areaEvents.fuseBox!,
     p = box.body.position;
   round(g, { pos: { x: p.x - 24, y: p.y }, vel: { x: 12, y: 0 }, damage: 1 });
   g.updateShots(1 / 60);
-  assert.equal(box.hp, 0);
+  assert(g.props.items.includes(box));
   assert(!g.areaEvents.dark && !g.waves.held);
   assert.equal(g.waves.phase, 'warning');
   assert.deepEqual(g.areaEvents.state!.relays, [4]);
   assert.equal(g.areaEvents.roomHeal, 6);
   const doors = g.waves.doors.length;
-  g.areaEvents.killed(box, true);
+  g.props.hit(box, 1, { x: 1, y: 0 }, undefined, true);
   assert.equal(g.waves.doors.length, doors);
   settle(g);
   assert(g.enemies.length > 0);
@@ -267,15 +295,14 @@ test('the power box can also be activated with an actual beam', () => {
   g.areaEvents.active = 'blackout';
   g.areaEvents.state = preset('blackout').areaEvent!;
   g.waves.held = true;
-  const box = target(g, 400, 300);
-  box.eventRole = 'relay';
-  box.hp = 1;
-  for (let i = 0; i < 30 && box.hp > 0; i++) {
+  const box = g.props.spawn('fuse', 400, 300);
+  g.areaEvents.fuseBox = box;
+  for (let i = 0; i < 30 && !g.areaEvents.powered; i++) {
     g.time += 1 / 60;
     g.torch.beforeStep(1 / 60, true);
     g.torch.afterStep(1 / 60);
   }
-  assert(box.hp <= 0);
+  assert(g.props.items.includes(box));
   assert(g.areaEvents.powered);
   assert(!g.waves.held);
 });

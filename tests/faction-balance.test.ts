@@ -129,6 +129,7 @@ test('recaps retain balance revision and accept old records without one', () => 
   delete old.factoryVersion;
   assert.equal(loadRunHistory([old]).length, 1);
   assert.equal(loadRunHistory([{ ...record, factoryVersion: 3 }]).length, 1);
-  assert.equal(loadRunHistory([{ ...record, factoryVersion: 4 }]).length, 0);
+  assert.equal(loadRunHistory([{ ...record, factoryVersion: 4 }]).length, 1);
+  assert.equal(loadRunHistory([{ ...record, factoryVersion: 5 }]).length, 0);
   assert.equal(loadRunHistory([{ ...record, factory: undefined }]).length, 0);
 });

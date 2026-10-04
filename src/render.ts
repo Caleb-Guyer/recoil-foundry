@@ -1394,7 +1394,7 @@ export class Renderer {
       g = this.game;
     drawCargoCables(c, g, this.reduced);
     for (const prop of g.props.items) {
-      if (prop.uprising) continue;
+      if (prop.uprising || prop.kind === 'fuse') continue;
       if (prop.auditCase) {
         drawCompanyCase(c, g, prop);
         continue;

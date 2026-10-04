@@ -713,11 +713,11 @@ test('new Factory plans retain their condition outside mission slots and reserve
     const seed = 'uprising-plans-' + i,
       g = new Game();
     g.start(seed, undefined, null, null, false, 0, true, [], newUprising());
-    assert.equal(g.factory?.version, 3);
+    assert.equal(g.factory?.version, 4);
     assert.equal(g.factory?.condition, planFactory(seed).condition);
     assert.deepEqual(
       g.factory?.encounters.slice(0, 2).map((e) => e.stage),
-      [0, 4],
+      [1, 4],
     );
     const reserved = g.reservedEncounterStages!;
     assert.deepEqual(uprisingForks(g.uprising.run!), [4, 8, 12, 16]);
@@ -797,7 +797,7 @@ for (const condition of ['freight', 'power'] as const)
         cause: g.deathCause,
       }),
     );
-    assert(seen.has(0) && seen.has(4));
+    assert(seen.has(1) && seen.has(4));
     assert.equal(g.uprising.run?.outcomes.length, 4);
   });
 for (const [finale, plan] of Object.entries(campaigns))

@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import { freightSelected } from './freight-layout.ts';
 import type { Enemy, Game } from './game.ts';
+import type { Prop } from './props.ts';
 import { ENEMY_STATS } from './enemies.ts';
 import { areaIndex, clamp, direction, distance, MOD_REQUIRES, seeded } from './rules.ts';
 import type { Checkpoint, Mod, Vec } from './rules.ts';
@@ -176,6 +177,7 @@ export class AreaEventSystem {
   pending = false;
   releaseAt = 0;
   powered = false;
+  fuseBox: Prop | null = null;
   constructor(game: Game) {
     this.game = game;
   }
@@ -192,13 +194,16 @@ export class AreaEventSystem {
   }
   selectFactoryEvent() {
     const g = this.game;
-    if (g.factory) this.state = g.factory.events.find((event) => event.room === g.stage) ?? null;
+    if (g.factory)
+      this.state =
+        g.stage === 0 ? null : (g.factory.events.find((event) => event.room === g.stage) ?? null);
   }
   get encounter(): AreaEventKind | null {
     const g = this.game,
       s = this.state;
     if (
       !s ||
+      g.stage === 0 ||
       g.practice ||
       g.workshop.active ||
       g.escape ||
@@ -226,6 +231,9 @@ export class AreaEventSystem {
     return this.active === 'lockdown' && !this.hunted && !this.game.enemies.length;
   }
   clear() {
+    if (this.fuseBox && this.game.props.items.includes(this.fuseBox))
+      this.game.props.remove(this.fuseBox);
+    this.fuseBox = null;
     this.game.factions.clear();
     this.formation = null;
     this.departingAt = null;
@@ -242,17 +250,13 @@ export class AreaEventSystem {
     this.site = this.findSite();
     this.cacheReady = this.cacheTaken = this.hunted = false;
     this.powered = cleared || s.relays.includes(g.stage);
-    if (cleared) return;
     if (this.active === 'blackout') {
-      g.waves.held = true;
-      const relay = this.spawn('shooter', this.site);
-      if (relay) {
-        relay.eventRole = 'relay';
-        relay.spawn = 0;
-        relay.hp = relay.maxHp = 1;
-        relay.body.isSensor = true;
-      }
-    } else if (this.active === 'lockdown') {
+      this.fuseBox = g.props.spawn('fuse', this.site.x, this.site.y);
+      g.waves.held = !this.powered;
+      return;
+    }
+    if (cleared) return;
+    if (this.active === 'lockdown') {
       g.waves.held = true;
     } else {
       this.spawnTurf();
@@ -424,13 +428,10 @@ export class AreaEventSystem {
     return this.game.factions.spawn(kind, p);
   }
   findSite(): Vec {
+    if (this.active === 'blackout') return this.findFuseSite();
     const g = this.game,
       candidates: Vec[] = [];
-    // Introduce the outage with a visible, floor-level objective near the
-    // entrance. Later outages retain their exploration-sized placement pool.
-    const opening =
-      !!g.factory && g.stage === (g.factory.version === 3 ? 0 : 1) && this.active === 'blackout';
-    for (let x = opening ? 340 : 540; x <= (opening ? 700 : 1720); x += 40) {
+    for (let x = 540; x <= 1720; x += 40) {
       if (
         !Query.region(g.solidBodies, { min: { x: x - 45, y: 642 }, max: { x: x + 45, y: 738 } })
           .length
@@ -438,7 +439,67 @@ export class AreaEventSystem {
         candidates.push({ x, y: 724 });
     }
     const rng = seeded(g.roomSeed + ':event-site:' + g.stage);
-    return candidates[Math.floor(rng() * candidates.length)] ?? { x: opening ? 200 : 1840, y: 724 };
+    return candidates[Math.floor(rng() * candidates.length)] ?? { x: 1840, y: 724 };
+  }
+  private findFuseSite(): Vec {
+    const g = this.game;
+    const opening = g.stage === g.factory?.encounters[0].stage;
+    const candidates: Vec[] = [];
+    // A floor-mounted cabinet needs headroom and a clear approach, away from
+    // patrol spawns, moving machinery and the exit doors.
+    const eligible = (x: number) => {
+      if (
+        Query.region(g.solidBodies, { min: { x: x - 45, y: 640 }, max: { x: x + 45, y: 739 } })
+          .length
+      )
+        return false;
+      if (g.level.spawns.some((s) => Math.abs(s.x - x) < 100 && s.y > 600)) return false;
+      if (g.hazards.items.some(({ placement: h }) => Math.abs(h.x - x) < h.w / 2 + 75))
+        return false;
+      if (
+        g.conveyors.items.some(
+          (belt) => belt.y > 700 && x + 30 > belt.x && x - 30 < belt.x + belt.w,
+        )
+      )
+        return false;
+      if (g.level.coolant?.some((pool) => x + 30 > pool.x && x - 30 < pool.x + pool.w))
+        return false;
+      return true;
+    };
+    for (let x = 220; x <= 1760; x += 25) if (eligible(x)) candidates.push({ x, y: 719 });
+    // Dense patrols can fill every central bay. Check the entrance service
+    // space with the same clearance rules instead of using a blind fallback.
+    if (!candidates.length)
+      for (let x = 80; x <= 200; x += 10) if (eligible(x)) candidates.push({ x, y: 719 });
+    const nearby = candidates.filter((p) =>
+      opening
+        ? p.x <= 700
+        : g.level.solids.some(
+            (s) =>
+              s.y + s.h >= 650 && Math.min(Math.abs(p.x - s.x), Math.abs(p.x - s.x - s.w)) < 130,
+          ),
+    );
+    const pool = nearby.length ? nearby : candidates;
+    const rng = seeded(g.roomSeed + ':fuse-site:' + g.stage);
+    return pool[Math.floor(rng() * pool.length)] ?? { x: 80, y: 719 };
+  }
+  hitFuse(box: Prop, damage: number, playerDamage: boolean) {
+    if (
+      box !== this.fuseBox ||
+      !this.dark ||
+      this.game.mode !== 'playing' ||
+      !playerDamage ||
+      !(damage > 0) ||
+      !this.state
+    )
+      return;
+    const g = this.game;
+    this.powered = true;
+    box.flash = 0.12;
+    if (!this.state.relays.includes(g.stage)) this.state.relays.push(g.stage);
+    g.burst(box.body.position, 8, '#e8bb76', 3);
+    g.waves.release();
+    g.onSound('reinforce');
   }
   free(p: Vec, margin = 28) {
     const g = this.game;

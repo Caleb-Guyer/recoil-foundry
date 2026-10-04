@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { type Game, type Input } from '../src/game.ts';
 import { distance } from '../src/rules.ts';
 import { dodgePilot } from './combat-pilot.ts';
+import { blackoutInput } from './blackout-pilot.ts';
 
 // Ordinary input only: navigate around shelves, use recoil to climb, and
 // deliberately release charged weapons. Health, AI and physics stay intact.
@@ -15,6 +16,11 @@ export function playRoom(g: Game, seconds: number, stop: () => boolean = () => f
     frame < seconds * 60 && !g.clear && g.mode === 'playing' && !stop();
     frame++
   ) {
+    const blackout = blackoutInput(g);
+    if (blackout) {
+      g.tick(1 / 60, blackout);
+      continue;
+    }
     const target = g.enemies
       .filter((e) => e.spawn <= 0)
       .sort(

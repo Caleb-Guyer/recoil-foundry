@@ -709,7 +709,7 @@ export class Game {
     testRun: Checkpoint | null = null,
     workshop = false,
     securityLevel: SecurityLevel = 0,
-    factoryRules: boolean | 1 | 2 | 3 = true,
+    factoryRules: boolean | 1 | 2 | 3 | 4 = true,
     unlocks: readonly string[] = [],
     uprising: UprisingRun | null = null,
   ) {
@@ -742,7 +742,7 @@ export class Game {
           : factoryRules
             ? planFactory(
                 this.seed,
-                typeof factoryRules === 'number' ? factoryRules : this.uprising.run ? 3 : undefined,
+                typeof factoryRules === 'number' ? factoryRules : this.uprising.run ? 4 : undefined,
               )
             : null
         : null;
@@ -1059,7 +1059,7 @@ export class Game {
               );
     // The opening faction fight teaches one mechanic with a small roster;
     // its authored crew replaces the standard patrol rather than piling on.
-    if (planned?.kind === 'turf' && this.stage === (this.factory?.version === 3 ? 0 : 1))
+    if (planned?.kind === 'turf' && this.stage === this.factory?.encounters[0].stage)
       this.level.spawns = [];
     if (
       this.route &&

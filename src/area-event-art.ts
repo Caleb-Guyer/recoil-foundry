@@ -1,5 +1,6 @@
 import type { Enemy, Game } from './game.ts';
 import { distance, type Vec } from './rules.ts';
+import { projectileLights, type ProjectileLight } from './projectile-light.ts';
 const AMBER = '#e8bb76',
   BLUE = '#6bb7ff';
 export function drawEventEnemy(c: CanvasRenderingContext2D, e: Enemy): boolean {
@@ -72,6 +73,38 @@ export function drawAreaEvent(c: CanvasRenderingContext2D, g: Game) {
       c.fillRect(p.x - 24, p.y - 45, 48 * Math.max(0, e.hp / e.maxHp), 3);
     }
   const p = event.site;
+  if (event.fuseBox) {
+    const p = event.fuseBox.body.position,
+      live = !event.powered;
+    c.save();
+    c.translate(p.x, p.y);
+    c.fillStyle = '#192527';
+    c.strokeStyle = live ? AMBER : '#687278';
+    c.lineWidth = 2;
+    c.fillRect(-20, -20, 40, 40);
+    c.strokeRect(-20, -20, 40, 40);
+    c.strokeStyle = '#45575d';
+    c.strokeRect(-15, -15, 30, 30);
+    c.fillStyle = '#45575d';
+    c.fillRect(-23, 17, 46, 3);
+    c.fillStyle = live ? '#ffc67e' : '#26383d';
+    c.fillRect(11, -12, 4, 4);
+    c.strokeStyle = live ? '#ffc67e' : '#687278';
+    c.beginPath();
+    if (live) {
+      c.moveTo(1, -12);
+      c.lineTo(-7, 1);
+      c.lineTo(2, 1);
+      c.lineTo(-2, 12);
+    } else {
+      c.moveTo(-7, 3);
+      c.lineTo(5, -6);
+      c.moveTo(7, 3);
+      c.lineTo(11, 3);
+    }
+    c.stroke();
+    c.restore();
+  }
   if (event.active === 'turf' && !event.cacheTaken && !event.state?.caches.includes(g.stage)) {
     c.fillStyle = '#192527';
     c.strokeStyle = event.cacheReady ? BLUE : '#555e64';
@@ -116,8 +149,8 @@ export function drawAreaEvent(c: CanvasRenderingContext2D, g: Game) {
   }
   c.restore();
 }
-// A mask darkens the actual world, including terrain and characters. Only a
-// small pool around the pilot and the box's indicator cut through the blackout.
+// Projectile pools reveal the actual world under the darkness mask. Their tint
+// follows the ammunition; the same glow remains subtle in ordinary rooms.
 const masks = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
 export function drawBlackout(
   c: CanvasRenderingContext2D,
@@ -127,7 +160,11 @@ export function drawBlackout(
   width: number,
   height: number,
 ) {
-  if (!g.areaEvents.dark) return;
+  const lights = projectileLights(g, { ...camera, w: width / scale, h: height / scale });
+  if (!g.areaEvents.dark) {
+    drawProjectileGlow(c, lights, camera, scale, false);
+    return;
+  }
   let mask = masks.get(c.canvas);
   if (!mask) {
     mask = document.createElement('canvas');
@@ -157,11 +194,34 @@ export function drawBlackout(
     m.fillRect(x - r, y - r, r * 2, r * 2);
   };
   light(g.player.position, 175, 0.92);
-  light(g.areaEvents.site, 75, 0.8);
+  if (g.areaEvents.fuseBox) light(g.areaEvents.site, 75, 0.8);
   if (g.muzzle > 0) light(g.player.position, 225, Math.min(0.6, g.muzzle * 4));
-  // Small shot glints retain a readable hazard without illuminating whole rooms.
-  for (const s of g.shots.slice(-80)) if (s.life > 0) light(s.pos, 18, 0.72);
+  for (const s of lights) light(s.pos, s.radius, s.strength);
   c.save();
   c.drawImage(mask, 0, 0, width, height);
+  c.restore();
+  drawProjectileGlow(c, lights, camera, scale, true);
+}
+function drawProjectileGlow(
+  c: CanvasRenderingContext2D,
+  lights: ProjectileLight[],
+  camera: Vec,
+  scale: number,
+  dark: boolean,
+) {
+  c.save();
+  c.globalCompositeOperation = 'screen';
+  for (const light of lights) {
+    const x = (light.pos.x - camera.x) * scale,
+      y = (light.pos.y - camera.y) * scale,
+      r = light.radius * scale;
+    const glow = c.createRadialGradient(x, y, 0, x, y, r);
+    glow.addColorStop(0, light.color + (dark ? '55' : '18'));
+    glow.addColorStop(0.35, light.color + (dark ? '20' : '08'));
+    glow.addColorStop(1, light.color + '00');
+    c.globalAlpha = light.strength;
+    c.fillStyle = glow;
+    c.fillRect(x - r, y - r, r * 2, r * 2);
+  }
   c.restore();
 }
