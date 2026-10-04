@@ -92,6 +92,13 @@ export const GUN_FINISHES = {
   },
 } as const;
 export const OUTFITS = {
+  victor: {
+    name: 'Victor',
+    body: '#597c72',
+    boots: '#384a49',
+    trim: '#efcb7a',
+    unlock: 'gauntlet-cleared',
+  },
   skyline: {
     name: 'Skyline',
     body: '#748e9b',
@@ -173,7 +180,14 @@ export function drawOutfit(
   c.beginPath();
   c.roundRect(-13, -18, 26, 31, 4);
   c.fill();
-  if (id === 'skyline') {
+  if (id === 'victor') {
+    c.fillStyle = '#304a47';
+    c.fillRect(-10, -1, 20, 13);
+    c.fillStyle = p.trim;
+    c.fillRect(-11, 0, 3, 5);
+    c.fillRect(8, 0, 3, 5);
+    for (let i = 0; i < 5; i++) c.fillRect(-7 + i * 3, 7, 2, 3);
+  } else if (id === 'skyline') {
     c.fillStyle = '#3b545d';
     c.fillRect(-10, 0, 20, 12);
     c.fillStyle = p.trim;

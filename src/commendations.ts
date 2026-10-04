@@ -7,6 +7,18 @@ import { WeaponMastery, type WeaponTrace } from './weapon-mastery.ts';
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
   {
+    id: 'gauntlet-cleared',
+    name: 'Five Machines Down',
+    objective: 'Complete all five rounds of the Boss Gauntlet.',
+    reward: 'Victor',
+    slot: 'Outfit',
+    lore: [
+      'DISPATCH · COMPLETE INSPECTION CIRCUIT',
+      'T. Orr · Dispatch',
+      'Five departments requested a demonstration. You brought one tool and declined four opportunities to replace it.\n\nThe jacket came from the old inspection team stores. Brass stitching, dark green cloth, pale cuffs. Vale added five small marks to the chest panel. There is no space left for another signature.\n\nEvery department has now approved your exit. Please take it before someone asks for a sixth demonstration.',
+    ] as Lore,
+  },
+  {
     id: 'launch-certified',
     name: 'Launch Certified',
     objective: 'Clear Launch shaft in 35 seconds without damage or a reset.',

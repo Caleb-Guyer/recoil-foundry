@@ -426,6 +426,49 @@ dialog.practice-dialog {
 .recoil-race-option input {
   accent-color: var(--accent);
 }
+.gauntlet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+.gauntlet-choice {
+  text-align: left;
+  border: 1px solid #3b5053;
+  background: #1c292d;
+  padding: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.gauntlet-choice canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2;
+  pointer-events: none;
+}
+.gauntlet-choice strong,
+.gauntlet-choice span {
+  margin: 0 18px;
+}
+.gauntlet-choice span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.gauntlet-service {
+  padding-top: 18px;
+}
+.gauntlet-choice:hover,
+.gauntlet-choice:focus-visible {
+  border-color: var(--accent);
+}
+@media (max-width: 520px) {
+  .gauntlet-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .single-upgrade .choices {
   grid-template-columns: minmax(0, 1fr);
 }

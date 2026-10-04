@@ -1,4 +1,5 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
+import { BossGauntlet } from './gauntlet.ts';
 import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
 import { EncounterPacer } from './encounter-pacing.ts';
 import { dailyStartingGun, isStartingGun, type StartingGun } from './starting-guns.ts';
@@ -442,6 +443,7 @@ export class Game {
   auditor = new AuditorSystem(this);
   auditorReward = false;
   practice: PracticeSession | null = null;
+  gauntlet = new BossGauntlet(this);
   practiceHits = 0;
   workshop = new WorkshopSystem(this);
   seed = '';
@@ -632,9 +634,11 @@ export class Game {
     this.loadRoom();
   }
   setMode(mode: Mode) {
+    if (mode === 'dead') this.gauntlet.died();
     if (mode === 'won') this.recordCampaignClear();
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.securityCombat.reset();
     if (mode === 'title') {
+      this.gauntlet.reset();
       this.clockOut = new ClockOut();
       this.recoil.race.reset();
     }
@@ -755,6 +759,7 @@ export class Game {
     recoilRules = true,
   ) {
     this.workshop.active = workshop;
+    this.gauntlet.reset();
     this.maintenance.trial = null;
     this.recoil.practice = null;
     this.practice = practice;
@@ -1864,6 +1869,7 @@ export class Game {
         this.testRun?.switchboardTest) &&
       this.clear
     ) {
+      if (this.gauntlet.state && !this.gauntlet.completeFight()) return;
       this.setMode('won');
       return;
     }
@@ -3532,6 +3538,8 @@ export class Game {
     this.courier.killed(e);
     if (e.kind === 'loader') this.loaderArena.stop();
     if (credited && e.eventRole !== 'relay') this.salvageEvolutions.killed(e, killEffects);
+    if (this.mode === 'playing' && this.hp > 0 && e.spawn <= 0)
+      this.gauntlet.defeated(e.kind, credited && source !== 'cleanup' && !e.allied);
     if (
       isBoss(e.kind) &&
       !this.practice &&

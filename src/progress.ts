@@ -9,6 +9,7 @@ import {
 import { SECURITY_KEY, loadSecurityProfile, validSecurityProfile } from './security.ts';
 import { SHAFT_PROFILE_KEY, loadShaftProfile, validShaftProfile } from './maintenance-trials.ts';
 import { RECOIL_TRIALS_KEY, loadRecoilProfile, validRecoilProfile } from './recoil-trial-rules.ts';
+import { GAUNTLET_KEY, loadGauntletRecords, validGauntletRecords } from './gauntlet-rules.ts';
 import {
   RECOIL_GHOSTS_KEY,
   loadRecoilGhosts,
@@ -63,6 +64,7 @@ export const PROGRESS_KEYS = [
   RECOIL_TRIALS_KEY,
   RECOIL_GHOSTS_KEY,
   SECURITY_KEY,
+  GAUNTLET_KEY,
 ] as const;
 export type ProgressValues = Record<(typeof PROGRESS_KEYS)[number], unknown>;
 export type SaveState = 'saved' | 'saving' | 'unavailable' | 'conflict' | 'unreadable';
@@ -163,6 +165,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [SHAFT_PROFILE_KEY]: loadShaftProfile(read(SHAFT_PROFILE_KEY)),
     [RECOIL_TRIALS_KEY]: loadRecoilProfile(read(RECOIL_TRIALS_KEY)),
     [RECOIL_GHOSTS_KEY]: serializeRecoilGhosts(read(RECOIL_GHOSTS_KEY)),
+    [GAUNTLET_KEY]: loadGauntletRecords(read(GAUNTLET_KEY)),
     [SECURITY_KEY]: loadSecurityProfile(
       read(SECURITY_KEY),
       !!checkpoint?.overtime ||
@@ -188,6 +191,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === SHAFT_PROFILE_KEY ||
           k === RECOIL_TRIALS_KEY ||
           k === RECOIL_GHOSTS_KEY ||
+          k === GAUNTLET_KEY ||
           k === SECURITY_KEY ||
           k === APPEARANCE_SEEN_KEY ||
           k === ARCHIVE_KEY ||
@@ -224,6 +228,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       return null;
     if (Object.hasOwn(raw, RECOIL_GHOSTS_KEY) && !validRecoilGhosts(raw[RECOIL_GHOSTS_KEY]))
       return null;
+    if (Object.hasOwn(raw, GAUNTLET_KEY) && !validGauntletRecords(raw[GAUNTLET_KEY])) return null;
     // Pre-blueprint profiles and backups migrate to six empty slots.
     if (Object.hasOwn(raw, BLUEPRINTS_KEY) && !validBlueprintSlots(raw[BLUEPRINTS_KEY]))
       return null;
@@ -343,6 +348,7 @@ export function progressSummary(values: ProgressValues) {
     recoilTrials: recoil.clears.length,
     recoilRecords: recoil.records.length,
     recoilGhosts: loadRecoilGhosts(values[RECOIL_GHOSTS_KEY]).length,
+    gauntletRecords: loadGauntletRecords(values[GAUNTLET_KEY]).length,
     security: loadSecurityProfile(values[SECURITY_KEY]).unlocked,
   };
 }

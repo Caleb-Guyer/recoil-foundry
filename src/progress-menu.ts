@@ -40,6 +40,7 @@ export function progressMenu(
     (summary.recoilTrials
       ? ` · ${summary.recoilTrials} Recoil Trials · ${summary.recoilRecords} course records · ${summary.recoilGhosts} ghosts`
       : '') +
+    (summary.gauntletRecords ? ` · ${summary.gauntletRecords} Gauntlet records` : '') +
     (summary.security ? ` · Security ${summary.security} unlocked` : '');
   const feedback = get('progress-feedback');
   let preview: ProgressBackup | null = null;
@@ -108,6 +109,7 @@ export function progressMenu(
         (imported.recoilTrials
           ? ` · ${imported.recoilTrials} Recoil Trials · ${imported.recoilRecords} course records · ${imported.recoilGhosts} ghosts`
           : '') +
+        (imported.gauntletRecords ? ` · ${imported.gauntletRecords} Gauntlet records` : '') +
         (imported.security ? ` · Security ${imported.security} unlocked` : '');
       panel.hidden = false;
       feedback.textContent = '';

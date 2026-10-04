@@ -249,6 +249,13 @@ import {
 } from './recoil-trial-rules.ts';
 import { recoilTrialMenu } from './recoil-trial-menu.ts';
 import {
+  GAUNTLET_KEY,
+  recordGauntlet,
+  gauntletPreviewFromUrl,
+  type GauntletRecord,
+} from './gauntlet-rules.ts';
+import { gauntletSetup, gauntletRunMenu } from './gauntlet-menu.ts';
+import {
   RECOIL_GHOSTS_KEY,
   loadRecoilGhosts,
   recordRecoilGhost,
@@ -363,6 +370,9 @@ let recoilMenuChallenge: RecoilChallenge | undefined;
 let recoilMenuShare: RecoilChallenge | undefined;
 let recoilGhostEnabled = true;
 let recoilGhostSaved = false;
+let savedGauntlet: GauntletRecord | null = null;
+let gauntletOutcome: ReturnType<typeof recordGauntlet> | null = null;
+let gauntletReward = false;
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let fittingNotice: { name: string; until: number | null; stage: number } | null = null;
@@ -413,7 +423,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Ghost Races</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Boss Gauntlet</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -508,6 +518,7 @@ const input: Input = {
   aim: { x: 600, y: 550 },
 };
 const entryUrl = new URL(location.href);
+const linkedGauntletPreview = gauntletPreviewFromUrl(entryUrl);
 let linkedTrial = trialFromUrl(entryUrl);
 let linkedRecoilChallenge = recoilChallengeFromUrl(entryUrl);
 let invalidRecoilLink = entryUrl.searchParams.has('recoil') && !linkedRecoilChallenge;
@@ -621,7 +632,8 @@ function updateTitle() {
     linkedWorkshop ||
     !!linkedTrial ||
     !!linkedRecoilChallenge ||
-    invalidRecoilLink;
+    invalidRecoilLink ||
+    !!linkedGauntletPreview;
   $('security').textContent = selectedSecurity
     ? securityLabel(selectedSecurity)
     : 'Security · Standard';
@@ -755,7 +767,8 @@ function updateTitle() {
   $('practice').hidden =
     encounters.length === 0 &&
     !loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length &&
-    !loadRecoilProfile(read(RECOIL_TRIALS_KEY)).clears.length;
+    !loadRecoilProfile(read(RECOIL_TRIALS_KEY)).clears.length &&
+    !weaponUnlocks().cleared;
   $('continue').textContent =
     checkpoint && dailyFromSeed(checkpoint.seed) ? 'Continue daily' : 'Continue';
   $('title-hint').textContent = linkedRunTest
@@ -920,6 +933,11 @@ function updateTitle() {
     $('play').textContent = 'Trial challenge';
     $('title-hint').textContent =
       'A shared course and starting gun. Open the challenge to check access.';
+  }
+  if (linkedGauntletPreview) {
+    $('play').textContent = 'Gauntlet playtest';
+    $('title-hint').textContent =
+      'Five bosses. This playtest keeps your records and rewards untouched.';
   }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
@@ -1125,6 +1143,10 @@ function start(
   }
   if (retry && game.maintenance.trial) {
     startTrial(game.maintenance.trial.route, game.maintenance.trial.preview, activeTrialChallenge);
+    return;
+  }
+  if (retry && game.gauntlet.state) {
+    startGauntlet(game.gauntlet.state.gun, game.gauntlet.state.preview);
     return;
   }
   if (retry && game.recoil.practice) {
@@ -1393,6 +1415,64 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun, challenge?
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
+}
+function startGauntlet(gun: StartingGun = 'pistol', preview = false) {
+  progress.checkExternal();
+  if (!preview && progress.blocked) {
+    openProgress();
+    return;
+  }
+  const access = weaponUnlocks();
+  if (!preview && (!access.cleared || !unlockedStartingGuns(access).includes(gun))) return;
+  firstSession.stop();
+  clearInput();
+  closeDialog();
+  game.setMode('title');
+  if (!game.gauntlet.begin(gun, access, preview)) return;
+  finishedRun = null;
+  runCommendations = [];
+  savedGauntlet = null;
+  gauntletOutcome = null;
+  gauntletReward = false;
+  activeDaily = null;
+  dailyResult = null;
+  showDialog('gauntlet-run');
+}
+function chooseGauntletBoss(kind: PracticeBoss) {
+  if (!game.gauntlet.choices.includes(kind)) return;
+  clearInput();
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  game.gauntlet.chooseBoss(kind);
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
+  canvas.focus();
+}
+function captureGauntletResult() {
+  const result = game.gauntlet.result;
+  if (
+    !result ||
+    savedGauntlet === result ||
+    game.mode !== 'won' ||
+    game.gauntlet.state?.phase !== 'complete' ||
+    game.gauntlet.state.preview
+  )
+    return;
+  progress.checkExternal();
+  if (progress.blocked) return;
+  savedGauntlet = result;
+  gauntletOutcome = recordGauntlet(read(GAUNTLET_KEY), result);
+  write(GAUNTLET_KEY, gauntletOutcome.records);
+  commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
+  gauntletReward = !commendations.includes('gauntlet-cleared');
+  if (gauntletReward) {
+    commendations = mergeCommendations(commendations, ['gauntlet-cleared']);
+    write(COMMENDATIONS_KEY, commendations);
+    updateArchive(['commendation:gauntlet-cleared']);
+    updateAppearanceBadge();
+  }
 }
 function captureTrialResult() {
   if (trialCaptured) return;
@@ -1869,6 +1949,7 @@ game.onChange = () => {
   }
   captureFinishedRun();
   capturePracticeResult();
+  captureGauntletResult();
   captureTrialResult();
   const finale = game.clockOut;
   document.body.dataset.clockOut = String(finale.active);
@@ -1938,6 +2019,8 @@ game.onChange = () => {
   if (game.maintenance.trial)
     $('stage').textContent =
       (game.maintenance.trial.preview ? 'TEST · ' : '') + 'MAINTENANCE TRIAL';
+  if (game.gauntlet.state)
+    $('stage').textContent = 'GAUNTLET · ' + game.gauntlet.state.route.length + ' / 5';
   if (game.testRun?.annex) {
     $('stage').textContent = 'DEAD SIGNAL · TEST';
     $('stage').title = 'Transmission Annex · One-room prototype';
@@ -1978,7 +2061,10 @@ function showDialog(kind: string) {
       'practice-share',
       'shaft-trials',
       'recoil-trials',
-    ].includes(kind),
+      'gauntlet-setup',
+      'gauntlet-run',
+    ].includes(kind) ||
+      (kind === 'result' && !!game.gauntlet.state),
   );
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
@@ -2009,13 +2095,41 @@ function showDialog(kind: string) {
       closeDialog,
       unlockedStartingGuns(weaponUnlocks()),
     );
+  } else if (kind === 'gauntlet-setup') {
+    buildMenu = gauntletSetup(
+      content,
+      unlockedStartingGuns(weaponUnlocks()),
+      read(GAUNTLET_KEY),
+      startGauntlet,
+      () => showDialog('practice'),
+    );
+  } else if (kind === 'gauntlet-run' || (kind === 'result' && game.gauntlet.state)) {
+    const session = game.gauntlet.state;
+    if (!session) {
+      showDialog('practice');
+      return;
+    }
+    buildMenu = gauntletRunMenu(content, game, {
+      outcome: gauntletOutcome,
+      reward: gauntletReward && session.phase === 'complete',
+      choose: chooseGauntletBoss,
+      restart: () => startGauntlet(session.gun, session.preview),
+      exit: menu,
+    });
+    const reward = document.getElementById('earned-rewards');
+    if (reward)
+      reward.onclick = () => {
+        logbookView.section = 'commendations';
+        logbookView.selected = 'commendation:gauntlet-cleared';
+        showDialog('logbook');
+      };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Chase your best.</h2>' +
-      '<p class="update-tagline">Your last best clear. Your next challenge.</p>' +
-      '<dl class="update-notes"><div><dt>Race your ghost.</dt><dd>A new Practice best records your movement in each Recoil Trial, separately for each starting gun. Turn the ghost on or off in Practice → Recoil Trials.</dd></div>' +
-      '<div><dt>Find the faster line.</dt><dd>Brief checkpoint comparisons show how far ahead or behind you are. Pausing freezes the race clock and your ghost.</dd></div>' +
-      '<div><dt>Challenge a friend.</dt><dd>Share a course, starting gun and checkpoint target using a code or link. Import a code in Recoil Trials to race the same unmodified gun. Courses and guns still need to be unlocked.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Five machines. One tool.</h2>' +
+      '<p class="update-tagline">Choose your fights. Keep your nerve.</p>' +
+      '<dl class="update-notes"><div><dt>Choose your route.</dt><dd>Campaign victory opens Boss Gauntlet in Practice. Choose between two opponents in each of five rounds, using a starting gun you have unlocked.</dd></div>' +
+      '<div><dt>Upgrade or repair.</dt><dd>Health carries between fights. Take one upgrade or recover up to 30 health before the next boss. Restart begins the whole Gauntlet again.</dd></div>' +
+      '<div><dt>Finish all five.</dt><dd>Earn the Victor outfit and save your best combat time for matching guns and routes. Thinking at a stop does not run down the clock. Your Campaign Continue stays available.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2263,6 +2377,9 @@ function showDialog(kind: string) {
             '</span><span aria-hidden="true">↗</span></button>',
         )
         .join('') +
+      (weaponUnlocks().cleared
+        ? '<button id="boss-gauntlet" class="practice-fight"><span>Boss Gauntlet</span><span aria-hidden="true">↗</span></button>'
+        : '') +
       (loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length
         ? '<button id="shaft-trials" class="practice-fight"><span>Maintenance Trials</span><span aria-hidden="true">↗</span></button>'
         : '') +
@@ -2271,6 +2388,8 @@ function showDialog(kind: string) {
         : '') +
       '</div><div class="actions"><button id="practice-import" class="quiet">Import challenge</button><button id="practice-back" class="quiet">Back</button></div>';
     if (document.getElementById('shaft-trials')) $('shaft-trials').onclick = () => openTrials();
+    if (document.getElementById('boss-gauntlet'))
+      $('boss-gauntlet').onclick = () => showDialog('gauntlet-setup');
     if (document.getElementById('recoil-trials'))
       $('recoil-trials').onclick = () => openRecoilTrials();
     content.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((button) => {
@@ -2940,33 +3059,35 @@ function showDialog(kind: string) {
         ? firstSession.warmup
           ? 'Targets reset automatically. Reset warm-up starts over. Done returns to the menu.'
           : 'Targets reset automatically. Reset room starts over. Build changes your gun.'
-        : game.maintenance.trial
-          ? 'Reach the summit. Starting gun. Retry repeats this layout.'
-          : game.recoil.active
-            ? RECOIL_TRIALS[game.recoil.kind].instruction +
-              ' ' +
-              (game.recoil.practice
-                ? 'Retry repeats this course.'
-                : 'Leave trial skips the bonus and rejoins the campaign.')
-            : game.practice
-              ? 'Defeat the boss. Retry starts over.'
-              : game.testRun
-                ? game.testRun.annex
-                  ? 'Clear the Annex, then leave through the right door. Restart test starts over.'
-                  : 'Preset test. Restart test starts over.'
-                : game.escape
-                  ? game.canOvertime
-                    ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
-                    : 'Reach the Exit lift to finish your run.'
-                  : game.detour
-                    ? game.maintenance.active
-                      ? 'Reach the top for an extra upgrade, without a health refill.'
-                      : 'Survive for an extra upgrade, without a health refill.'
-                    : game.overtime
-                      ? 'Second lap. Clear all twenty rooms, then extract.'
-                      : game.canDetour
-                        ? 'After clearing, the upper door offers an optional challenge.'
-                        : 'Clear the room, then leave through the right door.') +
+        : game.gauntlet.state
+          ? 'Health carries between all five fights. Restart Gauntlet starts the whole run over. Menu abandons this attempt.'
+          : game.maintenance.trial
+            ? 'Reach the summit. Starting gun. Retry repeats this layout.'
+            : game.recoil.active
+              ? RECOIL_TRIALS[game.recoil.kind].instruction +
+                ' ' +
+                (game.recoil.practice
+                  ? 'Retry repeats this course.'
+                  : 'Leave trial skips the bonus and rejoins the campaign.')
+              : game.practice
+                ? 'Defeat the boss. Retry starts over.'
+                : game.testRun
+                  ? game.testRun.annex
+                    ? 'Clear the Annex, then leave through the right door. Restart test starts over.'
+                    : 'Preset test. Restart test starts over.'
+                  : game.escape
+                    ? game.canOvertime
+                      ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
+                      : 'Reach the Exit lift to finish your run.'
+                    : game.detour
+                      ? game.maintenance.active
+                        ? 'Reach the top for an extra upgrade, without a health refill.'
+                        : 'Survive for an extra upgrade, without a health refill.'
+                      : game.overtime
+                        ? 'Second lap. Clear all twenty rooms, then extract.'
+                        : game.canDetour
+                          ? 'After clearing, the upper door offers an optional challenge.'
+                          : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused
         ? '<details class="build"><summary>Your gun · ' +
@@ -2988,21 +3109,23 @@ function showDialog(kind: string) {
         ? firstSession.warmup
           ? '<button id="workshop-pause-reset" class="quiet">Reset warm-up</button>'
           : '<button id="workshop-pause-build" class="quiet">Build</button><button id="workshop-pause-reset" class="quiet">Reset room</button>'
-        : paused && game.practice
-          ? '<button id="retry" class="quiet">Retry</button>' +
-            (!activePracticeChallenge && canPractice(game.practice, encounters)
-              ? '<button id="practice-edit" class="quiet">Edit build</button>'
-              : '') +
-            '<button id="choose-fight" class="quiet"' +
-            (encounters.length ? '' : ' hidden') +
-            '>Choose fight</button>'
-          : paused && game.recoil.practice
-            ? '<button id="retry" class="quiet">Retry course</button>'
-            : paused && game.maintenance.trial
-              ? '<button id="retry" class="quiet">Retry trial</button>'
-              : paused && game.testRun
-                ? '<button id="retry" class="quiet">Restart test</button>'
+        : paused && game.gauntlet.state
+          ? '<button id="retry" class="quiet">Restart Gauntlet</button>'
+          : paused && game.practice
+            ? '<button id="retry" class="quiet">Retry</button>' +
+              (!activePracticeChallenge && canPractice(game.practice, encounters)
+                ? '<button id="practice-edit" class="quiet">Edit build</button>'
                 : '') +
+              '<button id="choose-fight" class="quiet"' +
+              (encounters.length ? '' : ' hidden') +
+              '>Choose fight</button>'
+            : paused && game.recoil.practice
+              ? '<button id="retry" class="quiet">Retry course</button>'
+              : paused && game.maintenance.trial
+                ? '<button id="retry" class="quiet">Retry trial</button>'
+                : paused && game.testRun
+                  ? '<button id="retry" class="quiet">Restart test</button>'
+                  : '') +
       (paused
         ? '<button id="pause-logbook" class="quiet">Logbook</button>' +
           (game.uprising.run && !game.overtime
@@ -3075,7 +3198,8 @@ function showDialog(kind: string) {
     }
     if (paused && (game.practice || game.testRun)) {
       $('retry').onclick = () => start(undefined, true);
-      if (game.practice) $('choose-fight').onclick = () => showDialog('practice');
+      if (game.practice && !game.gauntlet.state)
+        $('choose-fight').onclick = () => showDialog('practice');
       const edit = document.getElementById('practice-edit');
       if (edit) edit.onclick = () => openPracticeBuild(game.practice!, 'pause');
     }
@@ -3127,7 +3251,17 @@ function showDialog(kind: string) {
     $('back').focus({ preventScroll: true });
     modal.scrollTop = 0;
   } else if (['controls', 'progress', 'credits', 'issue'].includes(kind)) $('back').focus();
-  if (['upgrade', 'reforge', 'practice', 'practice-setup', 'result'].includes(kind))
+  if (
+    [
+      'upgrade',
+      'reforge',
+      'practice',
+      'practice-setup',
+      'result',
+      'gauntlet-setup',
+      'gauntlet-run',
+    ].includes(kind)
+  )
     content.querySelector<HTMLButtonElement>('button')?.focus();
   if (kind === 'practice-build') $('workshop-apply').focus({ preventScroll: true });
   if (kind === 'uprising' || kind === 'uprising-map') {
@@ -3326,26 +3460,29 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedRecoilChallenge || invalidRecoilLink
-    ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-    : linkedTrial?.preview
-      ? startTrial(linkedTrial.route, true)
-      : linkedTrial || invalidTrialLink
-        ? openTrials('title', linkedTrial?.challenge)
-        : linkedWorkshop
-          ? showDialog('workshop')
-          : linkedRunTest?.seed.startsWith('ROOM47-') && entryUrl.searchParams.get('test') !== 'arc'
-            ? showDialog('layout-test')
-            : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                linkedRunTest?.seed.startsWith('FUSIONS-')
-              ? showDialog('upgrade-test')
-              : linkedRunTest
-                ? startRunTest(linkedRunTest)
-                : linkedTest
-                  ? startPractice(linkedTest, null, { test: true })
-                  : linkedDaily
-                    ? start()
-                    : startFreshCampaign();
+  linkedGauntletPreview
+    ? startGauntlet(linkedGauntletPreview, true)
+    : linkedRecoilChallenge || invalidRecoilLink
+      ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+      : linkedTrial?.preview
+        ? startTrial(linkedTrial.route, true)
+        : linkedTrial || invalidTrialLink
+          ? openTrials('title', linkedTrial?.challenge)
+          : linkedWorkshop
+            ? showDialog('workshop')
+            : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                entryUrl.searchParams.get('test') !== 'arc'
+              ? showDialog('layout-test')
+              : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                  linkedRunTest?.seed.startsWith('FUSIONS-')
+                ? showDialog('upgrade-test')
+                : linkedRunTest
+                  ? startRunTest(linkedRunTest)
+                  : linkedTest
+                    ? startPractice(linkedTest, null, { test: true })
+                    : linkedDaily
+                      ? start()
+                      : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
