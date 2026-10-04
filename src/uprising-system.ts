@@ -26,6 +26,7 @@ export class UprisingSystem {
   defenseWave = 0;
   routeStep = 0;
   startedAt = 0;
+  patrolClearedAt: number | null = null;
   anchors: { body: Matter.Body; x: number; y: number }[] = [];
   game: Game;
   constructor(game: Game) {
@@ -102,6 +103,7 @@ export class UprisingSystem {
     this.hurt = false;
     this.defenseWave = 0;
     this.routeStep = 0;
+    this.patrolClearedAt = null;
   }
   reset(cleared: boolean) {
     this.clear();
@@ -247,12 +249,20 @@ export class UprisingSystem {
       Matter.Body.setVelocity(a.body, { x: dx, y: dy });
     }
     if (!this.waiting) return;
+    if (!g.combatEnemyCount && !g.waves.pending) this.patrolClearedAt ??= g.time;
+    else this.patrolClearedAt = null;
     if (
       this.kind !== 'escape' &&
       !g.combatEnemyCount &&
       !g.waves.pending &&
       g.player.position.x > 1860 &&
-      g.player.position.y > 590
+      g.player.position.y > 590 &&
+      (g.encounters === 0 ||
+        (input.right &&
+          !input.left &&
+          g.grounded &&
+          this.patrolClearedAt !== null &&
+          g.time - this.patrolClearedAt >= 0.6))
     ) {
       this.resolve(false);
       return;
@@ -287,6 +297,8 @@ export class UprisingSystem {
       else {
         if (
           this.armedAt === null &&
+          (g.encounters === 0 ||
+            (this.patrolClearedAt !== null && g.time - this.patrolClearedAt >= 0.25)) &&
           input.jump &&
           distance(g.player.position, prop.body.position) < 150
         )
@@ -298,7 +310,10 @@ export class UprisingSystem {
           g.enemies.length < 10
         ) {
           this.defenseWave++;
-          for (const { x, y } of this.room?.defenseEntries ?? []) g.spawnEnemy('flyer', x, y);
+          for (const [i, { x, y }] of (this.room?.defenseEntries ?? []).entries()) {
+            const enemy = g.spawnEnemy('flyer', x, y);
+            if (enemy && g.encounters === 1) enemy.timer += i * 0.4;
+          }
         }
         if (this.armedAt !== null && g.time - this.armedAt >= 18) this.resolve(true);
       }
@@ -351,7 +366,9 @@ export class UprisingSystem {
         ? 'Prototype exposed · move beside it to collect'
         : 'Break the prototype case, then collect it';
     return this.armedAt === null
-      ? 'Jump beside the generator to activate · protect it for 18s'
+      ? this.game.encounters === 1 && (this.game.combatEnemyCount || this.game.waves.pending)
+        ? 'Clear the patrol, then jump beside the generator'
+        : 'Jump beside the generator to activate · protect it for 18s'
       : 'Protect generator · ' +
           Math.max(0, Math.ceil(18 - (this.game.time - this.armedAt))) +
           's · ' +

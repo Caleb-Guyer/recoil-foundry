@@ -2,7 +2,7 @@ import type { Game, Input } from '../src/game.ts';
 import { distance } from '../src/rules.ts';
 import Matter from 'matter-js';
 
-function approach(g: Game, target: { x: number; y: number }, interact = false): Input {
+export function approach(g: Game, target: { x: number; y: number }, interact = false): Input {
   const p = g.player.position,
     dx = target.x - p.x,
     dy = p.y - target.y;

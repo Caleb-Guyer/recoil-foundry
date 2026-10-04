@@ -10,6 +10,7 @@ import { pressurePilot } from './pressure-pilot.ts';
 import { freightPilot } from './freight-pilot.ts';
 import type { RegionChoice } from '../src/regions.ts';
 import { blackoutInput } from './blackout-pilot.ts';
+import { floodgateInput } from './floodgate-pilot.ts';
 const { Query } = Matter;
 const tick = (g: Game, n = 1, p: Partial<Input> = {}) => {
   for (let i = 0; i < n; i++)
@@ -129,6 +130,11 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     const blackout = blackoutInput(g);
     if (blackout) {
       g.tick(1 / 60, blackout);
+      continue;
+    }
+    const flood = floodgateInput(g);
+    if (flood) {
+      g.tick(1 / 60, flood);
       continue;
     }
     if (g.mode === 'reforge') {

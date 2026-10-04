@@ -257,7 +257,7 @@ test('cleared exits advance automatically and choices modify the same gun', () =
     Body.setPosition(g.player, g.freight.active ? { x: 1000, y: 682 } : { x: 1910, y: 700 });
     tick(g);
     assert.equal(g.mode, 'playing');
-    for (let i = 0; i < (g.freight.active ? 3000 : 300) && !g.clear; i++) {
+    for (let i = 0; i < (g.freight.active ? 3000 : 900) && !g.clear; i++) {
       for (const e of [...g.enemies]) g.hitEnemy(e, 9999);
       tick(g);
     }
@@ -755,7 +755,9 @@ for (const { seed, pressSpacing, pathMods, rewards, overtimeRun, fusion, highRoa
     common._nextId = 0;
     common._seed = 0;
     const g = new Game();
-    g.start(seed, undefined, null, null, false, 0, false);
+    g.start(seed, undefined, null, null, false, 0, false, [], null, 'pistol', 0);
+    // Keep the fixed-offer weapon course on its original encounter schedule.
+    // Fresh Campaign pacing has separate real-offer, gun and job simulations.
     // Keep this weapon-progression battery on its original event-free course.
     // Area event combat, objectives and rewards have their own ordinary-input tests.
     g.areaEvents.state = null;

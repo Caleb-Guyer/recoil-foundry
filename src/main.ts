@@ -69,6 +69,7 @@ import { endingCopy } from './ending.ts';
 import { clockOutTestFromUrl, prepareClockOutTest } from './clock-out-test.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { combatFeelTestFromUrl } from './combat-feel-test.ts';
+import { encounterTestFromUrl } from './encounter-test.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { auditorTestFromUrl } from './auditor-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
@@ -384,7 +385,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Feel Every Shot</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Room to Move</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -496,6 +497,7 @@ let linkedRunTest =
   clockOutTestFromUrl(entryUrl) ??
   presentationTestFromUrl(entryUrl) ??
   combatFeelTestFromUrl(entryUrl) ??
+  encounterTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
   storyTestFromUrl(entryUrl) ??
@@ -1057,6 +1059,7 @@ function start(
   unlockOverride?: readonly LongevityId[],
   uprisingOverride?: UprisingRun | null,
   startingGunOverride?: StartingGun,
+  encounterOverride?: 0 | 1,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1138,6 +1141,7 @@ function start(
       url.searchParams.delete('uv');
       url.searchParams.delete('ur');
       url.searchParams.delete('sg');
+      url.searchParams.delete('ev');
     } else {
       url.searchParams.set('sg', selectedStartingGun);
     }
@@ -1184,6 +1188,7 @@ function start(
               : undefined,
           ),
     startingGun,
+    encounterOverride ?? (seedParam === seed && entryUrl.searchParams.get('ev') === '0' ? 0 : 1),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1468,6 +1473,7 @@ function replayFinishedRun(run: RunRecap) {
   url.hash = '';
   url.searchParams.set('seed', run.seed);
   url.searchParams.set('sg', run.startingGun ?? 'pistol');
+  url.searchParams.set('ev', String(run.encounters ?? 0));
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   url.searchParams.set('ul', (run.unlocks ?? []).join(','));
   url.searchParams.set('uv', run.uprising ? '1' : '0');
@@ -1486,6 +1492,7 @@ function replayFinishedRun(run: RunRecap) {
       ? { ...newUprising(null, run.uprising.choices), unlocks: [...run.uprising.unlocks] }
       : null,
     run.startingGun ?? 'pistol',
+    run.encounters ?? 0,
   );
 }
 function workshopFromRun(run: RunRecap) {
@@ -1840,11 +1847,11 @@ function showDialog(kind: string) {
     );
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Feel every shot.</h2>' +
-      '<p class="update-tagline">Tools with weight. Machines with readable movement.</p>' +
-      '<dl class="update-notes"><div><dt>A shotgun with a kick.</dt><dd>A deeper blast, a sliding pump and compact pellet impacts give the Recoil shotgun its own feel. Clear the Campaign to earn it.</dd></div>' +
-      '<div><dt>A mechanical three-round burst.</dt><dd>The Burst nailgun fires sharp metal ticks. Spent nails stick briefly into scenery and ride along with moving objects. Complete Overtime to earn it.</dd></div>' +
-      '<div><dt>Movement you can read.</dt><dd>Player takeoffs, landings and recoil have new body poses. Patrol machines walk, brace their weapons and react to the direction of a hit. Reduced effects keeps motion restrained.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Room to move.</h2>' +
+      '<p class="update-tagline">Different fights. Clear openings. A moment to breathe.</p>' +
+      '<dl class="update-notes"><div><dt>A changing combat rhythm.</dt><dd>New Campaigns mix rushing ambushes, ranged crossfire and elevated fights. Quieter patrols follow bosses, and reinforcements arrive in staggered groups.</dd></div>' +
+      '<div><dt>Space to react.</dt><dd>Ordinary firing lanes and heavy attacks take turns before their warnings begin. Every shown warning keeps its full timing. Boss recovery gives each starting gun an opening.</dd></div>' +
+      '<div><dt>Jobs with clearer phases.</dt><dd>Clear the patrol before activating a defense generator, then protect it for eighteen seconds. Moving deliberately through the cleared exit skips a job.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

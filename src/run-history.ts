@@ -13,6 +13,7 @@ import { validUnlocks, type LongevityId } from './longevity.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  encounters?: 1;
   startingGun?: StartingGun;
   uprising?: UprisingRun;
   unlocks?: LongevityId[];
@@ -83,6 +84,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     const daily = !!dailyFromSeed(raw.seed) || isUnsupportedDailySeed(raw.seed);
     if (
       (raw.mode === 'daily') !== daily ||
+      (raw.encounters !== undefined && (raw.encounters !== 1 || daily)) ||
       !validStartingGunSave(raw.startingGun, raw.seed) ||
       (daily && raw.overtime) ||
       (raw.uprising !== undefined && (daily || !validUprisingRun(raw.uprising))) ||
@@ -97,6 +99,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       continue;
     records.push({
       version: 1,
+      ...(raw.encounters === 1 ? { encounters: 1 as const } : {}),
       ...(raw.startingGun ? { startingGun: raw.startingGun as StartingGun } : {}),
       ...(raw.uprising ? { uprising: structuredClone(raw.uprising) } : {}),
       ...(raw.unlocks && !daily ? { unlocks: [...raw.unlocks] } : {}),
@@ -146,6 +149,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        ...(game.encounters ? { encounters: game.encounters } : {}),
         startingGun: game.startingGun,
         ...(game.uprising.run ? { uprising: structuredClone(game.uprising.run) } : {}),
         ...(!dailyFromSeed(game.seed) ? { unlocks: [...game.unlocks] } : {}),

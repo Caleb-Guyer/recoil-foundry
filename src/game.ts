@@ -1,5 +1,6 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
+import { EncounterPacer } from './encounter-pacing.ts';
 import { dailyStartingGun, isStartingGun, type StartingGun } from './starting-guns.ts';
 import {
   campaignClearScore,
@@ -366,6 +367,8 @@ export class Game {
   massDriver = new MassDriverSystem(this);
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
+  encounters: 0 | 1 = 0;
+  encounterPacer = new EncounterPacer(this);
   portals = new PortalSystem(this);
   portalRequest: Vec | null = null;
   demolition = new DemolitionSystem(this);
@@ -733,6 +736,7 @@ export class Game {
     unlocks: readonly string[] = [],
     uprising: UprisingRun | null = null,
     startingGun: StartingGun = 'pistol',
+    encounterRules: 0 | 1 = 1,
   ) {
     this.workshop.active = workshop;
     this.maintenance.trial = null;
@@ -747,6 +751,14 @@ export class Game {
         : startingGun;
     this.startingGun =
       dailyStartingGun(this.seed) ?? (isStartingGun(requestedGun) ? requestedGun : 'pistol');
+    this.encounters =
+      practice || workshop || /^RF-D\d+-/.test(this.seed)
+        ? 0
+        : save
+          ? (save.encounters ?? 0)
+          : testRun
+            ? 0
+            : encounterRules;
     this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
     this.uprising.run =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
@@ -896,6 +908,7 @@ export class Game {
     this.onCheckpoint({
       version: 6,
       startingGun: this.startingGun,
+      ...(this.encounters ? { encounters: this.encounters } : {}),
       ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
       ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
       ...(this.uprising.run ? { uprising: structuredClone(this.uprising.run) } : {}),
@@ -1665,7 +1678,9 @@ export class Game {
     this.mutations.update();
     for (const e of [...this.enemies]) {
       const slow = this.cryogenic.slow(e);
+      const previousState = e.state;
       this.updateEnemy(e, dt * slow);
+      this.encounterPacer.recovery(e, previousState);
       if (
         e.spawn <= 0 &&
         e.hp > 0 &&
@@ -2209,6 +2224,8 @@ export class Game {
     if (this.courier.updateEnemy(e, dt)) return;
     if (this.mutations.updateEnemy(e, dt)) return;
     this.securityCombat.update(e, dt);
+    const combatTarget = this.uprising.target(e) ?? this.areaEvents.combatTarget(e);
+    this.encounterPacer.prepareRanged(e, dt, combatTarget);
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
       dt *
@@ -2216,7 +2233,7 @@ export class Game {
         ? 1.12
         : 1);
     const p = e.body.position,
-      target = this.uprising.target(e) ?? this.areaEvents.combatTarget(e),
+      target = combatTarget,
       d = direction(p, target),
       dist = distance(p, target);
     if (e.elite === 'volatile') {
@@ -2541,6 +2558,7 @@ export class Game {
       Body.setVelocity(e.body, { x: v.x + (sign * 2.1 - v.x) * 0.08, y: v.y });
       if (grounded && e.timer <= 0) {
         if (Math.abs(dx) < 680 && Math.abs(this.player.position.y - p.y) < 80) {
+          if (!this.encounterPacer.request(e, true, CHARGE_TELL + 0.75)) return;
           e.state = 'windup';
           e.timer = CHARGE_TELL;
           this.onSound('charge');
@@ -2652,6 +2670,7 @@ export class Game {
     } else {
       Body.setVelocity(e.body, { x: v.x * 0.8, y: v.y });
       if (e.timer <= 0 && grounded) {
+        if (!this.encounterPacer.request(e, true, HOP_TELL + 0.6)) return;
         e.target = this.hopperTarget(e);
         e.aim = direction(p, e.target);
         e.state = 'windup';
@@ -2680,6 +2699,7 @@ export class Game {
     } else {
       e.aim = direction(e.body.position, this.player.position);
       if (e.timer <= 0 && distance(e.body.position, this.player.position) < 1450) {
+        if (!this.encounterPacer.request(e, true, SNIPER_TELL + 0.35)) return;
         e.state = 'windup';
         e.timer = SNIPER_TELL;
         this.onSound('lock');

@@ -138,6 +138,7 @@ test('old rules remain readable while replay stays disabled; Workshop requires t
   assert(!canReplayRun(old));
   const daily = {
     ...old,
+    encounters: undefined,
     factory: undefined,
     factoryVersion: undefined,
     mode: 'daily' as const,

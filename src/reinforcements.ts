@@ -4,6 +4,13 @@ import type { Level, Spawn } from './levels.ts';
 import { ENEMY_STATS, isBoss } from './enemies.ts';
 import { areaIndex, distance, seeded } from './rules.ts';
 import { squadSpawns } from './squads.ts';
+import { UPRISING_ROUTES } from './uprising-model.ts';
+import {
+  encounterPlan,
+  shapeEncounter,
+  encounterDelays,
+  type EncounterPlan,
+} from './encounter-pacing.ts';
 import {
   overtimeEntryDelays,
   overtimePressure,
@@ -123,6 +130,7 @@ export class ReinforcementSystem {
   held = false;
   openingCount = 0;
   openingTime = 0;
+  plan: EncounterPlan | null = null;
   constructor(game: Game) {
     this.game = game;
   }
@@ -137,6 +145,7 @@ export class ReinforcementSystem {
     this.held = false;
     this.phase = this.doors.length ? 'warning' : 'done';
     for (const door of this.doors) {
+      if (this.plan && (door.delay ?? 0) > 0) continue;
       door.state = 'warning';
       door.timer = REINFORCEMENT_TELL;
     }
@@ -148,6 +157,8 @@ export class ReinforcementSystem {
     this.phase = 'done';
     this.openingCount = 0;
     this.openingTime = 0;
+    this.plan = null;
+    this.game.encounterPacer.clear();
   }
   reset(level: Level) {
     this.clear();
@@ -158,6 +169,25 @@ export class ReinforcementSystem {
       g.overtime && level.boss
         ? [level.spawns.slice(0, 1), level.spawns.slice(1)]
         : splitWaves(level, g.roomSeed, g.overtime ? Math.max(8, g.stage) : g.stage);
+    if (
+      g.encounters === 1 &&
+      !g.overtime &&
+      !g.practice &&
+      !g.workshop.active &&
+      !g.detour &&
+      !g.escape &&
+      !level.annex &&
+      !level.freight &&
+      !level.floodgate &&
+      !level.story &&
+      !level.sortingPit &&
+      !level.courier &&
+      !level.shutdown
+    ) {
+      const job = UPRISING_ROUTES.find((route) => level.id === 'uprising-' + route.id);
+      this.plan = encounterPlan(level, g.roomSeed, g.stage, job?.mission);
+      shapeEncounter(opening, final, level, this.plan);
+    }
     if (this.pacedOvertime && !level.boss) shapeOvertimeOpening(opening, final, g.stage);
     if (g.overtime && !level.boss && !level.freight) {
       // Reuse a few opening anchors in the later wave. The normal occupancy
@@ -181,14 +211,16 @@ export class ReinforcementSystem {
     const random = seeded(this.game.roomSeed + ':reinforcement-timers:' + this.game.stage);
     const delays = this.pacedOvertime
       ? overtimeEntryDelays(final, overtimePressure(g.stage, !!level.boss).spacing)
-      : [];
+      : this.plan
+        ? encounterDelays(final, this.plan.spacing).map((delay) => delay + this.plan!.rest)
+        : [];
     this.doors = final.map((spawn, i) => ({
       spawn,
       state: 'sealed',
       timer: 0,
       blocked: 0,
       attackDelay: (this.pacedOvertime && level.boss ? 1.05 : 0.65) + random() * 0.65,
-      ...(this.pacedOvertime ? { delay: delays[i] } : {}),
+      ...(this.pacedOvertime || this.plan ? { delay: delays[i] } : {}),
     }));
     this.phase = final.length ? 'opening' : 'done';
     return opening;
@@ -257,11 +289,13 @@ export class ReinforcementSystem {
       // Start support cues between boss moves, then honor every cue even if
       // the boss begins its next move. Never cancel or shorten a shown tell.
       if (this.pacedOvertime && boss && !['idle', 'recover'].includes(boss.state)) return;
-      const overlap = g.detour
-        ? 2
-        : g.stage >= 12 && g.stage < 16
-          ? 1
-          : Math.ceil(this.openingCount / 2);
+      const overlap = this.plan
+        ? this.plan.overlap
+        : g.detour
+          ? 2
+          : g.stage >= 12 && g.stage < 16
+            ? 1
+            : Math.ceil(this.openingCount / 2);
       if (
         g.combatEnemyCount === 0 ||
         this.openingTime >=
@@ -271,7 +305,7 @@ export class ReinforcementSystem {
               ? g.level.boss
                 ? 9
                 : 4.5
-              : reinforcementDeadline(g.stage)) ||
+              : (this.plan?.deadline ?? reinforcementDeadline(g.stage))) ||
         (g.overtime &&
           g.level.boss &&
           g.enemies.some((e) => e.hp < e.maxHp * (this.pacedOvertime ? 0.78 : 0.65))) ||
@@ -288,7 +322,11 @@ export class ReinforcementSystem {
       return;
     }
     for (const door of this.doors) {
-      if (door.state === 'sealed' && this.phase === 'warning' && this.pacedOvertime) {
+      if (
+        door.state === 'sealed' &&
+        this.phase === 'warning' &&
+        (this.pacedOvertime || this.plan)
+      ) {
         door.delay = Math.max(0, (door.delay ?? 0) - dt);
         if (door.delay === 0) {
           door.state = 'warning';
@@ -301,6 +339,7 @@ export class ReinforcementSystem {
       } else if (door.state === 'warning') {
         door.timer = Math.max(0, door.timer - dt);
         if (door.timer > 0) continue;
+        if (this.plan && g.combatEnemyCount >= this.plan.cap) continue;
         if (this.canEnter(door.spawn) && g.combatEnemyCount < 14) {
           const s = door.spawn;
           g.spawnEnemy(s.kind, s.x, s.y, s.elite, door.attackDelay, s.squad, s.mutation);
