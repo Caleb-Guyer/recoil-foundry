@@ -86,6 +86,7 @@ export function shapeEncounter(
   if (
     level.boss ||
     level.freight ||
+    level.teamworkIntro ||
     level.annex ||
     level.fabricatorIntro ||
     level.harpoonIntro ||
@@ -109,7 +110,11 @@ export function shapeEncounter(
     assigned = new Set<Spawn>();
   for (const spawn of roster) {
     if (assigned.has(spawn)) continue;
-    const group = spawn.squad ? roster.filter((s) => s.squad?.kind === spawn.squad!.kind) : [spawn];
+    const group = spawn.teamwork
+      ? roster.filter((s) => s.teamwork)
+      : spawn.squad
+        ? roster.filter((s) => s.squad?.kind === spawn.squad!.kind)
+        : [spawn];
     const fits = first.length + group.length <= plan.opening;
     (first.length === 0 || fits ? first : later).push(...group);
     for (const member of group) assigned.add(member);
@@ -123,7 +128,7 @@ export function encounterDelays(reserve: readonly Spawn[], spacing: number) {
   const squads = new Map<string, number>();
   return reserve.map((s) => {
     // A coordinated formation arrives together; ordinary enemies arrive in pairs.
-    const key = s.squad ? 'squad:' + s.squad.kind : '';
+    const key = s.teamwork ? 'teamwork' : s.squad ? 'squad:' + s.squad.kind : '';
     if (key) {
       if (!squads.has(key)) {
         squads.set(key, Math.floor(rank / 2));

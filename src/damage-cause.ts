@@ -1,6 +1,8 @@
 import type { EnemyKind } from './levels.ts';
 
 export const ENEMY_NAMES: Record<EnemyKind, string> = {
+  repairer: 'Repair Drone',
+  relay: 'Relay Unit',
   switchboard: 'The Switchboard',
   caller: 'Caller',
   switchman: 'Switchman',

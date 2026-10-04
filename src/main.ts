@@ -74,6 +74,7 @@ import { clockOutTestFromUrl, prepareClockOutTest } from './clock-out-test.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { combatFeelTestFromUrl } from './combat-feel-test.ts';
 import { encounterTestFromUrl } from './encounter-test.ts';
+import { teamworkTestFromUrl } from './teamwork-test.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { auditorTestFromUrl } from './auditor-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
@@ -423,7 +424,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Boss Gauntlet</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Machine Teamwork</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -541,6 +542,7 @@ let linkedRunTest =
   presentationTestFromUrl(entryUrl) ??
   combatFeelTestFromUrl(entryUrl) ??
   encounterTestFromUrl(entryUrl) ??
+  teamworkTestFromUrl(entryUrl) ??
   upgradePreviewTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
@@ -1130,6 +1132,7 @@ function start(
   startingGunOverride?: StartingGun,
   encounterOverride?: 0 | 1,
   recoilOverride?: boolean,
+  teamworkOverride?: boolean,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1224,6 +1227,7 @@ function start(
       url.searchParams.delete('ur');
       url.searchParams.delete('sg');
       url.searchParams.delete('ev');
+      url.searchParams.delete('sv');
     } else {
       url.searchParams.set('sg', selectedStartingGun);
     }
@@ -1272,6 +1276,10 @@ function start(
     startingGun,
     encounterOverride ?? (seedParam === seed && entryUrl.searchParams.get('ev') === '0' ? 0 : 1),
     recoilOverride ?? !(seedParam === seed && entryUrl.searchParams.get('tv') === '0'),
+    teamworkOverride ??
+      (retry
+        ? game.teamwork.enabled
+        : !(seedParam === seed && entryUrl.searchParams.get('sv') === '0')),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1670,6 +1678,7 @@ function replayFinishedRun(run: RunRecap) {
   url.searchParams.set('seed', run.seed);
   url.searchParams.set('sg', run.startingGun ?? 'pistol');
   url.searchParams.set('ev', String(run.encounters ?? 0));
+  url.searchParams.set('sv', String(run.teamwork ?? 0));
   url.searchParams.set('tv', run.recoilTrials ? '1' : '0');
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   url.searchParams.set('ul', (run.unlocks ?? []).join(','));
@@ -1691,6 +1700,7 @@ function replayFinishedRun(run: RunRecap) {
     run.startingGun ?? 'pistol',
     run.encounters ?? 0,
     !!run.recoilTrials,
+    run.teamwork === 1,
   );
 }
 function workshopFromRun(run: RunRecap) {
@@ -2125,11 +2135,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Five machines. One tool.</h2>' +
-      '<p class="update-tagline">Choose your fights. Keep your nerve.</p>' +
-      '<dl class="update-notes"><div><dt>Choose your route.</dt><dd>Campaign victory opens Boss Gauntlet in Practice. Choose between two opponents in each of five rounds, using a starting gun you have unlocked.</dd></div>' +
-      '<div><dt>Upgrade or repair.</dt><dd>Health carries between fights. Take one upgrade or recover up to 30 health before the next boss. Restart begins the whole Gauntlet again.</dd></div>' +
-      '<div><dt>Finish all five.</dt><dd>Earn the Victor outfit and save your best combat time for matching guns and routes. Thinking at a stop does not run down the clock. Your Campaign Continue stays available.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Break their connection.</h2>' +
+      '<p class="update-tagline">A patrol is only as strong as its support.</p>' +
+      '<dl class="update-notes"><div><dt>Interrupt repairs.</dt><dd>Repair Drones arrive from zone two. Their green tether warns before restoring a wounded machine. Shoot the tether or defeat the drone to interrupt its finite repair supply.</dd></div>' +
+      '<div><dt>Discharge the relay.</dt><dd>Relay Units arrive later. An amber tether charges one patrol shot while its normal attack warning stays visible. Cut the connection before it fires.</dd></div>' +
+      '<div><dt>Read the pair.</dt><dd>Support units replace a patrol member and arrive alongside a partner. Cover breaks connections, and only one support link can work at a time. Their real artwork and field notes appear in the Logbook when encountered.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

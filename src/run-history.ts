@@ -13,6 +13,7 @@ import { validUnlocks, type LongevityId } from './longevity.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  teamwork?: 1;
   recoilTrials?: true;
   encounters?: 1;
   startingGun?: StartingGun;
@@ -86,6 +87,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     if (
       (raw.mode === 'daily') !== daily ||
       (raw.encounters !== undefined && (raw.encounters !== 1 || daily)) ||
+      (raw.teamwork !== undefined && (raw.teamwork !== 1 || raw.encounters !== 1 || daily)) ||
       (raw.recoilTrials !== undefined && (raw.recoilTrials !== true || daily)) ||
       !validStartingGunSave(raw.startingGun, raw.seed) ||
       (daily && raw.overtime) ||
@@ -103,6 +105,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       version: 1,
       ...(raw.recoilTrials ? { recoilTrials: true as const } : {}),
       ...(raw.encounters === 1 ? { encounters: 1 as const } : {}),
+      ...(raw.teamwork === 1 ? { teamwork: 1 as const } : {}),
       ...(raw.startingGun ? { startingGun: raw.startingGun as StartingGun } : {}),
       ...(raw.uprising ? { uprising: structuredClone(raw.uprising) } : {}),
       ...(raw.unlocks && !daily ? { unlocks: [...raw.unlocks] } : {}),
@@ -154,6 +157,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
         version: 1,
         ...(game.recoil.state ? { recoilTrials: true as const } : {}),
         ...(game.encounters ? { encounters: game.encounters } : {}),
+        ...(game.teamwork.enabled ? { teamwork: 1 as const } : {}),
         startingGun: game.startingGun,
         ...(game.uprising.run ? { uprising: structuredClone(game.uprising.run) } : {}),
         ...(!dailyFromSeed(game.seed) ? { unlocks: [...game.unlocks] } : {}),

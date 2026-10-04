@@ -44,6 +44,7 @@ export class FusionSystem {
     if (g.floodgate.trace(origin, pos, radius)) Object.assign(pos, origin);
     if (g.sortingPit.trace(origin, pos, radius)) Object.assign(pos, origin);
     if (g.shutdown.trace(origin, pos, radius)) Object.assign(pos, origin);
+    g.teamwork.cutAlong(origin, pos, radius, damage > 0);
     if (distance(pos, muzzle) > 0.01) {
       pos.x -= d.x * 0.5;
       pos.y -= d.y * 0.5;

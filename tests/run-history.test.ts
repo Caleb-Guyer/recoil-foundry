@@ -139,6 +139,7 @@ test('old rules remain readable while replay stays disabled; Workshop requires t
   const daily = {
     ...old,
     encounters: undefined,
+    teamwork: undefined,
     recoilTrials: undefined,
     factory: undefined,
     factoryVersion: undefined,

@@ -40,7 +40,7 @@ const emptyBook = () => loadLogbook(null);
 test('the collection contains every upgrade, enemy, variant and zone without exposing unrecovered names or lore', () => {
   const entries = logbookCatalog([], emptyBook(), [], loadArchive(null));
   assert.equal(entries.filter((e) => e.mod).length, MODS.length);
-  assert.equal(entries.filter((e) => e.id.startsWith('enemy:')).length, 30);
+  assert.equal(entries.filter((e) => e.id.startsWith('enemy:')).length, 32);
   assert.equal(
     entries.filter((e) => e.id.startsWith('elite:') || e.id.startsWith('mutation:')).length,
     6,
@@ -52,7 +52,7 @@ test('the collection contains every upgrade, enemy, variant and zone without exp
     .join('');
   assert.doesNotMatch(
     html,
-    /Interceptor|Charge Lens|Pulse Chamber|Transmission Annex|Continuity control|Rooftops|Railworks|Foundry Core/,
+    /Repair Drone|Relay Unit|Interceptor|Charge Lens|Pulse Chamber|Transmission Annex|Continuity control|Rooftops|Railworks|Foundry Core/,
   );
   assert.equal(catalogMatches(entries, 'equipment', 'charge lens').length, 0);
   assert.equal(catalogMatches(entries, 'machines', 'interceptor').length, 0);

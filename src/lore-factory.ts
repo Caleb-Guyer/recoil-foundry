@@ -3,6 +3,16 @@ import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 export const MACHINE_LORE = {
+  repairer: [
+    'Field service · finite supply',
+    'M. Vale · maintenance',
+    'The little service head carried enough compound for one damaged panel. The green line told us which machine had requested it.\n\nSecurity kept the line and removed the request switch. It repairs whichever guard is closest. I could not persuade it to refill its tank, which may be the last sensible instruction it has left.\n\nThe delivery tether is unarmoured. It was built to work beside people, not between gun barrels.',
+  ],
+  relay: [
+    'Load sharing · revised circuit',
+    'Dr. S. Anik · development',
+    'The auxiliary cell was meant to get a stalled fastening head through one difficult join. It holds three charges. The amber line stays connected until the head uses one.\n\nThe revised order calls every shot a difficult join. At least the cell still has to show its work. Its line flashes before the charge settles, and disconnecting it returns the head to its own supply.\n\nI left the discharge timer in place. Stored charge should never wait indefinitely for somebody to walk past.',
+  ],
   welder: [
     'Hot work permit · unsigned',
     'M. Vale · maintenance',

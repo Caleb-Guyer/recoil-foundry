@@ -329,7 +329,7 @@ test('new Campaigns save their pacing revision; legacy Continue, Daily, Practice
   const next = new Game();
   next.start('pacing-save', saved);
   assert.equal(next.encounters, 1);
-  const { encounters: _, ...legacy } = saved!;
+  const { encounters: _, teamwork: ___, ...legacy } = saved!;
   next.start('pacing-save', legacy);
   assert.equal(next.encounters, 0);
   next.start('pacing-save', undefined, null, null, false, 0, true, [], null, 'pistol', 0);
@@ -339,7 +339,7 @@ test('new Campaigns save their pacing revision; legacy Continue, Daily, Practice
   assert.equal(recap.encounters, 1);
   assert.equal(loadRunHistory([recap])[0].encounters, 1);
   assert.deepEqual(loadRunHistory([{ ...recap, encounters: 2 }]), []);
-  const { encounters: __, ...oldRecap } = recap;
+  const { encounters: __, teamwork: ____, ...oldRecap } = recap;
   assert.equal(loadRunHistory([oldRecap])[0].encounters, undefined);
   next.start(dailyForDate('2026-10-04')!.seed);
   assert.equal(next.encounters, 0);

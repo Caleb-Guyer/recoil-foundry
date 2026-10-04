@@ -1,6 +1,10 @@
 import type { EnemyKind } from './levels.ts';
 
 export const ENEMY_GUIDES: Record<EnemyKind, string> = {
+  repairer:
+    'Repairs a wounded patrol through a green tether after a dashed warning. Shoot the tether or drone, or move the pair behind cover. Its repair supply is finite; it cannot repair bosses or support units.',
+  relay:
+    'An amber tether charges one patrol shot. Cut the tether or defeat the unit before the marked shot fires. Charges expire, never stack, and keep the patrol’s normal attack warning and projectile speed.',
   runner: 'Closes the distance on foot. Leave room to move and fire while it approaches.',
   shooter: 'Fires aimed rounds from its position. Use cover and move after it commits.',
   flyer: 'Approaches through open air and fires a spread. Change height to leave its firing lane.',

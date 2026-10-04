@@ -1,5 +1,7 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
+import { TeamworkSystem, createSupport, isSupport, SUPPORT, type SupportRig } from './teamwork.ts';
+import { teamworkLevel } from './teamwork-layout.ts';
 import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
 import { EncounterPacer } from './encounter-pacing.ts';
 import { dailyStartingGun, isStartingGun, type StartingGun } from './starting-guns.ts';
@@ -213,6 +215,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  support?: SupportRig;
   recoilTarget?: number;
   hitDirection?: Vec;
   welder?: WelderRig;
@@ -267,6 +270,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  supportCharged?: true;
   feel?: RoundFeel;
   weaponTrace?: WeaponTrace;
   meltSpent?: boolean;
@@ -444,6 +448,7 @@ export class Game {
   auditorReward = false;
   practice: PracticeSession | null = null;
   gauntlet = new BossGauntlet(this);
+  teamwork = new TeamworkSystem(this);
   practiceHits = 0;
   workshop = new WorkshopSystem(this);
   seed = '';
@@ -660,6 +665,7 @@ export class Game {
       this.annex.clear();
       this.spoof.clear();
       this.fabricators.clear();
+      this.teamwork.clear();
       this.courier.clear();
       this.areaEvents.clear();
       this.mutations.clear();
@@ -757,6 +763,7 @@ export class Game {
     startingGun: StartingGun = 'pistol',
     encounterRules: 0 | 1 = 1,
     recoilRules = true,
+    teamworkRules = true,
   ) {
     this.workshop.active = workshop;
     this.gauntlet.reset();
@@ -781,6 +788,12 @@ export class Game {
           : testRun
             ? 0
             : encounterRules;
+    this.teamwork.enabled =
+      this.encounters === 1 &&
+      !practice &&
+      !workshop &&
+      !/^RF-D\d+-/.test(this.seed) &&
+      (save ? save.teamwork === 1 : !testRun && teamworkRules);
     this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
     this.uprising.run =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
@@ -941,6 +954,7 @@ export class Game {
       version: 6,
       startingGun: this.startingGun,
       ...(this.encounters ? { encounters: this.encounters } : {}),
+      ...(this.teamwork.enabled ? { teamwork: 1 as const } : {}),
       ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
       ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
       ...(this.uprising.run ? { uprising: structuredClone(this.uprising.run) } : {}),
@@ -1003,6 +1017,7 @@ export class Game {
     this.welder.clear();
     this.commendations.resetRoom();
     this.fabricators.clear();
+    this.teamwork.clear();
     this.floodgate.clear();
     this.sortingPit.clear();
     this.courier.clear();
@@ -1203,6 +1218,7 @@ export class Game {
     this.level = this.uprising.level(this.level);
     if (this.security && this.level.id.startsWith('uprising-'))
       this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
+    this.level = teamworkLevel(this, this.level);
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1483,8 +1499,8 @@ export class Game {
         (this.detour && !isBoss(kind) ? DETOUR_HEALTH : 1),
     );
     const body =
-      kind === 'flyer' || kind === 'wallcrawler'
-        ? Bodies.circle(x, y, kind === 'wallcrawler' ? 14 : 19, {
+      kind === 'flyer' || kind === 'wallcrawler' || isSupport(kind)
+        ? Bodies.circle(x, y, kind === 'wallcrawler' || isSupport(kind) ? 14 : 19, {
             frictionAir: 0.035,
             inertia: Infinity,
             label: 'enemy',
@@ -1525,6 +1541,10 @@ export class Game {
       attack: 'aimed',
     };
     this.enemies.push(enemy);
+    if (isSupport(kind)) {
+      enemy.support = createSupport(kind);
+      this.teamwork.sources.add(enemy);
+    }
     if (kind === 'crane') enemy.crane = createCrane(this, enemy);
     if (kind === 'kiln') enemy.kiln = createKiln();
     if (kind === 'switchboard') enemy.switchboard = createSwitchboard();
@@ -1712,6 +1732,7 @@ export class Game {
     }
     this.loaderArena.update();
     this.mutations.update();
+    this.teamwork.tick(dt);
     for (const e of [...this.enemies]) {
       const slow = this.cryogenic.slow(e);
       const previousState = e.state;
@@ -2058,6 +2079,7 @@ export class Game {
     if (this.floodgate.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (this.sortingPit.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (this.shutdown.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
+    this.teamwork.cutAlong(valveOrigin, spawn, radius, damage > 0);
     if (distance(spawn, pos) > 0.01) {
       spawn.x -= d.x * 0.5;
       spawn.y -= d.y * 0.5;
@@ -2262,6 +2284,10 @@ export class Game {
     if (this.massDriver.staggered(e)) return;
     if (e.workshopTarget) {
       this.workshop.move(e);
+      return;
+    }
+    if (isSupport(e.kind)) {
+      this.teamwork.move(e);
       return;
     }
     if (e.kind === 'welder') {
@@ -2865,10 +2891,12 @@ export class Game {
       this.destruction.hitAlong(origin, muzzle, end, damage, d, padding);
       return;
     }
+    const supportCharged = this.teamwork.takeCharge(e);
     this.addShot({
       pos: portalMuzzle ? { ...origin } : muzzle,
       vel: { x: d.x * speed, y: d.y * speed },
-      damage: damage * (e.rebootDamage ?? 1),
+      damage: damage * (e.rebootDamage ?? 1) * (supportCharged ? SUPPORT.boost : 1),
+      ...(supportCharged ? { supportCharged: true as const } : {}),
       life: 4,
       friendly: false,
       ...(e.allied ? { allied: true } : {}),
@@ -3030,6 +3058,7 @@ export class Game {
             y: s.pos.y + (end.y - s.pos.y) * passage.t + passage.entry.normal.y * 0.5,
           };
           recordRoute(s, entryPoint);
+          this.teamwork.cutAlong(s.pos, entryPoint, s.radius, s.friendly);
           recordRoute(s, passage.pos, {
             pos: entryPoint,
             entry: passage.entry,
@@ -3065,6 +3094,7 @@ export class Game {
           continue;
         }
         if (!nearest) {
+          this.teamwork.cutAlong(s.pos, end, s.radius, s.friendly);
           this.salvage.trace(s, s.pos, end);
           s.pos = end;
           recordRoute(s);
@@ -3096,6 +3126,7 @@ export class Game {
           y: s.pos.y + (end.y - s.pos.y) * nearest.t,
         };
         this.salvage.trace(s, segmentStart, s.pos);
+        this.teamwork.cutAlong(segmentStart, s.pos, s.radius, s.friendly);
         recordShotTrace(s.trace, s.pos);
         this.stasis.abandon(s);
         remaining -= segment * nearest.t;
@@ -3534,6 +3565,7 @@ export class Game {
     )
       this.onEnemyDefeated(e.kind);
     this.fabricators.killed(e);
+    this.teamwork.disrupt(e);
     this.mutations.killed(e);
     this.courier.killed(e);
     if (e.kind === 'loader') this.loaderArena.stop();

@@ -27,6 +27,8 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'repairer'
+  | 'relay'
   | 'welder'
   | 'switchboard'
   | 'switchman'
@@ -64,6 +66,7 @@ export interface Solid {
   h: number;
 }
 export interface Spawn extends Vec {
+  teamwork?: true;
   mutation?: MutationKind;
   kind: EnemyKind;
   elite?: EliteKind;
@@ -92,6 +95,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  teamworkIntro?: import('./teamwork.ts').SupportKind;
   uprising?: import('./uprising-model.ts').UprisingDistrict;
   security?: true;
   sortingPit?: import('./sorting-pit-layout.ts').SortingLayout;

@@ -658,6 +658,7 @@ export class TorchSystem {
       }
       if (first && !segment.enemy) g.salvage.impact(s, segment.body, segment.normal);
       if (!this.wind) g.salvage.trace(s, segment.a, segment.b);
+      if (!this.wind) g.teamwork.cutAlong(segment.a, segment.b, torchRadius(g), true);
       // Beam pulses share Countershot's recovery with all other rounds.
       // Traced segments still stop at solids/cables/portals before interception.
       if (!this.reflected && g.mods.includes('countershot') && g.ballistics.counterReady) {

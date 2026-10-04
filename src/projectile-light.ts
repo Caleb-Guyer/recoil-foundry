@@ -18,6 +18,9 @@ export function shotLight(s: Shot, mods: readonly string[]): Omit<ProjectileLigh
   if (s.enemyAmmo) {
     color = INTERCEPTOR_WEAPONS[s.enemyAmmo.kind].color;
     radius = s.enemyAmmo.kind === 'capacitor' ? 80 : s.enemyAmmo.kind === 'fuse' ? 60 : 38;
+  } else if (!s.friendly && s.supportCharged) {
+    color = '#efc477';
+    radius = 48;
   } else if (!s.friendly) {
     color = '#f28a79';
     radius = s.blade ? 26 : 34;

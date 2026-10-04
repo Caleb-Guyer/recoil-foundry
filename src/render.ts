@@ -74,6 +74,7 @@ import { drawCargoCables } from './cargo-art.ts';
 import { drawConveyors } from './conveyor-art.ts';
 import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
 import { drawAngler } from './angler-art.ts';
+import { drawSupport } from './teamwork-art.ts';
 import { drawWallcrawler } from './wallcrawler-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
 import { drawFabricator } from './fabricator-art.ts';
@@ -209,6 +210,10 @@ export class Renderer {
       }
       if (e.kind === 'angler') {
         drawAngler(c, g, e, this.reduced);
+        continue;
+      }
+      if (e.support) {
+        drawSupport(c, g, e, this.reduced);
         continue;
       }
       if (e.kind === 'wallcrawler') {
@@ -867,6 +872,13 @@ export class Renderer {
       else if (s.blade) drawBlade(c, s, g.time, this.reduced);
       else if (s.enemyAmmo) drawRivalShot(c, s);
       else drawThreatRound(c, s);
+      if (s.supportCharged) {
+        c.strokeStyle = '#efc477';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(s.pos.x, s.pos.y, s.radius + 3, 0, Math.PI * 2);
+        c.stroke();
+      }
     }
     const view = { x: this.camera.x, y: this.camera.y, w: viewW, h: viewH };
     for (const e of g.enemies) {

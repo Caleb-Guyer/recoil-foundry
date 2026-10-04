@@ -2,6 +2,8 @@ import { Music } from './music.ts';
 import type { MusicScene } from './music-score.ts';
 
 const ATTACK_WARNINGS = new Set([
+  'repair-warn',
+  'relay-warn',
   'sorting-warn',
   'weld-warn',
   'aim-warn',
@@ -352,6 +354,16 @@ export class Sound {
     } else if (kind === 'signal-fire') {
       this.tone(210, 95, 0.1, 0.055, 'triangle');
       this.crack(0.045, 0.04, 1400);
+    } else if (kind === 'repair-warn') {
+      this.tone(440, 540, 0.18, 0.035, 'sine');
+      this.tone(660, 660, 0.16, 0.03, 'sine', 0.2);
+    } else if (kind === 'relay-warn') {
+      this.tone(150, 300, 0.28, 0.04, 'triangle');
+      this.tone(600, 600, 0.12, 0.035, 'triangle', 0.3);
+    } else if (kind === 'repair-pulse') {
+      this.tone(520, 680, 0.09, 0.02, 'sine');
+    } else if (kind === 'support-break') {
+      this.tone(300, 85, 0.14, 0.03, 'triangle');
     } else if (kind === 'fabricator-build') {
       this.crack(0.2, 0.06, 2300);
       this.tone(130, 190, 0.4, 0.045, 'triangle');

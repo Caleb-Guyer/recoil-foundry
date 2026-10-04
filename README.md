@@ -16,6 +16,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Machine Teamwork — version 4.9.0.** Repair Drones and Relay Units join fresh Campaign patrols after zone one. Cut their visible tethers to stop finite repairs or a charged patrol shot. Curated pairs arrive together and replace an existing patrol member. Read their behavior and actual artwork in the Logbook. [Release notes](docs/releases/4.9.0.md).
+
 **Boss Gauntlet — version 4.8.0.** Complete five boss fights with one gun, choosing between two opponents each round. Health carries forward; between fights, take one upgrade or a repair. Campaign victory unlocks the Gauntlet in Practice. Earn the Victor outfit and save best combat times for matching guns and routes. [Release notes](docs/releases/4.8.0.md).
 
 **Ghost Races — version 4.7.0.** Race your recorded Practice best in Recoil Trials, with brief ahead/behind checkpoint comparisons. Each course and starting gun has its own optional ghost. Share a challenge code or link so a friend can race the same course and unmodified gun against your checkpoint times. Courses and weapons still need to be unlocked. [Release notes](docs/releases/4.7.0.md).

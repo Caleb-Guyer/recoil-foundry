@@ -1135,6 +1135,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  teamwork?: 1;
   encounters?: 1;
   startingGun?: StartingGun;
   uprising?: import('./uprising-model.ts').UprisingRun;
@@ -1319,6 +1320,11 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const stages = legacy ? 12 : previous ? 16 : STAGES;
   if (!validStartingGunSave(d.startingGun, d.seed)) return null;
   if (d.encounters !== undefined && (d.encounters !== 1 || /^RF-D\d+-/.test(d.seed))) return null;
+  if (
+    d.teamwork !== undefined &&
+    (d.teamwork !== 1 || d.encounters !== 1 || d.version !== 6 || /^RF-D\d+-/.test(d.seed))
+  )
+    return null;
   const rooms = legacy ? 3 : ROOMS_PER_AREA;
   const missed = d.missedUpgrades ?? 0;
   const courierBonus = (d.courier?.status === 'claimed' ? 1 : 0) + auditorBonus(d.auditor);
