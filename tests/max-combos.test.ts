@@ -6,9 +6,19 @@ import { MASS_DRIVER } from '../src/mass-driver.ts';
 import { GRIND } from '../src/grindshot.ts';
 import { CLUSTER_LIMIT } from '../src/demolition.ts';
 import { RESONATOR, STORM_CELL } from '../src/cross-fusions.ts';
+import { readMaxComboShard, selectMaxComboShard } from '../scripts/test-sharding.mjs';
+
+const shard = readMaxComboShard();
 
 test('every maximal build fires in the actual Workshop with finite physics and bounded secondary effects', () => {
-  for (const combo of maxCombos()) {
+  console.log(`Preparing maximal builds for shard ${shard.shard}/${shard.total}.`);
+  const all = maxCombos(),
+    selected = selectMaxComboShard(all, shard);
+  console.log(
+    `Shard ${shard.shard}/${shard.total}: checking ${selected.length} of ${all.length} builds.`,
+  );
+  let checked = 0;
+  for (const combo of selected) {
     const g = new Game();
     g.startWorkshop(combo.mods, combo.mods);
     assert.deepEqual(g.mods, combo.mods);
@@ -51,5 +61,10 @@ test('every maximal build fires in the actual Workshop with finite physics and b
     assert.equal(g.grind.saws.length, 0);
     assert.equal(g.fusions.resonator.pending.length, 0);
     assert.equal(g.fusions.storm.cells.length, 0);
+    checked++;
+    if (checked % 128 === 0 || checked === selected.length)
+      console.log(
+        `Shard ${shard.shard}/${shard.total}: ${checked}/${selected.length} builds passed.`,
+      );
   }
 });

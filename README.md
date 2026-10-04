@@ -63,7 +63,7 @@ npm ci
 npm run dev
 ```
 
-`npm test` runs the automated checks. `npm run build` creates the static site in `dist/`. Pushing `main` runs tests, builds and deploys to GitHub Pages.
+`npm test` runs the automated checks. `npm run build` creates the static site in `dist/`. Pushing `main` runs the regular suite alongside eight groups of maximal-build simulations; every group must pass before building and deploying to GitHub Pages. [CI commands and coverage](docs/ci.md).
 
 [Release completion](docs/browser-release-checklist.md) · [Media kit](docs/release-media.md) · [itch.io launch](docs/itch-io/README.md) · [Development history](docs/development-history.md)
 

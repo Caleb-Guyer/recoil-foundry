@@ -209,7 +209,16 @@ test('Redline layouts cannot replace events, bosses, optional routes or Overtime
     },
   };
   g.start(event.seed, event);
+  assert.equal(g.level.id, 'security-docks');
+  assert.equal(g.areaEvents.active, null);
+  const laterEvent = {
+    ...event,
+    stage: 4,
+    areaEvent: { ...event.areaEvent, area: 1, room: 4 },
+  };
+  g.start(laterEvent.seed, laterEvent);
   assert.notEqual(g.level.id, 'security-docks');
+  assert.equal(g.areaEvents.active, 'blackout');
   g.start('security-boss', base(3, 'security-boss', 3));
   assert(g.level.boss);
   assert(!g.level.security);
