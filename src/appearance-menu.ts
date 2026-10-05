@@ -2,6 +2,7 @@ import type { Game } from './game.ts';
 import { COMMENDATIONS, commendationVisible, type CommendationId } from './commendations.ts';
 import { GUN_FINISHES, OUTFITS, drawOutfit, loadCosmetics, type Cosmetics } from './cosmetics.ts';
 import { drawWeapon } from './weapon-art.ts';
+import type { AppearanceItemId } from './appearance-notices.ts';
 
 export interface AppearanceOptions {
   game: Game;
@@ -9,13 +10,17 @@ export interface AppearanceOptions {
   preview: boolean;
   defeated?: readonly string[];
   discovered?: readonly string[];
-  unseen?: readonly CommendationId[];
-  viewed?: () => void;
+  unseen?: readonly AppearanceItemId[];
+  viewed?: (id: AppearanceItemId) => void;
   equip: (selection: Cosmetics) => void;
   logbook: () => void;
 }
 export function appearanceMenu(content: HTMLElement, options: AppearanceOptions) {
   const { game, earned } = options;
+  const unseen = new Set(options.unseen);
+  function acknowledge(id: AppearanceItemId) {
+    if (!options.preview && unseen.delete(id)) options.viewed?.(id);
+  }
   content.innerHTML =
     '<div class="appearance-layout"><figure class="appearance-preview"><canvas width="720" height="380" role="img" aria-label="Equipped outfit and gun"></canvas>' +
     '<figcaption></figcaption></figure><div class="appearance-options"></div></div>' +
@@ -47,6 +52,7 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
             )
             .map(([id, item]) => {
               const locked = item.unlock && !earned.includes(item.unlock);
+              const unread = !locked && unseen.has(`${slot}:${id}` as AppearanceItemId);
               const challenge = COMMENDATIONS.find((c) => c.id === item.unlock);
               const swatch = 'face' in item ? item.face : item.body;
               return (
@@ -57,11 +63,13 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
                 '" aria-pressed="' +
                 (selection[slot] === id) +
                 '"' +
+                (unread ? ' aria-label="' + item.name + ', new appearance"' : '') +
                 (locked ? ' disabled' : '') +
                 '><span class="appearance-swatch" style="--swatch:' +
                 swatch +
                 '" aria-hidden="true"></span><span>' +
                 item.name +
+                (unread ? ' <span class="new-badge" aria-hidden="true">New</span>' : '') +
                 (locked ? '<small>' + challenge!.name + '</small>' : '') +
                 '</span></button>'
               );
@@ -99,7 +107,7 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
           earned,
         );
         options.equip(next);
-        render();
+        viewSelection();
         list
           .querySelector<HTMLButtonElement>(
             '[data-slot="' + button.dataset.slot + '"][data-style="' + button.dataset.style + '"]',
@@ -108,6 +116,13 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
       };
     });
   }
+  function viewSelection() {
+    const selection = loadCosmetics(game.cosmetics, earned);
+    acknowledge(`gun:${selection.gun}`);
+    acknowledge(`outfit:${selection.outfit}`);
+    render();
+  }
   content.querySelector<HTMLButtonElement>('#appearance-logbook')!.onclick = options.logbook;
   render();
+  return viewSelection;
 }

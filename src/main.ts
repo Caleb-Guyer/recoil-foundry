@@ -133,8 +133,9 @@ import {
 import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
 import {
   APPEARANCE_SEEN_KEY,
-  loadSeenAppearances,
-  unseenAppearances,
+  APPEARANCE_ITEMS_SEEN_KEY,
+  acknowledgeAppearanceItem,
+  unseenAppearanceItems,
 } from './appearance-notices.ts';
 import { Game } from './game.ts';
 import { FACTORY_CONDITIONS, factoryHint, freshFactorySeed } from './factory.ts';
@@ -631,7 +632,9 @@ let selectedStartingGun: StartingGun =
 let dailyResult: { best?: number; newBest: boolean; saved: boolean } | null = null;
 
 function updateAppearanceBadge() {
-  const pending = unseenAppearances(commendations, read(APPEARANCE_SEEN_KEY)).length > 0;
+  const pending =
+    unseenAppearanceItems(commendations, read(APPEARANCE_ITEMS_SEEN_KEY), read(APPEARANCE_SEEN_KEY))
+      .length > 0;
   $('workshop-badge').hidden = !pending;
   if (pending)
     $('workshop').setAttribute('aria-label', 'Workshop, new appearance options available');
@@ -2343,12 +2346,20 @@ function showDialog(kind: string) {
         defeated: logbookProgress.enemies,
         discovered,
         preview: previewCommendations,
-        unseen: previewCommendations
-          ? []
-          : unseenAppearances(visibleCommendations, read(APPEARANCE_SEEN_KEY)),
-        viewed: () => {
-          if (previewCommendations) return;
-          write(APPEARANCE_SEEN_KEY, loadSeenAppearances(visibleCommendations, commendations));
+        unseen:
+          previewCommendations || game.testRun
+            ? []
+            : unseenAppearanceItems(
+                visibleCommendations,
+                read(APPEARANCE_ITEMS_SEEN_KEY),
+                read(APPEARANCE_SEEN_KEY),
+              ),
+        viewed: (id) => {
+          if (previewCommendations || game.testRun) return;
+          write(
+            APPEARANCE_ITEMS_SEEN_KEY,
+            acknowledgeAppearanceItem(read(APPEARANCE_ITEMS_SEEN_KEY), commendations, id),
+          );
           updateAppearanceBadge();
         },
         equip: (selection) => {

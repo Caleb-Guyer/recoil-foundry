@@ -241,17 +241,29 @@ export function workshopMenu(
     };
   }
   if (appearance) {
-    appearanceMenu(content.querySelector<HTMLElement>('#workshop-appearance')!, appearance);
+    const appearanceTab = content.querySelector<HTMLButtonElement>(
+      '[data-workshop-tab="appearance"]',
+    )!;
+    const viewAppearance = appearanceMenu(
+      content.querySelector<HTMLElement>('#workshop-appearance')!,
+      {
+        ...appearance,
+        viewed: (id) => {
+          appearance.unseen = appearance.unseen?.filter((item) => item !== id);
+          appearance.viewed?.(id);
+          if (!appearance.unseen?.length) {
+            appearanceTab.querySelector<HTMLElement>('.new-badge')?.remove();
+            appearanceTab.removeAttribute('aria-label');
+          }
+        },
+      },
+    );
     content.querySelectorAll<HTMLButtonElement>('[data-workshop-tab]').forEach((button) => {
       button.onclick = () => {
         const build = button.dataset.workshopTab === 'build';
         content.querySelector<HTMLElement>('#workshop-build')!.hidden = !build;
         content.querySelector<HTMLElement>('#workshop-appearance')!.hidden = build;
-        if (!build && !appearance.preview) {
-          appearance.viewed?.();
-          button.querySelector<HTMLElement>('.new-badge')?.remove();
-          button.removeAttribute('aria-label');
-        }
+        if (!build) viewAppearance();
         for (const id of ['workshop-status', 'workshop-clear', 'workshop-blueprints']) {
           const element = content.querySelector<HTMLElement>('#' + id);
           if (element) element.hidden = !build;

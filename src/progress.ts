@@ -27,7 +27,12 @@ import {
 import { LOGBOOK_KEY, loadLogbook, migrateLogbook } from './logbook.ts';
 import { COMMENDATIONS_KEY, loadCommendations } from './commendations.ts';
 import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
-import { APPEARANCE_SEEN_KEY, loadSeenAppearances } from './appearance-notices.ts';
+import {
+  APPEARANCE_SEEN_KEY,
+  APPEARANCE_ITEMS_SEEN_KEY,
+  loadSeenAppearances,
+  loadSeenAppearanceItems,
+} from './appearance-notices.ts';
 import { ARCHIVE_KEY, migrateArchive, validArchive, encounterArchive } from './archive.ts';
 import { MILESTONES_KEY, loadMilestones, validMilestones, unlockGoals } from './longevity.ts';
 import { VICTORIES_KEY, loadEncounters } from './practice.ts';
@@ -54,6 +59,7 @@ export const PROGRESS_KEYS = [
   COMMENDATIONS_KEY,
   COSMETICS_KEY,
   APPEARANCE_SEEN_KEY,
+  APPEARANCE_ITEMS_SEEN_KEY,
   ARCHIVE_KEY,
   MILESTONES_KEY,
   VICTORIES_KEY,
@@ -147,6 +153,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [COMMENDATIONS_KEY]: earned,
     [COSMETICS_KEY]: loadCosmetics(read(COSMETICS_KEY), earned),
     [APPEARANCE_SEEN_KEY]: loadSeenAppearances(read(APPEARANCE_SEEN_KEY), earned),
+    [APPEARANCE_ITEMS_SEEN_KEY]: loadSeenAppearanceItems(read(APPEARANCE_ITEMS_SEEN_KEY), earned),
     [ARCHIVE_KEY]: encounterArchive(
       migrateArchive(read(ARCHIVE_KEY), discovered, book, earned),
       unlockGoals(
@@ -198,6 +205,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === GAUNTLET_KEY ||
           k === SECURITY_KEY ||
           k === APPEARANCE_SEEN_KEY ||
+          k === APPEARANCE_ITEMS_SEEN_KEY ||
           k === ARCHIVE_KEY ||
           k === MILESTONES_KEY ||
           Object.hasOwn(raw, k),
@@ -228,6 +236,18 @@ export function validateProgress(raw: unknown): ProgressValues | null {
     )
       return null;
     if (Object.hasOwn(raw, SECURITY_KEY) && !validSecurityProfile(raw[SECURITY_KEY])) return null;
+    if (
+      Object.hasOwn(raw, APPEARANCE_ITEMS_SEEN_KEY) &&
+      (!Array.isArray(raw[APPEARANCE_ITEMS_SEEN_KEY]) ||
+        !same(
+          raw[APPEARANCE_ITEMS_SEEN_KEY],
+          loadSeenAppearanceItems(
+            raw[APPEARANCE_ITEMS_SEEN_KEY],
+            loadCommendations(raw[COMMENDATIONS_KEY]),
+          ),
+        ))
+    )
+      return null;
     if (Object.hasOwn(raw, SHAFT_PROFILE_KEY) && !validShaftProfile(raw[SHAFT_PROFILE_KEY]))
       return null;
     if (Object.hasOwn(raw, RECOIL_TRIALS_KEY) && !validRecoilProfile(raw[RECOIL_TRIALS_KEY]))
