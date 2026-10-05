@@ -1,4 +1,5 @@
 import { loadUnlocks } from './longevity.ts';
+import { BOSS_REMIXES, isBossRemix, type BossRemixId } from './boss-remix-rules.ts';
 import { breakableSolids } from './destruction-layout.ts';
 import { getLevel } from './levels.ts';
 import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
@@ -25,6 +26,7 @@ export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
 export interface Encounter {
   kind: PracticeBoss;
   seed: string;
+  remix?: BossRemixId;
 }
 // The loadout belongs to this attempt, never to the persisted victory record.
 export interface PracticeSession extends Encounter {
@@ -37,7 +39,10 @@ export function canPractice(
   test: Encounter | null = null,
 ): boolean {
   return [...victories, ...(test ? [test] : [])].some(
-    (record) => record.kind === encounter.kind && record.seed === encounter.seed,
+    (record) =>
+      record.kind === encounter.kind &&
+      record.seed === encounter.seed &&
+      record.remix === encounter.remix,
   );
 }
 
@@ -103,6 +108,7 @@ export function loadEncounters(value: unknown): Encounter[] {
   if (!Array.isArray(value)) return [];
   const records: Encounter[] = [];
   for (const item of value.slice(0, 32)) {
+    const remix: unknown = item?.remix;
     if (
       !item ||
       typeof item !== 'object' ||
@@ -111,13 +117,18 @@ export function loadEncounters(value: unknown): Encounter[] {
       typeof item.seed !== 'string' ||
       !item.seed.length ||
       item.seed.length > 40 ||
-      records.some((record) => record.kind === item.kind)
+      (remix !== undefined &&
+        (!isBossRemix(remix) ||
+          BOSS_REMIXES[remix].boss !== item.kind ||
+          item.seed !== 'REMIX-' + remix)) ||
+      records.some((record) => record.kind === item.kind && record.remix === item.remix)
     )
       continue;
     const kind = item.kind as PracticeBoss;
     // Existing victories predate alternate bosses. Keep their original arenas
     // available for earned practice even if that seed now selects a new boss.
     if (
+      item.remix !== undefined ||
       kind === 'welder' ||
       kind === 'switchboard' ||
       kind === 'condenser' ||
@@ -125,7 +136,11 @@ export function loadEncounters(value: unknown): Encounter[] {
       kind === 'sorter' ||
       getLevel(item.seed, PRACTICE_BOSSES[kind].stage).spawns[0]?.kind === kind
     )
-      records.push({ kind, seed: item.seed });
+      records.push({
+        kind,
+        seed: item.seed,
+        ...(item.remix ? { remix: item.remix as BossRemixId } : {}),
+      });
   }
   return records;
 }
@@ -141,6 +156,7 @@ export function practiceCheckpoint(
   const save = testCheckpoint(encounter.seed, stage);
   if (mods !== null) save.mods = practiceBuild(encounter.kind, mods, known);
   if (loadUnlocks(save.mods).length) save.unlocks = loadUnlocks(save.mods);
+  if (encounter.remix) return { ...save, version: 6, bossRemix: encounter.remix };
   return encounter.kind === 'switchboard'
     ? { ...save, version: 6, region: 'annex', annexVersion: 5 }
     : save;

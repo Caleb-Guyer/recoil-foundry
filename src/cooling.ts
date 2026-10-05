@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import type { Enemy, Game } from './game.ts';
 import { bossHasLane, huntBoss } from './boss-hunt.ts';
 import { bossPhase } from './enemies.ts';
+import type { BossRemixId } from './boss-remix-rules.ts';
 import { clamp, direction } from './rules.ts';
 
 export const SKIMMER_TELL = 0.82;
@@ -24,9 +25,13 @@ export function onCoolant(g: Game) {
   );
 }
 
-export function coolingAngles(e: Enemy): number[] {
+export function coolingAngles(e: Enemy, remix?: BossRemixId): number[] {
   const aim = Math.atan2(e.aim.y, e.aim.x);
   if (e.attack === 'ring') {
+    if (remix === 'condenser-purge-chamber')
+      return Array.from({ length: 12 }, (_, i) => aim + (i * Math.PI) / 6 + Math.PI / 12).filter(
+        (_, i) => i % 3 !== 0,
+      );
     // Four wide, rotating gaps are safe passages through the purge.
     return Array.from({ length: 16 }, (_, i) => aim + (i * Math.PI) / 8 + Math.PI / 16).filter(
       (_, i) => i % 4 !== 0,
@@ -65,7 +70,7 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
     if (e.timer > COOLING_LOCK && e.attack !== 'ring')
       e.aim = direction(e.body.position, g.player.position);
     if (e.timer > 0) return;
-    for (const angle of coolingAngles(e))
+    for (const angle of coolingAngles(e, g.level.bossRemix))
       g.enemyShot(
         e,
         angle,
@@ -73,22 +78,32 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
         boss ? 21 : g.stage >= 12 ? 20 : 18,
       );
     g.onSound(e.attack === 'ring' ? 'pulse' : 'cooling-shot');
-    if (boss && !second) {
+    if (boss && !second && g.level.bossRemix !== 'condenser-cold-circuit') {
       e.state = 'followup';
       e.timer = e.attack === 'ring' ? CONDENSER_PURGE_FOLLOWUP : CONDENSER_FOLLOWUP;
       if (e.attack === 'ring') {
         // The second purge fills the old gaps, with its own complete warning.
-        const angle = Math.atan2(e.aim.y, e.aim.x) + Math.PI / 4;
+        const angle =
+          Math.atan2(e.aim.y, e.aim.x) +
+          (g.level.bossRemix === 'condenser-purge-chamber' ? -Math.PI / 6 : Math.PI / 4);
         e.aim = { x: Math.cos(angle), y: Math.sin(angle) };
       } else e.aim = direction(e.body.position, g.player.position);
       g.onSound('lock');
     } else {
       e.attacks++;
       e.state = 'recover';
-      e.timer = boss ? CONDENSER_RECOVER : g.stage >= 12 ? 1.05 : 1.4;
+      e.timer = boss ? (g.level.bossRemix ? 1.2 : CONDENSER_RECOVER) : g.stage >= 12 ? 1.05 : 1.4;
     }
   } else if (e.timer <= 0 && bossHasLane(g, e)) {
-    e.attack = boss && e.attacks % 2 === 1 ? 'ring' : 'aimed';
+    e.attack =
+      boss &&
+      (g.level.bossRemix === 'condenser-cold-circuit'
+        ? e.attacks % 3 === 2
+        : g.level.bossRemix === 'condenser-purge-chamber'
+          ? e.attacks % 2 === 0
+          : e.attacks % 2 === 1)
+        ? 'ring'
+        : 'aimed';
     e.aim =
       e.attack === 'ring'
         ? { x: Math.cos(e.attacks * 0.67), y: Math.sin(e.attacks * 0.67) }
@@ -178,7 +193,7 @@ export function drawCoolingEnemy(c: CanvasRenderingContext2D, g: Game, e: Enemy,
     c.lineWidth = e.timer <= COOLING_LOCK ? 1.8 : 1;
     c.globalAlpha = e.timer <= COOLING_LOCK ? 0.65 : 0.28;
     c.setLineDash(e.timer <= COOLING_LOCK ? [] : [6, 10]);
-    for (const angle of coolingAngles(e)) {
+    for (const angle of coolingAngles(e, g.level.bossRemix)) {
       const end = g.lineEnd(p, {
         x: p.x + Math.cos(angle) * (e.attack === 'ring' ? 330 : 800),
         y: p.y + Math.sin(angle) * (e.attack === 'ring' ? 330 : 800),

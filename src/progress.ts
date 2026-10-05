@@ -1,4 +1,5 @@
 import { WEAPON_UNLOCKS_KEY, migrateWeaponUnlocks, validWeaponUnlocks } from './weapon-unlocks.ts';
+import { BOSS_REMIXES_KEY, loadBossRemixes, validBossRemixes } from './boss-remix-rules.ts';
 import { RUN_REWARDS_KEY, loadRunRewards, validRunRewards } from './run-rewards.ts';
 import { loadCheckpoint } from './rules.ts';
 import {
@@ -43,6 +44,7 @@ export const PROGRESS_KEY = 'rf-progress-v1';
 export const CHECKPOINT_KEY = 'rf-checkpoint-v5';
 export const BACKUP_LIMIT = 1024 * 1024;
 export const PROGRESS_KEYS = [
+  BOSS_REMIXES_KEY,
   WEAPON_UNLOCKS_KEY,
   RUN_REWARDS_KEY,
   UPRISING_RECORDS_KEY,
@@ -136,6 +138,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
       earned,
       loadSecurityProfile(read(SECURITY_KEY)).unlocked > 0,
     ),
+    [BOSS_REMIXES_KEY]: loadBossRemixes(read(BOSS_REMIXES_KEY)),
     [RUN_REWARDS_KEY]: loadRunRewards(read(RUN_REWARDS_KEY)),
     [CHECKPOINT_KEY]: checkpoint,
     [UPRISING_RECORDS_KEY]: loadUprisingRecords(read(UPRISING_RECORDS_KEY)),
@@ -183,6 +186,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       !keysOnly(raw, PROGRESS_KEYS) ||
       !PROGRESS_KEYS.every(
         (k) =>
+          k === BOSS_REMIXES_KEY ||
           k === WEAPON_UNLOCKS_KEY ||
           k === RUN_REWARDS_KEY ||
           k === UPRISING_RECORDS_KEY ||
@@ -199,6 +203,8 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           Object.hasOwn(raw, k),
       )
     )
+      return null;
+    if (Object.hasOwn(raw, BOSS_REMIXES_KEY) && !validBossRemixes(raw[BOSS_REMIXES_KEY]))
       return null;
     if (Object.hasOwn(raw, WEAPON_UNLOCKS_KEY) && !validWeaponUnlocks(raw[WEAPON_UNLOCKS_KEY]))
       return null;
@@ -349,6 +355,7 @@ export function progressSummary(values: ProgressValues) {
     recoilRecords: recoil.records.length,
     recoilGhosts: loadRecoilGhosts(values[RECOIL_GHOSTS_KEY]).length,
     gauntletRecords: loadGauntletRecords(values[GAUNTLET_KEY]).length,
+    bossRemixes: loadBossRemixes(values[BOSS_REMIXES_KEY]).seen.length,
     security: loadSecurityProfile(values[SECURITY_KEY]).unlocked,
   };
 }

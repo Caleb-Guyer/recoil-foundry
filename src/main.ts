@@ -75,6 +75,16 @@ import { presentationTestFromUrl, finishPresentationTest } from './presentation-
 import { combatFeelTestFromUrl } from './combat-feel-test.ts';
 import { encounterTestFromUrl } from './encounter-test.ts';
 import { teamworkTestFromUrl } from './teamwork-test.ts';
+import { bossRemixTestFromUrl } from './boss-remix-test.ts';
+import {
+  BOSS_REMIXES,
+  BOSS_REMIXES_KEY,
+  loadBossRemixes,
+  recordBossRemix,
+  remixEncounters,
+  type BossRemixId,
+} from './boss-remix-rules.ts';
+import { bossRemixMenu } from './boss-remix-menu.ts';
 import { courierTestFromUrl } from './courier-layout.ts';
 import { auditorTestFromUrl } from './auditor-layout.ts';
 import { floodgateTestFromUrl } from './floodgate-layout.ts';
@@ -358,6 +368,7 @@ let practiceOutcome: ReturnType<typeof recordPracticeWin> | null = null;
 let activePracticeChallenge: PracticeChallenge | null = null;
 let sharedPracticeChallenge: PracticeChallenge | undefined;
 let practiceRecordsBoss: PracticeBoss | undefined;
+let practiceRecordsRemix: BossRemixId | undefined;
 let practiceRecordsParent = 'practice-setup';
 let trialCaptured = false;
 let trialOutcome: ReturnType<typeof recordTrial> | null = null;
@@ -424,7 +435,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Machine Teamwork</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Boss Remixes</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -543,6 +554,7 @@ let linkedRunTest =
   combatFeelTestFromUrl(entryUrl) ??
   encounterTestFromUrl(entryUrl) ??
   teamworkTestFromUrl(entryUrl) ??
+  bossRemixTestFromUrl(entryUrl) ??
   upgradePreviewTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
   shutdownTestFromUrl(entryUrl) ??
@@ -919,6 +931,10 @@ function updateTitle() {
     $('play').textContent = 'Test the Sorting Pit';
     $('title-hint').textContent = 'Reclamation. R to restart test. Progress is untouched.';
   }
+  if (linkedRunTest?.bossRemix) {
+    $('play').textContent = 'Test ' + BOSS_REMIXES[linkedRunTest.bossRemix].name;
+    $('title-hint').textContent = 'Boss remix. R restarts this fight. No progress is recorded.';
+  }
   if (linkedTrial || invalidTrialLink) {
     $('daily').textContent = 'New run';
     $('daily').title = 'Start a fresh random run';
@@ -1133,6 +1149,7 @@ function start(
   encounterOverride?: 0 | 1,
   recoilOverride?: boolean,
   teamworkOverride?: boolean,
+  remixOverride?: boolean,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1193,7 +1210,9 @@ function start(
     (retry
       ? dailyFromSeed(game.seed)
         ? retrySeed(game.seed)
-        : freshSeed()
+        : game.bossRemixes
+          ? game.seed
+          : freshSeed()
       : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? freshSeed()));
   activeDaily = dailyFromSeed(seed);
   const requestedGun = startingGunOverride ?? (retry ? game.startingGun : selectedStartingGun);
@@ -1228,6 +1247,7 @@ function start(
       url.searchParams.delete('sg');
       url.searchParams.delete('ev');
       url.searchParams.delete('sv');
+      url.searchParams.delete('bv');
     } else {
       url.searchParams.set('sg', selectedStartingGun);
     }
@@ -1280,6 +1300,11 @@ function start(
       (retry
         ? game.teamwork.enabled
         : !(seedParam === seed && entryUrl.searchParams.get('sv') === '0')),
+    remixOverride ??
+      (retry
+        ? game.bossRemixes
+        : weaponUnlocks().cleared &&
+          !(seedParam === seed && entryUrl.searchParams.get('bv') === '0')),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1296,13 +1321,16 @@ function startPractice(
   discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
   if (options.challenge) {
     if (
-      !challengeAccess(options.challenge, encounters, discovered).allowed ||
+      !challengeAccess(options.challenge, practiceEncounters(), discovered).allowed ||
       options.challenge.kind !== encounter.kind ||
       options.challenge.seed !== encounter.seed ||
+      options.challenge.remix !== encounter.remix ||
       JSON.stringify(options.challenge.mods) !== JSON.stringify(mods)
     )
       return;
-  } else if (!canPractice(encounter, encounters, options.test && mods === null ? linkedTest : null))
+  } else if (
+    !canPractice(encounter, practiceEncounters(), options.test && mods === null ? linkedTest : null)
+  )
     return;
   practiceTest = options.test === true;
   practiceEligible = !practiceTest;
@@ -1513,8 +1541,9 @@ function capturePracticeResult() {
     write(PRACTICE_RECORDS_KEY, practiceRecords);
 }
 function openPracticeRecords(boss: PracticeBoss) {
-  if (!encounters.some((e) => e.kind === boss)) return;
+  if (!practiceEncounters().some((e) => e.kind === boss)) return;
   practiceRecordsBoss = boss;
+  practiceRecordsRemix = (dialogKind === 'practice-setup' ? practiceTarget : game.practice)?.remix;
   practiceRecordsParent = dialogKind;
   showDialog('practice-records');
 }
@@ -1534,7 +1563,7 @@ function presetBest(encounter: Encounter) {
     : '';
 }
 function openPracticeBuild(encounter: Encounter, parent = 'practice-setup') {
-  if (!canPractice(encounter, encounters)) return;
+  if (!canPractice(encounter, practiceEncounters())) return;
   practiceTarget = encounter;
   practiceEditorParent = parent;
   if (parent !== 'practice-setup' && game.practice?.build)
@@ -1564,6 +1593,12 @@ function startRunTest(save: Checkpoint) {
 }
 function weaponUnlocks() {
   return loadWeaponUnlocks(read(WEAPON_UNLOCKS_KEY));
+}
+function practiceEncounters(): Encounter[] {
+  return [
+    ...encounters.filter((e) => !e.remix),
+    ...remixEncounters(read(BOSS_REMIXES_KEY), weaponUnlocks().cleared),
+  ];
 }
 function earnRunRewards(ids: readonly string[]) {
   if (
@@ -1679,6 +1714,7 @@ function replayFinishedRun(run: RunRecap) {
   url.searchParams.set('sg', run.startingGun ?? 'pistol');
   url.searchParams.set('ev', String(run.encounters ?? 0));
   url.searchParams.set('sv', String(run.teamwork ?? 0));
+  url.searchParams.set('bv', String(run.bossRemixes ?? 0));
   url.searchParams.set('tv', run.recoilTrials ? '1' : '0');
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   url.searchParams.set('ul', (run.unlocks ?? []).join(','));
@@ -1701,6 +1737,7 @@ function replayFinishedRun(run: RunRecap) {
     run.encounters ?? 0,
     !!run.recoilTrials,
     run.teamwork === 1,
+    run.bossRemixes === 1,
   );
 }
 function workshopFromRun(run: RunRecap) {
@@ -1835,8 +1872,15 @@ game.onMilestone = (id) => {
   updateArchive();
 };
 game.onEnemyEncountered = (enemy) => {
-  if (!game.practice && !game.testRun && !game.workshop.active && game.mode === 'playing')
+  if (!game.practice && !game.testRun && !game.workshop.active && game.mode === 'playing') {
     updateArchive(enemyArchiveIds(enemy));
+    progress.checkExternal();
+    if (!progress.blocked && game.level.bossRemix) {
+      const before = loadBossRemixes(read(BOSS_REMIXES_KEY)),
+        next = recordBossRemix(before, game, weaponUnlocks().cleared);
+      if (JSON.stringify(before) !== JSON.stringify(next)) write(BOSS_REMIXES_KEY, next);
+    }
+  }
 };
 game.maintenance.onClear = (clear) => {
   progress.checkExternal();
@@ -2135,11 +2179,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Break their connection.</h2>' +
-      '<p class="update-tagline">A patrol is only as strong as its support.</p>' +
-      '<dl class="update-notes"><div><dt>Interrupt repairs.</dt><dd>Repair Drones arrive from zone two. Their green tether warns before restoring a wounded machine. Shoot the tether or defeat the drone to interrupt its finite repair supply.</dd></div>' +
-      '<div><dt>Discharge the relay.</dt><dd>Relay Units arrive later. An amber tether charges one patrol shot while its normal attack warning stays visible. Cut the connection before it fires.</dd></div>' +
-      '<div><dt>Read the pair.</dt><dd>Support units replace a patrol member and arrive alongside a partner. Cover breaks connections, and only one support link can work at a time. Their real artwork and field notes appear in the Logbook when encountered.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Familiar machines. New tactics.</h2>' +
+      '<p class="update-tagline">Read the arena. Make your opening.</p>' +
+      '<dl class="update-notes"><div><dt>Return to the factory.</dt><dd>After a Campaign victory, new runs can remix the Loader, Press and Condenser. Each has two authored arenas with distinct attack sequences.</dd></div>' +
+      '<div><dt>Use the machinery.</dt><dd>Break cargo braces, ride a transfer lift, or shoot a ready steam valve to expose armor. Every volley and machinery release keeps its warning.</dd></div>' +
+      '<div><dt>Learn the fight.</dt><dd>Encounter a remix to open it in Practice, with real arena photographs. Continue and Retry keep the run’s variants; older saves retain their original fights.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2378,6 +2422,7 @@ function showDialog(kind: string) {
     content.innerHTML =
       '<h2 id="dialog-title">Practice.</h2><div class="practice-list">' +
       encounters
+        .filter((record) => !record.remix)
         .map(
           (record) =>
             '<button class="practice-fight" data-boss="' +
@@ -2390,6 +2435,9 @@ function showDialog(kind: string) {
       (weaponUnlocks().cleared
         ? '<button id="boss-gauntlet" class="practice-fight"><span>Boss Gauntlet</span><span aria-hidden="true">↗</span></button>'
         : '') +
+      (remixEncounters(read(BOSS_REMIXES_KEY), weaponUnlocks().cleared).length
+        ? '<button id="boss-remixes" class="practice-fight"><span>Boss remixes</span><span aria-hidden="true">↗</span></button>'
+        : '') +
       (loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length
         ? '<button id="shaft-trials" class="practice-fight"><span>Maintenance Trials</span><span aria-hidden="true">↗</span></button>'
         : '') +
@@ -2400,6 +2448,8 @@ function showDialog(kind: string) {
     if (document.getElementById('shaft-trials')) $('shaft-trials').onclick = () => openTrials();
     if (document.getElementById('boss-gauntlet'))
       $('boss-gauntlet').onclick = () => showDialog('gauntlet-setup');
+    if (document.getElementById('boss-remixes'))
+      $('boss-remixes').onclick = () => showDialog('boss-remixes');
     if (document.getElementById('recoil-trials'))
       $('recoil-trials').onclick = () => openRecoilTrials();
     content.querySelectorAll<HTMLButtonElement>('[data-boss]').forEach((button) => {
@@ -2413,6 +2463,16 @@ function showDialog(kind: string) {
     });
     $('practice-back').onclick = backFromPractice;
     $('practice-import').onclick = () => showDialog('practice-import');
+  } else if (kind === 'boss-remixes') {
+    buildMenu = bossRemixMenu(
+      content,
+      weaponUnlocks().cleared ? read(BOSS_REMIXES_KEY) : null,
+      (encounter) => {
+        practiceTarget = encounter;
+        showDialog('practice-setup');
+      },
+      () => showDialog('practice'),
+    );
   } else if (kind === 'recoil-trials') {
     buildMenu = recoilTrialMenu(
       content,
@@ -2447,9 +2507,13 @@ function showDialog(kind: string) {
     content.innerHTML =
       '<p class="eyebrow">PRACTICE</p><h2 id="dialog-title">' +
       boss.name +
+      (encounter.remix ? ' · ' + BOSS_REMIXES[encounter.remix].name : '') +
       '</h2><p class="practice-note">Full health · Up to ' +
       boss.stage +
       ' upgrades</p>' +
+      (encounter.remix
+        ? '<p class="practice-note">' + BOSS_REMIXES[encounter.remix].hint + '</p>'
+        : '') +
       presetBest(encounter) +
       '<div class="practice-list">' +
       '<button id="practice-preset" class="practice-fight"><span>Preset</span><span aria-hidden="true">↗</span></button>' +
@@ -2459,7 +2523,7 @@ function showDialog(kind: string) {
     $('practice-preset').onclick = () => startPractice(encounter);
     $('practice-workshop').onclick = () => openPracticeBuild(encounter);
     $('practice-back').onclick = () => {
-      showDialog('practice');
+      showDialog(encounter.remix ? 'boss-remixes' : 'practice');
       content.querySelector<HTMLButtonElement>('[data-boss="' + encounter.kind + '"]')?.focus();
     };
   } else if (['practice-records', 'practice-import', 'practice-share'].includes(kind)) {
@@ -2467,8 +2531,9 @@ function showDialog(kind: string) {
     buildMenu = practiceRecordsMenu(content, {
       records: practiceRecords,
       known: discovered,
-      victories: encounters,
+      victories: practiceEncounters(),
       boss: kind === 'practice-records' ? practiceRecordsBoss : undefined,
+      remix: kind === 'practice-records' ? practiceRecordsRemix : undefined,
       share: kind === 'practice-share' ? sharedPracticeChallenge : undefined,
       start: startPracticeChallenge,
       exit: () =>
@@ -2881,7 +2946,7 @@ function showDialog(kind: string) {
         : '') +
       '<div class="actions"><button id="retry" class="primary" title="Retry · R">Retry ↗</button>' +
       (practiceWin ? '<button id="practice-share" class="quiet">Challenge a friend</button>' : '') +
-      (!activePracticeChallenge && canPractice(game.practice, encounters)
+      (!activePracticeChallenge && canPractice(game.practice, practiceEncounters())
         ? '<button id="practice-edit" class="quiet">Edit build</button>'
         : '') +
       '<button id="choose-fight" class="quiet"' +
@@ -2900,8 +2965,16 @@ function showDialog(kind: string) {
     const share = document.getElementById('practice-share');
     if (share)
       share.onclick = () => {
-        const { rules, kind, seed, mods, timeMs, hits } = practiceWin!;
-        sharedPracticeChallenge = { rules, kind, seed, mods: [...mods], timeMs, hits };
+        const { rules, kind, seed, mods, timeMs, hits, remix } = practiceWin!;
+        sharedPracticeChallenge = {
+          rules,
+          kind,
+          seed,
+          mods: [...mods],
+          timeMs,
+          hits,
+          ...(remix ? { remix } : {}),
+        };
         showDialog('practice-share');
       };
     $('menu').onclick = menu;
@@ -3110,6 +3183,13 @@ function showDialog(kind: string) {
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
           '</ul></details>'
         : '') +
+      (paused && game.level.bossRemix
+        ? '<p class="practice-note">Arena · ' +
+          BOSS_REMIXES[game.level.bossRemix].name +
+          '<br>' +
+          BOSS_REMIXES[game.level.bossRemix].hint +
+          '</p>'
+        : '') +
       '<div class="settings-links"><button id="open-credits" class="quiet settings-credits">About & credits</button><button id="open-report" class="quiet settings-credits">Report an issue</button></div></div><div class="actions"><button id="back" class="primary">' +
       (paused ? 'Resume' : 'Back') +
       '</button>' +
@@ -3123,7 +3203,7 @@ function showDialog(kind: string) {
           ? '<button id="retry" class="quiet">Restart Gauntlet</button>'
           : paused && game.practice
             ? '<button id="retry" class="quiet">Retry</button>' +
-              (!activePracticeChallenge && canPractice(game.practice, encounters)
+              (!activePracticeChallenge && canPractice(game.practice, practiceEncounters())
                 ? '<button id="practice-edit" class="quiet">Edit build</button>'
                 : '') +
               '<button id="choose-fight" class="quiet"' +

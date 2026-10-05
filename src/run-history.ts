@@ -13,6 +13,7 @@ import { validUnlocks, type LongevityId } from './longevity.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  bossRemixes?: 1;
   teamwork?: 1;
   recoilTrials?: true;
   encounters?: 1;
@@ -86,6 +87,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     const daily = !!dailyFromSeed(raw.seed) || isUnsupportedDailySeed(raw.seed);
     if (
       (raw.mode === 'daily') !== daily ||
+      (raw.bossRemixes !== undefined && (raw.bossRemixes !== 1 || raw.encounters !== 1 || daily)) ||
       (raw.encounters !== undefined && (raw.encounters !== 1 || daily)) ||
       (raw.teamwork !== undefined && (raw.teamwork !== 1 || raw.encounters !== 1 || daily)) ||
       (raw.recoilTrials !== undefined && (raw.recoilTrials !== true || daily)) ||
@@ -103,6 +105,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       continue;
     records.push({
       version: 1,
+      ...(raw.bossRemixes === 1 ? { bossRemixes: 1 as const } : {}),
       ...(raw.recoilTrials ? { recoilTrials: true as const } : {}),
       ...(raw.encounters === 1 ? { encounters: 1 as const } : {}),
       ...(raw.teamwork === 1 ? { teamwork: 1 as const } : {}),
@@ -155,6 +158,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        ...(game.bossRemixes ? { bossRemixes: 1 as const } : {}),
         ...(game.recoil.state ? { recoilTrials: true as const } : {}),
         ...(game.encounters ? { encounters: game.encounters } : {}),
         ...(game.teamwork.enabled ? { teamwork: 1 as const } : {}),

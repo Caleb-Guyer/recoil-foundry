@@ -165,7 +165,8 @@ export class PressureSystem {
       if (e && isBoss(e.kind)) {
         if (
           v.manual &&
-          ['press', 'kiln'].includes(e.kind) &&
+          (['press', 'kiln'].includes(e.kind) ||
+            (e.kind === 'condenser' && g.level.bossRemix?.startsWith('condenser-'))) &&
           (this.openings.get(e)?.next ?? 0) <= g.time
         ) {
           this.openings.set(e, {

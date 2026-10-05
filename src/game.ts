@@ -1,5 +1,6 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
+import { bossRemixLevel } from './boss-remix-layout.ts';
 import { TeamworkSystem, createSupport, isSupport, SUPPORT, type SupportRig } from './teamwork.ts';
 import { teamworkLevel } from './teamwork-layout.ts';
 import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
@@ -449,6 +450,7 @@ export class Game {
   practice: PracticeSession | null = null;
   gauntlet = new BossGauntlet(this);
   teamwork = new TeamworkSystem(this);
+  bossRemixes = false;
   practiceHits = 0;
   workshop = new WorkshopSystem(this);
   seed = '';
@@ -709,6 +711,7 @@ export class Game {
     this.start(save.seed, save, {
       kind: encounter.kind,
       seed: encounter.seed,
+      ...(encounter.remix ? { remix: encounter.remix } : {}),
       ...(mods === null ? {} : { build: [...save.mods] }),
     });
     return true;
@@ -764,6 +767,7 @@ export class Game {
     encounterRules: 0 | 1 = 1,
     recoilRules = true,
     teamworkRules = true,
+    remixRules = false,
   ) {
     this.workshop.active = workshop;
     this.gauntlet.reset();
@@ -794,6 +798,13 @@ export class Game {
       !workshop &&
       !/^RF-D\d+-/.test(this.seed) &&
       (save ? save.teamwork === 1 : !testRun && teamworkRules);
+    this.bossRemixes =
+      this.encounters === 1 &&
+      !practice &&
+      !testRun &&
+      !workshop &&
+      !/^RF-D\d+-/.test(this.seed) &&
+      (save ? save.bossRemixes === 1 : remixRules);
     this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
     this.uprising.run =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
@@ -955,6 +966,7 @@ export class Game {
       startingGun: this.startingGun,
       ...(this.encounters ? { encounters: this.encounters } : {}),
       ...(this.teamwork.enabled ? { teamwork: 1 as const } : {}),
+      ...(this.bossRemixes ? { bossRemixes: 1 as const } : {}),
       ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
       ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
       ...(this.uprising.run ? { uprising: structuredClone(this.uprising.run) } : {}),
@@ -1192,6 +1204,7 @@ export class Game {
     if (!escapeRoom && this.overtime)
       this.level = welderLevel(this.level, this.welder.state, this.stage);
     if (this.practice?.kind === 'welder') this.level = welderPracticeLevel(this.seed);
+    this.level = bossRemixLevel(this, this.level);
     if (
       !escapeRoom &&
       !this.overtime &&
@@ -3480,7 +3493,9 @@ export class Game {
       damage *= e.state === 'recover' || this.pressure.opening(e) ? 1.25 : 0.4;
     if (e.kind === 'kiln') damage *= e.state === 'recover' || this.pressure.opening(e) ? 1.35 : 0.4;
     if (e.kind === 'sorter') damage *= e.state === 'recover' ? 1.35 : 0.32;
-    if (e.kind === 'condenser') damage *= e.state === 'recover' ? 1.3 : 0.25;
+    if (e.kind === 'condenser')
+      damage *=
+        e.state === 'recover' || (this.level.bossRemix && this.pressure.opening(e)) ? 1.3 : 0.25;
     if (e.kind === 'switchboard')
       damage *= (e.switchboard?.opening ?? 0) > 0 ? 1.55 : e.state === 'recover' ? 1.25 : 0.6;
     if (e.kind === 'turbine') damage *= e.state === 'recover' ? 1.35 : 0.32;

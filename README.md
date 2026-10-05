@@ -16,6 +16,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Boss Remixes — version 4.10.0.** After your first Campaign victory, new runs can encounter two authored variants each of the Loader, Press and Condenser. Cargo braces, a transfer lift, steam valves and dry decks change how you approach their warned attack sequences. Encountered variants appear in Practice with real arena pictures, separate records and shareable challenges. Continue and Retry preserve the variants. [Release notes and isolated test links](docs/releases/4.10.0.md).
+
 **Machine Teamwork — version 4.9.0.** Repair Drones and Relay Units join fresh Campaign patrols after zone one. Cut their visible tethers to stop finite repairs or a charged patrol shot. Curated pairs arrive together and replace an existing patrol member. Read their behavior and actual artwork in the Logbook. [Release notes](docs/releases/4.9.0.md).
 
 **Boss Gauntlet — version 4.8.0.** Complete five boss fights with one gun, choosing between two opponents each round. Health carries forward; between fights, take one upgrade or a repair. Campaign victory unlocks the Gauntlet in Practice. Earn the Victor outfit and save best combat times for matching guns and routes. [Release notes](docs/releases/4.8.0.md).

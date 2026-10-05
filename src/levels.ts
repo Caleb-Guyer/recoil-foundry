@@ -95,6 +95,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  bossRemix?: import('./boss-remix-rules.ts').BossRemixId;
   teamworkIntro?: import('./teamwork.ts').SupportKind;
   uprising?: import('./uprising-model.ts').UprisingDistrict;
   security?: true;

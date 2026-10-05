@@ -30,7 +30,11 @@ export class LoaderArenaSystem {
   reset() {
     this.clear();
     const g = this.game;
-    if (g.level.id !== 'loader-bay' || !g.enemies.some((e) => e.kind === 'loader')) return;
+    if (
+      (g.level.id !== 'loader-bay' && !g.level.bossRemix?.startsWith('loader-')) ||
+      !g.enemies.some((e) => e.kind === 'loader')
+    )
+      return;
     this.active = true;
     for (const [i, index] of g.level.setpiece!.weak.entries()) {
       const rect = g.level.solids[index];

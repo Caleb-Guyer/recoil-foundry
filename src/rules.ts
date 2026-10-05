@@ -1,4 +1,5 @@
 import { validAreaEvent } from './area-events.ts';
+import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
 import { validFactory } from './factory.ts';
 import { validUprisingCheckpoint } from './uprising-model.ts';
 import { validSecurityRun } from './security.ts';
@@ -1135,6 +1136,8 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  bossRemixes?: 1;
+  bossRemix?: import('./boss-remix-rules.ts').BossRemixId;
   teamwork?: 1;
   encounters?: 1;
   startingGun?: StartingGun;
@@ -1318,6 +1321,25 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   )
     return null;
   const stages = legacy ? 12 : previous ? 16 : STAGES;
+  if (
+    d.bossRemixes !== undefined &&
+    (d.bossRemixes !== 1 || d.encounters !== 1 || d.version !== 6 || /^RF-D\d+-/.test(d.seed))
+  )
+    return null;
+  if (
+    d.bossRemix !== undefined &&
+    (!isBossRemix(d.bossRemix) ||
+      d.stage !== BOSS_REMIXES[d.bossRemix].stage ||
+      d.version !== 6 ||
+      d.bossRemixes !== undefined ||
+      d.overtime ||
+      d.detour ||
+      d.escape ||
+      d.region ||
+      d.security ||
+      /^RF-D\d+-/.test(d.seed))
+  )
+    return null;
   if (!validStartingGunSave(d.startingGun, d.seed)) return null;
   if (d.encounters !== undefined && (d.encounters !== 1 || /^RF-D\d+-/.test(d.seed))) return null;
   if (

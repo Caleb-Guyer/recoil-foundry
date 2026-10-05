@@ -1,4 +1,5 @@
 import { MODS } from './rules.ts';
+import { BOSS_REMIXES, type BossRemixId } from './boss-remix-rules.ts';
 import { PRACTICE_BOSSES, type Encounter, type PracticeBoss } from './practice.ts';
 import type { MenuBack } from './blueprint-menu.ts';
 import {
@@ -23,7 +24,10 @@ export function challengePreviewHtml(
   known: readonly string[],
 ): string {
   const access = challengeAccess(challenge, victories, known);
-  if (!access.earned) return '<p>Defeat this boss in a run to unlock its challenge.</p>';
+  if (!access.earned)
+    return challenge.remix
+      ? '<p>Encounter this remix after a Campaign victory to unlock its challenge.</p>'
+      : '<p>Defeat this boss in a run to unlock its challenge.</p>';
   if (!access.current)
     return '<p>This challenge uses a different balance version. Its target stays separate and cannot be raced in this version.</p>';
   const names = challenge.mods.map((id) =>
@@ -38,6 +42,9 @@ export function challengePreviewHtml(
     challenge.hits +
     ' hits</p>' +
     '<p class="practice-record-note">Shared target · Same arena and gun</p>' +
+    (challenge.remix
+      ? '<p class="practice-record-note">' + BOSS_REMIXES[challenge.remix].name + '</p>'
+      : '') +
     '<ul class="recap-build">' +
     (names.length
       ? names.map((name) => '<li>' + escape(name) + '</li>').join('')
@@ -57,6 +64,7 @@ interface Options {
   known: readonly string[];
   victories: readonly Encounter[];
   boss?: PracticeBoss;
+  remix?: BossRemixId;
   share?: PracticeChallenge;
   start(challenge: PracticeChallenge): void;
   exit(): void;
@@ -104,7 +112,10 @@ export function practiceRecordsMenu(root: HTMLElement, options: Options): MenuBa
   function preview(challenge: PracticeChallenge) {
     const access = challengeAccess(challenge, options.victories, options.known);
     screen(
-      access.earned && access.current ? PRACTICE_BOSSES[challenge.kind].name : 'Challenge.',
+      access.earned && access.current
+        ? PRACTICE_BOSSES[challenge.kind].name +
+            (challenge.remix ? ' · ' + BOSS_REMIXES[challenge.remix].name : '')
+        : 'Challenge.',
       challengePreviewHtml(challenge, options.victories, options.known),
       '<button id="challenge-start" class="primary"' +
         (access.allowed ? '' : ' disabled') +
@@ -186,7 +197,10 @@ export function practiceRecordsMenu(root: HTMLElement, options: Options): MenuBa
   }
   function list() {
     const records = options.records.filter(
-      (r) => r.kind === options.boss && options.victories.some((e) => e.kind === r.kind),
+      (r) =>
+        r.kind === options.boss &&
+        r.remix === options.remix &&
+        options.victories.some((e) => e.kind === r.kind && e.remix === r.remix),
     );
     const current = records.filter((r) => r.rules === PRACTICE_RULESET),
       archive = records.filter((r) => r.rules !== PRACTICE_RULESET);
@@ -209,6 +223,7 @@ export function practiceRecordsMenu(root: HTMLElement, options: Options): MenuBa
       'Practice records.',
       '<p class="practice-record-note">' +
         (options.boss ? PRACTICE_BOSSES[options.boss].name : '') +
+        (options.remix ? ' · ' + BOSS_REMIXES[options.remix].name : '') +
         ' · Separate records for each arena and gun</p>' +
         (current.length
           ? '<div class="practice-list">' + rows(current) + '</div>'

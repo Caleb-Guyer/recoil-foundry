@@ -1,4 +1,5 @@
 import type { Game } from './game.ts';
+import { isBossRemix, BOSS_REMIXES } from './boss-remix-rules.ts';
 import { validBlueprintMods } from './blueprints.ts';
 import { loadEncounters, practiceCheckpoint, PRACTICE_BOSSES, type Encounter } from './practice.ts';
 
@@ -31,6 +32,7 @@ const object = (value: unknown): value is Record<string, unknown> =>
 const keys = (value: Record<string, unknown>, expected: string[]) =>
   Object.keys(value).length === expected.length &&
   expected.every((key) => Object.hasOwn(value, key));
+const remixField = (value: Record<string, unknown>) => (value.remix === undefined ? [] : ['remix']);
 const integer = (n: unknown, min: number, max: number): n is number =>
   Number.isSafeInteger(n) && (n as number) >= min && (n as number) <= max;
 function validIdentity(value: Record<string, unknown>): boolean {
@@ -38,6 +40,10 @@ function validIdentity(value: Record<string, unknown>): boolean {
     !integer(value.rules, 1, 1000000) ||
     typeof value.kind !== 'string' ||
     !Object.hasOwn(PRACTICE_BOSSES, value.kind) ||
+    (value.remix !== undefined &&
+      (!isBossRemix(value.remix) ||
+        BOSS_REMIXES[value.remix].boss !== value.kind ||
+        value.seed !== 'REMIX-' + value.remix)) ||
     typeof value.seed !== 'string' ||
     !value.seed.length ||
     value.seed.length > 40 ||
@@ -66,7 +72,7 @@ function validScore(value: unknown): value is PracticeScore {
 export function validPracticeRecord(value: unknown): value is PracticeRecord {
   return (
     object(value) &&
-    keys(value, ['rules', 'kind', 'seed', 'mods', 'fastest', 'cleanest']) &&
+    keys(value, ['rules', 'kind', 'seed', 'mods', 'fastest', 'cleanest', ...remixField(value)]) &&
     validIdentity(value) &&
     validScore(value.fastest) &&
     validScore(value.cleanest) &&
@@ -75,7 +81,13 @@ export function validPracticeRecord(value: unknown): value is PracticeRecord {
   );
 }
 export function practiceBuildKey(build: PracticeBuild): string {
-  return JSON.stringify([build.rules, build.kind, build.seed, build.mods]);
+  return JSON.stringify([
+    build.rules,
+    build.kind,
+    build.seed,
+    build.mods,
+    ...(build.remix ? [build.remix] : []),
+  ]);
 }
 export function loadPracticeRecords(value: unknown): PracticeRecord[] {
   if (!Array.isArray(value)) return [];
@@ -113,7 +125,8 @@ export function snapshotPracticeWin(
     game.hp <= 0 ||
     game.combatEnemyCount ||
     game.seed !== game.practice.seed ||
-    game.stage !== PRACTICE_BOSSES[game.practice.kind].stage
+    game.stage !== PRACTICE_BOSSES[game.practice.kind].stage ||
+    game.level.bossRemix !== game.practice.remix
   )
     return null;
   const expected = practiceCheckpoint(game.practice, game.practice.build ?? null, game.mods);
@@ -122,6 +135,7 @@ export function snapshotPracticeWin(
     rules: PRACTICE_RULESET,
     kind: game.practice.kind,
     seed: game.seed,
+    ...(game.practice.remix ? { remix: game.practice.remix } : {}),
     mods: [...game.mods],
     timeMs: Math.round(game.elapsed * 100) * 10,
     hits: game.practiceHits,
@@ -131,6 +145,7 @@ export function snapshotPracticeWin(
     rules: win.rules,
     kind: win.kind,
     seed: win.seed,
+    ...(win.remix ? { remix: win.remix } : {}),
     mods: win.mods,
     fastest: { timeMs: win.timeMs, hits: win.hits, finishedAt: now },
     cleanest: { timeMs: win.timeMs, hits: win.hits, finishedAt: now },
@@ -139,7 +154,13 @@ export function snapshotPracticeWin(
     : null;
 }
 export function recordPracticeWin(value: unknown, win: PracticeWin) {
-  const identity = { rules: win.rules, kind: win.kind, seed: win.seed, mods: [...win.mods] };
+  const identity = {
+    rules: win.rules,
+    kind: win.kind,
+    seed: win.seed,
+    mods: [...win.mods],
+    ...(win.remix ? { remix: win.remix } : {}),
+  };
   const score = { timeMs: win.timeMs, hits: win.hits, finishedAt: win.finishedAt };
   const fresh = { ...identity, fastest: score, cleanest: score };
   if (win.rules !== PRACTICE_RULESET || !validPracticeRecord(fresh))
@@ -174,6 +195,7 @@ export function challengeFromRecord(record: PracticeRecord): PracticeChallenge {
     rules: record.rules,
     kind: record.kind,
     seed: record.seed,
+    ...(record.remix ? { remix: record.remix } : {}),
     mods: [...record.mods],
     timeMs: record.fastest.timeMs,
     hits: record.fastest.hits,
@@ -182,7 +204,7 @@ export function challengeFromRecord(record: PracticeRecord): PracticeChallenge {
 export function validPracticeChallenge(value: unknown): value is PracticeChallenge {
   return (
     object(value) &&
-    keys(value, ['rules', 'kind', 'seed', 'mods', 'timeMs', 'hits']) &&
+    keys(value, ['rules', 'kind', 'seed', 'mods', 'timeMs', 'hits', ...remixField(value)]) &&
     validIdentity(value) &&
     integer(value.timeMs, 1, 86400000) &&
     integer(value.hits, 0, 100000)
@@ -198,6 +220,7 @@ export function challengeCode(challenge: PracticeChallenge): string {
       challenge.mods,
       challenge.timeMs,
       challenge.hits,
+      ...(challenge.remix ? [challenge.remix] : []),
     ]),
   );
   return (
@@ -219,7 +242,7 @@ export function parseChallengeCode(text: string): PracticeChallenge {
         Uint8Array.from(binary, (c) => c.charCodeAt(0)),
       ),
     );
-    if (!Array.isArray(data) || data.length !== 6) throw new Error();
+    if (!Array.isArray(data) || ![6, 7].includes(data.length)) throw new Error();
     const challenge = {
       rules: data[0],
       kind: data[1],
@@ -227,6 +250,7 @@ export function parseChallengeCode(text: string): PracticeChallenge {
       mods: data[3],
       timeMs: data[4],
       hits: data[5],
+      ...(data.length === 7 ? { remix: data[6] } : {}),
     };
     if (!validPracticeChallenge(challenge) || challengeCode(challenge) !== code) throw new Error();
     return challenge;
@@ -239,7 +263,9 @@ export function challengeAccess(
   victories: readonly Encounter[],
   known: readonly string[],
 ) {
-  const earned = victories.some((item) => item.kind === challenge.kind);
+  const earned = victories.some(
+    (item) => item.kind === challenge.kind && item.remix === challenge.remix,
+  );
   const current = challenge.rules === PRACTICE_RULESET;
   const missing = challenge.mods.filter((id) => !known.includes(id)).length;
   return {

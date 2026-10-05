@@ -66,9 +66,9 @@ function updateFlak(g: Game, e: Enemy) {
   for (const angle of flakAngles(Math.atan2(e.aim.y, e.aim.x), e.phase === 1))
     g.enemyShot(e, angle, 10, 18, origin);
   e.attacks++;
-  // This is a firing cooldown, not the exposed crash/slam recovery state.
-  e.state = 'idle';
-  e.timer = 0.18;
+  // Remix fans expose the boss; standard fans retain their short firing cooldown.
+  e.state = g.level.bossRemix ? 'recover' : 'idle';
+  e.timer = g.level.bossRemix ? 1.05 : 0.18;
   g.onSound('enemy');
 }
 
@@ -237,7 +237,8 @@ export function updateLoader(g: Game, e: Enemy) {
       e.timer > 0 && (prop || weak ? contact!.t * 24 <= 15 : Math.abs(end.x - p.x) < nose - 1);
     if (crashed || e.timer <= 0) {
       e.state = 'recover';
-      e.timer = crashed ? 1.25 : 0.4;
+      e.timer = crashed ? (g.level.bossRemix ? 1.65 : 1.25) : g.level.bossRemix ? 0.85 : 0.4;
+      if (g.level.bossRemix) e.attacks++;
       Body.setVelocity(e.body, { x: 0, y: v.y });
       if (crashed) {
         if ((prop || weak) && contact)
@@ -283,7 +284,9 @@ export function updateLoader(g: Game, e: Enemy) {
     Body.setVelocity(e.body, { x: v.x + (speed - v.x) * 0.1, y: v.y });
     const blocked = Math.abs(g.lineEnd(p, { x: p.x + sign * nose, y: p.y }).x - p.x) < nose - 1;
     if (
-      counter &&
+      (counter ||
+        (g.level.bossRemix === 'loader-crossdock' && e.attacks % 2 === 1) ||
+        (g.level.bossRemix === 'loader-switchyard' && e.attacks % 3 === 2)) &&
       (!camping || grounded) &&
       !e.loaderClimb &&
       e.timer <= 0 &&
@@ -405,7 +408,7 @@ export function updatePress(g: Game, e: Enemy) {
       if (contact) Body.setPosition(e.body, { x: p.x, y: nextY - 0.05 });
       Body.setVelocity(e.body, { x: 0, y: 0 });
       e.state = 'recover';
-      e.timer = 0.8;
+      e.timer = g.level.bossRemix ? 1.05 : 0.8;
       e.attacks++;
       g.burst({ x: p.x, y: p.y + half }, 24, '#ffcb90', 5);
       g.feedback(6);
@@ -462,7 +465,13 @@ export function updatePress(g: Game, e: Enemy) {
       y: clamp((spot.y - p.y) * 0.12, -9, 9),
     });
     if (e.timer <= 0) {
-      if (counter && visible(g, bossMuzzle(e))) beginFlak(g, e);
+      if (
+        (counter ||
+          (g.level.bossRemix === 'press-split-die' && e.attacks % 2 === 1) ||
+          (g.level.bossRemix === 'press-stamping-line' && e.attacks % 3 === 2)) &&
+        visible(g, bossMuzzle(e))
+      )
+        beginFlak(g, e);
       else if (!counter && Math.abs(targetX - p.x) < 180 && Math.abs(p.y - 260) < 35) {
         e.attack = 'aimed';
         e.target = { x: targetX, y: g.pressSurface(targetX, p.y + half) };

@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
 import { Game } from './game.ts';
 import { Renderer } from './render.ts';
 import { createAuditorRig } from './auditor.ts';
@@ -21,6 +22,14 @@ export const ARCHIVE_STAGES: Record<string, number> = {
   'region:core': 9,
 };
 export function archiveCheckpoint(id: string): Checkpoint {
+  if (id.startsWith('remix:') && isBossRemix(id.slice(6))) {
+    const remix = id.slice(6) as import('./boss-remix-rules.ts').BossRemixId;
+    return {
+      ...testCheckpoint('REMIX-' + remix, BOSS_REMIXES[remix].stage),
+      version: 6,
+      bossRemix: remix,
+    };
+  }
   if (id.startsWith('trial:') && isRecoilTrial(id.slice(6)))
     return recoilTrialCheckpoint(id.slice(6) as import('./recoil-trial-rules.ts').RecoilTrialKind);
   const save: Checkpoint = {

@@ -41,6 +41,7 @@ export function progressMenu(
       ? ` · ${summary.recoilTrials} Recoil Trials · ${summary.recoilRecords} course records · ${summary.recoilGhosts} ghosts`
       : '') +
     (summary.gauntletRecords ? ` · ${summary.gauntletRecords} Gauntlet records` : '') +
+    (summary.bossRemixes ? ` · ${summary.bossRemixes} boss remixes` : '') +
     (summary.security ? ` · Security ${summary.security} unlocked` : '');
   const feedback = get('progress-feedback');
   let preview: ProgressBackup | null = null;
@@ -110,6 +111,7 @@ export function progressMenu(
           ? ` · ${imported.recoilTrials} Recoil Trials · ${imported.recoilRecords} course records · ${imported.recoilGhosts} ghosts`
           : '') +
         (imported.gauntletRecords ? ` · ${imported.gauntletRecords} Gauntlet records` : '') +
+        (imported.bossRemixes ? ` · ${imported.bossRemixes} boss remixes` : '') +
         (imported.security ? ` · Security ${imported.security} unlocked` : '');
       panel.hidden = false;
       feedback.textContent = '';
