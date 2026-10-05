@@ -11,6 +11,7 @@ import {
   type HuntKind,
 } from '../src/hunt-rules.ts';
 import { huntTestFromUrl } from '../src/hunt-test.ts';
+import { huntMuzzle } from '../src/hunts.ts';
 import { loadCheckpoint, type Checkpoint } from '../src/rules.ts';
 import {
   loadEncounters,
@@ -46,6 +47,27 @@ const idle = {
   fire: false,
   aim: { x: 1460, y: 705 },
 };
+test('Bulwark floor attacks start clear of the platforms and pressure the center lane', () => {
+  const g = new Game();
+  g.startTest(preview('bulwark'));
+  Body.setPosition(g.player, { x: 1000, y: 722 });
+  Body.setVelocity(g.player, { x: 0, y: 0 });
+  const e = g.enemies[0];
+  for (let n = 0; n < 1200 && g.mode === 'playing'; n++) {
+    const muzzle = huntMuzzle(e);
+    assert.equal(
+      Query.region(g.terrain, {
+        min: { x: muzzle.x - 5, y: muzzle.y - 5 },
+        max: { x: muzzle.x + 5, y: muzzle.y + 5 },
+      }).length,
+      0,
+      'the actual projectile origin must clear the platform hull',
+    );
+    const dx = 1000 - g.player.position.x - g.player.velocity.x * 5;
+    g.tick(1 / 60, { ...idle, left: dx < -8, right: dx > 8 });
+  }
+  assert(g.hp < 100, 'live, warned volleys must reach a stationary player in the center lane');
+});
 function preview(kind: HuntKind, gun = 'pistol') {
   return huntTestFromUrl(new URL(`https://test/?test=hunt&hunt=${kind}&gun=${gun}&v=1`))!;
 }

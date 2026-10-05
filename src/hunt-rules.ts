@@ -100,8 +100,8 @@ export function huntLevel(kind: HuntKind): Level {
   const platforms =
     kind === 'bulwark'
       ? [
-          { x: 520, y: 605, w: 180, h: 18 },
-          { x: 1280, y: 605, w: 180, h: 18 },
+          { x: 520, y: 585, w: 180, h: 18 },
+          { x: 1280, y: 585, w: 180, h: 18 },
         ]
       : kind === 'cableweaver'
         ? [
