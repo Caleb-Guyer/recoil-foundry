@@ -1,3 +1,4 @@
+import { isHunt } from './hunt-rules.ts';
 import type { Game } from './game.ts';
 import { isBossRemix, BOSS_REMIXES } from './boss-remix-rules.ts';
 import { validBlueprintMods } from './blueprints.ts';
@@ -126,7 +127,8 @@ export function snapshotPracticeWin(
     game.combatEnemyCount ||
     game.seed !== game.practice.seed ||
     game.stage !== PRACTICE_BOSSES[game.practice.kind].stage ||
-    game.level.bossRemix !== game.practice.remix
+    game.level.bossRemix !== game.practice.remix ||
+    (isHunt(game.practice.kind) && game.level.hunt !== game.practice.kind)
   )
     return null;
   const expected = practiceCheckpoint(game.practice, game.practice.build ?? null, game.mods);

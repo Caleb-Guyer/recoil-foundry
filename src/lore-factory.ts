@@ -3,6 +3,21 @@ import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 export const MACHINE_LORE = {
+  cableweaver: [
+    'Cable vault · unauthorized connection',
+    'M. Vale · maintenance',
+    'The reels were built to join two test terminals. Somebody replaced the continuity check with a proximity sensor.\n\nThe anchors still have manual disconnects. A broken terminal opens the circuit; the machine has to stop and check what went wrong.',
+  ],
+  bulwark: [
+    'Plate depot · mobile protection',
+    'E. Holt · safety',
+    'These plates were supposed to protect a maintenance crew. The carrier has decided it is the maintenance crew.\n\nThe feet are on rollers. Shots move them, and there are only two sets in the rack. Try the height advantage before emptying the whole tool into the steel.',
+  ],
+  demolisher: [
+    'Demolition bay · remaining stock',
+    'T. Orr · dispatch',
+    'Six demolition charges were signed out. No demolition permit followed them.\n\nThe timers and indicator lamps are still factory standard. Break the lit housing and the charge is safe. Please do not wait beside it to confirm the paperwork.',
+  ],
   repairer: [
     'Field service · finite supply',
     'M. Vale · maintenance',

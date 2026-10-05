@@ -1,3 +1,4 @@
+import { isHunt, huntSeed, HUNTS } from './hunt-rules.ts';
 import { loadUnlocks } from './longevity.ts';
 import { BOSS_REMIXES, isBossRemix, type BossRemixId } from './boss-remix-rules.ts';
 import { breakableSolids } from './destruction-layout.ts';
@@ -10,6 +11,9 @@ import { bossStage, availableMods, rewardMods, seeded, type Checkpoint } from '.
 // Encounter-only records cannot prove a win; start a separate victory history.
 export const VICTORIES_KEY = 'rf-boss-victories-v1';
 export const PRACTICE_BOSSES = {
+  cableweaver: { name: HUNTS.cableweaver.name, stage: 8 },
+  bulwark: { name: HUNTS.bulwark.name, stage: 8 },
+  demolisher: { name: HUNTS.demolisher.name, stage: 8 },
   welder: { name: 'The Welder', stage: 19 },
   switchboard: { name: 'The Switchboard', stage: bossStage(2) },
   loader: { name: 'The Loader', stage: bossStage(0) },
@@ -125,10 +129,12 @@ export function loadEncounters(value: unknown): Encounter[] {
     )
       continue;
     const kind = item.kind as PracticeBoss;
+    if (isHunt(kind) && (item.seed !== huntSeed(kind) || item.remix !== undefined)) continue;
     // Existing victories predate alternate bosses. Keep their original arenas
     // available for earned practice even if that seed now selects a new boss.
     if (
       item.remix !== undefined ||
+      isHunt(kind) ||
       kind === 'welder' ||
       kind === 'switchboard' ||
       kind === 'condenser' ||
@@ -156,6 +162,7 @@ export function practiceCheckpoint(
   const save = testCheckpoint(encounter.seed, stage);
   if (mods !== null) save.mods = practiceBuild(encounter.kind, mods, known);
   if (loadUnlocks(save.mods).length) save.unlocks = loadUnlocks(save.mods);
+  if (isHunt(encounter.kind)) return { ...save, version: 6, huntTest: encounter.kind };
   if (encounter.remix) return { ...save, version: 6, bossRemix: encounter.remix };
   return encounter.kind === 'switchboard'
     ? { ...save, version: 6, region: 'annex', annexVersion: 5 }

@@ -12,6 +12,9 @@ export const VOLATILE_TELL = 0.9;
 export const VOLATILE_RADIUS = 135;
 
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
+  cableweaver: { w: 64, h: 60, hp: 560 },
+  bulwark: { w: 64, h: 60, hp: 680 },
+  demolisher: { w: 64, h: 60, hp: 600 },
   repairer: { w: 28, h: 28, hp: 58 },
   relay: { w: 28, h: 28, hp: 64 },
   welder: { w: 58, h: 60, hp: WELDER_HP },
@@ -65,6 +68,9 @@ export function flakAngles(aim: number, enraged: boolean): number[] {
   );
 }
 export const isBoss = (kind: EnemyKind) =>
+  kind === 'cableweaver' ||
+  kind === 'bulwark' ||
+  kind === 'demolisher' ||
   kind === 'welder' ||
   kind === 'switchboard' ||
   kind === 'auditor' ||

@@ -401,6 +401,16 @@ dialog.practice-dialog {
 .practice-fight > span:last-child {
   color: var(--muted);
 }
+.hunt-practice-image {
+  width: 112px;
+  height: 56px;
+  flex: 0 0 112px;
+  margin-right: 16px;
+  border-radius: 3px;
+}
+.hunt-practice-image + span {
+  flex: 1;
+}
 .recoil-course-actions {
   display: flex;
   align-items: center;

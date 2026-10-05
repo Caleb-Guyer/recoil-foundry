@@ -1,3 +1,4 @@
+import { validHunt, huntDetour } from './hunt-rules.ts';
 import { validAreaEvent } from './area-events.ts';
 import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
 import { validFactory } from './factory.ts';
@@ -1136,6 +1137,9 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  huntRules?: 1;
+  hunt?: import('./hunt-rules.ts').HuntSave;
+  huntTest?: import('./hunt-rules.ts').HuntKind;
   bossRemixes?: 1;
   bossRemix?: import('./boss-remix-rules.ts').BossRemixId;
   teamwork?: 1;
@@ -1340,6 +1344,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       /^RF-D\d+-/.test(d.seed))
   )
     return null;
+  if (!validHunt(d)) return null;
   if (!validStartingGunSave(d.startingGun, d.seed)) return null;
   if (d.encounters !== undefined && (d.encounters !== 1 || /^RF-D\d+-/.test(d.seed))) return null;
   if (
@@ -1480,11 +1485,16 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (!/^RF-D\d+-/.test(d.seed) || d.route === dailyRoute(d.seed, d.stage)))) &&
     (!!overtime ||
       (d.detour === undefined && d.detours === undefined) ||
-      d.mods.length === d.stage + (d.detour ? 1 : 0) + completed.length - missed + courierBonus) &&
+      d.mods.length ===
+        d.stage +
+          (d.detour && !huntDetour(d) ? 1 : 0) +
+          completed.length -
+          missed +
+          courierBonus) &&
     (d.detour === undefined ||
       (d.detour === true &&
-        d.stage % rooms === rooms - 2 &&
-        (legacy || previous || isDetourStage(d.stage)) &&
+        (huntDetour(d) ||
+          (d.stage % rooms === rooms - 2 && (legacy || previous || isDetourStage(d.stage)))) &&
         d.escape === undefined)) &&
     (d.detours === undefined || (d.detours !== null && Array.isArray(d.detours))) &&
     (d.escape === undefined ||

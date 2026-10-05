@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { isHunt, huntSeed } from './hunt-rules.ts';
 import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
 import { Game } from './game.ts';
 import { Renderer } from './render.ts';
@@ -22,6 +23,10 @@ export const ARCHIVE_STAGES: Record<string, number> = {
   'region:core': 9,
 };
 export function archiveCheckpoint(id: string): Checkpoint {
+  if (id.startsWith('hunt:') && isHunt(id.slice(5))) {
+    const kind = id.slice(5) as import('./hunt-rules.ts').HuntKind;
+    return { ...testCheckpoint(huntSeed(kind), 8), version: 6, huntTest: kind };
+  }
   if (id.startsWith('remix:') && isBossRemix(id.slice(6))) {
     const remix = id.slice(6) as import('./boss-remix-rules.ts').BossRemixId;
     return {

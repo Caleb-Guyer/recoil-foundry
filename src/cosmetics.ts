@@ -2,6 +2,22 @@ import type { CommendationId } from './commendations.ts';
 
 export const COSMETICS_KEY = 'rf-cosmetics-v1';
 export const GUN_FINISHES = {
+  copperline: {
+    name: 'Copperline',
+    shell: '#735b42',
+    face: '#9de4d8',
+    trim: '#d4aa73',
+    light: '#baf1e7',
+    unlock: 'cable-cut',
+  },
+  fusekeeper: {
+    name: 'Fusekeeper',
+    shell: '#986f48',
+    face: '#edbd86',
+    trim: '#3f5156',
+    light: '#f7d8a3',
+    unlock: 'fuse-pulled',
+  },
   aeronaut: {
     name: 'Aeronaut',
     shell: '#476e78',
@@ -92,6 +108,13 @@ export const GUN_FINISHES = {
   },
 } as const;
 export const OUTFITS = {
+  sentinel: {
+    name: 'Sentinel',
+    body: '#6a8875',
+    boots: '#354d46',
+    trim: '#dce5b9',
+    unlock: 'plate-breaker',
+  },
   victor: {
     name: 'Victor',
     body: '#597c72',

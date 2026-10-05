@@ -27,6 +27,9 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'cableweaver'
+  | 'bulwark'
+  | 'demolisher'
   | 'repairer'
   | 'relay'
   | 'welder'
@@ -95,6 +98,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  hunt?: import('./hunt-rules.ts').HuntKind;
   bossRemix?: import('./boss-remix-rules.ts').BossRemixId;
   teamworkIntro?: import('./teamwork.ts').SupportKind;
   uprising?: import('./uprising-model.ts').UprisingDistrict;

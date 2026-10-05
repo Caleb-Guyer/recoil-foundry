@@ -13,6 +13,7 @@ import { validUnlocks, type LongevityId } from './longevity.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  huntRules?: 1;
   bossRemixes?: 1;
   teamwork?: 1;
   recoilTrials?: true;
@@ -87,6 +88,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     const daily = !!dailyFromSeed(raw.seed) || isUnsupportedDailySeed(raw.seed);
     if (
       (raw.mode === 'daily') !== daily ||
+      (raw.huntRules !== undefined && (raw.huntRules !== 1 || raw.encounters !== 1 || daily)) ||
       (raw.bossRemixes !== undefined && (raw.bossRemixes !== 1 || raw.encounters !== 1 || daily)) ||
       (raw.encounters !== undefined && (raw.encounters !== 1 || daily)) ||
       (raw.teamwork !== undefined && (raw.teamwork !== 1 || raw.encounters !== 1 || daily)) ||
@@ -105,6 +107,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       continue;
     records.push({
       version: 1,
+      ...(raw.huntRules === 1 ? { huntRules: 1 as const } : {}),
       ...(raw.bossRemixes === 1 ? { bossRemixes: 1 as const } : {}),
       ...(raw.recoilTrials ? { recoilTrials: true as const } : {}),
       ...(raw.encounters === 1 ? { encounters: 1 as const } : {}),
@@ -158,6 +161,7 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        ...(game.hunts.enabled ? { huntRules: 1 as const } : {}),
         ...(game.bossRemixes ? { bossRemixes: 1 as const } : {}),
         ...(game.recoil.state ? { recoilTrials: true as const } : {}),
         ...(game.encounters ? { encounters: game.encounters } : {}),

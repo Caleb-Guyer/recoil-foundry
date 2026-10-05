@@ -76,6 +76,9 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
     spawn.elite
       ? 20
       : {
+          cableweaver: 30,
+          bulwark: 30,
+          demolisher: 30,
           welder: 30,
           repairer: 4,
           relay: 5,

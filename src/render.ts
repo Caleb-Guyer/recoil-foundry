@@ -1,3 +1,4 @@
+import { drawHuntEnemy, drawHuntProps, drawHunts } from './hunt-art.ts';
 import { drawMelt } from './melt-through.ts';
 import { drawCombatImpacts, drawNail, enemyPose, playerPose, roundFeel } from './combat-feel.ts';
 import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
@@ -175,6 +176,7 @@ export class Renderer {
     const c = this.ctx,
       g = this.game;
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (drawHuntEnemy(c, e, portrait)) continue;
       if (e.kind === 'switchboard') {
         drawSwitchboard(c, e, this.reduced);
         continue;
@@ -706,6 +708,7 @@ export class Renderer {
     drawCallerWarnings(c, g);
     drawSpoof(c, g, this.reduced);
     this.drawProps();
+    drawHunts(c, g);
     drawUprising(c, g);
     drawWelds(c, g, this.reduced);
     drawMelt(c, g, this.reduced);
@@ -1449,9 +1452,10 @@ export class Renderer {
   drawProps() {
     const c = this.ctx,
       g = this.game;
+    drawHuntProps(c, g);
     drawCargoCables(c, g, this.reduced);
     for (const prop of g.props.items) {
-      if (prop.uprising || prop.kind === 'fuse') continue;
+      if (prop.hunt || prop.uprising || prop.kind === 'fuse') continue;
       if (prop.auditCase) {
         drawCompanyCase(c, g, prop);
         continue;

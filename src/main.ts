@@ -75,6 +75,9 @@ import { presentationTestFromUrl, finishPresentationTest } from './presentation-
 import { combatFeelTestFromUrl } from './combat-feel-test.ts';
 import { encounterTestFromUrl } from './encounter-test.ts';
 import { teamworkTestFromUrl } from './teamwork-test.ts';
+import { huntTestFromUrl } from './hunt-test.ts';
+import { HUNTS, isHunt, huntSeed } from './hunt-rules.ts';
+import { drawArchiveImages } from './archive-images.ts';
 import { bossRemixTestFromUrl } from './boss-remix-test.ts';
 import {
   BOSS_REMIXES,
@@ -435,7 +438,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Boss Remixes</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Rare Miniboss Hunts</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -554,6 +557,7 @@ let linkedRunTest =
   combatFeelTestFromUrl(entryUrl) ??
   encounterTestFromUrl(entryUrl) ??
   teamworkTestFromUrl(entryUrl) ??
+  huntTestFromUrl(entryUrl) ??
   bossRemixTestFromUrl(entryUrl) ??
   upgradePreviewTestFromUrl(entryUrl) ??
   auditorTestFromUrl(entryUrl) ??
@@ -931,6 +935,11 @@ function updateTitle() {
     $('play').textContent = 'Test the Sorting Pit';
     $('title-hint').textContent = 'Reclamation. R to restart test. Progress is untouched.';
   }
+  if (linkedRunTest?.huntTest) {
+    $('play').textContent = 'Test ' + HUNTS[linkedRunTest.huntTest].name;
+    $('title-hint').textContent =
+      HUNTS[linkedRunTest.huntTest].hint + ' R to retry. Progress stays untouched.';
+  }
   if (linkedRunTest?.bossRemix) {
     $('play').textContent = 'Test ' + BOSS_REMIXES[linkedRunTest.bossRemix].name;
     $('title-hint').textContent = 'Boss remix. R restarts this fight. No progress is recorded.';
@@ -1150,6 +1159,7 @@ function start(
   recoilOverride?: boolean,
   teamworkOverride?: boolean,
   remixOverride?: boolean,
+  huntOverride?: boolean,
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1210,7 +1220,7 @@ function start(
     (retry
       ? dailyFromSeed(game.seed)
         ? retrySeed(game.seed)
-        : game.bossRemixes
+        : game.bossRemixes || game.hunts.enabled
           ? game.seed
           : freshSeed()
       : (seedOverride ?? linkedDaily?.seed ?? seedParam ?? freshSeed()));
@@ -1248,6 +1258,7 @@ function start(
       url.searchParams.delete('ev');
       url.searchParams.delete('sv');
       url.searchParams.delete('bv');
+      url.searchParams.delete('hv');
     } else {
       url.searchParams.set('sg', selectedStartingGun);
     }
@@ -1305,6 +1316,10 @@ function start(
         ? game.bossRemixes
         : weaponUnlocks().cleared &&
           !(seedParam === seed && entryUrl.searchParams.get('bv') === '0')),
+    huntOverride ??
+      (retry
+        ? game.hunts.enabled
+        : !(seedParam === seed && entryUrl.searchParams.get('hv') === '0')),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1715,6 +1730,7 @@ function replayFinishedRun(run: RunRecap) {
   url.searchParams.set('ev', String(run.encounters ?? 0));
   url.searchParams.set('sv', String(run.teamwork ?? 0));
   url.searchParams.set('bv', String(run.bossRemixes ?? 0));
+  url.searchParams.set('hv', String(run.huntRules ?? 0));
   url.searchParams.set('tv', run.recoilTrials ? '1' : '0');
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   url.searchParams.set('ul', (run.unlocks ?? []).join(','));
@@ -1738,6 +1754,7 @@ function replayFinishedRun(run: RunRecap) {
     !!run.recoilTrials,
     run.teamwork === 1,
     run.bossRemixes === 1,
+    run.huntRules === 1,
   );
 }
 function workshopFromRun(run: RunRecap) {
@@ -1756,6 +1773,10 @@ function backFromHistory() {
   else resume();
 }
 function backFromLogbook() {
+  if (game.mode === 'upgrade' && game.hunts.rewarding && !logbookFromWorkshop) {
+    showDialog('upgrade');
+    return;
+  }
   if (logbookFromWorkshop) {
     logbookFromWorkshop = false;
     showDialog('workshop');
@@ -1958,6 +1979,17 @@ game.onCampaignClear = (score) => {
 game.onHaptic = (kind, strength) => {
   if (inputDevice === 'controller' && pageActive && document.hasFocus() && !document.hidden)
     controller.rumble(kind, strength, performance.now());
+};
+game.hunts.onClear = (kind) => {
+  progress.checkExternal();
+  if (progress.blocked) return;
+  const victory = { kind, seed: huntSeed(kind) };
+  if (!encounters.some((r) => r.kind === kind)) {
+    encounters.push(victory);
+    write(VICTORIES_KEY, encounters);
+  }
+  updateArchive();
+  updateTitle();
 };
 game.onBossDefeated = (kind) => {
   if (game.practice || game.testRun || game.workshop.active) return;
@@ -2179,11 +2211,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">Familiar machines. New tactics.</h2>' +
-      '<p class="update-tagline">Read the arena. Make your opening.</p>' +
-      '<dl class="update-notes"><div><dt>Return to the factory.</dt><dd>After a Campaign victory, new runs can remix the Loader, Press and Condenser. Each has two authored arenas with distinct attack sequences.</dd></div>' +
-      '<div><dt>Use the machinery.</dt><dd>Break cargo braces, ride a transfer lift, or shoot a ready steam valve to expose armor. Every volley and machinery release keeps its warning.</dd></div>' +
-      '<div><dt>Learn the fight.</dt><dd>Encounter a remix to open it in Practice, with real arena photographs. Continue and Retry keep the run’s variants; older saves retain their original fights.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">An unexpected assignment.</h2>' +
+      '<p class="update-tagline">Take the side door. Bring back something worth keeping.</p>' +
+      '<dl class="update-notes"><div><dt>Find a rare hunt.</dt><dd>Campaign runs can offer one optional side room from zone two onward. Clear the patrol, then jump at the marked hunt door. Taking the main exit skips it.</dd></div>' +
+      '<div><dt>Three machines. Three openings.</dt><dd>Cut The Cableweaver’s live cables, push The Bulwark’s shield plates, or shoot The Demolisher’s planted charges before they detonate.</dd></div>' +
+      '<div><dt>Keep the reward.</dt><dd>Choose a repair or a free upgrade reroll. First victories also earn appearances and Practice fights, with actual machine portraits in the Logbook. Continue and Retry keep the hunt.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2427,7 +2459,15 @@ function showDialog(kind: string) {
           (record) =>
             '<button class="practice-fight" data-boss="' +
             record.kind +
-            '"><span>' +
+            '">' +
+            (isHunt(record.kind)
+              ? '<canvas class="hunt-practice-image" data-archive-image="enemy:' +
+                record.kind +
+                '" aria-label="' +
+                PRACTICE_BOSSES[record.kind].name +
+                '"></canvas>'
+              : '') +
+            '<span>' +
             PRACTICE_BOSSES[record.kind].name +
             '</span><span aria-hidden="true">↗</span></button>',
         )
@@ -2445,6 +2485,7 @@ function showDialog(kind: string) {
         ? '<button id="recoil-trials" class="practice-fight"><span>Recoil Trials</span><span aria-hidden="true">↗</span></button>'
         : '') +
       '</div><div class="actions"><button id="practice-import" class="quiet">Import challenge</button><button id="practice-back" class="quiet">Back</button></div>';
+    drawArchiveImages(content);
     if (document.getElementById('shaft-trials')) $('shaft-trials').onclick = () => openTrials();
     if (document.getElementById('boss-gauntlet'))
       $('boss-gauntlet').onclick = () => showDialog('gauntlet-setup');
@@ -2639,6 +2680,42 @@ function showDialog(kind: string) {
       uprisingMap(game) +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = () => showDialog('pause');
+  } else if (kind === 'upgrade' && game.hunts.rewarding) {
+    const hunt = game.hunts.state!.kind,
+      info = HUNTS[hunt],
+      ledger = loadRunRewards(read(RUN_REWARDS_KEY)),
+      earned =
+        runCommendations.includes(info.commendation) ||
+        (ledger?.seed === game.seed &&
+          commendationRewards(info.commendation).some((id) => ledger.ids.includes(id)));
+    content.innerHTML =
+      '<p class="eyebrow">OPTIONAL HUNT · COMPLETE</p><h2 id="dialog-title">' +
+      info.name +
+      ' stopped.</h2><p>Choose one, then return to the cleared patrol.</p>' +
+      (earned ? rewardCards(commendationRewards(info.commendation)) : '') +
+      '<div class="choices"><button class="mod" data-hunt-reward="repair"><strong>Field repair</strong><span class="mod-copy">Restore up to 30 health. Current health: ' +
+      Math.ceil(game.hp) +
+      '.</span></button><button class="mod" data-hunt-reward="reroll"><strong>Upgrade reroll</strong><span class="mod-copy">Keep one free reroll for your next upgrade choice.</span></button></div><p class="practice-record-note">' +
+      info.name +
+      ' is now available in Practice.</p>';
+    drawRewardImages(content, game);
+    const rewardsButton = document.getElementById('earned-rewards');
+    if (rewardsButton)
+      rewardsButton.onclick = () => {
+        logbookView.section = 'commendations';
+        logbookView.selected = 'commendation:' + info.commendation;
+        showDialog('logbook');
+      };
+    content.querySelectorAll<HTMLButtonElement>('[data-hunt-reward]').forEach((button) => {
+      button.onclick = () => {
+        sound.unlock();
+        const reward = button.dataset.huntReward as 'repair' | 'reroll';
+        closeDialog();
+        game.hunts.choose(reward);
+        renderer.reset();
+        canvas.focus();
+      };
+    });
   } else if (kind === 'upgrade') {
     content.innerHTML =
       '<p class="eyebrow">' +
@@ -2721,7 +2798,7 @@ function showDialog(kind: string) {
           ' title="' +
           (game.rewardRerolled
             ? 'Once per reward'
-            : !game.areaEvents.freeReroll && game.hp <= REROLL_COST
+            : !game.hunts.freeReroll && !game.areaEvents.freeReroll && game.hp <= REROLL_COST
               ? 'Requires more than ' + REROLL_COST + ' health'
               : !game.canReroll
                 ? 'No full set of new upgrades available'
@@ -2729,7 +2806,7 @@ function showDialog(kind: string) {
           '">' +
           (game.rewardRerolled
             ? 'Reroll used'
-            : game.areaEvents.freeReroll
+            : game.hunts.freeReroll || game.areaEvents.freeReroll
               ? 'Reroll · free'
               : 'Reroll · −' + REROLL_COST + ' health') +
           '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
@@ -2752,7 +2829,7 @@ function showDialog(kind: string) {
     if (reroll)
       reroll.onclick = () => {
         sound.unlock();
-        const free = game.areaEvents.freeReroll;
+        const free = game.hunts.freeReroll || game.areaEvents.freeReroll;
         if (game.rerollReward()) {
           $('reward-status').textContent = free
             ? 'Choices replaced. Salvage used.'
@@ -3790,6 +3867,16 @@ window.addEventListener('keydown', (e) => {
   }
   if (game.mode === 'upgrade') {
     const i = Number(e.key) - 1;
+    if (game.hunts.rewarding) {
+      if (i === 0 || i === 1) {
+        sound.unlock();
+        closeDialog();
+        game.hunts.choose(i === 0 ? 'repair' : 'reroll');
+        renderer.reset();
+        canvas.focus();
+      }
+      return;
+    }
     if (game.uprising.choices.length) {
       const route = game.uprising.choices[i];
       if (route) {

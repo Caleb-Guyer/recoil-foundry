@@ -1,4 +1,5 @@
 import { planWelder, welderPracticeLevel } from '../src/welder-layout.ts';
+import { isHunt, huntSeed, huntLevel } from '../src/hunt-rules.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { switchboardLevel } from '../src/switchboard-layout.ts';
@@ -31,6 +32,7 @@ function step(g: Game, n = 1) {
   for (let i = 0; i < n; i++) g.tick(1 / 60, idle);
 }
 function record(kind: PracticeBoss, mirrored = false): Encounter {
+  if (isHunt(kind)) return { kind, seed: huntSeed(kind) };
   for (let i = 0; i < 100; i++) {
     const seed = 'practice-check-' + i,
       level =
@@ -83,7 +85,7 @@ test('all bosses accept legal custom guns within their normal upgrade budget in 
     build: string[] = [];
   while (build.length < 20) build.push(availableMods(build, true)[0].id);
   for (const kind of Object.keys(PRACTICE_BOSSES) as PracticeBoss[])
-    for (const mirrored of [false, true]) {
+    for (const mirrored of isHunt(kind) ? [false] : [false, true]) {
       const g = new Game(),
         entry = record(kind, mirrored),
         limit = PRACTICE_BOSSES[kind].stage;
@@ -274,19 +276,22 @@ test('all normal boss defeats unlock practice, but ordinary enemy kills do not',
   g.hitEnemy(g.enemies[0], 99999);
   assert.deepEqual(victories, []);
   for (const kind of Object.keys(PRACTICE_BOSSES) as PracticeBoss[]) {
-    if (kind === 'welder') continue; // Its Overtime wave/unlock is covered in welder.test.ts.
+    if (kind === 'welder' || isHunt(kind)) continue; // Overtime and optional hunt victories have their own eligibility checks.
     const entry = record(kind);
     g.start(entry.seed, practiceCheckpoint(entry)!);
     g.enemies[0].spawn = 0;
     g.hitEnemy(g.enemies[0], 99999);
     assert.equal(victories.at(-1), kind);
   }
-  assert.equal(victories.length, Object.keys(PRACTICE_BOSSES).length - 1);
+  assert.equal(
+    victories.length,
+    Object.keys(PRACTICE_BOSSES).filter((kind) => !isHunt(kind)).length - 1,
+  );
 });
 
 test('every practice boss keeps its discovered arena and gets the right number of real upgrades', () => {
   for (const kind of Object.keys(PRACTICE_BOSSES) as PracticeBoss[])
-    for (const mirror of [false, true]) {
+    for (const mirror of isHunt(kind) ? [false] : [false, true]) {
       const entry = record(kind, mirror),
         g = new Game(),
         saved: unknown[] = [];
@@ -302,11 +307,13 @@ test('every practice boss keeps its discovered arena and gets the right number o
       assert.equal(g.enemies[0].hp, g.enemies[0].maxHp);
       assert.deepEqual(
         g.level,
-        kind === 'welder'
-          ? welderPracticeLevel(entry.seed)
-          : kind === 'switchboard'
-            ? switchboardLevel(entry.seed)
-            : getLevel(entry.seed, g.stage),
+        isHunt(kind)
+          ? huntLevel(kind)
+          : kind === 'welder'
+            ? welderPracticeLevel(entry.seed)
+            : kind === 'switchboard'
+              ? switchboardLevel(entry.seed)
+              : getLevel(entry.seed, g.stage),
       );
       assert.equal(g.level.mirrored, mirror);
       assert.equal(g.elapsed, 0);

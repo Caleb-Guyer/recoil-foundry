@@ -9,6 +9,7 @@ import type { PracticeBoss } from '../src/practice.ts';
 import { auditorTestFromUrl } from '../src/auditor-layout.ts';
 import { switchboardTestFromUrl } from '../src/switchboard-layout.ts';
 import { seeded } from '../src/rules.ts';
+import { isHunt, huntSeed } from '../src/hunt-rules.ts';
 
 const { Body } = Matter;
 const idle = {
@@ -27,7 +28,9 @@ export function campingRoom(kind: (typeof kinds)[number], mirror: boolean) {
   common._nextId = common._seed = 0;
   Math.random = seeded('boss-camping-particles');
   const g = new Game();
-  if (kind === 'auditor') {
+  if (isHunt(kind)) {
+    g.startPractice({ kind, seed: huntSeed(kind) });
+  } else if (kind === 'auditor') {
     g.startTest(auditorTestFromUrl(new URL('https://test/?test=auditor&phase=hunt'))!);
     for (let n = 0; n < 300 && !g.auditor.enemy; n++) g.tick(1 / 60, idle);
   } else if (kind === 'switchboard') {

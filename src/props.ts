@@ -20,6 +20,7 @@ export const PROP_STATS = {
   rubble: { w: 26, h: 18, hp: 24 },
 };
 export interface Prop {
+  hunt?: 'plate' | 'anchor' | 'mine';
   uprising?: 'generator' | 'relay' | 'prototype';
   playerArmed?: true;
   welded?: true;
@@ -271,6 +272,10 @@ export class PropSystem {
     directFire = false,
     playerDamage = directFire || !!(source?.friendly && !source.allied),
   ) {
+    if (prop.hunt) {
+      this.game.hunts.hitProp(prop, damage, velocity, playerDamage);
+      return;
+    }
     if (prop.kind === 'fuse') {
       this.game.areaEvents.hitFuse(prop, damage, playerDamage);
       return;
@@ -326,6 +331,10 @@ export class PropSystem {
     else this.hit(prop, damage, velocity);
   }
   break(prop: Prop, source?: Shot, playerDamage = !!(source?.friendly && !source.allied)) {
+    if (prop.hunt) {
+      this.game.hunts.hitProp(prop, prop.hp, source?.vel ?? { x: 0, y: 0 }, playerDamage);
+      return;
+    }
     if (prop.kind === 'fuse') return;
     if (!this.items.includes(prop)) return;
     if (prop.auditCase) {
@@ -367,7 +376,7 @@ export class PropSystem {
     for (const prop of this.items) prop.flash = Math.max(0, prop.flash - dt);
     for (const { prop, other, speed, incomingSpeed } of this.impacts) {
       if (!this.items.includes(prop)) continue;
-      if (prop.kind === 'fuse') continue;
+      if (prop.kind === 'fuse' || prop.hunt) continue;
       if (g.sortingPit.impact(prop, other, speed)) {
         if (g.mode !== 'playing') return;
         continue;
@@ -451,7 +460,7 @@ export class PropSystem {
     }
   }
   explode(prop: Prop, credited = true) {
-    if (prop.kind === 'fuse') return;
+    if (prop.kind === 'fuse' || prop.hunt) return;
     if (this.game.mode !== 'playing' || !this.items.includes(prop)) return;
     const g = this.game,
       p = { ...prop.body.position };

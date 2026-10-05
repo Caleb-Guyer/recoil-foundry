@@ -97,6 +97,8 @@ import { FusionSystem, RAIL_RECOIL } from './fusions.ts';
 import { HarpoonSystem, createHarpooner } from './harpooner.ts';
 import type { HarpoonRig } from './harpooner.ts';
 import type { RecallFlight } from './ballistics.ts';
+import { Hunts } from './hunts.ts';
+import { isHunt } from './hunt-rules.ts';
 import { getDetour, DETOUR_STEPS, DETOUR_DOOR, DETOUR_HEALTH } from './detours.ts';
 import { MaintenanceSystem, maintenanceLevel, planMaintenance, SHAFT_TOP } from './maintenance.ts';
 import { RecoilTrials } from './recoil-trials.ts';
@@ -451,6 +453,7 @@ export class Game {
   gauntlet = new BossGauntlet(this);
   teamwork = new TeamworkSystem(this);
   bossRemixes = false;
+  hunts = new Hunts(this);
   practiceHits = 0;
   workshop = new WorkshopSystem(this);
   seed = '';
@@ -768,6 +771,7 @@ export class Game {
     recoilRules = true,
     teamworkRules = true,
     remixRules = false,
+    huntRules = false,
   ) {
     this.workshop.active = workshop;
     this.gauntlet.reset();
@@ -805,6 +809,7 @@ export class Game {
       !workshop &&
       !/^RF-D\d+-/.test(this.seed) &&
       (save ? save.bossRemixes === 1 : remixRules);
+    this.hunts.start(save, huntRules);
     this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
     this.uprising.run =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
@@ -908,6 +913,8 @@ export class Game {
     this.loadRoom(
       save?.escape === true,
       !!save?.reward ||
+        save?.hunt?.phase === 'reward' ||
+        (save?.hunt?.phase === 'finished' && save.stage === save.hunt.stage) ||
         (!!this.testRun?.annexRouteTest?.fork && this.stage === 7) ||
         !!save?.reforgeRoom ||
         storyInspection ||
@@ -951,7 +958,7 @@ export class Game {
       this.enteringRoute = save.reward.enteringRoute ?? null;
     }
     this.setMode(
-      save?.reward
+      save?.reward || this.hunts.rewarding
         ? 'upgrade'
         : save?.reforgeRoom?.open && this.reforge.site
           ? 'reforge'
@@ -967,6 +974,12 @@ export class Game {
       ...(this.encounters ? { encounters: this.encounters } : {}),
       ...(this.teamwork.enabled ? { teamwork: 1 as const } : {}),
       ...(this.bossRemixes ? { bossRemixes: 1 as const } : {}),
+      ...(this.hunts.enabled
+        ? {
+            huntRules: 1 as const,
+            ...(this.hunts.state ? { hunt: structuredClone(this.hunts.state) } : {}),
+          }
+        : {}),
       ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
       ...(this.factory ? { factory: structuredClone(this.factory) } : {}),
       ...(this.uprising.run ? { uprising: structuredClone(this.uprising.run) } : {}),
@@ -1002,7 +1015,7 @@ export class Game {
       ...(this.overtime ? { overtime: { ...this.overtime } } : {}),
       ...(this.route ? { route: this.route } : {}),
       ...(this.region ? { region: this.region, annexVersion: this.annexVersion } : {}),
-      ...(this.mode === 'upgrade' && !this.rewardTaken
+      ...(this.mode === 'upgrade' && !this.rewardTaken && !this.hunts.rewarding
         ? {
             reward: {
               offers: this.offers.map((m) => m.id),
@@ -1126,6 +1139,7 @@ export class Game {
       !escapeRoom && !this.detour && !this.overtime
         ? factoryEncounter(this.factory, this.stage)
         : undefined;
+    const huntRoom = this.hunts.level();
     this.level = this.workshop.active
       ? workshopLevel()
       : escapeRoom
@@ -1135,33 +1149,35 @@ export class Game {
             route: ESCAPE_LAYOUT.route.map((p) => ({ ...p })),
             spawns: [],
           }
-        : this.detour
-          ? this.recoil.scheduled
-            ? recoilTrialLevel(this.recoil.state!.kind)
-            : this.maintenance.scheduled
-              ? maintenanceLevel(
-                  this.maintenance.state!.kind,
+        : huntRoom
+          ? huntRoom
+          : this.detour
+            ? this.recoil.scheduled
+              ? recoilTrialLevel(this.recoil.state!.kind)
+              : this.maintenance.scheduled
+                ? maintenanceLevel(
+                    this.maintenance.state!.kind,
+                    this.seed,
+                    this.maintenance.state!.revision,
+                  )
+                : getDetour(this.seed, this.stage)
+            : this.overtime
+              ? getOvertimeLevel(this.seed, this.stage, this.overtime.remix, this.route)
+              : getLevel(
                   this.seed,
-                  this.maintenance.state!.revision,
-                )
-              : getDetour(this.seed, this.stage)
-          : this.overtime
-            ? getOvertimeLevel(this.seed, this.stage, this.overtime.remix, this.route)
-            : getLevel(
-                this.seed,
-                this.stage,
-                this.practice?.kind === 'condenser' ? 'condenser' : undefined,
-                this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
-                  ? this.practice.kind
-                  : undefined,
-                planned
-                  ? {
-                      crossing: planned.kind === 'crossing',
-                      freight: planned.kind === 'freight',
-                      ordinary: true,
-                    }
-                  : undefined,
-              );
+                  this.stage,
+                  this.practice?.kind === 'condenser' ? 'condenser' : undefined,
+                  this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
+                    ? this.practice.kind
+                    : undefined,
+                  planned
+                    ? {
+                        crossing: planned.kind === 'crossing',
+                        freight: planned.kind === 'freight',
+                        ordinary: true,
+                      }
+                    : undefined,
+                );
     // The opening faction fight teaches one mechanic with a small roster;
     // its authored crew replaces the standard patrol rather than piling on.
     if (planned?.kind === 'turf' && this.stage === this.factory?.encounters[0].stage)
@@ -1232,6 +1248,7 @@ export class Game {
     if (this.security && this.level.id.startsWith('uprising-'))
       this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
     this.level = teamworkLevel(this, this.level);
+    this.level = huntRoom ?? this.level;
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1324,6 +1341,7 @@ export class Game {
     this.maintenance.reset(clearedRoom);
     this.recoil.reset(clearedRoom);
     this.uprising.reset(clearedRoom);
+    this.hunts.reset(clearedRoom);
   }
   startEscape() {
     if (this.practice || this.detour || this.workshop.active || this.shutdown.chamber) return;
@@ -1615,6 +1633,7 @@ export class Game {
       this.hitStop = Math.max(0, this.hitStop - dt);
       return;
     }
+    if (this.hunts.enter(input.jump)) return;
     this.massDriver.beforeStep(dt);
     this.commendations.weapons.sampleGround();
     this.time += dt;
@@ -1867,6 +1886,7 @@ export class Game {
     this.floodgate.update(dt);
     if (this.mode !== 'playing') return;
     this.recoil.race.afterStep();
+    this.hunts.update();
     if (
       (!this.combatEnemyCount || this.uprising.escapeReady) &&
       !this.areaEvents.waiting &&
@@ -1896,6 +1916,7 @@ export class Game {
       this.reforge.arrive();
       this.onChange();
     }
+    if (this.hunts.complete()) return;
     if (
       (this.practice ||
         this.maintenance.trial ||
@@ -2323,6 +2344,7 @@ export class Game {
       (this.overtime && ((e.state === 'idle' && e.timer > 0.5) || e.state === 'recover')
         ? 1.12
         : 1);
+    if (this.hunts.updateEnemy(e)) return;
     const p = e.body.position,
       target = combatTarget,
       d = direction(p, target),
@@ -3474,6 +3496,7 @@ export class Game {
     if ((e.kind === 'auditor' || e.kind === 'welder') && e.spawn > 0) return true;
     if (e.kind === 'sentry') credited = false;
     const incomingDamage = damage;
+    damage *= this.hunts.armor(e);
     if (e.kind === 'welder') damage *= e.state === 'recover' ? 1.5 : 0.55;
     if (e.kind === 'auditor')
       damage *=
@@ -3579,6 +3602,7 @@ export class Game {
       (e.kind !== 'welder' || (credited && source !== 'cleanup'))
     )
       this.onEnemyDefeated(e.kind);
+    this.hunts.defeated(e, credited && source !== 'cleanup');
     this.fabricators.killed(e);
     this.teamwork.disrupt(e);
     this.mutations.killed(e);
@@ -3596,7 +3620,11 @@ export class Game {
       this.hp > 0 &&
       e.spawn <= 0
     )
-      if (e.kind !== 'auditor' && (e.kind !== 'welder' || (credited && source !== 'cleanup')))
+      if (
+        !isHunt(e.kind) &&
+        e.kind !== 'auditor' &&
+        (e.kind !== 'welder' || (credited && source !== 'cleanup'))
+      )
         this.onBossDefeated(e.kind);
     this.feedback(isBoss(e.kind) ? 10 : 4);
     this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);
@@ -3728,6 +3756,7 @@ export class Game {
       this.welder.state?.stage === this.stage && this.welder.state.status === 'defeated';
     if (this.welderReward)
       this.earnedSalvage = this.mods.includes('melt-through') ? null : 'melt-through';
+    this.hunts.skip();
     this.offers = rewardMods(
       this.mods,
       dailyFromSeed(this.seed) ? 1 : 3,
@@ -3832,12 +3861,13 @@ export class Game {
       !this.courierReward &&
       !this.auditorReward &&
       !this.welderReward &&
+      !this.hunts.rewarding &&
       this.mode === 'upgrade' &&
       !this.practice &&
       !dailyFromSeed(this.seed) &&
       !this.rewardTaken &&
       !this.rewardRerolled &&
-      (this.areaEvents.freeReroll || this.hp > REROLL_COST) &&
+      (this.hunts.freeReroll || this.areaEvents.freeReroll || this.hp > REROLL_COST) &&
       this.offers.length > 0 &&
       !this.offers.some((m) => m.id === 'repair') &&
       this.replacementOffers().length === this.offers.length
@@ -3846,7 +3876,8 @@ export class Game {
   rerollReward() {
     if (!this.canReroll) return false;
     const replacements = this.replacementOffers();
-    if (this.areaEvents.freeReroll) this.areaEvents.spendReroll();
+    if (this.hunts.freeReroll) this.hunts.state!.rerollSpent = true;
+    else if (this.areaEvents.freeReroll) this.areaEvents.spendReroll();
     else this.hp -= REROLL_COST;
     this.rewardRerolled = true;
     this.offers = replacements;
@@ -3857,6 +3888,7 @@ export class Game {
     return true;
   }
   chooseMod(id: string) {
+    if (this.hunts.rewarding) return;
     if (this.uprising.choices.length) return;
     if (this.practice || this.workshop.active) return;
     if (

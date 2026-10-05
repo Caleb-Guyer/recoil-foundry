@@ -1,5 +1,6 @@
 import { planWelder } from '../src/welder-layout.ts';
 import test from 'node:test';
+import { isHunt, huntSeed } from '../src/hunt-rules.ts';
 import assert from 'node:assert/strict';
 import { Game, type Input } from '../src/game.ts';
 import { MODS } from '../src/rules.ts';
@@ -33,6 +34,7 @@ const idle: Input = {
   aim: { x: 1400, y: 500 },
 };
 function encounter(kind: Encounter['kind'] = 'loader', offset = 0): Encounter {
+  if (isHunt(kind)) return { kind, seed: huntSeed(kind) };
   for (let i = offset; i < offset + 200; i++) {
     const seed = 'record-' + i;
     if (

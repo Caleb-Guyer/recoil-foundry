@@ -1,11 +1,48 @@
 import type { Lore } from './lore-upgrades.ts';
 import type { Game, Enemy } from './game.ts';
+import { isHunt } from './hunt-rules.ts';
 import { isBoss } from './enemies.ts';
 import { BossMastery } from './boss-mastery.ts';
 import { WeaponMastery, type WeaponTrace } from './weapon-mastery.ts';
 
 export const COMMENDATIONS_KEY = 'rf-commendations-v1';
 export const COMMENDATIONS = [
+  {
+    id: 'cable-cut',
+    name: 'Disconnected',
+    objective: 'Defeat The Cableweaver in a Campaign hunt.',
+    reward: 'Copperline',
+    slot: 'Gun finish',
+    lore: [
+      'MAINTENANCE · CIRCUIT CLOSED',
+      'M. Vale · Maintenance',
+      'The reels are quiet. I kept a length of copper braid for the receiver. It carries no current now, but the pale sight line still looks like the warning lamp just before an anchor goes live.\n\nDispatch can find another way to connect its orders. This circuit belongs to the person who opened it.',
+    ] as Lore,
+  },
+  {
+    id: 'plate-breaker',
+    name: 'Open Plate',
+    objective: 'Defeat The Bulwark in a Campaign hunt.',
+    reward: 'Sentinel',
+    slot: 'Outfit',
+    lore: [
+      'SAFETY · PROTECTION RELEASED',
+      'E. Holt · Safety',
+      'The carrier no longer decides who needs shielding. Its plates are back in the depot, where a maintenance crew can use them without asking permission from the rack.\n\nThe new jacket uses the same green as the steel, with a pale chest strip for the person inside. Protection should have a name attached to it.',
+    ] as Lore,
+  },
+  {
+    id: 'fuse-pulled',
+    name: 'Safe Disposal',
+    objective: 'Defeat The Demolisher in a Campaign hunt.',
+    reward: 'Fusekeeper',
+    slot: 'Gun finish',
+    lore: [
+      'DISPATCH · STOCK RECONCILED',
+      'T. Orr · Dispatch',
+      'Every missing charge has been accounted for. I have crossed six entries off the stock sheet and left the demolition permit unsigned. Nobody could tell me which wall it was meant to remove.\n\nThe orange enamel came from the safe disposal cabinet. The tool may keep it. Its operator has demonstrated a much better understanding of when to stop the timer.',
+    ] as Lore,
+  },
   {
     id: 'gauntlet-cleared',
     name: 'Five Machines Down',
@@ -296,7 +333,7 @@ export class CommendationTracker {
     )
       return;
     this.weapons.killed(e, trace);
-    if (isBoss(e.kind)) {
+    if (isBoss(e.kind) && !isHunt(e.kind)) {
       this.mastery.defeated(e);
       if (this.cleanBoss && g.level.boss && !g.escape) this.award('clean-work');
       if (source === 'reflection') this.award('return-to-sender');

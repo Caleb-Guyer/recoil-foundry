@@ -1,6 +1,12 @@
 import type { EnemyKind } from './levels.ts';
 
 export const ENEMY_GUIDES: Record<EnemyKind, string> = {
+  cableweaver:
+    'Rare optional hunt. Its cable anchors flash before becoming live. Jump over cables or shoot an anchor to expose the machine.',
+  bulwark:
+    'Rare optional hunt. Solid movable plates shield the core. Push or break them with shots, or fire from above. It has only two sets of plates.',
+  demolisher:
+    'Rare optional hunt. Planted charges show their blast radius and fuse. Shoot them to disarm them, or leave the circle. Its supply is finite.',
   repairer:
     'Repairs a wounded patrol through a green tether after a dashed warning. Shoot the tether or drone, or move the pair behind cover. Its repair supply is finite; it cannot repair bosses or support units.',
   relay:

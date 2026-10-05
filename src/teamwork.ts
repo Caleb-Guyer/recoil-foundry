@@ -211,6 +211,7 @@ export class TeamworkSystem {
   }
   cutAlong(from: Vec, to: Vec, radius: number, friendly: boolean) {
     if (this.game.mode !== 'playing' || !friendly) return;
+    this.game.hunts.cutAlong(from, to, radius, friendly);
     for (const e of this.sources) {
       const partner = this.partner(e);
       if (partner && crossesSupport(from, to, e.body.position, partner.body.position, radius))
