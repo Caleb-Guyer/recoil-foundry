@@ -116,6 +116,11 @@ import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
 import { countershotTestFromUrl, pressureTestFromUrl, tripwireTestFromUrl } from './practice.ts';
 import { torchTestFromUrl } from './practice.ts';
 import { branchTestFromUrl, BRANCH_TEST_BUILDS } from './branch-builds.ts';
+import {
+  continuityTestFromUrl,
+  CONTINUITY_BUILDS,
+  type ContinuityBuild,
+} from './continuity-test.ts';
 import { anglerTestFromUrl } from './practice.ts';
 import { vectorTestFromUrl } from './practice.ts';
 import { wallcrawlerTestFromUrl } from './practice.ts';
@@ -439,7 +444,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Rare Miniboss Hunts</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Keep Your Build</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -548,6 +553,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  continuityTestFromUrl(entryUrl) ??
   weaponMasteryTestFromUrl(entryUrl) ??
   securityTestFromUrl(entryUrl) ??
   switchboardTestFromUrl(entryUrl) ??
@@ -913,6 +919,12 @@ function updateTitle() {
     };
     const hint = hints[entryUrl.searchParams.get('build') ?? ''];
     if (hint) $('title-hint').textContent = hint;
+  }
+  if (linkedRunTest?.seed.startsWith('CONTINUITY-4.12-')) {
+    const build = (entryUrl.searchParams.get('build') ?? 'scatter') as ContinuityBuild;
+    $('play').textContent = 'Test ' + CONTINUITY_BUILDS[build].name;
+    $('title-hint').textContent =
+      CONTINUITY_BUILDS[build].hint + ' R to retry. Progress stays untouched.';
   }
   if (linkedRunTest?.seed.startsWith('PRESENTATION-')) {
     $('play').textContent = 'Preview ending';
@@ -2214,11 +2226,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CONTENT UPDATE</p><h2 id="dialog-title">An unexpected assignment.</h2>' +
-      '<p class="update-tagline">Take the side door. Bring back something worth keeping.</p>' +
-      '<dl class="update-notes"><div><dt>Find a rare hunt.</dt><dd>Campaign runs can offer one optional side room from zone two onward. Clear the patrol, then jump at the marked hunt door. Taking the main exit skips it.</dd></div>' +
-      '<div><dt>Three machines. Three openings.</dt><dd>Cut The Cableweaver’s live cables, push The Bulwark’s shield plates, or shoot The Demolisher’s planted charges before they detonate.</dd></div>' +
-      '<div><dt>Keep the reward.</dt><dd>Choose a repair or a free upgrade reroll. First victories also earn appearances and Practice fights, with actual machine portraits in the Logbook. Continue and Retry keep the hunt.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Your gun keeps its identity.</h2>' +
+      '<p class="update-tagline">New weapon. Same build. More ways to combine it.</p>' +
+      '<dl class="update-notes"><div><dt>Five pellets. Five beams.</dt><dd>Cutting Torch preserves Scattershot as five separate beams. Prism splits each one: ten rays in two fans. The shotgun keeps its native pellets too.</dd></div>' +
+      '<div><dt>Keep the whole combination.</dt><dd>Charge all five lances together, burst the spread, mirror it with Backfire, or splinter each ray into fragments. Each ray follows its own cover, banks, penetration and portals.</dd></div>' +
+      '<div><dt>See what changes.</dt><dd>Upgrade previews show your combined beam count and describe the pattern you actually get. Stored charges and recoil still apply once per discharge.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

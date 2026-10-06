@@ -2,6 +2,7 @@ import { getGun, MODS, MOD_REQUIRES, FUSION_REQUIRES, modDescription, type Mod }
 import { BRANCH_PARENTS } from './upgrade-branches.ts';
 import type { StartingGun } from './starting-guns.ts';
 import { SHELL_DIRECT } from './demolition.ts';
+import { torchRayCount } from './torch-pattern.ts';
 
 export interface UpgradeChange {
   label: string;
@@ -19,6 +20,7 @@ export interface UpgradeInspection {
 }
 const number = (n: number) => String(Math.round(n * 10) / 10);
 const seconds = (n: number) => String(Math.round(n * 100) / 100) + 's';
+const beams = (n: number) => n + (n === 1 ? ' beam' : ' beams');
 const name = (id: string) => MODS.find((m) => m.id === id)?.name ?? id;
 const fireKind = (mods: readonly string[]) =>
   mods.includes('cutting-torch')
@@ -53,6 +55,23 @@ export function inspectUpgrade(
     const beforeKind = fireKind(mods),
       afterKind = fireKind(afterMods);
     add('Fire', beforeKind, afterKind);
+    if (afterMods.includes('cutting-torch')) {
+      const count = torchRayCount(after, afterMods);
+      add(
+        'Pattern',
+        mods.includes('cutting-torch')
+          ? beams(torchRayCount(before, mods))
+          : before.pellets * before.lanes + ' pellets',
+        beams(count),
+      );
+      add(
+        'Rear beams',
+        mods.includes('cutting-torch') && before.rearVolley
+          ? number(torchRayCount(before, mods))
+          : '0',
+        after.rearVolley ? number(count) : '0',
+      );
+    }
     if (beforeKind === afterKind) {
       const beam = afterMods.includes('cutting-torch');
       if (!beam) {
@@ -113,8 +132,9 @@ export function inspectUpgrade(
       ['ricochet', ['banker'], 'Each wall bank also earns your Banker damage bonus.'],
       ['capacitor', ['scatter'], 'The charged discharge boosts all your pellets.'],
       ['rapid', ['cutting-torch'], 'Your beam gains sustained damage as its pulses speed up.'],
-      ['scatter', ['cutting-torch'], 'Your spread becomes beam width instead of separate pellets.'],
+      ['scatter', ['cutting-torch'], 'Each pellet remains a separate beam; Prism splits each one.'],
       ['magnum', ['cutting-torch'], 'Stronger beam pulses also take longer to recover.'],
+      ['cutting-torch', ['scatter'], 'Keep your Scattershot spread as separate beams.'],
       ['cutting-torch', ['burst'], 'Your Burst fitting becomes concentrated beam pulses.'],
       ['backfire', ['rail-spike'], 'Charged fire keeps a separate rear rail.'],
       [

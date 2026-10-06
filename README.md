@@ -16,6 +16,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Keep Your Build — version 4.12.0.** Cutting Torch keeps Scattershot as five separate beams; Prism splits them into ten rays. Charge Lens, Burst, Backfire, Splinter, banks and portals preserve the spread. The shotgun retains its native pellet count, and upgrade comparisons show the actual combined beam count. [Release notes and isolated test links](docs/releases/4.12.0.md).
+
 **Rare Miniboss Hunts — version 4.11.0.** Fresh Campaigns can offer one optional side-door fight from zone two onward. Cut the Cableweaver's live cables, move the Bulwark's shield plates or disarm the Demolisher's explosives in separate spacious arenas. Choose a repair or free upgrade reroll afterward; first victories earn pictured cosmetics and unlock each machine in Practice. Continue and Retry keep the hunt. [Release notes and isolated test links](docs/releases/4.11.0.md).
 
 **Boss Remixes — version 4.10.0.** After your first Campaign victory, new runs can encounter two authored variants each of the Loader, Press and Condenser. Cargo braces, a transfer lift, steam valves and dry decks change how you approach their warned attack sequences. Encountered variants appear in Practice with real arena pictures, separate records and shareable challenges. Continue and Retry preserve the variants. [Release notes and isolated test links](docs/releases/4.10.0.md).

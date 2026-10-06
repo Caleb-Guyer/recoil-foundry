@@ -15,6 +15,7 @@ interface Resonance {
   heatDamage: number;
   target?: number;
   portals: (Portal | null)[];
+  rays: { ray: number; origin: TorchOrigin; damage: number; heatDamage: number; target?: number }[];
 }
 export class ResonatorSystem {
   game: Game;
@@ -34,6 +35,7 @@ export class ResonatorSystem {
     target: number | undefined,
     hot: number,
     end: number,
+    ray = 0,
   ) {
     const g = this.game;
     if (!g.mods.includes('resonator') || !g.portals.linked || damage <= 0) return;
@@ -47,6 +49,7 @@ export class ResonatorSystem {
         heatDamage: 0,
         target,
         portals: [...g.portals.pair],
+        rays: [],
       };
       this.pending.push(repeat);
       if (this.pending.length > RESONATOR.limit) this.pending.shift();
@@ -55,6 +58,19 @@ export class ResonatorSystem {
     // banks, rear fire and rendered segments cannot mint a second discharge.
     repeat.damage += damage * RESONATOR.power;
     if (target === repeat.target) repeat.heatDamage += damage * (hot - 1) * RESONATOR.power;
+    let path = repeat.rays.find((p) => p.ray === ray);
+    if (!path) {
+      path = {
+        ray,
+        origin: repeat.rays.length ? structuredClone(origin) : repeat.origin,
+        damage: 0,
+        heatDamage: 0,
+        target,
+      };
+      repeat.rays.push(path);
+    }
+    path.damage += damage * RESONATOR.power;
+    if (target === path.target) path.heatDamage += damage * (hot - 1) * RESONATOR.power;
   }
   update() {
     const g = this.game;
@@ -69,17 +85,25 @@ export class ResonatorSystem {
       if (g.mode !== 'playing') return;
       // Retrace current cover from the frozen exit and aim. The portal gap has
       // no beam; spent bank, range and penetration budgets remain spent.
-      const segments = traceTorch(g, false, 0, TORCH.segments, { used: true }, p.origin);
+      const segments = p.rays.flatMap((ray) =>
+        traceTorch(g, false, 0, TORCH.segments, { used: true }, ray.origin).map((s) => ({
+          ...s,
+          ray: ray.ray,
+        })),
+      );
       this.effects.push({ at: g.time, segments });
       if (this.effects.length > RESONATOR.limit) this.effects.shift();
-      const hit = new Set<object>();
+      const hit = new Map<number, Set<object>>();
       for (const s of segments) {
         if (g.mode !== 'playing') return;
         const body =
           s.body ?? s.cable ?? s.anchor ?? s.valve ?? s.floodValve ?? s.sortingCoil ?? s.disconnect;
-        if (!body || hit.has(body)) continue;
-        hit.add(body);
-        const damage = (p.damage + (s.enemy?.id === p.target ? p.heatDamage : 0)) * s.gain;
+        const ray = p.rays.find((ray) => ray.ray === s.ray)!;
+        let visited = hit.get(ray.ray);
+        if (!visited) hit.set(ray.ray, (visited = new Set()));
+        if (!body || visited.has(body)) continue;
+        visited.add(body);
+        const damage = (ray.damage + (s.enemy?.id === ray.target ? ray.heatDamage : 0)) * s.gain;
         if (s.enemy)
           g.hitEnemy(
             s.enemy,

@@ -105,16 +105,21 @@ export function projectileLights(
       : g.mods.includes('arc-coil')
         ? '#96d7ff'
         : '#ffb86c';
-    for (const s of [...g.torch.segments, ...g.torch.rear]) {
-      const length = Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y),
-        steps = Math.max(1, Math.ceil(length / 80));
-      for (let i = 0; i <= steps && result.length < 32; i++)
-        add(
-          { x: s.a.x + ((s.b.x - s.a.x) * i) / steps, y: s.a.y + ((s.b.y - s.a.y) * i) / steps },
-          72,
-          color,
-          0.82,
-        );
+    const paths = [...g.torch.segments, ...g.torch.rear].map((s) => ({
+      s,
+      steps: Math.max(1, Math.ceil(Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y) / 80)),
+    }));
+    const steps = Math.max(0, ...paths.map((p) => p.steps));
+    // Share the light budget across the whole fan, including rear rays. Tips
+    // come first; overlapping muzzle lights cannot crowd out the outer rays.
+    for (let i = 0; i <= steps && result.length < 32; i++) {
+      for (const { s, steps } of paths) {
+        if (i > steps || result.length >= 32) continue;
+        const t = i === 0 ? 1 : (i - 1) / steps;
+        const pos = { x: s.a.x + (s.b.x - s.a.x) * t, y: s.a.y + (s.b.y - s.a.y) * t };
+        if (result.some((l) => Math.hypot(l.pos.x - pos.x, l.pos.y - pos.y) < 32)) continue;
+        add(pos, 72, color, 0.82);
+      }
     }
   }
   for (const a of g.arcs.effects.slice(-8)) {

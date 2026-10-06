@@ -127,31 +127,31 @@ test('holding fire delivers steady damage rather than an instant volley, indepen
     assert.equal(g.torch.segments.length, 0);
   }
 });
-test('Scattershot and faster fire change the output of one beam without adding firing lanes', () => {
+test('Scattershot keeps separate rays and its total output composes with faster fire', () => {
   for (const extras of [[], ['scatter'], ['rapid'], ['magnum', 'scatter', 'rapid']]) {
     const g = fixture(['cutting-torch', ...extras]),
       e = target(g);
+    Body.scale(e.body, 1, 12);
     beam(g, 1);
     const period = g.gun.interval;
     near(10000 - e.hp, ((g.gun.damage * g.gun.pellets) / period) * TORCH.output);
-    assert.equal(g.torch.segments.length, 1);
+    assert.equal(g.torch.segments.filter((s) => s.muzzle).length, g.gun.pellets);
     assert.equal(g.shots.length, 0);
   }
 });
-test('Scattershot visibly widens the ray hitbox and still stops at grazing cover', () => {
+test('Scattershot reaches off-axis targets through its outer rays and respects cover on that ray', () => {
   for (const scatter of [false, true]) {
     const g = fixture(['cutting-torch', ...(scatter ? ['scatter'] : [])]),
       e = target(g);
-    const half = (e.body.bounds.max.y - e.body.bounds.min.y) / 2;
-    Body.setPosition(e.body, { x: 600, y: 297 + half + 3.2 });
+    Body.setPosition(e.body, { x: 600, y: 297 + Math.tan(0.21) * 400 });
     beam(g, 0.2);
-    assert.equal(e.hp < 10000, scatter, 'Only the wider beam reaches this glancing target');
+    assert.equal(e.hp < 10000, scatter, 'Only the outer spread ray reaches this target');
     if (scatter) {
-      wall(g, 400, 350, 20, 100);
+      wall(g, 400, 297 + Math.tan(0.21) * 200, 20, 28);
       const hp = e.hp;
       beam(g, 0.2);
       near(e.hp, hp);
-      assert(g.torch.segments[0].body !== e.body, 'The full beam width must respect cover');
+      assert(!g.torch.segments.some((s) => s.enemy === e), 'The outer ray must respect cover');
     }
   }
 });
@@ -193,6 +193,8 @@ test('burst peak damage arrives early; Scattershot, fire rate, armor and rear be
     Body.setPosition(g.player, { x: 700, y: 300 });
     const front = target(g, 1100),
       rear = target(g, 300);
+    Body.scale(front.body, 1, 12);
+    Body.scale(rear.body, 1, 12);
     // End after the third pulse and before the next cycle, with fine stepping.
     const dt = 1 / 600,
       end = g.gun.interval * 2;
@@ -204,6 +206,7 @@ test('burst peak damage arrives early; Scattershot, fire rate, armor and rear be
   }
   const g = fixture(['cutting-torch', 'scatter', 'burst']),
     boss = target(g, 600, 300, 'loader');
+  Body.scale(boss.body, 1, 4);
   boss.state = 'idle';
   beam(g, 0.6);
   near(10000 - boss.hp, 3 * g.gun.damage * g.gun.pellets * TORCH.output * 0.4);

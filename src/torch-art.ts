@@ -8,19 +8,19 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   if (!t.equipped || !t.active || !['playing', 'paused'].includes(g.mode)) return;
   c.save();
   c.lineCap = 'round';
-  const width = (g.gun.pellets > 1 ? 8 : 1.6) * (t.finisher ? 0.6 : 1);
+  const width = 1.6 * (t.finisher ? 0.6 : 1);
   for (const path of [t.segments, t.rear])
     for (let i = 0; i < path.length; i++) {
       const s = path[i],
         len = distance(s.a, s.b),
         offset = s.muzzle ? Math.min(path === t.rear ? 17 : 31, len) : 0,
         a = { x: s.a.x + s.dir.x * offset, y: s.a.y + s.dir.y * offset },
-        hot = s.enemy?.id === t.target ? t.heat : 0;
+        hot = s.enemy?.id === t.target && (s.ray ?? 0) === 0 ? t.heat : 0;
       c.beginPath();
       c.moveTo(a.x, a.y);
       c.lineTo(s.b.x, s.b.y);
       c.strokeStyle = '#ebad68';
-      c.globalAlpha = reduced ? 0.13 : 0.19;
+      c.globalAlpha = (reduced ? 0.13 : 0.19) / (g.gun.pellets > 1 ? 2 : 1);
       c.lineWidth = width + 5.4;
       c.stroke();
       c.strokeStyle = hot > 0.6 ? '#fff0c7' : '#ffd59b';

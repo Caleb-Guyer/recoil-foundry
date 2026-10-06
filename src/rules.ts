@@ -557,13 +557,23 @@ export function modDescription(
   if (mod.id === 'deep-freeze' && mods.includes('coolant-rounds'))
     return 'Full cold briefly freezes ordinary enemies, with a recovery window. Boss cold hits gain a larger damage bonus.';
   const beam = mods.includes('cutting-torch');
+  const combined = [...new Set([...mods, mod.id])];
+  const beamGun = getGun(combined, startingGun);
+  const rays = beamGun.pellets * beamGun.lanes * (combined.includes('prism-array') ? 2 : 1);
+  const pattern = rays === 1 ? 'A continuous beam' : `${rays} separate beams in your firing spread`;
   if (mod.id === 'cutting-torch' && mods.includes('charge-lens'))
-    return 'Hold to charge the beam. Release a cutting lance with a heavy kick.';
+    return `Hold to charge. Release ${rays === 1 ? 'a cutting lance' : rays + ' cutting lances in your firing spread'} with one heavy kick.`;
   if (mod.id === 'cutting-torch' && mods.includes('prism-array'))
-    return 'Two angled rays with steady recoil. Hold fire and aim along either ray.';
+    return `${rays} angled beams with steady recoil. Each pellet keeps both Prism rays. Hold fire to cut.`;
+  if (beam && mod.id === 'prism-array')
+    return `${rays} angled beams: each existing beam splits into two rays at 60% power each. Your spread and rear fire stay intact.`;
+  if (beam && mod.id === 'backfire')
+    return `Add ${rays} rear ${mods.includes('charge-lens') ? 'lances' : 'beams'} matching your forward spread. 20% longer shot delay.`;
+  if (beam && mod.id === 'split')
+    return 'Each beam breaks into three smaller rounds on its first contact per pulse.';
   if (beam && mods.includes('charge-lens')) {
     if (mod.id === 'scatter')
-      return 'A wider lance with 60% more damage. 25% longer charge and recovery.';
+      return `${rays} charged lances in a spread. 60% more total damage. 25% longer charge and recovery.`;
     if (mod.id === 'rapid')
       return 'Shorter charge and recovery. 28% lighter lances and gentler recoil.';
     if (mod.id === 'magnum') return '75% stronger lances with 40% longer charge and recovery.';
@@ -595,8 +605,8 @@ export function modDescription(
     return 'Rear blasts clear up to two small bullets every 0.45 seconds. Heavy rounds resist.';
   if (mod.id === 'cutting-torch')
     return mods.includes('burst') || startingGun === 'nailgun'
-      ? 'A laser with three concentrated pulses, then recovery. Hold fire to cut.'
-      : mod.description;
+      ? `${pattern} with three concentrated pulses, then recovery. Hold fire to cut.`
+      : `${pattern} with steady recoil. Hold fire to cut. Your existing shot upgrades carry through.`;
   if (!beam) {
     if (startingGun === 'shotgun' && mod.id === 'scatter')
       return 'Nine pellets. 60% more total damage. Wider spread and a longer shot delay.';
@@ -604,7 +614,7 @@ export function modDescription(
   }
   switch (mod.id) {
     case 'scatter':
-      return 'A wider beam. 28% more sustained damage. Slower pulses.';
+      return `${rays} separate beams in a spread. 28% more sustained damage. Slower pulses.`;
     case 'burst':
       return 'Three concentrated beam pulses, then recovery. 10% lighter hits.';
     case 'rapid':

@@ -10,11 +10,11 @@ import { isBoss } from './enemies.ts';
 import { POCKET, pocketDirection } from './corner-pocket.ts';
 import type { PressureVent } from './pressure.ts';
 import type { FloodValve } from './floodgate.ts';
+import { torchPattern } from './torch-pattern.ts';
 
 export const TORCH = {
   range: 1100,
   radius: 1.5,
-  scatterRadius: 5,
   burstSpacing: 0.7,
   burstWidth: 0.35,
   burstCycle: 3.1,
@@ -23,6 +23,7 @@ export const TORCH = {
   heatTime: 1.5,
   heatBonus: 0.75,
   segments: 12,
+  maxSegments: 12 * 9 * 3 * 2 * 2,
 };
 export interface TorchSegment {
   weaponTrace?: WeaponTrace;
@@ -44,6 +45,7 @@ export interface TorchSegment {
   disconnect?: object;
   annexJunction?: number;
   ray?: number;
+  power?: number;
   muzzle?: boolean;
 }
 export interface TorchOrigin {
@@ -60,8 +62,7 @@ export interface TorchOrigin {
 }
 const add = (p: Vec, d: Vec, n: number): Vec => ({ x: p.x + d.x * n, y: p.y + d.y * n });
 const shielded = (e: Enemy, d: Vec) => e.elite === 'shielded' && -d.x * e.facing > 0.45;
-export const torchRadius = (g: Game) =>
-  (g.gun.pellets > 1 ? TORCH.scatterRadius : TORCH.radius) * (g.torch?.finisher ? 0.6 : 1);
+export const torchRadius = (g: Game) => TORCH.radius * (g.torch?.finisher ? 0.6 : 1);
 
 // Trace first, damage afterwards. Cutting a surface never lets the same step
 // hit something that was behind it. Every segment uses actual convex hulls.
@@ -292,7 +293,7 @@ export class TorchSystem {
   private fracture = new Map<number, number>();
   private reflected = false;
   private wind = false;
-  private split = false;
+  private splitRays = new Set<number>();
   private revision = -1;
   constructor(game: Game) {
     this.game = game;
@@ -427,7 +428,8 @@ export class TorchSystem {
       };
       this.processed.clear();
       this.fracture.clear();
-      this.reflected = this.wind = this.split = false;
+      this.reflected = this.wind = false;
+      this.splitRays.clear();
       if (g.gun.backblast) g.fireBackblast(d, this.payload() * 0.8);
       if (lens) g.onSound('charged');
     }
@@ -511,15 +513,15 @@ export class TorchSystem {
     }
     return due;
   }
-  private paths(rear = false, relay = { used: false }) {
+  private paths(rear = false) {
     const g = this.game;
-    if (!g.mods.includes('prism-array')) return traceTorch(g, rear, 0, TORCH.segments, relay);
-    const limit = Math.floor(TORCH.segments / (g.gun.rearVolley ? 4 : 2));
-    return [-0.09, 0.09].flatMap((angle, ray) =>
-      traceTorch(g, rear, angle, limit, relay).map((s) => ({
+    const pattern = torchPattern(g.gun, g.mods, g.shotCount);
+    return pattern.flatMap(({ angle, power }, ray) =>
+      traceTorch(g, rear, angle).map((s) => ({
         ...s,
-        gain: s.gain * 0.6,
-        ray: ray + (rear ? 2 : 0),
+        gain: s.gain * power,
+        power,
+        ray: ray + (rear ? pattern.length : 0),
       })),
     );
   }
@@ -531,9 +533,8 @@ export class TorchSystem {
       this.target = undefined;
       this.revision = g.portals.revision;
     }
-    const relay = { used: false };
-    this.segments = this.paths(false, relay);
-    this.rear = g.gun.rearVolley ? this.paths(true, relay) : [];
+    this.segments = this.paths();
+    this.rear = g.gun.rearVolley ? this.paths(true) : [];
     const target = this.segments.find((s) => (s.ray ?? 0) === 0 && s.enemy)?.enemy,
       eligible = target && !shielded(target, this.segments.find((s) => s.enemy === target)!.dir);
     if (!eligible || target.id !== this.target) {
@@ -556,17 +557,30 @@ export class TorchSystem {
       1 + (g.mods.includes('charge-lens') ? this.heat : (old + this.heat) * 0.5) * TORCH.heatBonus;
     const all = [...this.segments, ...this.rear],
       damaged = new Set<string>();
+    // Contact effects still share one discharge. Sum the rays reaching a prop
+    // before breaking it, so another ray cannot shoot through it in this step.
+    const impacts = new Map<object, number>();
+    for (const segment of all) {
+      const object = segment.body ?? segment.cable ?? segment.anchor;
+      if (object && !segment.enemy)
+        impacts.set(object, (impacts.get(object) ?? 0) + this.payload() * segment.gain);
+    }
     if (this.finisher && g.mods.includes('resonator')) {
-      const exit = all.find((s) => s.portalExit)?.portalExit;
-      if (exit)
+      const recorded = new Set<number>();
+      for (const s of this.segments) {
+        const ray = s.ray ?? 0;
+        if (!s.portalExit || recorded.has(ray)) continue;
+        recorded.add(ray);
         g.fusions.resonator.record(
           this.pulse!.id,
-          exit,
-          (this.payload() * burn) / this.period,
-          this.target,
-          hot,
+          s.portalExit,
+          (this.payload() * (s.power ?? 1) * burn) / this.period,
+          ray === 0 ? this.target : undefined,
+          ray === 0 ? hot : 1,
           this.burnUntil,
+          ray,
         );
+      }
     }
     for (const segment of all) {
       if (g.mode !== 'playing') {
@@ -642,19 +656,29 @@ export class TorchSystem {
           }
         }
       } else if (first) {
-        if (segment.cable) g.cargo.cut(segment.cable, s.damage);
-        else if (segment.anchor) g.harpoons.hitAnchor(segment.anchor, s.damage);
-        else if (segment.prop) g.props.hit(segment.prop, s.damage, s.vel, s);
+        const damage = impacts.get(object!) ?? s.damage;
+        const impact = { ...s, damage };
+        if (segment.cable) g.cargo.cut(segment.cable, damage);
+        else if (segment.anchor) g.harpoons.hitAnchor(segment.anchor, damage);
+        else if (segment.prop) g.props.hit(segment.prop, damage, s.vel, impact);
         else if (segment.body) {
-          g.counterweights.hit(segment.body, segment.b, s.vel, s.damage);
-          g.grapnel.impact(s, segment.body, segment.normal);
-          g.breaches.hitBody(segment.body, s.damage, s.vel, s);
-          g.destruction.hitBody(segment.body, s.damage, s.vel, s);
+          g.counterweights.hit(segment.body, segment.b, s.vel, damage);
+          g.grapnel.impact(impact, segment.body, segment.normal);
+          g.breaches.hitBody(segment.body, damage, s.vel, impact);
+          g.destruction.hitBody(segment.body, damage, s.vel, impact);
         }
       }
-      if (first && !this.split) {
-        g.splitShot(s, segment.normal);
-        this.split = s.split;
+      const ray = segment.ray ?? 0;
+      if (object && !this.splitRays.has(ray)) {
+        // A thin ray stops closer to cover than the fragment's own radius.
+        // Start outside that surface so outward fragments can actually fly.
+        const fragment = {
+          ...s,
+          split: false,
+          pos: segment.normal ? add(s.pos, segment.normal, 2) : { ...s.pos },
+        };
+        g.splitShot(fragment, segment.normal);
+        if (fragment.split) this.splitRays.add(ray);
       }
       if (first && !segment.enemy) g.salvage.impact(s, segment.body, segment.normal);
       if (!this.wind) g.salvage.trace(s, segment.a, segment.b);
