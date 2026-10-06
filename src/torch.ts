@@ -596,8 +596,8 @@ export class TorchSystem {
           this.pulse!.id,
           s.portalExit,
           (this.payload() * (s.power ?? 1) * burn) / this.period,
-          ray === 0 ? this.target : undefined,
-          ray === 0 ? hot : 1,
+          !this.legacyPattern || ray === 0 ? this.target : undefined,
+          !this.legacyPattern || ray === 0 ? hot : 1,
           this.burnUntil,
           ray,
         );
@@ -624,7 +624,9 @@ export class TorchSystem {
       s.damage =
         this.payload() *
         segment.gain *
-        (segment.enemy?.id === this.target && (segment.ray ?? 0) === 0 ? hot : 1);
+        (segment.enemy?.id === this.target && (!this.legacyPattern || (segment.ray ?? 0) === 0)
+          ? hot
+          : 1);
       if (segment.melt)
         g.melt.beam(
           s.id,
@@ -669,7 +671,10 @@ export class TorchSystem {
             g.salvage.impact(s);
           }
           if (e.hp > 0 && !e.body.isStatic) {
-            const force = (burn / this.period) * (isBoss(e.kind) ? 0.08 : 1);
+            const force =
+              (burn / this.period) *
+              (isBoss(e.kind) ? 0.08 : 1) *
+              (this.legacyPattern ? 1 : (segment.power ?? 1));
             Matter.Body.setVelocity(e.body, {
               x: e.body.velocity.x + s.vel.x * 0.12 * force,
               y: e.body.velocity.y + s.vel.y * 0.09 * force,

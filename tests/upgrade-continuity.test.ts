@@ -105,6 +105,39 @@ test('all spread modes preserve total damage across 30, 60 and 120 Hz', () => {
   }
 });
 
+test('Thermal Runaway keeps its declared bonus across every ray touching the tracked target', () => {
+  for (const extra of [[], ['prism-array'], ['charge-lens']]) {
+    const amounts = [false, true].map((hot) => {
+      const g = fixture([
+        'cutting-torch',
+        'scatter',
+        ...extra,
+        ...(hot ? ['thermal-runaway'] : []),
+      ]);
+      const e = target(g, 400);
+      Body.scale(e.body, 1, 15);
+      beam(g, 2);
+      if (extra.includes('charge-lens')) beam(g, 0.1, false);
+      return e.maxHp - e.hp;
+    });
+    near(amounts[1] / amounts[0], extra.includes('charge-lens') ? 1.75 : 1.46875);
+  }
+});
+
+test('a spread shares its contact impulse instead of multiplying knockback per ray', () => {
+  const impulses = [[], ['scatter'], ['scatter', 'prism-array']].map((extra) => {
+    const g = fixture(['cutting-torch', ...extra]);
+    const e = target(g, 400);
+    Body.scale(e.body, 1, 15);
+    Body.setStatic(e.body, false);
+    beam(g, 1 / 60);
+    return e.body.velocity.x * g.gun.interval;
+  });
+  assert(impulses[0] > 0);
+  assert(impulses[1] >= impulses[0] * 0.95 && impulses[1] <= impulses[0]);
+  assert(impulses[2] >= impulses[0] && impulses[2] <= impulses[0] * 1.2);
+});
+
 test('Splinter releases three fragments per ray once per pulse and retains total fragment energy', () => {
   for (const prism of [false, true]) {
     const g = fixture(['cutting-torch', 'scatter', 'split', ...(prism ? ['prism-array'] : [])]);

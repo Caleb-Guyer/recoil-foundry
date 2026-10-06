@@ -1,12 +1,13 @@
 # Upgrade continuity validation — 4.12.0
 
-The full local regular suite passed **2,628 tests**, followed by **47 focused checks** after the final fragment clearance fix. TypeScript and the Vite production build passed. GitHub runs the regular suite and all eight groups of the 9,216 maximal-build simulations before deployment.
+The full local regular suite passed **2,628 tests**, followed by **47 focused checks** after the fragment clearance fix, **111 checks** for archived Daily compatibility, and **70 checks** after the final Thermal Runaway and shared impulse fixes. TypeScript and the Vite production build passed. GitHub runs the regular suite and all eight groups of the 9,216 maximal-build simulations before deployment.
 
 ## Real firing behavior
 
 - Five Scattershot rays and ten Prism rays each hit separate physical targets. Their aggregate damage matches the existing spread budget and Prism's declared 60% per split ray.
 - Damage remains equal at 30, 60 and 120 Hz for continuous, Prism, charged and Pulse Chamber spreads. Recoil forecast and real emitted impulses remain equal through charge, hold, release and recovery.
 - Charge Lens spends one stored cell and one Landing shot bonus for the whole five-lance discharge. Front and rear rays retain unique identities and do not cancel the forward kick.
+- Thermal Runaway retains its 75% full-focus bonus across the rays touching the tracked enemy. Continuous and Prism spreads integrate the same ramp; fully charged spreads inherit the full focus bonus. Contact impulse stays within the shared spread and Prism energy budget instead of multiplying enemy knockback by the ray count.
 - Splinter produces three fragments per ray once per pulse, preserves total fragment energy, and starts outside the hit surface so outward fragments actually travel. Secondary rounds retain their existing cap and cannot recursively splinter.
 - Every ray respects real rotated cover, muzzle obstructions, banks and penetration limits. Rays hitting the same prop sum their contact energy before destruction; nothing behind it takes damage in the same step.
 - Resonator groups all portal-crossing rays into the same delayed discharge, retains frozen exits and remaining budgets, and retraces current cover. Echoes do not grant extra recoil or charges.

@@ -15,7 +15,7 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
         len = distance(s.a, s.b),
         offset = s.muzzle ? Math.min(path === t.rear ? 17 : 31, len) : 0,
         a = { x: s.a.x + s.dir.x * offset, y: s.a.y + s.dir.y * offset },
-        hot = s.enemy?.id === t.target && (s.ray ?? 0) === 0 ? t.heat : 0;
+        hot = s.enemy?.id === t.target && (!t.legacyPattern || (s.ray ?? 0) === 0) ? t.heat : 0;
       c.beginPath();
       c.moveTo(a.x, a.y);
       c.lineTo(s.b.x, s.b.y);
