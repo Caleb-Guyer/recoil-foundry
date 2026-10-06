@@ -576,22 +576,25 @@ export function modDescription(
     }
   }
   const combined = [...new Set([...mods, mod.id])];
-  const beamGun = getGun(combined, startingGun);
-  const rays = torchRayCount(beamGun, combined, seed);
+  const countPattern =
+    mod.id === 'cutting-torch' || (beam && ['scatter', 'prism-array', 'backfire'].includes(mod.id));
+  const rays = countPattern ? torchRayCount(getGun(combined, startingGun), combined, seed) : 1;
   const pattern = rays === 1 ? 'A continuous beam' : `${rays} separate beams in your firing spread`;
   if (mod.id === 'cutting-torch' && mods.includes('charge-lens'))
     return `Hold to charge. Release ${rays === 1 ? 'a cutting lance' : rays + ' cutting lances in your firing spread'} with one heavy kick.`;
   if (mod.id === 'cutting-torch' && mods.includes('prism-array'))
     return `${rays} angled beams with steady recoil. Each pellet keeps both Prism rays. Hold fire to cut.`;
   if (beam && mod.id === 'prism-array')
-    return `${rays} angled beams: each existing beam splits into two rays at 60% power each. Your spread and rear fire stay intact.`;
+    return rays > 2
+      ? `${rays} angled beams with 20% more total beam energy. A strong aimed core keeps your outer spread and rear fire.`
+      : 'Two angled rays at 60% power each. Aim along either ray. Rear fire stays intact.';
   if (beam && mod.id === 'backfire')
     return `Add ${rays} rear ${mods.includes('charge-lens') ? 'lances' : 'beams'} matching your forward spread. 20% longer shot delay.`;
   if (beam && mod.id === 'split')
     return 'Each beam breaks into three smaller rounds on its first contact per pulse.';
   if (beam && mods.includes('charge-lens')) {
     if (mod.id === 'scatter')
-      return `${rays} charged lances in a spread. 60% more total damage. 25% longer charge and recovery.`;
+      return `${rays} charged lances with a strong aimed core and outer spread. 60% more total damage. 25% longer charge and recovery.`;
     if (mod.id === 'rapid')
       return 'Shorter charge and recovery. 28% lighter lances and gentler recoil.';
     if (mod.id === 'magnum') return '75% stronger lances with 40% longer charge and recovery.';
@@ -632,7 +635,7 @@ export function modDescription(
   }
   switch (mod.id) {
     case 'scatter':
-      return `${rays} separate beams in a spread. 28% more sustained damage. Slower pulses.`;
+      return `${rays} separate beams with a strong aimed core and outer spread. 28% more total sustained damage. Slower pulses.`;
     case 'burst':
       return 'Three concentrated beam pulses, then recovery. 10% lighter hits.';
     case 'rapid':

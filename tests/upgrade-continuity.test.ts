@@ -32,8 +32,12 @@ for (const prism of [false, true])
     beam(g, 0.1);
     assert.equal(g.torch.segments.filter((s) => s.muzzle).length, prism ? 10 : 5);
     assert.equal(new Set(g.torch.segments.map((s) => s.ray)).size, prism ? 10 : 5);
-    const perRay = (g.gun.damage * TORCH.output * 0.1 * (prism ? 0.6 : 1)) / g.gun.interval;
-    for (const e of enemies) near(e.maxHp - e.hp, perRay);
+    const total =
+      (g.gun.damage * g.gun.pellets * TORCH.output * 0.1 * (prism ? 1.2 : 1)) / g.gun.interval;
+    for (let i = 0; i < enemies.length; i++) {
+      const weight = Math.abs(angles[i]) < 0.02 ? 0.8 / (prism ? 2 : 1) : 0.2 / (prism ? 8 : 4);
+      near(enemies[i].maxHp - enemies[i].hp, total * weight);
+    }
     near(
       enemies.reduce((sum, e) => sum + e.maxHp - e.hp, 0),
       (g.gun.damage * g.gun.pellets * TORCH.output * 0.1 * (prism ? 1.2 : 1)) / g.gun.interval,
@@ -41,6 +45,17 @@ for (const prism of [false, true])
     assert.equal(g.shots.length, 0);
     assert.equal(g.shotCount, 1, 'Rays do not mint extra discharges');
   });
+
+test("taking Scattershot preserves the laser's focused damage at range", () => {
+  const damage = [[], ['scatter'], ['scatter', 'prism-array']].map((extra) => {
+    const g = fixture(['cutting-torch', ...extra]);
+    const e = target(g, 1000);
+    beam(g, 0.1);
+    return e.maxHp - e.hp;
+  });
+  near(damage[1] / damage[0], 1.024);
+  near(damage[2] / damage[0], 1.2288);
+});
 
 test('beam and scatter acquisition order, native shotgun pellets and nailgun pulses keep their patterns', () => {
   for (const startingGun of ['pistol', 'shotgun', 'nailgun'] as const)
@@ -306,7 +321,7 @@ test('archived Dailies keep their original wide-beam damage while new Daily iden
     assert.equal(g.torch.segments.filter((s) => s.muzzle).length, old ? 1 : 5);
     near(
       e.maxHp - e.hp,
-      (g.gun.damage * TORCH.output * 0.1 * (old ? g.gun.pellets : 1)) / g.gun.interval,
+      (g.gun.damage * g.gun.pellets * TORCH.output * 0.1 * (old ? 1 : 0.8)) / g.gun.interval,
     );
     assert.equal(g.torch.legacyPattern, old);
   }

@@ -15,17 +15,20 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
         len = distance(s.a, s.b),
         offset = s.muzzle ? Math.min(path === t.rear ? 17 : 31, len) : 0,
         a = { x: s.a.x + s.dir.x * offset, y: s.a.y + s.dir.y * offset },
-        hot = s.enemy?.id === t.target && (!t.legacyPattern || (s.ray ?? 0) === 0) ? t.heat : 0;
+        hot = s.enemy?.id === t.target && (!t.legacyPattern || (s.ray ?? 0) === 0) ? t.heat : 0,
+        rayWidth =
+          width *
+          (!t.legacyPattern && g.gun.pellets > 1 ? ((s.power ?? 1) > 0.25 ? 1.25 : 0.8) : 1);
       c.beginPath();
       c.moveTo(a.x, a.y);
       c.lineTo(s.b.x, s.b.y);
       c.strokeStyle = '#ebad68';
       c.globalAlpha = (reduced ? 0.13 : 0.19) / (g.gun.pellets > 1 ? 2 : 1);
-      c.lineWidth = width + 5.4;
+      c.lineWidth = rayWidth + 5.4;
       c.stroke();
       c.strokeStyle = hot > 0.6 ? '#fff0c7' : '#ffd59b';
       c.globalAlpha = 0.9;
-      c.lineWidth = width + hot * 0.6;
+      c.lineWidth = rayWidth + hot * 0.6;
       c.stroke();
       if (s.body || s.cable || s.anchor) {
         c.globalAlpha = 0.8;

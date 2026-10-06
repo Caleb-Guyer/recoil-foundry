@@ -194,10 +194,14 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     const ep = e?.body.position ?? (terminal ? g.areaEvents.site : { x: exitX, y: 700 }),
       // Heavy shells should lead a short movement, not predict an entire
       // long flight through the target's next landing or direction change.
-      lead = Math.min(
-        pathMods[0] === 'shellshock' ? 15 : Infinity,
-        distance(p, ep) / g.gun.projectileSpeed,
-      ),
+      // Keep the new split beam's focused core on the current hull.
+      lead =
+        g.torch.equipped && !g.torch.legacyPattern && g.gun.pellets > 1
+          ? 0
+          : Math.min(
+              pathMods[0] === 'shellshock' ? 15 : Infinity,
+              distance(p, ep) / g.gun.projectileSpeed,
+            ),
       dx = ep.x - p.x,
       dy = p.y - ep.y;
     let aim = {

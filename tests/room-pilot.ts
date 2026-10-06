@@ -3,6 +3,7 @@ import { type Game, type Input } from '../src/game.ts';
 import { distance } from '../src/rules.ts';
 import { dodgePilot } from './combat-pilot.ts';
 import { blackoutInput } from './blackout-pilot.ts';
+import { torchPattern } from '../src/torch-pattern.ts';
 
 // Ordinary input only: navigate around shelves, use recoil to climb, and
 // deliberately release charged weapons. Health, AI and physics stay intact.
@@ -100,10 +101,12 @@ export function playRoom(g: Game, seconds: number, stop: () => boolean = () => f
     }
     if (g.mods.includes('prism-array') && input.aim) {
       const dx = input.aim.x - g.player.position.x,
-        dy = input.aim.y - g.player.position.y;
+        dy = input.aim.y - g.player.position.y,
+        // Aim along the visible core ray, including the closer Scattershot fan.
+        angle = g.torch.legacyPattern ? 0.09 : -torchPattern(g.gun, g.mods, g.shotCount)[0].angle;
       input.aim = {
-        x: g.player.position.x + dx * Math.cos(0.09) - dy * Math.sin(0.09),
-        y: g.player.position.y + dx * Math.sin(0.09) + dy * Math.cos(0.09),
+        x: g.player.position.x + dx * Math.cos(angle) - dy * Math.sin(angle),
+        y: g.player.position.y + dx * Math.sin(angle) + dy * Math.cos(angle),
       };
     }
     g.tick(1 / 60, {

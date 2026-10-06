@@ -380,7 +380,11 @@ export function dodgePilot(
             charged = g.gun.landing && g.landingReady;
           // Lead visible motion; aiming at the current position wastes slow
           // shells while a floating boss or recoil gunner is moving away.
-          const flight = distance(p, target) / g.gun.projectileSpeed;
+          // Keep the new split beam's focused core on the current hull.
+          const flight =
+            g.torch.equipped && !g.torch.legacyPattern && g.gun.pellets > 1
+              ? 0
+              : distance(p, target) / g.gun.projectileSpeed;
           const travel =
             e.kind === 'interceptor' && (e.state === 'airborne' || e.state === 'recover')
               ? (1 -
