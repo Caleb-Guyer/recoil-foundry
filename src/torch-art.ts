@@ -8,7 +8,7 @@ export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   if (!t.equipped || !t.active || !['playing', 'paused'].includes(g.mode)) return;
   c.save();
   c.lineCap = 'round';
-  const width = 1.6 * (t.finisher ? 0.6 : 1);
+  const width = (t.legacyPattern && g.gun.pellets > 1 ? 8 : 1.6) * (t.finisher ? 0.6 : 1);
   for (const path of [t.segments, t.rear])
     for (let i = 0; i < path.length; i++) {
       const s = path[i],

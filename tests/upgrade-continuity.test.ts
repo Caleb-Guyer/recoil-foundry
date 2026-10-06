@@ -10,6 +10,9 @@ import { RESONATOR } from '../src/cross-fusions.ts';
 import { withParents } from '../src/branch-builds.ts';
 import { playRoom } from './room-pilot.ts';
 import { projectileLights } from '../src/projectile-light.ts';
+import { DAILY_RULESET, dailyForDate, SUPPORTED_DAILY_RULESETS } from '../src/daily.ts';
+import { createUpgradeDemo, destroyUpgradeDemo } from '../src/upgrade-demo.ts';
+import { dailyStartingGun } from '../src/starting-guns.ts';
 
 const near = (a: number, b: number, tolerance = 1e-5) =>
   assert(Math.abs(a - b) < tolerance, `${a} != ${b}`);
@@ -256,6 +259,66 @@ test('upgrade copy and comparisons show the combined beam count in either acquis
       after: '10 beams',
     },
   );
+});
+
+test('archived Dailies keep their original wide-beam damage while new Daily identities use the spread', () => {
+  assert.equal(DAILY_RULESET, 87);
+  for (const ruleset of SUPPORTED_DAILY_RULESETS) {
+    const daily = dailyForDate('2026-10-05', ruleset)!;
+    const g = fixture(['cutting-torch', 'scatter']);
+    g.seed = daily.seed;
+    const e = target(g);
+    beam(g, 0.1);
+    const old = ruleset < 87;
+    assert.equal(g.torch.segments.filter((s) => s.muzzle).length, old ? 1 : 5);
+    near(
+      e.maxHp - e.hp,
+      (g.gun.damage * TORCH.output * 0.1 * (old ? g.gun.pellets : 1)) / g.gun.interval,
+    );
+    assert.equal(g.torch.legacyPattern, old);
+  }
+  assert.notEqual(dailyForDate('2026-10-05', 86)!.seed, dailyForDate('2026-10-05')!.seed);
+  for (const branch of ['prism-array', 'charge-lens', 'pulse-chamber']) {
+    const g = fixture([
+      'cutting-torch',
+      'scatter',
+      ...(branch === 'pulse-chamber' ? ['burst'] : []),
+      branch,
+    ]);
+    g.seed = dailyForDate('2026-10-05', 86)!.seed;
+    const e = target(g, 400);
+    Body.scale(e.body, 1, 15);
+    beam(g, 1.2);
+    if (branch === 'charge-lens') beam(g, 0.1, false);
+    assert(e.hp < e.maxHp);
+    assert.equal(g.torch.segments.filter((s) => s.muzzle).length, branch === 'prism-array' ? 2 : 1);
+  }
+});
+
+test('archived Daily descriptions, comparison stats and live previews match the preserved gun', () => {
+  const seed = dailyForDate('2026-10-05', 86)!.seed;
+  assert.match(modDescription(mod('scatter'), ['cutting-torch'], 'pistol', seed), /wider beam/);
+  assert.match(
+    modDescription(mod('cutting-torch'), ['scatter'], 'pistol', seed),
+    /continuous beam/,
+  );
+  const inspection = inspectUpgrade(
+    ['cutting-torch'],
+    mod('scatter'),
+    'pistol',
+    100,
+    undefined,
+    seed,
+  );
+  assert(!inspection.changes.some((c) => c.label === 'Pattern'));
+  assert.match(inspection.connections[0], /beam width/);
+  const g = createUpgradeDemo(['cutting-torch', 'scatter'], dailyStartingGun(seed)!, seed);
+  assert(g.testRun && g.torch.legacyPattern);
+  g.time += 1 / 60;
+  g.torch.beforeStep(1 / 60, true);
+  g.torch.afterStep(1 / 60);
+  assert.equal(g.torch.segments.filter((s) => s.muzzle).length, 1);
+  destroyUpgradeDemo(g);
 });
 
 test('new play links are legal, deterministic, repeatable and isolated for every gun and orientation', () => {

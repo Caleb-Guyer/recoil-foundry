@@ -2659,6 +2659,7 @@ function showDialog(kind: string) {
               to,
               game.mods.filter((id) => id !== swap.from),
               game.startingGun,
+              game.seed,
             ) +
             '</span>' +
             (modPathLabel(to.id)
@@ -2677,7 +2678,10 @@ function showDialog(kind: string) {
         Array.from(content.querySelectorAll<HTMLButtonElement>('[data-swap]')).map((button) => {
           const swap = game.reforge.offers[Number(button.dataset.swap)],
             mod = MODS.find((m) => m.id === swap.to)!;
-          return [button, inspectUpgrade(game.mods, mod, game.startingGun, game.hp, swap.from)];
+          return [
+            button,
+            inspectUpgrade(game.mods, mod, game.startingGun, game.hp, swap.from, game.seed),
+          ];
         }),
       ),
     );
@@ -2802,7 +2806,7 @@ function showDialog(kind: string) {
             '</kbd></span><strong>' +
             m.name +
             '</strong><span class="mod-copy">' +
-            modDescription(m, game.mods, game.startingGun) +
+            modDescription(m, game.mods, game.startingGun, game.seed) +
             '</span>' +
             (modPathLabel(m.id) ? '<span class="mod-path">' + modPathLabel(m.id) + '</span>' : '') +
             '</button>',
@@ -2844,6 +2848,8 @@ function showDialog(kind: string) {
             game.offers.find((m) => m.id === button.dataset.mod)!,
             game.startingGun,
             game.hp,
+            undefined,
+            game.seed,
           ),
         ]),
       ),

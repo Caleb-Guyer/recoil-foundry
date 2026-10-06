@@ -10,11 +10,12 @@ import { isBoss } from './enemies.ts';
 import { POCKET, pocketDirection } from './corner-pocket.ts';
 import type { PressureVent } from './pressure.ts';
 import type { FloodValve } from './floodgate.ts';
-import { torchPattern } from './torch-pattern.ts';
+import { legacyTorchPattern, torchPattern } from './torch-pattern.ts';
 
 export const TORCH = {
   range: 1100,
   radius: 1.5,
+  legacyScatterRadius: 5,
   burstSpacing: 0.7,
   burstWidth: 0.35,
   burstCycle: 3.1,
@@ -62,7 +63,9 @@ export interface TorchOrigin {
 }
 const add = (p: Vec, d: Vec, n: number): Vec => ({ x: p.x + d.x * n, y: p.y + d.y * n });
 const shielded = (e: Enemy, d: Vec) => e.elite === 'shielded' && -d.x * e.facing > 0.45;
-export const torchRadius = (g: Game) => TORCH.radius * (g.torch?.finisher ? 0.6 : 1);
+export const torchRadius = (g: Game) =>
+  (g.torch?.legacyPattern && g.gun.pellets > 1 ? TORCH.legacyScatterRadius : TORCH.radius) *
+  (g.torch?.finisher ? 0.6 : 1);
 
 // Trace first, damage afterwards. Cutting a surface never lets the same step
 // hit something that was behind it. Every segment uses actual convex hulls.
@@ -301,6 +304,9 @@ export class TorchSystem {
   get equipped() {
     return this.game.mods.includes('cutting-torch');
   }
+  get legacyPattern() {
+    return legacyTorchPattern(this.game.seed);
+  }
   get discharge() {
     return this.active ? this.pulse?.discharge : undefined;
   }
@@ -513,8 +519,19 @@ export class TorchSystem {
     }
     return due;
   }
-  private paths(rear = false) {
+  private paths(rear = false, relay = { used: false }) {
     const g = this.game;
+    if (this.legacyPattern) {
+      if (!g.mods.includes('prism-array')) return traceTorch(g, rear, 0, TORCH.segments, relay);
+      const limit = Math.floor(TORCH.segments / (g.gun.rearVolley ? 4 : 2));
+      return [-0.09, 0.09].flatMap((angle, ray) =>
+        traceTorch(g, rear, angle, limit, relay).map((s) => ({
+          ...s,
+          gain: s.gain * 0.6,
+          ray: ray + (rear ? 2 : 0),
+        })),
+      );
+    }
     const pattern = torchPattern(g.gun, g.mods, g.shotCount);
     return pattern.flatMap(({ angle, power }, ray) =>
       traceTorch(g, rear, angle).map((s) => ({
@@ -533,8 +550,9 @@ export class TorchSystem {
       this.target = undefined;
       this.revision = g.portals.revision;
     }
-    this.segments = this.paths();
-    this.rear = g.gun.rearVolley ? this.paths(true) : [];
+    const relay = { used: false };
+    this.segments = this.paths(false, relay);
+    this.rear = g.gun.rearVolley ? this.paths(true, relay) : [];
     const target = this.segments.find((s) => (s.ray ?? 0) === 0 && s.enemy)?.enemy,
       eligible = target && !shielded(target, this.segments.find((s) => s.enemy === target)!.dir);
     if (!eligible || target.id !== this.target) {
@@ -567,7 +585,10 @@ export class TorchSystem {
     }
     if (this.finisher && g.mods.includes('resonator')) {
       const recorded = new Set<number>();
-      for (const s of this.segments) {
+      const paths = this.legacyPattern
+        ? [all.find((s) => s.portalExit)].filter((s): s is TorchSegment => !!s)
+        : this.segments;
+      for (const s of paths) {
         const ray = s.ray ?? 0;
         if (!s.portalExit || recorded.has(ray)) continue;
         recorded.add(ray);
@@ -656,7 +677,7 @@ export class TorchSystem {
           }
         }
       } else if (first) {
-        const damage = impacts.get(object!) ?? s.damage;
+        const damage = this.legacyPattern ? s.damage : (impacts.get(object!) ?? s.damage);
         const impact = { ...s, damage };
         if (segment.cable) g.cargo.cut(segment.cable, damage);
         else if (segment.anchor) g.harpoons.hitAnchor(segment.anchor, damage);
@@ -668,14 +689,14 @@ export class TorchSystem {
           g.destruction.hitBody(segment.body, damage, s.vel, impact);
         }
       }
-      const ray = segment.ray ?? 0;
-      if (object && !this.splitRays.has(ray)) {
+      const ray = this.legacyPattern ? 0 : (segment.ray ?? 0);
+      if ((this.legacyPattern ? first : object) && !this.splitRays.has(ray)) {
         // A thin ray stops closer to cover than the fragment's own radius.
         // Start outside that surface so outward fragments can actually fly.
         const fragment = {
           ...s,
           split: false,
-          pos: segment.normal ? add(s.pos, segment.normal, 2) : { ...s.pos },
+          pos: !this.legacyPattern && segment.normal ? add(s.pos, segment.normal, 2) : { ...s.pos },
         };
         g.splitShot(fragment, segment.normal);
         if (fragment.split) this.splitRays.add(ray);

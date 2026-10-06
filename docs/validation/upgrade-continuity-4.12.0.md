@@ -11,6 +11,7 @@ The full local regular suite passed **2,628 tests**, followed by **47 focused ch
 - Every ray respects real rotated cover, muzzle obstructions, banks and penetration limits. Rays hitting the same prop sum their contact energy before destruction; nothing behind it takes damage in the same step.
 - Resonator groups all portal-crossing rays into the same delayed discharge, retains frozen exits and remaining budgets, and retraces current cover. Echoes do not grant extra recoil or charges.
 - Pistol, shotgun and nailgun retain their native patterns in either acquisition order. Existing build, checkpoint, Workshop and replay validation stays intact.
+- Daily ruleset 87 gives the changed mechanics a new challenge identity. Every supported older Daily keeps its wide-beam pattern and damage, including Prism, charged lances and Pulse Chamber. Contextual descriptions and the real comparison renderer use the archived rules; old links, saves and best-time keys remain supported.
 
 ## Playable presets and presentation
 

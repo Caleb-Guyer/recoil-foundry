@@ -6,11 +6,15 @@ const { Body, Bodies, Composite, Engine } = Matter;
 
 // Each inspection owns its own real Game, physics world and random stream.
 // No callback is connected to the player's run, profile, sound or discoveries.
-export function createUpgradeDemo(mods: readonly string[], startingGun: StartingGun) {
+export function createUpgradeDemo(
+  mods: readonly string[],
+  startingGun: StartingGun,
+  seed = 'GUN-COMPARISON',
+) {
   const g = new Game();
   const save: Checkpoint = {
     version: 6,
-    seed: 'GUN-COMPARISON',
+    seed,
     stage: 0,
     hp: 100,
     mods: [...mods],

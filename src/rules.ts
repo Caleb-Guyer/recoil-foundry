@@ -1,4 +1,5 @@
 import { validHunt, huntDetour } from './hunt-rules.ts';
+import { legacyTorchPattern, torchRayCount } from './torch-pattern.ts';
 import { validAreaEvent } from './area-events.ts';
 import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
 import { validFactory } from './factory.ts';
@@ -539,6 +540,7 @@ export function modDescription(
   mod: Mod,
   mods: readonly string[],
   startingGun: StartingGun = 'pistol',
+  seed?: string,
 ): string {
   if (startingGun === 'nailgun' && mod.id === 'burst')
     return '20% shorter burst recovery. 10% lighter hits and 20% lighter kicks.';
@@ -557,9 +559,25 @@ export function modDescription(
   if (mod.id === 'deep-freeze' && mods.includes('coolant-rounds'))
     return 'Full cold briefly freezes ordinary enemies, with a recovery window. Boss cold hits gain a larger damage bonus.';
   const beam = mods.includes('cutting-torch');
+  if (legacyTorchPattern(seed)) {
+    if (beam && mod.id === 'scatter')
+      return mods.includes('charge-lens')
+        ? 'A wider lance with 60% more damage. 25% longer charge and recovery.'
+        : 'A wider beam. 28% more sustained damage. Slower pulses.';
+    if (beam && ['prism-array', 'backfire', 'split'].includes(mod.id)) return mod.description;
+    if (mod.id === 'cutting-torch') {
+      if (mods.includes('charge-lens'))
+        return 'Hold to charge the beam. Release a cutting lance with a heavy kick.';
+      if (mods.includes('prism-array'))
+        return 'Two angled rays with steady recoil. Hold fire and aim along either ray.';
+      return mods.includes('burst') || startingGun === 'nailgun'
+        ? 'A laser with three concentrated pulses, then recovery. Hold fire to cut.'
+        : mod.description;
+    }
+  }
   const combined = [...new Set([...mods, mod.id])];
   const beamGun = getGun(combined, startingGun);
-  const rays = beamGun.pellets * beamGun.lanes * (combined.includes('prism-array') ? 2 : 1);
+  const rays = torchRayCount(beamGun, combined, seed);
   const pattern = rays === 1 ? 'A continuous beam' : `${rays} separate beams in your firing spread`;
   if (mod.id === 'cutting-torch' && mods.includes('charge-lens'))
     return `Hold to charge. Release ${rays === 1 ? 'a cutting lance' : rays + ' cutting lances in your firing spread'} with one heavy kick.`;

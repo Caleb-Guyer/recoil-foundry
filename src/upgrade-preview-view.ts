@@ -103,7 +103,7 @@ export class UpgradePreviewView {
     if (!selection || selection.mod.id === 'repair') return;
     for (const [index, mods] of [selection.beforeMods, selection.afterMods].entries()) {
       const canvas = this.root.querySelectorAll('canvas')[index];
-      const game = createUpgradeDemo(mods, selection.startingGun);
+      const game = createUpgradeDemo(mods, selection.startingGun, selection.seed);
       const renderer = new Renderer(canvas, game);
       renderer.reduced = true;
       this.demos.push({ game, renderer });

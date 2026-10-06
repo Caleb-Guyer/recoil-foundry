@@ -5,8 +5,13 @@ export interface TorchRay {
   power: number;
 }
 
-export const torchRayCount = (gun: Gun, mods: readonly string[]) =>
-  gun.pellets * gun.lanes * (mods.includes('prism-array') ? 2 : 1);
+export const BEAM_PATTERN_RULESET = 87;
+export function legacyTorchPattern(seed?: string) {
+  const daily = /^RF-D(\d+)-/.exec(seed ?? '');
+  return !!daily && Number(daily[1]) < BEAM_PATTERN_RULESET;
+}
+export const torchRayCount = (gun: Gun, mods: readonly string[], seed?: string) =>
+  (legacyTorchPattern(seed) ? 1 : gun.pellets * gun.lanes) * (mods.includes('prism-array') ? 2 : 1);
 
 // A pellet stays a ray after conversion. Prism splits each pellet, rather than
 // replacing the entire spread. The aimed lane comes first for Thermal Runaway.

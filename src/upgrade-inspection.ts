@@ -2,7 +2,7 @@ import { getGun, MODS, MOD_REQUIRES, FUSION_REQUIRES, modDescription, type Mod }
 import { BRANCH_PARENTS } from './upgrade-branches.ts';
 import type { StartingGun } from './starting-guns.ts';
 import { SHELL_DIRECT } from './demolition.ts';
-import { torchRayCount } from './torch-pattern.ts';
+import { legacyTorchPattern, torchRayCount } from './torch-pattern.ts';
 
 export interface UpgradeChange {
   label: string;
@@ -15,6 +15,7 @@ export interface UpgradeInspection {
   beforeMods: string[];
   afterMods: string[];
   startingGun: StartingGun;
+  seed?: string;
   changes: UpgradeChange[];
   connections: string[];
 }
@@ -41,6 +42,7 @@ export function inspectUpgrade(
   startingGun: StartingGun,
   hp = 100,
   remove?: string,
+  seed?: string,
 ): UpgradeInspection {
   const base = mods.filter((id) => id !== remove);
   const afterMods = mod.id === 'repair' ? [...base] : [...new Set([...base, mod.id])];
@@ -56,18 +58,18 @@ export function inspectUpgrade(
       afterKind = fireKind(afterMods);
     add('Fire', beforeKind, afterKind);
     if (afterMods.includes('cutting-torch')) {
-      const count = torchRayCount(after, afterMods);
+      const count = torchRayCount(after, afterMods, seed);
       add(
         'Pattern',
         mods.includes('cutting-torch')
-          ? beams(torchRayCount(before, mods))
+          ? beams(torchRayCount(before, mods, seed))
           : before.pellets * before.lanes + ' pellets',
         beams(count),
       );
       add(
         'Rear beams',
         mods.includes('cutting-torch') && before.rearVolley
-          ? number(torchRayCount(before, mods))
+          ? number(torchRayCount(before, mods, seed))
           : '0',
         after.rearVolley ? number(count) : '0',
       );
@@ -112,7 +114,7 @@ export function inspectUpgrade(
   if (remove) {
     connections.push('Exchanges ' + name(remove) + ' for ' + mod.name + '.');
     const lost = MODS.find((m) => m.id === remove);
-    if (lost) connections.push('Give up: ' + modDescription(lost, mods, startingGun));
+    if (lost) connections.push('Give up: ' + modDescription(lost, mods, startingGun, seed));
   }
   const parents = [
     ...new Set([
@@ -123,7 +125,7 @@ export function inspectUpgrade(
   ].filter((id) => base.includes(id));
   if (parents.length)
     connections.push(
-      'With ' + parents.map(name).join(' + ') + ': ' + modDescription(mod, base, startingGun),
+      'With ' + parents.map(name).join(' + ') + ': ' + modDescription(mod, base, startingGun, seed),
     );
   else {
     const pairs: [string, string[], string][] = [
@@ -132,9 +134,21 @@ export function inspectUpgrade(
       ['ricochet', ['banker'], 'Each wall bank also earns your Banker damage bonus.'],
       ['capacitor', ['scatter'], 'The charged discharge boosts all your pellets.'],
       ['rapid', ['cutting-torch'], 'Your beam gains sustained damage as its pulses speed up.'],
-      ['scatter', ['cutting-torch'], 'Each pellet remains a separate beam; Prism splits each one.'],
+      [
+        'scatter',
+        ['cutting-torch'],
+        legacyTorchPattern(seed)
+          ? 'Your spread becomes beam width instead of separate pellets.'
+          : 'Each pellet remains a separate beam; Prism splits each one.',
+      ],
       ['magnum', ['cutting-torch'], 'Stronger beam pulses also take longer to recover.'],
-      ['cutting-torch', ['scatter'], 'Keep your Scattershot spread as separate beams.'],
+      [
+        'cutting-torch',
+        ['scatter'],
+        legacyTorchPattern(seed)
+          ? 'Your Scattershot spread becomes beam width.'
+          : 'Keep your Scattershot spread as separate beams.',
+      ],
       ['cutting-torch', ['burst'], 'Your Burst fitting becomes concentrated beam pulses.'],
       ['backfire', ['rail-spike'], 'Charged fire keeps a separate rear rail.'],
       [
@@ -150,10 +164,11 @@ export function inspectUpgrade(
   }
   return {
     mod,
-    description: modDescription(mod, base, startingGun),
+    description: modDescription(mod, base, startingGun, seed),
     beforeMods: [...mods],
     afterMods,
     startingGun,
+    ...(seed ? { seed } : {}),
     changes,
     connections,
   };
