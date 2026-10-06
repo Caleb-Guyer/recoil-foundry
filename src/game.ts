@@ -193,6 +193,7 @@ import {
   type RegionDecision,
 } from './regions.ts';
 import { SpoofSystem, primaryGunShot } from './spoof.ts';
+import { SupportSystem, supportPoolAllowed } from './support-upgrades.ts';
 import { isSubversion } from './subversion-rules.ts';
 import type { ShotTrace } from './shot-trails.ts';
 import {
@@ -273,6 +274,7 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  overkillSpent?: true;
   supportCharged?: true;
   feel?: RoundFeel;
   weaponTrace?: WeaponTrace;
@@ -356,6 +358,7 @@ export class Game {
   annex = new AnnexSystem(this);
   switchboard = new SwitchboardSystem(this);
   spoof = new SpoofSystem(this);
+  support = new SupportSystem(this);
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
   floodgate = new FloodgateSystem(this);
@@ -698,6 +701,7 @@ export class Game {
       this.mobility.reset();
       this.grapnel.reset();
       this.scrap.reset();
+      this.support.reset();
       this.fusions.reset();
       this.harpoons.clear();
     }
@@ -1073,6 +1077,7 @@ export class Game {
     this.mobility.reset();
     this.grapnel.reset();
     this.scrap.reset();
+    this.support.reset();
     this.fusions.reset();
     this.harpoons.clear();
     this.magnets.items = [];
@@ -1447,6 +1452,7 @@ export class Game {
     this.mobility.reset();
     this.grapnel.reset();
     this.scrap.reset();
+    this.support.reset();
     this.fusions.reset();
     this.harpoons.clear();
     this.demolition.clear();
@@ -1640,6 +1646,7 @@ export class Game {
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
+    this.support.update(dt);
     this.cryogenic.update(dt);
     this.story.update(dt);
     this.stasis.input(input.fire);
@@ -2063,12 +2070,19 @@ export class Game {
       this.combatFeel.pumpStartedAt = this.time;
       this.combatFeel.pumpAt = this.time + clamp(this.gun.interval * 0.72, 0.02, 0.42) * 0.65;
     }
-    const damage =
+    const baseDamage =
       this.gun.damage *
       (this.grounded ? 1 : this.gun.airDamage) *
       (charged ? 2 : 1) *
       (capacitor ? 2 : 1) *
       evolutionDamage;
+    const bank = this.support.discharge(
+      baseDamage *
+        this.gun.pellets *
+        this.gun.lanes *
+        (1 + Number(this.gun.rearVolley) + (this.gun.backblast ? 0.8 : 0)),
+    );
+    const damage = baseDamage * bank;
     this.scrap.fire(d);
     if (rail) {
       this.fusions.fireRail(d, damage);
@@ -2079,6 +2093,9 @@ export class Game {
       if (this.gun.rearVolley)
         this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash, false);
     }
+    if (bank > 1)
+      for (const s of this.shots)
+        if (s.id > beforeVolley && primaryGunShot(s)) s.overkillSpent = true;
     this.ballistics.record(beforeVolley, origin, d);
     if (!this.stasis.held && !this.mods.includes('tripline'))
       this.stasis.release(this.shots.filter((s) => s.id > beforeVolley));
@@ -2155,6 +2172,18 @@ export class Game {
             ];
           }
         }
+        if (this.support.spreadScale < 1)
+          a = Math.atan2(d.y, d.x) + (a - Math.atan2(d.y, d.x)) * this.support.spreadScale;
+        if (waypoints && this.support.spreadScale < 1)
+          waypoints = waypoints.map((point) => {
+            const along = (point.x - spawn.x) * d.x + (point.y - spawn.y) * d.y;
+            const across =
+              ((point.y - spawn.y) * d.x - (point.x - spawn.x) * d.y) * this.support.spreadScale;
+            return {
+              x: spawn.x + d.x * along - d.y * across,
+              y: spawn.y + d.y * along + d.x * across,
+            };
+          });
         this.addShot({
           feel:
             this.startingGun === 'shotgun'
@@ -3270,6 +3299,7 @@ export class Game {
             s.reflected ? 'reflection' : undefined,
             shotTrace(s),
           );
+          this.support.gunHit(e, previousHp, s);
           this.spoof.hit(e, previousHp, primaryGunShot(s));
           if (blocked) {
             if (s.massDriver && !s.shell) {
@@ -3324,7 +3354,7 @@ export class Game {
           }
         } else if (nearest.player) {
           rivalImpact(this, s);
-          this.damagePlayer(s.damage, s.pos, s.damageCause ?? { type: 'shot' });
+          this.damagePlayer(s.damage, s.pos, s.damageCause ?? { type: 'shot' }, s);
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
@@ -3645,10 +3675,11 @@ export class Game {
         this.hitEnemy(other, 9999, undefined, true, true, true, 'cleanup');
     return blocked;
   }
-  damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }) {
+  damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }, shot?: Shot) {
     if (this.workshop.active) return;
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
+    if (shot && this.support.absorb(shot)) return;
     this.hp = Math.max(0, this.hp - amount);
     if (this.practice && amount > 0) this.practiceHits++;
     if (amount > 0) this.maintenance.damaged();
@@ -3901,8 +3932,10 @@ export class Game {
       (!(
         id === 'repair' &&
         this.overtime &&
-        availableMods(this.mods).filter((m) => draftUnlocked(m.id, this.unlocks, this.seed))
-          .length === 0
+        availableMods(this.mods).filter(
+          (m) =>
+            draftUnlocked(m.id, this.unlocks, this.seed) && supportPoolAllowed(m.id, this.seed),
+        ).length === 0
       ) &&
         !availableMods(this.mods, true, !!this.legacyOffers?.includes(id)).some((m) => m.id === id))
     )

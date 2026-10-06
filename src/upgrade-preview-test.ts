@@ -7,6 +7,14 @@ export const UPGRADE_PREVIEW_PRESETS: Record<string, { mods: string[]; offers: s
   beam: { mods: ['cutting-torch', 'burst'], offers: ['scatter', 'rapid', 'pulse-chamber'] },
   stasis: { mods: ['suspension', 'crosshatch'], offers: ['convoy', 'thread-the-needle', 'rapid'] },
   shell: { mods: ['shellshock', 'fuse'], offers: ['implosion', 'aftershock', 'shaped-charge'] },
+  support: {
+    mods: ['cutting-torch', 'scatter', 'prism-array'],
+    offers: ['collimator', 'overkill-bank', 'scrap-armor'],
+  },
+  heat: {
+    mods: ['cutting-torch', 'thermal-runaway'],
+    offers: ['heat-relay', 'overkill-bank', 'scrap-armor'],
+  },
 };
 // Explicit reward-screen previews use the regular UI without profile callbacks.
 export function upgradePreviewTestFromUrl(url: URL): Checkpoint | null {

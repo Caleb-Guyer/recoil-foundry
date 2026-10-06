@@ -491,6 +491,10 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
           'grapnel',
           'corner-pocket',
           'scrap-feed',
+          'collimator',
+          'heat-relay',
+          'overkill-bank',
+          'scrap-armor',
         ].includes(m.id),
     );
     if (!next) break;
@@ -525,6 +529,9 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
       'corner-pocket',
       'scrap-feed',
       'spoof',
+      'collimator',
+      'overkill-bank',
+      'scrap-armor',
     ],
   );
 });

@@ -28,6 +28,7 @@ import { SUBVERSION_MODS, SUBVERSION_PARENTS, isSubversion } from './subversion-
 import { isLegacyDaily } from './daily.ts';
 import { applyStartingGun, validStartingGunSave, type StartingGun } from './starting-guns.ts';
 import { LONGEVITY_MODS, draftUnlocked, validUnlocks } from './longevity.ts';
+import { SUPPORT_MODS, supportDraftAllowed, supportPoolAllowed } from './support-upgrades.ts';
 import {
   dailyRegion,
   annexRevision,
@@ -506,6 +507,7 @@ export const MODS = [
   ...WORKSHOP_MODS,
   ...LONGEVITY_MODS,
   ...SUBVERSION_MODS,
+  ...SUPPORT_MODS,
   {
     id: 'resonator',
     name: 'Resonator',
@@ -665,6 +667,7 @@ export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   tension: { path: 'demolition' },
   'cutting-torch': { path: 'precision' },
   'thermal-runaway': { path: 'precision' },
+  'heat-relay': { path: 'precision' },
   shellshock: { path: 'demolition' },
   'blast-surf': { path: 'demolition' },
   aftershock: { path: 'demolition' },
@@ -725,6 +728,7 @@ export const MOD_REQUIRES: Record<string, string> = {
   'drop-forge': 'mass-driver',
   tension: 'tripwire',
   'thermal-runaway': 'cutting-torch',
+  'heat-relay': 'thermal-runaway',
   afterburner: 'vector',
   'corner-cutter': 'grindshot',
   'wrecking-ball': 'ramjet',
@@ -847,6 +851,9 @@ export function rewardMods(
     pool = availableMods(mods).filter(
       (mod) =>
         draftUnlocked(mod.id, context.unlocks, context.seed) &&
+        supportDraftAllowed(mod.id, context.seed) &&
+        supportPoolAllowed(mod.id, context.seed) &&
+        (!SUPPORT_MODS.some((m) => m.id === mod.id) || context.overtime || context.stage >= 4) &&
         !excluded.includes(mod.id) &&
         (!isLegacyDaily(context.seed ?? '') || !isSubversion(mod.id)) &&
         (!isFusion(mod.id) || fusionUnlocked(context)) &&
@@ -1297,12 +1304,15 @@ function validRewardCheckpoint(d: Checkpoint) {
       !!d.overtime &&
       !r.rerolled &&
       r.offers.length === 1 &&
-      availableMods(d.mods).filter((m) => draftUnlocked(m.id, d.unlocks, d.seed)).length === 0
+      availableMods(d.mods).filter(
+        (m) => draftUnlocked(m.id, d.unlocks, d.seed) && supportPoolAllowed(m.id, d.seed),
+      ).length === 0
     );
   const legal = availableMods(d.mods, true, !!d.legacyOffers);
   return r.offers.every(
     (id) =>
       draftUnlocked(id, d.unlocks, d.seed) &&
+      supportDraftAllowed(id, d.seed) &&
       legal.some((m) => m.id === id) &&
       (!isSalvage(id) || (!r.rerolled && id === r.salvage)) &&
       (!isFusion(id) || fusionUnlocked({ stage: d.stage, overtime: !!d.overtime })) &&
@@ -1436,7 +1446,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       (overtime.repairs === 0 ||
         (validSavedBuild(d.mods, d.legacyMods) &&
           availableMods(d.mods)
-            .filter((m) => draftUnlocked(m.id, d.unlocks, d.seed))
+            .filter(
+              (m) => draftUnlocked(m.id, d.unlocks, d.seed) && supportDraftAllowed(m.id, d.seed),
+            )
             .every(
               (m) =>
                 isFusion(m.id) ||
@@ -1444,6 +1456,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
                 NEW_PATH_MODS.some((mod) => mod.id === m.id) ||
                 isSubversion(m.id) ||
                 WORKSHOP_MODS.some((mod) => mod.id === m.id) ||
+                SUPPORT_MODS.some((mod) => mod.id === m.id) ||
                 m.id === 'arc-coil' ||
                 m.id === 'daisy-chain' ||
                 m.id === 'grindshot' ||
@@ -1538,7 +1551,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     !valid ||
     (d.unlocks !== undefined &&
       (!validUnlocks(d.unlocks) || (/^RF-D\d+-/.test(d.seed) && d.unlocks.length > 0))) ||
-    d.mods.some((id) => !draftUnlocked(id, d.unlocks, d.seed)) ||
+    d.mods.some(
+      (id) => !draftUnlocked(id, d.unlocks, d.seed) || !supportDraftAllowed(id, d.seed),
+    ) ||
     !validRewardCheckpoint(d) ||
     !validRegion(d) ||
     !validReforge(d) ||

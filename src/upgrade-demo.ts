@@ -3,6 +3,7 @@ import { Game, type Input } from './game.ts';
 import { getGun, type Checkpoint } from './rules.ts';
 import type { StartingGun } from './starting-guns.ts';
 const { Body, Bodies, Composite, Engine } = Matter;
+const scenarios = new WeakMap<Game, string>();
 
 // Each inspection owns its own real Game, physics world and random stream.
 // No callback is connected to the player's run, profile, sound or discoveries.
@@ -10,8 +11,10 @@ export function createUpgradeDemo(
   mods: readonly string[],
   startingGun: StartingGun,
   seed = 'GUN-COMPARISON',
+  scenario = '',
 ) {
   const g = new Game();
+  scenarios.set(g, scenario);
   const save: Checkpoint = {
     version: 6,
     seed,
@@ -41,8 +44,11 @@ export function createUpgradeDemo(
     e.workshopTarget = { home: { x, y: 723 }, moving: false };
     e.spawn = 0;
     e.hp = e.maxHp = 160;
+    if ((scenario === 'heat-relay' || scenario === 'overkill-bank') && x === 510)
+      e.hp = e.maxHp = scenario === 'heat-relay' ? 60 : 10;
   }
   g.props.spawn('crate', 760, 717);
+  if (scenario === 'scrap-armor') g.props.spawn('cover', 350, 697);
   Body.setPosition(g.player, { x: 180, y: 721 });
   g.waves.clear();
   return g;
@@ -51,6 +57,39 @@ export function createUpgradeDemo(
 export function upgradeDemoInput(g: Game, step: number): Input {
   const t = step / 60,
     p = g.player.position;
+  const scenario = scenarios.get(g);
+  if (scenario && ['collimator', 'heat-relay', 'overkill-bank', 'scrap-armor'].includes(scenario)) {
+    const target = g.enemies[0];
+    const cover = g.props.items.find((prop) => prop.kind === 'cover');
+    if (scenario === 'scrap-armor' && step === 180)
+      g.addShot({
+        pos: { x: p.x + 160, y: p.y },
+        vel: { x: -8, y: 0 },
+        damage: 14,
+        life: 1.4,
+        friendly: false,
+        radius: 2.5,
+        bounces: 0,
+        pierce: 0,
+        fragment: false,
+        split: false,
+      });
+    return {
+      left: p.x > 220,
+      right: p.x < 165,
+      jump: false,
+      jumpHeld: false,
+      fire: t > 0.15 && t < 4.6,
+      aim:
+        scenario === 'scrap-armor' && cover
+          ? { ...cover.body.position }
+          : scenario === 'collimator' && t > 2 && t < 2.4
+            ? { x: 670, y: 620 + Math.sin(t * 18) * 100 }
+            : target
+              ? { ...target.body.position }
+              : { x: 870, y: 610 },
+    };
+  }
   const jump = step === 190 || step === 300;
   // Shoot, release to recharge/release stored rounds, then recoil through a jump.
   // A late bank tests scenery-dependent effects on the same physical wall.

@@ -88,6 +88,7 @@ export class BreachSystem {
     g.onSound('prop');
     if (panel.hp > 0) return;
     g.scrap.collect(source);
+    g.support.collectPlate(source);
     Composite.remove(g.engine.world, panel.body);
     this.panels = this.panels.filter((p) => p !== panel);
     const { x, y, w, h } = panel.rect,

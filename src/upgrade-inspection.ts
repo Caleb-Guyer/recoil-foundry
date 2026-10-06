@@ -108,6 +108,13 @@ export function inspectUpgrade(
     }
     add('Move speed', number(before.speed * 100) + '%', number(after.speed * 100) + '%');
     add('Healing / kill', number(before.heal), number(after.heal));
+    for (const [id, label, value] of [
+      ['collimator', 'Steady spread', 'Up to 50% tighter'],
+      ['heat-relay', 'Heat carry', 'Half heat · 1s window'],
+      ['overkill-bank', 'Excess reserve', 'Up to +50% next discharge'],
+      ['scrap-armor', 'Scrap plate', '1 small bullet · 4s'],
+    ])
+      add(label, mods.includes(id) ? value : 'None', afterMods.includes(id) ? value : 'None');
     add('Air damage', number(before.airDamage * 100) + '%', number(after.airDamage * 100) + '%');
   }
   const connections: string[] = [];

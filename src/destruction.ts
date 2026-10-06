@@ -128,6 +128,7 @@ export class DestructionSystem {
     const g = this.game;
     if (g.mode !== 'playing' || !this.pieces.includes(piece)) return;
     g.scrap.collect(source);
+    g.support.collectPlate(source);
     const rect = piece.rect;
     Composite.remove(g.engine.world, piece.body);
     g.sappers.disrupt(piece.body);

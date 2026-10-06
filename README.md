@@ -16,6 +16,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Support Systems — version 4.13.0.** Collimator controls your full firing spread, Heat Relay carries heat between beam kills, Overkill Bank saves excess damage for one discharge, and Scrap Armor turns broken cover into temporary protection. Fresh Campaigns and Dailies offer them from zone two; older seeded runs keep their reward sequence. Each fitting has visible indicators, live comparisons and Logbook records. [Release notes and isolated play links](docs/releases/4.13.0.md).
+
 **Keep Your Build — version 4.12.0.** Cutting Torch keeps Scattershot as five separate beams; Prism splits them into ten rays. Charge Lens, Burst, Backfire, Splinter, banks and portals preserve the spread. The shotgun retains its native pellet count, and upgrade comparisons show the actual combined beam count. [Release notes and isolated test links](docs/releases/4.12.0.md).
 
 **Rare Miniboss Hunts — version 4.11.0.** Fresh Campaigns can offer one optional side-door fight from zone two onward. Cut the Cableweaver's live cables, move the Bulwark's shield plates or disarm the Demolisher's explosives in separate spacious arenas. Choose a repair or free upgrade reroll afterward; first victories earn pictured cosmetics and unlock each machine in Practice. Continue and Retry keep the hunt. [Release notes and isolated test links](docs/releases/4.11.0.md).

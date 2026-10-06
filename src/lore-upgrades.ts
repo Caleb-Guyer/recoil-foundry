@@ -4,6 +4,26 @@ export type Lore = readonly [source: string, author: string, text: string];
 
 // These are original Foundry documents. Mechanical descriptions live in the upgrade catalog.
 export const UPGRADE_LORE = {
+  collimator: [
+    'Optics alignment · patient hands',
+    'Dr. S. Anik · development',
+    'The mount closes its guides when the operator holds a steady bearing. Move the tool quickly and they open again. All the outlets remain connected.\n\nVale tested it with ten outlets. Purchasing asked whether we could save money by closing nine of them. I have sent Purchasing the test recording.',
+  ],
+  'heat-relay': [
+    'Thermal return · next frame',
+    'M. Vale · maintenance',
+    'A stopped machine leaves heat in the cutting head. The return line catches half of it before the coolant arrives. You have one second to put it somewhere useful.\n\nThe receiver accepts one destination. I fitted a check valve after the third attempt to send the same heat to an entire patrol.',
+  ],
+  'overkill-bank': [
+    'Excess pressure account',
+    'T. Orr · dispatch',
+    'The frame stopped before the tool did. We collected part of the remaining impulse in a reserve chamber. The next discharge can draw it once.\n\nAn assisted discharge cannot pay into its own account. Even Dispatch has limits on how many times the same delivery can be invoiced.',
+  ],
+  'scrap-armor': [
+    'Temporary plate · field fitting',
+    'E. Holt · safety office',
+    'Broken cover still contains useful steel. The magnetic collar catches a piece and holds it beside the operator for four seconds. A small patrol round spends the plate.\n\nIt will not stop heavy ammunition, machinery or a fall. The collar needs six seconds between fittings. Please read those numbers before trusting the plate.',
+  ],
   'double-jump': [
     'Personnel lift · second attempt',
     'M. Vale · maintenance',

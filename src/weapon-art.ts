@@ -8,6 +8,22 @@ import { pumpCycle } from './combat-feel.ts';
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
 export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolean): void {
+  c.save();
+  if (g.mods.includes('collimator')) {
+    c.fillStyle = '#344d46';
+    c.fillRect(23, -13, 12, 2);
+    c.fillStyle = '#b8ddc9';
+    c.fillRect(23, -13, 12 * g.support.focus, 2);
+  }
+  if (g.mods.includes('overkill-bank')) {
+    c.fillStyle = g.support.reserve > 0 ? '#e7c984' : '#625b48';
+    c.fillRect(5, -14, 5, 3);
+  }
+  if (g.mods.includes('heat-relay')) {
+    c.fillStyle = g.support.relay > 0 && g.time <= g.support.relayUntil ? '#f0b879' : '#68533f';
+    c.fillRect(13, -14, 5, 3);
+  }
+  c.restore();
   if (g.mods.includes('scrap-feed')) {
     c.save();
     c.fillStyle = g.scrap.loaded ? '#dec297' : '#63756a';

@@ -141,6 +141,7 @@ export class ReforgeSystem {
     g.mobility.reset();
     g.grapnel.reset();
     g.scrap.reset();
+    g.support.reset();
     g.fusions.reset();
     g.demolition.clear();
     if (swap.from === 'fold') g.portals.reset();

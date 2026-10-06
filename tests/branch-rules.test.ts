@@ -30,7 +30,7 @@ import { dailyForDate } from '../src/daily.ts';
 
 test('all branch choices require their complete parents, respect both orders and enter at stage seven', () => {
   assert.equal(BRANCH_MODS.length, 14);
-  assert.equal(MODS.length, 113);
+  assert.equal(MODS.length, 117);
   for (const mod of BRANCH_MODS) {
     const parents = withParents([], BRANCH_PARENTS[mod.id])!;
     assert(validBuild([...parents, mod.id]));

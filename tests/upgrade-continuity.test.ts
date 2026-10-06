@@ -310,7 +310,7 @@ test('upgrade copy and comparisons show the combined beam count in either acquis
 });
 
 test('archived Dailies keep their original wide-beam damage while new Daily identities use the spread', () => {
-  assert.equal(DAILY_RULESET, 87);
+  assert.equal(DAILY_RULESET, 88);
   for (const ruleset of SUPPORTED_DAILY_RULESETS) {
     const daily = dailyForDate('2026-10-05', ruleset)!;
     const g = fixture(['cutting-torch', 'scatter']);

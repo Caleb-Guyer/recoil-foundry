@@ -410,10 +410,19 @@ export class TorchSystem {
       // Redline remains responsive to actual speed during continuous thrust.
       this.boost =
         ((landing ? 2 : 1) * (capacitor ? 2 : 1) * evolution) / (1 + g.evolutions.redline);
+      const bank = g.support.discharge(
+        this.payload() *
+          (g.gun.lanes *
+            (g.mods.includes('prism-array') ? 1.2 : 1) *
+            (1 + Number(g.gun.rearVolley)) +
+            (g.gun.backblast ? 0.8 : 0)),
+      );
+      this.boost *= bank;
       this.recoilBoost = (landing ? 1.25 : 1) * g.mobility.shot(d);
       g.scrap.fire(d);
       g.chargedFlash = landing || capacitor || evolution / (1 + g.evolutions.redline) > 1;
       this.pulse = {
+        ...(bank > 1 ? { overkillSpent: true as const } : {}),
         id: ++g.id,
         pos: { ...g.player.position },
         prev: { ...g.player.position },
@@ -481,7 +490,7 @@ export class TorchSystem {
         this.charging = Math.min(this.chargeDuration, this.charging + dt);
         const s = traceTorch(g).find((segment) => segment.enemy);
         const enemy = s?.enemy && !shielded(s.enemy, s.dir) ? s.enemy : undefined;
-        if (enemy?.id !== this.focusTarget) this.focus = 0;
+        if (enemy?.id !== this.focusTarget) this.focus = enemy ? g.support.takeHeat() : 0;
         this.focusTarget = enemy?.id;
         this.focus =
           enemy && g.mods.includes('thermal-runaway')
@@ -534,7 +543,7 @@ export class TorchSystem {
     }
     const pattern = torchPattern(g.gun, g.mods, g.shotCount);
     return pattern.flatMap(({ angle, power }, ray) =>
-      traceTorch(g, rear, angle).map((s) => ({
+      traceTorch(g, rear, angle * g.support.spreadScale).map((s) => ({
         ...s,
         gain: s.gain * power,
         power,
@@ -556,7 +565,7 @@ export class TorchSystem {
     const target = this.segments.find((s) => (s.ray ?? 0) === 0 && s.enemy)?.enemy,
       eligible = target && !shielded(target, this.segments.find((s) => s.enemy === target)!.dir);
     if (!eligible || target.id !== this.target) {
-      this.heat = 0;
+      this.heat = eligible && !g.mods.includes('charge-lens') ? g.support.takeHeat() : 0;
       this.target = eligible ? target.id : undefined;
     }
     // Intentional gaps preserve heat only while the aim still tracks the same
@@ -661,6 +670,7 @@ export class TorchSystem {
           undefined,
           segment.weaponTrace,
         );
+        g.support.gunHit(e, previousHp, s, true);
         g.spoof.hit(e, previousHp, true);
         if (!blocked) {
           g.evolutions.hit(s);

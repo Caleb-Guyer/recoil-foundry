@@ -192,6 +192,10 @@ test('old exhausted Overtime builds with repairs resume and can earn their new f
           'grapnel',
           'corner-pocket',
           'scrap-feed',
+          'collimator',
+          'heat-relay',
+          'overkill-bank',
+          'scrap-armor',
         ].includes(m.id),
     );
     if (!next) break;

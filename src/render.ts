@@ -1665,6 +1665,18 @@ export class Renderer {
       pose = playerPose(g, this.reduced);
     c.save();
     c.translate(p.x, p.y);
+    if (g.support.plate || g.time < g.support.plateFlashUntil) {
+      c.strokeStyle = '#b8ddc9';
+      c.lineWidth = g.support.plate ? 2 : 1;
+      c.beginPath();
+      for (const side of [-1, 1]) {
+        c.moveTo(side * 12, -13);
+        c.lineTo(side * 17, -8);
+        c.lineTo(side * 17, 10);
+        c.lineTo(side * 12, 15);
+      }
+      c.stroke();
+    }
     if (g.mods.includes('wing-harness')) {
       const spread = g.mobility.gliding ? 28 : 11;
       c.strokeStyle = g.mobility.glideLeft > 0 ? '#b8ddc9' : '#52665d';

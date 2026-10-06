@@ -345,6 +345,7 @@ export class PropSystem {
     this.remove(prop);
     if (!prop.welded && (prop.kind === 'crate' || prop.kind === 'cover'))
       this.game.scrap.collect(source);
+    if (prop.kind === 'crate' || prop.kind === 'cover') this.game.support.collectPlate(source);
     if (prop.charge) return;
     if (prop.kind === 'rubble') {
       this.game.burst(prop.body.position, 3, '#a9b5b3', 1.5);
