@@ -99,6 +99,7 @@ export class SupportSystem {
     if (!this.game.mods.includes('overkill-bank') || !(baseDamage > 0)) return 1;
     const gain = Math.min(0.5, this.reserve / baseDamage);
     this.reserve = 0;
+    this.game.combatReport.bankCharge(baseDamage * gain);
     return 1 + gain;
   }
   gunHit(e: Enemy, previousHp: number, s: Shot, beam = false) {
@@ -132,6 +133,7 @@ export class SupportSystem {
       this.game.mods.includes('heat-relay') && this.game.time <= this.relayUntil ? this.relay : 0;
     this.relay = 0;
     this.relayUntil = -1;
+    this.game.combatReport.heatTransfer(heat);
     return heat;
   }
   collectPlate(s?: Shot) {
@@ -165,6 +167,7 @@ export class SupportSystem {
     )
       return false;
     this.plateUntil = -1;
+    this.game.combatReport.armorBlock();
     this.plateFlashUntil = this.game.time + 0.2;
     this.game.burst(this.game.player.position, 8, '#b8ddc9', 2.5);
     this.game.onSound('armor');

@@ -6,6 +6,7 @@ import { MODS } from './rules.ts';
 import { damageCauseText } from './damage-cause.ts';
 import { canPracticeRunBuild, canReplayRun, reachedRoom, type RunRecap } from './run-history.ts';
 import { FACTORY_CONDITIONS } from './factory.ts';
+import { combatReportMenu } from './combat-report-menu.ts';
 
 export const escapeRecapText = (value: string) =>
   value.replace(
@@ -14,7 +15,12 @@ export const escapeRecapText = (value: string) =>
   );
 const time = (seconds: number) =>
   Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0');
-export function recapBody(run: RunRecap, index: number, known: readonly string[]) {
+export function recapBody(
+  run: RunRecap,
+  index: number,
+  known: readonly string[],
+  withReport = true,
+) {
   const canBuild = canPracticeRunBuild(run, known),
     replay = canReplayRun(run);
   return (
@@ -58,7 +64,10 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
         FINALE_NAMES[uprisingFinale(run.uprising)] +
         '</p>'
       : '') +
-    '<h3>Your gun</h3><p class="recap-note">' +
+    (withReport ? combatReportMenu(run, index) : '') +
+    '<h3>' +
+    (withReport ? 'All fittings' : 'Your gun') +
+    '</h3><p class="recap-note">' +
     STARTING_GUNS[run.startingGun ?? 'pistol'].name +
     '</p>' +
     (run.legacyMods
@@ -100,8 +109,9 @@ export function recapBody(run: RunRecap, index: number, known: readonly string[]
 }
 export function resultRecap(run: RunRecap, known: readonly string[]) {
   return (
+    combatReportMenu(run) +
     '<details class="run-recap"><summary>Run recap</summary>' +
-    recapBody(run, 0, known) +
+    recapBody(run, 0, known, false) +
     '<button id="recap-history" class="quiet">Recent runs</button></details>'
   );
 }

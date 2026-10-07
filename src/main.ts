@@ -1,4 +1,7 @@
 import './reward-cards.css';
+import './combat-report.css';
+import { combatReportMenu, type ReportGun } from './combat-report-menu.ts';
+import { drawCombatReportImages } from './combat-report-art.ts';
 import {
   WEAPON_UNLOCKS_KEY,
   loadWeaponUnlocks,
@@ -445,7 +448,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Support Systems</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Your Run, Explained</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -2234,11 +2237,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Make your build work together.</h2>' +
-      '<p class="update-tagline">Four new fittings for fresh Campaigns and Daily runs.</p>' +
-      '<dl class="update-notes"><div><dt>Control the spread.</dt><dd>Collimator tightens every pellet and beam when you hold your aim steady. Sweep to open the fan again.</dd></div>' +
-      '<div><dt>Carry the momentum.</dt><dd>Heat Relay passes half a defeated beam target’s heat to the next enemy. Overkill Bank saves excess direct-hit damage for one stronger discharge.</dd></div>' +
-      '<div><dt>Turn cover into protection.</dt><dd>Scrap Armor catches a temporary plate when your shots break crates or cracked cover. It absorbs one small enemy bullet. Weapon fittings show your focus and reserves; mint plates show protection.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">What carried your run?</h2>' +
+      '<p class="update-tagline">See the gun you built and what its fittings accomplished.</p>' +
+      '<dl class="update-notes"><div><dt>Your finished gun.</dt><dd>The end screen pictures your actual weapon and outfit, with the finish and fittings you used.</dd></div>' +
+      '<div><dt>Connected upgrades.</dt><dd>Short highlights explain your final pattern and combinations, including the pellets that became separate beams.</dd></div>' +
+      '<div><dt>Recorded results.</dt><dd>Expand the report for completed heat transfers, Overkill charges used, Scrap Armor blocks and health restored by Bloodwork. Continue carries the totals forward; Recent Runs keeps the report.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2342,6 +2345,7 @@ function showDialog(kind: string) {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     runHistory = loadRunHistory([...runHistory, ...loadRunHistory(read(RUN_HISTORY_KEY))]);
     content.innerHTML = runHistoryMenu(runHistory, discovered);
+    drawCombatReportImages(content, runHistory);
     bindRecapActions(
       content,
       runHistory,
@@ -3217,6 +3221,7 @@ function showDialog(kind: string) {
     }
     if (finishedRun) {
       content.insertAdjacentHTML('beforeend', resultRecap(finishedRun, discovered));
+      drawCombatReportImages(content, [finishedRun]);
       bindRecapActions(
         content,
         [finishedRun],
@@ -3226,6 +3231,22 @@ function showDialog(kind: string) {
         saveRunBlueprint,
       );
       $('recap-history').onclick = () => showDialog('history');
+    } else if (game.testRun) {
+      const report: ReportGun = {
+        mods: [...game.mods],
+        seed: game.seed,
+        startingGun: game.startingGun,
+        appearance: { ...game.cosmetics },
+        combatResults: game.combatReport.snapshot(),
+        kills: game.kills,
+        elapsed: game.elapsed,
+      };
+      content.insertAdjacentHTML(
+        'beforeend',
+        '<p class="recap-note">Preset test results · Progress stays untouched.</p>' +
+          combatReportMenu(report),
+      );
+      drawCombatReportImages(content, [report]);
     }
     $('retry').onclick = () => start(undefined, true);
     $('menu').onclick = menu;

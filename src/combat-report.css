@@ -1,0 +1,99 @@
+.combat-report {
+  margin-top: 20px;
+  border-top: 1px solid #354440;
+  padding-top: 18px;
+}
+.combat-report h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+.report-gun {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(110px, 0.65fr);
+  align-items: center;
+  gap: 14px;
+}
+.report-gun canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #26383b;
+}
+.report-gun figcaption {
+  display: grid;
+  gap: 6px;
+}
+.report-gun figcaption strong {
+  font-size: 14px;
+}
+.report-gun figcaption span {
+  color: #a8b4ae;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.report-connections {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.report-connections li {
+  display: grid;
+  gap: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.report-connections strong {
+  color: #dec297;
+  font-weight: 600;
+}
+.report-connections span {
+  color: #bec9c2;
+}
+.report-results {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.report-results summary {
+  padding: 8px 0;
+  cursor: pointer;
+}
+.report-results summary span {
+  display: block;
+  margin: 4px 0 0 17px;
+  color: #a8b4ae;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.report-results dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  margin: 10px 0;
+  line-height: 1.5;
+}
+.report-results dt {
+  color: #a8b4ae;
+}
+.report-results dd {
+  margin: 0;
+  text-align: right;
+}
+.report-results p {
+  color: #a8b4ae;
+  line-height: 1.5;
+}
+@media (max-width: 460px) {
+  .report-gun {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .report-gun figcaption {
+    gap: 3px;
+  }
+  .report-results dl {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

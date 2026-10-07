@@ -166,7 +166,7 @@ test('recap HTML starts collapsed, escapes stored text, and reveals only the run
   for (const name of ['Interceptor', 'Condenser', 'Rooftops', 'The Kiln', 'Rail spike'])
     assert(!html.includes(name), name + ' leaked');
   const history = runHistoryMenu([recap], recap.mods);
-  assert.equal((history.match(/<details/g) ?? []).length, 1);
+  assert.equal((history.match(/class="run-recap"/g) ?? []).length, 1);
   assert(!history.includes(' open'));
   assert.match(recapBody(recap, 0, []), /data-recap-build="0" disabled/);
   assert.match(recapBody(recap, 0, []), /data-recap-save="0" disabled/);

@@ -194,6 +194,7 @@ import {
 } from './regions.ts';
 import { SpoofSystem, primaryGunShot } from './spoof.ts';
 import { SupportSystem, supportPoolAllowed } from './support-upgrades.ts';
+import { CombatReport } from './combat-report.ts';
 import { isSubversion } from './subversion-rules.ts';
 import type { ShotTrace } from './shot-trails.ts';
 import {
@@ -359,6 +360,7 @@ export class Game {
   switchboard = new SwitchboardSystem(this);
   spoof = new SpoofSystem(this);
   support = new SupportSystem(this);
+  combatReport = new CombatReport(this);
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
   floodgate = new FloodgateSystem(this);
@@ -897,6 +899,16 @@ export class Game {
     this.gun = getGun(this.mods, this.startingGun);
     this.elapsed = save?.elapsed ?? 0;
     this.kills = save?.kills ?? 0;
+    this.combatReport.reset(
+      save?.combatResults,
+      save &&
+        !practice &&
+        !testRun &&
+        !workshop &&
+        (save.stage > 0 || save.elapsed > 0 || save.kills > 0)
+        ? save.stage
+        : undefined,
+    );
     this.time = 0;
     this.shotCount = 0;
     this.shootAt = 0;
@@ -1012,6 +1024,7 @@ export class Game {
       mods: [...this.mods],
       kills: this.kills,
       elapsed: this.elapsed,
+      combatResults: this.combatReport.snapshot(),
       ...(this.missedUpgrades ? { missedUpgrades: this.missedUpgrades } : {}),
       ...(this.escape ? { escape: true as const } : {}),
       ...(this.detour ? { detour: true as const } : {}),
@@ -3612,7 +3625,11 @@ export class Game {
     if (credited && e.eventRole !== 'relay') this.kills++;
     this.areaEvents.killed(e, credited);
     this.tethers.disrupt(e.body);
-    if (credited && e.eventRole !== 'relay') this.hp = Math.min(100, this.hp + this.gun.heal);
+    if (credited && e.eventRole !== 'relay') {
+      const before = this.hp;
+      this.hp = Math.min(100, this.hp + this.gun.heal);
+      this.combatReport.bloodworkHeal(this.hp - before);
+    }
     Composite.remove(this.engine.world, e.body);
     if (e.crane) Composite.remove(this.engine.world, e.crane.body);
     this.switchboard.clear(e);

@@ -8,13 +8,15 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 ![Recoil flight in the Loading Docks](public/media/loading-docks.png)
 
-- **113 upgrades** with branching paths and combinations that change how your gun works.
+- **117 upgrades** with branching paths and combinations that change how your gun works.
 - **Three starting guns:** begin with the pistol; earn the shotgun by clearing the Campaign and the nailgun by completing Overtime.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
+
+**Your Run, Explained — version 4.14.0.** The end screen pictures your actual finished gun and outfit, explains up to three connections in the final build, and offers expandable results for heat transfers, Overkill charges, armor blocks and Bloodwork healing. Continue preserves the totals; Recent Runs keeps the report with its original appearance. Older records remain readable and identify unavailable results. [Release notes and test links](docs/releases/4.14.0.md).
 
 **Support Systems — version 4.13.0.** Collimator controls your full firing spread, Heat Relay carries heat between beam kills, Overkill Bank saves excess damage for one discharge, and Scrap Armor turns broken cover into temporary protection. Fresh Campaigns and Dailies offer them from zone two; older seeded runs keep their reward sequence. Each fitting has visible indicators, live comparisons and Logbook records. [Release notes and isolated play links](docs/releases/4.13.0.md).
 

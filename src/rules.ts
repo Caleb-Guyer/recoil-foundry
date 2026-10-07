@@ -1,4 +1,5 @@
 import { validHunt, huntDetour } from './hunt-rules.ts';
+import { loadCombatResults, type CombatResults } from './combat-report.ts';
 import { legacyTorchPattern, torchRayCount } from './torch-pattern.ts';
 import { validAreaEvent } from './area-events.ts';
 import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
@@ -1175,6 +1176,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  combatResults?: CombatResults;
   huntRules?: 1;
   hunt?: import('./hunt-rules.ts').HuntSave;
   huntTest?: import('./hunt-rules.ts').HuntKind;
@@ -1353,6 +1355,9 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     ...(oldBuild && !validBuild(incoming.mods) ? { legacyMods: [...incoming.mods] } : {}),
     ...(oldOffers ? { legacyOffers: [...incoming.reward!.offers] } : {}),
   };
+  const combatResults = loadCombatResults(incoming.combatResults);
+  if (combatResults) d.combatResults = combatResults;
+  else delete d.combatResults;
   if (
     d.legacyOffers !== undefined &&
     (!Array.isArray(d.legacyOffers) ||
@@ -1567,8 +1572,10 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     (d.fabricators !== undefined && d.fabricators !== true)
   )
     return null;
-  if (!legacy && !previous)
-    return oldOffers || (oldBuild && !validBuild(incoming.mods)) ? { ...d, version: 6 } : incoming;
+  if (!legacy && !previous) {
+    if (oldOffers || (oldBuild && !validBuild(incoming.mods))) return { ...d, version: 6 };
+    return incoming.combatResults !== undefined ? d : incoming;
+  }
   // Keep the same room, gun and health. Skipped new rooms are recorded so later
   // detour and escape checkpoints remain valid without inventing upgrade picks.
   const oldStage = legacy

@@ -1,4 +1,6 @@
 import type { Game } from './game.ts';
+import { loadCombatResults, loadRecordedAppearance, type CombatResults } from './combat-report.ts';
+import type { Cosmetics } from './cosmetics.ts';
 import { validStartingGunSave, type StartingGun } from './starting-guns.ts';
 import { validUprisingRun, type UprisingRun } from './uprising-model.ts';
 import { planFactory, type FactoryCondition } from './factory.ts';
@@ -13,6 +15,8 @@ import { validUnlocks, type LongevityId } from './longevity.ts';
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
+  combatResults?: CombatResults;
+  appearance?: Cosmetics;
   huntRules?: 1;
   bossRemixes?: 1;
   teamwork?: 1;
@@ -105,7 +109,11 @@ export function loadRunHistory(value: unknown): RunRecap[] {
         (!validUnlocks(raw.unlocks) || (daily && raw.unlocks.length > 0)))
     )
       continue;
+    const combatResults = loadCombatResults(raw.combatResults);
+    const appearance = loadRecordedAppearance(raw.appearance);
     records.push({
+      ...(combatResults ? { combatResults } : {}),
+      ...(appearance ? { appearance } : {}),
       version: 1,
       ...(raw.huntRules === 1 ? { huntRules: 1 as const } : {}),
       ...(raw.bossRemixes === 1 ? { bossRemixes: 1 as const } : {}),
@@ -161,6 +169,8 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
     loadRunHistory([
       {
         version: 1,
+        combatResults: game.combatReport.snapshot(),
+        appearance: { ...game.cosmetics },
         ...(game.hunts.enabled ? { huntRules: 1 as const } : {}),
         ...(game.bossRemixes ? { bossRemixes: 1 as const } : {}),
         ...(game.recoil.state ? { recoilTrials: true as const } : {}),
