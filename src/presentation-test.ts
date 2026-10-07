@@ -9,7 +9,7 @@ export function presentationTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   if (p.get('test') !== 'presentation') return null;
   const scene = p.get('scene') ?? 'escape';
-  if (!['escape', 'overtime', 'shutdown'].includes(scene)) return null;
+  if (!['escape', 'overtime', 'shutdown', 'mastery'].includes(scene)) return null;
   let invalid = false;
   p.forEach((_, key) => {
     if (!['test', 'scene', 'v'].includes(key) || p.getAll(key).length !== 1) invalid = true;
@@ -20,6 +20,29 @@ export function presentationTestFromUrl(url: URL): Checkpoint | null {
       ? shutdownTestFromUrl(new URL('https://test.invalid/?test=shutdown&scene=ending'))!
       : exitTestFromUrl(new URL('https://test.invalid/?test=exits'))!;
   const baseMods = save.mods.length;
+  if (scene === 'mastery') {
+    save.version = 6;
+    save.mods = [
+      'cutting-torch',
+      'scatter',
+      'prism-array',
+      'thermal-runaway',
+      'heat-relay',
+      'overkill-bank',
+      'scrap-armor',
+      'light',
+      'leech',
+    ];
+    save.missedUpgrades = save.stage - save.mods.length;
+    save.combatResults = {
+      version: 1,
+      heatTransfers: 6,
+      bankCharges: 8,
+      armorBlocks: 5,
+      bloodworkHealing: 0,
+      fromStage: 0,
+    };
+  }
   if (scene === 'overtime') {
     for (let i = 0; i < save.stage; i++) {
       const next = availableMods(save.mods)[0];
@@ -38,7 +61,7 @@ export function presentationTestFromUrl(url: URL): Checkpoint | null {
 }
 
 export function finishPresentationTest(game: Game) {
-  if (!game.testRun || !/^PRESENTATION-(ESCAPE|OVERTIME|SHUTDOWN)$/.test(game.testRun.seed))
+  if (!game.testRun || !/^PRESENTATION-(ESCAPE|OVERTIME|SHUTDOWN|MASTERY)$/.test(game.testRun.seed))
     return false;
   game.setMode('won');
   return true;

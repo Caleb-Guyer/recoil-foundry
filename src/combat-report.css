@@ -85,6 +85,25 @@
   color: #a8b4ae;
   line-height: 1.5;
 }
+.report-masteries {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0;
+  display: grid;
+  gap: 12px;
+}
+.report-masteries li {
+  display: grid;
+  gap: 4px;
+  line-height: 1.5;
+}
+.report-masteries strong {
+  color: #dec297;
+}
+.report-masteries small {
+  color: #a8b4ae;
+  font-size: 12px;
+}
 @media (max-width: 460px) {
   .report-gun {
     grid-template-columns: 1fr;

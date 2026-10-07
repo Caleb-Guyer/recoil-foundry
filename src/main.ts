@@ -2,6 +2,7 @@ import './reward-cards.css';
 import './combat-report.css';
 import { combatReportMenu, type ReportGun } from './combat-report-menu.ts';
 import { drawCombatReportImages } from './combat-report-art.ts';
+import { SUPPORT_MASTERIES, type SupportMasteryAttempt } from './support-mastery.ts';
 import {
   WEAPON_UNLOCKS_KEY,
   loadWeaponUnlocks,
@@ -448,7 +449,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Your Run, Explained</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Support Masteries</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -938,8 +939,12 @@ function updateTitle() {
       SUPPORT_BUILDS[build].hint + ' R to retry. Progress stays untouched.';
   }
   if (linkedRunTest?.seed.startsWith('PRESENTATION-')) {
-    $('play').textContent = 'Preview ending';
-    $('title-hint').textContent = 'Ending preview. Your save and discoveries stay untouched.';
+    $('play').textContent =
+      linkedRunTest.seed === 'PRESENTATION-MASTERY' ? 'Preview mastery rewards' : 'Preview ending';
+    $('title-hint').textContent =
+      linkedRunTest.seed === 'PRESENTATION-MASTERY'
+        ? 'Sample mastery rewards and totals. Your progress stays untouched.'
+        : 'Ending preview. Your save and discoveries stay untouched.';
   }
   if (linkedRunTest?.seed.startsWith('CLOCK-OUT-')) {
     $('play').textContent = 'Preview Clock Out';
@@ -1884,6 +1889,15 @@ function currentGoals() {
     read(MILESTONES_KEY),
   );
 }
+function currentMasteryAttempt(): SupportMasteryAttempt | undefined {
+  if (game.mode !== 'title' && !game.practice && !game.workshop.active)
+    return {
+      results: game.combatReport.snapshot(),
+      label: game.testRun ? 'Preset test results · Progress stays untouched' : 'This attempt',
+    };
+  if (game.mode === 'title' && checkpoint?.combatResults)
+    return { results: checkpoint.combatResults, label: 'Continue attempt' };
+}
 function updateLogbookBadge() {
   const unread = logbookCatalog(
     discovered,
@@ -2196,9 +2210,15 @@ function showDialog(kind: string) {
   modal.scrollTop = 0;
   if (kind === 'logbook' || kind === 'workshop')
     commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
+  const masteryRewardPreview = game.testRun?.seed === 'PRESENTATION-MASTERY';
   const visibleCommendations = previewCommendations
     ? COMMENDATIONS.map((c) => c.id)
-    : commendations;
+    : masteryRewardPreview
+      ? mergeCommendations(
+          commendations,
+          SUPPORT_MASTERIES.map((m) => m.id),
+        )
+      : commendations;
   if (kind === 'starting-gun') {
     startingGunMenu(
       content,
@@ -2237,11 +2257,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">What carried your run?</h2>' +
-      '<p class="update-tagline">See the gun you built and what its fittings accomplished.</p>' +
-      '<dl class="update-notes"><div><dt>Your finished gun.</dt><dd>The end screen pictures your actual weapon and outfit, with the finish and fittings you used.</dd></div>' +
-      '<div><dt>Connected upgrades.</dt><dd>Short highlights explain your final pattern and combinations, including the pellets that became separate beams.</dd></div>' +
-      '<div><dt>Recorded results.</dt><dd>Expand the report for completed heat transfers, Overkill charges used, Scrap Armor blocks and health restored by Bloodwork. Continue carries the totals forward; Recent Runs keeps the report.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Master your support fittings.</h2>' +
+      '<p class="update-tagline">Turn useful combinations into permanent appearance rewards.</p>' +
+      '<dl class="update-notes"><div><dt>Three new masteries.</dt><dd>Heat Relay, Overkill Bank and Scrap Armor each have a challenge to complete in one Campaign or Daily run. Encounter their upgrade to reveal the goal.</dd></div>' +
+      '<div><dt>Pictures of what you earned.</dt><dd>Two gun finishes and a repaired outfit join the reward cards, Logbook and Workshop Appearance collection.</dd></div>' +
+      '<div><dt>Progress without clutter.</dt><dd>Check the Logbook or expand Recorded results at the end of a run. Continue keeps the same attempt; a fresh run starts its counters at zero.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2281,7 +2301,9 @@ function showDialog(kind: string) {
       previewLogbook
         ? logbookPreviewEntries()
         : logbookCatalog(
-            discovered,
+            game.testRun?.seed.startsWith('SUPPORT-4.13-') || masteryRewardPreview
+              ? [...discovered, ...game.mods]
+              : discovered,
             game.mode !== 'title' &&
               game.testRun &&
               (game.story.state?.recovered || game.testRun.shutdown)
@@ -2303,11 +2325,12 @@ function showDialog(kind: string) {
             read(UPRISING_RECORDS_KEY),
             weaponUnlocks(),
             read(RECOIL_TRIALS_KEY),
+            currentMasteryAttempt(),
           ),
       logbookView,
       modMark,
       backFromLogbook,
-      previewLogbook || previewCommendations,
+      previewLogbook || previewCommendations || masteryRewardPreview,
       () => {
         logbookFromWorkshop = false;
         showDialog('workshop');
@@ -2369,7 +2392,7 @@ function showDialog(kind: string) {
         earned: visibleCommendations,
         defeated: logbookProgress.enemies,
         discovered,
-        preview: previewCommendations,
+        preview: previewCommendations || masteryRewardPreview,
         unseen:
           previewCommendations || game.testRun
             ? []
@@ -2388,7 +2411,7 @@ function showDialog(kind: string) {
         },
         equip: (selection) => {
           game.cosmetics = selection;
-          if (!previewCommendations) {
+          if (!previewCommendations && !game.testRun) {
             equippedCosmetics = selection;
             write(COSMETICS_KEY, selection);
           }
@@ -3168,9 +3191,11 @@ function showDialog(kind: string) {
         ? ['gun:nailgun', 'appearance:outfit:night']
         : game.testRun?.seed === 'PRESENTATION-ESCAPE'
           ? ['gun:shotgun', 'appearance:gun:inspector']
-          : !game.testRun && ledger?.seed === game.seed
-            ? ledger.ids
-            : [];
+          : game.testRun?.seed === 'PRESENTATION-MASTERY'
+            ? ['appearance:gun:heatline', 'appearance:gun:reservoir', 'appearance:outfit:patchwork']
+            : !game.testRun && ledger?.seed === game.seed
+              ? ledger.ids
+              : [];
     content.querySelector('.actions')!.insertAdjacentHTML('beforebegin', rewardCards(rewards));
     drawRewardImages(content, game);
     const earnedRewards = document.getElementById('earned-rewards');

@@ -3,6 +3,7 @@ import { torchRayCount, legacyTorchPattern } from './torch-pattern.ts';
 import { STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 import { GUN_FINISHES, OUTFITS, type Cosmetics } from './cosmetics.ts';
 import type { CombatResults } from './combat-report.ts';
+import { SUPPORT_MASTERIES } from './support-mastery.ts';
 
 export interface ReportGun {
   mods: readonly string[];
@@ -165,6 +166,27 @@ export function combatReportMenu(run: ReportGun, index = 0) {
       )
       .join('') +
     '</dl>' +
+    (results
+      ? '<ul class="report-masteries" aria-label="Mastery targets for this attempt">' +
+        SUPPORT_MASTERIES.filter((m) => run.mods.includes(m.upgrades[0]) || results[m.counter] > 0)
+          .map(
+            (m) =>
+              '<li><strong>' +
+              escape(m.name) +
+              '</strong><span>' +
+              Math.min(m.target, results[m.counter]) +
+              ' / ' +
+              m.target +
+              ' ' +
+              escape(m.unit) +
+              (results[m.counter] >= m.target ? ' · Target met' : '') +
+              '</span><small>Reward: ' +
+              escape(m.reward + ' · ' + m.slot) +
+              '</small></li>',
+          )
+          .join('') +
+        '</ul>'
+      : '') +
     (!results
       ? '<p>Upgrade results weren’t recorded for this run.</p>'
       : results.partial

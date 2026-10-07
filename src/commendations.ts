@@ -1,4 +1,5 @@
 import type { Lore } from './lore-upgrades.ts';
+import { SUPPORT_MASTERIES } from './support-mastery.ts';
 import type { Game, Enemy } from './game.ts';
 import { isHunt } from './hunt-rules.ts';
 import { isBoss } from './enemies.ts';
@@ -254,6 +255,7 @@ export const COMMENDATIONS = [
       'You came back after the doors had already opened. I keep trying to find a practical explanation for that. There are several. None of them account for you leaving again.\n\nWe used to give the overnight staff dark coveralls with pale stitching so we could count them under the emergency lamps. Yours has a silver mark at the shoulder. One for each shift.\n\nThis is not a request for a third.',
     ] as Lore,
   },
+  ...SUPPORT_MASTERIES,
 ] as const;
 export type CommendationId = (typeof COMMENDATIONS)[number]['id'];
 export function commendationVisible(

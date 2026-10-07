@@ -7,7 +7,7 @@ import { presentationTestFromUrl, finishPresentationTest } from '../src/presenta
 import { endingCopy } from '../src/ending.ts';
 
 test('result previews exercise real ending states without progress writes or earned records', () => {
-  for (const scene of ['escape', 'overtime', 'shutdown']) {
+  for (const scene of ['escape', 'overtime', 'shutdown', 'mastery']) {
     const save = presentationTestFromUrl(
       new URL('https://test.invalid/?test=presentation&scene=' + scene),
     )!;

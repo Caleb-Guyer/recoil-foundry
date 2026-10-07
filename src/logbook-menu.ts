@@ -133,6 +133,30 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
       ? '<p class="logbook-unlock"><strong>Unlock:</strong> ' + escapeLogbook(entry.unlock) + '</p>'
       : '') +
     goalMark(entry) +
+    (entry.mastery
+      ? '<div class="logbook-goal"><strong>' +
+        escapeLogbook(entry.mastery.label) +
+        '</strong><progress max="' +
+        entry.mastery.target +
+        '" value="' +
+        entry.mastery.current +
+        '" aria-label="' +
+        escapeLogbook(entry.name + ' progress') +
+        '"></progress><span>' +
+        entry.mastery.current +
+        ' / ' +
+        entry.mastery.target +
+        ' ' +
+        escapeLogbook(entry.mastery.unit) +
+        '</span><p>' +
+        (entry.mastery.complete
+          ? 'Appearance unlocked.'
+          : 'Finish this target in one run. A new attempt starts at zero.') +
+        (entry.mastery.partialFrom
+          ? ' Recording began after Continue in room ' + entry.mastery.partialFrom + '.'
+          : '') +
+        '</p></div>'
+      : '') +
     (entry.reward
       ? '<p class="commendation-reward">' +
         escapeLogbook(entry.reward) +

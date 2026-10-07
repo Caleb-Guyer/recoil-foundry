@@ -2,6 +2,22 @@ import type { CommendationId } from './commendations.ts';
 
 export const COSMETICS_KEY = 'rf-cosmetics-v1';
 export const GUN_FINISHES = {
+  heatline: {
+    name: 'Heatline',
+    shell: '#8d443d',
+    face: '#e6aa6e',
+    trim: '#402d31',
+    light: '#ffe2a4',
+    unlock: 'relay-race',
+  },
+  reservoir: {
+    name: 'Reservoir',
+    shell: '#51446e',
+    face: '#bda16b',
+    trim: '#30283d',
+    light: '#f4db96',
+    unlock: 'stored-energy',
+  },
   copperline: {
     name: 'Copperline',
     shell: '#735b42',
@@ -108,6 +124,13 @@ export const GUN_FINISHES = {
   },
 } as const;
 export const OUTFITS = {
+  patchwork: {
+    name: 'Patchwork',
+    body: '#7d8b69',
+    boots: '#4d6063',
+    trim: '#c5e1bb',
+    unlock: 'scrap-certified',
+  },
   sentinel: {
     name: 'Sentinel',
     body: '#6a8875',
@@ -203,7 +226,25 @@ export function drawOutfit(
   c.beginPath();
   c.roundRect(-13, -18, 26, 31, 4);
   c.fill();
-  if (id === 'victor') {
+  if (id === 'patchwork') {
+    c.fillStyle = '#3f596b';
+    c.fillRect(-11, -1, 10, 12);
+    c.fillRect(5, 4, 7, 8);
+    c.fillRect(-10, -16, 8, 4);
+    c.fillStyle = p.trim;
+    c.fillRect(2, -1, 9, 4);
+    c.fillRect(-8, 5, 5, 4);
+    c.fillStyle = '#283e40';
+    for (const [x, y] of [
+      [-10, 0],
+      [-2, 0],
+      [-10, 10],
+      [6, 5],
+      [10, 10],
+      [3, 0],
+    ])
+      c.fillRect(x, y, 1.5, 1.5);
+  } else if (id === 'victor') {
     c.fillStyle = '#304a47';
     c.fillRect(-10, -1, 20, 13);
     c.fillStyle = p.trim;
@@ -289,7 +330,24 @@ export function drawFinishMark(c: CanvasRenderingContext2D, id: Cosmetics['gun']
   if (id === 'standard') return;
   const p = GUN_FINISHES[id];
   c.fillStyle = p.trim;
-  if (id === 'carom') {
+  if (id === 'heatline') {
+    c.strokeStyle = p.light;
+    c.lineWidth = 1.3;
+    c.beginPath();
+    c.moveTo(11, 2);
+    c.lineTo(15, 2);
+    c.lineTo(17, -2);
+    c.lineTo(23, -2);
+    c.stroke();
+    c.fillStyle = p.light;
+    c.fillRect(11, 1, 2, 2);
+    c.fillRect(22, -3, 2, 2);
+  } else if (id === 'reservoir') {
+    c.fillStyle = p.trim;
+    c.fillRect(11, -3, 13, 6);
+    c.fillStyle = p.light;
+    for (const x of [12, 16, 20]) c.fillRect(x, -2, 2.5, 4);
+  } else if (id === 'carom') {
     c.fillRect(12, -3, 3, 6);
     c.fillRect(12, 1, 11, 2);
   } else if (id === 'airmail') {

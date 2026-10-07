@@ -708,6 +708,7 @@ export class Game {
       this.harpoons.clear();
     }
     this.mode = mode;
+    if (mode === 'playing') this.combatReport.checkMasteries();
     this.onChange();
   }
   startPractice(

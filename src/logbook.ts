@@ -145,6 +145,7 @@ export interface LogbookEntry {
   notification?: string;
   unlock?: string;
   goal?: import('./longevity.ts').UnlockGoal;
+  mastery?: import('./support-mastery.ts').SupportMasteryProgress;
 }
 export function logbookEntries(
   known: readonly string[],

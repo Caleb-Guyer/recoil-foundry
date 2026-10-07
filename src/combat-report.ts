@@ -1,5 +1,6 @@
 import type { Game } from './game.ts';
 import { GUN_FINISHES, OUTFITS, type Cosmetics } from './cosmetics.ts';
+import { SUPPORT_MASTERIES } from './support-mastery.ts';
 
 export interface CombatResults {
   version: 1;
@@ -74,16 +75,28 @@ export class CombatReport {
   private get active() {
     return this.game.mode === 'playing' && this.game.hp > 0;
   }
+  checkMasteries() {
+    if (!this.game.commendations.eligible) return;
+    for (const mastery of SUPPORT_MASTERIES)
+      if (this.results[mastery.counter] >= mastery.target)
+        this.game.commendations.award(mastery.id);
+  }
   bankCharge(bonus: number) {
     if (!this.active || !Number.isFinite(bonus) || bonus <= 0) return;
     this.results.bankCharges = Math.min(1e7, this.results.bankCharges + 1);
+    this.checkMasteries();
   }
   heatTransfer(heat: number) {
-    if (this.active && Number.isFinite(heat) && heat > 0)
+    if (this.active && Number.isFinite(heat) && heat > 0) {
       this.results.heatTransfers = Math.min(1e7, this.results.heatTransfers + 1);
+      this.checkMasteries();
+    }
   }
   armorBlock() {
-    if (this.active) this.results.armorBlocks = Math.min(1e7, this.results.armorBlocks + 1);
+    if (this.active) {
+      this.results.armorBlocks = Math.min(1e7, this.results.armorBlocks + 1);
+      this.checkMasteries();
+    }
   }
   bloodworkHeal(amount: number) {
     if (this.active && Number.isFinite(amount) && amount > 0)

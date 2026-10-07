@@ -20,6 +20,7 @@ import {
 import { loadArchive, archiveToken, archiveUnread } from './archive.ts';
 import { ENEMY_GUIDES } from './archive-art.ts';
 import { type UnlockGoal } from './longevity.ts';
+import { supportMasteryProgress, type SupportMasteryAttempt } from './support-mastery.ts';
 
 const EMPTY_LORE: Lore = ['', '', ''];
 export const VARIANT_RECORDS = [
@@ -115,6 +116,7 @@ export function logbookCatalog(
   uprisingRecords: unknown = null,
   weapons?: WeaponUnlocks,
   recoilProfile: unknown = null,
+  masteryAttempt?: SupportMasteryAttempt,
 ): LogbookEntry[] {
   const archive = loadArchive(rawArchive),
     base = loadLogbook(progress);
@@ -324,6 +326,7 @@ export function logbookCatalog(
             ...entry,
             state: entry.earned ? ('known' as const) : ('locked' as const),
             unlock: entry.earned ? undefined : commendation.objective,
+            mastery: supportMasteryProgress(commendation.id, !!entry.earned, masteryAttempt),
           }
         : {
             id: 'commendation:' + commendation.id,
