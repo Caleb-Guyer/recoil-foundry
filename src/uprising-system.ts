@@ -14,6 +14,7 @@ import {
 } from './uprising-model.ts';
 import { uprisingLevel } from './uprising-layout.ts';
 import { UPRISING_ROOMS } from './uprising-rooms.ts';
+import { toolroomRevision } from './toolroom-catalog.ts';
 
 export class UprisingSystem {
   run: UprisingRun | null = null;
@@ -25,6 +26,7 @@ export class UprisingSystem {
   hurt = false;
   defenseWave = 0;
   routeStep = 0;
+  boardingAt: number | null = null;
   startedAt = 0;
   patrolClearedAt: number | null = null;
   anchors: { body: Matter.Body; x: number; y: number }[] = [];
@@ -91,6 +93,25 @@ export class UprisingSystem {
       Math.abs(g.player.bounds.max.y - (zone.y + zone.h)) < 8
     );
   }
+  get boardingDuration() {
+    return toolroomRevision(this.game.seed) ? 2 : 0;
+  }
+  get insideEvacuationZone() {
+    const zone = this.evacuation,
+      player = this.game.player;
+    return (
+      !!zone &&
+      player.position.x > zone.x + 16 &&
+      player.position.x < zone.x + zone.w - 16 &&
+      player.bounds.max.y >= zone.y &&
+      player.bounds.max.y <= zone.y + zone.h + 8
+    );
+  }
+  get boardingProgress() {
+    return this.boardingAt === null
+      ? 0
+      : Math.min(1, (this.game.time - this.boardingAt) / Math.max(0.001, this.boardingDuration));
+  }
   level(base: Game['level']) {
     return this.active && this.run ? uprisingLevel(base, this.run, this.game.stage) : base;
   }
@@ -103,6 +124,7 @@ export class UprisingSystem {
     this.hurt = false;
     this.defenseWave = 0;
     this.routeStep = 0;
+    this.boardingAt = null;
     this.patrolClearedAt = null;
   }
   reset(cleared: boolean) {
@@ -280,7 +302,18 @@ export class UprisingSystem {
           this.routeStep++;
           g.onSound('prop');
         }
-        if (!this.switchTarget && this.onEvacuationPad) this.resolve(true);
+        if (this.switchTarget || !this.insideEvacuationZone) this.boardingAt = null;
+        else {
+          if (this.onEvacuationPad) this.boardingAt ??= g.time;
+          // A small hit knockback inside the marked deck does not restart
+          // boarding. Completion still requires landing on its actual support.
+          if (
+            this.boardingAt !== null &&
+            this.onEvacuationPad &&
+            g.time - this.boardingAt >= this.boardingDuration
+          )
+            this.resolve(true);
+        }
       }
     } else if (this.kind === 'sabotage') {
       if (this.nodes.every((p) => p.hp <= 0)) this.resolve(true);
@@ -349,7 +382,11 @@ export class UprisingSystem {
             ' / ' +
             this.room!.switches!.length +
             ' · jump beside it'
-          : 'Board the marked evacuation platform') +
+          : this.boardingAt !== null && this.boardingDuration > 0
+            ? 'Hold position · boarding ' +
+              Math.max(0, Math.ceil(this.boardingDuration - (this.game.time - this.boardingAt))) +
+              's'
+            : 'Board the marked evacuation platform') +
         ' · ' +
         Math.max(0, Math.ceil(this.deadline - this.game.time)) +
         's'

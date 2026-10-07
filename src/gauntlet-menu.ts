@@ -220,7 +220,7 @@ export function gauntletRunMenu(
           : 'Restart begins with full health and an unmodified gun.') +
       '</p>' +
       history +
-      (options.reward ? rewardCards(['appearance:outfit:victor']) : '') +
+      (options.reward ? rewardCards(['appearance:outfit:victor', 'gun:repeater']) : '') +
       '<div class="actions"><button id="gauntlet-restart" class="primary">Restart Gauntlet ↗</button></div>';
     root.querySelector<HTMLButtonElement>('#gauntlet-restart')!.onclick = options.restart;
     drawRewardImages(root, g);

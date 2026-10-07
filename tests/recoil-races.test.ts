@@ -39,10 +39,10 @@ import {
   BACKUP_LIMIT,
 } from '../src/progress.ts';
 import { pilotRecoilTrial, trialTick } from './helpers/recoil-trial-pilot.ts';
-import type { StartingGun } from '../src/starting-guns.ts';
+import { STARTING_GUN_IDS, type StartingGun } from '../src/starting-guns.ts';
 
 const kinds: RecoilTrialKind[] = ['launch', 'cargo', 'airborne'];
-const guns: StartingGun[] = ['pistol', 'shotgun', 'nailgun'];
+const guns: StartingGun[] = STARTING_GUN_IDS;
 function practice(
   kind: RecoilTrialKind,
   gun: StartingGun = 'pistol',
@@ -318,7 +318,7 @@ test('a shared challenge preserves its starting gun and target across retries wi
   assert.equal(recoilDelta(0), 'Level with target');
 });
 
-test('ghost backups round-trip, old backups migrate, and all nine maximum recordings fit within the existing backup bound', async () => {
+test('ghost backups round-trip, old backups migrate, and all eighteen maximum recordings fit within the existing backup bound', async () => {
   const { g, recording } = recorded();
   const disk = store();
   await disk.write(RECOIL_GHOSTS_KEY, [recording]);

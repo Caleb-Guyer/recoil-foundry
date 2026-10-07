@@ -2,11 +2,11 @@ import { COMMENDATIONS, type CommendationId } from './commendations.ts';
 import { GUN_FINISHES, OUTFITS } from './cosmetics.ts';
 import { LONGEVITY_MODS } from './longevity.ts';
 import { UPRISING_CONTRACTS } from './uprising-model.ts';
-import { STARTING_GUNS } from './starting-guns.ts';
+import { STARTING_GUNS, STARTING_GUN_IDS } from './starting-guns.ts';
 
 export const RUN_REWARDS_KEY = 'rf-run-rewards-v1';
 export const REWARD_CATALOG = [
-  ...(['shotgun', 'nailgun'] as const).map((gun) => ({
+  ...STARTING_GUN_IDS.filter((id) => id !== 'pistol').map((gun) => ({
     id: 'gun:' + gun,
     name: STARTING_GUNS[gun].name,
     label: 'Starting gun unlocked',

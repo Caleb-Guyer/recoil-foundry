@@ -2,6 +2,7 @@ import { WELDER_HP } from './welder-rules.ts';
 import type { EnemyKind } from './levels.ts';
 import type { Vec } from './rules.ts';
 import { STAGES, areaIndex } from './rules.ts';
+import type { Enemy } from './game.ts';
 
 export type EliteKind = 'shielded' | 'twin' | 'volatile';
 export const ELITE_HP: Record<EliteKind, number> = { shielded: 86, twin: 85, volatile: 60 };
@@ -12,6 +13,9 @@ export const VOLATILE_TELL = 0.9;
 export const VOLATILE_RADIUS = 135;
 
 export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }> = {
+  shutter: { w: 36, h: 40, hp: 92 },
+  strider: { w: 32, h: 36, hp: 76 },
+  mortar: { w: 40, h: 36, hp: 84 },
   cableweaver: { w: 64, h: 60, hp: 560 },
   bulwark: { w: 64, h: 60, hp: 680 },
   demolisher: { w: 64, h: 60, hp: 600 },
@@ -49,6 +53,14 @@ export const ENEMY_STATS: Record<EnemyKind, { w: number; h: number; hp: number }
   boss: { w: 90, h: 76, hp: 2800 },
 };
 export const CHARGE_TELL = 0.7;
+export function enemyShielded(e: Enemy, incoming: Vec) {
+  const shield =
+    e.elite === 'shielded' ||
+    (e.kind === 'shutter' &&
+      (e.state === 'idle' || ((e.state === 'windup' || e.state === 'followup') && e.timer > 0.35)));
+  const length = Math.hypot(incoming.x, incoming.y) || 1;
+  return shield && -(incoming.x / length) * e.facing > 0.45;
+}
 export const SNIPER_TELL = 0.95;
 export const HOP_TELL = 0.36;
 export const LOADER_TELL = 0.9;

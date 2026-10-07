@@ -96,7 +96,7 @@ for (const gun of STARTING_GUN_IDS) {
     g.startingGun = gun;
     g.gun = getGun([], gun);
     g.fire();
-    assert.equal(g.shots.length, gun === 'shotgun' ? 5 : 1);
+    assert.equal(g.shots.length, gun === 'shotgun' ? 5 : gun === 'twinbore' ? 2 : 1);
     assert.equal(g.shotCount, 1);
     assert(Math.abs(g.player.velocity.x + g.gun.recoil) < 1e-8);
     assert.equal(g.burstRemaining, gun === 'nailgun' ? 2 : 0);

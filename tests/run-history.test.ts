@@ -133,7 +133,11 @@ test('malformed, oversized, future-schema and impossible records never reach the
   assert.equal(loadRunHistory([{ ...good, cause: { type: 'future' } }])[0].cause?.type, 'unknown');
 });
 test('old rules remain readable while replay stays disabled; Workshop requires the whole discovered build', () => {
-  const old = { ...run(), ruleset: DAILY_RULESET - 1 };
+  assert(
+    canReplayRun({ ...run(), ruleset: 88 }),
+    'previous production revision remains replayable',
+  );
+  const old = { ...run(), ruleset: 87 };
   assert.equal(loadRunHistory([old]).length, 1);
   assert(!canReplayRun(old));
   const daily = {
@@ -144,7 +148,7 @@ test('old rules remain readable while replay stays disabled; Workshop requires t
     factory: undefined,
     factoryVersion: undefined,
     mode: 'daily' as const,
-    seed: `RF-D${DAILY_RULESET - 1}-2026-09-13`,
+    seed: 'RF-D87-2026-09-13',
   };
   assert.equal(loadRunHistory([daily]).length, 1);
   assert(!canReplayRun(daily));

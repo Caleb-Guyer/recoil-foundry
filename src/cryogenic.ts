@@ -2,7 +2,7 @@ import Matter from 'matter-js';
 import type { Game, Enemy, Shot } from './game.ts';
 import { clamp, direction, distance, type Vec } from './rules.ts';
 import { firstSolid } from './collisions.ts';
-import { isBoss } from './enemies.ts';
+import { isBoss, enemyShielded } from './enemies.ts';
 import { breakSquad } from './squads.ts';
 import { releaseScrapper } from './scrapper.ts';
 
@@ -41,7 +41,7 @@ export class CryogenicSystem {
     );
   }
   blocked(e: Enemy, s: Shot) {
-    return e.elite === 'shielded' && direction(s.vel, { x: 0, y: 0 }).x * e.facing > 0.45;
+    return enemyShielded(e, s.vel);
   }
   state(e: Enemy) {
     let state = this.states.get(e.id);
@@ -156,7 +156,7 @@ export class CryogenicSystem {
       g.mode !== 'playing'
     )
       return;
-    if (e.elite === 'shielded' && direction(e.body.position, from).x * e.facing > 0.45) return;
+    if (enemyShielded(e, direction(from, e.body.position))) return;
     const cold = state.ready || state.frozen > g.time ? COLD.threshold : state.cold;
     if (cold < 1) return;
     // Consume before dealing any damage. Steam does not add/spread cold, burn,

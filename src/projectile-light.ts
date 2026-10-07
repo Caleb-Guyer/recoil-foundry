@@ -60,6 +60,13 @@ export function shotLight(s: Shot, mods: readonly string[]): Omit<ProjectileLigh
   } else if (s.reflected || s.banks > 0) {
     color = '#9dccb5';
     radius = 42;
+  } else if (s.nativeTool === 'carbine') {
+    color = '#9ee4ef';
+    radius = 48;
+  } else if (s.nativeTool === 'repeater') {
+    color = '#f3bd83';
+    radius = 26;
+    strength = 0.55;
   } else if (roundFeel(s) === 'nail') {
     color = '#b5d4d0';
     radius = 28;
@@ -129,6 +136,7 @@ export function projectileLights(
   for (const s of g.grind.saws) if (s.life > 0) add(s.pos, 28, '#e8bb76', 0.55);
   for (const s of g.ballistics.shells.slice(-8)) if (s.at > g.time) add(s.pos, 28, '#f1ad61', 0.6);
   // Threats get a place in the budget even during large friendly volleys.
+  for (const s of g.patrolMachines.shells) add(s.pos, 42, '#e4ad75');
   const shots = g.shots.slice(-256);
   for (const s of [...shots.filter((s) => !s.friendly), ...shots.filter((s) => s.friendly)]) {
     const light = shotLight(s, g.mods);

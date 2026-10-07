@@ -32,7 +32,7 @@ import {
   progressSummary,
 } from '../src/progress.ts';
 import { snapshotRun, loadRunHistory } from '../src/run-history.ts';
-import type { StartingGun } from '../src/starting-guns.ts';
+import { STARTING_GUN_IDS, type StartingGun } from '../src/starting-guns.ts';
 const { Body, Composite } = Matter;
 const kinds = Object.keys(RECOIL_TRIALS) as RecoilTrialKind[];
 function course(kind: RecoilTrialKind, gun: StartingGun = 'pistol', isolated = true) {
@@ -87,7 +87,7 @@ test('trial plans stay outside the first zone, avoid maintenance doors, and use 
   assert.equal(g.recoil.state, null);
 });
 for (const kind of kinds)
-  for (const gun of ['pistol', 'shotgun', 'nailgun'] as const) {
+  for (const gun of STARTING_GUN_IDS) {
     test(kind + ' can be completed with ordinary controls and the unmodified ' + gun, () => {
       const g = course(kind, gun);
       let writes = 0,

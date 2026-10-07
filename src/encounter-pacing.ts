@@ -85,6 +85,7 @@ export function shapeEncounter(
   // Introduction fights retain the special unit they teach, on its actual anchor.
   if (
     level.boss ||
+    level.machineIntro ||
     level.freight ||
     level.teamworkIntro ||
     level.annex ||

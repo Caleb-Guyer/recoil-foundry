@@ -6,7 +6,7 @@ import type { Prop } from './props.ts';
 import { firstSolid } from './collisions.ts';
 import { portalVector } from './portals.ts';
 import { clamp, direction, distance, segmentBox, type Vec } from './rules.ts';
-import { isBoss } from './enemies.ts';
+import { isBoss, enemyShielded } from './enemies.ts';
 import { POCKET, pocketDirection } from './corner-pocket.ts';
 import type { PressureVent } from './pressure.ts';
 import type { FloodValve } from './floodgate.ts';
@@ -62,7 +62,7 @@ export interface TorchOrigin {
   radius: number;
 }
 const add = (p: Vec, d: Vec, n: number): Vec => ({ x: p.x + d.x * n, y: p.y + d.y * n });
-const shielded = (e: Enemy, d: Vec) => e.elite === 'shielded' && -d.x * e.facing > 0.45;
+const shielded = enemyShielded;
 export const torchRadius = (g: Game) =>
   (g.torch?.legacyPattern && g.gun.pellets > 1 ? TORCH.legacyScatterRadius : TORCH.radius) *
   (g.torch?.finisher ? 0.6 : 1);
@@ -86,7 +86,7 @@ export function traceTorch(
       y: d.x * Math.sin(angle) + d.y * Math.cos(angle),
     };
   let from = { x: g.player.position.x, y: g.player.position.y - 3 },
-    remaining = TORCH.range,
+    remaining = TORCH.range * g.toolroom.rangeScale,
     banks = g.gun.bounces,
     pierce = g.gun.pierce + (g.torch?.extraPierce ?? 0),
     gain = 1,
@@ -409,7 +409,8 @@ export class TorchSystem {
       const evolution = g.evolutions.discharge(g.shotCount);
       // Redline remains responsive to actual speed during continuous thrust.
       this.boost =
-        ((landing ? 2 : 1) * (capacitor ? 2 : 1) * evolution) / (1 + g.evolutions.redline);
+        ((landing ? 2 : 1) * (capacitor ? 2 : 1) * evolution * g.toolroom.discharge()) /
+        (1 + g.evolutions.redline);
       const bank = g.support.discharge(
         this.payload() *
           (g.gun.lanes *
@@ -441,6 +442,7 @@ export class TorchSystem {
         hits: new Set(),
         discharge: g.shotCount,
       };
+      g.toolroom.tag(this.pulse);
       this.processed.clear();
       this.fracture.clear();
       this.reflected = this.wind = false;
@@ -457,7 +459,7 @@ export class TorchSystem {
       this.stepBurn *
       TORCH.thrust *
       this.pulseGain *
-      (g.grounded ? 0.21 : 1) *
+      (g.grounded ? 0.21 * g.toolroom.groundScale : 1) *
       this.recoilBoost;
     const beforeRecoil = g.player.velocity.y;
     Matter.Body.setVelocity(g.player, {
@@ -490,11 +492,12 @@ export class TorchSystem {
         this.charging = Math.min(this.chargeDuration, this.charging + dt);
         const s = traceTorch(g).find((segment) => segment.enemy);
         const enemy = s?.enemy && !shielded(s.enemy, s.dir) ? s.enemy : undefined;
-        if (enemy?.id !== this.focusTarget) this.focus = enemy ? g.support.takeHeat() : 0;
+        if (enemy?.id !== this.focusTarget)
+          this.focus = enemy ? g.toolroom.startHeat(g.support.takeHeat()) : 0;
         this.focusTarget = enemy?.id;
         this.focus =
           enemy && g.mods.includes('thermal-runaway')
-            ? Math.min(1, this.focus + dt / this.chargeDuration)
+            ? Math.min(1, this.focus + (dt / this.chargeDuration) * g.toolroom.heatRate)
             : 0;
       } else if (released && this.charging >= 0.06) {
         const bursting = g.gun.burstCount === 3;
@@ -565,7 +568,10 @@ export class TorchSystem {
     const target = this.segments.find((s) => (s.ray ?? 0) === 0 && s.enemy)?.enemy,
       eligible = target && !shielded(target, this.segments.find((s) => s.enemy === target)!.dir);
     if (!eligible || target.id !== this.target) {
-      this.heat = eligible && !g.mods.includes('charge-lens') ? g.support.takeHeat() : 0;
+      this.heat =
+        eligible && !g.mods.includes('charge-lens')
+          ? g.toolroom.startHeat(g.support.takeHeat())
+          : 0;
       this.target = eligible ? target.id : undefined;
     }
     // Intentional gaps preserve heat only while the aim still tracks the same
@@ -579,7 +585,7 @@ export class TorchSystem {
     if (g.mods.includes('charge-lens'))
       this.heat = eligible && target.id === this.lensTarget ? this.lensHeat : 0;
     else if (eligible && g.mods.includes('thermal-runaway'))
-      this.heat = Math.min(1, this.heat + burn / TORCH.heatTime);
+      this.heat = Math.min(1, this.heat + (burn / TORCH.heatTime) * g.toolroom.heatRate);
     const hot =
       1 + (g.mods.includes('charge-lens') ? this.heat : (old + this.heat) * 0.5) * TORCH.heatBonus;
     const all = [...this.segments, ...this.rear],
@@ -662,7 +668,7 @@ export class TorchSystem {
         const previousHp = e.hp;
         const blocked = g.hitEnemy(
           e,
-          damage,
+          g.toolroom.damage(e, s, damage),
           add(e.body.position, segment.dir, -30),
           !!first,
           true,
@@ -671,6 +677,7 @@ export class TorchSystem {
           segment.weaponTrace,
         );
         g.support.gunHit(e, previousHp, s, true);
+        g.toolroom.gunHit(e, previousHp, s, blocked);
         g.spoof.hit(e, previousHp, true);
         if (!blocked) {
           g.evolutions.hit(s);
@@ -719,6 +726,7 @@ export class TorchSystem {
       if (first && !segment.enemy) g.salvage.impact(s, segment.body, segment.normal);
       if (!this.wind) g.salvage.trace(s, segment.a, segment.b);
       if (!this.wind) g.teamwork.cutAlong(segment.a, segment.b, torchRadius(g), true);
+      if (!this.wind) g.patrolMachines.trace(segment.a, segment.b, torchRadius(g), s.damage);
       // Beam pulses share Countershot's recovery with all other rounds.
       // Traced segments still stop at solids/cables/portals before interception.
       if (!this.reflected && g.mods.includes('countershot') && g.ballistics.counterReady) {

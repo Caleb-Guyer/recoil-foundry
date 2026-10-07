@@ -3,6 +3,10 @@ import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
 import { TeamworkSystem, createSupport, isSupport, SUPPORT, type SupportRig } from './teamwork.ts';
 import { teamworkLevel } from './teamwork-layout.ts';
+import { ToolroomSystem, type ToolroomShot } from './toolroom-system.ts';
+import { toolroomLevel } from './toolroom-layouts.ts';
+import { PatrolMachineSystem, createPatrolRig, type PatrolRig } from './patrol-machine-system.ts';
+import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
 import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
 import { EncounterPacer } from './encounter-pacing.ts';
 import { dailyStartingGun, isStartingGun, type StartingGun } from './starting-guns.ts';
@@ -138,6 +142,7 @@ import { getLevel } from './levels.ts';
 import type { Level, EnemyKind } from './levels.ts';
 import {
   ENEMY_STATS,
+  enemyShielded,
   enemyHealth,
   SHIELD_TURN,
   TWIN_TELL,
@@ -220,6 +225,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  patrol?: PatrolRig;
   support?: SupportRig;
   recoilTarget?: number;
   hitDirection?: Vec;
@@ -275,6 +281,8 @@ export interface Enemy {
   sorter?: SorterRig;
 }
 export interface Shot {
+  nativeTool?: StartingGun;
+  toolroom?: ToolroomShot;
   overkillSpent?: true;
   supportCharged?: true;
   feel?: RoundFeel;
@@ -360,6 +368,8 @@ export class Game {
   switchboard = new SwitchboardSystem(this);
   spoof = new SpoofSystem(this);
   support = new SupportSystem(this);
+  toolroom = new ToolroomSystem(this);
+  patrolMachines = new PatrolMachineSystem(this);
   combatReport = new CombatReport(this);
   mutations = new MutationSystem(this);
   courier = new CourierSystem(this);
@@ -704,6 +714,8 @@ export class Game {
       this.grapnel.reset();
       this.scrap.reset();
       this.support.reset();
+      this.toolroom.reset();
+      this.patrolMachines.clear();
       this.fusions.reset();
       this.harpoons.clear();
     }
@@ -1092,6 +1104,8 @@ export class Game {
     this.grapnel.reset();
     this.scrap.reset();
     this.support.reset();
+    this.toolroom.reset();
+    this.patrolMachines.clear();
     this.fusions.reset();
     this.harpoons.clear();
     this.magnets.items = [];
@@ -1266,6 +1280,7 @@ export class Game {
     this.level = this.uprising.level(this.level);
     if (this.security && this.level.id.startsWith('uprising-'))
       this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
+    this.level = toolroomLevel(this, this.level);
     this.level = teamworkLevel(this, this.level);
     this.level = huntRoom ?? this.level;
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
@@ -1305,6 +1320,8 @@ export class Game {
           spawn.elite,
           undefined,
           this.level.security ? spawn.squad : undefined,
+          spawn.mutation,
+          spawn.machineVariant,
         );
     }
     if (escapeRoom) {
@@ -1467,6 +1484,8 @@ export class Game {
     this.grapnel.reset();
     this.scrap.reset();
     this.support.reset();
+    this.toolroom.reset();
+    this.patrolMachines.clear();
     this.fusions.reset();
     this.harpoons.clear();
     this.demolition.clear();
@@ -1536,6 +1555,7 @@ export class Game {
     attackDelay?: number,
     squad?: SquadTag,
     variant?: MutationKind | 'split-child',
+    machineVariant?: MachineVariant,
   ) {
     if (
       this.combatEnemyCount >=
@@ -1564,7 +1584,7 @@ export class Game {
             label: 'enemy',
           });
     if (
-      (kind === 'shooter' || kind === 'sniper' || kind === 'crane') &&
+      (kind === 'shooter' || kind === 'sniper' || kind === 'crane' || kind === 'mortar') &&
       !this.counterweights.movingPerch(body)
     )
       Body.setStatic(body, true);
@@ -1592,6 +1612,7 @@ export class Game {
       attack: 'aimed',
     };
     this.enemies.push(enemy);
+    if (isPatrolMachine(kind)) enemy.patrol = createPatrolRig(enemy, machineVariant);
     if (isSupport(kind)) {
       enemy.support = createSupport(kind);
       this.teamwork.sources.add(enemy);
@@ -1661,6 +1682,7 @@ export class Game {
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
     this.support.update(dt);
+    this.toolroom.update(dt);
     this.cryogenic.update(dt);
     this.story.update(dt);
     this.stasis.input(input.fire);
@@ -1786,6 +1808,7 @@ export class Game {
     this.loaderArena.update();
     this.mutations.update();
     this.teamwork.tick(dt);
+    this.patrolMachines.tick(dt);
     for (const e of [...this.enemies]) {
       const slow = this.cryogenic.slow(e);
       const previousState = e.state;
@@ -2033,13 +2056,14 @@ export class Game {
     this.shotCount++;
     // Snapshot movement and earned charges before this discharge applies recoil.
     const evolutionDamage = this.evolutions.discharge(this.shotCount);
+    const toolroomDamage = this.toolroom.discharge();
     this.muzzle = 0.065;
     const d = direction(this.player.position, this.aim);
     if (d.x === 0 && d.y === 0) d.x = 1;
     const impulse =
       this.gun.recoil *
       this.mobility.shot(d) *
-      (this.grounded ? 0.21 : 1) *
+      (this.grounded ? 0.21 * this.toolroom.groundScale : 1) *
       (charged ? 1.25 : 1) *
       (rail ? RAIL_RECOIL : 1);
     const beforeRecoil = this.player.velocity.y;
@@ -2069,9 +2093,15 @@ export class Game {
                 ? 'shotgun-shot'
                 : this.startingGun === 'nailgun'
                   ? 'nail-shot'
-                  : this.mods.includes('scatter')
-                    ? 'scatter'
-                    : 'shot',
+                  : this.startingGun === 'carbine'
+                    ? 'carbine-shot'
+                    : this.startingGun === 'twinbore'
+                      ? 'twinbore-shot'
+                      : this.startingGun === 'repeater'
+                        ? 'repeater-shot'
+                        : this.mods.includes('scatter')
+                          ? 'scatter'
+                          : 'shot',
     );
     this.combatFeel.pumpAt = null;
     this.combatFeel.pumpStartedAt = -100;
@@ -2089,7 +2119,8 @@ export class Game {
       (this.grounded ? 1 : this.gun.airDamage) *
       (charged ? 2 : 1) *
       (capacitor ? 2 : 1) *
-      evolutionDamage;
+      evolutionDamage *
+      toolroomDamage;
     const bank = this.support.discharge(
       baseDamage *
         this.gun.pellets *
@@ -2107,9 +2138,12 @@ export class Game {
       if (this.gun.rearVolley)
         this.fireVolley({ x: -d.x, y: -d.y }, damage, this.chargedFlash, false);
     }
-    if (bank > 1)
-      for (const s of this.shots)
-        if (s.id > beforeVolley && primaryGunShot(s)) s.overkillSpent = true;
+    for (const s of this.shots)
+      if (s.id > beforeVolley && primaryGunShot(s)) {
+        s.nativeTool = this.startingGun;
+        this.toolroom.tag(s);
+        if (bank > 1) s.overkillSpent = true;
+      }
     this.ballistics.record(beforeVolley, origin, d);
     if (!this.stasis.held && !this.mods.includes('tripline'))
       this.stasis.release(this.shots.filter((s) => s.id > beforeVolley));
@@ -2131,7 +2165,7 @@ export class Game {
     const pos = { x: this.player.position.x + d.x * 26, y: this.player.position.y - 3 + d.y * 26 };
     const radius = this.massDriver.equipped
       ? MASS_DRIVER.radius
-      : this.mods.includes('magnum')
+      : this.mods.includes('magnum') || this.startingGun === 'carbine'
         ? 4
         : 2.5;
     const spawn = this.lineEnd(
@@ -2151,13 +2185,20 @@ export class Game {
     }
     for (let lane = 0; lane < this.gun.lanes; lane++)
       for (let i = 0; i < this.gun.pellets; i++) {
+        const pellet = i - (this.gun.pellets - 1) / 2;
+        // Twinbore keeps its native tight pair inside a wider Scattershot fan.
+        const spread =
+          pellet *
+          (this.startingGun === 'twinbore' && Math.abs(pellet) === 0.5
+            ? Math.min(this.gun.spread, this.mods.includes('deadeye') ? 0.013 : 0.026)
+            : this.gun.spread);
         let a =
           Math.atan2(d.y, d.x) +
           (lane - (this.gun.lanes - 1) / 2) *
             (this.mods.includes('pinwheel')
               ? 0.12 + (Math.sin((this.shotCount * Math.PI) / 4) + 1) * 0.2
               : 0.22) +
-          (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
+          spread;
         let waypoints: Vec[] | undefined;
         if (this.gun.convergence && this.gun.lanes > 1) {
           const origin = { x: this.player.position.x, y: this.player.position.y - 3 };
@@ -2167,7 +2208,6 @@ export class Game {
             : this.aim;
           const range = Math.max(32, distance(spawn, target));
           const axis = distance(spawn, target) > 32 ? direction(spawn, target) : d;
-          const spread = (i - (this.gun.pellets - 1) / 2) * this.gun.spread;
           const side = lane - (this.gun.lanes - 1) / 2;
           a = Math.atan2(axis.y, axis.x) + side * 0.22 + spread;
           if (side !== 0) {
@@ -2200,7 +2240,7 @@ export class Game {
           });
         this.addShot({
           feel:
-            this.startingGun === 'shotgun'
+            this.startingGun === 'shotgun' || this.startingGun === 'twinbore'
               ? 'pellet'
               : this.startingGun === 'nailgun'
                 ? 'nail'
@@ -2399,7 +2439,8 @@ export class Game {
     }
     const coordinated = updateSquad(this, e);
     if (!coordinated) {
-      if (e.kind === 'switchboard') this.switchboard.update(e, dt);
+      if (isPatrolMachine(e.kind)) this.patrolMachines.updateEnemy(e);
+      else if (e.kind === 'switchboard') this.switchboard.update(e, dt);
       else if (e.kind === 'caller') updateCaller(this, e, dt);
       else if (e.kind === 'switchman') this.annex.updateSwitchman(e, dt);
       else if (e.kind === 'sorter' || e.kind === 'borer' || e.kind === 'sifter')
@@ -3137,6 +3178,7 @@ export class Game {
           };
           recordRoute(s, entryPoint);
           this.teamwork.cutAlong(s.pos, entryPoint, s.radius, s.friendly);
+          if (s.friendly) this.patrolMachines.trace(s.pos, entryPoint, s.radius, s.damage);
           recordRoute(s, passage.pos, {
             pos: entryPoint,
             entry: passage.entry,
@@ -3173,6 +3215,7 @@ export class Game {
         }
         if (!nearest) {
           this.teamwork.cutAlong(s.pos, end, s.radius, s.friendly);
+          if (s.friendly) this.patrolMachines.trace(s.pos, end, s.radius, s.damage);
           this.salvage.trace(s, s.pos, end);
           s.pos = end;
           recordRoute(s);
@@ -3205,6 +3248,7 @@ export class Game {
         };
         this.salvage.trace(s, segmentStart, s.pos);
         this.teamwork.cutAlong(segmentStart, s.pos, s.radius, s.friendly);
+        if (s.friendly) this.patrolMachines.trace(segmentStart, s.pos, s.radius, s.damage);
         recordShotTrace(s.trace, s.pos);
         this.stasis.abandon(s);
         remaining -= segment * nearest.t;
@@ -3302,7 +3346,7 @@ export class Game {
           const previousHp = e.hp;
           const blocked = this.hitEnemy(
             e,
-            damage,
+            this.toolroom.damage(e, s, damage),
             {
               x: e.body.position.x - s.vel.x,
               y: e.body.position.y - s.vel.y,
@@ -3314,6 +3358,7 @@ export class Game {
             shotTrace(s),
           );
           this.support.gunHit(e, previousHp, s);
+          this.toolroom.gunHit(e, previousHp, s, blocked);
           this.spoof.hit(e, previousHp, primaryGunShot(s));
           if (blocked) {
             if (s.massDriver && !s.shell) {
@@ -3545,10 +3590,9 @@ export class Game {
     if (e.kind === 'auditor')
       damage *=
         e.state === 'recover' ? 1 : e.hp > (e.maxHp * 2) / 3 ? 0.6 : e.hp > e.maxHp / 3 ? 0.8 : 1;
-    const blocked =
-      e.elite === 'shielded' && !!from && direction(e.body.position, from).x * e.facing > 0.45;
+    const blocked = !!from && enemyShielded(e, direction(from, e.body.position));
     if (blocked) {
-      damage *= 0.1;
+      damage *= e.kind === 'shutter' ? 0.3 : 0.1;
       e.shieldFlash = 0.14;
     }
     if (e.angler && e.angler.exposed > 0) damage *= 1.5;
@@ -3653,6 +3697,7 @@ export class Game {
     this.hunts.defeated(e, credited && source !== 'cleanup');
     this.fabricators.killed(e);
     this.teamwork.disrupt(e);
+    this.patrolMachines.remove(e);
     this.mutations.killed(e);
     this.courier.killed(e);
     if (e.kind === 'loader') this.loaderArena.stop();

@@ -1,6 +1,9 @@
 import type { EnemyKind } from './levels.ts';
 
 export const ENEMY_NAMES: Record<EnemyKind, string> = {
+  shutter: 'Shutter Guard',
+  strider: 'Strider',
+  mortar: 'Mortar Cart',
   cableweaver: 'The Cableweaver',
   bulwark: 'The Bulwark',
   demolisher: 'The Demolisher',

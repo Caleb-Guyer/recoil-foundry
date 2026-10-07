@@ -35,9 +35,12 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     return;
   }
   const massDriver = g.massDriver.equipped,
+    carbine = g.startingGun === 'carbine' && !massDriver && !g.gun.shellshock,
+    twinbore = g.startingGun === 'twinbore' && !massDriver && !g.gun.shellshock,
+    repeater = g.startingGun === 'repeater',
     shotgun = g.startingGun === 'shotgun' && !massDriver && !g.gun.shellshock,
-    heavy = g.mods.includes('magnum') || massDriver,
-    scatter = g.startingGun === 'shotgun' || g.mods.includes('scatter'),
+    heavy = g.mods.includes('magnum') || massDriver || carbine,
+    scatter = g.startingGun === 'shotgun' || g.mods.includes('scatter') || twinbore,
     burst = g.startingGun === 'nailgun' || g.mods.includes('burst'),
     rapid = g.mods.includes('rapid'),
     backblast = g.mods.includes('backblast'),
@@ -50,7 +53,19 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     motion = reduced ? 0.16 : 1,
     receiverKick = punch * (shotgun ? 4.2 : heavy ? 2.2 : 2.8) * motion,
     barrelKick = punch * (shotgun ? 1.5 : heavy ? 4.8 : 0.4) * motion,
-    muzzle = massDriver ? 45 : heavy ? 40 : scatter ? 35 : 31,
+    muzzle = massDriver
+      ? 45
+      : carbine
+        ? 46
+        : twinbore
+          ? 39
+          : heavy
+            ? 40
+            : scatter
+              ? 35
+              : repeater
+                ? 34
+                : 31,
     muzzleHalf = massDriver ? 8 : scatter ? 8.5 : heavy ? 5.5 : 4,
     cycling = burst && shotAge < Math.max(0.13, g.gun.interval * 0.35),
     // Pause cancels queued rounds; the mechanism follows the last discharge.
@@ -163,6 +178,25 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillStyle = '#c0d5b9';
     c.fillRect(24, heavy ? -7 : -5.5, heavy ? 10 : 5, 1.5);
   }
+  if (carbine) {
+    c.fillStyle = '#546e72';
+    c.fillRect(32, -5, 14, 10);
+    c.fillStyle = '#9ddae0';
+    for (let i = 0; i < 3; i++) c.fillRect(33 + i * 4, -6, 2, 12);
+    c.fillStyle = '#263b3e';
+    c.fillRect(45, -4, 2, 8);
+    c.fillStyle = '#c8d6c7';
+    c.fillRect(11, -10, 22, 2);
+    c.fillRect(30, -11, 3, 4);
+  }
+  if (twinbore) {
+    c.fillStyle = '#a5b8a2';
+    c.fillRect(25, -7, 15, 4);
+    c.fillRect(25, 3, 15, 4);
+    c.fillStyle = '#253a31';
+    c.fillRect(38, -6, 2, 2);
+    c.fillRect(38, 4, 2, 2);
+  }
   if (banking) {
     c.fillStyle = '#c0ab7c';
     c.fillRect(23, heavy ? 6 : 3, heavy ? 9 : 5, 1.5);
@@ -187,6 +221,16 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
 
   const half = burst ? 6 : 5;
   const finish = GUN_FINISHES[g.cosmetics.gun];
+  if (repeater) {
+    c.fillStyle = finish.shell;
+    c.beginPath();
+    c.roundRect(15, 4, 16, 13, 4);
+    c.fill();
+    c.fillStyle = '#3a5148';
+    c.fillRect(18, 7, 10, 7);
+    c.fillStyle = '#a8c0b2';
+    for (let i = 0; i < 3; i++) c.fillRect(20 + i * 3, 8, 1, 5);
+  }
   c.fillStyle = finish.shell;
   c.beginPath();
   c.roundRect(5, -half, 21, half * 2, 2);

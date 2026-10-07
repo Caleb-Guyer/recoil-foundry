@@ -1,5 +1,5 @@
 import { isRecoilTrial, loadRecoilProfile, type RecoilTrialKind } from './recoil-trial-rules.ts';
-import { isStartingGun, type StartingGun } from './starting-guns.ts';
+import { isStartingGun, STARTING_GUN_IDS, type StartingGun } from './starting-guns.ts';
 import { trialEntry, trialExit } from './recoil-trial-layouts.ts';
 
 export const RECOIL_GHOSTS_KEY = 'rf-recoil-ghosts-v1';
@@ -8,6 +8,7 @@ export const GHOST_DURATION = 180000;
 export const GHOST_FRAME_LIMIT = 2048;
 export const RECOIL_CODE_LIMIT = 512;
 export const RECOIL_SPLITS = { launch: 6, cargo: 5, airborne: 3 } as const;
+export const RECOIL_GHOST_CAPACITY = Object.keys(RECOIL_SPLITS).length * STARTING_GUN_IDS.length;
 // Simulation milliseconds, world position, aim in degrees, airborne/left/firing/reset bits.
 export type GhostFrame = [number, number, number, number, number];
 export interface RecoilChallenge {
@@ -89,7 +90,7 @@ export function recoilGhostKey(v: Pick<RecoilChallenge, 'kind' | 'gun'>) {
 }
 export function loadRecoilGhosts(raw: unknown): RecoilGhost[] {
   const seen = new Set<string>();
-  return (Array.isArray(raw) ? raw.slice(0, 9) : [])
+  return (Array.isArray(raw) ? raw.slice(0, RECOIL_GHOST_CAPACITY) : [])
     .map((v: unknown) => {
       if (!object(v) || typeof v.frames !== 'string') return v;
       if (v.frames.length > 65536) return null;
@@ -107,7 +108,11 @@ export function loadRecoilGhosts(raw: unknown): RecoilGhost[] {
     .map((v) => structuredClone(v));
 }
 export function validRecoilGhosts(raw: unknown) {
-  return Array.isArray(raw) && raw.length <= 9 && loadRecoilGhosts(raw).length === raw.length;
+  return (
+    Array.isArray(raw) &&
+    raw.length <= RECOIL_GHOST_CAPACITY &&
+    loadRecoilGhosts(raw).length === raw.length
+  );
 }
 export function serializeRecoilGhosts(raw: unknown): StoredRecoilGhost[] {
   return loadRecoilGhosts(raw).map((v) => ({ ...v, frames: JSON.stringify(v.frames) }));

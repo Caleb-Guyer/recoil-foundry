@@ -27,6 +27,9 @@ import type { EliteKind } from './enemies.ts';
 import type { HazardPlacement } from './hazard-layouts.ts';
 import type { SquadTag } from './squads.ts';
 export type EnemyKind =
+  | 'shutter'
+  | 'strider'
+  | 'mortar'
   | 'cableweaver'
   | 'bulwark'
   | 'demolisher'
@@ -69,6 +72,7 @@ export interface Solid {
   h: number;
 }
 export interface Spawn extends Vec {
+  machineVariant?: import('./patrol-machines.ts').MachineVariant;
   teamwork?: true;
   mutation?: MutationKind;
   kind: EnemyKind;
@@ -98,6 +102,8 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  toolroom?: import('./toolroom-layouts.ts').ToolroomRoom;
+  machineIntro?: import('./patrol-machines.ts').PatrolKind;
   hunt?: import('./hunt-rules.ts').HuntKind;
   bossRemix?: import('./boss-remix-rules.ts').BossRemixId;
   teamworkIntro?: import('./teamwork.ts').SupportKind;

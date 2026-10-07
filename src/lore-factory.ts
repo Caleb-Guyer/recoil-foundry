@@ -1,8 +1,10 @@
 import type { EnemyKind } from './levels.ts';
 import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
+import { MACHINE_LORE_RECORDS } from './patrol-machines.ts';
 
 export const MACHINE_LORE = {
+  ...MACHINE_LORE_RECORDS,
   cableweaver: [
     'Cable vault · unauthorized connection',
     'M. Vale · maintenance',

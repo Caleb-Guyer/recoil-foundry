@@ -71,7 +71,7 @@ for (const kind of kinds) {
       assert(Query.collides(prop.body, [e.body]).every((hit) => hit.depth < 0.5));
     }
   });
-  if (!['shooter', 'sniper', 'crane'].includes(kind)) {
+  if (!['shooter', 'sniper', 'crane', 'mortar'].includes(kind)) {
     test(`${kind}: a hard body impact damages stationary crates and ignites untouched fuel`, () => {
       for (const propKind of ['crate', 'canister', 'cover'] as PropKind[]) {
         const { g, e } = fixture(kind);

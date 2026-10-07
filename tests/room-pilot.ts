@@ -109,6 +109,15 @@ export function playRoom(g: Game, seconds: number, stop: () => boolean = () => f
         y: g.player.position.y + dx * Math.sin(angle) + dy * Math.cos(angle),
       };
     }
+    // Release sustained downward fire when it has carried us to the ceiling.
+    // Let ordinary gravity restore a useful firing angle before resuming.
+    if (
+      g.startingGun === 'twinbore' &&
+      target &&
+      g.player.position.y < g.worldTop + 180 &&
+      target.body.position.y > g.player.position.y + 350
+    )
+      input.fire = false;
     g.tick(1 / 60, {
       left: false,
       right: false,

@@ -160,10 +160,22 @@ export function drawUprising(c: CanvasRenderingContext2D, g: Game) {
     c.fillStyle = u.switchTarget ? '#637b8314' : '#aedcb618';
     c.fillRect(x, y, w, h);
     c.strokeRect(x, y, w, h);
+    if (u.boardingAt !== null && u.boardingDuration > 0) {
+      c.fillStyle = '#aedcb6';
+      c.fillRect(x + 8, y + h - 10, (w - 16) * u.boardingProgress, 4);
+    }
     c.fillStyle = c.strokeStyle;
     c.font = 'bold 14px monospace';
     c.textAlign = 'center';
-    c.fillText(u.switchTarget ? 'ROUTE LOCKED' : 'BOARD HERE', x + w / 2, y - 12);
+    c.fillText(
+      u.switchTarget
+        ? 'ROUTE LOCKED'
+        : u.boardingAt !== null && u.boardingDuration > 0
+          ? 'BOARDING'
+          : 'BOARD HERE',
+      x + w / 2,
+      y - 12,
+    );
   }
   c.restore();
 }

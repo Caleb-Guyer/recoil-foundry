@@ -31,6 +31,11 @@ export interface ReinforcementDoor {
 }
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
+  if (level.machineIntro) {
+    const intro = level.spawns.find((s) => s.kind === level.machineIntro);
+    if (intro)
+      return [[{ ...intro }], level.spawns.filter((s) => s !== intro).map((s) => ({ ...s }))];
+  }
   if (level.teamworkIntro)
     return [
       level.spawns.filter((s) => s.teamwork).map((s) => ({ ...s })),
@@ -83,6 +88,9 @@ export function splitWaves(level: Level, seed: string, stage: number): [Spawn[],
           repairer: 4,
           relay: 5,
           auditor: 0,
+          shutter: 6,
+          strider: 6,
+          mortar: 7,
           switchman: 5,
           caller: 6,
           switchboard: 0,
@@ -286,7 +294,8 @@ export class ReinforcementSystem {
     if (this.phase === 'opening') {
       if (g.level.freight) return;
       if (
-        (g.level.harpoonIntro ||
+        (g.level.machineIntro ||
+          g.level.harpoonIntro ||
           g.level.fabricatorIntro ||
           g.level.sapperIntro ||
           g.level.crawlerIntro ||
@@ -352,7 +361,16 @@ export class ReinforcementSystem {
         if (this.plan && g.combatEnemyCount >= this.plan.cap) continue;
         if (this.canEnter(door.spawn) && g.combatEnemyCount < 14) {
           const s = door.spawn;
-          g.spawnEnemy(s.kind, s.x, s.y, s.elite, door.attackDelay, s.squad, s.mutation);
+          g.spawnEnemy(
+            s.kind,
+            s.x,
+            s.y,
+            s.elite,
+            door.attackDelay,
+            s.squad,
+            s.mutation,
+            s.machineVariant,
+          );
           g.enemies[g.enemies.length - 1].fromDoor = true;
           door.state = 'open';
           door.timer = REINFORCEMENT_ENTRY;

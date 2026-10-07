@@ -1,7 +1,7 @@
 import type { Game } from './game.ts';
 import type { PracticeBoss } from './practice.ts';
 import { PRACTICE_BOSSES } from './practice.ts';
-import type { StartingGun } from './starting-guns.ts';
+import { isStartingGun, type StartingGun } from './starting-guns.ts';
 import { loadWeaponUnlocks, unlockedStartingGuns } from './weapon-unlocks.ts';
 import { getGun, type Checkpoint } from './rules.ts';
 import {
@@ -46,7 +46,7 @@ export class BossGauntlet {
   begin(gun: StartingGun, profile: unknown, preview = false) {
     const access = loadWeaponUnlocks(profile);
     if (!preview && (!access.cleared || !unlockedStartingGuns(access).includes(gun))) return false;
-    if (!['pistol', 'shotgun', 'nailgun'].includes(gun)) return false;
+    if (!isStartingGun(gun)) return false;
     this.reset();
     this.state = {
       gun,

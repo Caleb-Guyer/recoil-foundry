@@ -9,6 +9,7 @@ import { SUPPORT_DRILLS, supportDrillFromUrl, type SupportDrillId } from './supp
 import {
   WEAPON_UNLOCKS_KEY,
   loadWeaponUnlocks,
+  migrateWeaponUnlocks,
   unlockedStartingGuns,
   availableStartingGun,
 } from './weapon-unlocks.ts';
@@ -129,6 +130,12 @@ import {
   type ContinuityBuild,
 } from './continuity-test.ts';
 import { supportTestFromUrl, SUPPORT_BUILDS, type SupportBuild } from './support-test.ts';
+import {
+  toolroomTestFromUrl,
+  toolroomTestTitle,
+  TOOLROOM_BUILDS,
+  type ToolroomBuild,
+} from './toolroom-test.ts';
 import { anglerTestFromUrl } from './practice.ts';
 import { vectorTestFromUrl } from './practice.ts';
 import { wallcrawlerTestFromUrl } from './practice.ts';
@@ -452,7 +459,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Training Drills</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Toolroom Expansion</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -565,6 +572,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  toolroomTestFromUrl(entryUrl) ??
   supportTestFromUrl(entryUrl) ??
   continuityTestFromUrl(entryUrl) ??
   weaponMasteryTestFromUrl(entryUrl) ??
@@ -777,7 +785,7 @@ function updateTitle() {
     $('play').innerHTML = 'Test Tripwire <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'TORCH-58')
     $('play').innerHTML = 'Test Cutting Torch <span aria-hidden="true">↗</span>';
-  if (linkedRunTest?.seed.startsWith('BRANCHES-71-')) {
+  if (linkedRunTest && /^(?:BRANCHES-71-|RF-C89-BRANCHES-)/.test(linkedRunTest.seed)) {
     const name = entryUrl.searchParams.has('combo')
       ? 'max combo'
       : (BRANCH_TEST_BUILDS[entryUrl.searchParams.get('build') ?? 'pulse']?.name ??
@@ -841,6 +849,14 @@ function updateTitle() {
   }
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.seed.startsWith('RF-C89-EXP-')) {
+    $('play').textContent = 'Test ' + toolroomTestTitle(entryUrl) + ' ↗';
+    $('title-hint').textContent =
+      (entryUrl.searchParams.has('machine')
+        ? 'Read the attack warning, then flank, dodge or break the shell.'
+        : TOOLROOM_BUILDS[(entryUrl.searchParams.get('build') ?? 'native') as ToolroomBuild].hint) +
+      ' Isolated playtest · R to retry.';
+  }
   if (linkedRunTest?.annex)
     $('title-hint').textContent =
       'Dead Signal prototype. ' +
@@ -915,7 +931,7 @@ function updateTitle() {
     $('title-hint').textContent = 'Salvage equipped. Shoot backward to ram. R to retry.';
   if (linkedRunTest?.seed === 'SALVAGE-49' && entryUrl.searchParams.get('evolved') === '1')
     $('title-hint').textContent = 'Salvage evolutions equipped. R to retry.';
-  if (linkedRunTest?.seed.startsWith('BRANCHES-71-')) {
+  if (linkedRunTest && /^(?:BRANCHES-71-|RF-C89-BRANCHES-)/.test(linkedRunTest.seed)) {
     const hints: Record<string, string> = {
       icebreaker: 'Build cold. Hit a frozen enemy to shatter it. R to retry.',
       coldfront: 'Cold bursts chill nearby enemies. Follow up with shots. R to retry.',
@@ -1679,7 +1695,7 @@ function unlockStartingGun(gun: 'shotgun' | 'nailgun') {
   const field = gun === 'shotgun' ? 'cleared' : 'overtime';
   if (before[field]) return;
   write(WEAPON_UNLOCKS_KEY, {
-    version: 1,
+    ...before,
     started: true,
     cleared: true,
     overtime: before.overtime || gun === 'nailgun',
@@ -1852,6 +1868,21 @@ function updateLogbook(enemy?: EnemyKind) {
   updateArchive();
 }
 function updateArchive(ids: readonly string[] = []) {
+  const toolsBefore = weaponUnlocks();
+  const toolsAfter = migrateWeaponUnlocks(
+    toolsBefore,
+    checkpoint,
+    runHistory,
+    logbookProgress,
+    commendations,
+    securityProfile().unlocked > 0,
+    loadEncounters(read(VICTORIES_KEY)).map((e) => e.kind),
+  );
+  const earnedTools = unlockedStartingGuns(toolsAfter).filter(
+    (id) => !unlockedStartingGuns(toolsBefore).includes(id),
+  );
+  if (JSON.stringify(toolsBefore) !== JSON.stringify(toolsAfter))
+    write(WEAPON_UNLOCKS_KEY, toolsAfter);
   const before = read(ARCHIVE_KEY);
   const newlyUnlocked = currentGoals().filter(
     (g) => g.unlocked && !loadArchive(before).encountered.includes('mod:' + g.id + ':unlocked'),
@@ -1864,10 +1895,14 @@ function updateArchive(ids: readonly string[] = []) {
     earnRunRewards([
       ...newlyUnlocked.map((g) => 'mod:' + g.id),
       ...newContracts.map((c) => 'uprising:' + c.id),
+      ...earnedTools.map((id) => 'gun:' + id),
     ]);
   if (newlyUnlocked.length && game.commendations.eligible)
     fittingNotice = {
-      name: newlyUnlocked.map((g) => g.name).join(' + '),
+      name:
+        newlyUnlocked.length > 1
+          ? `${newlyUnlocked.length} toolroom fittings`
+          : newlyUnlocked[0].name,
       until: null,
       stage: game.stage,
     };
@@ -1875,6 +1910,16 @@ function updateArchive(ids: readonly string[] = []) {
   const next = encounterArchive(before, [
     ...entries.map(archiveToken),
     ...ids,
+    ...(!game.practice &&
+    !game.testRun &&
+    !game.workshop.active &&
+    game.mode !== 'title' &&
+    game.level.toolroom
+      ? ['room:' + game.level.toolroom]
+      : []),
+    ...unlockedStartingGuns(toolsAfter)
+      .filter((id) => id !== 'pistol')
+      .map((id) => 'gun:' + id),
     ...currentGoals()
       .filter((g) => g.unlocked)
       .map((g) => 'mod:' + g.id + ':unlocked'),
@@ -2265,6 +2310,7 @@ function showDialog(kind: string) {
       closeDialog,
       unlockedStartingGuns(weaponUnlocks()),
     );
+    drawRewardImages(content, game);
   } else if (kind === 'gauntlet-setup') {
     buildMenu = gauntletSetup(
       content,
@@ -2295,11 +2341,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Practice the handoff.</h2>' +
-      '<p class="update-tagline">Learn your support fittings in three optional firing range drills.</p>' +
-      '<dl class="update-notes"><div><dt>Try a revealed challenge.</dt><dd>Open Heat Relay, Overkill Bank or Scrap Armor mastery in the Logbook and choose Try this challenge. Each range gives you the right build, targets and a live counter.</dd></div>' +
-      '<div><dt>Real combat, quick retries.</dt><dd>Carry heat between targets, spend stored damage and time cover against incoming bullets. Retry whenever you want. Mouse, keyboard, touch and controller controls work in the range.</dd></div>' +
-      '<div><dt>Keep your run.</dt><dd>Your Campaign stays paused while you train. Training grants no rewards or saved progress; return to the same Logbook entry and resume your run.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Open the toolroom.</h2>' +
+      '<p class="update-tagline">New tools to earn. New fittings to combine. New machines to outmaneuver.</p>' +
+      '<dl class="update-notes"><div><dt>Six starting tools.</dt><dd>Earn the paired Twinbore by defeating the Press or Kiln, the penetrating Coil carbine through two different machine hunts, and the Pressure repeater by clearing the Gauntlet. Your first run starts with the pistol.</dd></div>' +
+      '<div><dt>24 earned fittings.</dt><dd>Boss victories and Campaign completion open movement, precision, heat, banking, defense and cadence fittings. See each requirement in the Logbook; later runs can offer the parts you have earned.</dd></div>' +
+      '<div><dt>A changing factory.</dt><dd>Nine later-zone layouts introduce Shutter Guards, Striders and Mortar Carts, plus six variants. Watch the committed warnings, flank closed shutters, and shoot mortar shells before they land. The opening stays familiar.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

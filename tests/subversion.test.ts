@@ -95,7 +95,7 @@ test('all Subversion upgrade pairs respect prerequisites in either order and lea
         assert.deepEqual(getGun(ab), getGun(ba));
       }
     }
-  assert.equal(pairs, 570);
+  assert.equal(pairs, 690);
 });
 
 test('reward weighting favors owned Subversion without allowing the opposite fork', () => {

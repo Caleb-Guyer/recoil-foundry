@@ -143,6 +143,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
       book,
       earned,
       loadSecurityProfile(read(SECURITY_KEY)).unlocked > 0,
+      victories.map((v) => v.kind),
     ),
     [BOSS_REMIXES_KEY]: loadBossRemixes(read(BOSS_REMIXES_KEY)),
     [RUN_REWARDS_KEY]: loadRunRewards(read(RUN_REWARDS_KEY)),

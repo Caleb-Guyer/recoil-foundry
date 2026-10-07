@@ -461,6 +461,17 @@ export class Sound {
     } else if (kind === 'mass-impact') {
       this.tone(420, 180, 0.085, 0.045, 'triangle');
       this.crack(0.035, 0.035, 1100);
+    } else if (kind === 'carbine-shot') {
+      this.tone(820, 150, 0.07, 0.075, 'sawtooth');
+      this.tone(120, 35, 0.14, 0.16, 'triangle');
+      this.crack(0.055, 0.11, 2100);
+    } else if (kind === 'twinbore-shot') {
+      this.tone(160, 45, 0.1, 0.15, 'triangle');
+      this.crack(0.05, 0.1, 1550);
+      this.tone(320, 95, 0.05, 0.035, 'square', 0.015);
+    } else if (kind === 'repeater-shot') {
+      this.tone(390, 110, 0.035, 0.065, 'triangle');
+      this.crack(0.026, 0.085, 2600);
     } else if (kind === 'shotgun-shot') {
       this.tone(92, 28, 0.19, 0.23);
       this.crack(0.14, 0.19, 1000);

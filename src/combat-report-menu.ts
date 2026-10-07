@@ -72,13 +72,15 @@ export function buildConnections(
   }
   pair(
     ['thermal-runaway', 'heat-relay'],
-    'A tracked beam kill carries half its heat to your next exposed target within one second.',
+    `A tracked beam kill carries ${has('heat-exchanger') ? '75%' : 'half'} of its heat to your next exposed target within ${has('insulated-line') ? '1.8 seconds' : 'one second'}.`,
   );
   if (has('overkill-bank'))
     connections.push({
       title: 'Overkill Bank + your discharge',
       detail:
-        'Excess direct-kill damage powers one later discharge. Its projectiles and rear fire share the reserve.',
+        'Excess direct-kill damage powers one later discharge. Its projectiles and rear fire share the reserve.' +
+        (has('bank-capacitor') ? ' The reserve can boost it by up to 75%.' : '') +
+        (has('bank-memory') ? ' Bank Memory keeps 25% after spending it.' : ''),
     });
   pair(['ricochet', 'banker'], 'Wall banks earn your Banker damage bonus.');
   pair(['capacitor', 'scatter'], 'One stored charge boosts the entire pellet pattern.');
@@ -92,12 +94,7 @@ export function buildConnections(
         ? { title: first.name, detail: first.description }
         : {
             title: STARTING_GUNS[run.startingGun ?? 'pistol'].name,
-            detail:
-              run.startingGun === 'shotgun'
-                ? 'A close-range pellet spread with a strong recoil launch.'
-                : run.startingGun === 'nailgun'
-                  ? 'Precise bursts with smaller recoil kicks.'
-                  : 'Single rounds with balanced aim and recoil.',
+            detail: STARTING_GUNS[run.startingGun ?? 'pistol'].description,
           },
     );
   }

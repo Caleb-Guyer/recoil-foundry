@@ -9,6 +9,8 @@ import type { Checkpoint } from './rules.ts';
 import { testCheckpoint } from './practice.ts';
 import { newUprising } from './uprising-model.ts';
 import { isRecoilTrial, recoilTrialCheckpoint } from './recoil-trial-rules.ts';
+import { isToolroomRoom } from './toolroom-layouts.ts';
+import { isMachineVariant, MACHINE_VARIANTS } from './patrol-machines.ts';
 
 const images = new Map<string, HTMLCanvasElement>();
 export const ARCHIVE_STAGES: Record<string, number> = {
@@ -23,6 +25,8 @@ export const ARCHIVE_STAGES: Record<string, number> = {
   'region:core': 9,
 };
 export function archiveCheckpoint(id: string): Checkpoint {
+  if (id.startsWith('room:') && isToolroomRoom(id.slice(5)))
+    return { ...testCheckpoint('RF-C89-EXP-ROOM-' + id.slice(5), 18), version: 6, mods: [] };
   if (id.startsWith('hunt:') && isHunt(id.slice(5))) {
     const kind = id.slice(5) as import('./hunt-rules.ts').HuntKind;
     return { ...testCheckpoint(huntSeed(kind), 8), version: 6, huntTest: kind };
@@ -61,7 +65,9 @@ export function prepareArchiveEnemy(g: Game, id: string) {
       ? key
       : family === 'elite'
         ? { shielded: 'runner', twin: 'sniper', volatile: 'flyer' }[key]
-        : { splitter: 'runner', gunner: 'shooter', blinker: 'hopper' }[key]
+        : family === 'machine' && isMachineVariant(key)
+          ? MACHINE_VARIANTS[key].kind
+          : { splitter: 'runner', gunner: 'shooter', blinker: 'hopper' }[key]
   ) as EnemyKind;
   g.enemies = [];
   g.spawnEnemy(
@@ -72,6 +78,7 @@ export function prepareArchiveEnemy(g: Game, id: string) {
     undefined,
     undefined,
     family === 'mutation' ? (key as 'splitter' | 'gunner' | 'blinker') : undefined,
+    family === 'machine' && isMachineVariant(key) ? key : undefined,
   );
   const enemy = g.enemies[0];
   enemy.spawn = 0;
@@ -94,7 +101,7 @@ function photograph(id: string): HTMLCanvasElement {
   renderer.width = 640;
   renderer.height = 320;
   renderer.reduced = true;
-  if (/^(enemy|elite|mutation):/.test(id)) {
+  if (/^(enemy|elite|mutation|machine):/.test(id)) {
     const enemy = prepareArchiveEnemy(g, id);
     // Photograph the real rendered pixels, then fit their bounds. Attachments,
     // overhead health bars and the Crane hook extend past physics body bounds.

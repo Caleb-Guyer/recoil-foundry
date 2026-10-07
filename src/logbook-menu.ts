@@ -262,12 +262,16 @@ export function logbookMenu(
   const family = content.querySelector<HTMLSelectElement>('#logbook-family')!;
   family.value = state.family ?? 'all';
   function render() {
-    const goals = entries.filter((e) => e.goal && !e.goal.unlocked);
+    const pendingGoals = entries.filter((e) => e.goal && !e.goal.unlocked);
+    const goals = pendingGoals.filter(
+      (e, i) =>
+        pendingGoals.findIndex((other) => other.goal!.requirement === e.goal!.requirement) === i,
+    );
     const goalsPanel = content.querySelector<HTMLElement>('#logbook-goals')!;
     goalsPanel.hidden = state.section !== 'equipment' || preview;
     goalsPanel.innerHTML =
       '<strong>' +
-      (goals.length ? 'Next goals' : 'All five achievement fittings unlocked') +
+      (goals.length ? 'Next goals' : 'All achievement fittings unlocked') +
       '</strong>' +
       goals
         .slice(0, 3)
@@ -276,7 +280,17 @@ export function logbookMenu(
             '<button class="quiet" data-goal="' +
             e.id +
             '">' +
-            escapeLogbook(e.name) +
+            escapeLogbook(
+              e.name +
+                (pendingGoals.filter((other) => other.goal!.requirement === e.goal!.requirement)
+                  .length > 1
+                  ? ' + ' +
+                    (pendingGoals.filter((other) => other.goal!.requirement === e.goal!.requirement)
+                      .length -
+                      1) +
+                    ' fittings'
+                  : ''),
+            ) +
             '<span>' +
             e.goal!.current +
             ' / ' +

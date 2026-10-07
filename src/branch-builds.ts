@@ -10,6 +10,7 @@ import { BRANCH_GROUPS, BRANCH_PARENTS } from './upgrade-branches.ts';
 import { getLevel } from './levels.ts';
 import { isSubversion } from './subversion-rules.ts';
 import { LONGEVITY_IDS, loadUnlocks } from './longevity.ts';
+import { TOOLROOM_IDS } from './toolroom-catalog.ts';
 
 export function withParents(build: readonly string[], wanted: readonly string[]): string[] | null {
   const result = [...build],
@@ -669,9 +670,13 @@ export function branchTestFromUrl(url: URL): Checkpoint | null {
   const version = /^(\d+)\.(\d+)\./.exec(p.get('v') ?? '');
   if (version && (+version[1] < 3 || (+version[1] === 3 && +version[2] < 20)))
     mods = mods.filter((id) => !LONGEVITY_IDS.includes(id as never));
+  if (version && +version[1] < 5) mods = mods.filter((id) => !TOOLROOM_IDS.includes(id as never));
   const stage = p.get('room') === 'boss' ? 19 : 10;
   for (let i = 0; i < 4096; i++) {
-    const seed = 'BRANCHES-71-' + i;
+    const seed =
+      (mods.some((id) => TOOLROOM_IDS.includes(id as never))
+        ? 'RF-C89-BRANCHES-'
+        : 'BRANCHES-71-') + i;
     if (getLevel(seed, stage).mirrored !== (p.get('mirror') === '1')) continue;
     while (mods.length < stage) {
       const next = availableMods(mods).find((m) => !Object.hasOwn(BRANCH_PARENTS, m.id));

@@ -7,6 +7,9 @@ import { logbookEntries, type LogbookEntry, type LogbookProgress } from './logbo
 import type { CommendationId } from './commendations.ts';
 import type { Enemy } from './game.ts';
 import { LONGEVITY_IDS } from './longevity.ts';
+import { STARTING_GUN_IDS } from './starting-guns.ts';
+import { MACHINE_VARIANT_IDS } from './patrol-machines.ts';
+import { TOOLROOM_ROOM_IDS } from './toolroom-layouts.ts';
 
 export const ARCHIVE_KEY = 'rf-archive-v1';
 export const VARIANT_IDS = [
@@ -16,11 +19,11 @@ export const VARIANT_IDS = [
   'mutation:splitter',
   'mutation:gunner',
   'mutation:blinker',
+  ...MACHINE_VARIANT_IDS.map((id) => 'machine:' + id),
 ] as const;
 const ids = [
   'tool',
-  'gun:shotgun',
-  'gun:nailgun',
+  ...STARTING_GUN_IDS.filter((id) => id !== 'pistol').map((id) => 'gun:' + id),
   'trial:launch',
   'trial:cargo',
   'trial:airborne',
@@ -36,6 +39,7 @@ const ids = [
   'uprising:core-license:unlocked',
   'uprising:uprising-veteran:unlocked',
   ...VARIANT_IDS,
+  ...TOOLROOM_ROOM_IDS.map((id) => 'room:' + id),
   ...RECORDS.map((r) => 'record:' + r.id),
   ...COMMENDATIONS.flatMap((c) => ['commendation:' + c.id, 'commendation:' + c.id + ':earned']),
 ];
@@ -124,5 +128,6 @@ export function enemyArchiveIds(enemy: Enemy) {
     'enemy:' + enemy.kind,
     ...(enemy.elite ? ['elite:' + enemy.elite] : []),
     ...(enemy.mutation ? ['mutation:' + enemy.mutation.kind] : []),
+    ...(enemy.patrol?.variant ? ['machine:' + enemy.patrol.variant] : []),
   ];
 }

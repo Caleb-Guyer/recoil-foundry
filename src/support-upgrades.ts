@@ -97,8 +97,8 @@ export class SupportSystem {
   }
   discharge(baseDamage: number) {
     if (!this.game.mods.includes('overkill-bank') || !(baseDamage > 0)) return 1;
-    const gain = Math.min(0.5, this.reserve / baseDamage);
-    this.reserve = 0;
+    const gain = Math.min(this.game.toolroom.bankCap, this.reserve / baseDamage);
+    this.reserve *= this.game.mods.includes('bank-memory') ? 0.25 : 0;
     this.game.combatReport.bankCharge(baseDamage * gain);
     return 1 + gain;
   }
@@ -123,8 +123,8 @@ export class SupportSystem {
       g.burst(g.player.position, 3, '#e7c984', 1.2);
     }
     if (beam && g.mods.includes('heat-relay') && g.torch.target === e.id && g.torch.heat > 0) {
-      this.relay = g.torch.heat * 0.5;
-      this.relayUntil = g.time + SUPPORT.relayTime;
+      this.relay = g.torch.heat * (g.mods.includes('heat-exchanger') ? 0.75 : 0.5);
+      this.relayUntil = g.time + (g.mods.includes('insulated-line') ? 1.8 : SUPPORT.relayTime);
       g.burst(e.body.position, 4, '#f0b879', 2);
     }
   }
@@ -138,6 +138,7 @@ export class SupportSystem {
   }
   collectPlate(s?: Shot) {
     const g = this.game;
+    g.toolroom.scrap(s);
     if (
       !g.mods.includes('scrap-armor') ||
       g.mode !== 'playing' ||
@@ -149,7 +150,7 @@ export class SupportSystem {
       g.time < this.plateReadyAt
     )
       return;
-    this.plateUntil = g.time + SUPPORT.plateTime;
+    this.plateUntil = g.time + g.toolroom.plateTime;
     this.plateReadyAt = g.time + SUPPORT.plateCooldown;
     g.onSound('loaded');
     g.burst(g.player.position, 5, '#b8ddc9', 1.8);
@@ -161,9 +162,9 @@ export class SupportSystem {
       s.allied ||
       s.blade ||
       s.shell ||
-      s.radius > 5 ||
+      s.radius > (this.game.mods.includes('reinforced-plate') ? 6 : 5) ||
       !(s.damage > 0) ||
-      s.damage > 20
+      s.damage > (this.game.mods.includes('reinforced-plate') ? 28 : 20)
     )
       return false;
     this.plateUntil = -1;

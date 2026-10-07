@@ -21,9 +21,8 @@ export function rewardImage(id: string, name: string) {
 export function rewardCards(ids: readonly string[]) {
   const rewards = REWARD_CATALOG.filter((r) => ids.includes(r.id));
   if (!rewards.length) return '';
-  return (
-    '<section class="run-rewards" aria-label="Rewards earned this run"><h3>Earned this run</h3><div class="reward-cards">' +
-    rewards
+  const cards = (items: typeof rewards) =>
+    items
       .map(
         (r) =>
           '<article class="reward-card">' +
@@ -46,8 +45,21 @@ export function rewardCards(ids: readonly string[]) {
           escapeLogbook(r.detail) +
           '</p></article>',
       )
-      .join('') +
-    '</div><button id="earned-rewards" class="quiet">View rewards in Logbook ↗</button></section>'
+      .join('');
+  return (
+    '<section class="run-rewards" aria-label="Rewards earned this run"><h3>Earned this run' +
+    (rewards.length > 6 ? ' · ' + rewards.length : '') +
+    '</h3><div class="reward-cards">' +
+    cards(rewards.slice(0, 6)) +
+    '</div>' +
+    (rewards.length > 6
+      ? '<details class="reward-overflow"><summary>Show ' +
+        (rewards.length - 6) +
+        ' more rewards</summary><div class="reward-cards">' +
+        cards(rewards.slice(6)) +
+        '</div></details>'
+      : '') +
+    '<button id="earned-rewards" class="quiet">View rewards in Logbook ↗</button></section>'
   );
 }
 let weaponPreview: Game | undefined;
@@ -74,8 +86,8 @@ export function drawRewardImages(root: HTMLElement, game: Game) {
       preview.gun = getGun([], preview.startingGun);
       if (family === 'appearance' && slot === 'gun' && Object.hasOwn(GUN_FINISHES, style))
         preview.cosmetics.gun = style as Cosmetics['gun'];
-      c.scale(5, 5);
-      c.translate(-14, 0);
+      c.scale(family === 'gun' ? 8 : 5, family === 'gun' ? 8 : 5);
+      c.translate(family === 'gun' ? -21 : -14, family === 'gun' ? -1 : 0);
       drawWeapon(c, preview, true);
     }
     c.restore();

@@ -210,7 +210,7 @@ export function addRun(value: unknown, run: RunRecap): RunRecap[] {
 }
 export function canReplayRun(run: RunRecap) {
   return (
-    run.ruleset === DAILY_RULESET &&
+    (run.ruleset === 88 || run.ruleset === DAILY_RULESET) &&
     !run.legacyMods &&
     !isUnsupportedDailySeed(run.seed) &&
     (run.mode !== 'daily' || !!dailyFromSeed(run.seed))

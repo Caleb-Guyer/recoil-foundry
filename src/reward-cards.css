@@ -20,6 +20,18 @@
   font-size: 15px;
   margin: 0 0 12px;
 }
+.reward-overflow summary {
+  cursor: pointer;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid #546557;
+  border-radius: 4px;
+  color: #d6ddcd;
+}
+.reward-overflow summary:focus-visible {
+  outline: 2px solid #e8b56c;
+  outline-offset: 3px;
+}
 .reward-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

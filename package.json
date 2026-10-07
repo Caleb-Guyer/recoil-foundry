@@ -1,9 +1,9 @@
 {
   "name": "recoil-foundry",
-  "version": "4.16.0",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
-  "description": "One gun. Twenty stages. A physics roguelike with varied obstacle layouts and recoil movement.",
+  "description": "Six earned tools. Twenty stages. A physics roguelike with 141 upgrades, varied factory encounters and recoil movement.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",

@@ -21,9 +21,13 @@ import { loadArchive, archiveToken, archiveUnread } from './archive.ts';
 import { ENEMY_GUIDES } from './archive-art.ts';
 import { type UnlockGoal } from './longevity.ts';
 import { supportMasteryProgress, type SupportMasteryAttempt } from './support-mastery.ts';
+import { MACHINE_VARIANT_RECORDS } from './patrol-machines.ts';
+import { TOOLROOM_ROOM_IDS, TOOLROOM_ROOMS } from './toolroom-layouts.ts';
+import { TOOLROOM_MODS } from './toolroom-catalog.ts';
 
 const EMPTY_LORE: Lore = ['', '', ''];
 export const VARIANT_RECORDS = [
+  ...MACHINE_VARIANT_RECORDS,
   {
     id: 'elite:shielded',
     name: 'Shielded Runner',
@@ -175,28 +179,30 @@ export function logbookCatalog(
     ...uprisingCatalog(rawArchive, uprisingRecords),
     recovered.get('tool')!,
     ...(weapons?.started
-      ? (['shotgun', 'nailgun'] as const).map((gun) => ({
-          id: 'gun:' + gun,
-          name: STARTING_GUNS[gun].name,
-          section: 'equipment' as const,
-          weapon: gun,
-          family: 'general',
-          label: unlockedStartingGuns(weapons).includes(gun)
-            ? 'Starting gun · Unlocked'
-            : 'Starting gun · Locked',
-          description: STARTING_GUNS[gun].description,
-          unlock: unlockedStartingGuns(weapons).includes(gun)
-            ? undefined
-            : WEAPON_REQUIREMENTS[gun],
-          state: unlockedStartingGuns(weapons).includes(gun)
-            ? ('known' as const)
-            : ('locked' as const),
-          lore: [
-            'Toolroom register',
-            'M. Vale · maintenance',
-            'Available in Campaign and Workshop. Every collected fitting uses the same mount.',
-          ] as Lore,
-        }))
+      ? (Object.keys(STARTING_GUNS) as import('./starting-guns.ts').StartingGun[])
+          .filter((id) => id !== 'pistol')
+          .map((gun) => ({
+            id: 'gun:' + gun,
+            name: STARTING_GUNS[gun].name,
+            section: 'equipment' as const,
+            weapon: gun,
+            family: 'general',
+            label: unlockedStartingGuns(weapons).includes(gun)
+              ? 'Starting gun · Unlocked'
+              : 'Starting gun · Locked',
+            description: STARTING_GUNS[gun].description,
+            unlock: unlockedStartingGuns(weapons).includes(gun)
+              ? undefined
+              : WEAPON_REQUIREMENTS[gun],
+            state: unlockedStartingGuns(weapons).includes(gun)
+              ? ('known' as const)
+              : ('locked' as const),
+            lore: [
+              'Toolroom register',
+              'M. Vale · maintenance',
+              'Available in Campaign and Workshop. Every collected fitting uses the same mount.',
+            ] as Lore,
+          }))
       : []),
     ...MODS.map((mod, index) => {
       const existing = recovered.get('mod:' + mod.id);
@@ -211,7 +217,9 @@ export function logbookCatalog(
           lore: EMPTY_LORE,
           mod,
           state: 'locked' as const,
-          family: 'general',
+          family: TOOLROOM_MODS.find((m) => m.id === mod.id)?.family
+            ? 'toolroom:' + TOOLROOM_MODS.find((m) => m.id === mod.id)!.family
+            : 'general',
           unlock: goal.requirement,
           goal,
         };
@@ -238,7 +246,9 @@ export function logbookCatalog(
                 : {}),
             }
           : {}),
-        family: MOD_PATHS[mod.id]?.path ?? 'general',
+        family: TOOLROOM_MODS.find((m) => m.id === mod.id)?.family
+          ? 'toolroom:' + TOOLROOM_MODS.find((m) => m.id === mod.id)!.family
+          : (MOD_PATHS[mod.id]?.path ?? 'general'),
       };
     }),
     ...Object.entries(ENEMY_NAMES).map(([id, name], index) => {
@@ -277,6 +287,26 @@ export function logbookCatalog(
         description: known ? ZONE_GUIDES[id] : '',
         lore: known ? PLACE_LORE[id as keyof typeof AREAS] : EMPTY_LORE,
         state: known ? ('known' as const) : ('unseen' as const),
+      };
+    }),
+    ...TOOLROOM_ROOM_IDS.map((id) => {
+      const known = archive.encountered.includes('room:' + id),
+        info = TOOLROOM_ROOMS[id];
+      return {
+        id: 'room:' + id,
+        name: known ? info.name : 'Unvisited workroom',
+        section: 'places' as const,
+        label: known ? 'Combat layout' : 'Not yet visited',
+        description: known ? info.guide : '',
+        state: known ? ('known' as const) : ('unseen' as const),
+        lore: known
+          ? ([
+              info.name + ' · aisle plan',
+              'M. Vale · maintenance',
+              info.guide +
+                '\n\nThe service drawings leave the floor clear between stations. The patrol has kept the stations. The route through them is yours.',
+            ] as Lore)
+          : EMPTY_LORE,
       };
     }),
     ...(recovered.has('region:annex')
@@ -354,6 +384,14 @@ export const CATALOG_FAMILIES = [
   { id: 'all', name: 'All families' },
   { id: 'general', name: 'General' },
   ...Object.entries(PATH_NAMES).map(([id, name]) => ({ id, name })),
+  ...Object.entries({
+    mobility: 'Movement',
+    precision: 'Precision',
+    thermal: 'Heat',
+    banking: 'Banking',
+    defense: 'Defense',
+    cadence: 'Cadence',
+  }).map(([id, name]) => ({ id: 'toolroom:' + id, name: 'Toolroom · ' + name })),
 ];
 export type CatalogFilter = 'all' | 'known' | 'unseen' | 'locked' | 'unread';
 export function catalogMatches(

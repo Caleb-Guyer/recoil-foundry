@@ -12,7 +12,7 @@ import { playRoom } from './room-pilot.ts';
 import { projectileLights } from '../src/projectile-light.ts';
 import { DAILY_RULESET, dailyForDate, SUPPORTED_DAILY_RULESETS } from '../src/daily.ts';
 import { createUpgradeDemo, destroyUpgradeDemo } from '../src/upgrade-demo.ts';
-import { dailyStartingGun } from '../src/starting-guns.ts';
+import { dailyStartingGun, STARTING_GUN_IDS } from '../src/starting-guns.ts';
 
 const near = (a: number, b: number, tolerance = 1e-5) =>
   assert(Math.abs(a - b) < tolerance, `${a} != ${b}`);
@@ -58,7 +58,7 @@ test("taking Scattershot preserves the laser's focused damage at range", () => {
 });
 
 test('beam and scatter acquisition order, native shotgun pellets and nailgun pulses keep their patterns', () => {
-  for (const startingGun of ['pistol', 'shotgun', 'nailgun'] as const)
+  for (const startingGun of STARTING_GUN_IDS)
     for (const mods of [
       ['scatter', 'cutting-torch', 'prism-array'],
       ['cutting-torch', 'scatter', 'prism-array'],
@@ -70,10 +70,7 @@ test('beam and scatter acquisition order, native shotgun pellets and nailgun pul
       const e = target(g, 400);
       Body.scale(e.body, 1, 15);
       beam(g, 0.1);
-      assert.equal(
-        g.torch.segments.filter((s) => s.muzzle).length,
-        startingGun === 'shotgun' ? 18 : 10,
-      );
+      assert.equal(g.torch.segments.filter((s) => s.muzzle).length, g.gun.pellets * 2);
       assert(e.hp < e.maxHp);
       assert.equal(g.gun.burstCount, startingGun === 'nailgun' ? 3 : 1);
     }
@@ -310,7 +307,7 @@ test('upgrade copy and comparisons show the combined beam count in either acquis
 });
 
 test('archived Dailies keep their original wide-beam damage while new Daily identities use the spread', () => {
-  assert.equal(DAILY_RULESET, 88);
+  assert.equal(DAILY_RULESET, 89);
   for (const ruleset of SUPPORTED_DAILY_RULESETS) {
     const daily = dailyForDate('2026-10-05', ruleset)!;
     const g = fixture(['cutting-torch', 'scatter']);

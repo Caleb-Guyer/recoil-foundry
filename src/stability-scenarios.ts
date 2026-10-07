@@ -3,6 +3,7 @@ import type { Game, Input } from './game.ts';
 import { branchTestFromUrl } from './branch-builds.ts';
 import { interceptorGrindTestFromUrl, overtimeTestFromUrl } from './practice.ts';
 import type { Checkpoint } from './rules.ts';
+import { toolroomTestFromUrl } from './toolroom-test.ts';
 
 export const STABILITY_CASES = [
   { id: 'volley', name: 'Dense volley', build: 'pinwheel' },
@@ -11,10 +12,19 @@ export const STABILITY_CASES = [
   { id: 'beam', name: 'Prism beam', build: 'prism' },
   { id: 'boss', name: 'Boss arsenal', build: '' },
   { id: 'overtime', name: 'Overtime', build: '' },
+  { id: 'thermal', name: 'Toolroom heat circuit', build: 'thermal' },
+  { id: 'repair', name: 'Toolroom field repairs', build: 'defense' },
+  { id: 'mortar', name: 'Twin mortar shells', build: 'precision' },
 ] as const;
 
 export function stabilityCheckpoint(index: number): Checkpoint {
   const scenario = STABILITY_CASES[index % STABILITY_CASES.length];
+  if (scenario.id === 'thermal' || scenario.id === 'repair' || scenario.id === 'mortar')
+    return toolroomTestFromUrl(
+      new URL(
+        `https://test/?test=toolroom&gun=${scenario.id === 'thermal' ? 'twinbore' : scenario.id === 'repair' ? 'repeater' : 'carbine'}&build=${scenario.build}${scenario.id === 'mortar' ? '&machine=mortar-twin' : ''}`,
+      ),
+    )!;
   if (scenario.id === 'boss')
     return interceptorGrindTestFromUrl(
       new URL('https://test/?test=interceptor-grindshot&phase=3'),
@@ -68,6 +78,9 @@ export function stabilityCounts(g: Game) {
     particles: g.particles.length,
     enemies: g.enemies.length,
     props: g.props.items.length,
+    mortarShells: g.patrolMachines.shells.length,
+    mortarBlasts: g.patrolMachines.blasts.length,
+    marks: g.toolroom.marks.size,
   };
 }
 
@@ -84,4 +97,10 @@ export function assertFiniteWorld(g: Game) {
     if (![shot.pos.x, shot.pos.y, shot.vel.x, shot.vel.y, shot.life].every(Number.isFinite))
       throw new Error('Non-finite projectile');
   if (g.shots.length > 180 || g.particles.length > 220) throw new Error('Combat budget exceeded');
+  if (
+    g.patrolMachines.shells.length > 12 ||
+    g.patrolMachines.blasts.length > 12 ||
+    g.toolroom.marks.size > 20
+  )
+    throw new Error('Toolroom combat budget exceeded');
 }

@@ -22,7 +22,7 @@ export class MobilitySystem {
   }
   reset() {
     this.airJumpReady = true;
-    this.glideLeft = 1.2;
+    this.glideLeft = this.game.mods.includes('glide-rig') ? 2 : 1.2;
     this.gliding = false;
     this.grip = null;
     this.lastWall = null;
@@ -36,8 +36,9 @@ export class MobilitySystem {
     this.gliding = false;
   }
   land() {
+    this.game.toolroom.land();
     this.airJumpReady = true;
-    this.glideLeft = 1.2;
+    this.glideLeft = this.game.mods.includes('glide-rig') ? 2 : 1.2;
     this.gliding = false;
   }
   shot(d: Vec) {
@@ -46,7 +47,7 @@ export class MobilitySystem {
     this.thrust(d);
     const boost = this.launchReady && !g.grounded ? MOBILITY.launch : 1;
     this.launchReady = false;
-    return boost;
+    return boost * g.toolroom.recoil();
   }
   thrust(d: Vec) {
     this.grip = null;
@@ -105,7 +106,10 @@ export class MobilitySystem {
       g.time > g.jumpAt + 1 / 60
     ) {
       this.airJumpReady = false;
-      Matter.Body.setVelocity(p, { x: p.velocity.x, y: Math.min(-10.4, p.velocity.y) });
+      Matter.Body.setVelocity(p, {
+        x: p.velocity.x,
+        y: Math.min(g.mods.includes('spring-step') ? -12.48 : -10.4, p.velocity.y),
+      });
       g.jumpBuffer = g.coyote = 0;
       g.jumpAt = g.time;
       g.jumpCut = false;

@@ -10,6 +10,7 @@ export function teamworkLevel(g: Game, level: Level): Level {
     g.stage < 6 ||
     g.stage % 4 === 0 ||
     level.boss ||
+    level.toolroom ||
     level.detour ||
     level.freight ||
     level.crossing ||

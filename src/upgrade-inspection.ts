@@ -108,13 +108,43 @@ export function inspectUpgrade(
     }
     add('Move speed', number(before.speed * 100) + '%', number(after.speed * 100) + '%');
     add('Healing / kill', number(before.heal), number(after.heal));
-    for (const [id, label, value] of [
-      ['collimator', 'Steady spread', 'Up to 50% tighter'],
-      ['heat-relay', 'Heat carry', 'Half heat · 1s window'],
-      ['overkill-bank', 'Excess reserve', 'Up to +50% next discharge'],
-      ['scrap-armor', 'Scrap plate', '1 small bullet · 4s'],
+    const supportValue = (ids: readonly string[], id: string) => {
+      if (!ids.includes(id)) return 'None';
+      if (id === 'heat-relay')
+        return `${ids.includes('heat-exchanger') ? '75%' : 'Half'} heat · ${ids.includes('insulated-line') ? '1.8' : '1'}s window`;
+      if (id === 'overkill-bank')
+        return `Up to +${ids.includes('bank-capacitor') ? '75' : '50'}% next discharge${ids.includes('bank-memory') ? ' · retain 25% reserve' : ''}`;
+      if (id === 'scrap-armor')
+        return `1 bullet ≤${ids.includes('reinforced-plate') ? '28' : '20'} damage · ${ids.includes('plate-retainer') ? '6' : '4'}s`;
+      return 'Up to 50% tighter';
+    };
+    for (const [id, label] of [
+      ['collimator', 'Steady spread'],
+      ['heat-relay', 'Heat carry'],
+      ['overkill-bank', 'Excess reserve'],
+      ['scrap-armor', 'Scrap plate'],
     ])
-      add(label, mods.includes(id) ? value : 'None', afterMods.includes(id) ? value : 'None');
+      add(label, supportValue(base, id), supportValue(afterMods, id));
+    const conditional: [string, string, string][] = [
+      ['surveyor', 'Marked target', '+20% later discharge'],
+      ['far-sight', 'Long sight line', '+15% at 350 units'],
+      ['follow-mark', 'Marked kill', '+20% next discharge'],
+      ['stagger-coil', 'Idle attack delay', '0.25s · charged hit'],
+      ['thermal-budget', 'Heat buildup', '+25% tracking rate'],
+      ['hot-start', 'First target heat', '25% each room'],
+      ['spring-step', 'Extra jump', '+20% rise'],
+      ['glide-rig', 'Glide allowance', '2s per landing'],
+      ['impulse-reserve', 'Airborne opening', '+25% recoil'],
+      ['ground-anchor', 'Ground push', '40% gentler'],
+      ['reclamation', 'Cover repair', '2 HP · 4s recharge · 10/room'],
+      ['field-patch', 'Combat repair', '1 HP/s · after 6s safe · 10/room'],
+      ['opening-shot', 'Rested discharge', '+20% after 0.9s'],
+      ['recoil-runner', 'Moving discharge', '+15% at speed 8'],
+      ['clean-cycle', 'Two direct kills', '+20% next discharge'],
+      ['guide-vane', 'Travel / reach', '+20%'],
+    ];
+    for (const [id, label, value] of conditional)
+      add(label, base.includes(id) ? value : 'None', afterMods.includes(id) ? value : 'None');
     add('Air damage', number(before.airDamage * 100) + '%', number(after.airDamage * 100) + '%');
   }
   const connections: string[] = [];

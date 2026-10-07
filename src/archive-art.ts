@@ -1,6 +1,10 @@
 import type { EnemyKind } from './levels.ts';
+import { PATROL_MACHINES } from './patrol-machines.ts';
 
 export const ENEMY_GUIDES: Record<EnemyKind, string> = {
+  shutter: PATROL_MACHINES.shutter.guide,
+  strider: PATROL_MACHINES.strider.guide,
+  mortar: PATROL_MACHINES.mortar.guide,
   cableweaver:
     'Rare optional hunt. Its cable anchors flash before becoming live. Jump over cables or shoot an anchor to expose the machine.',
   bulwark:
@@ -53,7 +57,7 @@ export const ENEMY_GUIDES: Record<EnemyKind, string> = {
 
 // Images are filled by archive-images using the production renderer.
 export function archiveMark(id: string) {
-  return /^(enemy|elite|mutation|area|region|trial|remix):/.test(id)
+  return /^(enemy|elite|mutation|machine|area|region|room|trial|remix):/.test(id)
     ? '<canvas class="archive-image" width="640" height="320" data-archive-image="' +
         id +
         '" aria-hidden="true"></canvas>'

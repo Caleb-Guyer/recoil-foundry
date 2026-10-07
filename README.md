@@ -8,13 +8,15 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 ![Recoil flight in the Loading Docks](public/media/loading-docks.png)
 
-- **117 upgrades** with branching paths and combinations that change how your gun works.
-- **Three starting guns:** begin with the pistol; earn the shotgun by clearing the Campaign and the nailgun by completing Overtime.
+- **141 upgrades**, including 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
+- **Six starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater through different accomplishments.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
+
+**Toolroom Expansion — version 5.0.0.** Earn three new starting tools and 24 fittings through boss victories, machine hunts and the Gauntlet. Later zones gain nine spacious room layouts, Shutter Guards, Striders and Mortar Carts, with six behavioral variants. New equipment uses the same upgrade system, pictured rewards and actual-art Logbook; your first run still starts with the pistol. [Release notes, unlock requirements and play links](docs/releases/5.0.0.md).
 
 **Training Drills — version 4.16.0.** Revealed support masteries now have a **Try this challenge** button in the Logbook. Practice Heat Relay, Overkill Bank and Scrap Armor in separate firing ranges with actual combat, live counters and quick retries. Your run stays paused; training grants no rewards or saved progress. [Release notes and play links](docs/releases/4.16.0.md).
 

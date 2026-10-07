@@ -1,5 +1,6 @@
 import type { LogbookProgress } from './logbook.ts';
 import type { CommendationId } from './commendations.ts';
+import { TOOLROOM_MODS, toolroomDraftAllowed, type ToolroomFamily } from './toolroom-catalog.ts';
 
 // Campaign unlocks are separate from ownership and structural build legality.
 // A run snapshots these IDs; earning a goal changes the next run's draft.
@@ -43,6 +44,7 @@ export const LONGEVITY_MODS = [
     color: '#b9e4ed',
     mark: 'conductive-tether',
   },
+  ...TOOLROOM_MODS,
 ] as const;
 export type LongevityId = (typeof LONGEVITY_MODS)[number]['id'];
 export const LONGEVITY_IDS: readonly LongevityId[] = LONGEVITY_MODS.map((m) => m.id);
@@ -54,7 +56,9 @@ export function validUnlocks(raw: unknown): raw is LongevityId[] {
 }
 export function draftUnlocked(id: string, unlocks: readonly string[] = [], seed = '') {
   return (
-    !LONGEVITY_IDS.includes(id as LongevityId) || (!/^RF-D\d+-/.test(seed) && unlocks.includes(id))
+    (!LONGEVITY_IDS.includes(id as LongevityId) ||
+      (!/^RF-D\d+-/.test(seed) && unlocks.includes(id))) &&
+    toolroomDraftAllowed(id, seed)
   );
 }
 export const MILESTONES_KEY = 'rf-milestones-v1';
@@ -120,12 +124,60 @@ export function unlockGoals(
       1,
     ],
   ];
+  const families: Record<ToolroomFamily, readonly [string, number, number]> = {
+    mobility: [
+      'Defeat the Loader or Crane in Campaign or Daily.',
+      Number(victories.some((v) => ['loader', 'crane'].includes(v))),
+      1,
+    ],
+    precision: [
+      'Defeat the Press or Kiln in Campaign or Daily.',
+      Number(victories.some((v) => ['press', 'kiln'].includes(v))),
+      1,
+    ],
+    thermal: [
+      'Defeat the Condenser, Turbine or Switchboard in Campaign or Daily.',
+      Number(victories.some((v) => ['condenser', 'turbine', 'switchboard'].includes(v))),
+      1,
+    ],
+    banking: [
+      'Defeat three different main bosses in Campaign or Daily.',
+      Math.min(
+        3,
+        new Set(
+          victories.filter((v) =>
+            [
+              'loader',
+              'crane',
+              'press',
+              'kiln',
+              'condenser',
+              'turbine',
+              'switchboard',
+              'sorter',
+              'boss',
+              'interceptor',
+              'welder',
+            ].includes(v),
+          ),
+        ).size,
+      ),
+      3,
+    ],
+    defense: ['Defeat the Sorter in Campaign or Daily.', Number(victories.includes('sorter')), 1],
+    cadence: [
+      'Complete the Campaign escape or factory shutdown.',
+      Number(book.escaped || !!book.shutdown),
+      1,
+    ],
+  };
+  const goals = [...progress, ...TOOLROOM_MODS.map((mod) => families[mod.family])];
   return LONGEVITY_MODS.map((mod, i) => ({
     id: mod.id,
     name: mod.name,
-    requirement: progress[i][0],
-    current: progress[i][1],
-    target: progress[i][2],
-    unlocked: progress[i][1] >= progress[i][2],
+    requirement: goals[i][0],
+    current: goals[i][1],
+    target: goals[i][2],
+    unlocked: goals[i][1] >= goals[i][2],
   }));
 }

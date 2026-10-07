@@ -28,7 +28,14 @@ export function encounterTestFromUrl(url: URL): Checkpoint | null {
     const job = uprisingTestFromUrl(
       new URL('https://test/?test=uprising&v=1&route=' + p.get('route')),
     );
-    return job ? { ...job, startingGun: gun, encounters: 1 } : null;
+    return job
+      ? {
+          ...job,
+          seed: ['twinbore', 'carbine', 'repeater'].includes(gun) ? 'RF-C89-' + job.seed : job.seed,
+          startingGun: gun,
+          encounters: 1,
+        }
+      : null;
   }
   return { ...testCheckpoint(seed, Number(room) - 1), startingGun: gun, encounters: 1 };
 }

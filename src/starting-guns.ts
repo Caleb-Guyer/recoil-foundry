@@ -16,6 +16,24 @@ export const STARTING_GUNS = {
     trait: 'Precise bursts · Smaller kicks',
     description: 'Three quick nails, then recovery. Controlled aim with less lift per shot.',
   },
+  twinbore: {
+    name: 'Twinbore',
+    trait: 'Paired rounds · Measured kicks',
+    description:
+      'Two tightly spaced rounds per shot. A slower cycle rewards lining up close targets.',
+  },
+  carbine: {
+    name: 'Coil carbine',
+    trait: 'Penetrating rounds · Long sight lines',
+    description:
+      'Fast, heavy rounds cross one extra enemy. Deliberate shots with a firm recoil kick.',
+  },
+  repeater: {
+    name: 'Pressure repeater',
+    trait: 'Continuous fire · Light rounds',
+    description:
+      'A steady stream of light rounds. Small, frequent kicks make fine flight corrections.',
+  },
 } as const;
 export type StartingGun = keyof typeof STARTING_GUNS;
 export const STARTING_GUN_IDS = Object.keys(STARTING_GUNS) as StartingGun[];
@@ -40,6 +58,24 @@ export function applyStartingGun(gun: Gun, id: StartingGun, mods: readonly strin
     gun.recoil *= 0.55;
     // The Burst fitting improves this native mechanism rather than doing nothing.
     if (mods.includes('burst')) gun.interval *= 0.8;
+  } else if (id === 'twinbore') {
+    const pellets = gun.pellets;
+    gun.pellets += 1;
+    gun.damage *= (pellets / gun.pellets) * 1.4;
+    gun.interval *= 1.4;
+    gun.recoil *= 1.4;
+    gun.spread = Math.max(gun.spread, mods.includes('deadeye') ? 0.013 : 0.026);
+  } else if (id === 'carbine') {
+    gun.damage *= 2.1;
+    gun.interval *= 2.1;
+    gun.recoil *= 1.5;
+    gun.projectileSpeed *= 1.75;
+    gun.pierce += 1;
+  } else if (id === 'repeater') {
+    gun.damage *= 0.55;
+    gun.interval *= 0.55;
+    gun.recoil *= 0.62;
+    gun.projectileSpeed *= 1.12;
   }
   return gun;
 }
@@ -55,7 +91,8 @@ export function dailyStartingGun(seed: string): StartingGun | undefined {
     return undefined;
   if (Number(match[1]) < 86) return 'pistol';
   const day = Math.floor(date.getTime() / 86400000);
-  return STARTING_GUN_IDS[((day % 3) + 3) % 3];
+  const rotation = Number(match[1]) >= 89 ? STARTING_GUN_IDS : STARTING_GUN_IDS.slice(0, 3);
+  return rotation[((day % rotation.length) + rotation.length) % rotation.length];
 }
 
 export function validStartingGunSave(value: unknown, seed: string): boolean {

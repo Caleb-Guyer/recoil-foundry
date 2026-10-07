@@ -76,6 +76,7 @@ import { drawConveyors } from './conveyor-art.ts';
 import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
 import { drawAngler } from './angler-art.ts';
 import { drawSupport } from './teamwork-art.ts';
+import { drawPatrolMachine, drawPatrolShells, drawSurveyMarks } from './patrol-machine-art.ts';
 import { drawWallcrawler } from './wallcrawler-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
 import { drawFabricator } from './fabricator-art.ts';
@@ -176,6 +177,10 @@ export class Renderer {
     const c = this.ctx,
       g = this.game;
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (e.patrol) {
+        drawPatrolMachine(c, g, e, portrait);
+        continue;
+      }
       if (drawHuntEnemy(c, e, portrait)) continue;
       if (e.kind === 'switchboard') {
         drawSwitchboard(c, e, this.reduced);
@@ -761,7 +766,9 @@ export class Renderer {
     c.globalAlpha = 1;
     drawCourierWorld(c, g);
     drawAuditDoor(c, g, this.reduced);
+    drawPatrolShells(c, g);
     this.drawEnemies();
+    drawSurveyMarks(c, g);
     drawCombatImpacts(c, g, this.reduced, threats);
     drawTorch(c, g, this.reduced);
     if (g.blast.life > 0) {
@@ -854,7 +861,11 @@ export class Renderer {
                     ? '#c3b4f0'
                     : roundFeel(s) === 'nail'
                       ? '#b5d4d0'
-                      : '#f6d49a',
+                      : s.nativeTool === 'carbine'
+                        ? '#9ee4ef'
+                        : s.nativeTool === 'repeater'
+                          ? '#f3bd83'
+                          : '#f6d49a',
             s.radius * 1.15 + (s.charged ? 1 : 0),
           );
           if (roundFeel(s) !== 'nail') this.circle(s.pos, s.radius, '#fff2d5');

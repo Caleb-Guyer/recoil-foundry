@@ -31,6 +31,12 @@ import { applyStartingGun, validStartingGunSave, type StartingGun } from './star
 import { LONGEVITY_MODS, draftUnlocked, validUnlocks } from './longevity.ts';
 import { SUPPORT_MODS, supportDraftAllowed, supportPoolAllowed } from './support-upgrades.ts';
 import {
+  TOOLROOM_IDS,
+  TOOLROOM_PARENTS,
+  applyToolroomGun,
+  toolroomStageAllowed,
+} from './toolroom-catalog.ts';
+import {
   dailyRegion,
   annexRevision,
   isAnnexStage,
@@ -613,7 +619,7 @@ export function modDescription(
     return 'Charged pellets merge into a piercing rail. Backfire keeps a separate rear rail.';
   if (mods.includes('rail-spike')) {
     if (mod.id === 'scatter')
-      return `${startingGun === 'shotgun' ? 'Nine' : 'Five'} pellets merge into a stronger charged rail. Uncharged fire stays a spread.`;
+      return `${startingGun === 'shotgun' ? 'Nine' : startingGun === 'twinbore' ? 'Six' : 'Five'} pellets merge into a stronger charged rail. Uncharged fire stays a spread.`;
     if (mod.id === 'backfire')
       return 'Add a charged rear rail or an uncharged rear volley. 20% longer shot delay.';
     if (mod.id === 'grindshot')
@@ -632,8 +638,8 @@ export function modDescription(
       ? `${pattern} with three concentrated pulses, then recovery. Hold fire to cut.`
       : `${pattern} with steady recoil. Hold fire to cut. Your existing shot upgrades carry through.`;
   if (!beam) {
-    if (startingGun === 'shotgun' && mod.id === 'scatter')
-      return 'Nine pellets. 60% more total damage. Wider spread and a longer shot delay.';
+    if ((startingGun === 'shotgun' || startingGun === 'twinbore') && mod.id === 'scatter')
+      return `${startingGun === 'shotgun' ? 'Nine' : 'Six'} pellets. 60% more total damage. Wider spread and a longer shot delay.`;
     return mod.description;
   }
   switch (mod.id) {
@@ -766,6 +772,7 @@ export const MOD_REQUIRES: Record<string, string> = {
   ...NEW_PATH_PARENTS,
   ...WORKSHOP_PARENTS,
   ...SUBVERSION_PARENTS,
+  ...TOOLROOM_PARENTS,
 };
 export function buildPath(mods: readonly string[]): BuildPath | undefined {
   return mods.map((id) => MOD_PATHS[id]?.path).find((path) => path !== undefined);
@@ -852,6 +859,7 @@ export function rewardMods(
     pool = availableMods(mods).filter(
       (mod) =>
         draftUnlocked(mod.id, context.unlocks, context.seed) &&
+        toolroomStageAllowed(mod.id, context.stage, context.overtime) &&
         supportDraftAllowed(mod.id, context.seed) &&
         supportPoolAllowed(mod.id, context.seed) &&
         (!SUPPORT_MODS.some((m) => m.id === mod.id) || context.overtime || context.stage >= 4) &&
@@ -1142,7 +1150,7 @@ export function getGun(mods: readonly string[], startingGun: StartingGun = 'pist
   // Recall's extra penetration must compose in either acquisition order.
   if (mods.includes('recall') && mods.includes('pierce')) g.pierce = 3;
   if (mods.includes('flywheel')) g.bounces = Math.max(0, g.bounces - 2);
-  return applyStartingGun(g, startingGun, mods);
+  return applyStartingGun(applyToolroomGun(g, mods), startingGun, mods);
 }
 export const STAGES = 20;
 export const ROOMS_PER_AREA = 4;
@@ -1315,6 +1323,7 @@ function validRewardCheckpoint(d: Checkpoint) {
     (id) =>
       draftUnlocked(id, d.unlocks, d.seed) &&
       supportDraftAllowed(id, d.seed) &&
+      toolroomStageAllowed(id, d.stage, !!d.overtime) &&
       legal.some((m) => m.id === id) &&
       (!isSalvage(id) || (!r.rerolled && id === r.salvage)) &&
       (!isFusion(id) || fusionUnlocked({ stage: d.stage, overtime: !!d.overtime })) &&
@@ -1462,6 +1471,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
                 isSubversion(m.id) ||
                 WORKSHOP_MODS.some((mod) => mod.id === m.id) ||
                 SUPPORT_MODS.some((mod) => mod.id === m.id) ||
+                TOOLROOM_IDS.some((id) => id === m.id) ||
                 m.id === 'arc-coil' ||
                 m.id === 'daisy-chain' ||
                 m.id === 'grindshot' ||

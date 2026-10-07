@@ -31,7 +31,8 @@ export function approach(g: Game, target: { x: number; y: number }, interact = f
     right: move > 0,
     jump: (interact && nearby) || (g.grounded && (dy > 45 || blocked)),
     jumpHeld: true,
-    fire: !ceiling && dy > 55 && !nearby,
+    fire:
+      !ceiling && dy > 55 && !nearby && (g.startingGun !== 'repeater' || g.player.velocity.y > -6),
     aim: { x: p.x, y: p.y + 500 },
   };
 }
