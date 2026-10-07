@@ -579,7 +579,10 @@ export class Renderer {
     }
   }
   // Archive photographs use the identical world renderer with a fixed camera.
-  draw(now = performance.now(), framing?: { camera: Vec; scale: number; player?: boolean }) {
+  draw(
+    now = performance.now(),
+    framing?: { camera: Vec; scale: number; player?: boolean; navigation?: boolean },
+  ) {
     if (framing) this.scale = framing.scale;
     const c = this.ctx,
       g = this.game,
@@ -681,7 +684,13 @@ export class Renderer {
     }
     drawLoaderSupports(c, g, this.reduced);
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
-    if (!g.workshop.active && !g.areaEvents.dark && !g.shutdown.chamber) this.drawExit();
+    if (
+      framing?.navigation !== false &&
+      !g.workshop.active &&
+      !g.areaEvents.dark &&
+      !g.shutdown.chamber
+    )
+      this.drawExit();
     drawWorkshopMounts(c, g);
     drawReforge(c, g, this.reduced);
     if (!g.areaEvents.dark) {
@@ -935,6 +944,7 @@ export class Renderer {
         );
       }
       if (
+        framing?.navigation !== false &&
         g.clear &&
         !g.maintenance.active &&
         !g.shutdown.chamber &&

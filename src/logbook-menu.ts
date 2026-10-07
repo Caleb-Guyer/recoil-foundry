@@ -7,6 +7,7 @@ import { archiveMark } from './archive-art.ts';
 import { archiveToken } from './archive.ts';
 import { catalogMatches, CATALOG_FAMILIES, type CatalogFilter } from './logbook-catalog.ts';
 import { navigateControllerMenu } from './controller-menu.ts';
+import { supportDrillForEntry, type SupportDrillId } from './support-drill-info.ts';
 
 const names = {
   equipment: 'Equipment',
@@ -167,6 +168,11 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
         '</span></p>'
       : '') +
     (entry.earned ? '<button class="quiet commendation-equip">Open Appearance ↗</button>' : '') +
+    (supportDrillForEntry(entry.id)
+      ? '<div class="logbook-drill"><button class="quiet" data-support-drill="' +
+        supportDrillForEntry(entry.id) +
+        '">Try this challenge ↗</button><p class="logbook-locked">Optional training · no rewards or saved progress.</p></div>'
+      : '') +
     (entry.earned === false || entry.state === 'locked'
       ? '<p class="logbook-locked">Report not yet filed.<br><span>' +
         (entry.weapon
@@ -197,6 +203,7 @@ export function logbookMenu(
   appearance?: () => void,
   openEntry?: (entry: LogbookEntry) => void,
   paintRewards?: (root: HTMLElement) => void,
+  drill?: (id: SupportDrillId) => void,
 ) {
   const opened = new Set<string>();
   const filters: { id: CatalogFilter; name: string }[] = [
@@ -399,6 +406,11 @@ export function logbookMenu(
     if (equip) {
       equip.hidden = !appearance;
       if (appearance) equip.onclick = appearance;
+    }
+    const train = detail.querySelector<HTMLButtonElement>('[data-support-drill]');
+    if (train) {
+      train.hidden = !drill;
+      if (drill) train.onclick = () => drill(train.dataset.supportDrill as SupportDrillId);
     }
     list.querySelectorAll<HTMLButtonElement>('[data-entry]').forEach((button) => {
       button.onclick = () => {

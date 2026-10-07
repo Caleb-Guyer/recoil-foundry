@@ -1,0 +1,104 @@
+dialog.drill-dialog {
+  width: min(960px, calc(100% - 32px));
+}
+.drill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 20px;
+}
+.drill-header h2 {
+  font-size: clamp(26px, 4vw, 36px);
+  margin-bottom: 12px;
+}
+.drill-header .eyebrow {
+  margin-top: 0;
+}
+.drill-header button {
+  flex-shrink: 0;
+}
+.drill-instruction {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.drill-scope,
+.drill-controls {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.drill-scope {
+  margin: 0 0 16px;
+}
+.drill-canvas {
+  width: 100%;
+  height: clamp(200px, 27vw, 280px);
+  display: block;
+  border: 1px solid #354440;
+  touch-action: none;
+  background: #101817;
+}
+.drill-canvas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.drill-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 16px;
+  font-size: 13px;
+}
+.drill-progress progress {
+  width: min(230px, 100%);
+  flex: 1;
+  min-width: 90px;
+  accent-color: var(--accent);
+}
+.drill-progress span {
+  color: var(--muted);
+}
+.drill-cue {
+  min-height: 2.6em;
+  margin: 10px 0 0;
+  line-height: 1.4;
+  color: var(--accent);
+}
+.drill-controls {
+  margin: 8px 0 18px;
+}
+.drill-touch {
+  display: none;
+  gap: 12px;
+  margin: 10px 0 16px;
+}
+.drill-touch button {
+  min-width: 52px;
+  min-height: 44px;
+  touch-action: none;
+}
+.drill-touch button:last-child {
+  margin-left: auto;
+}
+.logbook-drill {
+  margin: 12px 0;
+}
+@media (pointer: coarse) {
+  .drill-touch {
+    display: flex;
+  }
+}
+@media (max-width: 540px) {
+  .drill-header {
+    flex-wrap: wrap;
+    gap: 0 12px;
+    margin-bottom: 12px;
+  }
+  .drill-header h2 {
+    margin-bottom: 6px;
+  }
+  .drill-cue {
+    min-height: 3em;
+  }
+}

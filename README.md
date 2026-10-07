@@ -16,7 +16,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Support Masteries — version 4.15.0.** Complete six Heat Relay transfers, spend eight Overkill Bank charges or block five bullets with Scrap Armor in one Campaign or Daily run. Earn Heatline and Reservoir gun finishes or the Patchwork outfit, pictured on reward cards. Challenges reveal with their upgrades; the Logbook and run report show progress without adding HUD clutter. Continue carries the same attempt forward. [Release notes and test links](docs/releases/4.15.0.md).
+**Training Drills — version 4.16.0.** Revealed support masteries now have a **Try this challenge** button in the Logbook. Practice Heat Relay, Overkill Bank and Scrap Armor in separate firing ranges with actual combat, live counters and quick retries. Your run stays paused; training grants no rewards or saved progress. [Release notes and play links](docs/releases/4.16.0.md).
 
 **Your Run, Explained — version 4.14.0.** The end screen pictures your actual finished gun and outfit, explains up to three connections in the final build, and offers expandable results for heat transfers, Overkill charges, armor blocks and Bloodwork healing. Continue preserves the totals; Recent Runs keeps the report with its original appearance. Older records remain readable and identify unavailable results. [Release notes and test links](docs/releases/4.14.0.md).
 

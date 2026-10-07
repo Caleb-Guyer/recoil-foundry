@@ -3,6 +3,9 @@ import './combat-report.css';
 import { combatReportMenu, type ReportGun } from './combat-report-menu.ts';
 import { drawCombatReportImages } from './combat-report-art.ts';
 import { SUPPORT_MASTERIES, type SupportMasteryAttempt } from './support-mastery.ts';
+import './support-drill.css';
+import { SupportDrillView } from './support-drill-view.ts';
+import { SUPPORT_DRILLS, supportDrillFromUrl, type SupportDrillId } from './support-drill-info.ts';
 import {
   WEAPON_UNLOCKS_KEY,
   loadWeaponUnlocks,
@@ -449,7 +452,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Support Masteries</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Training Drills</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -484,6 +487,9 @@ let allowProgressReload = false;
 game.cosmetics = { ...equippedCosmetics };
 let replayView: ReplayView | null = null;
 let upgradePreview: UpgradePreviewView | null = null;
+let supportDrill: SupportDrillView | null = null;
+let selectedDrill: SupportDrillId = 'heat';
+let drillPreview = false;
 const previewMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let replayRoom = game.level;
 const workshopTools = document.createElement('div');
@@ -544,6 +550,7 @@ const input: Input = {
   aim: { x: 600, y: 550 },
 };
 const entryUrl = new URL(location.href);
+const linkedDrill = supportDrillFromUrl(entryUrl);
 const linkedGauntletPreview = gauntletPreviewFromUrl(entryUrl);
 let linkedTrial = trialFromUrl(entryUrl);
 let linkedRecoilChallenge = recoilChallengeFromUrl(entryUrl);
@@ -975,6 +982,11 @@ function updateTitle() {
     $('play').textContent = 'Test ' + BOSS_REMIXES[linkedRunTest.bossRemix].name;
     $('title-hint').textContent = 'Boss remix. R restarts this fight. No progress is recorded.';
   }
+  if (linkedDrill) {
+    $('play').textContent = 'Train ' + SUPPORT_DRILLS[linkedDrill].name;
+    $('title-hint').textContent = 'Optional firing range. Continue and saved progress stay intact.';
+    $('security').hidden = true;
+  }
   if (linkedTrial || invalidTrialLink) {
     $('daily').textContent = 'New run';
     $('daily').title = 'Start a fresh random run';
@@ -1018,6 +1030,8 @@ function clearInput(disarm = true) {
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
+  supportDrill?.dispose();
+  supportDrill = null;
   upgradePreview?.dispose();
   upgradePreview = null;
   buildMenu = null;
@@ -2157,7 +2171,26 @@ game.onChange = () => {
   if (game.mode === 'reforge') showDialog('reforge');
   if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
 };
+function openSupportDrill(id: SupportDrillId) {
+  sound.unlock();
+  selectedDrill = id;
+  showDialog('support-drill');
+}
+function startLinkedSupportDrill(id: SupportDrillId) {
+  drillPreview = true;
+  logbookView.query = '';
+  logbookView.filter = 'all';
+  openSupportDrill(id);
+}
+function backFromDrill() {
+  logbookView.section = 'commendations';
+  logbookView.selected = 'commendation:' + SUPPORT_DRILLS[selectedDrill].mastery;
+  showDialog('logbook');
+  document.querySelector<HTMLButtonElement>('[data-support-drill]')?.focus({ preventScroll: true });
+}
 function showDialog(kind: string) {
+  supportDrill?.dispose();
+  supportDrill = null;
   upgradePreview?.dispose();
   upgradePreview = null;
   if (kind === 'upgrade' && game.uprising.choices.length) kind = 'uprising';
@@ -2194,6 +2227,7 @@ function showDialog(kind: string) {
   );
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
+  modal.classList.toggle('drill-dialog', kind === 'support-drill');
   modal.classList.toggle(
     'ending-dialog',
     kind === 'result' &&
@@ -2219,7 +2253,11 @@ function showDialog(kind: string) {
           SUPPORT_MASTERIES.map((m) => m.id),
         )
       : commendations;
-  if (kind === 'starting-gun') {
+  if (kind === 'support-drill') {
+    supportDrill = new SupportDrillView(content, selectedDrill, bindings, backFromDrill, (kind) =>
+      sound.play(kind),
+    );
+  } else if (kind === 'starting-gun') {
     startingGunMenu(
       content,
       selectedStartingGun,
@@ -2257,11 +2295,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Master your support fittings.</h2>' +
-      '<p class="update-tagline">Turn useful combinations into permanent appearance rewards.</p>' +
-      '<dl class="update-notes"><div><dt>Three new masteries.</dt><dd>Heat Relay, Overkill Bank and Scrap Armor each have a challenge to complete in one Campaign or Daily run. Encounter their upgrade to reveal the goal.</dd></div>' +
-      '<div><dt>Pictures of what you earned.</dt><dd>Two gun finishes and a repaired outfit join the reward cards, Logbook and Workshop Appearance collection.</dd></div>' +
-      '<div><dt>Progress without clutter.</dt><dd>Check the Logbook or expand Recorded results at the end of a run. Continue keeps the same attempt; a fresh run starts its counters at zero.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Practice the handoff.</h2>' +
+      '<p class="update-tagline">Learn your support fittings in three optional firing range drills.</p>' +
+      '<dl class="update-notes"><div><dt>Try a revealed challenge.</dt><dd>Open Heat Relay, Overkill Bank or Scrap Armor mastery in the Logbook and choose Try this challenge. Each range gives you the right build, targets and a live counter.</dd></div>' +
+      '<div><dt>Real combat, quick retries.</dt><dd>Carry heat between targets, spend stored damage and time cover against incoming bullets. Retry whenever you want. Mouse, keyboard, touch and controller controls work in the range.</dd></div>' +
+      '<div><dt>Keep your run.</dt><dd>Your Campaign stays paused while you train. Training grants no rewards or saved progress; return to the same Logbook entry and resume your run.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2301,9 +2339,11 @@ function showDialog(kind: string) {
       previewLogbook
         ? logbookPreviewEntries()
         : logbookCatalog(
-            game.testRun?.seed.startsWith('SUPPORT-4.13-') || masteryRewardPreview
-              ? [...discovered, ...game.mods]
-              : discovered,
+            drillPreview
+              ? [...discovered, ...SUPPORT_DRILLS[selectedDrill].mods]
+              : game.testRun?.seed.startsWith('SUPPORT-4.13-') || masteryRewardPreview
+                ? [...discovered, ...game.mods]
+                : discovered,
             game.mode !== 'title' &&
               game.testRun &&
               (game.story.state?.recovered || game.testRun.shutdown)
@@ -2330,18 +2370,19 @@ function showDialog(kind: string) {
       logbookView,
       modMark,
       backFromLogbook,
-      previewLogbook || previewCommendations || masteryRewardPreview,
+      previewLogbook || previewCommendations || masteryRewardPreview || drillPreview,
       () => {
         logbookFromWorkshop = false;
         showDialog('workshop');
         content.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
       },
       (entry) => {
-        if (previewLogbook || previewCommendations || game.testRun) return;
+        if (previewLogbook || previewCommendations || game.testRun || drillPreview) return;
         write(ARCHIVE_KEY, acknowledgeArchiveEntry(read(ARCHIVE_KEY), entry));
         updateLogbookBadge();
       },
       (root) => drawRewardImages(root, game),
+      openSupportDrill,
     );
   } else if (kind === 'replay' && deathReplay.ready) {
     replayView = new ReplayView(deathReplay, content);
@@ -3666,12 +3707,23 @@ function pollController(now: number) {
   if (sample.connected !== wasConnected) updateControlHints();
   if (sample.disconnected && inputDevice === 'controller') {
     useInputDevice('pointer');
+    if (supportDrill?.isPlaying) supportDrill.toggle();
     if (game.mode === 'playing') showDialog('pause');
     $('save-status').textContent = 'Controller disconnected. Game paused.';
     return null;
   }
   if (sample.activity) useInputDevice('controller');
   if (inputDevice !== 'controller') return null;
+  if (supportDrill) {
+    if (sample.back) backFromDrill();
+    else if (sample.pause) supportDrill.toggle();
+    else if (supportDrill.isPlaying) return sample;
+    else {
+      if (sample.navigation) navigateControllerMenu(modal, sample.navigation);
+      if (sample.confirm) confirmControllerMenu(modal);
+    }
+    return null;
+  }
   if (game.clockOut.active) {
     if (sample.confirm || sample.back || sample.pause) game.skipClockOut();
     return null;
@@ -3710,29 +3762,31 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedGauntletPreview
-    ? startGauntlet(linkedGauntletPreview, true)
-    : linkedRecoilChallenge || invalidRecoilLink
-      ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-      : linkedTrial?.preview
-        ? startTrial(linkedTrial.route, true)
-        : linkedTrial || invalidTrialLink
-          ? openTrials('title', linkedTrial?.challenge)
-          : linkedWorkshop
-            ? showDialog('workshop')
-            : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                entryUrl.searchParams.get('test') !== 'arc'
-              ? showDialog('layout-test')
-              : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                  linkedRunTest?.seed.startsWith('FUSIONS-')
-                ? showDialog('upgrade-test')
-                : linkedRunTest
-                  ? startRunTest(linkedRunTest)
-                  : linkedTest
-                    ? startPractice(linkedTest, null, { test: true })
-                    : linkedDaily
-                      ? start()
-                      : startFreshCampaign();
+  linkedDrill
+    ? startLinkedSupportDrill(linkedDrill)
+    : linkedGauntletPreview
+      ? startGauntlet(linkedGauntletPreview, true)
+      : linkedRecoilChallenge || invalidRecoilLink
+        ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+        : linkedTrial?.preview
+          ? startTrial(linkedTrial.route, true)
+          : linkedTrial || invalidTrialLink
+            ? openTrials('title', linkedTrial?.challenge)
+            : linkedWorkshop
+              ? showDialog('workshop')
+              : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                  entryUrl.searchParams.get('test') !== 'arc'
+                ? showDialog('layout-test')
+                : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                    linkedRunTest?.seed.startsWith('FUSIONS-')
+                  ? showDialog('upgrade-test')
+                  : linkedRunTest
+                    ? startRunTest(linkedRunTest)
+                    : linkedTest
+                      ? startPractice(linkedTest, null, { test: true })
+                      : linkedDaily
+                        ? start()
+                        : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
@@ -3798,6 +3852,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'support-drill') {
+    backFromDrill();
+    return;
+  }
   if (dialogKind === 'uprising-map') {
     showDialog('pause');
     return;
@@ -3866,6 +3924,11 @@ function cancelDialog() {
   resume();
 }
 window.addEventListener('keydown', (e) => {
+  if (supportDrill) {
+    useInputDevice('pointer');
+    supportDrill.keyDown(e);
+    return;
+  }
   if (bindingEditor?.handleKey(e)) return;
   useInputDevice('pointer');
   if (
@@ -3997,7 +4060,10 @@ window.addEventListener('keydown', (e) => {
     sound.unlock();
   }
 });
-window.addEventListener('keyup', (e) => keys.delete(e.code));
+window.addEventListener('keyup', (e) => {
+  keys.delete(e.code);
+  supportDrill?.keyUp(e);
+});
 window.addEventListener('pointerdown', () => useInputDevice('pointer'), { capture: true });
 window.addEventListener(
   'pointermove',
@@ -4095,6 +4161,13 @@ function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   const pad = pollController(now);
+  supportDrill?.frame(
+    dt,
+    now,
+    renderer.reduced,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+    pad,
+  );
   upgradePreview?.frame(
     dt,
     now,
