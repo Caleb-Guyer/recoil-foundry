@@ -148,6 +148,103 @@ progress.low::-moz-progress-bar {
 .title-content {
   width: min(600px, 100%);
 }
+.next-goal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: min(420px, 100%);
+  margin: 24px auto 0;
+  padding: 13px 16px;
+  text-align: left;
+  border: 1px solid #52635a60;
+  border-radius: 3px;
+  background: #23302a30;
+  color: var(--ink);
+}
+.next-goal[hidden],
+.next-goal-count[hidden],
+.goal-preview .title-actions,
+.goal-preview .title-settings,
+.goal-preview .title-controls,
+.goal-preview .update-link {
+  display: none;
+}
+.next-goal:hover {
+  border-color: #82998b;
+  background: #23302a60;
+}
+.next-goal-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.next-goal-label {
+  color: #e1b986;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.next-goal-copy strong {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.next-goal-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: #b4c0b8;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.next-goal-end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #b4c0b8;
+  flex-shrink: 0;
+}
+.next-goal-count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+dialog.goal-dialog {
+  width: min(560px, calc(100% - 40px));
+}
+.goal-requirement {
+  line-height: 1.5;
+}
+.goal-how {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #b4c0b8;
+}
+.goal-count {
+  color: #e1b986;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.goal-reward {
+  border-top: 1px solid #52635a60;
+  margin: 24px 0 18px;
+  padding-top: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.goal-reward dt {
+  color: #e1b986;
+  margin-bottom: 4px;
+}
+.goal-reward dd {
+  margin: 0;
+}
+.goal-optional {
+  color: #a3ada7;
+  font-size: 12px;
+}
 .update-link {
   display: inline-flex;
   align-items: center;
@@ -2102,6 +2199,26 @@ dialog.workshop-dialog {
     position: static;
     flex-wrap: wrap;
     justify-content: center;
+  }
+}
+@media (max-height: 520px) {
+  #title-screen:has(.next-goal:not([hidden])) {
+    padding-top: 18px;
+    row-gap: 16px;
+  }
+  .title-content:has(.next-goal:not([hidden])) .title-controls {
+    display: none;
+  }
+  .title-content:has(.next-goal:not([hidden])) .update-link {
+    padding-block: 4px;
+    margin-bottom: 8px;
+  }
+  .title-content:has(.next-goal:not([hidden])) h1 {
+    margin-bottom: 16px;
+  }
+  .next-goal {
+    margin-top: 12px;
+    padding-block: 10px;
   }
 }
 

@@ -203,6 +203,9 @@ import {
 import { controllerPortalTarget } from './controller-target.ts';
 import { musicScene } from './music-score.ts';
 import { ProgressStore, PROGRESS_KEY, CHECKPOINT_KEY, mergeDailyRecords } from './progress.ts';
+import { nextGoal } from './next-goal.ts';
+import { goalProgressLabel, nextGoalMenu } from './next-goal-menu.ts';
+import { goalPreviewFromUrl, goalPreviewProgress } from './next-goal-preview.ts';
 import { progressMenu } from './progress-menu.ts';
 import { newCampaignSeed, retrySeed } from './run-seed.ts';
 import {
@@ -462,12 +465,13 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Build Momentum</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Your Next Goal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
    <p id="title-controls" class="title-controls"><kbd>A</kbd><kbd>D</kbd> move <i>·</i> <kbd>Space</kbd> jump <i>·</i> Mouse fire</p>
    <p id="title-hint" class="recoil-hint">Shoot down. Go up.</p>
+   <button id="next-goal" class="next-goal" aria-haspopup="dialog" hidden><span class="next-goal-copy"><span id="next-goal-label" class="next-goal-label">Next goal</span><strong id="next-goal-title"></strong><span id="next-goal-summary" class="next-goal-summary"></span></span><span class="next-goal-end"><span id="next-goal-count" class="next-goal-count" hidden></span><span aria-hidden="true">↗</span></span></button>
   </div><div class="title-settings"><button id="controls" class="quiet">Controls</button><button id="logbook" class="quiet">Logbook <span id="logbook-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="history" class="quiet" ${runHistory.length ? '' : 'hidden'}>Recent runs</button><button id="settings" class="quiet">Settings</button></div>
  </section>
  <div id="clock-out-controls" hidden><span class="sr-only" role="status">Clock Out. Your shift is complete.</span><button id="skip-clock-out" class="quiet">Skip ↗</button></div>
@@ -560,6 +564,7 @@ const input: Input = {
   aim: { x: 600, y: 550 },
 };
 const entryUrl = new URL(location.href);
+const linkedGoalPreview = goalPreviewFromUrl(entryUrl);
 const linkedDrill = supportDrillFromUrl(entryUrl);
 const linkedGauntletPreview = gauntletPreviewFromUrl(entryUrl);
 let linkedTrial = trialFromUrl(entryUrl);
@@ -1038,6 +1043,65 @@ function updateTitle() {
     /\bR to /g,
     bindingLabel(bindings, 'retry') + ' to ',
   );
+  if (linkedGoalPreview) {
+    $('title-screen').classList.add('goal-preview');
+    $('security').hidden = true;
+    $('play').textContent = 'Return to game ↗';
+    $('title-hint').textContent =
+      'Title preview · ' + linkedGoalPreview + ' profile · Your save stays untouched.';
+  }
+  updateNextGoal();
+}
+function currentNextGoal() {
+  const weapons = weaponUnlocks();
+  return nextGoal(
+    linkedGoalPreview
+      ? goalPreviewProgress(linkedGoalPreview)
+      : {
+          weapons,
+          security: loadSecurityProfile(read(SECURITY_KEY), weapons.cleared),
+          book: loadLogbook(read(LOGBOOK_KEY)),
+          earned: loadCommendations(read(COMMENDATIONS_KEY)),
+          victories: loadEncounters(read(VICTORIES_KEY)).map((e) => e.kind),
+          discovered: loadDiscoveries(read(DISCOVERIES_KEY)),
+          milestones: read(MILESTONES_KEY),
+        },
+  );
+}
+function updateNextGoal() {
+  if (game.mode !== 'title') return;
+  const button = $('next-goal');
+  button.hidden =
+    !linkedGoalPreview &&
+    !!(
+      linkedDaily ||
+      invalidDailyLink ||
+      unavailableDailySave ||
+      linkedTest ||
+      linkedRunTest ||
+      linkedWorkshop ||
+      linkedTrial ||
+      invalidTrialLink ||
+      linkedRecoilChallenge ||
+      invalidRecoilLink ||
+      linkedGauntletPreview ||
+      linkedDrill ||
+      previewLogbook ||
+      previewCommendations ||
+      entryUrl.searchParams.get('test') === 'next-goal'
+    );
+  if (button.hidden) return;
+  const goal = currentNextGoal();
+  $('next-goal-label').textContent = goal.kind === 'complete' ? 'Your progress' : 'Next goal';
+  $('next-goal-title').textContent = goal.title;
+  $('next-goal-summary').textContent = goal.summary;
+  $('next-goal-count').hidden = !goal.progress;
+  $('next-goal-count').textContent = goalProgressLabel(goal);
+}
+function backFromGoal() {
+  closeDialog();
+  updateNextGoal();
+  $('next-goal').focus({ preventScroll: true });
 }
 function clearInput(disarm = true) {
   if (disarm) controller.disarm();
@@ -2281,6 +2345,7 @@ function showDialog(kind: string) {
   );
   modal.classList.toggle('replay-dialog', kind === 'replay');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
+  modal.classList.toggle('goal-dialog', kind === 'next-goal');
   modal.classList.toggle('drill-dialog', kind === 'support-drill');
   modal.classList.toggle(
     'ending-dialog',
@@ -2307,7 +2372,9 @@ function showDialog(kind: string) {
           SUPPORT_MASTERIES.map((m) => m.id),
         )
       : commendations;
-  if (kind === 'support-drill') {
+  if (kind === 'next-goal') {
+    nextGoalMenu(content, currentNextGoal(), backFromGoal);
+  } else if (kind === 'support-drill') {
     supportDrill = new SupportDrillView(content, selectedDrill, bindings, backFromDrill, (kind) =>
       sound.play(kind),
     );
@@ -2350,11 +2417,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Build momentum.</h2>' +
-      '<p class="update-tagline">Develop your gun. Read the fight. Keep moving.</p>' +
-      '<dl class="update-notes"><div><dt>Parts that connect.</dt><dd>Ordinary new Campaign rewards after rooms 6, 9, 12, 15 and 18 reserve a slot for an eligible follow-up to a part you own. Two choices keep their ordinary draw. Look for the Build follow-up tag and compare the combined gun.</dd></div>' +
-      '<div><dt>Clearer dense combat.</dt><dd>Mortar paths, landing warnings and shootable shells stay visible above friendly beams. Overlapping beam glows are lighter, while every beam core and its damage remain intact. Reduced effects removes the broad glow.</dd></div>' +
-      '<div><dt>Put it through its paces.</dt><dd>Try beam heat and chain blasts against twin mortars in isolated playtests. The stability test now covers eleven combat patterns, with correct duration and progress counts.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE PROGRESSION UPDATE</p><h2 id="dialog-title">Your next goal.</h2>' +
+      '<p class="update-tagline">One clear reason to return to the factory.</p>' +
+      '<dl class="update-notes"><div><dt>Start with your escape.</dt><dd>A quiet title-screen goal begins with beating the Campaign. Select it for the requirement, reward and where to start.</dd></div>' +
+      '<div><dt>Aim for something new.</dt><dd>Your saved progress moves the suggestion through earned guns, Security clears, fitting licenses and commendations. Repeat victories never inflate a different-hunts goal.</dd></div>' +
+      '<div><dt>Keep exploring.</dt><dd>After the main goals, find a specific uncollected upgrade. Follow-ups account for their parents and licenses. The suggestion never changes your chosen run or blocks Play.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3608,7 +3675,8 @@ function showDialog(kind: string) {
   } else if (kind === 'pause') {
     $('back').focus({ preventScroll: true });
     modal.scrollTop = 0;
-  } else if (['controls', 'progress', 'credits', 'issue'].includes(kind)) $('back').focus();
+  } else if (['controls', 'progress', 'credits', 'issue', 'next-goal'].includes(kind))
+    $('back').focus();
   if (
     [
       'upgrade',
@@ -3829,31 +3897,33 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedDrill
-    ? startLinkedSupportDrill(linkedDrill)
-    : linkedGauntletPreview
-      ? startGauntlet(linkedGauntletPreview, true)
-      : linkedRecoilChallenge || invalidRecoilLink
-        ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-        : linkedTrial?.preview
-          ? startTrial(linkedTrial.route, true)
-          : linkedTrial || invalidTrialLink
-            ? openTrials('title', linkedTrial?.challenge)
-            : linkedWorkshop
-              ? showDialog('workshop')
-              : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                  entryUrl.searchParams.get('test') !== 'arc'
-                ? showDialog('layout-test')
-                : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                    linkedRunTest?.seed.startsWith('FUSIONS-')
-                  ? showDialog('upgrade-test')
-                  : linkedRunTest
-                    ? startRunTest(linkedRunTest)
-                    : linkedTest
-                      ? startPractice(linkedTest, null, { test: true })
-                      : linkedDaily
-                        ? start()
-                        : startFreshCampaign();
+  linkedGoalPreview
+    ? location.assign(new URL('./', location.href).href)
+    : linkedDrill
+      ? startLinkedSupportDrill(linkedDrill)
+      : linkedGauntletPreview
+        ? startGauntlet(linkedGauntletPreview, true)
+        : linkedRecoilChallenge || invalidRecoilLink
+          ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+          : linkedTrial?.preview
+            ? startTrial(linkedTrial.route, true)
+            : linkedTrial || invalidTrialLink
+              ? openTrials('title', linkedTrial?.challenge)
+              : linkedWorkshop
+                ? showDialog('workshop')
+                : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                    entryUrl.searchParams.get('test') !== 'arc'
+                  ? showDialog('layout-test')
+                  : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                      linkedRunTest?.seed.startsWith('FUSIONS-')
+                    ? showDialog('upgrade-test')
+                    : linkedRunTest
+                      ? startRunTest(linkedRunTest)
+                      : linkedTest
+                        ? startPractice(linkedTest, null, { test: true })
+                        : linkedDaily
+                          ? start()
+                          : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
@@ -3881,6 +3951,7 @@ $('continue').onclick = () => {
 };
 $('settings').onclick = () => showDialog('settings');
 $('whats-new').onclick = () => showDialog('update');
+$('next-goal').onclick = () => showDialog('next-goal');
 document.querySelectorAll<HTMLButtonElement>('[data-save-warning]').forEach((button) => {
   button.onclick = openProgress;
 });
@@ -3919,6 +3990,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'next-goal') {
+    backFromGoal();
+    return;
+  }
   if (dialogKind === 'support-drill') {
     backFromDrill();
     return;
@@ -4347,7 +4422,10 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 game.onChange();
-progress.onChange = updateSaveStatus;
+progress.onChange = () => {
+  updateSaveStatus();
+  if (game.mode === 'title') updateNextGoal();
+};
 updateSaveStatus();
 window.addEventListener('storage', (e) => {
   if (e.key === PROGRESS_KEY || e.key === null) progress.checkExternal();
