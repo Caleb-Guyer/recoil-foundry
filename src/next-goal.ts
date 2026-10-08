@@ -143,7 +143,7 @@ export function nextGoal(p: GoalProgress): NextGoal {
       summary: challenge.objective,
       requirement: challenge.objective,
       hint: CERTIFICATIONS.includes(challenge.id)
-        ? 'Open Practice → Recoil Trials. The course must be unlocked; complete a normal trial to earn its certificate.'
+        ? 'Clear this optional course in Campaign to unlock it in Practice → Recoil Trials. You can earn the certificate in Campaign or on a normal Practice attempt.'
         : 'Earn this in Campaign or Daily unless the requirement names a specific mode. Isolated playtests and Workshop do not award commendations.',
       reward: challenge.reward + ' · ' + challenge.slot,
     };
