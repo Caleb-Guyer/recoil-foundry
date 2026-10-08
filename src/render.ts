@@ -101,6 +101,7 @@ import { drawMassRound } from './mass-driver-art.ts';
 import { drawBallistics } from './ballistics-art.ts';
 import { drawFusions } from './fusions-art.ts';
 import { drawInteractionCues } from './interaction-cues.ts';
+import type { GoalCue } from './goal-run.ts';
 import { drawNewPaths, drawStoredRound } from './new-paths-art.ts';
 import { drawSwitchboard, drawSwitchboardArena } from './switchboard-art.ts';
 import { drawCaller, drawCallerWarnings } from './caller-art.ts';
@@ -116,6 +117,7 @@ export class Renderer {
   camera: Vec = { x: 0, y: 0 };
   reduced = false;
   portalAim: Vec | null | undefined;
+  goalCue: GoalCue | null = null;
   last = 0;
   clock = 0;
   portalRevision = 0;
@@ -893,6 +895,18 @@ export class Renderer {
     }
     drawAreaEvent(c, g);
     drawInteractionCues(c, g);
+    if (this.goalCue && g.mode === 'playing') {
+      const { pos, text } = this.goalCue;
+      c.save();
+      c.font = '13px sans-serif';
+      c.textAlign = 'right';
+      const w = c.measureText(text).width;
+      c.fillStyle = '#101c1fe8';
+      c.fillRect(pos.x + 36 - w - 12, pos.y - 78, w + 18, 23);
+      c.fillStyle = '#eed4a0';
+      c.fillText(text, pos.x + 30, pos.y - 62);
+      c.restore();
+    }
     drawMutationTells(c, g);
     // Mortar shells and committed machine warnings share the threat layer.
     // Dense friendly beams/volleys must never paint over shootable shells or

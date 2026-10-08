@@ -203,7 +203,26 @@ import {
 import { controllerPortalTarget } from './controller-target.ts';
 import { musicScene } from './music-score.ts';
 import { ProgressStore, PROGRESS_KEY, CHECKPOINT_KEY, mergeDailyRecords } from './progress.ts';
-import { nextGoal } from './next-goal.ts';
+import { nextGoal, goalById, type GoalProgress } from './next-goal.ts';
+import {
+  GOAL_RUN_KEY,
+  beginGoalRun,
+  goalRunSummary,
+  goalAction,
+  goalOfferLabel,
+  goalHuntLabel,
+  goalMeasure,
+  GoalOpportunity,
+  type GoalRun,
+  type GoalAction,
+} from './goal-run.ts';
+import { goalRunMarkup } from './goal-run-menu.ts';
+import {
+  goalRunPreviewFromUrl,
+  goalRunTestFromUrl,
+  goalRunTestProgress,
+  prepareGoalRunTest,
+} from './goal-run-test.ts';
 import { goalProgressLabel, nextGoalMenu } from './next-goal-menu.ts';
 import { goalPreviewFromUrl, goalPreviewProgress } from './next-goal-preview.ts';
 import { progressMenu } from './progress-menu.ts';
@@ -418,6 +437,14 @@ let gauntletReward = false;
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let fittingNotice: { name: string; until: number | null; stage: number } | null = null;
+let activeGoalRun: GoalRun | null = null;
+let activeGoalScope = 'campaign';
+let goalRunProfile: GoalProgress | null = null;
+const goalOpportunity = new GoalOpportunity();
+let goalParent = 'title';
+let goalCampaignSecurity: SecurityLevel | undefined;
+let gauntletMenuParent = 'practice';
+let goalTrialCourse: RecoilTrialKind | undefined;
 let commendationNotice: {
   id: (typeof commendations)[number];
   until: number | null;
@@ -465,7 +492,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Your Next Goal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Follow Your Goal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -579,7 +606,9 @@ if (previewCommendations) logbookView.section = 'commendations';
 const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
+const linkedGoalRunPreview = goalRunPreviewFromUrl(entryUrl);
 let linkedRunTest =
+  goalRunTestFromUrl(entryUrl) ??
   progressionTestFromUrl(entryUrl) ??
   toolroomTestFromUrl(entryUrl) ??
   supportTestFromUrl(entryUrl) ??
@@ -1050,23 +1079,147 @@ function updateTitle() {
     $('title-hint').textContent =
       'Title preview · ' + linkedGoalPreview + ' profile · Your save stays untouched.';
   }
+  if (linkedGoalRunPreview && linkedRunTest?.seed.startsWith('GOAL-RUN-')) {
+    $('play').textContent = 'Preview goal ' + linkedGoalRunPreview;
+    $('title-hint').textContent = 'Isolated goal preview. Your save stays untouched. R to retry.';
+  }
   updateNextGoal();
 }
-function currentNextGoal() {
+function currentGoalProgress(): GoalProgress {
+  if (
+    activeGoalScope === 'preview' &&
+    linkedGoalRunPreview &&
+    game.testRun?.seed.startsWith('GOAL-RUN-')
+  )
+    return goalRunTestProgress(linkedGoalRunPreview, game);
   const weapons = weaponUnlocks();
+  return {
+    weapons,
+    security: loadSecurityProfile(read(SECURITY_KEY), weapons.cleared),
+    book: loadLogbook(read(LOGBOOK_KEY)),
+    earned: loadCommendations(read(COMMENDATIONS_KEY)),
+    victories: loadEncounters(read(VICTORIES_KEY)).map((e) => e.kind),
+    discovered: loadDiscoveries(read(DISCOVERIES_KEY)),
+    milestones: read(MILESTONES_KEY),
+  };
+}
+function currentNextGoal() {
   return nextGoal(
-    linkedGoalPreview
-      ? goalPreviewProgress(linkedGoalPreview)
-      : {
-          weapons,
-          security: loadSecurityProfile(read(SECURITY_KEY), weapons.cleared),
-          book: loadLogbook(read(LOGBOOK_KEY)),
-          earned: loadCommendations(read(COMMENDATIONS_KEY)),
-          victories: loadEncounters(read(VICTORIES_KEY)).map((e) => e.kind),
-          discovered: loadDiscoveries(read(DISCOVERIES_KEY)),
-          milestones: read(MILESTONES_KEY),
-        },
+    linkedGoalPreview ? goalPreviewProgress(linkedGoalPreview) : currentGoalProgress(),
   );
+}
+function runGoalAvailable() {
+  if (!activeGoalRun || game.mode === 'title') return false;
+  if (activeGoalScope === 'preview')
+    return !!linkedGoalRunPreview && !!game.testRun?.seed.startsWith('GOAL-RUN-');
+  if (activeGoalScope === 'gauntlet') return !!game.gauntlet.state && !game.gauntlet.state.preview;
+  if (activeGoalScope === 'recoil') return !!game.recoil.practice;
+  if (activeGoalScope === 'maintenance')
+    return !!game.maintenance.trial && !game.maintenance.trial.preview;
+  return (
+    !game.practice &&
+    !game.testRun &&
+    !game.workshop.active &&
+    !game.gauntlet.state &&
+    !game.recoil.practice &&
+    !game.maintenance.trial &&
+    activeGoalRun.seed === game.seed
+  );
+}
+function runGoalSummary(ended = false) {
+  return runGoalAvailable() && activeGoalRun
+    ? goalRunSummary(
+        activeGoalRun,
+        currentGoalProgress(),
+        {
+          stage: game.stage,
+          overtime: !!game.overtime,
+          security: game.security?.level ?? 0,
+          ...(game.gauntlet.state ? { gauntlet: game.gauntlet.state.cleared } : {}),
+          results: game.combatReport.snapshot(),
+        },
+        ended,
+      )
+    : null;
+}
+function resetRunGoal() {
+  activeGoalRun = null;
+  activeGoalScope = 'campaign';
+  goalRunProfile = null;
+  goalOpportunity.reset();
+  renderer.goalCue = null;
+}
+function beginOptionalGoal(scope: string, allowed: readonly string[]) {
+  resetRunGoal();
+  const p = currentGoalProgress();
+  const goal = beginGoalRun('GOAL-' + scope, p);
+  if (goal && allowed.includes(goal.id)) activeGoalRun = goal;
+  activeGoalScope = scope;
+  goalRunProfile = p;
+}
+function updateGoalFeedback() {
+  const content = $('dialog-content');
+  goalRunProfile = currentGoalProgress();
+  const row = content.querySelector('.run-goal');
+  if (row && (dialogKind === 'pause' || dialogKind === 'result' || dialogKind === 'gauntlet-run')) {
+    const ended = dialogKind !== 'pause';
+    const markup = goalRunMarkup(
+      runGoalSummary(ended),
+      ended,
+      progress.state === 'saved',
+      activeGoalScope === 'preview',
+    );
+    if (markup) {
+      const holder = document.createElement('div');
+      holder.innerHTML = markup;
+      row.innerHTML = holder.firstElementChild!.innerHTML;
+    } else row.remove();
+    bindPauseGoal();
+  }
+}
+function bindPauseGoal() {
+  const content = $('dialog-content');
+  const button = content.querySelector<HTMLButtonElement>('#pause-goal');
+  if (button)
+    button.onclick = () => {
+      goalParent = 'pause';
+      showDialog('next-goal');
+    };
+}
+function insertGoalResult() {
+  const content = $('dialog-content');
+  const summary = runGoalSummary(true);
+  const anchor = content.querySelector('.run-rewards, .actions');
+  if (summary && anchor)
+    anchor.insertAdjacentHTML(
+      'beforebegin',
+      goalRunMarkup(summary, true, progress.state === 'saved', activeGoalScope === 'preview'),
+    );
+}
+function chooseGoalAction(action: GoalAction) {
+  if (game.mode !== 'title' || linkedGoalPreview) return;
+  if (action.kind === 'gauntlet') {
+    gauntletMenuParent = 'next-goal';
+    showDialog('gauntlet-setup');
+  } else if (action.kind === 'recoil') {
+    goalTrialCourse = action.course;
+    openRecoilTrials('next-goal');
+  } else if (action.kind === 'maintenance') openTrials('next-goal');
+  else {
+    goalCampaignSecurity = action.security;
+    if (weaponUnlocks().started) showDialog('goal-campaign');
+    else
+      start(
+        undefined,
+        false,
+        undefined,
+        action.security,
+        undefined,
+        undefined,
+        undefined,
+        'pistol',
+      );
+  }
 }
 function updateNextGoal() {
   if (game.mode !== 'title') return;
@@ -1099,6 +1252,13 @@ function updateNextGoal() {
   $('next-goal-count').textContent = goalProgressLabel(goal);
 }
 function backFromGoal() {
+  if (goalParent === 'pause' && game.mode === 'paused') {
+    showDialog('pause');
+    $('dialog-content')
+      .querySelector<HTMLButtonElement>('#pause-goal')
+      ?.focus({ preventScroll: true });
+    return;
+  }
   closeDialog();
   updateNextGoal();
   $('next-goal').focus({ preventScroll: true });
@@ -1362,6 +1522,14 @@ function start(
   const requestedGun = startingGunOverride ?? (retry ? game.startingGun : selectedStartingGun);
   const startingGun =
     save || activeDaily ? requestedGun : availableStartingGun(requestedGun, weaponUnlocks());
+  resetRunGoal();
+  activeGoalScope = 'campaign';
+  goalRunProfile = currentGoalProgress();
+  activeGoalRun = beginGoalRun(seed, goalRunProfile, read(GOAL_RUN_KEY), !!save);
+  // Daily has its own fixed challenge; Campaign suggestions can require absent
+  // hunts, licensed fittings or another mode, so keep its goal card out of Daily.
+  if (activeDaily) activeGoalRun = null;
+  write(GOAL_RUN_KEY, activeGoalRun);
   if (!save) write(RUN_REWARDS_KEY, { version: 1, seed, ids: [] });
   write(WEAPON_UNLOCKS_KEY, { ...weaponUnlocks(), started: true });
   if (!activeDaily) selectedStartingGun = save ? (save.startingGun ?? 'pistol') : startingGun;
@@ -1481,6 +1649,7 @@ function startPractice(
     !canPractice(encounter, practiceEncounters(), options.test && mods === null ? linkedTest : null)
   )
     return;
+  resetRunGoal();
   practiceTest = options.test === true;
   practiceEligible = !practiceTest;
   practiceCaptured = false;
@@ -1518,6 +1687,7 @@ function startTrial(route: TrialRoute, preview = false, challenge?: TrialChallen
     (!linkedTrial?.preview || JSON.stringify(linkedTrial.route) !== JSON.stringify(route))
   )
     return;
+  beginOptionalGoal('maintenance', preview ? [] : ['commendation:maintenance-certified']);
   clearInput();
   firstSession.stop();
   finishedRun = null;
@@ -1575,6 +1745,7 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun, challenge?
         challenge.gun !== gun))
   )
     return;
+  beginOptionalGoal('recoil', ['commendation:' + RECOIL_TRIALS[kind].commendation]);
   clearInput();
   firstSession.stop();
   finishedRun = null;
@@ -1609,6 +1780,10 @@ function startGauntlet(gun: StartingGun = 'pistol', preview = false) {
   }
   const access = weaponUnlocks();
   if (!preview && (!access.cleared || !unlockedStartingGuns(access).includes(gun))) return;
+  beginOptionalGoal(
+    'gauntlet',
+    preview ? [] : ['weapon:repeater', 'commendation:gauntlet-cleared'],
+  );
   firstSession.stop();
   clearInput();
   closeDialog();
@@ -1724,6 +1899,11 @@ function backFromPracticeBuild() {
   document.querySelector<HTMLButtonElement>('#practice-edit, #practice-workshop')?.focus();
 }
 function startRunTest(save: Checkpoint) {
+  resetRunGoal();
+  if (linkedGoalRunPreview && save.seed === 'GOAL-RUN-' + linkedGoalRunPreview.toUpperCase()) {
+    activeGoalScope = 'preview';
+    activeGoalRun = beginGoalRun(save.seed, goalRunTestProgress(linkedGoalRunPreview));
+  }
   firstSession.stop();
   finishedRun = null;
   runCommendations = [];
@@ -1733,6 +1913,7 @@ function startRunTest(save: Checkpoint) {
   activeDaily = null;
   dailyResult = null;
   game.startTest(save);
+  if (linkedGoalRunPreview) prepareGoalRunTest(game, linkedGoalRunPreview);
   prepareClockOutTest(game);
   finishPresentationTest(game);
   renderer.reset();
@@ -1785,6 +1966,7 @@ function startWorkshop(
   warmup = false,
   startingGun: StartingGun = workshopStartingGun,
 ) {
+  resetRunGoal();
   firstSession.stop();
   finishedRun = null;
   runCommendations = [];
@@ -2209,6 +2391,7 @@ game.onChange = () => {
   capturePracticeResult();
   captureGauntletResult();
   captureTrialResult();
+  goalRunProfile = currentGoalProgress();
   const finale = game.clockOut;
   document.body.dataset.clockOut = String(finale.active);
   $('clock-out-controls').hidden = !finale.active;
@@ -2373,19 +2556,54 @@ function showDialog(kind: string) {
         )
       : commendations;
   if (kind === 'next-goal') {
-    nextGoalMenu(content, currentNextGoal(), backFromGoal);
+    const p = currentGoalProgress();
+    const goal =
+      goalParent === 'pause' && activeGoalRun
+        ? (goalById(p, activeGoalRun.id) ?? currentNextGoal())
+        : currentNextGoal();
+    const action =
+      game.mode === 'title' && !linkedGoalPreview
+        ? goalAction(
+            goal,
+            p,
+            loadRecoilProfile(read(RECOIL_TRIALS_KEY)).clears,
+            loadShaftProfile(read(SHAFT_PROFILE_KEY)).unlocks.length,
+          )
+        : null;
+    nextGoalMenu(
+      content,
+      goal,
+      backFromGoal,
+      action ? { label: action.label, select: () => chooseGoalAction(action) } : undefined,
+    );
   } else if (kind === 'support-drill') {
     supportDrill = new SupportDrillView(content, selectedDrill, bindings, backFromDrill, (kind) =>
       sound.play(kind),
     );
-  } else if (kind === 'starting-gun') {
+  } else if (kind === 'starting-gun' || kind === 'goal-campaign') {
     startingGunMenu(
       content,
       selectedStartingGun,
-      (gun) => start(undefined, false, undefined, undefined, undefined, undefined, undefined, gun),
-      closeDialog,
+      (gun) =>
+        start(
+          undefined,
+          false,
+          undefined,
+          kind === 'goal-campaign' ? goalCampaignSecurity : undefined,
+          undefined,
+          undefined,
+          undefined,
+          gun,
+        ),
+      kind === 'goal-campaign' ? () => showDialog('next-goal') : closeDialog,
       unlockedStartingGuns(weaponUnlocks()),
     );
+    if (kind === 'goal-campaign') {
+      const level = goalCampaignSecurity ?? selectedSecurity;
+      content.querySelector('.starting-gun-intro')!.textContent =
+        securityLabel(level) + '. Choose your tool, then start a fresh Campaign.';
+      $('start-with-gun').textContent = 'Start ' + securityLabel(level).split(' · ')[0] + ' run';
+    }
     drawRewardImages(content, game);
   } else if (kind === 'gauntlet-setup') {
     buildMenu = gauntletSetup(
@@ -2393,7 +2611,7 @@ function showDialog(kind: string) {
       unlockedStartingGuns(weaponUnlocks()),
       read(GAUNTLET_KEY),
       startGauntlet,
-      () => showDialog('practice'),
+      () => showDialog(gauntletMenuParent),
     );
   } else if (kind === 'gauntlet-run' || (kind === 'result' && game.gauntlet.state)) {
     const session = game.gauntlet.state;
@@ -2417,11 +2635,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE PROGRESSION UPDATE</p><h2 id="dialog-title">Your next goal.</h2>' +
-      '<p class="update-tagline">One clear reason to return to the factory.</p>' +
-      '<dl class="update-notes"><div><dt>Start with your escape.</dt><dd>A quiet title-screen goal begins with beating the Campaign. Select it for the requirement, reward and where to start.</dd></div>' +
-      '<div><dt>Aim for something new.</dt><dd>Your saved progress moves the suggestion through earned guns, Security clears, fitting licenses and commendations. Repeat victories never inflate a different-hunts goal.</dd></div>' +
-      '<div><dt>Keep exploring.</dt><dd>After the main goals, find a specific uncollected upgrade. Follow-ups account for their parents and licenses. The suggestion never changes your chosen run or blocks Play.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE PROGRESSION UPDATE</p><h2 id="dialog-title">Follow your goal.</h2>' +
+      '<p class="update-tagline">A clear next step, through the whole attempt.</p>' +
+      '<dl class="update-notes"><div><dt>Keep it in view.</dt><dd>Pause shows your current goal and progress. Open it for the requirement and reward; Continue keeps the goal you started with.</dd></div>' +
+      '<div><dt>Spot an opportunity.</dt><dd>A brief hint marks a nearby hunt that counts. Upgrade choices highlight your target or a useful prerequisite, without changing the choices.</dd></div>' +
+      '<div><dt>See what you kept.</dt><dd>Results show goal progress beside your pictured rewards, including newly collected upgrades after a loss. On the title, goal details can take you to the right run setup.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2709,7 +2927,10 @@ function showDialog(kind: string) {
     drawArchiveImages(content);
     if (document.getElementById('shaft-trials')) $('shaft-trials').onclick = () => openTrials();
     if (document.getElementById('boss-gauntlet'))
-      $('boss-gauntlet').onclick = () => showDialog('gauntlet-setup');
+      $('boss-gauntlet').onclick = () => {
+        gauntletMenuParent = 'practice';
+        showDialog('gauntlet-setup');
+      };
     if (document.getElementById('boss-remixes'))
       $('boss-remixes').onclick = () => showDialog('boss-remixes');
     if (document.getElementById('recoil-trials'))
@@ -2753,6 +2974,10 @@ function showDialog(kind: string) {
         invalid: invalidRecoilLink && recoilMenuParent === 'title',
       },
     );
+    if (recoilMenuParent === 'next-goal' && goalTrialCourse)
+      content
+        .querySelector<HTMLButtonElement>('[data-trial-course="' + goalTrialCourse + '"]')
+        ?.focus();
   } else if (kind === 'shaft-trials') {
     buildMenu = maintenanceTrialsMenu(content, {
       profile: loadShaftProfile(read(SHAFT_PROFILE_KEY)),
@@ -3006,6 +3231,15 @@ function showDialog(kind: string) {
             '</strong><span class="mod-copy">' +
             modDescription(m, game.mods, game.startingGun, game.seed) +
             '</span>' +
+            (runGoalAvailable() &&
+            activeGoalRun &&
+            goalRunProfile &&
+            !goalMeasure(activeGoalRun.id, goalRunProfile).complete &&
+            goalOfferLabel(activeGoalRun.id, m.id, game.mods)
+              ? '<span class="mod-goal">' +
+                goalOfferLabel(activeGoalRun.id, m.id, game.mods) +
+                '</span>'
+              : '') +
             (modPathLabel(m.id) ||
             (progressionCampaign(game.seed) && buildFollowup(m.id, game.mods))
               ? '<span class="mod-path">' +
@@ -3332,7 +3566,9 @@ function showDialog(kind: string) {
       ' <span>·</span> ' +
       game.kills +
       ' kills</p>' +
-      (game.testRun?.seed.startsWith('PRESENTATION-') || game.testRun?.seed.startsWith('CLOCK-OUT-')
+      (game.testRun?.seed.startsWith('PRESENTATION-') ||
+      game.testRun?.seed.startsWith('CLOCK-OUT-') ||
+      activeGoalScope === 'preview'
         ? '<p class="presentation-note">Preview · progress is not saved.</p>'
         : '') +
       (win
@@ -3362,15 +3598,21 @@ function showDialog(kind: string) {
         : '');
     const ledger = loadRunRewards(read(RUN_REWARDS_KEY));
     const rewards =
-      game.testRun?.seed === 'PRESENTATION-OVERTIME'
-        ? ['gun:nailgun', 'appearance:outfit:night']
-        : game.testRun?.seed === 'PRESENTATION-ESCAPE'
-          ? ['gun:shotgun', 'appearance:gun:inspector']
-          : game.testRun?.seed === 'PRESENTATION-MASTERY'
-            ? ['appearance:gun:heatline', 'appearance:gun:reservoir', 'appearance:outfit:patchwork']
-            : !game.testRun && ledger?.seed === game.seed
-              ? ledger.ids
-              : [];
+      game.testRun?.seed === 'GOAL-RUN-LOSS'
+        ? ['gun:carbine']
+        : game.testRun?.seed === 'PRESENTATION-OVERTIME'
+          ? ['gun:nailgun', 'appearance:outfit:night']
+          : game.testRun?.seed === 'PRESENTATION-ESCAPE'
+            ? ['gun:shotgun', 'appearance:gun:inspector']
+            : game.testRun?.seed === 'PRESENTATION-MASTERY'
+              ? [
+                  'appearance:gun:heatline',
+                  'appearance:gun:reservoir',
+                  'appearance:outfit:patchwork',
+                ]
+              : !game.testRun && ledger?.seed === game.seed
+                ? ledger.ids
+                : [];
     content.querySelector('.actions')!.insertAdjacentHTML('beforebegin', rewardCards(rewards));
     drawRewardImages(content, game);
     const earnedRewards = document.getElementById('earned-rewards');
@@ -3461,6 +3703,7 @@ function showDialog(kind: string) {
       '<h2 id="dialog-title">' +
       (paused ? 'Paused.' : 'Settings.') +
       '</h2><div class="settings-scroll">' +
+      (paused ? goalRunMarkup(runGoalSummary()) : '') +
       '<div class="settings-list"><label>Sound<span class="setting-value"><span id="sound-state"></span><input id="sound" type="checkbox" ' +
       (sound.enabled ? 'checked' : '') +
       ' /></span></label>' +
@@ -3666,6 +3909,12 @@ function showDialog(kind: string) {
     feedback.onclick = openReport;
     content.querySelector('.actions')?.append(feedback);
   }
+  if (kind === 'pause') bindPauseGoal();
+  if (
+    kind === 'result' ||
+    (kind === 'gauntlet-run' && ['complete', 'dead'].includes(game.gauntlet.state?.phase ?? ''))
+  )
+    insertGoalResult();
   if (!modal.open) modal.showModal();
   updateControlHints();
   updateSaveStatus();
@@ -3951,7 +4200,10 @@ $('continue').onclick = () => {
 };
 $('settings').onclick = () => showDialog('settings');
 $('whats-new').onclick = () => showDialog('update');
-$('next-goal').onclick = () => showDialog('next-goal');
+$('next-goal').onclick = () => {
+  goalParent = 'title';
+  showDialog('next-goal');
+};
 document.querySelectorAll<HTMLButtonElement>('[data-save-warning]').forEach((button) => {
   button.onclick = openProgress;
 });
@@ -3992,6 +4244,10 @@ installDialogDismissal(
 function cancelDialog() {
   if (dialogKind === 'next-goal') {
     backFromGoal();
+    return;
+  }
+  if (dialogKind === 'goal-campaign') {
+    showDialog('next-goal');
     return;
   }
   if (dialogKind === 'support-drill') {
@@ -4371,6 +4627,21 @@ function frame(now: number) {
     if (n === 5) accumulator = 0;
   } else accumulator = 0;
   updateMusic();
+  renderer.goalCue =
+    game.mode === 'playing' &&
+    runGoalAvailable() &&
+    activeGoalRun &&
+    goalRunProfile &&
+    game.clear &&
+    game.hunts.state?.phase === 'available'
+      ? goalOpportunity.cue(
+          game.seed + ':' + game.stage + ':' + game.level.id,
+          game.time,
+          game.player.position,
+          game.hunts.door,
+          goalHuntLabel(activeGoalRun.id, game.hunts.state.kind, goalRunProfile),
+        )
+      : null;
   renderer.draw(now);
   if (game.mode === 'playing' && !game.workshop.active) deathReplay.capture(canvas, game.elapsed);
   if (now - hudAt > 80) {
@@ -4425,6 +4696,7 @@ game.onChange();
 progress.onChange = () => {
   updateSaveStatus();
   if (game.mode === 'title') updateNextGoal();
+  else if (activeGoalRun) updateGoalFeedback();
 };
 updateSaveStatus();
 window.addEventListener('storage', (e) => {

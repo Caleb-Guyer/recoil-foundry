@@ -33,7 +33,19 @@ const DISCOVERY_SEED = newCampaignSeed(undefined, () => 0);
 // A suggestion, never a condition on Play. Stable catalog order prevents the
 // target from changing each time the player visits the title screen.
 export function nextGoal(p: GoalProgress): NextGoal {
-  if (!p.weapons.cleared)
+  return selectGoal(p);
+}
+
+// Resolve the original target after its completion, rather than replacing it
+// with the next suggestion partway through an attempt.
+export function goalById(p: GoalProgress, id: string): NextGoal | null {
+  const goal = selectGoal(p, id);
+  return goal.id === id && id !== 'complete' ? goal : null;
+}
+
+function selectGoal(p: GoalProgress, target?: string): NextGoal {
+  const wants = (id: string, missing: boolean) => (target ? target === id : missing);
+  if (wants('campaign', !p.weapons.cleared))
     return {
       id: 'campaign',
       kind: 'campaign',
@@ -44,7 +56,7 @@ export function nextGoal(p: GoalProgress): NextGoal {
       reward: 'Recoil shotgun, Security I and Boss Gauntlet access.',
     };
   const guns = unlockedStartingGuns(p.weapons);
-  if (!guns.includes('twinbore'))
+  if (wants('weapon:twinbore', !guns.includes('twinbore')))
     return {
       id: 'weapon:twinbore',
       kind: 'weapon',
@@ -54,7 +66,7 @@ export function nextGoal(p: GoalProgress): NextGoal {
       hint: 'These machines guard the Furnace halls. Practice victories do not award this license.',
       reward: 'Twinbore starting gun and the precision fitting family.',
     };
-  if (!guns.includes('carbine'))
+  if (wants('weapon:carbine', !guns.includes('carbine')))
     return {
       id: 'weapon:carbine',
       kind: 'weapon',
@@ -69,7 +81,7 @@ export function nextGoal(p: GoalProgress): NextGoal {
         unit: 'different hunts won',
       },
     };
-  if (!guns.includes('repeater'))
+  if (wants('weapon:repeater', !guns.includes('repeater')))
     return {
       id: 'weapon:repeater',
       kind: 'weapon',
@@ -79,7 +91,7 @@ export function nextGoal(p: GoalProgress): NextGoal {
       hint: 'Open Practice → Boss Gauntlet. Health carries between fights; choose a fitting or repair after each round.',
       reward: 'Pressure repeater starting gun and the Victor outfit.',
     };
-  if (!guns.includes('nailgun'))
+  if (wants('weapon:nailgun', !guns.includes('nailgun')))
     return {
       id: 'weapon:nailgun',
       kind: 'weapon',
@@ -95,7 +107,7 @@ export function nextGoal(p: GoalProgress): NextGoal {
       p.security.unlocked > level ||
       p.security.bests.some((b) => b.level === level) ||
       (level === 3 && p.earned.includes('redline'));
-    if (!cleared)
+    if (wants('security:' + level, !cleared))
       return {
         id: 'security:' + level,
         kind: 'difficulty',
@@ -113,7 +125,7 @@ export function nextGoal(p: GoalProgress): NextGoal {
       };
   }
   const licenses = unlockGoals(p.book, p.earned, p.victories, p.milestones);
-  const locked = licenses.find((g) => !g.unlocked);
+  const locked = licenses.find((g) => wants('license:' + g.id, !g.unlocked));
   if (locked)
     return {
       id: 'license:' + locked.id,
@@ -133,7 +145,8 @@ export function nextGoal(p: GoalProgress): NextGoal {
     };
   const challenge = COMMENDATIONS.find(
     (c) =>
-      !p.earned.includes(c.id) && commendationVisible(c.id, p.victories, p.earned, p.discovered),
+      wants('commendation:' + c.id, !p.earned.includes(c.id)) &&
+      commendationVisible(c.id, p.victories, p.earned, p.discovered),
   );
   if (challenge)
     return {
@@ -148,15 +161,16 @@ export function nextGoal(p: GoalProgress): NextGoal {
       reward: challenge.reward + ' · ' + challenge.slot,
     };
   const unlocked = licenses.filter((g) => g.unlocked).map((g) => g.id);
-  const missing = MODS.find(
-    (mod) =>
-      !p.discovered.includes(mod.id) &&
-      draftUnlocked(mod.id, unlocked, DISCOVERY_SEED) &&
-      [
-        MOD_REQUIRES[mod.id],
-        ...(FUSION_REQUIRES[mod.id] ?? []),
-        ...(BRANCH_PARENTS[mod.id] ?? []),
-      ].every((id) => !id || p.discovered.includes(id)),
+  const missing = MODS.find((mod) =>
+    target
+      ? target === 'discover:' + mod.id
+      : !p.discovered.includes(mod.id) &&
+        draftUnlocked(mod.id, unlocked, DISCOVERY_SEED) &&
+        [
+          MOD_REQUIRES[mod.id],
+          ...(FUSION_REQUIRES[mod.id] ?? []),
+          ...(BRANCH_PARENTS[mod.id] ?? []),
+        ].every((id) => !id || p.discovered.includes(id)),
   );
   if (missing) {
     const parents = [
@@ -207,7 +221,9 @@ export function nextGoal(p: GoalProgress): NextGoal {
   }
   // Boss-specific challenges stay concealed until the machine is defeated.
   // Do not report completion merely because every currently revealed one is done.
-  const hidden = COMMENDATIONS.find((c) => !p.earned.includes(c.id));
+  const hidden = COMMENDATIONS.find((c) =>
+    target ? 'boss' in c && target === 'encounter:' + c.boss : !p.earned.includes(c.id),
+  );
   if (hidden && 'boss' in hidden)
     return {
       id: 'encounter:' + hidden.boss,

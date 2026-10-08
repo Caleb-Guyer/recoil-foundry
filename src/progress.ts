@@ -1,6 +1,7 @@
 import { WEAPON_UNLOCKS_KEY, migrateWeaponUnlocks, validWeaponUnlocks } from './weapon-unlocks.ts';
 import { BOSS_REMIXES_KEY, loadBossRemixes, validBossRemixes } from './boss-remix-rules.ts';
 import { RUN_REWARDS_KEY, loadRunRewards, validRunRewards } from './run-rewards.ts';
+import { GOAL_RUN_KEY, loadGoalRun, validGoalRun } from './goal-run.ts';
 import { loadCheckpoint } from './rules.ts';
 import {
   UPRISING_RECORDS_KEY,
@@ -52,6 +53,7 @@ export const PROGRESS_KEYS = [
   BOSS_REMIXES_KEY,
   WEAPON_UNLOCKS_KEY,
   RUN_REWARDS_KEY,
+  GOAL_RUN_KEY,
   UPRISING_RECORDS_KEY,
   CHECKPOINT_KEY,
   DISCOVERIES_KEY,
@@ -147,6 +149,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     ),
     [BOSS_REMIXES_KEY]: loadBossRemixes(read(BOSS_REMIXES_KEY)),
     [RUN_REWARDS_KEY]: loadRunRewards(read(RUN_REWARDS_KEY)),
+    [GOAL_RUN_KEY]: loadGoalRun(read(GOAL_RUN_KEY)),
     [CHECKPOINT_KEY]: checkpoint,
     [UPRISING_RECORDS_KEY]: loadUprisingRecords(read(UPRISING_RECORDS_KEY)),
     [DISCOVERIES_KEY]: discovered,
@@ -197,6 +200,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === BOSS_REMIXES_KEY ||
           k === WEAPON_UNLOCKS_KEY ||
           k === RUN_REWARDS_KEY ||
+          k === GOAL_RUN_KEY ||
           k === UPRISING_RECORDS_KEY ||
           k === BLUEPRINTS_KEY ||
           k === PRACTICE_RECORDS_KEY ||
@@ -218,6 +222,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
     if (Object.hasOwn(raw, WEAPON_UNLOCKS_KEY) && !validWeaponUnlocks(raw[WEAPON_UNLOCKS_KEY]))
       return null;
     if (Object.hasOwn(raw, RUN_REWARDS_KEY) && !validRunRewards(raw[RUN_REWARDS_KEY])) return null;
+    if (Object.hasOwn(raw, GOAL_RUN_KEY) && !validGoalRun(raw[GOAL_RUN_KEY])) return null;
     const checkpoint = raw[CHECKPOINT_KEY];
     if (
       Object.hasOwn(raw, UPRISING_RECORDS_KEY) &&
