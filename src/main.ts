@@ -69,6 +69,7 @@ import { maintenanceTestFromUrl } from './maintenance-test.ts';
 import { SHAFT_NAMES } from './maintenance.ts';
 import { MUTATIONS, mutationTestFromUrl } from './mutations.ts';
 import { overtimeBalanceTestFromUrl } from './overtime-balance.ts';
+import { progressionTestFromUrl } from './progression-test.ts';
 import { creditsMarkup } from './credits.ts';
 import { installDialogDismissal } from './dialog-dismissal.ts';
 import { annexTestFromUrl } from './annex-layout.ts';
@@ -218,6 +219,8 @@ import {
   STAGES,
   modPathLabel,
   modDescription,
+  buildFollowup,
+  progressionCampaign,
   buildPath,
   PATH_NAMES,
   REROLL_COST,
@@ -459,7 +462,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Toolroom Expansion</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Build Momentum</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -572,6 +575,7 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 let linkedRunTest =
+  progressionTestFromUrl(entryUrl) ??
   toolroomTestFromUrl(entryUrl) ??
   supportTestFromUrl(entryUrl) ??
   continuityTestFromUrl(entryUrl) ??
@@ -849,6 +853,11 @@ function updateTitle() {
   }
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.seed.startsWith('RF-C90-DRAFT-')) {
+    $('play').textContent = 'Test build follow-ups ↗';
+    $('title-hint').textContent =
+      'Start at a room-nine reward with an existing build. Compare the follow-up, choose or reroll. Isolated playtest · R to retry.';
+  }
   if (linkedRunTest?.seed.startsWith('RF-C89-EXP-')) {
     $('play').textContent = 'Test ' + toolroomTestTitle(entryUrl) + ' ↗';
     $('title-hint').textContent =
@@ -2341,11 +2350,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Open the toolroom.</h2>' +
-      '<p class="update-tagline">New tools to earn. New fittings to combine. New machines to outmaneuver.</p>' +
-      '<dl class="update-notes"><div><dt>Six starting tools.</dt><dd>Earn the paired Twinbore by defeating the Press or Kiln, the penetrating Coil carbine through two different machine hunts, and the Pressure repeater by clearing the Gauntlet. Your first run starts with the pistol.</dd></div>' +
-      '<div><dt>24 earned fittings.</dt><dd>Boss victories and Campaign completion open movement, precision, heat, banking, defense and cadence fittings. See each requirement in the Logbook; later runs can offer the parts you have earned.</dd></div>' +
-      '<div><dt>A changing factory.</dt><dd>Nine later-zone layouts introduce Shutter Guards, Striders and Mortar Carts, plus six variants. Watch the committed warnings, flank closed shutters, and shoot mortar shells before they land. The opening stays familiar.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE GAMEPLAY UPDATE</p><h2 id="dialog-title">Build momentum.</h2>' +
+      '<p class="update-tagline">Develop your gun. Read the fight. Keep moving.</p>' +
+      '<dl class="update-notes"><div><dt>Parts that connect.</dt><dd>Ordinary new Campaign rewards after rooms 6, 9, 12, 15 and 18 reserve a slot for an eligible follow-up to a part you own. Two choices keep their ordinary draw. Look for the Build follow-up tag and compare the combined gun.</dd></div>' +
+      '<div><dt>Clearer dense combat.</dt><dd>Mortar paths, landing warnings and shootable shells stay visible above friendly beams. Overlapping beam glows are lighter, while every beam core and its damage remain intact. Reduced effects removes the broad glow.</dd></div>' +
+      '<div><dt>Put it through its paces.</dt><dd>Try beam heat and chain blasts against twin mortars in isolated playtests. The stability test now covers eleven combat patterns, with correct duration and progress counts.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2930,7 +2939,19 @@ function showDialog(kind: string) {
             '</strong><span class="mod-copy">' +
             modDescription(m, game.mods, game.startingGun, game.seed) +
             '</span>' +
-            (modPathLabel(m.id) ? '<span class="mod-path">' + modPathLabel(m.id) + '</span>' : '') +
+            (modPathLabel(m.id) ||
+            (progressionCampaign(game.seed) && buildFollowup(m.id, game.mods))
+              ? '<span class="mod-path">' +
+                [
+                  modPathLabel(m.id),
+                  progressionCampaign(game.seed) && buildFollowup(m.id, game.mods)
+                    ? 'Build follow-up'
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ') +
+                '</span>'
+              : '') +
             '</button>',
         )
         .join('') +

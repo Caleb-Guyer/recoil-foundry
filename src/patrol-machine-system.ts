@@ -60,9 +60,10 @@ export function mortarPoint(arc: MortarArc, progress: number): Vec {
 }
 export function mortarImpact(g: Game, arc: MortarArc, start = 0): Vec {
   let previous = mortarPoint(arc, start);
+  const solids = g.solidBodies;
   for (let i = 1; i <= 120; i++) {
     const point = mortarPoint(arc, start + ((1 - start) * i) / 120);
-    const hit = firstSolid(previous, point, { x: 7, y: 7 }, g.solidBodies);
+    const hit = firstSolid(previous, point, { x: 7, y: 7 }, solids);
     if (hit)
       return {
         x: previous.x + (point.x - previous.x) * hit.t,

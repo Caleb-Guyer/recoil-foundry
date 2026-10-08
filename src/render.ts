@@ -76,7 +76,12 @@ import { drawConveyors } from './conveyor-art.ts';
 import { drawFreightScenery, drawFreightLift } from './freight-art.ts';
 import { drawAngler } from './angler-art.ts';
 import { drawSupport } from './teamwork-art.ts';
-import { drawPatrolMachine, drawPatrolShells, drawSurveyMarks } from './patrol-machine-art.ts';
+import {
+  drawPatrolMachine,
+  drawPatrolShells,
+  drawPatrolTell,
+  drawSurveyMarks,
+} from './patrol-machine-art.ts';
 import { drawWallcrawler } from './wallcrawler-art.ts';
 import { drawScrapper } from './scrapper-art.ts';
 import { drawFabricator } from './fabricator-art.ts';
@@ -766,11 +771,11 @@ export class Renderer {
     c.globalAlpha = 1;
     drawCourierWorld(c, g);
     drawAuditDoor(c, g, this.reduced);
-    drawPatrolShells(c, g);
     this.drawEnemies();
     drawSurveyMarks(c, g);
     drawCombatImpacts(c, g, this.reduced, threats);
-    drawTorch(c, g, this.reduced);
+    const view = { x: this.camera.x, y: this.camera.y, w: viewW, h: viewH };
+    drawTorch(c, g, this.reduced, view);
     if (g.blast.life > 0) {
       const { pos, dir, life } = g.blast,
         base = Math.atan2(dir.y, dir.x);
@@ -889,6 +894,11 @@ export class Renderer {
     drawAreaEvent(c, g);
     drawInteractionCues(c, g);
     drawMutationTells(c, g);
+    // Mortar shells and committed machine warnings share the threat layer.
+    // Dense friendly beams/volleys must never paint over shootable shells or
+    // their actual landing areas. All rays and physical damage remain intact.
+    for (const e of g.enemies) if (e.patrol) drawPatrolTell(c, g, e);
+    drawPatrolShells(c, g);
     // Hostile projectiles stay above player shots and all cosmetic particles.
     for (const s of threats) {
       if (s.mutationShell) drawMutationShell(c, s);
@@ -903,7 +913,6 @@ export class Renderer {
         c.stroke();
       }
     }
-    const view = { x: this.camera.x, y: this.camera.y, w: viewW, h: viewH };
     for (const e of g.enemies) {
       const brace = attackBrace(e);
       if (

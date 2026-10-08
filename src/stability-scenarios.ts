@@ -15,14 +15,16 @@ export const STABILITY_CASES = [
   { id: 'thermal', name: 'Toolroom heat circuit', build: 'thermal' },
   { id: 'repair', name: 'Toolroom field repairs', build: 'defense' },
   { id: 'mortar', name: 'Twin mortar shells', build: 'precision' },
+  { id: 'heat-mortar', name: 'Heat beams and mortar warnings', build: 'thermal' },
+  { id: 'blast-mortar', name: 'Chain blasts and mortar warnings', build: 'blast' },
 ] as const;
 
 export function stabilityCheckpoint(index: number): Checkpoint {
   const scenario = STABILITY_CASES[index % STABILITY_CASES.length];
-  if (scenario.id === 'thermal' || scenario.id === 'repair' || scenario.id === 'mortar')
+  if (['thermal', 'repair', 'mortar', 'heat-mortar', 'blast-mortar'].includes(scenario.id))
     return toolroomTestFromUrl(
       new URL(
-        `https://test/?test=toolroom&gun=${scenario.id === 'thermal' ? 'twinbore' : scenario.id === 'repair' ? 'repeater' : 'carbine'}&build=${scenario.build}${scenario.id === 'mortar' ? '&machine=mortar-twin' : ''}`,
+        `https://test/?test=toolroom&gun=${['thermal', 'heat-mortar'].includes(scenario.id) ? 'twinbore' : scenario.id === 'blast-mortar' ? 'shotgun' : scenario.id === 'repair' ? 'repeater' : 'carbine'}&build=${scenario.build}${scenario.id.includes('mortar') ? '&machine=mortar-twin' : ''}`,
       ),
     )!;
   if (scenario.id === 'boss')
@@ -51,12 +53,18 @@ export function stabilityInput(g: Game, tick: number): Input {
   if (g.portals.linked && phase < 120) aim = { ...g.portals.pair[0]!.pos };
   else if (phase > 270) aim = { x: p.x + Math.cos(tick / 60) * 220, y: p.y + 400 };
   const dx = aim.x - p.x;
+  // Give the combined stress fixtures time to show a real mortar attack before
+  // their strong gun can clear the patrol. No AI, damage or health is changed.
+  const watchMortar =
+    tick < 330 &&
+    g.enemies.some((e) => e.kind === 'mortar') &&
+    (g.mods.includes('heat-relay') || g.mods.includes('chain-reaction'));
   return {
     left: dx < -150,
     right: dx > 150,
     jump: g.grounded && tick % 55 === 0,
     jumpHeld: phase < 300,
-    fire: g.mods.includes('charge-lens') ? phase % 90 < 65 : phase % 120 < 108,
+    fire: !watchMortar && (g.mods.includes('charge-lens') ? phase % 90 < 65 : phase % 120 < 108),
     aim,
   };
 }

@@ -291,6 +291,26 @@ test('Storm contacts sweep fast enemies but exclude teleport gaps and intervenin
   }
 });
 
+test('fast cover cuts Storm links along its sweep while teleport gaps do not', () => {
+  for (const teleport of [false, true]) {
+    const { g } = cell();
+    const crate = g.props.spawn('crate', 500, 630);
+    const e = target(g, 500, 719);
+    g.time = 0.2;
+    g.fusions.storm.beforeStep();
+    Body.setPosition(crate.body, { x: 500, y: 810 });
+    if (teleport) g.fusions.storm.teleported(crate.body);
+    g.fusions.storm.afterStep();
+    assert.equal(g.fusions.storm.cells[0].links.length, teleport ? 1 : 0);
+    near(e.maxHp - e.hp, teleport ? 50 : 0);
+    // Once the physical cover has passed, the cell reconnects normally.
+    g.fusions.storm.beforeStep();
+    g.fusions.storm.afterStep();
+    assert.equal(g.fusions.storm.cells[0].links.length, 1);
+    near(e.maxHp - e.hp, 50);
+  }
+});
+
 test('Storm nodes follow moving support, disappear with broken support and stay within the three-cell cap', () => {
   const { g, floor } = cell();
   g.time = 0.2;

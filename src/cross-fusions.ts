@@ -277,7 +277,9 @@ export class StormCellSystem {
               )
                 return false;
               const vertices = Matter.Vertices.hull([...old, ...body.vertices] as Matter.Vertex[]);
-              return !!firstSolid(a, b, { x: 1, y: 1 }, [{ ...body, vertices }]);
+              return !!firstSolid(a, b, { x: 1, y: 1 }, [
+                { ...body, vertices, bounds: Matter.Bounds.create(vertices) },
+              ]);
             })
           )
             continue;

@@ -45,7 +45,22 @@ export function sweepBox(from: Vec, to: Vec, half: Vec, body: Matter.Body) {
 
 export function firstSolid(from: Vec, to: Vec, half: Vec, bodies: Matter.Body[]) {
   let nearest: { t: number; normal: Vec; body: Matter.Body } | undefined;
+  // The swept hull cannot intersect a convex body outside this envelope.
+  // Read current Matter bounds each query: moving/rotating/broken cover remains
+  // exact, without a spatial cache or a changed SAT collision result.
+  // Synthetic swept bodies must also supply bounds enclosing their vertices.
+  const minX = Math.min(from.x, to.x) - half.x,
+    maxX = Math.max(from.x, to.x) + half.x,
+    minY = Math.min(from.y, to.y) - half.y,
+    maxY = Math.max(from.y, to.y) + half.y;
   for (const body of bodies) {
+    if (
+      body.bounds.min.x > maxX ||
+      body.bounds.max.x < minX ||
+      body.bounds.min.y > maxY ||
+      body.bounds.max.y < minY
+    )
+      continue;
     const hit = sweepBox(from, to, half, body);
     if (hit && (!nearest || hit.t < nearest.t)) nearest = { ...hit, body };
   }

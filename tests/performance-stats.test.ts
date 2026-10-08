@@ -9,7 +9,7 @@ import {
   stabilityCounts,
   assertFiniteWorld,
 } from '../src/stability-scenarios.ts';
-import { validBuild } from '../src/rules.ts';
+import { loadCheckpoint, validBuild } from '../src/rules.ts';
 
 test('timing summaries count real stalls and tolerate unavailable or invalid measurements', () => {
   const stats = new TimingStats();
@@ -38,6 +38,7 @@ test('every browser stress preset uses a legal isolated build and resets the rea
   for (let index = 0; index < STABILITY_CASES.length; index++) {
     startStabilityCase(g, index);
     assert(g.testRun);
+    assert(loadCheckpoint(g.testRun), STABILITY_CASES[index].id);
     assert(validBuild(g.mods), STABILITY_CASES[index].id);
     if (STABILITY_CASES[index].id === 'portals') assert(g.portals.linked);
     const baseline = stabilityCounts(g);
@@ -48,4 +49,23 @@ test('every browser stress preset uses a legal isolated build and resets the rea
     assert.deepEqual(stabilityCounts(g), baseline);
   }
   assert.equal(saves, 0);
+});
+test('combined heat and blast stress cases include real warned mortar attacks', () => {
+  for (const id of ['heat-mortar', 'blast-mortar']) {
+    const g = new Game(),
+      index = STABILITY_CASES.findIndex((s) => s.id === id);
+    startStabilityCase(g, index);
+    let warned = false,
+      shells = false,
+      fired = false;
+    for (let tick = 0; tick < 540 && g.mode === 'playing'; tick++) {
+      const input = stabilityInput(g, tick);
+      g.tick(1 / 60, input);
+      warned ||= g.enemies.some((e) => e.kind === 'mortar' && e.state === 'windup');
+      shells ||= g.patrolMachines.shells.length > 0;
+      fired ||= g.shotCount > 0 || g.torch.active;
+      assertFiniteWorld(g);
+    }
+    assert(warned && shells && fired, JSON.stringify({ id, warned, shells, fired }));
+  }
 });

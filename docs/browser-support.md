@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The stable release on GitHub Pages and itch.io is **3.17.0**. The browser/hardware evidence below was collected for 2.96.1; it is retained with its original scope rather than represented as a fresh physical-device test. The [release operations record](release-operations.md) links subsequent software checks and publication verification, including [Weapon Mastery 3.17.0](validation/weapon-mastery-3.17.0.md).
+Release target: **Windows desktop/laptop with keyboard and mouse**. The GitHub Pages software release is **5.1.0**, with its [Build Momentum validation](validation/build-momentum-5.1.0.md) recording the current automated and embedded-browser checks. The physical browser/hardware evidence below was collected for 2.96.1; it retains that original scope. The [release operations record](release-operations.md) preserves earlier software checks and publication history, including the itch.io release.
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

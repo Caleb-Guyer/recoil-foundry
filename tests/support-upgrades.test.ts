@@ -356,7 +356,7 @@ test('support comparison scenarios demonstrate focus, heat transfer, stored exce
 });
 
 test('new support upgrades obey prerequisites and are absent from every archived Daily pool', () => {
-  assert.equal(DAILY_RULESET, 89);
+  assert.equal(DAILY_RULESET, 90);
   assert(!validBuild(['heat-relay']));
   assert(validBuild(['cutting-torch', 'thermal-runaway', 'heat-relay']));
   for (const rules of SUPPORTED_DAILY_RULESETS) {
@@ -380,7 +380,7 @@ test('fresh Campaign seeds offer all four supports while existing seeds retain t
   const values = [35, 36];
   assert.equal(
     newCampaignSeed('RF-C88-Z', () => values.shift()!),
-    'RF-C89-10',
+    'RF-C90-10',
   );
   for (const seed of ['old-campaign', 'RF-C88-new']) {
     const mods = ['cutting-torch', 'thermal-runaway'];

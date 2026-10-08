@@ -166,7 +166,6 @@ export function drawPatrolMachine(
   }
   c.restore();
   if (!portrait) {
-    drawPatrolTell(c, g, e);
     if (e.hp < e.maxHp) {
       c.fillStyle = '#3a3934';
       c.fillRect(p.x - 17, p.y - 28, 34, 3);

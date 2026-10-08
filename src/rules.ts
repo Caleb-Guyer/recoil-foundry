@@ -847,6 +847,31 @@ export const OPENING_IDENTITY_MODS: readonly string[] = [
   'fold',
   'vector',
 ];
+// These are actual prerequisite relationships, rather than inferred damage
+// preferences. The eligible draft pool still owns unlock and branch rules.
+export function buildFollowup(id: string, mods: readonly string[]) {
+  const parents = [
+    MOD_REQUIRES[id],
+    ...(FUSION_REQUIRES[id] ?? []),
+    ...(BRANCH_PARENTS[id] ?? []),
+  ].filter((parent): parent is string => !!parent);
+  return parents.length > 0 && parents.every((parent) => mods.includes(parent));
+}
+export function progressionDraft(context: RewardContext, count = 3) {
+  return (
+    progressionCampaign(context.seed ?? '') &&
+    !context.overtime &&
+    count === 3 &&
+    context.stage >= 4 &&
+    context.stage < STAGES - 1 &&
+    context.stage % 3 === 2
+  );
+}
+export function progressionCampaign(seed: string) {
+  const revision = /^RF-C(\d+)-/.exec(seed);
+  return !!revision && Number(revision[1]) >= 90;
+}
+
 // A small preference for the chosen path, sampled without replacement.
 export function rewardMods(
   mods: readonly string[],
@@ -937,6 +962,21 @@ export function rewardMods(
       while (index < developments.length - 1 && roll >= weight(developments[index]))
         roll -= weight(developments[index++]);
       offers[replace] = developments[index];
+    }
+  }
+  // One offer every three later Campaign rooms can develop an owned part.
+  // Preserve two open draws, any earned salvage, authored introductions and
+  // reroll exclusions. No extra saved state, or change to historical seeds.
+  if (progressionDraft(context, count) && !offers.some((mod) => buildFollowup(mod.id, mods))) {
+    const followups = pool.filter((mod) => buildFollowup(mod.id, mods));
+    let replace = offers.length - 1;
+    while (replace >= 0 && isSalvage(offers[replace].id)) replace--;
+    if (replace >= 0 && followups.length) {
+      let roll = rng() * followups.reduce((sum, mod) => sum + weight(mod), 0);
+      let index = 0;
+      while (index < followups.length - 1 && roll >= weight(followups[index]))
+        roll -= weight(followups[index++]);
+      offers[replace] = followups[index];
     }
   }
   return offers;

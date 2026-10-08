@@ -1,6 +1,6 @@
 {
   "name": "recoil-foundry",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "private": true,
   "type": "module",
   "description": "Six earned tools. Twenty stages. A physics roguelike with 141 upgrades, varied factory encounters and recoil movement.",
@@ -15,7 +15,8 @@
     "balance:dead-signal": "node --experimental-strip-types scripts/dead-signal-audit.ts",
     "stability": "node --expose-gc --experimental-strip-types scripts/stability-audit.ts",
     "balance:overtime": "node --experimental-strip-types scripts/overtime-balance-audit.ts",
-    "balance:camping": "node --experimental-strip-types scripts/boss-camping-audit.ts"
+    "balance:camping": "node --experimental-strip-types scripts/boss-camping-audit.ts",
+    "balance:progression": "node --experimental-strip-types scripts/progression-balance-audit.ts"
   },
   "dependencies": {
     "matter-js": "0.20.0"

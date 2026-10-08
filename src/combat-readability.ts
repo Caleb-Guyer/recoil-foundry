@@ -29,6 +29,15 @@ export function inCombatView(p: Vec, view: CombatView, padding = 0) {
   );
 }
 
+export function segmentInCombatView(a: Vec, b: Vec, view: CombatView, padding = 0) {
+  return (
+    Math.max(a.x, b.x) >= view.x - padding &&
+    Math.min(a.x, b.x) <= view.x + view.w + padding &&
+    Math.max(a.y, b.y) >= view.y - padding &&
+    Math.min(a.y, b.y) <= view.y + view.h + padding
+  );
+}
+
 // Cosmetic effects yield locally to a bullet's head and its next short segment.
 // The shot, its collision hull and every active hazard remain fully visible.
 export function effectOpacity(p: Vec, radius: number, threats: readonly Shot[]) {

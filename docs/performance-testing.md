@@ -8,14 +8,16 @@ Use the production [stability test](https://caleb-guyer.github.io/recoil-foundry
 
 1. Record the browser's full version, Windows version, CPU, GPU, RAM, screen resolution and refresh rate. Record whether the laptop is plugged in and which power mode it uses. Do not include account names, serial numbers or other private identifiers.
 2. Close other games, video playback and heavy work. Keep the browser at its usual resolution and zoom. Do not use CPU throttling as a substitute for an actual low-end device.
-3. Keep **Replay capture** and **Audio** on. Run **Quick · 3 minutes**, then **Soak · 12 minutes**. Keep the test tab visible; switching away pauses it. Resume explicitly when returning. Download each report.
+3. Keep **Replay capture** and **Audio** on. Run **Quick · 5.5 minutes**, then **Soak · 22 minutes**. Keep the test tab visible; switching away pauses it. Resume explicitly when returning. Download each report. These durations include all eleven scenarios; the labels and resume counter derive from the scenario list.
 4. Repeat Quick with **Reduced effects** checked. This changes rendering only. If replay capture dominates frame stalls, repeat Quick with Replay capture off to help isolate the cost; the acceptance run still needs it on.
 5. Review the captured clip, pause and resume it, save it, then close the viewer. Verify that the downloaded clip plays and that a second test can start normally.
 6. Play the actual game too. Test death/retry, entering the next room, opening menus, returning from another tab and fullscreen. Use the intended physical keyboard/mouse and controller; disconnect and reconnect the controller during play. Check rumble and neutral-stick/released-trigger recovery. Test touch only on actual touch hardware if it will be advertised.
 
 ## Read the measurements
 
-The six presets cover dense volleys, chain explosions, portals, beams, the boss arsenal and Overtime. They use real game simulation, AI, collisions, rendering, audio and replay capture. An automatic input driver restarts a preset after death or a clear. It is a load test, not a complete campaign playthrough or a difficulty assessment.
+The eleven presets cover dense volleys, chain explosions, portals, beams, the boss arsenal, Overtime, heat transfers, field repairs, twin mortars, and heat/blast builds against twin mortars. The combined fixtures delay firing through the opening mortar warning so the gun cannot immediately erase the attack being tested. They use real game simulation, AI, collisions, rendering, audio and replay capture. An automatic input driver restarts a preset after death or a clear. It is a load test, not a complete campaign playthrough or a difficulty assessment.
+
+Select a single **Scenario** for a thirty-second Quick test or two-minute Soak when investigating one pattern. Direct links can select a known scenario, such as [`?scenario=heat-mortar`](https://caleb-guyer.github.io/recoil-foundry/diagnostics.html?scenario=heat-mortar). The report records the selection; a single-case result does not cover the other scenarios. Unknown or repeated scenario parameters leave All patterns selected.
 
 The first two seconds of each scenario are excluded from timing histograms. Frame intervals measure browser animation-frame delivery. Simulation time is total fixed-step work **per rendered frame**, including frames with no simulation step on high-refresh displays. Render and replay timings measure synchronous main-thread calls, not total GPU or encoder time. Histograms use 0.1 ms bins; values at or above 400 ms share an overflow bin and report the observed maximum conservatively. Object peaks are sampled once per second and can miss shorter peaks.
 

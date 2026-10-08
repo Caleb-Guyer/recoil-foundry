@@ -18,7 +18,7 @@ import {
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 $('diagnostics').innerHTML = `
 <header><a href="./">← Game</a><h1>Stability test</h1><p>Isolated late-game presets. Contains encounter spoilers. No progress or settings are saved or uploaded.</p>
-<div class="bench-controls"><label>Duration <select id="duration"><option value="30">Quick · 3 minutes</option><option value="120">Soak · 12 minutes</option></select></label><label><input id="reduced" type="checkbox"> Reduced effects</label><label><input id="record" type="checkbox" checked> Replay capture</label><label><input id="audio" type="checkbox" checked> Audio</label><button id="start">Start test</button><button id="pause-test" hidden>Pause</button><button id="stop" hidden>Stop</button><button id="export" disabled>Download report</button><button id="clip" disabled>Review clip</button></div>
+<div class="bench-controls"><label>Scenario <select id="scenario"><option value="all">All patterns</option>${STABILITY_CASES.map((s) => `<option value="${s.id}">${s.name}</option>`).join('')}</select></label><label>Duration <select id="duration"><option value="30">Quick · ${STABILITY_CASES.length / 2} minutes</option><option value="120">Soak · ${STABILITY_CASES.length * 2} minutes</option></select></label><label><input id="reduced" type="checkbox"> Reduced effects</label><label><input id="record" type="checkbox" checked> Replay capture</label><label><input id="audio" type="checkbox" checked> Audio</label><button id="start">Start test</button><button id="pause-test" hidden>Pause</button><button id="stop" hidden>Stop</button><button id="export" disabled>Download report</button><button id="clip" disabled>Review clip</button></div>
 <p id="status" role="status">Keep this tab visible. Results describe this browser and machine, not other hardware.</p><p id="environment"></p></header>
 <main><canvas id="bench-canvas" aria-label="Automated isolated combat test"></canvas><pre id="report" aria-label="Performance measurements">Ready.</pre></main><dialog id="replay-dialog"><div id="replay-root"></div></dialog>`;
 const game = new Game(),
@@ -26,6 +26,21 @@ const game = new Game(),
   renderer = new Renderer(canvas, game),
   sound = new Sound(),
   replay = new DeathReplay();
+const scenarioControl = $<HTMLSelectElement>('scenario');
+const scenarioParam = new URL(location.href).searchParams.getAll('scenario');
+if (scenarioParam.length === 1 && STABILITY_CASES.some((s) => s.id === scenarioParam[0]))
+  scenarioControl.value = scenarioParam[0];
+function durationLabels() {
+  const single = scenarioControl.value !== 'all';
+  $<HTMLSelectElement>('duration').options[0].textContent = single
+    ? 'Quick · 30 seconds'
+    : `Quick · ${STABILITY_CASES.length / 2} minutes`;
+  $<HTMLSelectElement>('duration').options[1].textContent = single
+    ? 'Soak · 2 minutes'
+    : `Soak · ${STABILITY_CASES.length * 2} minutes`;
+}
+scenarioControl.onchange = durationLabels;
+durationLabels();
 const frameDiagnostics = new FrameDiagnostics();
 sound.effectsVolume = sound.musicVolume = 0.25;
 game.onSound = (kind) => sound.play(kind);
@@ -39,6 +54,7 @@ let running = false,
   tick = 0,
   hudAt = 0;
 let caseIndex = 0,
+  selectedScenario: number | null = null,
   secondsPerCase = 30,
   sceneMs = 0,
   retries = 0,
@@ -133,6 +149,7 @@ function report(detailed = true) {
     environment,
     options,
     secondsPerCase,
+    selection: selectedScenario === null ? 'all' : STABILITY_CASES[selectedScenario].id,
     activeSeconds: Math.round(activeMs / 1000),
     methodology:
       'Real game simulation/render/audio/replay. Automatic preset retries after death/clear. First 2 seconds of each scenario excluded from timings. No CPU/GPU throttling. Heap is optional browser-reported JS heap, not total process memory.',
@@ -196,7 +213,7 @@ function nextCase() {
   resetRoom();
   peaks = stabilityCounts(game);
   $('status').textContent =
-    `${caseIndex + 1} / ${STABILITY_CASES.length} · ${STABILITY_CASES[caseIndex].name}`;
+    `${selectedScenario === null ? `${caseIndex + 1} / ${STABILITY_CASES.length}` : '1 / 1'} · ${STABILITY_CASES[caseIndex].name}`;
 }
 function finish(failed = false) {
   if (!running) return;
@@ -212,7 +229,7 @@ function finish(failed = false) {
   game.setMode('paused');
   sound.silenceMusic();
   sound.updateTorch(false);
-  for (const id of ['start', 'duration', 'reduced', 'record', 'audio'])
+  for (const id of ['start', 'scenario', 'duration', 'reduced', 'record', 'audio'])
     $<HTMLButtonElement>(id).disabled = false;
   $('stop').hidden = $('pause-test').hidden = true;
   $<HTMLButtonElement>('export').disabled = false;
@@ -237,7 +254,8 @@ function setPaused(value: boolean) {
   } else {
     frameDiagnostics.start(performance.now());
     sound.unlock();
-    $('status').textContent = `${caseIndex + 1} / 6 · ${STABILITY_CASES[caseIndex].name}`;
+    $('status').textContent =
+      `${selectedScenario === null ? `${caseIndex + 1} / ${STABILITY_CASES.length}` : '1 / 1'} · ${STABILITY_CASES[caseIndex].name}`;
   }
   refresh();
 }
@@ -259,13 +277,27 @@ $('start').onclick = () => {
   running = true;
   completed = false;
   paused = false;
-  activeMs = accumulator = caseIndex = nextSample = 0;
+  const selectedIndex = STABILITY_CASES.findIndex((s) => s.id === scenarioControl.value);
+  selectedScenario = selectedIndex < 0 ? null : selectedIndex;
+  activeMs = accumulator = nextSample = 0;
+  caseIndex = selectedScenario ?? 0;
   last = performance.now();
   frameDiagnostics.reset(last);
   frameDiagnostics.start(last);
   environment.viewport = { width: innerWidth, height: innerHeight, pixelRatio: devicePixelRatio };
   environment.canvas = { width: canvas.width, height: canvas.height };
-  for (const id of ['start', 'duration', 'reduced', 'record', 'audio', 'export', 'clip'])
+  $('environment').textContent =
+    `${environment.userAgent} · ${environment.viewport.width}×${environment.viewport.height} · ${environment.logicalCores} logical cores`;
+  for (const id of [
+    'start',
+    'scenario',
+    'duration',
+    'reduced',
+    'record',
+    'audio',
+    'export',
+    'clip',
+  ])
     $<HTMLButtonElement>(id).disabled = true;
   $('stop').hidden = $('pause-test').hidden = false;
   $('pause-test').textContent = 'Pause';
@@ -394,7 +426,7 @@ function frame(now: number) {
       before = performance.now();
       if (sceneMs >= secondsPerCase * 1000) {
         finishedResult = result();
-        if (caseIndex === STABILITY_CASES.length - 1) {
+        if (selectedScenario !== null || caseIndex === STABILITY_CASES.length - 1) {
           completed = true;
           shouldFinish = true;
         } else {

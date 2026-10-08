@@ -15,5 +15,5 @@ export function retrySeed(previous: string, random?: () => number) {
 }
 // Reward revisions live in the seed, so Continue and replay need no migration.
 export function newCampaignSeed(previous?: string, random?: () => number) {
-  return 'RF-C89-' + newSeed(previous?.replace(/^RF-C\d+-/, ''), random);
+  return 'RF-C90-' + newSeed(previous?.replace(/^RF-C\d+-/, ''), random);
 }

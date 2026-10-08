@@ -2,55 +2,91 @@ import { GUN_FINISHES, drawFinishMark } from './cosmetics.ts';
 import type { Game } from './game.ts';
 import { distance } from './rules.ts';
 import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
+import { segmentInCombatView, type CombatView } from './combat-readability.ts';
+import type { TorchSegment } from './torch.ts';
+import type { Vec } from './rules.ts';
 
-export function drawTorch(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
+export function drawTorch(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  reduced: boolean,
+  view?: CombatView,
+) {
   const t = g.torch;
   if (!t.equipped || !t.active || !['playing', 'paused'].includes(g.mode)) return;
   c.save();
   c.lineCap = 'round';
   const width = (t.legacyPattern && g.gun.pellets > 1 ? 8 : 1.6) * (t.finisher ? 0.6 : 1);
+  const rays: { s: TorchSegment; a: Vec; hot: number; width: number; group: number }[] = [];
   for (const path of [t.segments, t.rear])
     for (let i = 0; i < path.length; i++) {
-      const s = path[i],
-        len = distance(s.a, s.b),
+      const s = path[i];
+      if (view && !segmentInCombatView(s.a, s.b, view, 16)) continue;
+      const len = distance(s.a, s.b),
         offset = s.muzzle ? Math.min(path === t.rear ? 17 : 31, len) : 0,
         a = { x: s.a.x + s.dir.x * offset, y: s.a.y + s.dir.y * offset },
         hot = s.enemy?.id === t.target && (!t.legacyPattern || (s.ray ?? 0) === 0) ? t.heat : 0,
         rayWidth =
           width *
           (!t.legacyPattern && g.gun.pellets > 1 ? ((s.power ?? 1) > 0.25 ? 1.25 : 0.8) : 1);
+      rays.push({
+        s,
+        a,
+        hot,
+        width: rayWidth,
+        group: !t.legacyPattern && g.gun.pellets > 1 && (s.power ?? 1) <= 0.25 ? 1 : 0,
+      });
+    }
+  // Draw each halo width once. Intersections no longer accumulate a bright
+  // fog, and a wide gun needs at most two halo strokes rather than hundreds.
+  if (!reduced)
+    for (const group of [0, 1]) {
+      const first = rays.find((ray) => ray.group === group);
+      if (!first) continue;
       c.beginPath();
-      c.moveTo(a.x, a.y);
-      c.lineTo(s.b.x, s.b.y);
-      c.strokeStyle = '#ebad68';
-      c.globalAlpha = (reduced ? 0.13 : 0.19) / (g.gun.pellets > 1 ? 2 : 1);
-      c.lineWidth = rayWidth + 5.4;
-      c.stroke();
-      c.strokeStyle = hot > 0.6 ? '#fff0c7' : '#ffd59b';
-      c.globalAlpha = 0.9;
-      c.lineWidth = rayWidth + hot * 0.6;
-      c.stroke();
-      if (s.body || s.cable || s.anchor) {
-        c.globalAlpha = 0.8;
-        c.fillStyle = '#ffdfad';
-        c.beginPath();
-        c.arc(s.b.x, s.b.y, 2 + hot * 2, 0, Math.PI * 2);
-        c.fill();
-        if (!reduced) {
-          const turn = g.time * 11;
-          c.strokeStyle = '#d99c61';
-          c.lineWidth = 1;
-          c.beginPath();
-          for (let n = 0; n < 3; n++) {
-            const a = turn + (n * Math.PI * 2) / 3,
-              r = 5 + hot * 3;
-            c.moveTo(s.b.x + Math.cos(a) * 4, s.b.y + Math.sin(a) * 4);
-            c.lineTo(s.b.x + Math.cos(a) * r, s.b.y + Math.sin(a) * r);
-          }
-          c.stroke();
+      for (const { s, a, group: bucket } of rays)
+        if (bucket === group) {
+          c.moveTo(a.x, a.y);
+          c.lineTo(s.b.x, s.b.y);
         }
+      c.strokeStyle = '#ebad68';
+      c.globalAlpha = 0.19 / (g.gun.pellets > 1 ? 2 : 1);
+      c.lineWidth = first.width + 5.4;
+      c.stroke();
+    }
+  const impacts = new Set<string>();
+  for (const { s, a, hot, width: rayWidth } of rays) {
+    c.beginPath();
+    c.moveTo(a.x, a.y);
+    c.lineTo(s.b.x, s.b.y);
+    c.strokeStyle = hot > 0.6 ? '#fff0c7' : '#ffd59b';
+    c.globalAlpha = 0.9;
+    c.lineWidth = rayWidth + hot * 0.6;
+    c.stroke();
+    if (s.body || s.cable || s.anchor) {
+      const key = Math.round(s.b.x / 12) + ',' + Math.round(s.b.y / 12);
+      if (impacts.has(key)) continue;
+      impacts.add(key);
+      c.globalAlpha = 0.8;
+      c.fillStyle = '#ffdfad';
+      c.beginPath();
+      c.arc(s.b.x, s.b.y, 2 + hot * 2, 0, Math.PI * 2);
+      c.fill();
+      if (!reduced) {
+        const turn = g.time * 11;
+        c.strokeStyle = '#d99c61';
+        c.lineWidth = 1;
+        c.beginPath();
+        for (let n = 0; n < 3; n++) {
+          const a = turn + (n * Math.PI * 2) / 3,
+            r = 5 + hot * 3;
+          c.moveTo(s.b.x + Math.cos(a) * 4, s.b.y + Math.sin(a) * 4);
+          c.lineTo(s.b.x + Math.cos(a) * r, s.b.y + Math.sin(a) * r);
+        }
+        c.stroke();
       }
     }
+  }
   c.restore();
 }
 

@@ -16,6 +16,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Build Momentum — version 5.1.0.** Periodic Campaign drafts develop an owned part while keeping two ordinary choices. Mortar warnings and shootable shells draw above friendly beams, overlapping glows stay lighter, and dense collision queries skip distant geometry. Try the new draft and combined mortar playtests. [Release notes and play links](docs/releases/5.1.0.md).
+
 **Toolroom Expansion — version 5.0.0.** Earn three new starting tools and 24 fittings through boss victories, machine hunts and the Gauntlet. Later zones gain nine spacious room layouts, Shutter Guards, Striders and Mortar Carts, with six behavioral variants. New equipment uses the same upgrade system, pictured rewards and actual-art Logbook; your first run still starts with the pistol. [Release notes, unlock requirements and play links](docs/releases/5.0.0.md).
 
 **Training Drills — version 4.16.0.** Revealed support masteries now have a **Try this challenge** button in the Logbook. Practice Heat Relay, Overkill Bank and Scrap Armor in separate firing ranges with actual combat, live counters and quick retries. Your run stays paused; training grants no rewards or saved progress. [Release notes and play links](docs/releases/4.16.0.md).

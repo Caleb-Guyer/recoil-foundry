@@ -217,7 +217,9 @@ export class TripwireSystem {
         )
           return false;
         const vertices = Matter.Vertices.hull([...old, ...body.vertices] as Matter.Vertex[]);
-        return !!firstSolid(a.pos, b.pos, { x: 1, y: 1 }, [{ ...body, vertices }]);
+        return !!firstSolid(a.pos, b.pos, { x: 1, y: 1 }, [
+          { ...body, vertices, bounds: Matter.Bounds.create(vertices) },
+        ]);
       });
       if (blocked || !this.valid(a) || !this.valid(b) || !this.clear(a.pos, b.pos)) {
         this.wires = this.wires.filter((w) => w !== wire);
