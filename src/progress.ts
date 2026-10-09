@@ -1,7 +1,18 @@
-import { WEAPON_UNLOCKS_KEY, migrateWeaponUnlocks, validWeaponUnlocks } from './weapon-unlocks.ts';
+import {
+  WEAPON_UNLOCKS_KEY,
+  loadWeaponUnlocks,
+  migrateWeaponUnlocks,
+  validWeaponUnlocks,
+} from './weapon-unlocks.ts';
 import { BOSS_REMIXES_KEY, loadBossRemixes, validBossRemixes } from './boss-remix-rules.ts';
 import { RUN_REWARDS_KEY, loadRunRewards, validRunRewards } from './run-rewards.ts';
 import { GOAL_RUN_KEY, loadGoalRun, validGoalRun } from './goal-run.ts';
+import {
+  TRACKED_GOAL_KEY,
+  loadTrackedGoal,
+  validTrackedGoal,
+  trackedGoal,
+} from './tracked-goal.ts';
 import { loadCheckpoint } from './rules.ts';
 import {
   UPRISING_RECORDS_KEY,
@@ -54,6 +65,7 @@ export const PROGRESS_KEYS = [
   WEAPON_UNLOCKS_KEY,
   RUN_REWARDS_KEY,
   GOAL_RUN_KEY,
+  TRACKED_GOAL_KEY,
   UPRISING_RECORDS_KEY,
   CHECKPOINT_KEY,
   DISCOVERIES_KEY,
@@ -137,7 +149,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
   const victories = loadEncounters(read(VICTORIES_KEY));
   const history = loadRunHistory(read(RUN_HISTORY_KEY));
   const book = migrateLogbook(read(LOGBOOK_KEY), checkpoint, history, victories);
-  return {
+  const values: ProgressValues = {
     [WEAPON_UNLOCKS_KEY]: migrateWeaponUnlocks(
       read(WEAPON_UNLOCKS_KEY),
       checkpoint,
@@ -150,6 +162,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [BOSS_REMIXES_KEY]: loadBossRemixes(read(BOSS_REMIXES_KEY)),
     [RUN_REWARDS_KEY]: loadRunRewards(read(RUN_REWARDS_KEY)),
     [GOAL_RUN_KEY]: loadGoalRun(read(GOAL_RUN_KEY)),
+    [TRACKED_GOAL_KEY]: loadTrackedGoal(read(TRACKED_GOAL_KEY)),
     [CHECKPOINT_KEY]: checkpoint,
     [UPRISING_RECORDS_KEY]: loadUprisingRecords(read(UPRISING_RECORDS_KEY)),
     [DISCOVERIES_KEY]: discovered,
@@ -188,6 +201,23 @@ function normalize(read: (key: string) => unknown): ProgressValues {
         history.some((r) => r.outcome === 'won'),
     ),
   };
+  if (
+    !trackedGoal(
+      {
+        weapons: loadWeaponUnlocks(values[WEAPON_UNLOCKS_KEY]),
+        security: loadSecurityProfile(values[SECURITY_KEY]),
+        book: loadLogbook(values[LOGBOOK_KEY]),
+        earned,
+        victories: victories.map((v) => v.kind),
+        discovered,
+        revealed: migrateArchive(values[ARCHIVE_KEY], discovered, book, earned).encountered,
+        milestones: values[MILESTONES_KEY],
+      },
+      values[TRACKED_GOAL_KEY],
+    )
+  )
+    values[TRACKED_GOAL_KEY] = null;
+  return values;
 }
 export function validateProgress(raw: unknown): ProgressValues | null {
   try {
@@ -201,6 +231,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           k === WEAPON_UNLOCKS_KEY ||
           k === RUN_REWARDS_KEY ||
           k === GOAL_RUN_KEY ||
+          k === TRACKED_GOAL_KEY ||
           k === UPRISING_RECORDS_KEY ||
           k === BLUEPRINTS_KEY ||
           k === PRACTICE_RECORDS_KEY ||
@@ -223,6 +254,8 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       return null;
     if (Object.hasOwn(raw, RUN_REWARDS_KEY) && !validRunRewards(raw[RUN_REWARDS_KEY])) return null;
     if (Object.hasOwn(raw, GOAL_RUN_KEY) && !validGoalRun(raw[GOAL_RUN_KEY])) return null;
+    if (Object.hasOwn(raw, TRACKED_GOAL_KEY) && !validTrackedGoal(raw[TRACKED_GOAL_KEY]))
+      return null;
     const checkpoint = raw[CHECKPOINT_KEY];
     if (
       Object.hasOwn(raw, UPRISING_RECORDS_KEY) &&

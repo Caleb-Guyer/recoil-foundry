@@ -14,8 +14,10 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
-- **One next goal** on the title screen, in Pause and on results: escape first, then earned weapons, Security clears, fitting licenses, commendations and upgrade discoveries.
+- **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
+
+**Choose Your Goal — version 5.4.0.** Select **Track this** on a revealed Logbook weapon, achievement or fitting after your first Campaign clear. Your choice follows the existing goal displays, survives backup/restore, and returns to automatic suggestions when completed or untracked. An attempt already underway keeps its original goal. [Release notes and interactive previews](docs/releases/5.4.0.md).
 
 **Follow Your Goal — version 5.3.0.** Track your current goal in Pause, spot relevant hunts and upgrade choices, and see saved progress beside your rewards when the attempt ends. Goal details on the title can open the appropriate run setup. [Release notes and playtests](docs/releases/5.3.0.md).
 

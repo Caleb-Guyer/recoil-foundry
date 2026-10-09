@@ -77,7 +77,34 @@ export interface LogbookViewState {
   filter?: CatalogFilter;
   family?: string;
 }
-export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) {
+export interface LogbookGoalTrack {
+  title: string;
+  tracked: boolean;
+  nextAttempt: boolean;
+}
+export interface LogbookGoalTracking {
+  get: (entry: LogbookEntry) => LogbookGoalTrack | null;
+  toggle: (entry: LogbookEntry) => boolean;
+}
+export function logbookTrackMarkup(track?: LogbookGoalTrack | null) {
+  return track
+    ? '<div class="logbook-tracking"><button id="logbook-track-goal" class="quiet" aria-pressed="' +
+        track.tracked +
+        '">' +
+        (track.tracked ? 'Stop tracking' : 'Track this') +
+        '</button><p role="status">' +
+        (track.tracked
+          ? 'Tracked goal: ' + escapeLogbook(track.title) + '.'
+          : 'Follow this goal on the title and in your next attempt.') +
+        (track.nextAttempt ? ' This attempt keeps its original goal.' : '') +
+        '</p></div>'
+    : '';
+}
+export function logbookArticle(
+  entry: LogbookEntry,
+  mark: (mod: Mod) => string,
+  track?: LogbookGoalTrack | null,
+) {
   if (entry.state === 'unseen')
     return (
       '<div class="logbook-entry-top silhouette">' +
@@ -97,7 +124,8 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
               ? 'Explore more of the Foundry to reveal this challenge.'
               : 'Explore the Foundry to recover this document.') +
       '</p>' +
-      goalMark(entry)
+      goalMark(entry) +
+      logbookTrackMarkup(track)
     );
   return (
     '<div class="logbook-entry-top">' +
@@ -134,6 +162,7 @@ export function logbookArticle(entry: LogbookEntry, mark: (mod: Mod) => string) 
       ? '<p class="logbook-unlock"><strong>Unlock:</strong> ' + escapeLogbook(entry.unlock) + '</p>'
       : '') +
     goalMark(entry) +
+    logbookTrackMarkup(track) +
     (entry.mastery
       ? '<div class="logbook-goal"><strong>' +
         escapeLogbook(entry.mastery.label) +
@@ -204,6 +233,7 @@ export function logbookMenu(
   openEntry?: (entry: LogbookEntry) => void,
   paintRewards?: (root: HTMLElement) => void,
   drill?: (id: SupportDrillId) => void,
+  tracking?: LogbookGoalTracking,
 ) {
   const opened = new Set<string>();
   const filters: { id: CatalogFilter; name: string }[] = [
@@ -407,7 +437,7 @@ export function logbookMenu(
           ? 'Choose All to browse the records in this view.'
           : hints[state.section];
     detail.innerHTML = selected
-      ? logbookArticle(selected, mark)
+      ? logbookArticle(selected, mark, tracking?.get(selected))
       : '<div class="logbook-empty"><h3 id="logbook-entry-title">' +
         emptyHeading +
         '</h3><p>' +
@@ -416,6 +446,15 @@ export function logbookMenu(
     if (paintRewards) paintRewards(content);
     else drawArchiveImages(content);
     detail.scrollTop = 0;
+    const track = detail.querySelector<HTMLButtonElement>('#logbook-track-goal');
+    if (track && selected && tracking)
+      track.onclick = () => {
+        if (!tracking.toggle(selected)) return;
+        render();
+        detail
+          .querySelector<HTMLButtonElement>('#logbook-track-goal')
+          ?.focus({ preventScroll: true });
+      };
     const equip = detail.querySelector<HTMLButtonElement>('.commendation-equip');
     if (equip) {
       equip.hidden = !appearance;

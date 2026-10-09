@@ -8,6 +8,7 @@ export function nextGoalMenu(
   goal: NextGoal,
   back: () => void,
   action?: { label: string; select: () => void },
+  tracked?: { untrack: () => void },
 ) {
   content.innerHTML =
     '<p class="eyebrow" id="goal-category"></p><h2 id="dialog-title"></h2>' +
@@ -16,11 +17,16 @@ export function nextGoalMenu(
     '<p class="goal-optional">A suggested goal. Play at your own pace.</p>' +
     '<div class="actions">' +
     (action ? '<button id="goal-action" class="primary"></button>' : '') +
+    (tracked ? '<button id="goal-untrack" class="quiet">Use automatic goals</button>' : '') +
     '<button id="back" class="' +
     (action ? 'quiet' : 'primary') +
     '">Back</button></div>';
   content.querySelector('#goal-category')!.textContent =
-    goal.kind === 'complete' ? 'YOUR PROGRESS' : 'NEXT GOAL';
+    goal.kind === 'complete' ? 'YOUR PROGRESS' : tracked ? 'TRACKED GOAL' : 'NEXT GOAL';
+  content.querySelector('.goal-optional')!.textContent = tracked
+    ? 'Chosen in the Logbook. Complete or untrack it to return to automatic suggestions.'
+    : 'A suggested goal. Play at your own pace.';
+  if (tracked) content.querySelector<HTMLButtonElement>('#goal-untrack')!.onclick = tracked.untrack;
   content.querySelector('#dialog-title')!.textContent = goal.title;
   content.querySelector('#goal-requirement')!.textContent = goal.requirement;
   content.querySelector('#goal-how')!.textContent = goal.hint;

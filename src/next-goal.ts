@@ -4,7 +4,7 @@ import { unlockGoals, draftUnlocked, LONGEVITY_IDS, type LongevityId } from './l
 import { MODS, MOD_REQUIRES, FUSION_REQUIRES, SALVAGE_BOSSES, isSalvage } from './rules.ts';
 import { BRANCH_PARENTS } from './upgrade-branches.ts';
 import type { SecurityProfile } from './security.ts';
-import { unlockedStartingGuns, type WeaponUnlocks } from './weapon-unlocks.ts';
+import { unlockedStartingGuns, type WeaponUnlocks, type ToolLicense } from './weapon-unlocks.ts';
 import { newCampaignSeed } from './run-seed.ts';
 
 export interface GoalProgress {
@@ -14,6 +14,7 @@ export interface GoalProgress {
   earned: readonly CommendationId[];
   victories: readonly string[];
   discovered: readonly string[];
+  revealed?: readonly string[];
   milestones: unknown;
 }
 export interface NextGoal {
@@ -41,6 +42,42 @@ export function nextGoal(p: GoalProgress): NextGoal {
 export function goalById(p: GoalProgress, id: string): NextGoal | null {
   const goal = selectGoal(p, id);
   return goal.id === id && id !== 'complete' ? goal : null;
+}
+
+export function goalMeasure(id: string, p: GoalProgress) {
+  let current = 0,
+    target = 1,
+    unit = '';
+  if (id === 'campaign') current = Number(p.weapons.cleared);
+  else if (id.startsWith('weapon:')) {
+    const gun = id.slice(7);
+    current = Number(unlockedStartingGuns(p.weapons).includes(gun as ToolLicense | 'nailgun'));
+    if (gun === 'carbine') {
+      target = 2;
+      unit = 'different hunts won';
+      current = current ? 2 : HUNTS.filter((id) => p.earned.includes(id)).length;
+    }
+  } else if (id.startsWith('security:')) {
+    const level = Number(id.slice(9));
+    current = Number(
+      p.security.unlocked > level ||
+        p.security.bests.some((b) => b.level === level) ||
+        (level === 3 && p.earned.includes('redline')),
+    );
+  } else if (id.startsWith('license:')) {
+    const g = unlockGoals(p.book, p.earned, p.victories, p.milestones).find(
+      (g) => id === 'license:' + g.id,
+    );
+    if (g) {
+      current = g.current;
+      target = g.target;
+      unit = 'completed';
+    }
+  } else if (id.startsWith('commendation:'))
+    current = Number(p.earned.some((c) => id === 'commendation:' + c));
+  else if (id.startsWith('discover:')) current = Number(p.discovered.includes(id.slice(9)));
+  else if (id.startsWith('encounter:')) current = Number(p.victories.includes(id.slice(10)));
+  return { current: Math.min(target, current), target, unit, complete: current >= target };
 }
 
 function selectGoal(p: GoalProgress, target?: string): NextGoal {
@@ -143,10 +180,13 @@ function selectGoal(p: GoalProgress, target?: string): NextGoal {
         ? { progress: { current: locked.current, target: locked.target, unit: 'completed' } }
         : {}),
     };
+  const revealedMods = MODS.filter(
+    (m) => p.discovered.includes(m.id) || p.revealed?.includes('mod:' + m.id),
+  ).map((m) => m.id);
   const challenge = COMMENDATIONS.find(
     (c) =>
       wants('commendation:' + c.id, !p.earned.includes(c.id)) &&
-      commendationVisible(c.id, p.victories, p.earned, p.discovered),
+      commendationVisible(c.id, p.victories, p.earned, revealedMods),
   );
   if (challenge)
     return {

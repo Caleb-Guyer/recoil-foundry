@@ -167,7 +167,11 @@ progress.low::-moz-progress-bar {
 .goal-preview .title-actions,
 .goal-preview .title-settings,
 .goal-preview .title-controls,
-.goal-preview .update-link {
+.goal-preview .update-link,
+.tracking-preview .title-actions,
+.tracking-preview .title-controls,
+.tracking-preview .update-link,
+.tracking-preview .title-settings > button:not(#logbook) {
   display: none;
 }
 .next-goal:hover {
@@ -277,6 +281,15 @@ dialog.goal-dialog {
   color: #eed4a0;
   font-size: 12px;
   margin-top: 8px;
+}
+.logbook-tracking {
+  margin: 16px 0;
+}
+.logbook-tracking p {
+  color: #b4c0b8;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 6px 0 0;
 }
 .update-link {
   display: inline-flex;

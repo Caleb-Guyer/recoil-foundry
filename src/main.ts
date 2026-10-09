@@ -203,7 +203,7 @@ import {
 import { controllerPortalTarget } from './controller-target.ts';
 import { musicScene } from './music-score.ts';
 import { ProgressStore, PROGRESS_KEY, CHECKPOINT_KEY, mergeDailyRecords } from './progress.ts';
-import { nextGoal, goalById, type GoalProgress } from './next-goal.ts';
+import { goalById, type GoalProgress } from './next-goal.ts';
 import {
   GOAL_RUN_KEY,
   beginGoalRun,
@@ -225,6 +225,14 @@ import {
 } from './goal-run-test.ts';
 import { goalProgressLabel, nextGoalMenu } from './next-goal-menu.ts';
 import { goalPreviewFromUrl, goalPreviewProgress } from './next-goal-preview.ts';
+import {
+  TRACKED_GOAL_KEY,
+  trackedGoal,
+  selectedGoal,
+  logbookGoal,
+  type TrackedGoal,
+} from './tracked-goal.ts';
+import { trackingPreviewFromUrl, trackingPreviewProgress } from './tracked-goal-preview.ts';
 import { progressMenu } from './progress-menu.ts';
 import { newCampaignSeed, retrySeed } from './run-seed.ts';
 import {
@@ -492,7 +500,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Follow Your Goal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Choose Your Goal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -592,6 +600,19 @@ const input: Input = {
 };
 const entryUrl = new URL(location.href);
 const linkedGoalPreview = goalPreviewFromUrl(entryUrl);
+const linkedTrackingPreview = trackingPreviewFromUrl(entryUrl);
+let previewTrackedGoal: TrackedGoal | null = null;
+if (linkedTrackingPreview) {
+  logbookView.section = linkedTrackingPreview === 'achievements' ? 'commendations' : 'equipment';
+  logbookView.selected =
+    linkedTrackingPreview === 'tools'
+      ? 'gun:repeater'
+      : linkedTrackingPreview === 'achievements'
+        ? 'commendation:air-traffic'
+        : linkedTrackingPreview === 'upgrades'
+          ? 'mod:heat-relay'
+          : 'tool';
+}
 const linkedDrill = supportDrillFromUrl(entryUrl);
 const linkedGauntletPreview = gauntletPreviewFromUrl(entryUrl);
 let linkedTrial = trialFromUrl(entryUrl);
@@ -1072,12 +1093,13 @@ function updateTitle() {
     /\bR to /g,
     bindingLabel(bindings, 'retry') + ' to ',
   );
-  if (linkedGoalPreview) {
-    $('title-screen').classList.add('goal-preview');
+  if (linkedGoalPreview || linkedTrackingPreview) {
+    $('title-screen').classList.add(linkedTrackingPreview ? 'tracking-preview' : 'goal-preview');
     $('security').hidden = true;
     $('play').textContent = 'Return to game ↗';
-    $('title-hint').textContent =
-      'Title preview · ' + linkedGoalPreview + ' profile · Your save stays untouched.';
+    $('title-hint').textContent = linkedTrackingPreview
+      ? 'Goal tracking preview · Open Logbook to choose. Your save stays untouched.'
+      : 'Title preview · ' + linkedGoalPreview + ' profile · Your save stays untouched.';
   }
   if (linkedGoalRunPreview && linkedRunTest?.seed.startsWith('GOAL-RUN-')) {
     $('play').textContent = 'Preview goal ' + linkedGoalRunPreview;
@@ -1100,13 +1122,41 @@ function currentGoalProgress(): GoalProgress {
     earned: loadCommendations(read(COMMENDATIONS_KEY)),
     victories: loadEncounters(read(VICTORIES_KEY)).map((e) => e.kind),
     discovered: loadDiscoveries(read(DISCOVERIES_KEY)),
+    revealed: loadArchive(read(ARCHIVE_KEY)).encountered,
     milestones: read(MILESTONES_KEY),
   };
 }
+function titleGoalProgress() {
+  return linkedTrackingPreview
+    ? trackingPreviewProgress(linkedTrackingPreview)
+    : linkedGoalPreview
+      ? goalPreviewProgress(linkedGoalPreview)
+      : currentGoalProgress();
+}
+function goalPreference() {
+  return linkedTrackingPreview ? previewTrackedGoal : read(TRACKED_GOAL_KEY);
+}
 function currentNextGoal() {
-  return nextGoal(
-    linkedGoalPreview ? goalPreviewProgress(linkedGoalPreview) : currentGoalProgress(),
+  return selectedGoal(titleGoalProgress(), linkedGoalPreview ? null : goalPreference());
+}
+function canChooseGoal() {
+  return (
+    !!linkedTrackingPreview ||
+    !(previewLogbook || previewCommendations || drillPreview || linkedGoalPreview || game.testRun)
   );
+}
+function setGoalPreference(value: TrackedGoal | null) {
+  if (linkedTrackingPreview) previewTrackedGoal = value;
+  else {
+    progress.checkExternal();
+    if (progress.blocked) {
+      openProgress();
+      return false;
+    }
+    write(TRACKED_GOAL_KEY, value);
+  }
+  updateNextGoal();
+  return true;
 }
 function runGoalAvailable() {
   if (!activeGoalRun || game.mode === 'title') return false;
@@ -1152,7 +1202,7 @@ function resetRunGoal() {
 function beginOptionalGoal(scope: string, allowed: readonly string[]) {
   resetRunGoal();
   const p = currentGoalProgress();
-  const goal = beginGoalRun('GOAL-' + scope, p);
+  const goal = beginGoalRun('GOAL-' + scope, p, undefined, false, read(TRACKED_GOAL_KEY));
   if (goal && allowed.includes(goal.id)) activeGoalRun = goal;
   activeGoalScope = scope;
   goalRunProfile = p;
@@ -1197,7 +1247,7 @@ function insertGoalResult() {
     );
 }
 function chooseGoalAction(action: GoalAction) {
-  if (game.mode !== 'title' || linkedGoalPreview) return;
+  if (game.mode !== 'title' || linkedGoalPreview || linkedTrackingPreview) return;
   if (action.kind === 'gauntlet') {
     gauntletMenuParent = 'next-goal';
     showDialog('gauntlet-setup');
@@ -1226,6 +1276,7 @@ function updateNextGoal() {
   const button = $('next-goal');
   button.hidden =
     !linkedGoalPreview &&
+    !linkedTrackingPreview &&
     !!(
       linkedDaily ||
       invalidDailyLink ||
@@ -1241,11 +1292,16 @@ function updateNextGoal() {
       linkedDrill ||
       previewLogbook ||
       previewCommendations ||
-      entryUrl.searchParams.get('test') === 'next-goal'
+      ['next-goal', 'track-goal'].includes(entryUrl.searchParams.get('test') ?? '')
     );
   if (button.hidden) return;
   const goal = currentNextGoal();
-  $('next-goal-label').textContent = goal.kind === 'complete' ? 'Your progress' : 'Next goal';
+  $('next-goal-label').textContent =
+    goal.kind === 'complete'
+      ? 'Your progress'
+      : !linkedGoalPreview && trackedGoal(titleGoalProgress(), goalPreference())
+        ? 'Tracked goal'
+        : 'Next goal';
   $('next-goal-title').textContent = goal.title;
   $('next-goal-summary').textContent = goal.summary;
   $('next-goal-count').hidden = !goal.progress;
@@ -1525,7 +1581,13 @@ function start(
   resetRunGoal();
   activeGoalScope = 'campaign';
   goalRunProfile = currentGoalProgress();
-  activeGoalRun = beginGoalRun(seed, goalRunProfile, read(GOAL_RUN_KEY), !!save);
+  activeGoalRun = beginGoalRun(
+    seed,
+    goalRunProfile,
+    read(GOAL_RUN_KEY),
+    !!save,
+    read(TRACKED_GOAL_KEY),
+  );
   // Daily has its own fixed challenge; Campaign suggestions can require absent
   // hunts, licensed fittings or another mode, so keep its goal card out of Daily.
   if (activeDaily) activeGoalRun = null;
@@ -2556,13 +2618,13 @@ function showDialog(kind: string) {
         )
       : commendations;
   if (kind === 'next-goal') {
-    const p = currentGoalProgress();
+    const p = game.mode === 'title' ? titleGoalProgress() : currentGoalProgress();
     const goal =
       goalParent === 'pause' && activeGoalRun
         ? (goalById(p, activeGoalRun.id) ?? currentNextGoal())
         : currentNextGoal();
     const action =
-      game.mode === 'title' && !linkedGoalPreview
+      game.mode === 'title' && !linkedGoalPreview && !linkedTrackingPreview
         ? goalAction(
             goal,
             p,
@@ -2575,6 +2637,16 @@ function showDialog(kind: string) {
       goal,
       backFromGoal,
       action ? { label: action.label, select: () => chooseGoalAction(action) } : undefined,
+      game.mode === 'title' && !linkedGoalPreview && trackedGoal(p, goalPreference())
+        ? {
+            untrack: () => {
+              if (setGoalPreference(null)) {
+                showDialog('next-goal');
+                $('back').focus({ preventScroll: true });
+              }
+            },
+          }
+        : undefined,
     );
   } else if (kind === 'support-drill') {
     supportDrill = new SupportDrillView(content, selectedDrill, bindings, backFromDrill, (kind) =>
@@ -2635,11 +2707,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE PROGRESSION UPDATE</p><h2 id="dialog-title">Follow your goal.</h2>' +
-      '<p class="update-tagline">A clear next step, through the whole attempt.</p>' +
-      '<dl class="update-notes"><div><dt>Keep it in view.</dt><dd>Pause shows your current goal and progress. Open it for the requirement and reward; Continue keeps the goal you started with.</dd></div>' +
-      '<div><dt>Spot an opportunity.</dt><dd>A brief hint marks a nearby hunt that counts. Upgrade choices highlight your target or a useful prerequisite, without changing the choices.</dd></div>' +
-      '<div><dt>See what you kept.</dt><dd>Results show goal progress beside your pictured rewards, including newly collected upgrades after a loss. On the title, goal details can take you to the right run setup.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE PROGRESSION UPDATE</p><h2 id="dialog-title">Choose your goal.</h2>' +
+      '<p class="update-tagline">Work toward the reward you want next.</p>' +
+      '<dl class="update-notes"><div><dt>Pick it in the Logbook.</dt><dd>After your first Campaign victory, select Track this on a revealed weapon, achievement or fitting. Unknown records keep their secrets.</dd></div>' +
+      '<div><dt>Follow one clear target.</dt><dd>Your choice uses the existing title card, Pause progress, hunt and upgrade hints, and results. Goal details can open the right run setup.</dd></div>' +
+      '<div><dt>Keep control.</dt><dd>Complete or stop tracking to return to automatic suggestions. Choosing during a run applies to your next attempt; Continue keeps the goal you started with.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2676,54 +2748,110 @@ function showDialog(kind: string) {
     logbookProgress = mergeLogbook(logbookProgress, loadLogbook(read(LOGBOOK_KEY)));
     logbookMenu(
       content,
-      previewLogbook
-        ? logbookPreviewEntries()
-        : logbookCatalog(
-            drillPreview
-              ? [...discovered, ...SUPPORT_DRILLS[selectedDrill].mods]
-              : game.testRun?.seed.startsWith('SUPPORT-4.13-') || masteryRewardPreview
-                ? [...discovered, ...game.mods]
-                : discovered,
-            game.mode !== 'title' &&
-              game.testRun &&
-              (game.story.state?.recovered || game.testRun.shutdown)
-              ? mergeLogbook(logbookProgress, {
-                  version: 1,
-                  enemies: [],
-                  areas: [],
-                  escaped: false,
-                  stories: game.story.state?.recovered ? [game.story.state.kind] : [],
-                  disconnects: game.shutdown.state?.disabled ?? [],
-                  ...(game.mode === 'won' && game.shutdown.complete
-                    ? { shutdown: true as const }
-                    : {}),
-                })
-              : logbookProgress,
-            visibleCommendations,
-            read(ARCHIVE_KEY),
-            currentGoals(),
-            read(UPRISING_RECORDS_KEY),
-            weaponUnlocks(),
-            read(RECOIL_TRIALS_KEY),
-            currentMasteryAttempt(),
-          ),
+      linkedTrackingPreview
+        ? (() => {
+            const p = titleGoalProgress();
+            return logbookCatalog(
+              p.discovered,
+              p.book,
+              p.earned,
+              { version: 1, encountered: p.revealed, read: [] },
+              unlockGoals(p.book, p.earned, p.victories, p.milestones),
+              null,
+              p.weapons,
+            );
+          })()
+        : previewLogbook
+          ? logbookPreviewEntries()
+          : logbookCatalog(
+              drillPreview
+                ? [...discovered, ...SUPPORT_DRILLS[selectedDrill].mods]
+                : game.testRun?.seed.startsWith('SUPPORT-4.13-') || masteryRewardPreview
+                  ? [...discovered, ...game.mods]
+                  : discovered,
+              game.mode !== 'title' &&
+                game.testRun &&
+                (game.story.state?.recovered || game.testRun.shutdown)
+                ? mergeLogbook(logbookProgress, {
+                    version: 1,
+                    enemies: [],
+                    areas: [],
+                    escaped: false,
+                    stories: game.story.state?.recovered ? [game.story.state.kind] : [],
+                    disconnects: game.shutdown.state?.disabled ?? [],
+                    ...(game.mode === 'won' && game.shutdown.complete
+                      ? { shutdown: true as const }
+                      : {}),
+                  })
+                : logbookProgress,
+              visibleCommendations,
+              read(ARCHIVE_KEY),
+              currentGoals(),
+              read(UPRISING_RECORDS_KEY),
+              weaponUnlocks(),
+              read(RECOIL_TRIALS_KEY),
+              currentMasteryAttempt(),
+            ),
       logbookView,
       modMark,
       backFromLogbook,
-      previewLogbook || previewCommendations || masteryRewardPreview || drillPreview,
-      () => {
-        logbookFromWorkshop = false;
-        showDialog('workshop');
-        content.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
-      },
+      !!linkedTrackingPreview ||
+        previewLogbook ||
+        previewCommendations ||
+        masteryRewardPreview ||
+        drillPreview,
+      linkedTrackingPreview
+        ? undefined
+        : () => {
+            logbookFromWorkshop = false;
+            showDialog('workshop');
+            content.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
+          },
       (entry) => {
-        if (previewLogbook || previewCommendations || game.testRun || drillPreview) return;
+        if (
+          linkedTrackingPreview ||
+          previewLogbook ||
+          previewCommendations ||
+          game.testRun ||
+          drillPreview
+        )
+          return;
         write(ARCHIVE_KEY, acknowledgeArchiveEntry(read(ARCHIVE_KEY), entry));
         updateLogbookBadge();
       },
       (root) => drawRewardImages(root, game),
-      openSupportDrill,
+      linkedTrackingPreview ? undefined : openSupportDrill,
+      canChooseGoal()
+        ? {
+            get: (entry) => {
+              const p = linkedTrackingPreview ? titleGoalProgress() : currentGoalProgress();
+              const goal = logbookGoal(entry, p);
+              return goal
+                ? {
+                    title: goal.title,
+                    tracked: trackedGoal(p, goalPreference())?.id === goal.id,
+                    nextAttempt: game.mode !== 'title',
+                  }
+                : null;
+            },
+            toggle: (entry) => {
+              const p = linkedTrackingPreview ? titleGoalProgress() : currentGoalProgress();
+              const goal = logbookGoal(entry, p);
+              return (
+                !!goal &&
+                setGoalPreference(
+                  trackedGoal(p, goalPreference())?.id === goal.id
+                    ? null
+                    : { version: 1, id: goal.id },
+                )
+              );
+            },
+          }
+        : undefined,
     );
+    if (linkedTrackingPreview)
+      content.querySelector('.logbook-preview')!.textContent =
+        'Goal tracking preview · Choices stay in this preview. Your save stays untouched.';
   } else if (kind === 'replay' && deathReplay.ready) {
     replayView = new ReplayView(deathReplay, content);
     $('retry').onclick = () => start(undefined, true);
@@ -4146,7 +4274,7 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedGoalPreview
+  linkedGoalPreview || linkedTrackingPreview
     ? location.assign(new URL('./', location.href).href)
     : linkedDrill
       ? startLinkedSupportDrill(linkedDrill)
