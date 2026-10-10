@@ -10,6 +10,7 @@ import { LONGEVITY_IDS } from './longevity.ts';
 import { STARTING_GUN_IDS } from './starting-guns.ts';
 import { MACHINE_VARIANT_IDS } from './patrol-machines.ts';
 import { TOOLROOM_ROOM_IDS } from './toolroom-layouts.ts';
+import { REMIX_IDS } from './boss-remix-rules.ts';
 
 export const ARCHIVE_KEY = 'rf-archive-v1';
 export const VARIANT_IDS = [
@@ -40,6 +41,7 @@ const ids = [
   'uprising:uprising-veteran:unlocked',
   ...VARIANT_IDS,
   ...TOOLROOM_ROOM_IDS.map((id) => 'room:' + id),
+  ...REMIX_IDS.map((id) => 'remix:' + id),
   ...RECORDS.map((r) => 'record:' + r.id),
   ...COMMENDATIONS.flatMap((c) => ['commendation:' + c.id, 'commendation:' + c.id + ':earned']),
 ];

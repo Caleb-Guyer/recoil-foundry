@@ -186,7 +186,7 @@ function selectGoal(p: GoalProgress, target?: string): NextGoal {
   const challenge = COMMENDATIONS.find(
     (c) =>
       wants('commendation:' + c.id, !p.earned.includes(c.id)) &&
-      commendationVisible(c.id, p.victories, p.earned, revealedMods),
+      commendationVisible(c.id, p.victories, p.earned, revealedMods, p.revealed),
   );
   if (challenge)
     return {
@@ -195,9 +195,12 @@ function selectGoal(p: GoalProgress, target?: string): NextGoal {
       title: 'Earn ' + challenge.name,
       summary: challenge.objective,
       requirement: challenge.objective,
-      hint: CERTIFICATIONS.includes(challenge.id)
-        ? 'Clear this optional course in Campaign to unlock it in Practice → Recoil Trials. You can earn the certificate in Campaign or on a normal Practice attempt.'
-        : 'Earn this in Campaign or Daily unless the requirement names a specific mode. Isolated playtests and Workshop do not award commendations.',
+      hint:
+        'remix' in challenge
+          ? 'Find this arena in a fresh Campaign after your first victory. New runs choose one arena for each boss. Practice rematches help you learn the fight; earn this reward in Campaign.'
+          : CERTIFICATIONS.includes(challenge.id)
+            ? 'Clear this optional course in Campaign to unlock it in Practice → Recoil Trials. You can earn the certificate in Campaign or on a normal Practice attempt.'
+            : 'Earn this in Campaign or Daily unless the requirement names a specific mode. Isolated playtests and Workshop do not award commendations.',
       reward: challenge.reward + ' · ' + challenge.slot,
     };
   const unlocked = licenses.filter((g) => g.unlocked).map((g) => g.id);

@@ -106,7 +106,7 @@ export function drawReclamationEnemy(
     for (const offset of flying
       ? [-0.22, 0, 0.22]
       : boss
-        ? sorterFan(e).map((a) => a - angle)
+        ? sorterFan(e, g.level.bossRemix).map((a) => a - angle)
         : [0]) {
       const end = g.lineEnd(p, {
         x: p.x + Math.cos(angle + offset) * length,

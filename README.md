@@ -17,6 +17,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Late Shift — version 5.5.0.** Four new late boss arenas add conveyor sorting lanes, magnetic scrap, rooftop lifts and staggered crossfire. Discover their real photographs and Practice rematches, then earn four cosmetics through clean Campaign victories and track their achievements as your next goal. [Release notes and four playtests](docs/releases/5.5.0.md).
+
 **Choose Your Goal — version 5.4.0.** Select **Track this** on a revealed Logbook weapon, achievement or fitting after your first Campaign clear. Your choice follows the existing goal displays, survives backup/restore, and returns to automatic suggestions when completed or untracked. An attempt already underway keeps its original goal. [Release notes and interactive previews](docs/releases/5.4.0.md).
 
 **Follow Your Goal — version 5.3.0.** Track your current goal in Pause, spot relevant hunts and upgrade choices, and see saved progress beside your rewards when the attempt ends. Goal details on the title can open the appropriate run setup. [Release notes and playtests](docs/releases/5.3.0.md).

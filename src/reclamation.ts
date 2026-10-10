@@ -3,6 +3,8 @@ import type { Game, Enemy } from './game.ts';
 import { clamp, direction, distance } from './rules.ts';
 import { bossPhase } from './enemies.ts';
 import { bossHasLane, bossHuntTarget, huntBoss } from './boss-hunt.ts';
+import { sorterRemixLanes, sorterRemixAttack } from './late-boss-patterns.ts';
+import type { BossRemixId } from './boss-remix-rules.ts';
 
 const { Body } = Matter;
 export const SORTER_TELL = 1.15;
@@ -13,8 +15,13 @@ export interface SorterRig {
   pulse: number;
 }
 export const createSorter = (): SorterRig => ({ lanes: [], pulse: 0 });
-export function sorterFan(e: Enemy) {
+export function sorterFan(e: Enemy, remix?: BossRemixId) {
   const base = Math.atan2(e.aim.y, e.aim.x);
+  if (remix === 'sorter-magnetic-return')
+    return (
+      e.phase === 0 ? [-0.36, -0.18, 0.18, 0.36] : [-0.54, -0.36, -0.18, 0.18, 0.36, 0.54]
+    ).map((a) => base + a);
+  if (remix === 'sorter-beltline') return [-0.48, -0.24, 0, 0.24, 0.48].map((a) => base + a);
   return (e.phase === 0 ? [-0.27, 0, 0.27] : [-0.44, -0.22, 0, 0.22, 0.44]).map((a) => base + a);
 }
 
@@ -113,10 +120,7 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
     Body.setVelocity(e.body, { x: e.body.velocity.x * 0.7, y: e.body.velocity.y * 0.7 });
     if (e.attack === 'slam') {
       if (e.timer > SORTER_LOCK) {
-        const x = clamp(g.player.position.x, 60, 1940);
-        rig.lanes = [x];
-        if (e.phase >= 1) rig.lanes.push(clamp(x + (x < 1000 ? 420 : -420), 60, 1940));
-        if (e.phase >= 2) rig.lanes.push(clamp(x + (x < 1000 ? 840 : -840), 60, 1940));
+        rig.lanes = sorterRemixLanes(g.level.bossRemix, g.player.position.x, e.phase);
       }
       if (e.timer <= 0) {
         rig.pulse = 0.22;
@@ -143,7 +147,7 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
     } else {
       if (e.timer > 0.5) e.aim = direction(p, g.player.position);
       if (e.timer <= 0) {
-        for (const angle of sorterFan(e)) g.enemyShot(e, angle, 10.8, 22);
+        for (const angle of sorterFan(e, g.level.bossRemix)) g.enemyShot(e, angle, 10.8, 22);
         e.state = 'recover';
         e.timer = 1.15;
         e.attacks++;
@@ -166,14 +170,15 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
   if (e.timer <= 0) {
     // The field attack reaches camped corners and elevated players. Gunfire
     // still respects cover, with navigation finding a real firing opening.
-    e.attack =
-      e.attacks % 2 === 0 || !bossHasLane(g, e) || distance(p, g.player.position) < 260
-        ? 'slam'
-        : 'fan';
+    e.attack = !bossHasLane(g, e)
+      ? 'slam'
+      : (sorterRemixAttack(g.level.bossRemix, e.attacks) ??
+        (e.attacks % 2 === 0 || distance(p, g.player.position) < 260 ? 'slam' : 'fan'));
     e.state = 'windup';
     e.timer = e.attack === 'slam' ? SORTER_TELL : 0.95;
     e.aim = direction(p, g.player.position);
-    rig.lanes = e.attack === 'slam' ? [clamp(g.player.position.x, 60, 1940)] : [];
+    rig.lanes =
+      e.attack === 'slam' ? sorterRemixLanes(g.level.bossRemix, g.player.position.x, e.phase) : [];
     g.onSound('lock');
   }
 }

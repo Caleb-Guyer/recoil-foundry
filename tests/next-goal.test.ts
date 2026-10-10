@@ -97,6 +97,7 @@ test('revealed achievements use their actual objective and cosmetic reward', () 
   for (const c of COMMENDATIONS) {
     const p = finished();
     p.earned = p.earned.filter((id) => id !== c.id);
+    if ('remix' in c) p.revealed = [...(p.revealed ?? []), 'remix:' + c.remix];
     // Air Traffic also owns the Static Reservoir license.
     if (c.id === 'air-traffic') {
       assert.equal(nextGoal(p).id, 'license:static-reservoir');

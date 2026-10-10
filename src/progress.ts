@@ -171,9 +171,9 @@ function normalize(read: (key: string) => unknown): ProgressValues {
     [COSMETICS_KEY]: loadCosmetics(read(COSMETICS_KEY), earned),
     [APPEARANCE_SEEN_KEY]: loadSeenAppearances(read(APPEARANCE_SEEN_KEY), earned),
     [APPEARANCE_ITEMS_SEEN_KEY]: loadSeenAppearanceItems(read(APPEARANCE_ITEMS_SEEN_KEY), earned),
-    [ARCHIVE_KEY]: encounterArchive(
-      migrateArchive(read(ARCHIVE_KEY), discovered, book, earned),
-      unlockGoals(
+    [ARCHIVE_KEY]: encounterArchive(migrateArchive(read(ARCHIVE_KEY), discovered, book, earned), [
+      ...loadBossRemixes(read(BOSS_REMIXES_KEY)).seen.map((id) => 'remix:' + id),
+      ...unlockGoals(
         book,
         earned,
         victories.map((v) => v.kind),
@@ -181,7 +181,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
       )
         .filter((g) => g.unlocked)
         .map((g) => 'mod:' + g.id + ':unlocked'),
-    ),
+    ]),
     [MILESTONES_KEY]: loadMilestones(read(MILESTONES_KEY)),
     [VICTORIES_KEY]: victories,
     [RUN_HISTORY_KEY]: history,

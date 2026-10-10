@@ -259,6 +259,7 @@ import type { Checkpoint, Mod } from './rules.ts';
 import {
   VICTORIES_KEY,
   PRACTICE_BOSSES,
+  practiceStage,
   loadEncounters,
   testEncounterFromUrl,
   expandedTestFromUrl,
@@ -500,7 +501,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Choose Your Goal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Late Shift</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -2223,7 +2224,10 @@ function updateArchive(ids: readonly string[] = []) {
       until: null,
       stage: game.stage,
     };
-  const entries = logbookEntries(discovered, logbookProgress, commendations);
+  const entries = logbookEntries(discovered, logbookProgress, commendations, [
+    ...loadArchive(before).encountered,
+    ...ids,
+  ]);
   const next = encounterArchive(before, [
     ...entries.map(archiveToken),
     ...ids,
@@ -2274,6 +2278,14 @@ function currentMasteryAttempt(): SupportMasteryAttempt | undefined {
   if (game.mode === 'title' && checkpoint?.combatResults)
     return { results: checkpoint.combatResults, label: 'Continue attempt' };
 }
+function displayedArchive() {
+  const archive = loadArchive(read(ARCHIVE_KEY));
+  // Playing a linked arena can show its photograph and challenge without
+  // recording a Campaign discovery or granting any reward.
+  return game.testRun?.bossRemix
+    ? encounterArchive(archive, ['remix:' + game.testRun.bossRemix])
+    : archive;
+}
 function updateLogbookBadge() {
   const unread = logbookCatalog(
     discovered,
@@ -2315,7 +2327,10 @@ game.onEnemyEncountered = (enemy) => {
     if (!progress.blocked && game.level.bossRemix) {
       const before = loadBossRemixes(read(BOSS_REMIXES_KEY)),
         next = recordBossRemix(before, game, weaponUnlocks().cleared);
-      if (JSON.stringify(before) !== JSON.stringify(next)) write(BOSS_REMIXES_KEY, next);
+      if (JSON.stringify(before) !== JSON.stringify(next)) {
+        write(BOSS_REMIXES_KEY, next);
+        updateArchive(['remix:' + game.level.bossRemix]);
+      }
     }
   }
 };
@@ -2707,11 +2722,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE PROGRESSION UPDATE</p><h2 id="dialog-title">Choose your goal.</h2>' +
-      '<p class="update-tagline">Work toward the reward you want next.</p>' +
-      '<dl class="update-notes"><div><dt>Pick it in the Logbook.</dt><dd>After your first Campaign victory, select Track this on a revealed weapon, achievement or fitting. Unknown records keep their secrets.</dd></div>' +
-      '<div><dt>Follow one clear target.</dt><dd>Your choice uses the existing title card, Pause progress, hunt and upgrade hints, and results. Goal details can open the right run setup.</dd></div>' +
-      '<div><dt>Keep control.</dt><dd>Complete or stop tracking to return to automatic suggestions. Choosing during a run applies to your next attempt; Continue keeps the goal you started with.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE BOSS UPDATE</p><h2 id="dialog-title">Late Shift.</h2>' +
+      '<p class="update-tagline">Four new ways to finish the factory.</p>' +
+      '<dl class="update-notes"><div><dt>Two new sorting floors.</dt><dd>After your first Campaign victory, new runs can reach Beltline’s moving feed belts or Magnetic Return’s scrap lifts. Each Sorter fight has a different sequence and clear attack warnings.</dd></div>' +
+      '<div><dt>Command changes its orders.</dt><dd>Skybridge connects upper decks with transfer lifts. Crossfire shifts the gaps between paired volleys. Your Factory Uprising choices still change the final defense.</dd></div>' +
+      '<div><dt>Master what you discover.</dt><dd>Find actual arena photographs in the Logbook and rematches in Practice. A Campaign victory without damage earns each arena’s own cosmetic; track its revealed achievement as your next goal.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2785,7 +2800,7 @@ function showDialog(kind: string) {
                   })
                 : logbookProgress,
               visibleCommendations,
-              read(ARCHIVE_KEY),
+              displayedArchive(),
               currentGoals(),
               read(UPRISING_RECORDS_KEY),
               weaponUnlocks(),
@@ -2799,6 +2814,7 @@ function showDialog(kind: string) {
         previewLogbook ||
         previewCommendations ||
         masteryRewardPreview ||
+        !!game.testRun?.bossRemix ||
         drillPreview,
       linkedTrackingPreview
         ? undefined
@@ -2901,6 +2917,7 @@ function showDialog(kind: string) {
         earned: visibleCommendations,
         defeated: logbookProgress.enemies,
         discovered,
+        revealed: displayedArchive().encountered,
         preview: previewCommendations || masteryRewardPreview,
         unseen:
           previewCommendations || game.testRun
@@ -3177,7 +3194,7 @@ function showDialog(kind: string) {
       {
         title: 'Practice build.',
         note: PRACTICE_BOSSES[encounter.kind].name + ' · Collected upgrades only.',
-        limit: PRACTICE_BOSSES[encounter.kind].stage,
+        limit: practiceStage(encounter),
         applyLabel: 'Start fight ↗',
         blueprints: blueprintStore,
         change: (mods) => {

@@ -1,6 +1,7 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
+import { commandRemix, commandRemixAttack, commandRemixAngles } from './late-boss-patterns.ts';
 import { TeamworkSystem, createSupport, isSupport, SUPPORT, type SupportRig } from './teamwork.ts';
 import { teamworkLevel } from './teamwork-layout.ts';
 import { ToolroomSystem, type ToolroomShot } from './toolroom-system.ts';
@@ -156,7 +157,6 @@ import {
   bossPhase,
   bossAttack,
   attackTell,
-  attackAngles,
 } from './enemies.ts';
 import type { EnemyState, Attack, EliteKind } from './enemies.ts';
 import { PropSystem, traceProp } from './props.ts';
@@ -1278,6 +1278,9 @@ export class Game {
         this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
     }
     this.level = this.uprising.level(this.level);
+    // The final Uprising defense authors its own arena. New final remixes are
+    // applied after that choice so its boss identity is retained.
+    if (this.stage === 19) this.level = bossRemixLevel(this, this.level);
     if (this.security && this.level.id.startsWith('uprising-'))
       this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
     this.level = toolroomLevel(this, this.level);
@@ -2929,28 +2932,37 @@ export class Game {
       const second = e.state === 'followup';
       if (e.timer > 0.3) e.aim = d;
       if (e.timer <= 0) {
-        for (const angle of attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)))
+        for (const angle of commandRemixAngles(this.level.bossRemix, e))
           this.enemyShot(e, angle, e.attack === 'ring' ? 7.8 : 11.2, 23);
         if (!second && e.attack !== 'ring' && this.uprising.finale !== 'mutiny') {
           e.state = 'followup';
-          e.timer = 0.7;
+          e.timer = commandRemix(this.level.bossRemix) ? 0.9 : 0.7;
           e.aim = d;
           this.onSound('lock');
         } else {
           e.attacks++;
           e.state = 'recover';
-          e.timer = [1.1, 1, 0.9][e.phase];
+          e.timer = commandRemix(this.level.bossRemix)
+            ? [1.5, 1.35, 1.2][e.phase]
+            : [1.1, 1, 0.9][e.phase];
         }
         this.onSound(e.attack === 'ring' ? 'pulse' : 'enemy');
       }
     } else if (e.timer <= 0 && bossHasLane(this, e)) {
-      e.attack = bossAttack(e.phase, e.attacks);
-      if (this.uprising.finale === 'overloaded')
+      e.attack = commandRemix(this.level.bossRemix)
+        ? commandRemixAttack(
+            this.level.bossRemix!,
+            e.phase,
+            e.attacks,
+            this.uprising.finale === 'overloaded',
+          )
+        : bossAttack(e.phase, e.attacks);
+      if (!commandRemix(this.level.bossRemix) && this.uprising.finale === 'overloaded')
         e.attack = ['fan', 'ring', 'aimed'][e.attacks % 3] as Enemy['attack'];
       if (this.uprising.finale === 'isolated' && e.attack === 'ring') e.attack = 'fan';
       e.aim = d;
       e.state = 'windup';
-      e.timer = attackTell(e.attack);
+      e.timer = attackTell(e.attack) + (commandRemix(this.level.bossRemix) ? 0.2 : 0);
       this.onSound('lock');
     }
   }

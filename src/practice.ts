@@ -32,6 +32,11 @@ export interface Encounter {
   seed: string;
   remix?: BossRemixId;
 }
+export function practiceStage(encounter: Pick<Encounter, 'kind' | 'remix'>) {
+  return encounter.remix
+    ? BOSS_REMIXES[encounter.remix].stage
+    : PRACTICE_BOSSES[encounter.kind].stage;
+}
 // The loadout belongs to this attempt, never to the persisted victory record.
 export interface PracticeSession extends Encounter {
   build?: string[];
@@ -54,8 +59,9 @@ export function practiceBuild(
   kind: PracticeBoss,
   mods: readonly string[],
   known: readonly string[],
+  remix?: BossRemixId,
 ): string[] {
-  return workshopBuild(mods, known).slice(0, PRACTICE_BOSSES[kind].stage);
+  return workshopBuild(mods, known).slice(0, practiceStage({ kind, remix }));
 }
 
 // Explicit playtest links are isolated fights, never earned Practice unlocks.
@@ -158,9 +164,9 @@ export function practiceCheckpoint(
 ): Checkpoint | null {
   const encounter = loadEncounters([record])[0];
   if (!encounter) return null;
-  const stage = PRACTICE_BOSSES[encounter.kind].stage;
+  const stage = practiceStage(encounter);
   const save = testCheckpoint(encounter.seed, stage);
-  if (mods !== null) save.mods = practiceBuild(encounter.kind, mods, known);
+  if (mods !== null) save.mods = practiceBuild(encounter.kind, mods, known, encounter.remix);
   if (loadUnlocks(save.mods).length) save.unlocks = loadUnlocks(save.mods);
   if (isHunt(encounter.kind)) return { ...save, version: 6, huntTest: encounter.kind };
   if (encounter.remix) return { ...save, version: 6, bossRemix: encounter.remix };

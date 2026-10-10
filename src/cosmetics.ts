@@ -2,6 +2,22 @@ import type { CommendationId } from './commendations.ts';
 
 export const COSMETICS_KEY = 'rf-cosmetics-v1';
 export const GUN_FINISHES = {
+  beltline: {
+    name: 'Beltline',
+    shell: '#bd9955',
+    face: '#e8ce83',
+    trim: '#394f44',
+    light: '#c0eed1',
+    unlock: 'beltline-certified',
+  },
+  lodestone: {
+    name: 'Lodestone',
+    shell: '#72518e',
+    face: '#cfb0dc',
+    trim: '#314c55',
+    light: '#b9edf1',
+    unlock: 'magnetic-certified',
+  },
   heatline: {
     name: 'Heatline',
     shell: '#8d443d',
@@ -124,6 +140,20 @@ export const GUN_FINISHES = {
   },
 } as const;
 export const OUTFITS = {
+  highrise: {
+    name: 'Highrise',
+    body: '#6089ba',
+    boots: '#3b526f',
+    trim: '#d7eee5',
+    unlock: 'skybridge-certified',
+  },
+  signalkeeper: {
+    name: 'Signalkeeper',
+    body: '#945e68',
+    boots: '#4d414e',
+    trim: '#f4ce8e',
+    unlock: 'crossfire-certified',
+  },
   patchwork: {
     name: 'Patchwork',
     body: '#7d8b69',

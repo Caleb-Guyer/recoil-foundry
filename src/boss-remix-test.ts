@@ -16,7 +16,7 @@ export function bossRemixTestFromUrl(url: URL): Checkpoint | null {
   if (
     invalid ||
     p.get('test') !== 'boss-remix' ||
-    !['loader', 'press', 'condenser'].includes(boss) ||
+    !['loader', 'press', 'condenser', 'sorter', 'boss'].includes(boss) ||
     !['1', '2'].includes(variant) ||
     !isStartingGun(gun) ||
     (p.has('v') && p.get('v') !== '1')

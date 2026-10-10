@@ -11,6 +11,12 @@ import { clamp, direction, distance } from './rules.ts';
 import { bossPhase } from './enemies.ts';
 import { bossHasLane, bossHuntTarget } from './boss-hunt.ts';
 import {
+  lateInterceptorRemix,
+  lateInterceptorMove,
+  lateInterceptorAngles,
+} from './late-boss-patterns.ts';
+import type { BossRemixId } from './boss-remix-rules.ts';
+import {
   INTERCEPTOR_WEAPONS,
   weaponAngles,
   interceptorMove,
@@ -68,11 +74,9 @@ export const interceptorLock = (e: Enemy) =>
   e.attack === 'vault' ? INTERCEPTOR_VAULT_LOCK : INTERCEPTOR_WEAPONS[e.interceptor!.move].lock;
 export const interceptorSpeed = (e: Enemy) =>
   e.attack === 'vault' ? 8 : INTERCEPTOR_WEAPONS[e.interceptor!.move].speed;
-export function interceptorAngles(e: Enemy): number[] {
+export function interceptorAngles(e: Enemy, remix?: BossRemixId): number[] {
   if (e.attack !== 'vault' && e.interceptor!.move === 'grindshot') return rivalGrindAngles(e);
-  return e.attack === 'vault'
-    ? weaponAngles('aimed', e.aim, 0)
-    : weaponAngles(e.interceptor!.move, e.aim, e.phase, e.interceptor!.caught);
+  return e.attack === 'vault' ? weaponAngles('aimed', e.aim, 0) : lateInterceptorAngles(remix, e);
 }
 export const interceptorOrigin = (e: Enemy): Vec =>
   e.interceptor!.move === 'fold' && e.attack !== 'vault' && e.interceptor!.gate
@@ -159,13 +163,15 @@ export function beginInterceptorAttack(g: Game, e: Enemy, move: InterceptorMove)
     };
   aim(g, e);
   e.state = 'windup';
-  e.timer = INTERCEPTOR_WEAPONS[rig.move].tell;
+  e.timer =
+    INTERCEPTOR_WEAPONS[rig.move].tell + (lateInterceptorRemix(g.level.bossRemix) ? 0.15 : 0);
   g.onSound('interceptor-lock');
 }
 function recover(g: Game, e: Enemy) {
   const rig = e.interceptor!;
   e.state = 'recover';
   e.timer = INTERCEPTOR_WEAPONS[rig.move].recover - (rig.move === 'heavy' ? e.phase * 0.1 : 0);
+  if (lateInterceptorRemix(g.level.bossRemix)) e.timer += 0.2;
   e.attacks++;
   rig.relocate = true;
   rig.history.push({ ...rig.origin });
@@ -224,7 +230,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       // ground. A shelf or crate can intercept the dive normally.
       rivalCharge(g, e, e.body.position, 145, 22, 0.65, true);
       e.aim = { x: 0, y: -1 };
-      fireWeapon(g, e, 'shockwave', e.body.position, interceptorAngles(e));
+      fireWeapon(g, e, 'shockwave', e.body.position, interceptorAngles(e, g.level.bossRemix));
       Matter.Body.setVelocity(e.body, { x: 0, y: -8 });
       recover(g, e);
     } else if (e.timer <= 0) recover(g, e);
@@ -278,7 +284,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       Matter.Body.setVelocity(e.body, { x: 0, y: 14 });
       return;
     }
-    const angles = interceptorAngles(e);
+    const angles = interceptorAngles(e, g.level.bossRemix);
     if (e.attack === 'vault') {
       for (const a of angles) {
         const before = g.shots.at(-1)?.id;
@@ -298,10 +304,15 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       const kick = rig.move === 'capacitor' ? 14 : e.attack === 'heavy' ? 12 : 4;
       recoil(e, { x: -e.aim.x * kick, y: -e.aim.y * kick });
       g.onSound(e.attack === 'heavy' ? 'interceptor-heavy' : 'interceptor-shot');
-      if (rig.move === 'aimed' && rig.volley < Math.max(1, e.phase)) {
+      const remix = lateInterceptorRemix(g.level.bossRemix);
+      if (
+        ((rig.move === 'aimed' && rig.volley < Math.max(1, e.phase)) ||
+          (remix && rig.move === 'crossfire' && rig.volley === 0)) &&
+        (!remix || g.uprising.finale !== 'mutiny')
+      ) {
         rig.volley++;
         e.state = 'followup';
-        e.timer = 0.78 - e.phase * 0.04;
+        e.timer = remix ? 0.95 : 0.78 - e.phase * 0.04;
         aim(g, e);
         g.onSound('interceptor-lock');
       } else {
@@ -353,6 +364,10 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
   beginInterceptorAttack(
     g,
     e,
-    g.testRun?.seed.startsWith('SAW-BOSS-53-') ? 'grindshot' : interceptorMove(e, g.seed),
+    g.testRun?.seed.startsWith('SAW-BOSS-53-')
+      ? 'grindshot'
+      : lateInterceptorRemix(g.level.bossRemix)
+        ? lateInterceptorMove(g.level.bossRemix!, e, g.uprising.finale)
+        : interceptorMove(e, g.seed),
   );
 }

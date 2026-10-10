@@ -1,4 +1,5 @@
 import { drawHuntEnemy, drawHuntProps, drawHunts } from './hunt-art.ts';
+import { commandRemixAngles } from './late-boss-patterns.ts';
 import { drawMelt } from './melt-through.ts';
 import { drawCombatImpacts, drawNail, enemyPose, playerPose, roundFeel } from './combat-feel.ts';
 import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
@@ -65,7 +66,6 @@ import {
   VOLATILE_TELL,
   VOLATILE_RADIUS,
   isBoss,
-  attackAngles,
 } from './enemies.ts';
 import { clamp, direction, distance } from './rules.ts';
 import type { Vec } from './rules.ts';
@@ -1682,7 +1682,7 @@ export class Renderer {
       this.line({ x: end.x - e.aim.x * 9, y: end.y - 6 }, end, '#f8b480', 2);
       this.line({ x: end.x - e.aim.x * 9, y: end.y + 6 }, end, '#f8b480', 2);
     } else if (e.kind === 'boss') {
-      const angles = attackAngles(e.attack, Math.atan2(e.aim.y, e.aim.x)),
+      const angles = commandRemixAngles(g.level.bossRemix, e),
         locked = e.timer <= 0.3,
         length = e.attack === 'ring' ? 380 : 800;
       c.setLineDash(locked ? [] : [5, 12]);

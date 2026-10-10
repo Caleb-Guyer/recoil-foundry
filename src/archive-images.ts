@@ -94,6 +94,7 @@ function photograph(id: string): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const g = new Game();
   g.startTest(archiveCheckpoint(id));
+  if (id.startsWith('remix:')) for (const enemy of g.enemies) enemy.spawn = 0;
   g.mode = 'paused';
   const renderer = new Renderer(canvas, g);
   canvas.width = 640;

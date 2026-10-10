@@ -14,6 +14,102 @@ const vent = (x: number, offset: number, length = 620) => ({
 });
 const empty = { rosters: [[0]], weak: [], props: [] };
 export const REMIX_LAYOUTS: Record<BossRemixId, Layout> = {
+  'sorter-beltline': {
+    id: 'sorter-beltline',
+    area: 'reclamation',
+    name: 'Beltline',
+    solids: [
+      { x: 480, y: 535, w: 240, h: 22 },
+      { x: 940, y: 440, w: 210, h: 22 },
+      { x: 1400, y: 535, w: 240, h: 22 },
+    ],
+    spawns: [{ kind: 'sorter', x: 1500, y: 280 }],
+    route: [
+      { x: 300, y: 720 },
+      { x: 600, y: 515 },
+      { x: 1000, y: 720 },
+      { x: 1520, y: 515 },
+      { x: 1810, y: 720 },
+    ],
+    hazards: [],
+    setpiece: empty,
+  },
+  'sorter-magnetic-return': {
+    id: 'sorter-magnetic-return',
+    area: 'reclamation',
+    name: 'Magnetic Return',
+    solids: [
+      { x: 420, y: 650, w: 120, h: 90 },
+      { x: 920, y: 515, w: 200, h: 22 },
+      { x: 1460, y: 650, w: 120, h: 90 },
+    ],
+    spawns: [{ kind: 'sorter', x: 1450, y: 270 }],
+    route: [
+      { x: 300, y: 720 },
+      { x: 480, y: 630 },
+      { x: 1000, y: 495 },
+      { x: 1520, y: 630 },
+      { x: 1810, y: 720 },
+    ],
+    magnets: [
+      { x: 710, y: 310, floor: 740, offset: 0 },
+      { x: 1300, y: 310, floor: 740, offset: 3.8 },
+    ],
+    hazards: [],
+    setpiece: {
+      rosters: [[0]],
+      weak: [],
+      props: [
+        { kind: 'crate', x: 710, y: 718 },
+        { kind: 'crate', x: 1300, y: 718 },
+      ],
+    },
+  },
+  'boss-skybridge': {
+    id: 'boss-skybridge',
+    area: 'rooftops',
+    name: 'Skybridge',
+    solids: [
+      { x: 410, y: 450, w: 230, h: 22 },
+      { x: 900, y: 330, w: 210, h: 22 },
+      { x: 1390, y: 450, w: 230, h: 22 },
+    ],
+    spawns: [{ kind: 'boss', x: 1490, y: 240 }],
+    route: [
+      { x: 300, y: 720 },
+      { x: 750, y: 610 },
+      { x: 1000, y: 310 },
+      { x: 1260, y: 610 },
+      { x: 1810, y: 720 },
+    ],
+    hazards: [
+      { kind: 'lift', x: 750, y: 650, w: 160, h: 18, travel: 240 },
+      { kind: 'lift', x: 1260, y: 650, w: 160, h: 18, travel: 240 },
+    ],
+    setpiece: empty,
+  },
+  'boss-crossfire': {
+    id: 'boss-crossfire',
+    area: 'rooftops',
+    name: 'Crossfire',
+    solids: [
+      { x: 400, y: 625, w: 180, h: 22 },
+      { x: 740, y: 475, w: 180, h: 22 },
+      { x: 1090, y: 625, w: 180, h: 22 },
+      { x: 1430, y: 475, w: 180, h: 22 },
+    ],
+    spawns: [{ kind: 'boss', x: 1470, y: 270 }],
+    route: [
+      { x: 300, y: 720 },
+      { x: 490, y: 605 },
+      { x: 830, y: 455 },
+      { x: 1180, y: 605 },
+      { x: 1520, y: 455 },
+      { x: 1810, y: 720 },
+    ],
+    hazards: [],
+    setpiece: empty,
+  },
   'loader-crossdock': {
     id: 'loader-crossdock',
     area: 'docks',
@@ -200,5 +296,10 @@ export function bossRemixLevel(g: Game, level: Level): Level {
       ? bossRemixFor(g.seed, level.spawns[0]?.kind)
       : undefined);
   if (!id || g.stage !== BOSS_REMIXES[id].stage) return level;
-  return { ...structuredClone(REMIX_LAYOUTS[id]), boss: true, mirrored: false, bossRemix: id };
+  const layout = structuredClone(REMIX_LAYOUTS[id]);
+  // Uprising can substitute its pursuit rival. Keep that consequence while
+  // giving it the same authored arena and its own warned arsenal sequence.
+  if (g.stage === 19 && !forced && g.uprising.finale === 'hunted')
+    layout.spawns[0].kind = 'interceptor';
+  return { ...layout, boss: true, mirrored: false, bossRemix: id };
 }

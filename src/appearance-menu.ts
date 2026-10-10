@@ -10,6 +10,7 @@ export interface AppearanceOptions {
   preview: boolean;
   defeated?: readonly string[];
   discovered?: readonly string[];
+  revealed?: readonly string[];
   unseen?: readonly AppearanceItemId[];
   viewed?: (id: AppearanceItemId) => void;
   equip: (selection: Cosmetics) => void;
@@ -48,6 +49,7 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
                   options.defeated ?? [],
                   earned,
                   options.discovered,
+                  options.revealed,
                 ),
             )
             .map(([id, item]) => {

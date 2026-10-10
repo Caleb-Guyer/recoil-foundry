@@ -1,5 +1,7 @@
 import type { Lore } from './lore-upgrades.ts';
 import { SUPPORT_MASTERIES } from './support-mastery.ts';
+import { LATE_BOSS_MASTERIES } from './late-boss-mastery.ts';
+import { BOSS_REMIXES, matchesRemixBoss } from './boss-remix-rules.ts';
 import type { Game, Enemy } from './game.ts';
 import { isHunt } from './hunt-rules.ts';
 import { isBoss } from './enemies.ts';
@@ -256,6 +258,7 @@ export const COMMENDATIONS = [
     ] as Lore,
   },
   ...SUPPORT_MASTERIES,
+  ...LATE_BOSS_MASTERIES,
 ] as const;
 export type CommendationId = (typeof COMMENDATIONS)[number]['id'];
 export function commendationVisible(
@@ -263,13 +266,16 @@ export function commendationVisible(
   defeated: readonly string[],
   earned: readonly CommendationId[],
   discovered: readonly string[] = [],
+  revealed: readonly string[] = [],
 ) {
   const entry = COMMENDATIONS.find((c) => c.id === id)!;
   return (
     earned.includes(id) ||
-    ('upgrades' in entry
-      ? entry.upgrades.some((upgrade) => discovered.includes(upgrade))
-      : !('boss' in entry) || defeated.includes(entry.boss))
+    ('remix' in entry
+      ? revealed.includes('remix:' + entry.remix)
+      : 'upgrades' in entry
+        ? entry.upgrades.some((upgrade) => discovered.includes(upgrade))
+        : !('boss' in entry) || defeated.includes(entry.boss))
   );
 }
 export function loadCommendations(raw: unknown): CommendationId[] {
@@ -338,6 +344,21 @@ export class CommendationTracker {
     if (isBoss(e.kind) && !isHunt(e.kind)) {
       this.mastery.defeated(e);
       if (this.cleanBoss && g.level.boss && !g.escape) this.award('clean-work');
+      const remix = g.level.bossRemix;
+      if (
+        this.cleanBoss &&
+        g.bossRemixes &&
+        remix &&
+        g.level.boss &&
+        !g.overtime &&
+        !g.escape &&
+        !g.detour &&
+        matchesRemixBoss(remix, e.kind) &&
+        BOSS_REMIXES[remix].stage === g.stage
+      ) {
+        const mastery = LATE_BOSS_MASTERIES.find((m) => m.remix === remix);
+        if (mastery) this.award(mastery.id);
+      }
       if (source === 'reflection') this.award('return-to-sender');
     }
     if (source && typeof source === 'object') {

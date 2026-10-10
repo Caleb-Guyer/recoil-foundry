@@ -40,6 +40,30 @@ export const BOSS_REMIXES = {
     name: 'Purge Chamber',
     hint: 'Two purges have wide, shifting gaps. Side valves open its shutters; dry decks cross the coolant.',
   },
+  'sorter-beltline': {
+    boss: 'sorter',
+    stage: 15,
+    name: 'Beltline',
+    hint: 'Opposing belts carry you across locked sorting lanes. Two field strikes, then a fan; fire into the open housing after each release.',
+  },
+  'sorter-magnetic-return': {
+    boss: 'sorter',
+    stage: 15,
+    name: 'Magnetic Return',
+    hint: 'Two magnets lift loose scrap. Split fans alternate with a three-lane field strike; move through the gaps and attack during recovery.',
+  },
+  'boss-skybridge': {
+    boss: 'boss',
+    stage: 19,
+    name: 'Skybridge',
+    hint: 'Transfer lifts connect the upper decks. Change height after the aim locks; Command uses aimed volleys, broad fans and gapped rings. A pursuit rival uses scatter fire and a warned dive instead.',
+  },
+  'boss-crossfire': {
+    boss: 'boss',
+    stage: 19,
+    name: 'Crossfire',
+    hint: 'Staggered decks divide the room. Paired fans shift their gaps on the second volley; read both warnings before attacking the exposed core.',
+  },
 } as const;
 export type BossRemixId = keyof typeof BOSS_REMIXES;
 export type RemixBoss = (typeof BOSS_REMIXES)[BossRemixId]['boss'];
@@ -47,11 +71,23 @@ export const REMIX_IDS = Object.keys(BOSS_REMIXES) as BossRemixId[];
 export const isBossRemix = (id: unknown): id is BossRemixId =>
   typeof id === 'string' && Object.hasOwn(BOSS_REMIXES, id);
 export function bossRemixFor(seed: string, boss: string): BossRemixId | undefined {
-  const choices = REMIX_IDS.filter((id) => BOSS_REMIXES[id].boss === boss);
-  return choices[Math.floor(seeded(seed + ':boss-remix-v1:' + boss)() * choices.length)];
+  // Continue/replay and pinned Daily seeds retain their original late fights.
+  if (
+    (boss === 'sorter' || boss === 'boss' || boss === 'interceptor') &&
+    Number(/^RF-C(\d+)-/.exec(seed)?.[1] ?? 0) < 91
+  )
+    return undefined;
+  const kind = boss === 'interceptor' ? 'boss' : boss;
+  const choices = REMIX_IDS.filter((id) => BOSS_REMIXES[id].boss === kind);
+  return choices[Math.floor(seeded(seed + ':boss-remix-v1:' + kind)() * choices.length)];
 }
 export function remixEncounter(id: BossRemixId): Encounter {
   return { kind: BOSS_REMIXES[id].boss, seed: 'REMIX-' + id, remix: id };
+}
+export function matchesRemixBoss(id: BossRemixId, kind: string) {
+  return (
+    BOSS_REMIXES[id].boss === kind || (BOSS_REMIXES[id].stage === 19 && kind === 'interceptor')
+  );
 }
 export interface BossRemixProfile {
   version: 1;
@@ -93,7 +129,7 @@ export function recordBossRemix(raw: unknown, game: Game, cleared: boolean): Bos
     game.mode === 'playing' &&
     game.hp > 0 &&
     id &&
-    game.enemies.some((e) => e.kind === BOSS_REMIXES[id].boss && e.spawn <= 0 && e.hp > 0) &&
+    game.enemies.some((e) => matchesRemixBoss(id, e.kind) && e.spawn <= 0 && e.hp > 0) &&
     !p.seen.includes(id)
   )
     p.seen.push(id);

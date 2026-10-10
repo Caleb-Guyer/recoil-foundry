@@ -2,7 +2,13 @@ import { isHunt } from './hunt-rules.ts';
 import type { Game } from './game.ts';
 import { isBossRemix, BOSS_REMIXES } from './boss-remix-rules.ts';
 import { validBlueprintMods } from './blueprints.ts';
-import { loadEncounters, practiceCheckpoint, PRACTICE_BOSSES, type Encounter } from './practice.ts';
+import {
+  loadEncounters,
+  practiceCheckpoint,
+  practiceStage,
+  PRACTICE_BOSSES,
+  type Encounter,
+} from './practice.ts';
 
 export const PRACTICE_RECORDS_KEY = 'rf-practice-records-v1';
 // Bump whenever physics, boss AI, arenas, presets or upgrade balance changes.
@@ -50,7 +56,7 @@ function validIdentity(value: Record<string, unknown>): boolean {
     value.seed.length > 40 ||
     /[\u0000-\u001f\u007f-\u009f]/.test(value.seed) ||
     !Array.isArray(value.mods) ||
-    value.mods.length > PRACTICE_BOSSES[value.kind as Encounter['kind']].stage ||
+    value.mods.length > practiceStage(value as unknown as Encounter) ||
     value.mods.some((id) => typeof id !== 'string' || !/^[a-z0-9-]{1,48}$/.test(id)) ||
     new Set(value.mods).size !== value.mods.length
   )
@@ -126,7 +132,7 @@ export function snapshotPracticeWin(
     game.hp <= 0 ||
     game.combatEnemyCount ||
     game.seed !== game.practice.seed ||
-    game.stage !== PRACTICE_BOSSES[game.practice.kind].stage ||
+    game.stage !== practiceStage(game.practice) ||
     game.level.bossRemix !== game.practice.remix ||
     (isHunt(game.practice.kind) && game.level.hunt !== game.practice.kind)
   )

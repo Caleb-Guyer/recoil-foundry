@@ -151,6 +151,7 @@ export function logbookEntries(
   known: readonly string[],
   progress: LogbookProgress,
   commendations: readonly CommendationId[] = [],
+  revealed: readonly string[] = [],
 ): LogbookEntry[] {
   const safe = loadLogbook(progress);
   return [
@@ -224,7 +225,7 @@ export function logbookEntries(
       lore: record.lore,
     })),
     ...COMMENDATIONS.filter((c) =>
-      commendationVisible(c.id, safe.enemies, commendations, known),
+      commendationVisible(c.id, safe.enemies, commendations, known, revealed),
     ).map((c) => ({
       id: 'commendation:' + c.id,
       name: c.name,

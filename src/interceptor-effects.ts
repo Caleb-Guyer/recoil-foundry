@@ -20,7 +20,7 @@ export function rivalWarningLanes(g: Game, e: Enemy): { from: Vec; to: Vec; bank
           ...rig.grindPlans.filter((p) => grindPlanValid(g, p)).map((p) => p.heading),
           ...rig.grindBullets,
         ]
-      : interceptorAngles(e);
+      : interceptorAngles(e, g.level.bossRemix);
   for (const a of angles) {
     let d = { x: Math.cos(a), y: Math.sin(a) },
       from = { x: origin.x + d.x * 44, y: origin.y + d.y * 44 };

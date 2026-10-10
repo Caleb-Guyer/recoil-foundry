@@ -24,6 +24,7 @@ import { supportMasteryProgress, type SupportMasteryAttempt } from './support-ma
 import { MACHINE_VARIANT_RECORDS } from './patrol-machines.ts';
 import { TOOLROOM_ROOM_IDS, TOOLROOM_ROOMS } from './toolroom-layouts.ts';
 import { TOOLROOM_MODS } from './toolroom-catalog.ts';
+import { BOSS_REMIXES, REMIX_IDS } from './boss-remix-rules.ts';
 
 const EMPTY_LORE: Lore = ['', '', ''];
 export const VARIANT_RECORDS = [
@@ -135,7 +136,9 @@ export function logbookCatalog(
     areas: [],
     escaped: false,
   });
-  const recovered = new Map(logbookEntries(knownMods, book, earned).map((e) => [e.id, e]));
+  const recovered = new Map(
+    logbookEntries(knownMods, book, earned, archive.encountered).map((e) => [e.id, e]),
+  );
   const entries: LogbookEntry[] = [
     ...(Object.keys(RECOIL_TRIALS) as RecoilTrialKind[]).map((kind) => {
       const profile = loadRecoilProfile(recoilProfile),
@@ -274,6 +277,26 @@ export function logbookCatalog(
         label: known ? 'Variant record' : 'Not yet encountered',
         description: known ? record.description : '',
         lore: known ? record.lore : EMPTY_LORE,
+        state: known ? ('known' as const) : ('unseen' as const),
+      };
+    }),
+    ...REMIX_IDS.map((id) => {
+      const known = archive.encountered.includes('remix:' + id),
+        info = BOSS_REMIXES[id];
+      return {
+        id: 'remix:' + id,
+        name: known ? info.name : 'Unvisited boss arena',
+        section: 'places' as const,
+        label: known ? ENEMY_NAMES[info.boss] + ' · Boss remix' : 'Not yet visited',
+        description: known ? info.hint + ' Replay in Practice → Boss remixes.' : '',
+        lore: known
+          ? ([
+              info.name + ' · arena inspection',
+              'M. Vale · maintenance',
+              info.hint +
+                '\n\nThe photograph records the arena. Practice uses its standard boss sequence; job consequences apply during Campaign fights.',
+            ] as Lore)
+          : EMPTY_LORE,
         state: known ? ('known' as const) : ('unseen' as const),
       };
     }),

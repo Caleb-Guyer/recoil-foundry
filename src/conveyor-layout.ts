@@ -20,6 +20,11 @@ export function conveyorPlacements(
   machinery: Solid[] = [],
   fixtures: Solid[] = [],
 ): Conveyor[] {
+  if (level.bossRemix === 'sorter-beltline')
+    return [
+      { x: 400, y: 740, w: 430, speed: 2.1 },
+      { x: 1170, y: 740, w: 430, speed: -2.1 },
+    ];
   if (level.sortingPit === 'feed')
     return [
       { x: 640, y: 740, w: 290, speed: 1.3 },

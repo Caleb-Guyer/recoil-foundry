@@ -45,6 +45,7 @@ import {
 } from '../src/progress.ts';
 import { fixture, target, Body } from './branches-fixture.ts';
 import { playRoom } from './room-pilot.ts';
+import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
 const idle = {
   left: false,
   right: false,
@@ -97,7 +98,7 @@ test('first Campaigns keep original fights; enabled seeds introduce all six dete
       assert.deepEqual(g.level, snapshot);
     }
   }
-  assert.deepEqual([...seen].sort(), [...REMIX_IDS].sort());
+  assert.deepEqual([...seen].sort(), REMIX_IDS.filter((id) => BOSS_REMIXES[id].stage <= 11).sort());
 });
 test('Continue and run history preserve the revision, while legacy saves and isolated modes retain their fights', () => {
   const seed = 'REMIX-RUN-0',
@@ -452,7 +453,9 @@ test('remix Practice records and challenge codes stay separate from standard fig
   assert.equal(snapshotPracticeWin(preview, true), null);
 });
 for (const id of REMIX_IDS)
-  for (const gun of ['pistol', 'shotgun', 'nailgun'])
+  for (const gun of BOSS_REMIXES[id].stage >= 15
+    ? STARTING_GUN_IDS
+    : ['pistol', 'shotgun', 'nailgun'])
     test(`${gun} clears ${id} with ordinary inputs and no profile rewards`, () => {
       const g = new Game();
       let writes = 0,
