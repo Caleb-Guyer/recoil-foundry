@@ -29,7 +29,8 @@ export class SecurityCombat {
   update(e: Enemy, dt: number) {
     const g = this.game;
     if (
-      (g.security?.level ?? 0) < 2 ||
+      ((g.security?.level ?? 0) < 2 &&
+        !(g.gauntlet.state?.mode === 'remix' && g.gauntlet.state.tier === 'overclocked')) ||
       !isBoss(e.kind) ||
       e.allied ||
       e.kind === 'welder' ||

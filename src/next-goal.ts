@@ -196,11 +196,13 @@ function selectGoal(p: GoalProgress, target?: string): NextGoal {
       summary: challenge.objective,
       requirement: challenge.objective,
       hint:
-        'remix' in challenge
-          ? 'Find this arena in a fresh Campaign after your first victory. New runs choose one arena for each boss. Practice rematches help you learn the fight; earn this reward in Campaign.'
-          : CERTIFICATIONS.includes(challenge.id)
-            ? 'Clear this optional course in Campaign to unlock it in Practice → Recoil Trials. You can earn the certificate in Campaign or on a normal Practice attempt.'
-            : 'Earn this in Campaign or Daily unless the requirement names a specific mode. Isolated playtests and Workshop do not award commendations.',
+        'gauntlet' in challenge
+          ? 'Open Practice → Boss Gauntlet and choose the Remix route. Either tier counts. Discover more arenas in Campaign to expand your choices; upgrades and health carry through five fights.'
+          : 'remix' in challenge
+            ? 'Find this arena in a fresh Campaign after your first victory. New runs choose one arena for each boss. Practice rematches help you learn the fight; earn this reward in Campaign.'
+            : CERTIFICATIONS.includes(challenge.id)
+              ? 'Clear this optional course in Campaign to unlock it in Practice → Recoil Trials. You can earn the certificate in Campaign or on a normal Practice attempt.'
+              : 'Earn this in Campaign or Daily unless the requirement names a specific mode. Isolated playtests and Workshop do not award commendations.',
       reward: challenge.reward + ' · ' + challenge.slot,
     };
   const unlocked = licenses.filter((g) => g.unlocked).map((g) => g.id);

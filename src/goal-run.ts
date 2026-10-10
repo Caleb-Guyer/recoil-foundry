@@ -10,6 +10,17 @@ import { RECOIL_TRIALS, type RecoilTrialKind } from './recoil-trial-rules.ts';
 import { SUPPORT_MASTERIES } from './support-mastery.ts';
 import type { CombatResults } from './combat-report.ts';
 import type { SecurityLevel } from './security.ts';
+import type { GauntletMode } from './gauntlet-rules.ts';
+const GAUNTLET_GOALS = [
+  'weapon:repeater',
+  'commendation:gauntlet-cleared',
+  'commendation:remix-gauntlet-cleared',
+  'commendation:remix-gauntlet-unserviced',
+];
+const REMIX_GOALS = [
+  'commendation:remix-gauntlet-cleared',
+  'commendation:remix-gauntlet-unserviced',
+];
 
 export const GOAL_RUN_KEY = 'rf-goal-run-v1';
 export interface GoalRun {
@@ -89,6 +100,8 @@ export interface GoalAttempt {
   overtime: boolean;
   security: SecurityLevel;
   gauntlet?: number;
+  gauntletMode?: GauntletMode;
+  gauntletRepairs?: number;
   results?: CombatResults;
 }
 export function goalRunSummary(run: GoalRun, p: GoalProgress, attempt: GoalAttempt, ended = false) {
@@ -122,13 +135,14 @@ export function goalRunSummary(run: GoalRun, p: GoalProgress, attempt: GoalAttem
         ['I', 'II', 'III'][Number(run.id.slice(9)) - 1] +
         ' · this run uses ' +
         (attempt.security ? 'Security ' + ['I', 'II', 'III'][attempt.security - 1] : 'Standard');
-  } else if (
-    attempt.gauntlet !== undefined &&
-    ['weapon:repeater', 'commendation:gauntlet-cleared'].includes(run.id)
-  )
-    status = `${attempt.gauntlet} / 5 bosses defeated this attempt`;
-  else if (['weapon:repeater', 'commendation:gauntlet-cleared'].includes(run.id))
-    status = 'Needs Boss Gauntlet · this is a Campaign run';
+  } else if (attempt.gauntlet !== undefined && GAUNTLET_GOALS.includes(run.id))
+    status =
+      REMIX_GOALS.includes(run.id) && attempt.gauntletMode !== 'remix'
+        ? 'Needs the Remix route · this attempt uses Classic'
+        : run.id === 'commendation:remix-gauntlet-unserviced' && (attempt.gauntletRepairs ?? 0) > 0
+          ? 'Repair chosen · begin a new Gauntlet to try this goal again'
+          : `${attempt.gauntlet} / 5 bosses defeated this attempt`;
+  else if (GAUNTLET_GOALS.includes(run.id)) status = 'Needs Boss Gauntlet · this is a Campaign run';
   else {
     const mastery = SUPPORT_MASTERIES.find((m) => run.id === 'commendation:' + m.id);
     if (mastery && attempt.results)
@@ -147,7 +161,7 @@ export function goalRunSummary(run: GoalRun, p: GoalProgress, attempt: GoalAttem
 
 export type GoalAction =
   | { kind: 'campaign'; label: string; security?: SecurityLevel }
-  | { kind: 'gauntlet'; label: string }
+  | { kind: 'gauntlet'; label: string; mode?: GauntletMode }
   | { kind: 'recoil'; label: string; course: RecoilTrialKind }
   | { kind: 'maintenance'; label: string };
 export function goalAction(
@@ -157,8 +171,12 @@ export function goalAction(
   shafts = 0,
 ): GoalAction | null {
   if (goal.kind === 'complete') return null;
-  if (['weapon:repeater', 'commendation:gauntlet-cleared'].includes(goal.id) && p.weapons.cleared)
-    return { kind: 'gauntlet', label: 'Set up Boss Gauntlet ↗' };
+  if (GAUNTLET_GOALS.includes(goal.id) && p.weapons.cleared)
+    return {
+      kind: 'gauntlet',
+      label: REMIX_GOALS.includes(goal.id) ? 'Set up Remix Gauntlet ↗' : 'Set up Boss Gauntlet ↗',
+      ...(REMIX_GOALS.includes(goal.id) ? { mode: 'remix' as const } : {}),
+    };
   const course = (Object.keys(RECOIL_TRIALS) as RecoilTrialKind[]).find(
     (k) => goal.id === 'commendation:' + RECOIL_TRIALS[k].commendation,
   );

@@ -585,6 +585,15 @@ dialog.practice-dialog {
   gap: 14px;
   margin: 20px 0;
 }
+.gauntlet-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 18px;
+}
+.gauntlet-selectors label {
+  flex: 1 1 180px;
+}
 .gauntlet-choice {
   text-align: left;
   border: 1px solid #3b5053;

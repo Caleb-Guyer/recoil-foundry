@@ -1,11 +1,18 @@
 import type { Game } from './game.ts';
-import { PRACTICE_BOSSES, type PracticeBoss } from './practice.ts';
 import {
   GAUNTLET_HINTS,
   GAUNTLET_REPAIR,
   loadGauntletRecords,
   type GauntletRecord,
+  gauntletRouteLabel,
+  gauntletChoiceName,
+  type GauntletOptions,
+  type GauntletChoice,
+  type GauntletMode,
+  type GauntletTier,
 } from './gauntlet-rules.ts';
+import { BOSS_REMIXES, isBossRemix, type BossRemixId } from './boss-remix-rules.ts';
+import { archiveMark } from './archive-art.ts';
 import { STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 import { MODS } from './rules.ts';
 import { practiceTime } from './practice-records.ts';
@@ -14,24 +21,73 @@ import { drawArchiveImages } from './archive-images.ts';
 import { rewardCards, drawRewardImages } from './reward-cards.ts';
 import type { MenuBack } from './blueprint-menu.ts';
 
-const routeLabel = (r: readonly PracticeBoss[]) =>
-  r.map((k) => PRACTICE_BOSSES[k].name).join(' → ');
+const routeLabel = gauntletRouteLabel;
 export function gauntletSetup(
   root: HTMLElement,
   guns: StartingGun[],
   raw: unknown,
-  start: (gun: StartingGun) => void,
+  start: (gun: StartingGun, options: GauntletOptions) => void,
   exit: () => void,
+  options: {
+    seen?: readonly BossRemixId[];
+    mode?: GauntletMode;
+    tier?: GauntletTier;
+    gun?: StartingGun;
+    preview?: boolean;
+    import?: () => void;
+    share?: (record: GauntletRecord) => void;
+  } = {},
 ): MenuBack {
-  let gun: StartingGun = 'pistol';
+  let gun: StartingGun = options.gun && guns.includes(options.gun) ? options.gun : 'pistol';
+  let mode: GauntletMode = options.mode === 'remix' && options.seen?.length ? 'remix' : 'classic';
+  let tier: GauntletTier = options.tier ?? 'standard';
   const records = loadGauntletRecords(raw);
   function show() {
-    const scores = records.filter((r) => r.gun === gun).sort((a, b) => a.timeMs - b.timeMs);
+    const scores = records
+      .filter(
+        (r) => r.gun === gun && (r.mode ?? 'classic') === mode && (r.tier ?? 'standard') === tier,
+      )
+      .sort((a, b) => a.timeMs - b.timeMs);
     root.innerHTML =
-      '<p class="eyebrow">PRACTICE · BOSS GAUNTLET</p><h2 id="dialog-title">Five machines. One tool.</h2>' +
-      '<p class="practice-note">Choose between two bosses each round. Health carries forward. Between fights, take one upgrade or repair up to ' +
+      '<p class="eyebrow">' +
+      (options.preview ? 'ISOLATED PREVIEW' : 'PRACTICE') +
+      ' · BOSS GAUNTLET</p><h2 id="dialog-title">Five machines. One tool.</h2>' +
+      '<p class="practice-note">' +
+      (mode === 'remix'
+        ? 'Choose your arena each round.'
+        : 'Choose between two bosses each round.') +
+      ' Health carries forward. Between fights, take one upgrade or repair up to ' +
       GAUNTLET_REPAIR +
-      ' health. The clock counts combat only. Your Campaign save stays available.</p>' +
+      ' health. The clock counts combat only. ' +
+      (options.preview
+        ? 'No records, rewards or unlocks are saved.'
+        : 'Your Campaign save stays available.') +
+      '</p>' +
+      '<div class="gauntlet-selectors"><label>Route<select id="gauntlet-mode" class="workshop-search"><option value="classic"' +
+      (mode === 'classic' ? ' selected' : '') +
+      '>Classic</option><option value="remix"' +
+      (mode === 'remix' ? ' selected' : '') +
+      (options.seen?.length ? '' : ' disabled') +
+      '>Remix' +
+      (options.seen?.length ? '' : ' · locked') +
+      '</option></select></label>' +
+      (mode === 'remix'
+        ? '<label>Tier<select id="gauntlet-tier" class="workshop-search"><option value="standard"' +
+          (tier === 'standard' ? ' selected' : '') +
+          '>Standard</option><option value="overclocked"' +
+          (tier === 'overclocked' ? ' selected' : '') +
+          '>Overclocked</option></select></label>'
+        : '') +
+      '</div>' +
+      '<p class="practice-record-note">' +
+      (mode === 'remix'
+        ? options.seen!.length +
+          ' / 10 arenas discovered. Your discovered remixes replace the standard fight for their department. ' +
+          (tier === 'overclocked'
+            ? 'Stronger bosses chain fully warned counter-volleys; every other recovery remains open.'
+            : 'Standard uses each arena’s original warnings and recovery.')
+        : 'Discover a boss remix in Campaign to open the Remix route.') +
+      '</p>' +
       '<div class="workshop-actions" aria-label="Starting gun">' +
       guns
         .map(
@@ -46,7 +102,11 @@ export function gauntletSetup(
         )
         .join('') +
       '</div>' +
-      '<p class="practice-record-note">Complete all five rounds to earn the Victor outfit. Best times compare the same starting gun and boss route.</p>' +
+      '<p class="practice-record-note">' +
+      (mode === 'remix'
+        ? 'Complete the Remix route to earn Circuit Runner. Finish without choosing a repair to earn Cold Steel. '
+        : 'Complete all five rounds to earn the Victor outfit. ') +
+      'Best times compare the same gun, route and tier.</p>' +
       '<details class="build"><summary>Route records · ' +
       scores.length +
       '</summary>' +
@@ -67,11 +127,38 @@ export function gauntletSetup(
               : 'Unmodified gun') +
             ' · ' +
             r.repairs +
-            ' repairs</p>',
+            ' repairs</p>' +
+            (r.mode === 'remix' && options.share
+              ? '<button class="quiet" data-gauntlet-share="' +
+                records.indexOf(r) +
+                '">Share challenge</button>'
+              : ''),
         )
         .join('') || '<p class="practice-record-note">No completed routes with this gun yet.</p>') +
       '</details>' +
-      '<div class="actions"><button id="gauntlet-start" class="primary">Start Gauntlet ↗</button><button id="gauntlet-back" class="quiet">Back</button></div>';
+      '<div class="actions"><button id="gauntlet-start" class="primary">Start Gauntlet ↗</button>' +
+      (options.import
+        ? '<button id="gauntlet-import" class="quiet">Import Gauntlet challenge</button>'
+        : '') +
+      '<button id="gauntlet-back" class="quiet">Back</button></div>';
+    root.querySelector<HTMLSelectElement>('#gauntlet-mode')!.onchange = (event) => {
+      mode = (event.target as HTMLSelectElement).value as GauntletMode;
+      tier = 'standard';
+      show();
+      root.querySelector<HTMLSelectElement>('#gauntlet-mode')?.focus();
+    };
+    const tierControl = root.querySelector<HTMLSelectElement>('#gauntlet-tier');
+    if (tierControl)
+      tierControl.onchange = () => {
+        tier = tierControl.value as GauntletTier;
+        show();
+        root.querySelector<HTMLSelectElement>('#gauntlet-tier')?.focus();
+      };
+    root.querySelectorAll<HTMLButtonElement>('[data-gauntlet-share]').forEach((b) => {
+      b.onclick = () => options.share?.(records[Number(b.dataset.gauntletShare)]);
+    });
+    const importButton = root.querySelector<HTMLButtonElement>('#gauntlet-import');
+    if (importButton) importButton.onclick = () => options.import?.();
     root.querySelectorAll<HTMLButtonElement>('[data-gauntlet-gun]').forEach(
       (b) =>
         (b.onclick = () => {
@@ -80,7 +167,8 @@ export function gauntletSetup(
           root.querySelector<HTMLButtonElement>('[data-gauntlet-gun="' + gun + '"]')?.focus();
         }),
     );
-    root.querySelector<HTMLButtonElement>('#gauntlet-start')!.onclick = () => start(gun);
+    root.querySelector<HTMLButtonElement>('#gauntlet-start')!.onclick = () =>
+      start(gun, { mode, tier });
     root.querySelector<HTMLButtonElement>('#gauntlet-back')!.onclick = exit;
   }
   show();
@@ -96,8 +184,9 @@ export function gauntletRunMenu(
   g: Game,
   options: {
     outcome: { best: boolean; records: GauntletRecord[] } | null;
-    reward: boolean;
-    choose(kind: PracticeBoss): void;
+    rewards: readonly string[];
+    choose(kind: GauntletChoice): void;
+    share?: (record: GauntletRecord) => void;
     restart(): void;
     exit(): void;
   },
@@ -123,7 +212,19 @@ export function gauntletRunMenu(
       ' repairs</p></details>'
     : '';
   const eyebrow =
-    '<p class="eyebrow">' + (s.preview ? 'PLAYTEST · ' : 'PRACTICE · ') + 'BOSS GAUNTLET</p>';
+    '<p class="eyebrow">' +
+    (s.preview ? 'PLAYTEST · ' : 'PRACTICE · ') +
+    (s.mode === 'remix'
+      ? 'REMIX GAUNTLET · ' + (s.tier === 'overclocked' ? 'OVERCLOCKED' : 'STANDARD')
+      : 'BOSS GAUNTLET') +
+    '</p>' +
+    (s.challenge
+      ? '<p class="practice-record-note">Challenge target · ' +
+        practiceTime(s.challenge.timeMs) +
+        ' · ' +
+        s.challenge.hits +
+        ' hits</p>'
+      : '');
   if (s.phase === 'route') {
     root.innerHTML =
       eyebrow +
@@ -138,14 +239,11 @@ export function gauntletRunMenu(
             '<button class="gauntlet-choice" data-gauntlet-boss="' +
             k +
             '">' +
-            '<canvas width="640" height="320" role="img" aria-label="' +
-            PRACTICE_BOSSES[k].name +
-            '" data-archive-image="enemy:' +
-            k +
-            '"></canvas><strong>' +
-            PRACTICE_BOSSES[k].name +
+            archiveMark((isBossRemix(k) ? 'remix:' : 'enemy:') + k) +
+            '<strong>' +
+            gauntletChoiceName(k) +
             '</strong><span>' +
-            GAUNTLET_HINTS[k] +
+            (isBossRemix(k) ? BOSS_REMIXES[k].hint : GAUNTLET_HINTS[k]) +
             '</span></button>',
         )
         .join('') +
@@ -156,7 +254,7 @@ export function gauntletRunMenu(
       '</p>';
     root
       .querySelectorAll<HTMLButtonElement>('[data-gauntlet-boss]')
-      .forEach((b) => (b.onclick = () => options.choose(b.dataset.gauntletBoss as PracticeBoss)));
+      .forEach((b) => (b.onclick = () => options.choose(b.dataset.gauntletBoss as GauntletChoice)));
     drawArchiveImages(root);
   } else if (s.phase === 'service') {
     root.innerHTML =
@@ -214,15 +312,30 @@ export function gauntletRunMenu(
         : won
           ? options.outcome
             ? options.outcome.best
-              ? 'Best time for this gun and route.'
+              ? 'Best time for this gun, route and tier.'
               : 'Completed. Your faster route record remains.'
             : 'Record could not be saved. Check Progress in Settings.'
           : 'Restart begins with full health and an unmodified gun.') +
       '</p>' +
       history +
-      (options.reward ? rewardCards(['appearance:outfit:victor', 'gun:repeater']) : '') +
-      '<div class="actions"><button id="gauntlet-restart" class="primary">Restart Gauntlet ↗</button></div>';
+      (won && s.challenge
+        ? '<p class="practice-record-note">' +
+          (s.timeMs < s.challenge.timeMs
+            ? 'Target beaten by ' + practiceTime(s.challenge.timeMs - s.timeMs) + '.'
+            : s.timeMs === s.challenge.timeMs
+              ? 'Target time matched.'
+              : 'Finished ' + practiceTime(s.timeMs - s.challenge.timeMs) + ' after the target.') +
+          '</p>'
+        : '') +
+      rewardCards(options.rewards) +
+      '<div class="actions"><button id="gauntlet-restart" class="primary">Restart Gauntlet ↗</button>' +
+      (won && g.gauntlet.result?.mode === 'remix' && options.share
+        ? '<button id="gauntlet-share" class="quiet">Share challenge</button>'
+        : '') +
+      '</div>';
     root.querySelector<HTMLButtonElement>('#gauntlet-restart')!.onclick = options.restart;
+    const shareButton = root.querySelector<HTMLButtonElement>('#gauntlet-share');
+    if (shareButton) shareButton.onclick = () => options.share?.(g.gauntlet.result!);
     drawRewardImages(root, g);
   }
   const actions = document.createElement('div');

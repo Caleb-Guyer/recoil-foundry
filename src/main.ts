@@ -94,6 +94,7 @@ import {
   loadBossRemixes,
   recordBossRemix,
   remixEncounters,
+  REMIX_IDS,
   type BossRemixId,
 } from './boss-remix-rules.ts';
 import { bossRemixMenu } from './boss-remix-menu.ts';
@@ -321,9 +322,21 @@ import {
   GAUNTLET_KEY,
   recordGauntlet,
   gauntletPreviewFromUrl,
+  remixGauntletPreviewFromUrl,
+  gauntletCommendations,
+  type GauntletChoice,
+  type GauntletOptions,
+  type GauntletMode,
   type GauntletRecord,
 } from './gauntlet-rules.ts';
 import { gauntletSetup, gauntletRunMenu } from './gauntlet-menu.ts';
+import {
+  gauntletChallengeFromUrl,
+  gauntletChallengeFromRecord,
+  gauntletChallengeAccess,
+  type GauntletChallenge,
+} from './gauntlet-challenge.ts';
+import { gauntletChallengeMenu } from './gauntlet-challenge-menu.ts';
 import {
   RECOIL_GHOSTS_KEY,
   loadRecoilGhosts,
@@ -442,7 +455,12 @@ let recoilGhostEnabled = true;
 let recoilGhostSaved = false;
 let savedGauntlet: GauntletRecord | null = null;
 let gauntletOutcome: ReturnType<typeof recordGauntlet> | null = null;
-let gauntletReward = false;
+let gauntletRewards: string[] = [];
+let gauntletSetupMode: GauntletMode = 'classic';
+let gauntletSetupPreview = false;
+let gauntletChallengeTarget: GauntletChallenge | undefined;
+let gauntletChallengeSharing = false;
+let gauntletChallengeParent = 'gauntlet-setup';
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
 let fittingNotice: { name: string; until: number | null; stage: number } | null = null;
@@ -501,7 +519,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Late Shift</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Remix Gauntlet</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -615,7 +633,10 @@ if (linkedTrackingPreview) {
           : 'tool';
 }
 const linkedDrill = supportDrillFromUrl(entryUrl);
-const linkedGauntletPreview = gauntletPreviewFromUrl(entryUrl);
+let linkedGauntletPreview = gauntletPreviewFromUrl(entryUrl);
+let linkedRemixGauntletPreview = remixGauntletPreviewFromUrl(entryUrl);
+let linkedGauntletChallenge = gauntletChallengeFromUrl(entryUrl);
+let invalidGauntletLink = entryUrl.searchParams.has('gauntlet') && !linkedGauntletChallenge;
 let linkedTrial = trialFromUrl(entryUrl);
 let linkedRecoilChallenge = recoilChallengeFromUrl(entryUrl);
 let invalidRecoilLink = entryUrl.searchParams.has('recoil') && !linkedRecoilChallenge;
@@ -741,7 +762,10 @@ function updateTitle() {
     !!linkedTrial ||
     !!linkedRecoilChallenge ||
     invalidRecoilLink ||
-    !!linkedGauntletPreview;
+    !!linkedGauntletPreview ||
+    !!linkedRemixGauntletPreview ||
+    !!linkedGauntletChallenge ||
+    invalidGauntletLink;
   $('security').textContent = selectedSecurity
     ? securityLabel(selectedSecurity)
     : 'Security · Standard';
@@ -1090,6 +1114,18 @@ function updateTitle() {
     $('title-hint').textContent =
       'Five bosses. This playtest keeps your records and rewards untouched.';
   }
+  if (linkedRemixGauntletPreview) {
+    $('play').textContent = 'Remix Gauntlet playtest';
+    $('title-hint').textContent =
+      'Five arenas · ' +
+      (linkedRemixGauntletPreview.tier === 'overclocked' ? 'Overclocked' : 'Standard') +
+      '. No progress is recorded.';
+  }
+  if (linkedGauntletChallenge || invalidGauntletLink) {
+    $('play').textContent = 'Gauntlet challenge';
+    $('daily').textContent = 'New run';
+    $('title-hint').textContent = 'A shared five-fight route. Open the challenge to check access.';
+  }
   $('title-hint').textContent = $('title-hint').textContent!.replace(
     /\bR to /g,
     bindingLabel(bindings, 'retry') + ' to ',
@@ -1186,7 +1222,13 @@ function runGoalSummary(ended = false) {
           stage: game.stage,
           overtime: !!game.overtime,
           security: game.security?.level ?? 0,
-          ...(game.gauntlet.state ? { gauntlet: game.gauntlet.state.cleared } : {}),
+          ...(game.gauntlet.state
+            ? {
+                gauntlet: game.gauntlet.state.cleared,
+                gauntletMode: game.gauntlet.state.mode,
+                gauntletRepairs: game.gauntlet.state.repairs,
+              }
+            : {}),
           results: game.combatReport.snapshot(),
         },
         ended,
@@ -1250,7 +1292,9 @@ function insertGoalResult() {
 function chooseGoalAction(action: GoalAction) {
   if (game.mode !== 'title' || linkedGoalPreview || linkedTrackingPreview) return;
   if (action.kind === 'gauntlet') {
+    gauntletSetupPreview = false;
     gauntletMenuParent = 'next-goal';
+    gauntletSetupMode = action.mode ?? 'classic';
     showDialog('gauntlet-setup');
   } else if (action.kind === 'recoil') {
     goalTrialCourse = action.course;
@@ -1290,6 +1334,9 @@ function updateNextGoal() {
       linkedRecoilChallenge ||
       invalidRecoilLink ||
       linkedGauntletPreview ||
+      linkedRemixGauntletPreview ||
+      linkedGauntletChallenge ||
+      invalidGauntletLink ||
       linkedDrill ||
       previewLogbook ||
       previewCommendations ||
@@ -1527,7 +1574,7 @@ function start(
     return;
   }
   if (retry && game.gauntlet.state) {
-    startGauntlet(game.gauntlet.state.gun, game.gauntlet.state.preview);
+    startGauntlet(game.gauntlet.state.gun, game.gauntlet.state.preview, game.gauntlet.state);
     return;
   }
   if (retry && game.recoil.practice) {
@@ -1835,7 +1882,11 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun, challenge?
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
 }
-function startGauntlet(gun: StartingGun = 'pistol', preview = false) {
+function startGauntlet(
+  gun: StartingGun = 'pistol',
+  preview = false,
+  options: GauntletOptions = {},
+) {
   progress.checkExternal();
   if (!preview && progress.blocked) {
     openProgress();
@@ -1843,25 +1894,41 @@ function startGauntlet(gun: StartingGun = 'pistol', preview = false) {
   }
   const access = weaponUnlocks();
   if (!preview && (!access.cleared || !unlockedStartingGuns(access).includes(gun))) return;
+  const seen = loadBossRemixes(read(BOSS_REMIXES_KEY)).seen;
+  if (!preview && options.mode === 'remix' && !seen.length) return;
+  if (
+    !preview &&
+    options.challenge &&
+    !gauntletChallengeAccess(options.challenge, access, seen).allowed
+  )
+    return;
   beginOptionalGoal(
     'gauntlet',
-    preview ? [] : ['weapon:repeater', 'commendation:gauntlet-cleared'],
+    preview
+      ? []
+      : [
+          'weapon:repeater',
+          'commendation:gauntlet-cleared',
+          ...(options.mode === 'remix'
+            ? ['commendation:remix-gauntlet-cleared', 'commendation:remix-gauntlet-unserviced']
+            : []),
+        ],
   );
   firstSession.stop();
   clearInput();
   closeDialog();
   game.setMode('title');
-  if (!game.gauntlet.begin(gun, access, preview)) return;
+  if (!game.gauntlet.begin(gun, access, preview, { ...options, seen })) return;
   finishedRun = null;
   runCommendations = [];
   savedGauntlet = null;
   gauntletOutcome = null;
-  gauntletReward = false;
+  gauntletRewards = [];
   activeDaily = null;
   dailyResult = null;
   showDialog('gauntlet-run');
 }
-function chooseGauntletBoss(kind: PracticeBoss) {
+function chooseGauntletBoss(kind: GauntletChoice) {
   if (!game.gauntlet.choices.includes(kind)) return;
   clearInput();
   sound.unlock();
@@ -1889,13 +1956,30 @@ function captureGauntletResult() {
   gauntletOutcome = recordGauntlet(read(GAUNTLET_KEY), result);
   write(GAUNTLET_KEY, gauntletOutcome.records);
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
-  gauntletReward = !commendations.includes('gauntlet-cleared');
-  if (gauntletReward) {
-    commendations = mergeCommendations(commendations, ['gauntlet-cleared']);
+  const gunsBefore = unlockedStartingGuns(weaponUnlocks());
+  const gained = gauntletCommendations(result).filter((id) => !commendations.includes(id));
+  gauntletRewards = gained.flatMap(commendationRewards);
+  if (gained.length) {
+    commendations = mergeCommendations(commendations, gained);
     write(COMMENDATIONS_KEY, commendations);
-    updateArchive(['commendation:gauntlet-cleared']);
+    updateArchive(gained.map((id) => 'commendation:' + id));
+    gauntletRewards.push(
+      ...unlockedStartingGuns(weaponUnlocks())
+        .filter((gun) => !gunsBefore.includes(gun))
+        .map((gun) => 'gun:' + gun),
+    );
     updateAppearanceBadge();
   }
+}
+function openGauntletChallenge(
+  challenge?: GauntletChallenge,
+  sharing = false,
+  parent = 'gauntlet-setup',
+) {
+  gauntletChallengeTarget = challenge;
+  gauntletChallengeSharing = sharing;
+  gauntletChallengeParent = parent;
+  showDialog('gauntlet-challenge');
 }
 function captureTrialResult() {
   if (trialCaptured) return;
@@ -2538,7 +2622,14 @@ game.onChange = () => {
     $('stage').textContent =
       (game.maintenance.trial.preview ? 'TEST · ' : '') + 'MAINTENANCE TRIAL';
   if (game.gauntlet.state)
-    $('stage').textContent = 'GAUNTLET · ' + game.gauntlet.state.route.length + ' / 5';
+    $('stage').textContent =
+      (game.gauntlet.state.mode === 'remix'
+        ? game.gauntlet.state.tier === 'overclocked'
+          ? 'REMIX OC · '
+          : 'REMIX · '
+        : 'GAUNTLET · ') +
+      game.gauntlet.state.route.length +
+      ' / 5';
   if (game.testRun?.annex) {
     $('stage').textContent = 'DEAD SIGNAL · TEST';
     $('stage').title = 'Transmission Annex · One-room prototype';
@@ -2600,6 +2691,7 @@ function showDialog(kind: string) {
       'recoil-trials',
       'gauntlet-setup',
       'gauntlet-run',
+      'gauntlet-challenge',
     ].includes(kind) ||
       (kind === 'result' && !!game.gauntlet.state),
   );
@@ -2695,11 +2787,42 @@ function showDialog(kind: string) {
   } else if (kind === 'gauntlet-setup') {
     buildMenu = gauntletSetup(
       content,
-      unlockedStartingGuns(weaponUnlocks()),
-      read(GAUNTLET_KEY),
-      startGauntlet,
-      () => showDialog(gauntletMenuParent),
+      gauntletSetupPreview
+        ? (Object.keys(STARTING_GUNS) as StartingGun[])
+        : unlockedStartingGuns(weaponUnlocks()),
+      gauntletSetupPreview ? [] : read(GAUNTLET_KEY),
+      (gun, options) => startGauntlet(gun, gauntletSetupPreview, options),
+      () => (gauntletSetupPreview ? closeDialog() : showDialog(gauntletMenuParent)),
+      {
+        seen: gauntletSetupPreview ? REMIX_IDS : loadBossRemixes(read(BOSS_REMIXES_KEY)).seen,
+        mode: gauntletSetupMode,
+        ...(gauntletSetupPreview
+          ? {
+              preview: true,
+              tier: linkedRemixGauntletPreview?.tier,
+              gun: linkedRemixGauntletPreview?.gun,
+            }
+          : {
+              import: () => openGauntletChallenge(),
+              share: (r: GauntletRecord) =>
+                openGauntletChallenge(gauntletChallengeFromRecord(r), true),
+            }),
+      },
     );
+  } else if (kind === 'gauntlet-challenge') {
+    buildMenu = gauntletChallengeMenu(content, {
+      profile: weaponUnlocks(),
+      seen: loadBossRemixes(read(BOSS_REMIXES_KEY)).seen,
+      ...(gauntletChallengeSharing
+        ? { share: gauntletChallengeTarget }
+        : { challenge: gauntletChallengeTarget }),
+      invalid: invalidGauntletLink && gauntletChallengeParent === 'title',
+      base: location.href,
+      start: (challenge) =>
+        startGauntlet(challenge.gun, false, { mode: 'remix', tier: challenge.tier, challenge }),
+      exit: () =>
+        gauntletChallengeParent === 'title' ? closeDialog() : showDialog(gauntletChallengeParent),
+    });
   } else if (kind === 'gauntlet-run' || (kind === 'result' && game.gauntlet.state)) {
     const session = game.gauntlet.state;
     if (!session) {
@@ -2708,25 +2831,29 @@ function showDialog(kind: string) {
     }
     buildMenu = gauntletRunMenu(content, game, {
       outcome: gauntletOutcome,
-      reward: gauntletReward && session.phase === 'complete',
+      rewards: session.phase === 'complete' ? gauntletRewards : [],
       choose: chooseGauntletBoss,
-      restart: () => startGauntlet(session.gun, session.preview),
+      restart: () => startGauntlet(session.gun, session.preview, session),
+      share: (r) => openGauntletChallenge(gauntletChallengeFromRecord(r), true, 'gauntlet-run'),
       exit: menu,
     });
     const reward = document.getElementById('earned-rewards');
     if (reward)
       reward.onclick = () => {
         logbookView.section = 'commendations';
-        logbookView.selected = 'commendation:gauntlet-cleared';
+        logbookView.selected =
+          session.mode === 'remix'
+            ? 'commendation:remix-gauntlet-cleared'
+            : 'commendation:gauntlet-cleared';
         showDialog('logbook');
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE BOSS UPDATE</p><h2 id="dialog-title">Late Shift.</h2>' +
-      '<p class="update-tagline">Four new ways to finish the factory.</p>' +
-      '<dl class="update-notes"><div><dt>Two new sorting floors.</dt><dd>After your first Campaign victory, new runs can reach Beltline’s moving feed belts or Magnetic Return’s scrap lifts. Each Sorter fight has a different sequence and clear attack warnings.</dd></div>' +
-      '<div><dt>Command changes its orders.</dt><dd>Skybridge connects upper decks with transfer lifts. Crossfire shifts the gaps between paired volleys. Your Factory Uprising choices still change the final defense.</dd></div>' +
-      '<div><dt>Master what you discover.</dt><dd>Find actual arena photographs in the Logbook and rematches in Practice. A Campaign victory without damage earns each arena’s own cosmetic; track its revealed achievement as your next goal.</dd></div></dl>' +
+      '<p class="eyebrow">A FREE CHALLENGE UPDATE</p><h2 id="dialog-title">Remix Gauntlet.</h2>' +
+      '<p class="update-tagline">Five departments. One lasting build.</p>' +
+      '<dl class="update-notes"><div><dt>Your discoveries become a route.</dt><dd>After a Campaign victory and your first discovered boss remix, choose Remix in Practice’s Boss Gauntlet. Pick from real arena photographs; each new discovery expands your choices.</dd></div>' +
+      '<div><dt>Push it into Overclocked.</dt><dd>Carry health and upgrades across five fights. Take a fitting or a repair between rounds. Overclocked adds stronger bosses and fully warned counter-volleys, with open recovery windows.</dd></div>' +
+      '<div><dt>Earn it. Share it.</dt><dd>Complete a route for Circuit Runner, or skip repairs for Cold Steel. Pictured rewards and trackable Logbook goals follow your progress. Share a challenge link from your result or route record; each gun, route and tier keeps its own best.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3074,6 +3201,8 @@ function showDialog(kind: string) {
     if (document.getElementById('boss-gauntlet'))
       $('boss-gauntlet').onclick = () => {
         gauntletMenuParent = 'practice';
+        gauntletSetupPreview = false;
+        gauntletSetupMode = 'classic';
         showDialog('gauntlet-setup');
       };
     if (document.getElementById('boss-remixes'))
@@ -3840,11 +3969,19 @@ function showDialog(kind: string) {
   } else {
     const paused = game.mode === 'paused';
     content.innerHTML =
-      (paused && game.practice
-        ? '<p class="eyebrow">PRACTICE · ' + PRACTICE_BOSSES[game.practice.kind].name + '</p>'
-        : paused && activeDaily
-          ? '<p class="eyebrow">DAILY · ' + activeDaily.date + '</p>'
-          : '') +
+      (paused && game.gauntlet.state
+        ? '<p class="eyebrow">' +
+          (game.gauntlet.state.preview ? 'PLAYTEST · ' : 'PRACTICE · ') +
+          (game.gauntlet.state.mode === 'remix'
+            ? 'REMIX GAUNTLET · ' +
+              (game.gauntlet.state.tier === 'overclocked' ? 'OVERCLOCKED' : 'STANDARD')
+            : 'BOSS GAUNTLET') +
+          '</p>'
+        : paused && game.practice
+          ? '<p class="eyebrow">PRACTICE · ' + PRACTICE_BOSSES[game.practice.kind].name + '</p>'
+          : paused && activeDaily
+            ? '<p class="eyebrow">DAILY · ' + activeDaily.date + '</p>'
+            : '') +
       '<h2 id="dialog-title">' +
       (paused ? 'Paused.' : 'Settings.') +
       '</h2><div class="settings-scroll">' +
@@ -4080,6 +4217,7 @@ function showDialog(kind: string) {
       'result',
       'gauntlet-setup',
       'gauntlet-run',
+      'gauntlet-challenge',
     ].includes(kind)
   )
     content.querySelector<HTMLButtonElement>('button')?.focus();
@@ -4297,40 +4435,58 @@ $('play').onclick = () =>
       ? startLinkedSupportDrill(linkedDrill)
       : linkedGauntletPreview
         ? startGauntlet(linkedGauntletPreview, true)
-        : linkedRecoilChallenge || invalidRecoilLink
-          ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-          : linkedTrial?.preview
-            ? startTrial(linkedTrial.route, true)
-            : linkedTrial || invalidTrialLink
-              ? openTrials('title', linkedTrial?.challenge)
-              : linkedWorkshop
-                ? showDialog('workshop')
-                : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                    entryUrl.searchParams.get('test') !== 'arc'
-                  ? showDialog('layout-test')
-                  : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                      linkedRunTest?.seed.startsWith('FUSIONS-')
-                    ? showDialog('upgrade-test')
-                    : linkedRunTest
-                      ? startRunTest(linkedRunTest)
-                      : linkedTest
-                        ? startPractice(linkedTest, null, { test: true })
-                        : linkedDaily
-                          ? start()
-                          : startFreshCampaign();
+        : linkedRemixGauntletPreview
+          ? linkedRemixGauntletPreview.setup
+            ? (() => {
+                gauntletSetupPreview = true;
+                gauntletSetupMode = 'remix';
+                showDialog('gauntlet-setup');
+              })()
+            : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
+          : linkedGauntletChallenge || invalidGauntletLink
+            ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
+            : linkedRecoilChallenge || invalidRecoilLink
+              ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+              : linkedTrial?.preview
+                ? startTrial(linkedTrial.route, true)
+                : linkedTrial || invalidTrialLink
+                  ? openTrials('title', linkedTrial?.challenge)
+                  : linkedWorkshop
+                    ? showDialog('workshop')
+                    : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                        entryUrl.searchParams.get('test') !== 'arc'
+                      ? showDialog('layout-test')
+                      : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                          linkedRunTest?.seed.startsWith('FUSIONS-')
+                        ? showDialog('upgrade-test')
+                        : linkedRunTest
+                          ? startRunTest(linkedRunTest)
+                          : linkedTest
+                            ? startPractice(linkedTest, null, { test: true })
+                            : linkedDaily
+                              ? start()
+                              : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
     linkedTrial ||
     invalidTrialLink ||
     linkedRecoilChallenge ||
-    invalidRecoilLink
+    invalidRecoilLink ||
+    linkedGauntletChallenge ||
+    invalidGauntletLink ||
+    linkedRemixGauntletPreview ||
+    linkedGauntletPreview
   ) {
     linkedDaily = null;
     linkedTrial = null;
     invalidTrialLink = false;
     linkedRecoilChallenge = null;
     invalidRecoilLink = false;
+    linkedGauntletChallenge = null;
+    invalidGauntletLink = false;
+    linkedRemixGauntletPreview = null;
+    linkedGauntletPreview = null;
     seedParam = undefined;
     const url = new URL(location.href);
     url.search = '';

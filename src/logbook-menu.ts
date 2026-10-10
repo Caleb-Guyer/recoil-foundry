@@ -9,6 +9,7 @@ import { catalogMatches, CATALOG_FAMILIES, type CatalogFilter } from './logbook-
 import { navigateControllerMenu } from './controller-menu.ts';
 import { supportDrillForEntry, type SupportDrillId } from './support-drill-info.ts';
 import { LATE_BOSS_MASTERIES } from './late-boss-mastery.ts';
+import { REMIX_GAUNTLET_MASTERIES } from './gauntlet-mastery.ts';
 
 const names = {
   equipment: 'Equipment',
@@ -209,9 +210,11 @@ export function logbookArticle(
           ? 'Earn this tool to choose it for Campaign and Workshop.'
           : entry.id.startsWith('uprising:')
             ? 'Campaign jobs count. Extra routes enter your next Campaign.'
-            : LATE_BOSS_MASTERIES.some((m) => entry.id === 'commendation:' + m.id)
-              ? 'Campaign fights count. Practice, Workshop and test runs do not.'
-              : 'Campaign and Daily runs count. Practice, Workshop and test runs do not.') +
+            : REMIX_GAUNTLET_MASTERIES.some((m) => entry.id === 'commendation:' + m.id)
+              ? 'Choose Remix in Practice → Boss Gauntlet. Either tier counts; isolated playtests grant no rewards.'
+              : LATE_BOSS_MASTERIES.some((m) => entry.id === 'commendation:' + m.id)
+                ? 'Campaign fights count. Practice, Workshop and test runs do not.'
+                : 'Campaign and Daily runs count. Practice, Workshop and test runs do not.') +
         '</span></p>'
       : '<div class="logbook-document"><p class="logbook-source">' +
         escapeLogbook(entry.lore[0]) +

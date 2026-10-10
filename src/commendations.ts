@@ -1,6 +1,7 @@
 import type { Lore } from './lore-upgrades.ts';
 import { SUPPORT_MASTERIES } from './support-mastery.ts';
 import { LATE_BOSS_MASTERIES } from './late-boss-mastery.ts';
+import { REMIX_GAUNTLET_MASTERIES } from './gauntlet-mastery.ts';
 import { BOSS_REMIXES, matchesRemixBoss } from './boss-remix-rules.ts';
 import type { Game, Enemy } from './game.ts';
 import { isHunt } from './hunt-rules.ts';
@@ -259,6 +260,7 @@ export const COMMENDATIONS = [
   },
   ...SUPPORT_MASTERIES,
   ...LATE_BOSS_MASTERIES,
+  ...REMIX_GAUNTLET_MASTERIES,
 ] as const;
 export type CommendationId = (typeof COMMENDATIONS)[number]['id'];
 export function commendationVisible(
@@ -271,11 +273,13 @@ export function commendationVisible(
   const entry = COMMENDATIONS.find((c) => c.id === id)!;
   return (
     earned.includes(id) ||
-    ('remix' in entry
-      ? revealed.includes('remix:' + entry.remix)
-      : 'upgrades' in entry
-        ? entry.upgrades.some((upgrade) => discovered.includes(upgrade))
-        : !('boss' in entry) || defeated.includes(entry.boss))
+    ('gauntlet' in entry
+      ? revealed.some((id) => id.startsWith('remix:'))
+      : 'remix' in entry
+        ? revealed.includes('remix:' + entry.remix)
+        : 'upgrades' in entry
+          ? entry.upgrades.some((upgrade) => discovered.includes(upgrade))
+          : !('boss' in entry) || defeated.includes(entry.boss))
   );
 }
 export function loadCommendations(raw: unknown): CommendationId[] {

@@ -94,7 +94,9 @@ test('locked commendations expose objectives and rewards, but only earned report
   const locked = logbookEntries([], loadLogbook(null)).filter((e) => e.section === 'commendations');
   assert.equal(
     locked.length,
-    COMMENDATIONS.filter((c) => !('boss' in c) && !('upgrades' in c) && !('remix' in c)).length,
+    COMMENDATIONS.filter(
+      (c) => !('boss' in c) && !('upgrades' in c) && !('remix' in c) && !('gauntlet' in c),
+    ).length,
   );
   for (const entry of locked) {
     const html = logbookArticle(entry, () => '');

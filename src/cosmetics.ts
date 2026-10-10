@@ -2,6 +2,14 @@ import type { CommendationId } from './commendations.ts';
 
 export const COSMETICS_KEY = 'rf-cosmetics-v1';
 export const GUN_FINISHES = {
+  coldsteel: {
+    name: 'Cold Steel',
+    shell: '#b1c4c8',
+    face: '#e4efde',
+    trim: '#514963',
+    light: '#a6e9d4',
+    unlock: 'remix-gauntlet-unserviced',
+  },
   beltline: {
     name: 'Beltline',
     shell: '#bd9955',
@@ -140,6 +148,13 @@ export const GUN_FINISHES = {
   },
 } as const;
 export const OUTFITS = {
+  circuitrunner: {
+    name: 'Circuit Runner',
+    body: '#518e91',
+    boots: '#344d66',
+    trim: '#f1c88e',
+    unlock: 'remix-gauntlet-cleared',
+  },
   highrise: {
     name: 'Highrise',
     body: '#6089ba',
