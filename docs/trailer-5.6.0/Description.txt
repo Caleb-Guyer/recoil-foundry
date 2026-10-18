@@ -1,0 +1,23 @@
+Play free in your browser: https://caleb-guyer.github.io/recoil-foundry/
+itch.io: https://caleb-guyer.itch.io/recoil-foundry
+
+Your gun is your way out.
+
+Shoot down. Go up. Turn recoil into movement in Recoil Foundry, a physics roguelike set inside a hostile factory.
+
+Build one gun each run. Combine 141 upgrades, earn six starting weapons, and fight through 20 rooms across five factory zones. Discover changing encounters, branching jobs, optional hunts, and new ways for your upgrades to work together.
+
+Keep coming back for Daily Runs, Overtime, Security levels, and the five-fight Boss Gauntlet — including Remix routes built from the arenas you discover.
+
+Free to play. Available now on desktop in your web browser.
+
+A game by Caleb Guyer.
+Trailer captured from Recoil Foundry 5.6.0 using the actual game engine, active combat, and scripted controls. Gameplay is edited to the music; no invulnerability or fabricated attacks.
+
+MUSIC
+'Resonance' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
+Track: https://www.scottbuckley.com.au/library/resonance/
+License: https://creativecommons.org/licenses/by/4.0/
+Changes: two excerpts joined on a musical phrase with a short crossfade, equalization, level adjustment, and ducking beneath game sound effects. The recording's original closing accents and natural decay are retained.
+
+#RecoilFoundry #Roguelike #IndieGame

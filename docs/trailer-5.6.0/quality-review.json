@@ -1,0 +1,63 @@
+{
+  "version": "5.6.0",
+  "video": "Recoil-Foundry-Official-Trailer.mp4",
+  "bytes": 27567494,
+  "sha256": "c7ac85325181a56857102af59ab799575f523c8d83241537f61123d7102a02d0",
+  "durationSeconds": 42.78333333333333,
+  "decodedFrames": 2567,
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "videoCodec": "H.264 High / yuv420p / BT.709 / progressive",
+  "audioCodec": "AAC-LC / 48 kHz / stereo / 384 kbps",
+  "integratedLufs": -14.06,
+  "truePeakDbtp": -1.83,
+  "worstTwoSecondMonoDeltaDb": -1.293,
+  "blackStartsSeconds": [
+    42.166667
+  ],
+  "silenceStartsSeconds": [
+    41.17125
+  ],
+  "freezeStartsSeconds": [
+    39.25
+  ],
+  "fastStart": true,
+  "topLevelAtoms": [
+    {
+      "type": "ftyp",
+      "offset": 0,
+      "bytes": 32
+    },
+    {
+      "type": "moov",
+      "offset": 32,
+      "bytes": 60064
+    },
+    {
+      "type": "free",
+      "offset": 60096,
+      "bytes": 8
+    },
+    {
+      "type": "mdat",
+      "offset": 60104,
+      "bytes": 27507390
+    }
+  ],
+  "shots": 18,
+  "capturedStartingGuns": [
+    "carbine",
+    "nailgun",
+    "pistol",
+    "repeater",
+    "shotgun",
+    "twinbore"
+  ],
+  "verifiedCombatAccents": 59,
+  "maximumCombatSyncErrorFrames": 0,
+  "allShotsPassQualityGates": true,
+  "allAudioSamplesFinite": true,
+  "musicSourceSha256": "264be9c44c32419b6de70f0ac24c92f81401419419c8fb111b8e19e62261331b",
+  "reviewNote": "Decoder, timing, loudness, peak, mono and technical checks. Encoded review sheets require separate visual inspection; these measurements do not constitute speaker listening or a YouTube upload."
+}

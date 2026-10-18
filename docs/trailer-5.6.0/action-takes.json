@@ -1,0 +1,1076 @@
+{
+  "recoil": [
+    {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-11",
+      "style": 1,
+      "start": 205,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8611111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 0,
+        "travel": 1433,
+        "span": 733,
+        "damage": 86
+      },
+      "score": 8.629
+    },
+    {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-5",
+      "style": 1,
+      "start": 157,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8472222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 20,
+        "longestStallFrames": 5,
+        "travel": 928,
+        "span": 392,
+        "damage": 204
+      },
+      "score": 8.487
+    },
+    {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-12",
+      "style": 0,
+      "start": 601,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7847222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 0,
+        "travel": 1202,
+        "span": 737,
+        "damage": 71
+      },
+      "score": 7.615
+    }
+  ],
+  "scatter": [
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
+      "seed": "ACTION-SCATTER-2",
+      "style": 0,
+      "start": 289,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8402777777777778,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 0,
+        "travel": 1168,
+        "span": 802,
+        "damage": 318
+      },
+      "score": 11.106
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
+      "seed": "ACTION-SCATTER-1",
+      "style": 1,
+      "start": 385,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8125,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 0,
+        "travel": 882,
+        "span": 713,
+        "damage": 189
+      },
+      "score": 9.884
+    },
+    {
+      "name": "scatter",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "kick",
+        "rapid",
+        "scatter",
+        "ricochet",
+        "airshot"
+      ],
+      "seed": "ACTION-SCATTER-7",
+      "style": 1,
+      "start": 661,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8611111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 10,
+        "longestStallFrames": 5,
+        "travel": 1212,
+        "span": 505,
+        "damage": 168
+      },
+      "score": 9.633
+    }
+  ],
+  "pinwheel": [
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-7",
+      "style": 1,
+      "start": 445,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 3,
+        "travel": 1215,
+        "span": 827,
+        "damage": 327
+      },
+      "score": 17.945
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-14",
+      "style": 0,
+      "start": 553,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.875,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 17,
+        "longestStallFrames": 0,
+        "travel": 1520,
+        "span": 935,
+        "damage": 251
+      },
+      "score": 17.303
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-19",
+      "style": 1,
+      "start": 529,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7291666666666666,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 8,
+        "travel": 1205,
+        "span": 663,
+        "damage": 487
+      },
+      "score": 17.302
+    }
+  ],
+  "prism": [
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-3",
+      "style": 1,
+      "start": 469,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8263888888888888,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 25,
+        "longestStallFrames": 0,
+        "travel": 1539,
+        "span": 888,
+        "damage": 404
+      },
+      "score": 16.22
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-4",
+      "style": 0,
+      "start": 361,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1225,
+        "span": 587,
+        "damage": 339
+      },
+      "score": 14.712
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-7",
+      "style": 1,
+      "start": 325,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9236111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 11,
+        "longestStallFrames": 0,
+        "travel": 1531,
+        "span": 774,
+        "damage": 349
+      },
+      "score": 14.71
+    }
+  ],
+  "cluster": [
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-5",
+      "style": 1,
+      "start": 385,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9097222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 2,
+        "travel": 1367,
+        "span": 543,
+        "damage": 434
+      },
+      "score": 16.828
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-12",
+      "style": 0,
+      "start": 481,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1224,
+        "span": 459,
+        "damage": 234
+      },
+      "score": 16.623
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-9",
+      "style": 1,
+      "start": 325,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9166666666666666,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 12,
+        "longestStallFrames": 0,
+        "travel": 1334,
+        "span": 643,
+        "damage": 457
+      },
+      "score": 16.066
+    }
+  ],
+  "storm": [
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-11",
+      "style": 1,
+      "start": 433,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1374,
+        "span": 1161,
+        "damage": 447
+      },
+      "score": 17.702
+    },
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-21",
+      "style": 1,
+      "start": 397,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 2,
+        "travel": 1105,
+        "span": 419,
+        "damage": 512
+      },
+      "score": 16.33
+    },
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-13",
+      "style": 1,
+      "start": 469,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8541666666666666,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 5,
+        "travel": 1277,
+        "span": 748,
+        "damage": 306
+      },
+      "score": 16.247
+    }
+  ],
+  "saw": [
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
+      "seed": "ACTION-SAW-8",
+      "style": 0,
+      "start": 637,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9097222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 1,
+        "travel": 1207,
+        "span": 673,
+        "damage": 198
+      },
+      "score": 14.282
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
+      "seed": "ACTION-SAW-18",
+      "style": 0,
+      "start": 325,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 1476,
+        "span": 898,
+        "damage": 224
+      },
+      "score": 13.835
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
+      "seed": "ACTION-SAW-20",
+      "style": 0,
+      "start": 337,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 1160,
+        "span": 722,
+        "damage": 184
+      },
+      "score": 12.587
+    }
+  ],
+  "turf": [
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
+      "event": true,
+      "seed": "ACTION-TURF-14",
+      "style": 0,
+      "start": 277,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9722222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 4,
+        "longestStallFrames": 4,
+        "travel": 984,
+        "span": 473,
+        "damage": 407
+      },
+      "score": 19.105
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
+      "event": true,
+      "seed": "ACTION-TURF-16",
+      "style": 0,
+      "start": 205,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8819444444444444,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 14,
+        "longestStallFrames": 0,
+        "travel": 991,
+        "span": 554,
+        "damage": 341
+      },
+      "score": 17.51
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
+      "event": true,
+      "seed": "ACTION-TURF-19",
+      "style": 1,
+      "start": 421,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9722222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 4,
+        "longestStallFrames": 4,
+        "travel": 1241,
+        "span": 591,
+        "damage": 339
+      },
+      "score": 15.361
+    }
+  ],
+  "loader": [
+    {
+      "name": "loader",
+      "stage": 3,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
+      "seed": "ACTION-LOADER-20",
+      "style": 0,
+      "start": 685,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7430555555555556,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 0,
+        "travel": 971,
+        "span": 345,
+        "damage": 102
+      },
+      "score": 6.62
+    }
+  ],
+  "shotgun": [
+    {
+      "name": "shotgun",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "startingGun": "shotgun",
+      "seed": "ACTION-SHOTGUN-21",
+      "style": 1,
+      "start": 529,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7986111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 10,
+        "longestStallFrames": 2,
+        "travel": 1248,
+        "span": 333,
+        "damage": 127
+      },
+      "score": 9.803
+    },
+    {
+      "name": "shotgun",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "startingGun": "shotgun",
+      "seed": "ACTION-SHOTGUN-16",
+      "style": 0,
+      "start": 409,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8888888888888888,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 15,
+        "longestStallFrames": 0,
+        "travel": 2008,
+        "span": 1611,
+        "damage": 144
+      },
+      "score": 9.482
+    },
+    {
+      "name": "shotgun",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "startingGun": "shotgun",
+      "seed": "ACTION-SHOTGUN-11",
+      "style": 1,
+      "start": 433,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9375,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 5,
+        "longestStallFrames": 5,
+        "travel": 1117,
+        "span": 435,
+        "damage": 128
+      },
+      "score": 9.351
+    }
+  ],
+  "nails": [
+    {
+      "name": "nails",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "nailgun",
+      "seed": "ACTION-NAILS-14",
+      "style": 0,
+      "start": 157,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.875,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 18,
+        "longestStallFrames": 0,
+        "travel": 1260,
+        "span": 776,
+        "damage": 444
+      },
+      "score": 13.476
+    },
+    {
+      "name": "nails",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "nailgun",
+      "seed": "ACTION-NAILS-15",
+      "style": 1,
+      "start": 217,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 998,
+        "span": 320,
+        "damage": 406
+      },
+      "score": 13.085
+    },
+    {
+      "name": "nails",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "nailgun",
+      "seed": "ACTION-NAILS-3",
+      "style": 1,
+      "start": 181,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7986111111111112,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 17,
+        "longestStallFrames": 0,
+        "travel": 1288,
+        "span": 746,
+        "damage": 324
+      },
+      "score": 12.944
+    }
+  ],
+  "twinbore": [
+    {
+      "name": "twinbore",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "scatter",
+        "airshot"
+      ],
+      "startingGun": "twinbore",
+      "seed": "ACTION-TWINBORE-12",
+      "style": 0,
+      "start": 313,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8125,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 0,
+        "travel": 1506,
+        "span": 926,
+        "damage": 335
+      },
+      "score": 11.982
+    },
+    {
+      "name": "twinbore",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "scatter",
+        "airshot"
+      ],
+      "startingGun": "twinbore",
+      "seed": "ACTION-TWINBORE-6",
+      "style": 0,
+      "start": 433,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 1489,
+        "span": 717,
+        "damage": 297
+      },
+      "score": 11.914
+    },
+    {
+      "name": "twinbore",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "scatter",
+        "airshot"
+      ],
+      "startingGun": "twinbore",
+      "seed": "ACTION-TWINBORE-18",
+      "style": 0,
+      "start": 469,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 8,
+        "travel": 1020,
+        "span": 575,
+        "damage": 258
+      },
+      "score": 10.99
+    }
+  ],
+  "carbine": [
+    {
+      "name": "carbine",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "pierce",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "carbine",
+      "seed": "ACTION-CARBINE-3",
+      "style": 1,
+      "start": 325,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 4,
+        "travel": 948,
+        "span": 307,
+        "damage": 500
+      },
+      "score": 14.982
+    },
+    {
+      "name": "carbine",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "pierce",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "carbine",
+      "seed": "ACTION-CARBINE-14",
+      "style": 0,
+      "start": 337,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 1136,
+        "span": 606,
+        "damage": 573
+      },
+      "score": 13.986
+    },
+    {
+      "name": "carbine",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "pierce",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "carbine",
+      "seed": "ACTION-CARBINE-13",
+      "style": 1,
+      "start": 253,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9444444444444444,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 8,
+        "longestStallFrames": 0,
+        "travel": 1314,
+        "span": 1177,
+        "damage": 498
+      },
+      "score": 13.105
+    }
+  ],
+  "repeater": [
+    {
+      "name": "repeater",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "repeater",
+      "seed": "ACTION-REPEATER-18",
+      "style": 0,
+      "start": 325,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 4,
+        "travel": 995,
+        "span": 371,
+        "damage": 445
+      },
+      "score": 17.504
+    },
+    {
+      "name": "repeater",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "repeater",
+      "seed": "ACTION-REPEATER-20",
+      "style": 0,
+      "start": 445,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1396,
+        "span": 604,
+        "damage": 410
+      },
+      "score": 17.263
+    },
+    {
+      "name": "repeater",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "repeater",
+      "seed": "ACTION-REPEATER-3",
+      "style": 1,
+      "start": 469,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 2,
+        "travel": 1037,
+        "span": 639,
+        "damage": 208
+      },
+      "score": 15.28
+    }
+  ]
+}

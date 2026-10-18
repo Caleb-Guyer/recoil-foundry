@@ -1,0 +1,481 @@
+{
+  "track": "Resonance",
+  "artist": "Scott Buckley",
+  "sourceIn": 163.276,
+  "bpm": 100,
+  "sampleRate": 24000,
+  "analysis": "Original action accents retained through marker 31. Closing passage measured from the actual ending: positive spectral flux, 2048-sample Hann windows and 5ms hops; final two accents refined with 1024-sample windows and 1ms hops. Marker 46 follows the final pickup; marker 48 is the first title accent, not a nominal quarter note. Extra body beats 32\u201347 measured at 1 ms hops with a 1024-sample Hann window, positive spectral flux and a \u00b165 ms search around the 100 BPM grid. No synthesized music or artificial ending.",
+  "beats": [
+    {
+      "beat": 0,
+      "sourceSeconds": 163.277667,
+      "frame": 0,
+      "strength": 4.852,
+      "frameErrorMs": -1.67
+    },
+    {
+      "beat": 1,
+      "sourceSeconds": 163.887667,
+      "frame": 37,
+      "strength": 1.207,
+      "frameErrorMs": 5.0
+    },
+    {
+      "beat": 2,
+      "sourceSeconds": 164.482667,
+      "frame": 72,
+      "strength": 2.607,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 3,
+      "sourceSeconds": 165.122667,
+      "frame": 111,
+      "strength": 2.129,
+      "frameErrorMs": 3.33
+    },
+    {
+      "beat": 4,
+      "sourceSeconds": 165.682667,
+      "frame": 144,
+      "strength": 4.955,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 5,
+      "sourceSeconds": 166.322667,
+      "frame": 183,
+      "strength": 1.24,
+      "frameErrorMs": 3.33
+    },
+    {
+      "beat": 6,
+      "sourceSeconds": 166.927667,
+      "frame": 219,
+      "strength": 1.002,
+      "frameErrorMs": -1.67
+    },
+    {
+      "beat": 7,
+      "sourceSeconds": 167.532667,
+      "frame": 255,
+      "strength": 1.765,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 8,
+      "sourceSeconds": 168.087667,
+      "frame": 289,
+      "strength": 5.514,
+      "frameErrorMs": 5.0
+    },
+    {
+      "beat": 9,
+      "sourceSeconds": 168.687667,
+      "frame": 325,
+      "strength": 1.635,
+      "frameErrorMs": 5.0
+    },
+    {
+      "beat": 10,
+      "sourceSeconds": 169.282667,
+      "frame": 360,
+      "strength": 3.634,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 11,
+      "sourceSeconds": 169.927667,
+      "frame": 399,
+      "strength": 1.593,
+      "frameErrorMs": -1.67
+    },
+    {
+      "beat": 12,
+      "sourceSeconds": 170.467667,
+      "frame": 431,
+      "strength": 6.192,
+      "frameErrorMs": -8.33
+    },
+    {
+      "beat": 13,
+      "sourceSeconds": 171.107667,
+      "frame": 470,
+      "strength": 1.54,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 14,
+      "sourceSeconds": 171.707667,
+      "frame": 506,
+      "strength": 1.774,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 15,
+      "sourceSeconds": 172.307667,
+      "frame": 542,
+      "strength": 1.779,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 16,
+      "sourceSeconds": 172.882667,
+      "frame": 576,
+      "strength": 6.336,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 17,
+      "sourceSeconds": 173.512667,
+      "frame": 614,
+      "strength": 1.555,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 18,
+      "sourceSeconds": 174.077667,
+      "frame": 648,
+      "strength": 5.537,
+      "frameErrorMs": -1.67
+    },
+    {
+      "beat": 19,
+      "sourceSeconds": 174.702667,
+      "frame": 686,
+      "strength": 1.072,
+      "frameErrorMs": 6.67
+    },
+    {
+      "beat": 20,
+      "sourceSeconds": 175.282667,
+      "frame": 720,
+      "strength": 6.088,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 21,
+      "sourceSeconds": 175.912667,
+      "frame": 758,
+      "strength": 1.602,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 22,
+      "sourceSeconds": 176.512667,
+      "frame": 794,
+      "strength": 1.329,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 23,
+      "sourceSeconds": 177.107667,
+      "frame": 830,
+      "strength": 1.172,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 24,
+      "sourceSeconds": 177.682667,
+      "frame": 864,
+      "strength": 6.728,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 25,
+      "sourceSeconds": 178.307667,
+      "frame": 902,
+      "strength": 1.317,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 26,
+      "sourceSeconds": 178.887667,
+      "frame": 937,
+      "strength": 5.326,
+      "frameErrorMs": 5.0
+    },
+    {
+      "beat": 27,
+      "sourceSeconds": 179.487667,
+      "frame": 973,
+      "strength": 1.553,
+      "frameErrorMs": 5.0
+    },
+    {
+      "beat": 28,
+      "sourceSeconds": 180.062667,
+      "frame": 1007,
+      "strength": 6.325,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 29,
+      "sourceSeconds": 180.707667,
+      "frame": 1046,
+      "strength": 1.406,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 30,
+      "sourceSeconds": 181.307667,
+      "frame": 1082,
+      "strength": 1.153,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 31,
+      "sourceSeconds": 181.907667,
+      "frame": 1118,
+      "strength": 0.887,
+      "frameErrorMs": 1.67
+    },
+    {
+      "beat": 32,
+      "sourceSeconds": 182.49733333333333,
+      "frame": 1153,
+      "strength": 103.47257326073326,
+      "frameErrorMs": -4.6667
+    },
+    {
+      "beat": 33,
+      "sourceSeconds": 183.11533333333333,
+      "frame": 1190,
+      "strength": 30.28507026399366,
+      "frameErrorMs": -6.0
+    },
+    {
+      "beat": 34,
+      "sourceSeconds": 183.69933333333333,
+      "frame": 1225,
+      "strength": 65.69945819146687,
+      "frameErrorMs": -6.6667
+    },
+    {
+      "beat": 35,
+      "sourceSeconds": 184.32133333333334,
+      "frame": 1263,
+      "strength": 27.11922217752959,
+      "frameErrorMs": 4.6667
+    },
+    {
+      "beat": 36,
+      "sourceSeconds": 184.89533333333333,
+      "frame": 1297,
+      "strength": 97.26223622364822,
+      "frameErrorMs": -2.6667
+    },
+    {
+      "beat": 37,
+      "sourceSeconds": 185.51933333333332,
+      "frame": 1335,
+      "strength": 34.511990867967974,
+      "frameErrorMs": 6.6667
+    },
+    {
+      "beat": 38,
+      "sourceSeconds": 186.12033333333332,
+      "frame": 1371,
+      "strength": 27.40332611325924,
+      "frameErrorMs": 5.6667
+    },
+    {
+      "beat": 39,
+      "sourceSeconds": 186.71033333333332,
+      "frame": 1406,
+      "strength": 27.870884742942792,
+      "frameErrorMs": -1.0
+    },
+    {
+      "beat": 40,
+      "sourceSeconds": 187.30033333333333,
+      "frame": 1441,
+      "strength": 85.78449414853999,
+      "frameErrorMs": -7.6667
+    },
+    {
+      "beat": 41,
+      "sourceSeconds": 187.92433333333332,
+      "frame": 1479,
+      "strength": 35.58015270087307,
+      "frameErrorMs": 1.6667
+    },
+    {
+      "beat": 42,
+      "sourceSeconds": 188.50233333333333,
+      "frame": 1514,
+      "strength": 43.096036065988415,
+      "frameErrorMs": 7.0
+    },
+    {
+      "beat": 43,
+      "sourceSeconds": 189.12033333333332,
+      "frame": 1551,
+      "strength": 27.77878697554754,
+      "frameErrorMs": 5.6667
+    },
+    {
+      "beat": 44,
+      "sourceSeconds": 189.68233333333333,
+      "frame": 1584,
+      "strength": 95.90648290896749,
+      "frameErrorMs": -6.3333
+    },
+    {
+      "beat": 45,
+      "sourceSeconds": 190.32033333333334,
+      "frame": 1623,
+      "strength": 24.693857809131913,
+      "frameErrorMs": 5.6667
+    },
+    {
+      "beat": 46,
+      "sourceSeconds": 190.92133333333334,
+      "frame": 1659,
+      "strength": 30.722506269150355,
+      "frameErrorMs": 4.6667
+    },
+    {
+      "beat": 47,
+      "sourceSeconds": 191.52033333333333,
+      "frame": 1695,
+      "strength": 32.540739966508276,
+      "frameErrorMs": 5.6667
+    },
+    {
+      "beat": 48,
+      "frame": 1728,
+      "sourceSeconds": 249.682667,
+      "strength": 390.524,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 49,
+      "frame": 1766,
+      "sourceSeconds": 250.312667,
+      "strength": 90.75,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 50,
+      "frame": 1801,
+      "sourceSeconds": 250.887667,
+      "strength": 370.499,
+      "frameErrorMs": 5.0
+    },
+    {
+      "beat": 51,
+      "frame": 1838,
+      "sourceSeconds": 251.512667,
+      "strength": 69.302,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 52,
+      "frame": 1873,
+      "sourceSeconds": 252.092667,
+      "strength": 372.435,
+      "frameErrorMs": -0.0
+    },
+    {
+      "beat": 53,
+      "frame": 1910,
+      "sourceSeconds": 252.712667,
+      "strength": 46.13,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 54,
+      "frame": 1946,
+      "sourceSeconds": 253.312667,
+      "strength": 73.752,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 55,
+      "frame": 1982,
+      "sourceSeconds": 253.917667,
+      "strength": 36.28,
+      "frameErrorMs": -8.33
+    },
+    {
+      "beat": 56,
+      "frame": 2017,
+      "sourceSeconds": 254.497667,
+      "strength": 367.391,
+      "frameErrorMs": -5.0
+    },
+    {
+      "beat": 57,
+      "frame": 2054,
+      "sourceSeconds": 255.112667,
+      "strength": 42.004,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 58,
+      "frame": 2089,
+      "sourceSeconds": 255.687667,
+      "strength": 280.68,
+      "frameErrorMs": 5.0
+    },
+    {
+      "beat": 59,
+      "frame": 2124,
+      "sourceSeconds": 256.272667,
+      "strength": 51.802,
+      "frameErrorMs": 3.33
+    },
+    {
+      "beat": 60,
+      "frame": 2160,
+      "sourceSeconds": 256.882667,
+      "strength": 395.534,
+      "frameErrorMs": -6.67
+    },
+    {
+      "beat": 61,
+      "frame": 2198,
+      "sourceSeconds": 257.512667,
+      "strength": 17.996,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 62,
+      "frame": 2250,
+      "sourceSeconds": 258.377333,
+      "strength": 20.15,
+      "frameErrorMs": -1.33
+    },
+    {
+      "beat": 63,
+      "frame": 2270,
+      "sourceSeconds": 258.712667,
+      "strength": 32.161,
+      "frameErrorMs": -3.33
+    },
+    {
+      "beat": 64,
+      "frame": 2279,
+      "sourceSeconds": 258.856333,
+      "strength": 36.177,
+      "frameErrorMs": 3.0,
+      "role": "Final accent: RECOIL title reveal"
+    }
+  ],
+  "closing": {
+    "spliceFrame": 1728,
+    "spliceAtBeat": 48,
+    "sourceIn": 249.676,
+    "sourceOut": 263.2,
+    "crossfadeSeconds": 0.025,
+    "phraseSkipBeats": 96,
+    "titleFrame": 2279,
+    "subtitleFrame": 2305,
+    "titleSourceSeconds": 258.85633333333334,
+    "subtitleSourceSeconds": 259.29633333333334,
+    "titleFrameErrorMs": 3.0,
+    "subtitleFrameErrorMs": -3.67,
+    "method": "One additional 16-beat phrase develops the six starting tools. Skip six complete phrases (96 beats / 57.6 seconds) into the recording's original ending; retain the measured final accents and natural decay."
+  }
+}

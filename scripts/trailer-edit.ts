@@ -62,6 +62,11 @@ export interface EditShot {
   score: number;
 }
 const weights: Record<string, number> = {
+  'shotgun-shot': 10,
+  'nail-shot': 8,
+  'carbine-shot': 10,
+  'twinbore-shot': 9,
+  'repeater-shot': 8,
   'shell-shot': 9,
   heavy: 9,
   scatter: 9,
@@ -80,10 +85,14 @@ interface Moment {
   weight: number;
 }
 
-export function planEdit(takes: Record<string, Take[]>, beats: Beat[]): EditShot[] {
+export function planEdit(
+  takes: Record<string, Take[]>,
+  beats: Beat[],
+  montage: readonly (readonly [string, number, number, number])[] = MONTAGE,
+): EditShot[] {
   const cache = new Map<string, { frames: ActionFrame[]; moments: Moment[] }>();
   const used: { seed: string; start: number; end: number }[] = [];
-  return MONTAGE.map(([name, preferred, fromBeat, toBeat]) => {
+  return montage.map(([name, preferred, fromBeat, toBeat]) => {
     const start = beats[fromBeat].frame,
       end = beats[toBeat].frame,
       len = end - start;

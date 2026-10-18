@@ -1,0 +1,22 @@
+MUSIC LICENSE — checked October 18, 2026
+
+Resonance — Scott Buckley
+Composer and source: https://www.scottbuckley.com.au/library/resonance/
+Usage instructions: https://www.scottbuckley.com.au/library/using-this-music/
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+
+The composer expressly permits commercial projects with attribution. Keep the full music credit, track link, license link and edit disclosure from Description.txt in the YouTube description.
+
+This export uses an excerpt from 2:43.276 to 3:12.076, then the original closing passage from 4:09.676 to 4:23.200. A 25 ms phrase-aligned crossfade joins the two excerpts. The mix includes EQ, gain adjustment and brief ducking under game sound effects. The original recorded ending is preserved. No other song is used, and no generative music is used.
+
+Source recording SHA-256:
+264be9c44c32419b6de70f0ac24c92f81401419419c8fb111b8e19e62261331b
+
+The source recording was downloaded directly from:
+https://www.scottbuckley.com.au/library/wp-content/uploads/2018/04/sb_resonance.mp3
+
+Game footage, sound effects and game artwork: Recoil Foundry, Caleb Guyer.
+The video uses the current game's own renderer and Sound class. No third-party gameplay footage or AI-generated thumbnail art is used. Fonts are rasterized from the local licensed Windows installation; no font files are redistributed.
+
+The recording retains its CC BY 4.0 license. The game's software license does not replace the music license. This use does not imply endorsement by Scott Buckley. Do not register the licensed music in a Content ID fingerprinting service. If a music claim occurs, retain this record and use the composer's claims process linked from his website; this document is not a promise that automated claims cannot occur.

@@ -2,7 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game } from '../src/game.ts';
-import { actionInput, takeQuality, usableAction } from '../scripts/trailer-scenes.ts';
+import {
+  actionInput,
+  takeQuality,
+  usableAction,
+  startTake,
+  PROMO_TEMPLATES,
+} from '../scripts/trailer-scenes.ts';
+import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
+import { validBuild } from '../src/rules.ts';
 
 const { Body, Bodies, Composite } = Matter;
 function fixture() {
@@ -64,4 +72,24 @@ test('scout rejects stationary combat even when it has damage and a high action 
     score: 100,
   }));
   assert.equal(usableAction(takeQuality(frames), frames.length), false);
+});
+
+test('current promotional fixtures preserve all six starting tools and use legal room budgets', () => {
+  const captured = new Set<string>();
+  for (const template of PROMO_TEMPLATES) {
+    assert(validBuild(template.mods));
+    assert(template.mods.length <= template.stage);
+    const g = startTake({
+      ...template,
+      seed: 'TRAILER-TOOL-CHECK-' + template.name,
+      style: 0,
+      start: 0,
+      length: 144,
+    });
+    assert.equal(g.startingGun, 'startingGun' in template ? template.startingGun : 'pistol');
+    assert(g.testRun);
+    assert.equal(g.hp, 100);
+    captured.add(g.startingGun);
+  }
+  assert.deepEqual([...captured].sort(), [...STARTING_GUN_IDS].sort());
 });

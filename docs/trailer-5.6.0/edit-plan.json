@@ -1,0 +1,1085 @@
+[
+  {
+    "take": {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-5",
+      "style": 1,
+      "start": 152,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8402777777777778,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 5,
+        "travel": 914,
+        "span": 375,
+        "damage": 175
+      },
+      "score": 8.487
+    },
+    "fromBeat": 0,
+    "toBeat": 4,
+    "start": 0,
+    "end": 144,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shot",
+        "beat": 0
+      },
+      {
+        "output": 37,
+        "source": 42,
+        "kind": "shot",
+        "beat": 1
+      },
+      {
+        "output": 72,
+        "source": 79,
+        "kind": "kill",
+        "beat": 2
+      },
+      {
+        "output": 111,
+        "source": 116,
+        "kind": "kill",
+        "beat": 3
+      },
+      {
+        "output": 143,
+        "source": 143,
+        "kind": "end"
+      }
+    ],
+    "score": 28.027676453813164
+  },
+  {
+    "take": {
+      "name": "shotgun",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "startingGun": "shotgun",
+      "seed": "ACTION-SHOTGUN-21",
+      "style": 1,
+      "start": 546,
+      "length": 145,
+      "quality": {
+        "visibleFraction": 0.7103448275862069,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 2,
+        "travel": 1276,
+        "span": 346,
+        "damage": 127
+      },
+      "score": 9.803
+    },
+    "fromBeat": 4,
+    "toBeat": 8,
+    "start": 144,
+    "end": 289,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "kill",
+        "beat": 4
+      },
+      {
+        "output": 39,
+        "source": 45,
+        "kind": "shotgun-shot",
+        "beat": 5
+      },
+      {
+        "output": 75,
+        "source": 81,
+        "kind": "shotgun-shot",
+        "beat": 6
+      },
+      {
+        "output": 111,
+        "source": 114,
+        "kind": "shotgun-shot",
+        "beat": 7
+      },
+      {
+        "output": 144,
+        "source": 144,
+        "kind": "end"
+      }
+    ],
+    "score": 31.615025853036467
+  },
+  {
+    "take": {
+      "name": "nails",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "nailgun",
+      "seed": "ACTION-NAILS-15",
+      "style": 1,
+      "start": 224,
+      "length": 142,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 920,
+        "span": 310,
+        "damage": 315
+      },
+      "score": 13.085
+    },
+    "fromBeat": 8,
+    "toBeat": 12,
+    "start": 289,
+    "end": 431,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 8
+      },
+      {
+        "output": 36,
+        "source": 40,
+        "kind": "kill",
+        "beat": 9
+      },
+      {
+        "output": 71,
+        "source": 80,
+        "kind": "kill",
+        "beat": 10
+      },
+      {
+        "output": 110,
+        "source": 115,
+        "kind": "kill",
+        "beat": 11
+      },
+      {
+        "output": 141,
+        "source": 141,
+        "kind": "end"
+      }
+    ],
+    "score": 34.61487869079693
+  },
+  {
+    "take": {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-3",
+      "style": 1,
+      "start": 469,
+      "length": 145,
+      "quality": {
+        "visibleFraction": 0.8206896551724138,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 26,
+        "longestStallFrames": 0,
+        "travel": 1549,
+        "span": 898,
+        "damage": 404
+      },
+      "score": 16.22
+    },
+    "fromBeat": 12,
+    "toBeat": 16,
+    "start": 431,
+    "end": 576,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "beam-hit",
+        "beat": 12
+      },
+      {
+        "output": 39,
+        "source": 32,
+        "kind": "kill",
+        "beat": 13
+      },
+      {
+        "output": 75,
+        "source": 71,
+        "kind": "beam-start",
+        "beat": 14
+      },
+      {
+        "output": 111,
+        "source": 107,
+        "kind": "kill",
+        "beat": 15
+      },
+      {
+        "output": 144,
+        "source": 144,
+        "kind": "end"
+      }
+    ],
+    "score": 37.022152927127024
+  },
+  {
+    "take": {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-7",
+      "style": 1,
+      "start": 440,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 3,
+        "travel": 1136,
+        "span": 746,
+        "damage": 332
+      },
+      "score": 17.945
+    },
+    "fromBeat": 16,
+    "toBeat": 20,
+    "start": 576,
+    "end": 720,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "scatter",
+        "beat": 16
+      },
+      {
+        "output": 38,
+        "source": 41,
+        "kind": "kill",
+        "beat": 17
+      },
+      {
+        "output": 72,
+        "source": 77,
+        "kind": "kill",
+        "beat": 18
+      },
+      {
+        "output": 143,
+        "source": 143,
+        "kind": "end"
+      }
+    ],
+    "score": 35.4593978113932
+  },
+  {
+    "take": {
+      "name": "turf",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
+      "event": true,
+      "seed": "ACTION-TURF-14",
+      "style": 0,
+      "start": 296,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8402777777777778,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 4,
+        "travel": 1098,
+        "span": 515,
+        "damage": 403
+      },
+      "score": 19.105
+    },
+    "fromBeat": 20,
+    "toBeat": 24,
+    "start": 720,
+    "end": 864,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "kill",
+        "beat": 20
+      },
+      {
+        "output": 38,
+        "source": 32,
+        "kind": "kill",
+        "beat": 21
+      },
+      {
+        "output": 74,
+        "source": 72,
+        "kind": "heavy",
+        "beat": 22
+      },
+      {
+        "output": 110,
+        "source": 104,
+        "kind": "explode",
+        "beat": 23
+      },
+      {
+        "output": 143,
+        "source": 143,
+        "kind": "end"
+      }
+    ],
+    "score": 44.65972218019433
+  },
+  {
+    "take": {
+      "name": "saw",
+      "stage": 6,
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
+      "seed": "ACTION-SAW-18",
+      "style": 0,
+      "start": 338,
+      "length": 143,
+      "quality": {
+        "visibleFraction": 0.9440559440559441,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 8,
+        "longestStallFrames": 1,
+        "travel": 1458,
+        "span": 924,
+        "damage": 205
+      },
+      "score": 13.835
+    },
+    "fromBeat": 24,
+    "toBeat": 28,
+    "start": 864,
+    "end": 1007,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shot",
+        "beat": 24
+      },
+      {
+        "output": 73,
+        "source": 69,
+        "kind": "shot",
+        "beat": 26
+      },
+      {
+        "output": 109,
+        "source": 108,
+        "kind": "shot",
+        "beat": 27
+      },
+      {
+        "output": 142,
+        "source": 142,
+        "kind": "end"
+      }
+    ],
+    "score": 25.999088197434705
+  },
+  {
+    "take": {
+      "name": "twinbore",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "scatter",
+        "airshot"
+      ],
+      "startingGun": "twinbore",
+      "seed": "ACTION-TWINBORE-6",
+      "style": 0,
+      "start": 453,
+      "length": 146,
+      "quality": {
+        "visibleFraction": 0.9931506849315068,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 1,
+        "longestStallFrames": 1,
+        "travel": 1369,
+        "span": 509,
+        "damage": 288
+      },
+      "score": 11.914
+    },
+    "fromBeat": 28,
+    "toBeat": 32,
+    "start": 1007,
+    "end": 1153,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 28
+      },
+      {
+        "output": 39,
+        "source": 42,
+        "kind": "heavy",
+        "beat": 29
+      },
+      {
+        "output": 75,
+        "source": 81,
+        "kind": "break",
+        "beat": 30
+      },
+      {
+        "output": 111,
+        "source": 114,
+        "kind": "kill",
+        "beat": 31
+      },
+      {
+        "output": 145,
+        "source": 145,
+        "kind": "end"
+      }
+    ],
+    "score": 31.071432426243554
+  },
+  {
+    "take": {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-5",
+      "style": 1,
+      "start": 383,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9097222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 2,
+        "travel": 1375,
+        "span": 543,
+        "damage": 453
+      },
+      "score": 16.828
+    },
+    "fromBeat": 32,
+    "toBeat": 36,
+    "start": 1153,
+    "end": 1297,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shell-shot",
+        "beat": 32
+      },
+      {
+        "output": 37,
+        "source": 33,
+        "kind": "kill",
+        "beat": 33
+      },
+      {
+        "output": 72,
+        "source": 70,
+        "kind": "shell-shot",
+        "beat": 34
+      },
+      {
+        "output": 110,
+        "source": 110,
+        "kind": "kill",
+        "beat": 35
+      },
+      {
+        "output": 143,
+        "source": 143,
+        "kind": "end"
+      }
+    ],
+    "score": 39.15084632227919
+  },
+  {
+    "take": {
+      "name": "carbine",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "pierce",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "carbine",
+      "seed": "ACTION-CARBINE-3",
+      "style": 1,
+      "start": 351,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 905,
+        "span": 316,
+        "damage": 576
+      },
+      "score": 14.982
+    },
+    "fromBeat": 36,
+    "toBeat": 40,
+    "start": 1297,
+    "end": 1441,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "explode",
+        "beat": 36
+      },
+      {
+        "output": 38,
+        "source": 38,
+        "kind": "heavy",
+        "beat": 37
+      },
+      {
+        "output": 74,
+        "source": 81,
+        "kind": "kill",
+        "beat": 38
+      },
+      {
+        "output": 109,
+        "source": 110,
+        "kind": "kill",
+        "beat": 39
+      },
+      {
+        "output": 143,
+        "source": 143,
+        "kind": "end"
+      }
+    ],
+    "score": 38.421845321230464
+  },
+  {
+    "take": {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-11",
+      "style": 1,
+      "start": 456,
+      "length": 143,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1280,
+        "span": 1052,
+        "damage": 424
+      },
+      "score": 17.702
+    },
+    "fromBeat": 40,
+    "toBeat": 44,
+    "start": 1441,
+    "end": 1584,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shell-shot",
+        "beat": 40
+      },
+      {
+        "output": 38,
+        "source": 39,
+        "kind": "shell-shot",
+        "beat": 41
+      },
+      {
+        "output": 73,
+        "source": 76,
+        "kind": "explode",
+        "beat": 42
+      },
+      {
+        "output": 110,
+        "source": 108,
+        "kind": "shell-shot",
+        "beat": 43
+      },
+      {
+        "output": 142,
+        "source": 142,
+        "kind": "end"
+      }
+    ],
+    "score": 39.210756697296276
+  },
+  {
+    "take": {
+      "name": "loader",
+      "stage": 3,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
+      "seed": "ACTION-LOADER-20",
+      "style": 0,
+      "start": 688,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7430555555555556,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 0,
+        "travel": 973,
+        "span": 317,
+        "damage": 116
+      },
+      "score": 6.62
+    },
+    "fromBeat": 44,
+    "toBeat": 48,
+    "start": 1584,
+    "end": 1728,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 44
+      },
+      {
+        "output": 39,
+        "source": 44,
+        "kind": "heavy",
+        "beat": 45
+      },
+      {
+        "output": 75,
+        "source": 80,
+        "kind": "heavy",
+        "beat": 46
+      },
+      {
+        "output": 143,
+        "source": 143,
+        "kind": "end"
+      }
+    ],
+    "score": 21.083688892909247
+  },
+  {
+    "take": {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-7",
+      "style": 1,
+      "start": 359,
+      "length": 145,
+      "quality": {
+        "visibleFraction": 0.9241379310344827,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 11,
+        "longestStallFrames": 6,
+        "travel": 1371,
+        "span": 819,
+        "damage": 329
+      },
+      "score": 14.71
+    },
+    "fromBeat": 48,
+    "toBeat": 52,
+    "start": 1728,
+    "end": 1873,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "beam-start",
+        "beat": 48
+      },
+      {
+        "output": 38,
+        "source": 44,
+        "kind": "beam-hit",
+        "beat": 49
+      },
+      {
+        "output": 73,
+        "source": 73,
+        "kind": "beam-start",
+        "beat": 50
+      },
+      {
+        "output": 110,
+        "source": 110,
+        "kind": "beam-hit",
+        "beat": 51
+      },
+      {
+        "output": 144,
+        "source": 144,
+        "kind": "end"
+      }
+    ],
+    "score": 30.859947203299043
+  },
+  {
+    "take": {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-14",
+      "style": 0,
+      "start": 587,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9930555555555556,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 1,
+        "longestStallFrames": 4,
+        "travel": 1332,
+        "span": 762,
+        "damage": 286
+      },
+      "score": 17.303
+    },
+    "fromBeat": 52,
+    "toBeat": 56,
+    "start": 1873,
+    "end": 2017,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "scatter",
+        "beat": 52
+      },
+      {
+        "output": 37,
+        "source": 39,
+        "kind": "scatter",
+        "beat": 53
+      },
+      {
+        "output": 73,
+        "source": 81,
+        "kind": "scatter",
+        "beat": 54
+      },
+      {
+        "output": 143,
+        "source": 143,
+        "kind": "end"
+      }
+    ],
+    "score": 30.666339108685314
+  },
+  {
+    "take": {
+      "name": "saw",
+      "stage": 6,
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
+      "seed": "ACTION-SAW-8",
+      "style": 0,
+      "start": 668,
+      "length": 72,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 725,
+        "span": 412,
+        "damage": 147
+      },
+      "score": 14.282
+    },
+    "fromBeat": 56,
+    "toBeat": 58,
+    "start": 2017,
+    "end": 2089,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shot",
+        "beat": 56
+      },
+      {
+        "output": 71,
+        "source": 71,
+        "kind": "end"
+      }
+    ],
+    "score": 19.754706709722768
+  },
+  {
+    "take": {
+      "name": "turf",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
+      "event": true,
+      "seed": "ACTION-TURF-16",
+      "style": 0,
+      "start": 205,
+      "length": 71,
+      "quality": {
+        "visibleFraction": 0.8591549295774648,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 10,
+        "longestStallFrames": 0,
+        "travel": 306,
+        "span": 246,
+        "damage": 135
+      },
+      "score": 17.51
+    },
+    "fromBeat": 58,
+    "toBeat": 60,
+    "start": 2089,
+    "end": 2160,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "kill",
+        "beat": 58
+      },
+      {
+        "output": 35,
+        "source": 39,
+        "kind": "kill",
+        "beat": 59
+      },
+      {
+        "output": 70,
+        "source": 70,
+        "kind": "end"
+      }
+    ],
+    "score": 29.23616062053935
+  },
+  {
+    "take": {
+      "name": "repeater",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "repeater",
+      "seed": "ACTION-REPEATER-18",
+      "style": 0,
+      "start": 324,
+      "length": 90,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 622,
+        "span": 290,
+        "damage": 300
+      },
+      "score": 17.504
+    },
+    "fromBeat": 60,
+    "toBeat": 62,
+    "start": 2160,
+    "end": 2250,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 60
+      },
+      {
+        "output": 38,
+        "source": 35,
+        "kind": "kill",
+        "beat": 61
+      },
+      {
+        "output": 89,
+        "source": 89,
+        "kind": "end"
+      }
+    ],
+    "score": 29.60898649660002
+  },
+  {
+    "take": {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-12",
+      "style": 0,
+      "start": 488,
+      "length": 29,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 172,
+        "span": 122,
+        "damage": 52
+      },
+      "score": 16.623
+    },
+    "fromBeat": 62,
+    "toBeat": 64,
+    "start": 2250,
+    "end": 2279,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "shell-shot",
+        "beat": 62
+      },
+      {
+        "output": 20,
+        "source": 21,
+        "kind": "kill",
+        "beat": 63
+      },
+      {
+        "output": 28,
+        "source": 28,
+        "kind": "end"
+      }
+    ],
+    "score": 30.60382144891715
+  }
+]

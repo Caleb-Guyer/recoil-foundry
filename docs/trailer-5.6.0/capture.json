@@ -1,0 +1,1685 @@
+{
+  "version": "5.6.0",
+  "createdAt": "2026-10-18T05:01:11.367Z",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "frames": 2567,
+  "seconds": 42.78333333333333,
+  "shots": [
+    {
+      "name": "recoil",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "seed": "ACTION-RECOIL-5",
+      "style": 1,
+      "start": 152,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8402777777777778,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 5,
+        "travel": 914,
+        "span": 375,
+        "damage": 175
+      },
+      "score": 8.487,
+      "timelineStart": 0,
+      "seconds": 2.4,
+      "initialHp": 100,
+      "finalHp": 86,
+      "kills": 3,
+      "onScreen": 0.8958333333333334,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "shot",
+          "beat": 0
+        },
+        {
+          "output": 37,
+          "source": 42,
+          "kind": "shot",
+          "beat": 1
+        },
+        {
+          "output": 72,
+          "source": 79,
+          "kind": "kill",
+          "beat": 2
+        },
+        {
+          "output": 111,
+          "source": 116,
+          "kind": "kill",
+          "beat": 3
+        },
+        {
+          "output": 143,
+          "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "shotgun",
+      "stage": 2,
+      "mods": [
+        "kick",
+        "light"
+      ],
+      "startingGun": "shotgun",
+      "seed": "ACTION-SHOTGUN-21",
+      "style": 1,
+      "start": 546,
+      "length": 145,
+      "quality": {
+        "visibleFraction": 0.7103448275862069,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 2,
+        "travel": 1276,
+        "span": 346,
+        "damage": 127
+      },
+      "score": 9.803,
+      "timelineStart": 2.4,
+      "seconds": 2.4166666666666665,
+      "initialHp": 86,
+      "finalHp": 86,
+      "kills": 3,
+      "onScreen": 0.8482758620689655,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "kill",
+          "beat": 4
+        },
+        {
+          "output": 39,
+          "source": 45,
+          "kind": "shotgun-shot",
+          "beat": 5
+        },
+        {
+          "output": 75,
+          "source": 81,
+          "kind": "shotgun-shot",
+          "beat": 6
+        },
+        {
+          "output": 111,
+          "source": 114,
+          "kind": "shotgun-shot",
+          "beat": 7
+        },
+        {
+          "output": 144,
+          "source": 144,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "nails",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "nailgun",
+      "seed": "ACTION-NAILS-15",
+      "style": 1,
+      "start": 224,
+      "length": 142,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 920,
+        "span": 310,
+        "damage": 315
+      },
+      "score": 13.085,
+      "timelineStart": 4.816666666666666,
+      "seconds": 2.3666666666666667,
+      "initialHp": 84,
+      "finalHp": 68,
+      "kills": 4,
+      "onScreen": 0.852112676056338,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 8
+        },
+        {
+          "output": 36,
+          "source": 40,
+          "kind": "kill",
+          "beat": 9
+        },
+        {
+          "output": 71,
+          "source": 80,
+          "kind": "kill",
+          "beat": 10
+        },
+        {
+          "output": 110,
+          "source": 115,
+          "kind": "kill",
+          "beat": 11
+        },
+        {
+          "output": 141,
+          "source": 141,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-3",
+      "style": 1,
+      "start": 469,
+      "length": 145,
+      "quality": {
+        "visibleFraction": 0.8206896551724138,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 26,
+        "longestStallFrames": 0,
+        "travel": 1549,
+        "span": 898,
+        "damage": 404
+      },
+      "score": 16.22,
+      "timelineStart": 7.183333333333334,
+      "seconds": 2.4166666666666665,
+      "initialHp": 100,
+      "finalHp": 91,
+      "kills": 5,
+      "onScreen": 0.7931034482758621,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "beam-hit",
+          "beat": 12
+        },
+        {
+          "output": 39,
+          "source": 32,
+          "kind": "kill",
+          "beat": 13
+        },
+        {
+          "output": 75,
+          "source": 71,
+          "kind": "beam-start",
+          "beat": 14
+        },
+        {
+          "output": 111,
+          "source": 107,
+          "kind": "kill",
+          "beat": 15
+        },
+        {
+          "output": 144,
+          "source": 144,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-7",
+      "style": 1,
+      "start": 440,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 3,
+        "travel": 1136,
+        "span": 746,
+        "damage": 332
+      },
+      "score": 17.945,
+      "timelineStart": 9.6,
+      "seconds": 2.4,
+      "initialHp": 100,
+      "finalHp": 85,
+      "kills": 2,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "scatter",
+          "beat": 16
+        },
+        {
+          "output": 38,
+          "source": 41,
+          "kind": "kill",
+          "beat": 17
+        },
+        {
+          "output": 72,
+          "source": 77,
+          "kind": "kill",
+          "beat": 18
+        },
+        {
+          "output": 143,
+          "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
+      "event": true,
+      "seed": "ACTION-TURF-14",
+      "style": 0,
+      "start": 296,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.8402777777777778,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 23,
+        "longestStallFrames": 4,
+        "travel": 1098,
+        "span": 515,
+        "damage": 403
+      },
+      "score": 19.105,
+      "timelineStart": 12,
+      "seconds": 2.4,
+      "initialHp": 68,
+      "finalHp": 68,
+      "kills": 5,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "kill",
+          "beat": 20
+        },
+        {
+          "output": 38,
+          "source": 32,
+          "kind": "kill",
+          "beat": 21
+        },
+        {
+          "output": 74,
+          "source": 72,
+          "kind": "heavy",
+          "beat": 22
+        },
+        {
+          "output": 110,
+          "source": 104,
+          "kind": "explode",
+          "beat": 23
+        },
+        {
+          "output": 143,
+          "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
+      "seed": "ACTION-SAW-18",
+      "style": 0,
+      "start": 338,
+      "length": 143,
+      "quality": {
+        "visibleFraction": 0.9440559440559441,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 8,
+        "longestStallFrames": 1,
+        "travel": 1458,
+        "span": 924,
+        "damage": 205
+      },
+      "score": 13.835,
+      "timelineStart": 14.4,
+      "seconds": 2.3833333333333333,
+      "initialHp": 100,
+      "finalHp": 84,
+      "kills": 0,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "shot",
+          "beat": 24
+        },
+        {
+          "output": 73,
+          "source": 69,
+          "kind": "shot",
+          "beat": 26
+        },
+        {
+          "output": 109,
+          "source": 108,
+          "kind": "shot",
+          "beat": 27
+        },
+        {
+          "output": 142,
+          "source": 142,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "twinbore",
+      "stage": 6,
+      "mods": [
+        "magnum",
+        "rapid",
+        "scatter",
+        "airshot"
+      ],
+      "startingGun": "twinbore",
+      "seed": "ACTION-TWINBORE-6",
+      "style": 0,
+      "start": 453,
+      "length": 146,
+      "quality": {
+        "visibleFraction": 0.9931506849315068,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 1,
+        "longestStallFrames": 1,
+        "travel": 1369,
+        "span": 509,
+        "damage": 288
+      },
+      "score": 11.914,
+      "timelineStart": 16.783333333333335,
+      "seconds": 2.433333333333333,
+      "initialHp": 84,
+      "finalHp": 46,
+      "kills": 3,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 28
+        },
+        {
+          "output": 39,
+          "source": 42,
+          "kind": "heavy",
+          "beat": 29
+        },
+        {
+          "output": 75,
+          "source": 81,
+          "kind": "break",
+          "beat": 30
+        },
+        {
+          "output": 111,
+          "source": 114,
+          "kind": "kill",
+          "beat": 31
+        },
+        {
+          "output": 145,
+          "source": 145,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-5",
+      "style": 1,
+      "start": 383,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9097222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 13,
+        "longestStallFrames": 2,
+        "travel": 1375,
+        "span": 543,
+        "damage": 453
+      },
+      "score": 16.828,
+      "timelineStart": 19.216666666666665,
+      "seconds": 2.4,
+      "initialHp": 100,
+      "finalHp": 91,
+      "kills": 4,
+      "onScreen": 0.9583333333333334,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "shell-shot",
+          "beat": 32
+        },
+        {
+          "output": 37,
+          "source": 33,
+          "kind": "kill",
+          "beat": 33
+        },
+        {
+          "output": 72,
+          "source": 70,
+          "kind": "shell-shot",
+          "beat": 34
+        },
+        {
+          "output": 110,
+          "source": 110,
+          "kind": "kill",
+          "beat": 35
+        },
+        {
+          "output": 143,
+          "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "carbine",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "pierce",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "carbine",
+      "seed": "ACTION-CARBINE-3",
+      "style": 1,
+      "start": 351,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 905,
+        "span": 316,
+        "damage": 576
+      },
+      "score": 14.982,
+      "timelineStart": 21.616666666666667,
+      "seconds": 2.4,
+      "initialHp": 82,
+      "finalHp": 64,
+      "kills": 2,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "explode",
+          "beat": 36
+        },
+        {
+          "output": 38,
+          "source": 38,
+          "kind": "heavy",
+          "beat": 37
+        },
+        {
+          "output": 74,
+          "source": 81,
+          "kind": "kill",
+          "beat": 38
+        },
+        {
+          "output": 109,
+          "source": 110,
+          "kind": "kill",
+          "beat": 39
+        },
+        {
+          "output": 143,
+          "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "storm",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "arc-coil",
+        "storm-cell",
+        "aftershock",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech",
+        "rapid"
+      ],
+      "seed": "ACTION-STORM-11",
+      "style": 1,
+      "start": 456,
+      "length": 143,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1280,
+        "span": 1052,
+        "damage": 424
+      },
+      "score": 17.702,
+      "timelineStart": 24.016666666666666,
+      "seconds": 2.3833333333333333,
+      "initialHp": 100,
+      "finalHp": 66,
+      "kills": 1,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "shell-shot",
+          "beat": 40
+        },
+        {
+          "output": 38,
+          "source": 39,
+          "kind": "shell-shot",
+          "beat": 41
+        },
+        {
+          "output": 73,
+          "source": 76,
+          "kind": "explode",
+          "beat": 42
+        },
+        {
+          "output": 110,
+          "source": 108,
+          "kind": "shell-shot",
+          "beat": 43
+        },
+        {
+          "output": 142,
+          "source": 142,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "loader",
+      "stage": 3,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
+      "seed": "ACTION-LOADER-20",
+      "style": 0,
+      "start": 688,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.7430555555555556,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 21,
+        "longestStallFrames": 0,
+        "travel": 973,
+        "span": 317,
+        "damage": 116
+      },
+      "score": 6.62,
+      "timelineStart": 26.4,
+      "seconds": 2.4,
+      "initialHp": 82,
+      "finalHp": 64,
+      "kills": 0,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 44
+        },
+        {
+          "output": 39,
+          "source": 44,
+          "kind": "heavy",
+          "beat": 45
+        },
+        {
+          "output": 75,
+          "source": 80,
+          "kind": "heavy",
+          "beat": 46
+        },
+        {
+          "output": 143,
+          "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "prism",
+      "stage": 10,
+      "mods": [
+        "cutting-torch",
+        "prism-array",
+        "thermal-runaway",
+        "scatter",
+        "pierce",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PRISM-7",
+      "style": 1,
+      "start": 359,
+      "length": 145,
+      "quality": {
+        "visibleFraction": 0.9241379310344827,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 11,
+        "longestStallFrames": 6,
+        "travel": 1371,
+        "span": 819,
+        "damage": 329
+      },
+      "score": 14.71,
+      "timelineStart": 28.8,
+      "seconds": 2.4166666666666665,
+      "initialHp": 82,
+      "finalHp": 84,
+      "kills": 1,
+      "onScreen": 0.9586206896551724,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "beam-start",
+          "beat": 48
+        },
+        {
+          "output": 38,
+          "source": 44,
+          "kind": "beam-hit",
+          "beat": 49
+        },
+        {
+          "output": 73,
+          "source": 73,
+          "kind": "beam-start",
+          "beat": 50
+        },
+        {
+          "output": 110,
+          "source": 110,
+          "kind": "beam-hit",
+          "beat": 51
+        },
+        {
+          "output": 144,
+          "source": 144,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "pinwheel",
+      "stage": 10,
+      "mods": [
+        "crossfire",
+        "pinwheel",
+        "scatter",
+        "rapid",
+        "burst",
+        "airshot",
+        "light",
+        "leech",
+        "kick"
+      ],
+      "seed": "ACTION-PINWHEEL-14",
+      "style": 0,
+      "start": 587,
+      "length": 144,
+      "quality": {
+        "visibleFraction": 0.9930555555555556,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 1,
+        "longestStallFrames": 4,
+        "travel": 1332,
+        "span": 762,
+        "damage": 286
+      },
+      "score": 17.303,
+      "timelineStart": 31.216666666666665,
+      "seconds": 2.4,
+      "initialHp": 84,
+      "finalHp": 73,
+      "kills": 2,
+      "onScreen": 0.8402777777777778,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "scatter",
+          "beat": 52
+        },
+        {
+          "output": 37,
+          "source": 39,
+          "kind": "scatter",
+          "beat": 53
+        },
+        {
+          "output": 73,
+          "source": 81,
+          "kind": "scatter",
+          "beat": 54
+        },
+        {
+          "output": 143,
+          "source": 143,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "saw",
+      "stage": 6,
+      "mods": [
+        "grindshot",
+        "crosscut",
+        "split",
+        "shatter",
+        "pierce",
+        "light"
+      ],
+      "seed": "ACTION-SAW-8",
+      "style": 0,
+      "start": 668,
+      "length": 72,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 725,
+        "span": 412,
+        "damage": 147
+      },
+      "score": 14.282,
+      "timelineStart": 33.61666666666667,
+      "seconds": 1.2,
+      "initialHp": 27,
+      "finalHp": 27,
+      "kills": 0,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "shot",
+          "beat": 56
+        },
+        {
+          "output": 71,
+          "source": 71,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "turf",
+      "stage": 4,
+      "mods": [
+        "magnum",
+        "ricochet",
+        "airshot",
+        "light"
+      ],
+      "event": true,
+      "seed": "ACTION-TURF-16",
+      "style": 0,
+      "start": 205,
+      "length": 71,
+      "quality": {
+        "visibleFraction": 0.8591549295774648,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 10,
+        "longestStallFrames": 0,
+        "travel": 306,
+        "span": 246,
+        "damage": 135
+      },
+      "score": 17.51,
+      "timelineStart": 34.81666666666667,
+      "seconds": 1.1833333333333333,
+      "initialHp": 84,
+      "finalHp": 68,
+      "kills": 3,
+      "onScreen": 0.8732394366197183,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "kill",
+          "beat": 58
+        },
+        {
+          "output": 35,
+          "source": 39,
+          "kind": "kill",
+          "beat": 59
+        },
+        {
+          "output": 70,
+          "source": 70,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "repeater",
+      "stage": 10,
+      "mods": [
+        "magnum",
+        "rapid",
+        "ricochet",
+        "airshot"
+      ],
+      "startingGun": "repeater",
+      "seed": "ACTION-REPEATER-18",
+      "style": 0,
+      "start": 324,
+      "length": 90,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 622,
+        "span": 290,
+        "damage": 300
+      },
+      "score": 17.504,
+      "timelineStart": 36,
+      "seconds": 1.5,
+      "initialHp": 100,
+      "finalHp": 82,
+      "kills": 2,
+      "onScreen": 0.9777777777777777,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 60
+        },
+        {
+          "output": 38,
+          "source": 35,
+          "kind": "kill",
+          "beat": 61
+        },
+        {
+          "output": 89,
+          "source": 89,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "cluster",
+      "stage": 10,
+      "mods": [
+        "shellshock",
+        "cluster-shell",
+        "fuse",
+        "linked-fuse",
+        "aftershock",
+        "shockfront",
+        "blast-surf",
+        "airshot",
+        "light",
+        "leech"
+      ],
+      "seed": "ACTION-CLUSTER-12",
+      "style": 0,
+      "start": 488,
+      "length": 29,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 172,
+        "span": 122,
+        "damage": 52
+      },
+      "score": 16.623,
+      "timelineStart": 37.5,
+      "seconds": 0.48333333333333334,
+      "initialHp": 49,
+      "finalHp": 53,
+      "kills": 2,
+      "onScreen": 1,
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "shell-shot",
+          "beat": 62
+        },
+        {
+          "output": 20,
+          "source": 21,
+          "kind": "kill",
+          "beat": 63
+        },
+        {
+          "output": 28,
+          "source": 28,
+          "kind": "end"
+        }
+      ]
+    }
+  ],
+  "beatSync": [
+    {
+      "shot": 1,
+      "kind": "shot",
+      "beat": 0,
+      "frame": 0,
+      "expectedFrame": 0,
+      "errorFrames": 0
+    },
+    {
+      "shot": 1,
+      "kind": "shot",
+      "beat": 1,
+      "frame": 37,
+      "expectedFrame": 37,
+      "errorFrames": 0
+    },
+    {
+      "shot": 1,
+      "kind": "kill",
+      "beat": 2,
+      "frame": 72,
+      "expectedFrame": 72,
+      "errorFrames": 0
+    },
+    {
+      "shot": 1,
+      "kind": "kill",
+      "beat": 3,
+      "frame": 111,
+      "expectedFrame": 111,
+      "errorFrames": 0
+    },
+    {
+      "shot": 2,
+      "kind": "kill",
+      "beat": 4,
+      "frame": 144,
+      "expectedFrame": 144,
+      "errorFrames": 0
+    },
+    {
+      "shot": 2,
+      "kind": "shotgun-shot",
+      "beat": 5,
+      "frame": 183,
+      "expectedFrame": 183,
+      "errorFrames": 0
+    },
+    {
+      "shot": 2,
+      "kind": "shotgun-shot",
+      "beat": 6,
+      "frame": 219,
+      "expectedFrame": 219,
+      "errorFrames": 0
+    },
+    {
+      "shot": 2,
+      "kind": "shotgun-shot",
+      "beat": 7,
+      "frame": 255,
+      "expectedFrame": 255,
+      "errorFrames": 0
+    },
+    {
+      "shot": 3,
+      "kind": "heavy",
+      "beat": 8,
+      "frame": 289,
+      "expectedFrame": 289,
+      "errorFrames": 0
+    },
+    {
+      "shot": 3,
+      "kind": "kill",
+      "beat": 9,
+      "frame": 325,
+      "expectedFrame": 325,
+      "errorFrames": 0
+    },
+    {
+      "shot": 3,
+      "kind": "kill",
+      "beat": 10,
+      "frame": 360,
+      "expectedFrame": 360,
+      "errorFrames": 0
+    },
+    {
+      "shot": 3,
+      "kind": "kill",
+      "beat": 11,
+      "frame": 399,
+      "expectedFrame": 399,
+      "errorFrames": 0
+    },
+    {
+      "shot": 4,
+      "kind": "beam-hit",
+      "beat": 12,
+      "frame": 431,
+      "expectedFrame": 431,
+      "errorFrames": 0
+    },
+    {
+      "shot": 4,
+      "kind": "kill",
+      "beat": 13,
+      "frame": 470,
+      "expectedFrame": 470,
+      "errorFrames": 0
+    },
+    {
+      "shot": 4,
+      "kind": "beam-start",
+      "beat": 14,
+      "frame": 506,
+      "expectedFrame": 506,
+      "errorFrames": 0
+    },
+    {
+      "shot": 4,
+      "kind": "kill",
+      "beat": 15,
+      "frame": 542,
+      "expectedFrame": 542,
+      "errorFrames": 0
+    },
+    {
+      "shot": 5,
+      "kind": "scatter",
+      "beat": 16,
+      "frame": 576,
+      "expectedFrame": 576,
+      "errorFrames": 0
+    },
+    {
+      "shot": 5,
+      "kind": "kill",
+      "beat": 17,
+      "frame": 614,
+      "expectedFrame": 614,
+      "errorFrames": 0
+    },
+    {
+      "shot": 5,
+      "kind": "kill",
+      "beat": 18,
+      "frame": 648,
+      "expectedFrame": 648,
+      "errorFrames": 0
+    },
+    {
+      "shot": 6,
+      "kind": "kill",
+      "beat": 20,
+      "frame": 720,
+      "expectedFrame": 720,
+      "errorFrames": 0
+    },
+    {
+      "shot": 6,
+      "kind": "kill",
+      "beat": 21,
+      "frame": 758,
+      "expectedFrame": 758,
+      "errorFrames": 0
+    },
+    {
+      "shot": 6,
+      "kind": "heavy",
+      "beat": 22,
+      "frame": 794,
+      "expectedFrame": 794,
+      "errorFrames": 0
+    },
+    {
+      "shot": 6,
+      "kind": "explode",
+      "beat": 23,
+      "frame": 830,
+      "expectedFrame": 830,
+      "errorFrames": 0
+    },
+    {
+      "shot": 7,
+      "kind": "shot",
+      "beat": 24,
+      "frame": 864,
+      "expectedFrame": 864,
+      "errorFrames": 0
+    },
+    {
+      "shot": 7,
+      "kind": "shot",
+      "beat": 26,
+      "frame": 937,
+      "expectedFrame": 937,
+      "errorFrames": 0
+    },
+    {
+      "shot": 7,
+      "kind": "shot",
+      "beat": 27,
+      "frame": 973,
+      "expectedFrame": 973,
+      "errorFrames": 0
+    },
+    {
+      "shot": 8,
+      "kind": "heavy",
+      "beat": 28,
+      "frame": 1007,
+      "expectedFrame": 1007,
+      "errorFrames": 0
+    },
+    {
+      "shot": 8,
+      "kind": "heavy",
+      "beat": 29,
+      "frame": 1046,
+      "expectedFrame": 1046,
+      "errorFrames": 0
+    },
+    {
+      "shot": 8,
+      "kind": "break",
+      "beat": 30,
+      "frame": 1082,
+      "expectedFrame": 1082,
+      "errorFrames": 0
+    },
+    {
+      "shot": 8,
+      "kind": "kill",
+      "beat": 31,
+      "frame": 1118,
+      "expectedFrame": 1118,
+      "errorFrames": 0
+    },
+    {
+      "shot": 9,
+      "kind": "shell-shot",
+      "beat": 32,
+      "frame": 1153,
+      "expectedFrame": 1153,
+      "errorFrames": 0
+    },
+    {
+      "shot": 9,
+      "kind": "kill",
+      "beat": 33,
+      "frame": 1190,
+      "expectedFrame": 1190,
+      "errorFrames": 0
+    },
+    {
+      "shot": 9,
+      "kind": "shell-shot",
+      "beat": 34,
+      "frame": 1225,
+      "expectedFrame": 1225,
+      "errorFrames": 0
+    },
+    {
+      "shot": 9,
+      "kind": "kill",
+      "beat": 35,
+      "frame": 1263,
+      "expectedFrame": 1263,
+      "errorFrames": 0
+    },
+    {
+      "shot": 10,
+      "kind": "explode",
+      "beat": 36,
+      "frame": 1297,
+      "expectedFrame": 1297,
+      "errorFrames": 0
+    },
+    {
+      "shot": 10,
+      "kind": "heavy",
+      "beat": 37,
+      "frame": 1335,
+      "expectedFrame": 1335,
+      "errorFrames": 0
+    },
+    {
+      "shot": 10,
+      "kind": "kill",
+      "beat": 38,
+      "frame": 1371,
+      "expectedFrame": 1371,
+      "errorFrames": 0
+    },
+    {
+      "shot": 10,
+      "kind": "kill",
+      "beat": 39,
+      "frame": 1406,
+      "expectedFrame": 1406,
+      "errorFrames": 0
+    },
+    {
+      "shot": 11,
+      "kind": "shell-shot",
+      "beat": 40,
+      "frame": 1441,
+      "expectedFrame": 1441,
+      "errorFrames": 0
+    },
+    {
+      "shot": 11,
+      "kind": "shell-shot",
+      "beat": 41,
+      "frame": 1479,
+      "expectedFrame": 1479,
+      "errorFrames": 0
+    },
+    {
+      "shot": 11,
+      "kind": "explode",
+      "beat": 42,
+      "frame": 1514,
+      "expectedFrame": 1514,
+      "errorFrames": 0
+    },
+    {
+      "shot": 11,
+      "kind": "shell-shot",
+      "beat": 43,
+      "frame": 1551,
+      "expectedFrame": 1551,
+      "errorFrames": 0
+    },
+    {
+      "shot": 12,
+      "kind": "heavy",
+      "beat": 44,
+      "frame": 1584,
+      "expectedFrame": 1584,
+      "errorFrames": 0
+    },
+    {
+      "shot": 12,
+      "kind": "heavy",
+      "beat": 45,
+      "frame": 1623,
+      "expectedFrame": 1623,
+      "errorFrames": 0
+    },
+    {
+      "shot": 12,
+      "kind": "heavy",
+      "beat": 46,
+      "frame": 1659,
+      "expectedFrame": 1659,
+      "errorFrames": 0
+    },
+    {
+      "shot": 13,
+      "kind": "beam-start",
+      "beat": 48,
+      "frame": 1728,
+      "expectedFrame": 1728,
+      "errorFrames": 0
+    },
+    {
+      "shot": 13,
+      "kind": "beam-hit",
+      "beat": 49,
+      "frame": 1766,
+      "expectedFrame": 1766,
+      "errorFrames": 0
+    },
+    {
+      "shot": 13,
+      "kind": "beam-start",
+      "beat": 50,
+      "frame": 1801,
+      "expectedFrame": 1801,
+      "errorFrames": 0
+    },
+    {
+      "shot": 13,
+      "kind": "beam-hit",
+      "beat": 51,
+      "frame": 1838,
+      "expectedFrame": 1838,
+      "errorFrames": 0
+    },
+    {
+      "shot": 14,
+      "kind": "scatter",
+      "beat": 52,
+      "frame": 1873,
+      "expectedFrame": 1873,
+      "errorFrames": 0
+    },
+    {
+      "shot": 14,
+      "kind": "scatter",
+      "beat": 53,
+      "frame": 1910,
+      "expectedFrame": 1910,
+      "errorFrames": 0
+    },
+    {
+      "shot": 14,
+      "kind": "scatter",
+      "beat": 54,
+      "frame": 1946,
+      "expectedFrame": 1946,
+      "errorFrames": 0
+    },
+    {
+      "shot": 15,
+      "kind": "shot",
+      "beat": 56,
+      "frame": 2017,
+      "expectedFrame": 2017,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "kill",
+      "beat": 58,
+      "frame": 2089,
+      "expectedFrame": 2089,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "kill",
+      "beat": 59,
+      "frame": 2124,
+      "expectedFrame": 2124,
+      "errorFrames": 0
+    },
+    {
+      "shot": 17,
+      "kind": "heavy",
+      "beat": 60,
+      "frame": 2160,
+      "expectedFrame": 2160,
+      "errorFrames": 0
+    },
+    {
+      "shot": 17,
+      "kind": "kill",
+      "beat": 61,
+      "frame": 2198,
+      "expectedFrame": 2198,
+      "errorFrames": 0
+    },
+    {
+      "shot": 18,
+      "kind": "shell-shot",
+      "beat": 62,
+      "frame": 2250,
+      "expectedFrame": 2250,
+      "errorFrames": 0
+    },
+    {
+      "shot": 18,
+      "kind": "kill",
+      "beat": 63,
+      "frame": 2270,
+      "expectedFrame": 2270,
+      "errorFrames": 0
+    }
+  ],
+  "effectsLevels": [
+    {
+      "shot": 1,
+      "rmsDb": -21.019347164584413,
+      "peak": 0.5000673532485962
+    },
+    {
+      "shot": 2,
+      "rmsDb": -22.379191240999585,
+      "peak": 0.5116277933120728
+    },
+    {
+      "shot": 3,
+      "rmsDb": -18.60382711853238,
+      "peak": 0.5620884895324707
+    },
+    {
+      "shot": 4,
+      "rmsDb": -18.31295623786667,
+      "peak": 0.5492035150527954
+    },
+    {
+      "shot": 5,
+      "rmsDb": -20.50900236680528,
+      "peak": 0.5399087071418762
+    },
+    {
+      "shot": 6,
+      "rmsDb": -19.26925613545755,
+      "peak": 0.6547388434410095
+    },
+    {
+      "shot": 7,
+      "rmsDb": -21.601058073631766,
+      "peak": 0.5121048092842102
+    },
+    {
+      "shot": 8,
+      "rmsDb": -19.649638846439387,
+      "peak": 0.6510486602783203
+    },
+    {
+      "shot": 9,
+      "rmsDb": -16.70547589291064,
+      "peak": 0.6938045024871826
+    },
+    {
+      "shot": 10,
+      "rmsDb": -20.840512018891403,
+      "peak": 0.6252488493919373
+    },
+    {
+      "shot": 11,
+      "rmsDb": -15.35508790111523,
+      "peak": 0.6721096634864807
+    },
+    {
+      "shot": 12,
+      "rmsDb": -20.087134580405625,
+      "peak": 0.49654415249824524
+    },
+    {
+      "shot": 13,
+      "rmsDb": -20.48897665474232,
+      "peak": 0.5507177710533142
+    },
+    {
+      "shot": 14,
+      "rmsDb": -21.44553413250216,
+      "peak": 0.5316487550735474
+    },
+    {
+      "shot": 15,
+      "rmsDb": -20.87110019944095,
+      "peak": 0.7000563740730286
+    },
+    {
+      "shot": 16,
+      "rmsDb": -18.182079649697144,
+      "peak": 0.5873186588287354
+    },
+    {
+      "shot": 17,
+      "rmsDb": -18.953468677847358,
+      "peak": 0.5281078815460205
+    },
+    {
+      "shot": 18,
+      "rmsDb": -22.657205046912804,
+      "peak": 0.316866397857666
+    }
+  ],
+  "audioMix": {
+    "method": "Original game cues with space for the closing fill; phrase-aligned edit into the original recorded ending, two title accents and natural ring-out; music EQ, brief ducking, measured constant gain and peak limiter",
+    "musicResolution": {
+      "impact": 37.983333333333334,
+      "subtitle": 38.416666666666664,
+      "splice": 28.8,
+      "pauseSeconds": 0,
+      "sourceEnd": 263.2,
+      "addedEcho": false,
+      "naturalEnding": true,
+      "titleFrameErrorMs": 3,
+      "subtitleFrameErrorMs": -3.67
+    },
+    "musicGain": 0.6,
+    "masterGainDb": 1.7400000000000002,
+    "inputLufs": -15.74,
+    "inputTruePeak": -1.45,
+    "sampleRate": 48000
+  },
+  "music": {
+    "title": "Resonance",
+    "artist": "Scott Buckley",
+    "license": "CC BY 4.0",
+    "source": "https://www.scottbuckley.com.au/library/resonance/",
+    "sha256": "264be9c44c32419b6de70f0ac24c92f81401419419c8fb111b8e19e62261331b",
+    "sourceIn": 163.276,
+    "closing": {
+      "spliceFrame": 1728,
+      "spliceAtBeat": 48,
+      "sourceIn": 249.676,
+      "sourceOut": 263.2,
+      "crossfadeSeconds": 0.025,
+      "phraseSkipBeats": 96,
+      "titleFrame": 2279,
+      "subtitleFrame": 2305,
+      "titleSourceSeconds": 258.85633333333334,
+      "subtitleSourceSeconds": 259.29633333333334,
+      "titleFrameErrorMs": 3,
+      "subtitleFrameErrorMs": -3.67,
+      "method": "One additional 16-beat phrase develops the six starting tools. Skip six complete phrases (96 beats / 57.6 seconds) into the recording's original ending; retain the measured final accents and natural decay."
+    }
+  },
+  "method": "Actual current Game and Renderer. Six starting tools, legal checkpoint builds, ordinary scripted inputs, active health, enemy AI and collisions; source events gently retimed to recorded musical accents. No invulnerability, fabricated attacks, player saves or unlock writes. Opening starts directly in combat; game Sound cues are mixed with licensed recorded music."
+}

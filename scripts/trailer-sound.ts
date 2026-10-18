@@ -12,7 +12,19 @@ export interface BeamFrame {
   heat: number;
 }
 export const INTRO_FOLEY_GAIN = 1.35;
-const weapons = new Set(['shot', 'scatter', 'heavy', 'charged', 'shell-shot', 'mass-shot']);
+const weapons = new Set([
+  'shot',
+  'scatter',
+  'heavy',
+  'charged',
+  'shell-shot',
+  'mass-shot',
+  'shotgun-shot',
+  'nail-shot',
+  'carbine-shot',
+  'twinbore-shot',
+  'repeater-shot',
+]);
 const impacts = new Set([
   'explode',
   'kill',
@@ -44,6 +56,7 @@ export function trailerSound(
   duration: number,
   ending: EndingTiming,
   footsteps: readonly Float32Array[],
+  includeIntro = true,
 ) {
   const rate = 48000;
   const channels = [
@@ -96,10 +109,11 @@ export function trailerSound(
       }
   }
   // The intro is mixed directly, without a loudness normalizer lifting its room tone.
-  mix(
-    introAudio(footsteps, rate).map((ch) => Float32Array.from(ch, (v) => v * INTRO_FOLEY_GAIN)),
-    0,
-  );
+  if (includeIntro)
+    mix(
+      introAudio(footsteps, rate).map((ch) => Float32Array.from(ch, (v) => v * INTRO_FOLEY_GAIN)),
+      0,
+    );
   const last = new Map<string, number>();
   // Keep the first impact intact; clustered blasts should not bury the next gunshot or beat.
   const impactWindow = 0.12,

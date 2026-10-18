@@ -3,6 +3,7 @@ import { Game, type Input } from '../src/game.ts';
 import { BRANCH_TEST_BUILDS, withParents } from '../src/branch-builds.ts';
 import { eventTestFromUrl } from '../src/area-events.ts';
 import { seeded, validBuild, type Checkpoint, type Vec } from '../src/rules.ts';
+import type { StartingGun } from '../src/starting-guns.ts';
 
 // Capture direction uses only ordinary inputs. It never changes combat state.
 export interface Take {
@@ -16,6 +17,7 @@ export interface Take {
   event?: boolean;
   score?: number;
   quality?: TakeQuality;
+  startingGun?: StartingGun;
 }
 const legal = (ids: readonly string[]) => {
   const mods = withParents([], ids);
@@ -42,6 +44,37 @@ export const templates = [
   { name: 'loader', stage: 3, mods: legal(['magnum', 'rapid', 'kick']) },
 ];
 
+// The current launch trailer also shows earned starting tools. These capture
+// fixtures never read or write a player's save or award equipment.
+export const PROMO_TEMPLATES = [
+  ...templates,
+  { name: 'shotgun', stage: 2, mods: legal(['kick', 'light']), startingGun: 'shotgun' as const },
+  {
+    name: 'nails',
+    stage: 6,
+    mods: legal(['magnum', 'rapid', 'ricochet', 'airshot']),
+    startingGun: 'nailgun' as const,
+  },
+  {
+    name: 'twinbore',
+    stage: 6,
+    mods: legal(['magnum', 'rapid', 'scatter', 'airshot']),
+    startingGun: 'twinbore' as const,
+  },
+  {
+    name: 'carbine',
+    stage: 10,
+    mods: legal(['magnum', 'rapid', 'pierce', 'ricochet', 'airshot']),
+    startingGun: 'carbine' as const,
+  },
+  {
+    name: 'repeater',
+    stage: 10,
+    mods: legal(['magnum', 'rapid', 'ricochet', 'airshot']),
+    startingGun: 'repeater' as const,
+  },
+];
+
 export function startTake(take: Take) {
   if (take.mods.length > take.stage) throw new Error('Build exceeds its room reward budget');
   Math.random = seeded(take.seed + ':trailer-fx');
@@ -51,6 +84,7 @@ export function startTake(take: Take) {
     stage: take.stage,
     hp: 100,
     mods: [...take.mods],
+    ...(take.startingGun ? { startingGun: take.startingGun } : {}),
     kills: 0,
     elapsed: 0,
     ...(take.event
@@ -263,10 +297,10 @@ export function usableAction(q: TakeQuality, frames: number) {
   );
 }
 
-export function surveyTakes(names?: string[]) {
+export function surveyTakes(names?: string[], pool = templates) {
   const selected: Record<string, Take[]> = {};
   const length = 144;
-  for (const template of templates) {
+  for (const template of pool) {
     if (names && !names.includes(template.name)) continue;
     const candidates: Take[] = [];
     for (let n = 0; n < 24; n++) {
