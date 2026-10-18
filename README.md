@@ -2,11 +2,13 @@
 
 **One gun. All recoil.**
 
-[Play free on itch.io](https://caleb-guyer.itch.io/recoil-foundry) · [GitHub mirror](https://caleb-guyer.github.io/recoil-foundry/) · [Watch gameplay](https://caleb-guyer.github.io/recoil-foundry/media/gameplay.mp4)
+[Play free on itch.io](https://caleb-guyer.itch.io/recoil-foundry) · [GitHub mirror](https://caleb-guyer.github.io/recoil-foundry/) · [Watch the official trailer](https://www.youtube.com/watch?v=rDDEY7eRPc4)
 
 A physics roguelike set inside a hostile factory. Build one gun between fights, use its kick to throw yourself through the air, and survive twenty rooms across five areas. Shoot down. Go up.
 
-![Recoil flight in the Loading Docks](public/media/loading-docks.png)
+[![Watch the official Recoil Foundry gameplay trailer](docs/trailer-5.6.0/Recoil-Foundry-YouTube-Thumbnail.png)](https://www.youtube.com/watch?v=rDDEY7eRPc4)
+
+[Watch the official gameplay trailer on YouTube — 52 seconds.](https://www.youtube.com/watch?v=rDDEY7eRPc4)
 
 - **141 upgrades**, including 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
 - **Six starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater through different accomplishments.

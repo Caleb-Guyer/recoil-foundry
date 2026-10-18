@@ -15,7 +15,7 @@
 - Description: [ready-to-paste HTML](description.html).
 - Cover: [1260 × 1000](assets/cover.png). Header: [1600 × 450](assets/banner.png).
 - Screenshots: Transmission, Recoil climb and Subversion from [the Dead Signal launch kit](../launch/dead-signal/README.md), followed by the existing Loading Docks, Furnace Halls and Cooling Works images.
-- Video: use the actual MP4 link in the description. The trailer field only accepts supported video hosts; it is not a YouTube upload.
+- Featured video: [the official 52-second gameplay trailer on YouTube](https://www.youtube.com/watch?v=rDDEY7eRPc4), published in the **Gameplay video or trailer** field. The older Dead Signal update trailer remains linked in its description section.
 - AI disclosure: Yes, with Code and Text & Dialog selected. The game uses code-drawn art and procedural audio; no image or audio generation model assets are used.
 - Theme: background `#0a1419`, content `#142127`, text `#e9eadc`, links/buttons `#acc3b6`. Simple sans-serif typography, visible screenshots, no additional decorative background.
 - Embed: click to launch fullscreen, with scrollbars off and Loading Docks as the launch background. Screenshots use the sidebar layout; comments are enabled.
