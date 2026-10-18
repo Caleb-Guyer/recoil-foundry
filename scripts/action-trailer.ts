@@ -396,7 +396,7 @@ for (let frame = ending.impactFrame; frame < total; frame++) {
     plate.getContext('2d').putImageData(c.getImageData(0, 0, W, H), 0, 0);
     background = plate;
   }
-  drawEnding(c, frame, ending, background);
+  drawEnding(c, frame, ending, background, 'caleb-guyer.github.io/recoil-foundry');
   if (frame === ending.linkFrame + 18) await still(frame, 'PLAY FREE', edit.length);
   const n = endingFrames.indexOf(frame);
   if (n >= 0) {

@@ -12,7 +12,6 @@ if (MODS.length !== 141 || STARTING_GUN_IDS.length !== 6)
   throw new Error('Update promotional equipment counts');
 const title = 'Recoil Foundry — Official Gameplay Trailer | Play Free';
 const description = `Play free in your browser: https://caleb-guyer.github.io/recoil-foundry/
-itch.io: https://caleb-guyer.itch.io/recoil-foundry
 
 Your gun is your way out.
 
@@ -90,7 +89,7 @@ Ready-to-upload files are in this folder. This package has not been uploaded or 
 | Automatic chapters | Off; this is one continuous trailer. |
 | Cards | None; keep the action unobstructed. |
 | End screen | Leave off to preserve the closing title and play URL. |
-| Shorts remixing | Turn off audio-only remixes so this licensed music excerpt is not offered as a standalone soundtrack. Video remixing is your choice. |
+| Shorts remixing | Don't allow remixing for this upload, to keep the trailer and its music attribution together. |
 | Recording date/location | Optional; no physical filming location is needed for engine footage. |
 | Playlist | Your Recoil Foundry playlist, if you have one. |
 | Monetization | Optional if your channel is eligible; the music license permits commercial use with credit. |
@@ -144,7 +143,11 @@ const cues = [
   [9.6, 26.35, '[Beams, saws, explosions and gunfire over music]'],
   [26.4, 28.75, 'CLOCK OUT ALIVE.'],
   [28.8, 37.9, '[Gunfire and explosions build with the music]'],
-  [38.417, 41.05, 'RECOIL FOUNDRY\nPLAY FREE IN YOUR BROWSER\ncaleb-guyer.itch.io/recoil-foundry'],
+  [
+    38.417,
+    41.05,
+    'RECOIL FOUNDRY\nPLAY FREE IN YOUR BROWSER\ncaleb-guyer.github.io/recoil-foundry',
+  ],
   [41.05, 42.28, '[Music fades]'],
 ] as const;
 const captions = cues

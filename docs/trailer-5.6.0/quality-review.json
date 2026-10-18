@@ -1,8 +1,8 @@
 {
   "version": "5.6.0",
   "video": "Recoil-Foundry-Official-Trailer.mp4",
-  "bytes": 27567494,
-  "sha256": "c7ac85325181a56857102af59ab799575f523c8d83241537f61123d7102a02d0",
+  "bytes": 27576957,
+  "sha256": "2de93cd9d5de34643655d14aa622a90658edb41c2fdc27447826e91783b60105",
   "durationSeconds": 42.78333333333333,
   "decodedFrames": 2567,
   "width": 1920,
@@ -32,17 +32,17 @@
     {
       "type": "moov",
       "offset": 32,
-      "bytes": 60064
+      "bytes": 60048
     },
     {
       "type": "free",
-      "offset": 60096,
+      "offset": 60080,
       "bytes": 8
     },
     {
       "type": "mdat",
-      "offset": 60104,
-      "bytes": 27507390
+      "offset": 60088,
+      "bytes": 27516869
     }
   ],
   "shots": 18,

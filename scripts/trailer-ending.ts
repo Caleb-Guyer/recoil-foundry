@@ -23,6 +23,7 @@ export function drawEnding(
   frame: number,
   timing: EndingTiming,
   gameplay?: CanvasImageSource,
+  playUrl = 'caleb-guyer.itch.io/recoil-foundry',
 ) {
   const w = c.canvas.width,
     h = c.canvas.height;
@@ -75,7 +76,7 @@ export function drawEnding(
   c.globalAlpha *= smooth((frame - timing.linkFrame) / 12);
   c.font = '44px "Release Mono"';
   c.fillStyle = '#cbd5cc';
-  c.fillText('caleb-guyer.itch.io/recoil-foundry', 960, 850);
+  c.fillText(playUrl, 960, 850);
   c.restore();
   c.restore();
 }

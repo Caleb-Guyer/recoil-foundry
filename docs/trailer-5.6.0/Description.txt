@@ -1,5 +1,4 @@
 Play free in your browser: https://caleb-guyer.github.io/recoil-foundry/
-itch.io: https://caleb-guyer.itch.io/recoil-foundry
 
 Your gun is your way out.
 

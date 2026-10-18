@@ -25,7 +25,7 @@ Ready-to-upload files are in this folder. This package has not been uploaded or 
 | Automatic chapters | Off; this is one continuous trailer. |
 | Cards | None; keep the action unobstructed. |
 | End screen | Leave off to preserve the closing title and play URL. |
-| Shorts remixing | Turn off audio-only remixes so this licensed music excerpt is not offered as a standalone soundtrack. Video remixing is your choice. |
+| Shorts remixing | Don't allow remixing for this upload, to keep the trailer and its music attribution together. |
 | Recording date/location | Optional; no physical filming location is needed for engine footage. |
 | Playlist | Your Recoil Foundry playlist, if you have one. |
 | Monetization | Optional if your channel is eligible; the music license permits commercial use with credit. |

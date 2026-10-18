@@ -27,7 +27,7 @@ CLOCK OUT ALIVE.
 00:00:38,417 --> 00:00:41,050
 RECOIL FOUNDRY
 PLAY FREE IN YOUR BROWSER
-caleb-guyer.itch.io/recoil-foundry
+caleb-guyer.github.io/recoil-foundry
 
 8
 00:00:41,050 --> 00:00:42,280
