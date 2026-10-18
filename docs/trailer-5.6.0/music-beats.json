@@ -4,7 +4,7 @@
   "sourceIn": 163.276,
   "bpm": 100,
   "sampleRate": 24000,
-  "analysis": "Original action accents retained through marker 31. Closing passage measured from the actual ending: positive spectral flux, 2048-sample Hann windows and 5ms hops; final two accents refined with 1024-sample windows and 1ms hops. Marker 46 follows the final pickup; marker 48 is the first title accent, not a nominal quarter note. Extra body beats 32\u201347 measured at 1 ms hops with a 1024-sample Hann window, positive spectral flux and a \u00b165 ms search around the 100 BPM grid. No synthesized music or artificial ending.",
+  "analysis": "Original action accents retained through marker 31. Closing passage measured from the actual ending: positive spectral flux, 2048-sample Hann windows and 5ms hops; final two accents refined with 1024-sample windows and 1ms hops. Marker 46 follows the final pickup; marker 48 is the first title accent, not a nominal quarter note. Extra body beats 32\u201363 measured at 1 ms hops with a 1024-sample Hann window, positive spectral flux and a \u00b165 ms search around the 100 BPM grid. No synthesized music or artificial ending.",
   "beats": [
     {
       "beat": 0,
@@ -344,119 +344,231 @@
     },
     {
       "beat": 48,
-      "frame": 1728,
+      "sourceSeconds": 192.09633333333332,
+      "frame": 1729,
+      "strength": 106.7445412609281,
+      "frameErrorMs": -3.6667
+    },
+    {
+      "beat": 49,
+      "sourceSeconds": 192.71233333333333,
+      "frame": 1766,
+      "strength": 28.434967667494817,
+      "frameErrorMs": -3.0
+    },
+    {
+      "beat": 50,
+      "sourceSeconds": 193.29433333333333,
+      "frame": 1801,
+      "strength": 64.50379234286802,
+      "frameErrorMs": -1.6667
+    },
+    {
+      "beat": 51,
+      "sourceSeconds": 193.92633333333333,
+      "frame": 1839,
+      "strength": 25.59093863749371,
+      "frameErrorMs": -0.3333
+    },
+    {
+      "beat": 52,
+      "sourceSeconds": 194.49533333333332,
+      "frame": 1873,
+      "strength": 99.1874589557423,
+      "frameErrorMs": -2.6667
+    },
+    {
+      "beat": 53,
+      "sourceSeconds": 195.12133333333333,
+      "frame": 1911,
+      "strength": 24.26633885785449,
+      "frameErrorMs": 4.6667
+    },
+    {
+      "beat": 54,
+      "sourceSeconds": 195.71833333333333,
+      "frame": 1947,
+      "strength": 24.05180370274354,
+      "frameErrorMs": 7.6667
+    },
+    {
+      "beat": 55,
+      "sourceSeconds": 196.31333333333333,
+      "frame": 1982,
+      "strength": 27.771064644312865,
+      "frameErrorMs": -4.0
+    },
+    {
+      "beat": 56,
+      "sourceSeconds": 196.90133333333333,
+      "frame": 2018,
+      "strength": 81.94643119968876,
+      "frameErrorMs": 8.0
+    },
+    {
+      "beat": 57,
+      "sourceSeconds": 197.52033333333333,
+      "frame": 2055,
+      "strength": 33.26681147984768,
+      "frameErrorMs": 5.6667
+    },
+    {
+      "beat": 58,
+      "sourceSeconds": 198.10133333333334,
+      "frame": 2090,
+      "strength": 48.19567204205235,
+      "frameErrorMs": 8.0
+    },
+    {
+      "beat": 59,
+      "sourceSeconds": 198.67733333333334,
+      "frame": 2124,
+      "strength": 26.65291436370642,
+      "frameErrorMs": -1.3333
+    },
+    {
+      "beat": 60,
+      "sourceSeconds": 199.28133333333332,
+      "frame": 2160,
+      "strength": 97.48370729156218,
+      "frameErrorMs": -5.3333
+    },
+    {
+      "beat": 61,
+      "sourceSeconds": 199.91733333333335,
+      "frame": 2198,
+      "strength": 25.39465619998452,
+      "frameErrorMs": -8.0
+    },
+    {
+      "beat": 62,
+      "sourceSeconds": 200.51833333333335,
+      "frame": 2235,
+      "strength": 26.213315555358864,
+      "frameErrorMs": 7.6667
+    },
+    {
+      "beat": 63,
+      "sourceSeconds": 201.12233333333333,
+      "frame": 2271,
+      "strength": 32.136943727655066,
+      "frameErrorMs": 3.6667
+    },
+    {
+      "beat": 64,
+      "frame": 2304,
       "sourceSeconds": 249.682667,
       "strength": 390.524,
       "frameErrorMs": -6.67
     },
     {
-      "beat": 49,
-      "frame": 1766,
+      "beat": 65,
+      "frame": 2342,
       "sourceSeconds": 250.312667,
       "strength": 90.75,
       "frameErrorMs": -3.33
     },
     {
-      "beat": 50,
-      "frame": 1801,
+      "beat": 66,
+      "frame": 2377,
       "sourceSeconds": 250.887667,
       "strength": 370.499,
       "frameErrorMs": 5.0
     },
     {
-      "beat": 51,
-      "frame": 1838,
+      "beat": 67,
+      "frame": 2414,
       "sourceSeconds": 251.512667,
       "strength": 69.302,
       "frameErrorMs": -3.33
     },
     {
-      "beat": 52,
-      "frame": 1873,
+      "beat": 68,
+      "frame": 2449,
       "sourceSeconds": 252.092667,
       "strength": 372.435,
       "frameErrorMs": -0.0
     },
     {
-      "beat": 53,
-      "frame": 1910,
+      "beat": 69,
+      "frame": 2486,
       "sourceSeconds": 252.712667,
       "strength": 46.13,
       "frameErrorMs": -3.33
     },
     {
-      "beat": 54,
-      "frame": 1946,
+      "beat": 70,
+      "frame": 2522,
       "sourceSeconds": 253.312667,
       "strength": 73.752,
       "frameErrorMs": -3.33
     },
     {
-      "beat": 55,
-      "frame": 1982,
+      "beat": 71,
+      "frame": 2558,
       "sourceSeconds": 253.917667,
       "strength": 36.28,
       "frameErrorMs": -8.33
     },
     {
-      "beat": 56,
-      "frame": 2017,
+      "beat": 72,
+      "frame": 2593,
       "sourceSeconds": 254.497667,
       "strength": 367.391,
       "frameErrorMs": -5.0
     },
     {
-      "beat": 57,
-      "frame": 2054,
+      "beat": 73,
+      "frame": 2630,
       "sourceSeconds": 255.112667,
       "strength": 42.004,
       "frameErrorMs": -3.33
     },
     {
-      "beat": 58,
-      "frame": 2089,
+      "beat": 74,
+      "frame": 2665,
       "sourceSeconds": 255.687667,
       "strength": 280.68,
       "frameErrorMs": 5.0
     },
     {
-      "beat": 59,
-      "frame": 2124,
+      "beat": 75,
+      "frame": 2700,
       "sourceSeconds": 256.272667,
       "strength": 51.802,
       "frameErrorMs": 3.33
     },
     {
-      "beat": 60,
-      "frame": 2160,
+      "beat": 76,
+      "frame": 2736,
       "sourceSeconds": 256.882667,
       "strength": 395.534,
       "frameErrorMs": -6.67
     },
     {
-      "beat": 61,
-      "frame": 2198,
+      "beat": 77,
+      "frame": 2774,
       "sourceSeconds": 257.512667,
       "strength": 17.996,
       "frameErrorMs": -3.33
     },
     {
-      "beat": 62,
-      "frame": 2250,
+      "beat": 78,
+      "frame": 2826,
       "sourceSeconds": 258.377333,
       "strength": 20.15,
       "frameErrorMs": -1.33
     },
     {
-      "beat": 63,
-      "frame": 2270,
+      "beat": 79,
+      "frame": 2846,
       "sourceSeconds": 258.712667,
       "strength": 32.161,
       "frameErrorMs": -3.33
     },
     {
-      "beat": 64,
-      "frame": 2279,
+      "beat": 80,
+      "frame": 2855,
       "sourceSeconds": 258.856333,
       "strength": 36.177,
       "frameErrorMs": 3.0,
@@ -464,18 +576,18 @@
     }
   ],
   "closing": {
-    "spliceFrame": 1728,
-    "spliceAtBeat": 48,
+    "spliceFrame": 2304,
+    "spliceAtBeat": 64,
     "sourceIn": 249.676,
     "sourceOut": 263.2,
     "crossfadeSeconds": 0.025,
-    "phraseSkipBeats": 96,
-    "titleFrame": 2279,
-    "subtitleFrame": 2305,
+    "phraseSkipBeats": 80,
+    "titleFrame": 2855,
+    "subtitleFrame": 2881,
     "titleSourceSeconds": 258.85633333333334,
     "subtitleSourceSeconds": 259.29633333333334,
     "titleFrameErrorMs": 3.0,
     "subtitleFrameErrorMs": -3.67,
-    "method": "One additional 16-beat phrase develops the six starting tools. Skip six complete phrases (96 beats / 57.6 seconds) into the recording's original ending; retain the measured final accents and natural decay."
+    "method": "Two additional 16-beat phrases develop the weapons and five distinct boss fights. Skip five complete phrases (80 beats / 48 seconds) into the recording's original ending; retain the measured final accents and natural decay."
   }
 }

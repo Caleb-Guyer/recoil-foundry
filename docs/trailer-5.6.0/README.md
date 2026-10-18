@@ -10,23 +10,23 @@ Current-game trailer prepared October 18, 2026. This is a new edit and capture f
 - [Music license and source hash](Music-License.txt)
 - [Capture manifest](capture.json) · [Encoded export measurements](quality-review.json)
 
-The local delivery folder is **YouTube Trailer 5.6.0** in the task's outer workspace. It contains the MP4, thumbnail, upload copy, captions and license record. A separate ZIP contains only the delivery files. No YouTube upload or external announcement has been performed.
+The revised local delivery folder is **YouTube Trailer 5.6.0 Revised** in the task's outer workspace. It contains the MP4, thumbnail, upload copy, captions and license record. A separate ZIP contains only the delivery files. The earlier local kit remains available. No YouTube upload or external announcement has been performed.
 
 ## The edit
 
-**42.783 seconds, 1920 × 1080 at 60 fps.** The first frame opens in actual recoil combat. Eighteen moving shots show the pistol, shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater, then combinations including beams, rotating fire, saws and explosive rounds. The Loader provides a recognizable boss encounter without showing the ending. Three short captions carry the pitch. The closing wordmark lands on the recording's actual final accents, followed by the play invitation and a readable URL.
+**52.383 seconds, 1920 × 1080 at 60 fps.** This revised edit opens in recoil combat, develops the weapon combinations, then gives five bosses a dedicated sequence. Nineteen moving shots show the pistol, shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater, with beams, rotating fire, saws, explosive rounds and a Turf War. **The Loader, Press, Condenser, Sorter and Interceptor** cover all five factory zones. Their actual attacks, impacts and recovery openings remain visible, with camera framing that includes the player and machine. Boss names identify each fight. The three short captions are EVERY SHOT MOVES YOU, ONE GUN YOUR BUILD, and MEET MANAGEMENT. The closing wordmark lands on the recording's actual final accents, followed by the play invitation and URL.
 
-Music is **Resonance by Scott Buckley**, a recorded industrial electronica track released under CC BY 4.0. The composer explicitly permits commercial projects with attribution. The body uses one additional musical phrase compared with the older edit; two excerpts join at a barline and keep the recording's natural conclusion. Keep the credit in Description.txt when uploading. Source and license links are in Music-License.txt.
+Music is **Resonance by Scott Buckley**, a recorded industrial electronica track released under CC BY 4.0. The composer explicitly permits commercial projects with attribution. An extra 16-beat phrase compared with the first 5.6.0 edit leaves room for full boss exchanges; two excerpts join at a barline and keep the recording's natural conclusion. Keep the credit in Description.txt when uploading. Source and license links are in Music-License.txt.
 
-The thumbnail composes an actual captured gameplay frame and the native wordmark, with the hook **SHOOT DOWN. FLY UP.** It is a 3840 × 2160 PNG below 0.5 MB. It uses the game's actual art and contains no generated depiction of gameplay.
+The new thumbnail is a character poster: the actual **Night Shift player outfit and Magnum weapon art**, a raised gun, hard amber factory backlighting, a long cast shadow and restrained typography. It uses the same native drawing functions as the game. It is a 3840 × 2160 PNG, with no AI image generation, screenshot background, HUD or promotional tagline.
 
 ## Capture and verification
 
 The current `Game`, `Renderer` and `Sound` classes supply picture and effects. Captures use isolated legal checkpoint builds and ordinary scripted controls; health, enemy AI, damage and collision remain active. No personal save is read, no equipment is awarded, and no attacks are fabricated. This is edited engine footage rather than a browser performance measurement or human playtest.
 
-All eighteen shots pass the movement, visibility, damage and unobstructed-firing gates. All **59** selected combat accents match their assigned video frames. All **2,567** exported frames and the full audio stream decode. Final measured audio is **−14.06 LUFS integrated**, **−1.83 dBTP**, with a worst two-second mono level difference of **−1.293 dB**. No black gaps, sustained freezes or silence occur during the action. Detected stillness and silence belong to the intentional closing card and fade. Fast-start metadata precedes the media payload.
+All nineteen shots pass the movement, visibility, damage and unobstructed-firing gates. Each boss shot also requires the player to remain in frame for at least 95% of the shot and the boss to change combat states. All **75** selected combat accents match their assigned video frames. All **3,143** exported frames and the full audio stream decode. Exact final audio levels, format details and file hash are in quality-review.json. No black gaps, sustained freezes or silence occur during the action. Detected stillness and silence belong to the intentional closing card and fade. Fast-start metadata precedes the media payload.
 
-All 108 sampled gameplay frames from the encoded MP4, the hook, end card and final thumbnail were visually inspected. Four capture-driver regressions, strict TypeScript checks for the new capture/package scripts, and the production build pass. These checks do not replace physical speaker listening or YouTube's upload processing.
+Encoded review sheets sample six frames per shot, with separate hook, end-card and thumbnail reviews. Five capture-driver regressions include live boss AI, actual weapon damage, unchanged boss health and isolation from player progression. Strict TypeScript checks for the capture/package scripts and the production build pass. These checks do not replace physical speaker listening or YouTube's upload processing.
 
 ## Rebuild
 
@@ -48,6 +48,6 @@ node --experimental-strip-types scripts/action-trailer-package.ts
 python scripts/action-trailer-review.py
 ```
 
-The source recording's SHA-256 is checked before rendering. `TRAILER_OUT`, `TRAILER_MUSIC`, `FFMPEG` and `MEDIA_FONT_DIR` override local paths. The documented default output is `../../YouTube Trailer 5.6.0` relative to this checkout. `--survey --name=shotgun` regenerates one family. New captures can require new edit planning if the game engine changes.
+The source recording's SHA-256 is checked before rendering. `TRAILER_OUT`, `TRAILER_MUSIC`, `FFMPEG` and `MEDIA_FONT_DIR` override local paths. The default output is `../../YouTube Trailer 5.6.0 Revised` relative to this checkout. `--survey --name=shotgun` regenerates one family. `--mix-only` rebuilds sound and the final MP4 from an existing rendered picture and its capture audits. New captures can require new edit planning if the game engine changes.
 
 The original recording and optional tool installations are excluded from Git. Review frames, intermediate picture and effects stems stay in the local delivery folder's `production/` directory. The upload video does not require any of those tools to play.

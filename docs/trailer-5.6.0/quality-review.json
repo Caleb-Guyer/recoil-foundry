@@ -1,26 +1,26 @@
 {
   "version": "5.6.0",
   "video": "Recoil-Foundry-Official-Trailer.mp4",
-  "bytes": 27576957,
-  "sha256": "2de93cd9d5de34643655d14aa622a90658edb41c2fdc27447826e91783b60105",
-  "durationSeconds": 42.78333333333333,
-  "decodedFrames": 2567,
+  "bytes": 29350447,
+  "sha256": "2e49037e4f4dd9dc1a7f0696248c0595c74d2cb954c8aa144ed23a1b08bca47f",
+  "durationSeconds": 52.38333333333333,
+  "decodedFrames": 3143,
   "width": 1920,
   "height": 1080,
   "fps": 60,
   "videoCodec": "H.264 High / yuv420p / BT.709 / progressive",
   "audioCodec": "AAC-LC / 48 kHz / stereo / 384 kbps",
   "integratedLufs": -14.06,
-  "truePeakDbtp": -1.83,
-  "worstTwoSecondMonoDeltaDb": -1.293,
+  "truePeakDbtp": -1.85,
+  "worstTwoSecondMonoDeltaDb": -1.294,
   "blackStartsSeconds": [
-    42.166667
+    51.766667
   ],
   "silenceStartsSeconds": [
-    41.17125
+    50.771354
   ],
   "freezeStartsSeconds": [
-    39.25
+    48.816667
   ],
   "fastStart": true,
   "topLevelAtoms": [
@@ -32,20 +32,20 @@
     {
       "type": "moov",
       "offset": 32,
-      "bytes": 60048
+      "bytes": 74264
     },
     {
       "type": "free",
-      "offset": 60080,
+      "offset": 74296,
       "bytes": 8
     },
     {
       "type": "mdat",
-      "offset": 60088,
-      "bytes": 27516869
+      "offset": 74304,
+      "bytes": 29276143
     }
   ],
-  "shots": 18,
+  "shots": 19,
   "capturedStartingGuns": [
     "carbine",
     "nailgun",
@@ -54,7 +54,15 @@
     "shotgun",
     "twinbore"
   ],
-  "verifiedCombatAccents": 59,
+  "capturedBosses": [
+    "loader",
+    "press",
+    "condenser",
+    "sorter",
+    "interceptor"
+  ],
+  "bossZones": 5,
+  "verifiedCombatAccents": 75,
   "maximumCombatSyncErrorFrames": 0,
   "allShotsPassQualityGates": true,
   "allAudioSamplesFinite": true,

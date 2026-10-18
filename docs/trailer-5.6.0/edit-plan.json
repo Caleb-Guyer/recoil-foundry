@@ -478,7 +478,7 @@
       {
         "output": 75,
         "source": 81,
-        "kind": "break",
+        "kind": "crash",
         "beat": 30
       },
       {
@@ -493,7 +493,7 @@
         "kind": "end"
       }
     ],
-    "score": 31.071432426243554
+    "score": 33.57143242624356
   },
   {
     "take": {
@@ -697,32 +697,34 @@
   },
   {
     "take": {
-      "name": "loader",
-      "stage": 3,
+      "name": "repeater",
+      "stage": 10,
       "mods": [
         "magnum",
         "rapid",
-        "kick"
+        "ricochet",
+        "airshot"
       ],
-      "seed": "ACTION-LOADER-20",
+      "startingGun": "repeater",
+      "seed": "ACTION-REPEATER-20",
       "style": 0,
-      "start": 688,
-      "length": 144,
+      "start": 446,
+      "length": 145,
       "quality": {
-        "visibleFraction": 0.7430555555555556,
+        "visibleFraction": 1,
         "blockedFireFrames": 0,
-        "longestQuietFrames": 21,
+        "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 973,
-        "span": 317,
-        "damage": 116
+        "travel": 1402,
+        "span": 604,
+        "damage": 410
       },
-      "score": 6.62
+      "score": 17.263
     },
     "fromBeat": 44,
     "toBeat": 48,
     "start": 1584,
-    "end": 1728,
+    "end": 1729,
     "points": [
       {
         "output": 0,
@@ -732,82 +734,21 @@
       },
       {
         "output": 39,
-        "source": 44,
+        "source": 35,
         "kind": "heavy",
         "beat": 45
       },
       {
         "output": 75,
-        "source": 80,
-        "kind": "heavy",
+        "source": 74,
+        "kind": "explode",
         "beat": 46
       },
       {
-        "output": 143,
-        "source": 143,
-        "kind": "end"
-      }
-    ],
-    "score": 21.083688892909247
-  },
-  {
-    "take": {
-      "name": "prism",
-      "stage": 10,
-      "mods": [
-        "cutting-torch",
-        "prism-array",
-        "thermal-runaway",
-        "scatter",
-        "pierce",
-        "airshot",
-        "light",
-        "leech",
-        "kick"
-      ],
-      "seed": "ACTION-PRISM-7",
-      "style": 1,
-      "start": 359,
-      "length": 145,
-      "quality": {
-        "visibleFraction": 0.9241379310344827,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 11,
-        "longestStallFrames": 6,
-        "travel": 1371,
-        "span": 819,
-        "damage": 329
-      },
-      "score": 14.71
-    },
-    "fromBeat": 48,
-    "toBeat": 52,
-    "start": 1728,
-    "end": 1873,
-    "points": [
-      {
-        "output": 0,
-        "source": 0,
-        "kind": "beam-start",
-        "beat": 48
-      },
-      {
-        "output": 38,
-        "source": 44,
-        "kind": "beam-hit",
-        "beat": 49
-      },
-      {
-        "output": 73,
-        "source": 73,
-        "kind": "beam-start",
-        "beat": 50
-      },
-      {
-        "output": 110,
-        "source": 110,
-        "kind": "beam-hit",
-        "beat": 51
+        "output": 111,
+        "source": 113,
+        "kind": "kill",
+        "beat": 47
       },
       {
         "output": 144,
@@ -815,7 +756,370 @@
         "kind": "end"
       }
     ],
-    "score": 30.859947203299043
+    "score": 38.91885641754944
+  },
+  {
+    "take": {
+      "name": "boss-loader",
+      "stage": 3,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
+      "encounter": {
+        "kind": "loader",
+        "seed": "GAUNTLET-1-LOADER-4"
+      },
+      "seed": "GAUNTLET-1-LOADER-4",
+      "style": 0,
+      "start": 433,
+      "length": 218,
+      "quality": {
+        "visibleFraction": 0.8073394495412844,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 2,
+        "travel": 1758,
+        "span": 793,
+        "damage": 102
+      },
+      "score": 7.414
+    },
+    "fromBeat": 48,
+    "toBeat": 54,
+    "start": 1729,
+    "end": 1947,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 48
+      },
+      {
+        "output": 37,
+        "source": 43,
+        "kind": "cargo-impact",
+        "beat": 49
+      },
+      {
+        "output": 72,
+        "source": 85,
+        "kind": "heavy",
+        "beat": 50
+      },
+      {
+        "output": 110,
+        "source": 119,
+        "kind": "heavy",
+        "beat": 51
+      },
+      {
+        "output": 182,
+        "source": 183,
+        "kind": "heavy",
+        "beat": 53
+      },
+      {
+        "output": 217,
+        "source": 217,
+        "kind": "end"
+      }
+    ],
+    "score": 32.44091079471504
+  },
+  {
+    "take": {
+      "name": "boss-press",
+      "stage": 7,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "press",
+        "seed": "GAUNTLET-1-PRESS-1"
+      },
+      "seed": "GAUNTLET-1-PRESS-1",
+      "style": 0,
+      "start": 401,
+      "length": 213,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 7,
+        "travel": 2028,
+        "span": 1178,
+        "damage": 280
+      },
+      "score": 7.773
+    },
+    "fromBeat": 54,
+    "toBeat": 60,
+    "start": 1947,
+    "end": 2160,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "slam",
+        "beat": 54
+      },
+      {
+        "output": 35,
+        "source": 31,
+        "kind": "heavy",
+        "beat": 55
+      },
+      {
+        "output": 108,
+        "source": 109,
+        "kind": "heavy",
+        "beat": 57
+      },
+      {
+        "output": 143,
+        "source": 139,
+        "kind": "heavy",
+        "beat": 58
+      },
+      {
+        "output": 177,
+        "source": 175,
+        "kind": "heavy",
+        "beat": 59
+      },
+      {
+        "output": 212,
+        "source": 212,
+        "kind": "end"
+      }
+    ],
+    "score": 31.130702647307558
+  },
+  {
+    "take": {
+      "name": "boss-condenser",
+      "stage": 11,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "condenser",
+        "seed": "GAUNTLET-1-CONDENSER-1"
+      },
+      "seed": "GAUNTLET-1-CONDENSER-1",
+      "style": 0,
+      "start": 654,
+      "length": 217,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 2,
+        "travel": 1743,
+        "span": 386,
+        "damage": 297
+      },
+      "score": 8.582
+    },
+    "fromBeat": 60,
+    "toBeat": 66,
+    "start": 2160,
+    "end": 2377,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 60
+      },
+      {
+        "output": 75,
+        "source": 71,
+        "kind": "heavy",
+        "beat": 62
+      },
+      {
+        "output": 111,
+        "source": 114,
+        "kind": "heavy",
+        "beat": 63
+      },
+      {
+        "output": 144,
+        "source": 150,
+        "kind": "heavy",
+        "beat": 64
+      },
+      {
+        "output": 182,
+        "source": 188,
+        "kind": "heavy",
+        "beat": 65
+      },
+      {
+        "output": 216,
+        "source": 216,
+        "kind": "end"
+      }
+    ],
+    "score": 33.56176350067472
+  },
+  {
+    "take": {
+      "name": "boss-sorter",
+      "stage": 15,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "sorter",
+        "seed": "GAUNTLET-1-SORTER-0"
+      },
+      "seed": "GAUNTLET-1-SORTER-0",
+      "style": 0,
+      "start": 508,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9722222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 6,
+        "longestStallFrames": 4,
+        "travel": 1407,
+        "span": 273,
+        "damage": 527
+      },
+      "score": 7.027
+    },
+    "fromBeat": 66,
+    "toBeat": 72,
+    "start": 2377,
+    "end": 2593,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 66
+      },
+      {
+        "output": 37,
+        "source": 32,
+        "kind": "slam",
+        "beat": 67
+      },
+      {
+        "output": 72,
+        "source": 64,
+        "kind": "heavy",
+        "beat": 68
+      },
+      {
+        "output": 109,
+        "source": 100,
+        "kind": "heavy",
+        "beat": 69
+      },
+      {
+        "output": 145,
+        "source": 140,
+        "kind": "heavy",
+        "beat": 70
+      },
+      {
+        "output": 181,
+        "source": 176,
+        "kind": "heavy",
+        "beat": 71
+      },
+      {
+        "output": 215,
+        "source": 215,
+        "kind": "end"
+      }
+    ],
+    "score": 35.49192169481533
+  },
+  {
+    "take": {
+      "name": "boss-interceptor",
+      "stage": 19,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "interceptor",
+        "seed": "GAUNTLET-1-INTERCEPTOR-0"
+      },
+      "seed": "GAUNTLET-1-INTERCEPTOR-0",
+      "style": 0,
+      "start": 248,
+      "length": 143,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1260,
+        "span": 449,
+        "damage": 281
+      },
+      "score": 7.788
+    },
+    "fromBeat": 72,
+    "toBeat": 76,
+    "start": 2593,
+    "end": 2736,
+    "points": [
+      {
+        "output": 0,
+        "source": 0,
+        "kind": "heavy",
+        "beat": 72
+      },
+      {
+        "output": 37,
+        "source": 36,
+        "kind": "heavy",
+        "beat": 73
+      },
+      {
+        "output": 72,
+        "source": 76,
+        "kind": "heavy",
+        "beat": 74
+      },
+      {
+        "output": 107,
+        "source": 112,
+        "kind": "heavy",
+        "beat": 75
+      },
+      {
+        "output": 142,
+        "source": 142,
+        "kind": "end"
+      }
+    ],
+    "score": 26.95208360259468
   },
   {
     "take": {
@@ -832,191 +1136,37 @@
         "leech",
         "kick"
       ],
-      "seed": "ACTION-PINWHEEL-14",
-      "style": 0,
-      "start": 587,
-      "length": 144,
-      "quality": {
-        "visibleFraction": 0.9930555555555556,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 1,
-        "longestStallFrames": 4,
-        "travel": 1332,
-        "span": 762,
-        "damage": 286
-      },
-      "score": 17.303
-    },
-    "fromBeat": 52,
-    "toBeat": 56,
-    "start": 1873,
-    "end": 2017,
-    "points": [
-      {
-        "output": 0,
-        "source": 0,
-        "kind": "scatter",
-        "beat": 52
-      },
-      {
-        "output": 37,
-        "source": 39,
-        "kind": "scatter",
-        "beat": 53
-      },
-      {
-        "output": 73,
-        "source": 81,
-        "kind": "scatter",
-        "beat": 54
-      },
-      {
-        "output": 143,
-        "source": 143,
-        "kind": "end"
-      }
-    ],
-    "score": 30.666339108685314
-  },
-  {
-    "take": {
-      "name": "saw",
-      "stage": 6,
-      "mods": [
-        "grindshot",
-        "crosscut",
-        "split",
-        "shatter",
-        "pierce",
-        "light"
-      ],
-      "seed": "ACTION-SAW-8",
-      "style": 0,
-      "start": 668,
-      "length": 72,
-      "quality": {
-        "visibleFraction": 1,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 0,
-        "longestStallFrames": 0,
-        "travel": 725,
-        "span": 412,
-        "damage": 147
-      },
-      "score": 14.282
-    },
-    "fromBeat": 56,
-    "toBeat": 58,
-    "start": 2017,
-    "end": 2089,
-    "points": [
-      {
-        "output": 0,
-        "source": 0,
-        "kind": "shot",
-        "beat": 56
-      },
-      {
-        "output": 71,
-        "source": 71,
-        "kind": "end"
-      }
-    ],
-    "score": 19.754706709722768
-  },
-  {
-    "take": {
-      "name": "turf",
-      "stage": 4,
-      "mods": [
-        "magnum",
-        "ricochet",
-        "airshot",
-        "light"
-      ],
-      "event": true,
-      "seed": "ACTION-TURF-16",
-      "style": 0,
-      "start": 205,
-      "length": 71,
-      "quality": {
-        "visibleFraction": 0.8591549295774648,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 10,
-        "longestStallFrames": 0,
-        "travel": 306,
-        "span": 246,
-        "damage": 135
-      },
-      "score": 17.51
-    },
-    "fromBeat": 58,
-    "toBeat": 60,
-    "start": 2089,
-    "end": 2160,
-    "points": [
-      {
-        "output": 0,
-        "source": 0,
-        "kind": "kill",
-        "beat": 58
-      },
-      {
-        "output": 35,
-        "source": 39,
-        "kind": "kill",
-        "beat": 59
-      },
-      {
-        "output": 70,
-        "source": 70,
-        "kind": "end"
-      }
-    ],
-    "score": 29.23616062053935
-  },
-  {
-    "take": {
-      "name": "repeater",
-      "stage": 10,
-      "mods": [
-        "magnum",
-        "rapid",
-        "ricochet",
-        "airshot"
-      ],
-      "startingGun": "repeater",
-      "seed": "ACTION-REPEATER-18",
-      "style": 0,
-      "start": 324,
+      "seed": "ACTION-PINWHEEL-19",
+      "style": 1,
+      "start": 566,
       "length": 90,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 622,
-        "span": 290,
-        "damage": 300
+        "travel": 740,
+        "span": 483,
+        "damage": 368
       },
-      "score": 17.504
+      "score": 17.302
     },
-    "fromBeat": 60,
-    "toBeat": 62,
-    "start": 2160,
-    "end": 2250,
+    "fromBeat": 76,
+    "toBeat": 78,
+    "start": 2736,
+    "end": 2826,
     "points": [
       {
         "output": 0,
         "source": 0,
-        "kind": "heavy",
-        "beat": 60
+        "kind": "scatter",
+        "beat": 76
       },
       {
         "output": 38,
-        "source": 35,
+        "source": 42,
         "kind": "kill",
-        "beat": 61
+        "beat": 77
       },
       {
         "output": 89,
@@ -1024,7 +1174,7 @@
         "kind": "end"
       }
     ],
-    "score": 29.60898649660002
+    "score": 31.3823715340647
   },
   {
     "take": {
@@ -1057,22 +1207,22 @@
       },
       "score": 16.623
     },
-    "fromBeat": 62,
-    "toBeat": 64,
-    "start": 2250,
-    "end": 2279,
+    "fromBeat": 78,
+    "toBeat": 80,
+    "start": 2826,
+    "end": 2855,
     "points": [
       {
         "output": 0,
         "source": 0,
         "kind": "shell-shot",
-        "beat": 62
+        "beat": 78
       },
       {
         "output": 20,
         "source": 21,
         "kind": "kill",
-        "beat": 63
+        "beat": 79
       },
       {
         "output": 28,

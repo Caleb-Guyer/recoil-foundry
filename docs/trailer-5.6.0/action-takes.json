@@ -1072,5 +1072,510 @@
       },
       "score": 15.28
     }
+  ],
+  "boss-press": [
+    {
+      "name": "boss-press",
+      "stage": 7,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "press",
+        "seed": "GAUNTLET-1-PRESS-1"
+      },
+      "seed": "GAUNTLET-1-PRESS-1",
+      "style": 0,
+      "start": 421,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9953703703703703,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 1,
+        "longestStallFrames": 7,
+        "travel": 2145,
+        "span": 1228,
+        "damage": 234
+      },
+      "score": 7.773
+    },
+    {
+      "name": "boss-press",
+      "stage": 7,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "press",
+        "seed": "GAUNTLET-1-PRESS-1"
+      },
+      "seed": "GAUNTLET-1-PRESS-1",
+      "style": 0,
+      "start": 205,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 2,
+        "travel": 1399,
+        "span": 285,
+        "damage": 236
+      },
+      "score": 6.977
+    }
+  ],
+  "boss-loader": [
+    {
+      "name": "boss-loader",
+      "stage": 3,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
+      "encounter": {
+        "kind": "loader",
+        "seed": "GAUNTLET-1-LOADER-4"
+      },
+      "seed": "GAUNTLET-1-LOADER-4",
+      "style": 0,
+      "start": 421,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.8101851851851852,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 15,
+        "longestStallFrames": 2,
+        "travel": 1810,
+        "span": 804,
+        "damage": 102
+      },
+      "score": 7.414
+    }
+  ],
+  "boss-crane": [
+    {
+      "name": "boss-crane",
+      "stage": 3,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick"
+      ],
+      "encounter": {
+        "kind": "crane",
+        "seed": "GAUNTLET-1-CRANE-2"
+      },
+      "seed": "GAUNTLET-1-CRANE-2",
+      "style": 0,
+      "start": 757,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.8981481481481481,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 22,
+        "longestStallFrames": 0,
+        "travel": 1806,
+        "span": 607,
+        "damage": 76
+      },
+      "score": 7.076
+    }
+  ],
+  "boss-kiln": [
+    {
+      "name": "boss-kiln",
+      "stage": 7,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "kiln",
+        "seed": "GAUNTLET-1-KILN-0"
+      },
+      "seed": "GAUNTLET-1-KILN-0",
+      "style": 0,
+      "start": 133,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1259,
+        "span": 660,
+        "damage": 189
+      },
+      "score": 6.491
+    },
+    {
+      "name": "boss-kiln",
+      "stage": 7,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "kiln",
+        "seed": "GAUNTLET-1-KILN-0"
+      },
+      "seed": "GAUNTLET-1-KILN-0",
+      "style": 0,
+      "start": 481,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.875,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 26,
+        "longestStallFrames": 10,
+        "travel": 1342,
+        "span": 408,
+        "damage": 226
+      },
+      "score": 6.317
+    },
+    {
+      "name": "boss-kiln",
+      "stage": 7,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "kiln",
+        "seed": "GAUNTLET-1-KILN-0"
+      },
+      "seed": "GAUNTLET-1-KILN-0",
+      "style": 0,
+      "start": 829,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.875,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 27,
+        "longestStallFrames": 6,
+        "travel": 1324,
+        "span": 887,
+        "damage": 147
+      },
+      "score": 6.308
+    }
+  ],
+  "boss-condenser": [
+    {
+      "name": "boss-condenser",
+      "stage": 11,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "condenser",
+        "seed": "GAUNTLET-1-CONDENSER-1"
+      },
+      "seed": "GAUNTLET-1-CONDENSER-1",
+      "style": 0,
+      "start": 661,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 2,
+        "travel": 1713,
+        "span": 386,
+        "damage": 366
+      },
+      "score": 8.582
+    },
+    {
+      "name": "boss-condenser",
+      "stage": 11,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "condenser",
+        "seed": "GAUNTLET-1-CONDENSER-1"
+      },
+      "seed": "GAUNTLET-1-CONDENSER-1",
+      "style": 0,
+      "start": 289,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.8518518518518519,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 4,
+        "travel": 1471,
+        "span": 336,
+        "damage": 387
+      },
+      "score": 8.044
+    }
+  ],
+  "boss-turbine": [
+    {
+      "name": "boss-turbine",
+      "stage": 11,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "turbine",
+        "seed": "GAUNTLET-1-TURBINE-1"
+      },
+      "seed": "GAUNTLET-1-TURBINE-1",
+      "style": 0,
+      "start": 277,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.8842592592592593,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 14,
+        "longestStallFrames": 8,
+        "travel": 1514,
+        "span": 333,
+        "damage": 439
+      },
+      "score": 7.225
+    },
+    {
+      "name": "boss-turbine",
+      "stage": 11,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "turbine",
+        "seed": "GAUNTLET-1-TURBINE-1"
+      },
+      "seed": "GAUNTLET-1-TURBINE-1",
+      "style": 0,
+      "start": 829,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.7824074074074074,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 27,
+        "longestStallFrames": 2,
+        "travel": 1709,
+        "span": 803,
+        "damage": 297
+      },
+      "score": 6.892
+    }
+  ],
+  "boss-sorter": [
+    {
+      "name": "boss-sorter",
+      "stage": 15,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "sorter",
+        "seed": "GAUNTLET-1-SORTER-0"
+      },
+      "seed": "GAUNTLET-1-SORTER-0",
+      "style": 0,
+      "start": 289,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9768518518518519,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 5,
+        "longestStallFrames": 3,
+        "travel": 1801,
+        "span": 753,
+        "damage": 510
+      },
+      "score": 7.643
+    },
+    {
+      "name": "boss-sorter",
+      "stage": 15,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "sorter",
+        "seed": "GAUNTLET-1-SORTER-0"
+      },
+      "seed": "GAUNTLET-1-SORTER-0",
+      "style": 0,
+      "start": 829,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 1,
+        "travel": 1529,
+        "span": 434,
+        "damage": 419
+      },
+      "score": 7.319
+    },
+    {
+      "name": "boss-sorter",
+      "stage": 15,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "sorter",
+        "seed": "GAUNTLET-1-SORTER-0"
+      },
+      "seed": "GAUNTLET-1-SORTER-0",
+      "style": 0,
+      "start": 505,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9722222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 6,
+        "longestStallFrames": 4,
+        "travel": 1396,
+        "span": 260,
+        "damage": 527
+      },
+      "score": 7.027
+    }
+  ],
+  "boss-interceptor": [
+    {
+      "name": "boss-interceptor",
+      "stage": 19,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "interceptor",
+        "seed": "GAUNTLET-1-INTERCEPTOR-0"
+      },
+      "seed": "GAUNTLET-1-INTERCEPTOR-0",
+      "style": 0,
+      "start": 241,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9907407407407407,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 2,
+        "longestStallFrames": 7,
+        "travel": 1697,
+        "span": 451,
+        "damage": 454
+      },
+      "score": 7.788
+    },
+    {
+      "name": "boss-interceptor",
+      "stage": 19,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "interceptor",
+        "seed": "GAUNTLET-1-INTERCEPTOR-0"
+      },
+      "seed": "GAUNTLET-1-INTERCEPTOR-0",
+      "style": 0,
+      "start": 745,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9675925925925926,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 4,
+        "longestStallFrames": 7,
+        "travel": 1425,
+        "span": 409,
+        "damage": 471
+      },
+      "score": 7.468
+    },
+    {
+      "name": "boss-interceptor",
+      "stage": 19,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "interceptor",
+        "seed": "GAUNTLET-1-INTERCEPTOR-0"
+      },
+      "seed": "GAUNTLET-1-INTERCEPTOR-0",
+      "style": 0,
+      "start": 493,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9490740740740741,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 11,
+        "longestStallFrames": 3,
+        "travel": 1335,
+        "span": 352,
+        "damage": 471
+      },
+      "score": 6.984
+    }
   ]
 }

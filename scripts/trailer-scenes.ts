@@ -4,6 +4,8 @@ import { BRANCH_TEST_BUILDS, withParents } from '../src/branch-builds.ts';
 import { eventTestFromUrl } from '../src/area-events.ts';
 import { seeded, validBuild, type Checkpoint, type Vec } from '../src/rules.ts';
 import type { StartingGun } from '../src/starting-guns.ts';
+import { gauntletEncounter } from '../src/gauntlet-rules.ts';
+import { practiceCheckpoint, PRACTICE_BOSSES, type Encounter } from '../src/practice.ts';
 
 // Capture direction uses only ordinary inputs. It never changes combat state.
 export interface Take {
@@ -18,6 +20,7 @@ export interface Take {
   score?: number;
   quality?: TakeQuality;
   startingGun?: StartingGun;
+  encounter?: Encounter;
 }
 const legal = (ids: readonly string[]) => {
   const mods = withParents([], ids);
@@ -75,6 +78,21 @@ export const PROMO_TEMPLATES = [
   },
 ];
 
+// Isolated Practice fights retain the campaign's actual arena, boss health and AI.
+// These are not Gauntlet-scaled enemies or static archive portraits.
+export const BOSS_TEMPLATES = (
+  ['loader', 'crane', 'press', 'kiln', 'condenser', 'turbine', 'sorter', 'interceptor'] as const
+).map((kind) => ({
+  name: 'boss-' + kind,
+  stage: PRACTICE_BOSSES[kind].stage,
+  mods: legal(
+    kind === 'loader' || kind === 'crane'
+      ? ['magnum', 'rapid', 'kick']
+      : ['magnum', 'rapid', 'kick', 'ricochet', 'airshot'],
+  ),
+  encounter: gauntletEncounter(kind),
+}));
+
 export function startTake(take: Take) {
   if (take.mods.length > take.stage) throw new Error('Build exceeds its room reward budget');
   Math.random = seeded(take.seed + ':trailer-fx');
@@ -92,7 +110,17 @@ export function startTake(take: Take) {
       : {}),
   };
   const game = new Game();
-  game.startTest(save);
+  if (take.encounter) {
+    const checkpoint = practiceCheckpoint(take.encounter, take.mods, take.mods);
+    if (!checkpoint || checkpoint.stage !== take.stage) throw new Error('Invalid boss capture');
+    if (take.startingGun) checkpoint.startingGun = take.startingGun;
+    game.start(
+      checkpoint.seed,
+      checkpoint,
+      { ...take.encounter, build: [...take.mods] },
+      checkpoint,
+    );
+  } else game.startTest(save);
   return game;
 }
 
@@ -224,13 +252,14 @@ export interface TakeQuality {
 }
 export function recordAction(g: Game, input: Input) {
   const p = g.player.position;
+  const wide = !!g.practice;
   const visible = g.enemies.filter(
     (e) =>
       e.hp > 0 &&
       e.spawn <= 0 &&
       !e.allied &&
-      Math.abs(e.body.position.x - p.x) < 420 &&
-      Math.abs(e.body.position.y - p.y) < 230 &&
+      Math.abs(e.body.position.x - p.x) < (wide ? 900 : 420) &&
+      Math.abs(e.body.position.y - p.y) < (wide ? 650 : 230) &&
       clearAim(g, e.body.position),
   ).length;
   const blockedFire = input.fire && !clearAim(g, input.aim);
@@ -297,15 +326,19 @@ export function usableAction(q: TakeQuality, frames: number) {
   );
 }
 
-export function surveyTakes(names?: string[], pool = templates) {
+export function surveyTakes(
+  names?: string[],
+  pool: readonly Omit<Take, 'seed' | 'start' | 'length' | 'style'>[] = templates,
+) {
   const selected: Record<string, Take[]> = {};
-  const length = 144;
   for (const template of pool) {
     if (names && !names.includes(template.name)) continue;
+    const length = template.encounter ? 216 : 144;
     const candidates: Take[] = [];
-    for (let n = 0; n < 24; n++) {
-      const seed =
-        template.name === 'loader' && n < 2
+    for (let n = 0; n < (template.encounter ? 2 : 24); n++) {
+      const seed = template.encounter
+        ? template.encounter.seed
+        : template.name === 'loader' && n < 2
           ? n
             ? 'LOADER-SHIFT-0'
             : 'LOADER-SHIFT-5'
@@ -325,7 +358,7 @@ export function surveyTakes(names?: string[], pool = templates) {
           // Also gate each half: a short edit must not inherit an idle opening.
           if (
             usableAction(quality, length) &&
-            [frames.slice(0, 72), frames.slice(72)].every((half) =>
+            [frames.slice(0, length / 2), frames.slice(length / 2)].every((half) =>
               usableAction(takeQuality(half), half.length),
             )
           ) {
@@ -344,7 +377,7 @@ export function surveyTakes(names?: string[], pool = templates) {
       if (choices.length === 3) break;
     }
     const required =
-      template.name === 'loader' || template.name === 'storm'
+      template.encounter || template.name === 'loader' || template.name === 'storm'
         ? 1
         : template.name === 'cluster' || template.name === 'pinwheel'
           ? 3

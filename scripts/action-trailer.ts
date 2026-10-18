@@ -8,6 +8,7 @@ import { Renderer } from '../src/render.ts';
 import { GAME_VERSION } from '../src/version.ts';
 import {
   PROMO_TEMPLATES,
+  BOSS_TEMPLATES,
   startTake,
   surveyTakes,
   actionInput,
@@ -27,11 +28,12 @@ import {
 import { endingTiming, drawEnding } from './trailer-ending.ts';
 import { trailerSound, type SoundCue, type BeamFrame } from './trailer-sound.ts';
 import { mixTrailer } from './trailer-mix.ts';
-import { drawThumbnail } from './trailer-thumbnail.ts';
+import { drawHeroThumbnail } from './trailer-hero.ts';
+import { PRACTICE_BOSSES } from '../src/practice.ts';
 
 // Reproducible current-game captures. The older 2.98 trailer stays intact.
 const metadata = resolve('docs/trailer-5.6.0');
-const out = resolve(process.env.TRAILER_OUT ?? '../../YouTube Trailer 5.6.0');
+const out = resolve(process.env.TRAILER_OUT ?? '../../YouTube Trailer 5.6.0 Revised');
 const work = resolve(out, 'production');
 mkdirSync(metadata, { recursive: true });
 mkdirSync(work, { recursive: true });
@@ -50,22 +52,23 @@ const montage = [
   ['cluster', 0, 32, 36],
   ['carbine', 0, 36, 40],
   ['storm', 0, 40, 44],
-  ['loader', 0, 44, 48],
-  ['prism', 1, 48, 52],
-  ['pinwheel', 1, 52, 56],
-  ['saw', 1, 56, 58],
-  ['turf', 1, 58, 60],
-  ['repeater', 0, 60, 62],
-  ['cluster', 1, 62, 64],
+  ['repeater', 0, 44, 48],
+  ['boss-loader', 0, 48, 54],
+  ['boss-press', 1, 54, 60],
+  ['boss-condenser', 0, 60, 66],
+  ['boss-sorter', 0, 66, 72],
+  ['boss-interceptor', 0, 72, 76],
+  ['pinwheel', 1, 76, 78],
+  ['cluster', 1, 78, 80],
 ] as const;
 if (process.argv.includes('--survey')) {
   const name = process.argv.find((arg) => arg.startsWith('--name='))?.slice(7);
   const takes: Record<string, Take[]> = existsSync(takePath)
     ? JSON.parse(readFileSync(takePath, 'utf8'))
     : {};
-  for (const template of PROMO_TEMPLATES) {
+  for (const template of [...PROMO_TEMPLATES, ...BOSS_TEMPLATES]) {
     if (name && name !== template.name) continue;
-    Object.assign(takes, surveyTakes([template.name], PROMO_TEMPLATES));
+    Object.assign(takes, surveyTakes([template.name], [...PROMO_TEMPLATES, ...BOSS_TEMPLATES]));
     json(takePath, takes);
   }
   process.exit(0);
@@ -96,6 +99,12 @@ for (const [file, family] of [
     )
   )
     throw new Error(`Missing ${file}`);
+if (process.argv.includes('--thumbnail')) {
+  const thumb = createCanvas(3840, 2160);
+  drawHeroThumbnail(thumb.getContext('2d'));
+  writeFileSync(resolve(out, 'Recoil-Foundry-YouTube-Thumbnail.png'), thumb.toBuffer('image/png'));
+  process.exit(0);
+}
 Object.defineProperty(globalThis, 'devicePixelRatio', { value: 1, configurable: true });
 class CaptureAudio extends RenderingAudioContext {
   constructor() {
@@ -114,6 +123,7 @@ const musicHash = createHash('sha256').update(readFileSync(music)).digest('hex')
 if (musicHash !== '264be9c44c32419b6de70f0ac24c92f81401419419c8fb111b8e19e62261331b')
   throw new Error('Music does not match the measured source recording');
 const storyboard = process.argv.includes('--storyboard');
+const mixingOnly = process.argv.includes('--mix-only');
 const W = 1920,
   H = 1080,
   FPS = 60;
@@ -130,61 +140,88 @@ const sheet = createCanvas(1600, Math.ceil((edit.length + 1) / 4) * 250),
 sc.fillStyle = '#081115';
 sc.fillRect(0, 0, sheet.width, sheet.height);
 const sequences = Array.from({ length: Math.ceil(edit.length / 4) }, () => createCanvas(1920, 840));
-const cues: SoundCue[] = [],
-  beams: BeamFrame[] = [];
-const manifest: object[] = [],
-  sync: object[] = [];
+const recorded = mixingOnly
+  ? JSON.parse(readFileSync(resolve(work, 'sound-cues.json'), 'utf8'))
+  : null;
+const cues: SoundCue[] = recorded?.cues ?? [],
+  beams: BeamFrame[] = recorded?.beams ?? [];
+const manifest: object[] = mixingOnly
+    ? JSON.parse(readFileSync(resolve(work, 'shot-audit.json'), 'utf8'))
+    : [],
+  sync: object[] = mixingOnly
+    ? JSON.parse(readFileSync(resolve(work, 'sync-audit.json'), 'utf8'))
+    : [];
+if (mixingOnly) {
+  const saved = manifest as (Take & {
+    timelineStart: number;
+    seconds: number;
+    retiming: unknown;
+  })[];
+  if (
+    saved.length !== edit.length ||
+    edit.some(
+      (shot, i) =>
+        saved[i].seed !== shot.take.seed ||
+        saved[i].start !== shot.take.start ||
+        saved[i].timelineStart !== shot.start / FPS ||
+        saved[i].seconds !== (shot.end - shot.start) / FPS ||
+        JSON.stringify(saved[i].retiming) !== JSON.stringify(shot.points),
+    )
+  )
+    throw new Error('Rendered picture does not match the current edit plan; render again');
+}
 let posterScore = -Infinity;
-const video = storyboard
-  ? null
-  : spawn(
-      ffmpeg,
-      [
-        '-hide_banner',
-        '-loglevel',
-        'error',
-        '-y',
-        '-f',
-        'rawvideo',
-        '-pixel_format',
-        'rgba',
-        '-video_size',
-        `${W}x${H}`,
-        '-framerate',
-        String(FPS),
-        '-i',
-        'pipe:0',
-        '-an',
-        '-c:v',
-        'libx264',
-        '-preset',
-        'fast',
-        '-crf',
-        '17',
-        '-profile:v',
-        'high',
-        '-pix_fmt',
-        'yuv420p',
-        '-g',
-        '30',
-        '-bf',
-        '2',
-        '-flags',
-        '+cgop',
-        '-colorspace',
-        'bt709',
-        '-color_trc',
-        'bt709',
-        '-color_primaries',
-        'bt709',
-        '-x264-params',
-        'colorprim=bt709:transfer=bt709:colormatrix=bt709',
-        '-movflags',
-        '+faststart',
-        resolve(work, 'picture.mp4'),
-      ],
-      { stdio: ['pipe', 'ignore', 'inherit'] },
-    );
+const video =
+  storyboard || mixingOnly
+    ? null
+    : spawn(
+        ffmpeg,
+        [
+          '-hide_banner',
+          '-loglevel',
+          'error',
+          '-y',
+          '-f',
+          'rawvideo',
+          '-pixel_format',
+          'rgba',
+          '-video_size',
+          `${W}x${H}`,
+          '-framerate',
+          String(FPS),
+          '-i',
+          'pipe:0',
+          '-an',
+          '-c:v',
+          'libx264',
+          '-preset',
+          'fast',
+          '-crf',
+          '17',
+          '-profile:v',
+          'high',
+          '-pix_fmt',
+          'yuv420p',
+          '-g',
+          '30',
+          '-bf',
+          '2',
+          '-flags',
+          '+cgop',
+          '-colorspace',
+          'bt709',
+          '-color_trc',
+          'bt709',
+          '-color_primaries',
+          'bt709',
+          '-x264-params',
+          'colorprim=bt709:transfer=bt709:colormatrix=bt709',
+          '-movflags',
+          '+faststart',
+          resolve(work, 'picture.mp4'),
+        ],
+        { stdio: ['pipe', 'ignore', 'inherit'] },
+      );
 const encoded = video ? once(video, 'exit') : null;
 if (video)
   video.stdin.on('error', (error) => {
@@ -216,7 +253,7 @@ const ease = (x: number) => {
 const labels: Record<number, string> = {
   0: 'EVERY SHOT\nMOVES YOU.',
   3: 'ONE GUN.\nYOUR BUILD.',
-  11: 'CLOCK OUT\nALIVE.',
+  12: 'MEET\nMANAGEMENT.',
 };
 async function still(frame: number, label: string, index: number) {
   const png = canvas.toBuffer('image/png');
@@ -249,16 +286,45 @@ const scales: Record<string, number> = {
 let last:
   | { g: ReturnType<typeof startTake>; r: Renderer; take: Take; cursor: number; scale: number }
   | undefined;
-for (const [index, shot] of edit.entries()) {
+for (const [index, shot] of mixingOnly ? [] : edit.entries()) {
   const take = shot.take,
     g = startTake(take),
     r = new Renderer(canvas, g);
-  const base = scales[take.name];
+  const base = scales[take.name] ?? 1.65;
+  // Boss shots include the whole player/boss exchange, including overhead tells.
+  // This is a camera change only; it never repositions either combatant.
+  let bossCamera: { x: number; y: number; scale: number } | undefined;
+  const draw = (now: number) => {
+    const boss =
+      take.encounter && g.enemies.find((e) => e.kind === take.encounter!.kind && e.hp > 0);
+    if (!boss) {
+      r.draw(now);
+      return;
+    }
+    const p = g.player.position,
+      b = boss.body.position;
+    const scale = Math.min(1.9, W / (Math.abs(p.x - b.x) + 500), H / (Math.abs(p.y - b.y) + 370));
+    const target = {
+      x: (p.x + b.x) / 2 - W / scale / 2,
+      y: Math.min(835 - H / scale, (p.y + b.y) / 2 - (H / scale) * 0.48),
+      scale,
+    };
+    if (!bossCamera) bossCamera = target;
+    else
+      for (const key of ['x', 'y', 'scale'] as const)
+        bossCamera[key] += (target[key] - bossCamera[key]) * 0.12;
+    r.draw(now, {
+      camera: { x: bossCamera.x, y: bossCamera.y },
+      scale: bossCamera.scale,
+      player: true,
+      navigation: false,
+    });
+  };
   r.scale = base;
   r.reset();
   for (let tick = 0; tick < take.start; tick++) {
     g.tick(1 / FPS, actionInput(g, tick, take.style));
-    if (tick >= take.start - 45) r.draw(((tick + 1) * 1000) / FPS);
+    if (tick >= take.start - 45) draw(((tick + 1) * 1000) / FPS);
   }
   const initialHp = g.hp,
     initialKills = g.kills;
@@ -272,7 +338,9 @@ for (const [index, shot] of edit.entries()) {
   const metrics: ActionFrame[] = [],
     len = shot.end - shot.start;
   const samples = Array.from({ length: 6 }, (_, n) => Math.round((n * (len - 1)) / 5));
-  let visible = 0;
+  let visible = 0,
+    playerVisible = 0;
+  const bossStates = new Set<string>();
   console.log(
     `Shot ${index + 1}/${edit.length}: ${take.name}, ${take.start}, ${(len / FPS).toFixed(2)}s`,
   );
@@ -313,10 +381,22 @@ for (const [index, shot] of edit.entries()) {
         .map((p) => 0.035 * Math.exp(-(local - p.output) / 6)),
     );
     r.scale = base + 0.05 * ease(local / len) + punch;
-    r.draw(((target + 1) * 1000) / FPS);
+    draw(((target + 1) * 1000) / FPS);
     const ax = (g.aim.x - r.camera.x) * r.scale,
       ay = (g.aim.y - r.camera.y) * r.scale;
     if (ax > 35 && ax < W - 35 && ay > 65 && ay < H - 35) visible++;
+    const playerPoint = r.toCanvas(g.player.position);
+    if (
+      playerPoint.x > 35 &&
+      playerPoint.x < W - 35 &&
+      playerPoint.y > 40 &&
+      playerPoint.y < H - 45
+    )
+      playerVisible++;
+    if (take.encounter) {
+      const boss = g.enemies.find((e) => e.kind === take.encounter!.kind);
+      if (boss) bossStates.add(boss.state);
+    }
     const mid = local === Math.floor(len / 2);
     if (
       ['scatter', 'cluster', 'twinbore', 'shotgun'].includes(take.name) &&
@@ -332,6 +412,20 @@ for (const [index, shot] of edit.entries()) {
     }
     const text = labels[index];
     if (text) caption(text, ease(local / 6) * (1 - ease((local - len + 14) / 14)));
+    if (take.encounter) {
+      c.save();
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.fillStyle = '#080f14dd';
+      c.fillRect(78, 912, 510, 94);
+      c.fillStyle = '#d9b177';
+      c.fillRect(78, 912, 4, 94);
+      c.font = '22px "Release Mono"';
+      c.fillText('ZONE ' + (Math.floor(take.stage / 4) + 1), 102, 944);
+      c.fillStyle = '#e9eadc';
+      c.font = '36px "Release Bold"';
+      c.fillText(PRACTICE_BOSSES[take.encounter.kind].name.toUpperCase(), 102, 986);
+      c.restore();
+    }
     if (frame === 0 || frame === 12 || frame === 36 || frame === 72)
       writeFileSync(resolve(work, `hook-${frame}.png`), canvas.toBuffer('image/png'));
     if (mid) await still(frame, take.name, index);
@@ -361,6 +455,10 @@ for (const [index, shot] of edit.entries()) {
     onScreen = visible / len;
   if (!usableAction(quality, len) || onScreen < 0.75)
     throw new Error(`Unusable shot ${index + 1}: ${JSON.stringify({ quality, onScreen })}`);
+  if (take.encounter && (playerVisible / len < 0.95 || bossStates.size < 2))
+    throw new Error(
+      `Incomplete boss exchange ${take.name}: ${playerVisible / len}, ${[...bossStates]}`,
+    );
   manifest.push({
     ...take,
     timelineStart: shot.start / FPS,
@@ -370,6 +468,8 @@ for (const [index, shot] of edit.entries()) {
     kills: g.kills - initialKills,
     quality,
     onScreen,
+    playerOnScreen: playerVisible / len,
+    ...(take.encounter ? { bossStates: [...bossStates] } : {}),
     retiming: shot.points,
   });
   last = { g, r, take, cursor, scale: r.scale };
@@ -384,7 +484,7 @@ const endingFrames = [
 ];
 const endingSheet = createCanvas(1440, 600),
   ec = endingSheet.getContext('2d');
-for (let frame = ending.impactFrame; frame < total; frame++) {
+for (let frame = mixingOnly ? total : ending.impactFrame; frame < total; frame++) {
   let background: CanvasImageSource | undefined;
   if (frame < ending.transitionEndFrame && last) {
     last.g.onSound = (kind) => cues.push({ frame, kind });
@@ -409,17 +509,16 @@ for (let frame = ending.impactFrame; frame < total; frame++) {
   }
   if (!storyboard) await writeFrame();
 }
-writeFileSync(resolve(out, 'Contact-Sheet.png'), sheet.toBuffer('image/png'));
-writeFileSync(resolve(out, 'Ending-Review.png'), endingSheet.toBuffer('image/png'));
-sequences.forEach((s: any, i: number) =>
-  writeFileSync(resolve(work, `sequence-${i + 1}.png`), s.toBuffer('image/png')),
-);
-writeFileSync(resolve(work, 'thumbnail-gameplay.png'), poster.toBuffer('image/png'));
+if (!mixingOnly) {
+  writeFileSync(resolve(out, 'Contact-Sheet.png'), sheet.toBuffer('image/png'));
+  writeFileSync(resolve(out, 'Ending-Review.png'), endingSheet.toBuffer('image/png'));
+  sequences.forEach((s: any, i: number) =>
+    writeFileSync(resolve(work, `sequence-${i + 1}.png`), s.toBuffer('image/png')),
+  );
+  writeFileSync(resolve(work, 'thumbnail-gameplay.png'), poster.toBuffer('image/png'));
+}
 const thumb = createCanvas(3840, 2160);
-drawThumbnail(thumb.getContext('2d'), poster, {
-  hook: ['SHOOT DOWN.', 'FLY UP.'],
-  label: 'OFFICIAL TRAILER',
-});
+drawHeroThumbnail(thumb.getContext('2d'));
 writeFileSync(resolve(out, 'Recoil-Foundry-YouTube-Thumbnail.png'), thumb.toBuffer('image/png'));
 json(resolve(work, 'shot-audit.json'), manifest);
 json(resolve(work, 'sync-audit.json'), sync);
@@ -481,7 +580,7 @@ const capture = {
     closing: map.closing,
   },
   method:
-    'Actual current Game and Renderer. Six starting tools, legal checkpoint builds, ordinary scripted inputs, active health, enemy AI and collisions; source events gently retimed to recorded musical accents. No invulnerability, fabricated attacks, player saves or unlock writes. Opening starts directly in combat; game Sound cues are mixed with licensed recorded music.',
+    'Actual current Game and Renderer. Six starting tools, legal checkpoint builds and five live Practice bosses across five zones. Ordinary scripted inputs, active health, enemy AI and collisions; source events gently retimed to recorded musical accents. Boss cameras include the player and machine with attack/recovery sequences. No invulnerability, fabricated attacks, player saves or unlock writes. Opening starts directly in combat; game Sound cues are mixed with licensed recorded music.',
 };
 json(resolve(out, 'Capture-Manifest.json'), capture);
 json(resolve(metadata, 'capture.json'), capture);

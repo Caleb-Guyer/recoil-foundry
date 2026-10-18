@@ -8,6 +8,8 @@ import {
   usableAction,
   startTake,
   PROMO_TEMPLATES,
+  BOSS_TEMPLATES,
+  recordAction,
 } from '../scripts/trailer-scenes.ts';
 import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
 import { validBuild } from '../src/rules.ts';
@@ -51,6 +53,32 @@ test('capture driver crosses cover instead of firing at a nearby hidden enemy', 
     crossed ||= g.player.position.x > 505;
   }
   assert(crossed, 'ordinary movement and jump inputs must get over the blocking cover');
+});
+
+test('boss captures run live Practice encounters with real health, attacks and damage', () => {
+  for (const template of BOSS_TEMPLATES) {
+    const g = startTake({
+      ...template,
+      seed: template.encounter.seed,
+      style: 0,
+      start: 0,
+      length: 216,
+    });
+    assert.equal(g.practice?.kind, template.encounter.kind);
+    assert(g.testRun, 'capture must remain an isolated test session');
+    assert.equal(g.hp, 100);
+    const boss = g.enemies.find((e) => e.kind === template.encounter.kind)!;
+    assert(boss);
+    const initialHp = boss.hp,
+      states = new Set<string>();
+    for (let tick = 0; tick < 900 && g.mode === 'playing' && g.hp > 15; tick++) {
+      recordAction(g, actionInput(g, tick, 0));
+      states.add(boss.state);
+    }
+    assert(states.size > 1, template.name + ' must actually attack');
+    assert(boss.hp < initialHp, template.name + ' must receive real weapon damage');
+    assert.equal(boss.maxHp, initialHp, 'capture must not rescale boss health');
+  }
 });
 
 test('capture driver aims at a visible enemy instead of a closer hidden enemy', () => {

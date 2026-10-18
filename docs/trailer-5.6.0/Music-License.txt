@@ -8,7 +8,7 @@ https://creativecommons.org/licenses/by/4.0/
 
 The composer expressly permits commercial projects with attribution. Keep the full music credit, track link, license link and edit disclosure from Description.txt in the YouTube description.
 
-This export uses an excerpt from 2:43.276 to 3:12.076, then the original closing passage from 4:09.676 to 4:23.200. A 25 ms phrase-aligned crossfade joins the two excerpts. The mix includes EQ, gain adjustment and brief ducking under game sound effects. The original recorded ending is preserved. No other song is used, and no generative music is used.
+This export uses an excerpt from 2:43.276 to 3:21.676, then the original closing passage from 4:09.676 to 4:23.200. A 25 ms phrase-aligned crossfade joins the two excerpts. The mix includes EQ, gain adjustment and brief ducking under game sound effects. The original recorded ending is preserved. No other song is used, and no generative music is used.
 
 Source recording SHA-256:
 264be9c44c32419b6de70f0ac24c92f81401419419c8fb111b8e19e62261331b

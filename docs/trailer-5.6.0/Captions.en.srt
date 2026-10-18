@@ -4,31 +4,53 @@
 EVERY SHOT MOVES YOU.
 
 2
-00:00:02,400 --> 00:00:07,150
+00:00:02,400 --> 00:00:07,133
 [Shotgun blasts, rapid gunfire and ricochets]
 
 3
-00:00:07,200 --> 00:00:09,550
+00:00:07,183 --> 00:00:09,550
 ONE GUN. YOUR BUILD.
 
 4
-00:00:09,600 --> 00:00:26,350
+00:00:09,600 --> 00:00:28,767
 [Beams, saws, explosions and gunfire over music]
 
 5
-00:00:26,400 --> 00:00:28,750
-CLOCK OUT ALIVE.
+00:00:28,817 --> 00:00:32,400
+MEET MANAGEMENT.
+The Loader
+[Engine charge and crash]
 
 6
-00:00:28,800 --> 00:00:37,900
-[Gunfire and explosions build with the music]
+00:00:32,450 --> 00:00:35,950
+The Press
+[Heavy machine slams and gunfire]
 
 7
-00:00:38,417 --> 00:00:41,050
+00:00:36,000 --> 00:00:39,567
+The Condenser
+[Energy volleys and gunfire]
+
+8
+00:00:39,617 --> 00:00:43,167
+The Sorter
+[Falling cargo and machine impacts]
+
+9
+00:00:43,217 --> 00:00:45,550
+The Interceptor
+[Rapid gunfire and impacts]
+
+10
+00:00:45,600 --> 00:00:47,967
+[Gunfire and explosions build with the music]
+
+11
+00:00:48,017 --> 00:00:50,633
 RECOIL FOUNDRY
 PLAY FREE IN YOUR BROWSER
 caleb-guyer.github.io/recoil-foundry
 
-8
-00:00:41,050 --> 00:00:42,280
+12
+00:00:50,683 --> 00:00:51,883
 [Music fades]

@@ -78,6 +78,9 @@ const weights: Record<string, number> = {
   break: 7,
   'beam-start': 10,
   'beam-hit': 7,
+  slam: 12,
+  crash: 12,
+  'cargo-impact': 12,
 };
 interface Moment {
   tick: number;
@@ -99,7 +102,13 @@ export function planEdit(
     const choices: EditShot[] = [];
     const options = [takes[name][preferred], ...takes[name].filter((_, n) => n !== preferred)];
     for (const take of options) {
-      const key = `${take.seed}:${take.style}`;
+      const key = JSON.stringify([
+        take.seed,
+        take.style,
+        take.mods,
+        take.startingGun,
+        take.encounter,
+      ]);
       let history = cache.get(key);
       if (!history) {
         const g = startTake(take);

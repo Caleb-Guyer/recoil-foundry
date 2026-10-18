@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { MODS } from '../src/rules.ts';
 import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
 
-const out = resolve(process.env.TRAILER_OUT ?? '../../YouTube Trailer 5.6.0');
+const out = resolve(process.env.TRAILER_OUT ?? '../../YouTube Trailer 5.6.0 Revised');
 const metadata = resolve('docs/trailer-5.6.0');
 mkdirSync(out, { recursive: true });
 mkdirSync(metadata, { recursive: true });
@@ -20,6 +20,8 @@ Shoot down. Go up. Turn recoil into movement in Recoil Foundry, a physics roguel
 Build one gun each run. Combine 141 upgrades, earn six starting weapons, and fight through 20 rooms across five factory zones. Discover changing encounters, branching jobs, optional hunts, and new ways for your upgrades to work together.
 
 Keep coming back for Daily Runs, Overtime, Security levels, and the five-fight Boss Gauntlet — including Remix routes built from the arenas you discover.
+
+See five bosses in action, from the Loader's charge to the Interceptor's aerial firefight.
 
 Free to play. Available now on desktop in your web browser.
 
@@ -49,7 +51,7 @@ https://creativecommons.org/licenses/by/4.0/
 
 The composer expressly permits commercial projects with attribution. Keep the full music credit, track link, license link and edit disclosure from Description.txt in the YouTube description.
 
-This export uses an excerpt from 2:43.276 to 3:12.076, then the original closing passage from 4:09.676 to 4:23.200. A 25 ms phrase-aligned crossfade joins the two excerpts. The mix includes EQ, gain adjustment and brief ducking under game sound effects. The original recorded ending is preserved. No other song is used, and no generative music is used.
+This export uses an excerpt from 2:43.276 to 3:21.676, then the original closing passage from 4:09.676 to 4:23.200. A 25 ms phrase-aligned crossfade joins the two excerpts. The mix includes EQ, gain adjustment and brief ducking under game sound effects. The original recorded ending is preserved. No other song is used, and no generative music is used.
 
 Source recording SHA-256:
 ${capture.music.sha256}
@@ -110,7 +112,7 @@ Ready-to-upload files are in this folder. This package has not been uploaded or 
 - Duration: ${capture.seconds.toFixed(3)} seconds; ${capture.frames} frames.
 - Picture: 1920 × 1080, 60 fps, progressive H.264 High, YUV 4:2:0, BT.709, fast-start MP4.
 - Audio: AAC-LC stereo, 48 kHz, 384 kb/s. Measured loudness and peak values are in Quality-Report.json.
-- Thumbnail: 3840 × 2160 PNG, 16:9, composed from the actual captured game and native wordmark.
+- Thumbnail: 3840 × 2160 PNG, 16:9. An original character poster using the game's actual Night Shift outfit and Magnum weapon drawing functions, with native factory geometry and typography.
 - Music: Resonance by Scott Buckley, free commercial use under CC BY 4.0 with the supplied credit.
 
 ## Upload order
@@ -136,20 +138,59 @@ const stamp = (seconds: number) => {
   const ms = Math.round(seconds * 1000);
   return `${String(Math.floor(ms / 3600000)).padStart(2, '0')}:${String(Math.floor(ms / 60000) % 60).padStart(2, '0')}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')},${String(ms % 1000).padStart(3, '0')}`;
 };
-const cues = [
-  [0, 2.35, '[Driving electronic music and gunfire]\nEVERY SHOT MOVES YOU.'],
-  [2.4, 7.15, '[Shotgun blasts, rapid gunfire and ricochets]'],
-  [7.2, 9.55, 'ONE GUN. YOUR BUILD.'],
-  [9.6, 26.35, '[Beams, saws, explosions and gunfire over music]'],
-  [26.4, 28.75, 'CLOCK OUT ALIVE.'],
-  [28.8, 37.9, '[Gunfire and explosions build with the music]'],
+const shots = capture.shots;
+const titleAt = capture.music.closing.subtitleFrame / 60;
+const fadeAt = (capture.music.closing.titleFrame + 186) / 60;
+const cues: [number, number, string][] = [
+  [0, shots[0].seconds - 0.05, '[Driving electronic music and gunfire]\nEVERY SHOT MOVES YOU.'],
   [
-    38.417,
-    41.05,
+    shots[1].timelineStart,
+    shots[3].timelineStart - 0.05,
+    '[Shotgun blasts, rapid gunfire and ricochets]',
+  ],
+  [
+    shots[3].timelineStart,
+    shots[3].timelineStart + shots[3].seconds - 0.05,
+    'ONE GUN. YOUR BUILD.',
+  ],
+  [
+    shots[4].timelineStart,
+    shots[12].timelineStart - 0.05,
+    '[Beams, saws, explosions and gunfire over music]',
+  ],
+  [
+    shots[12].timelineStart,
+    shots[12].timelineStart + shots[12].seconds - 0.05,
+    'MEET MANAGEMENT.\nThe Loader\n[Engine charge and crash]',
+  ],
+  [
+    shots[13].timelineStart,
+    shots[14].timelineStart - 0.05,
+    'The Press\n[Heavy machine slams and gunfire]',
+  ],
+  [
+    shots[14].timelineStart,
+    shots[15].timelineStart - 0.05,
+    'The Condenser\n[Energy volleys and gunfire]',
+  ],
+  [
+    shots[15].timelineStart,
+    shots[16].timelineStart - 0.05,
+    'The Sorter\n[Falling cargo and machine impacts]',
+  ],
+  [
+    shots[16].timelineStart,
+    shots[17].timelineStart - 0.05,
+    'The Interceptor\n[Rapid gunfire and impacts]',
+  ],
+  [shots[17].timelineStart, titleAt - 0.05, '[Gunfire and explosions build with the music]'],
+  [
+    titleAt,
+    fadeAt - 0.05,
     'RECOIL FOUNDRY\nPLAY FREE IN YOUR BROWSER\ncaleb-guyer.github.io/recoil-foundry',
   ],
-  [41.05, 42.28, '[Music fades]'],
-] as const;
+  [fadeAt, capture.seconds - 0.5, '[Music fades]'],
+];
 const captions = cues
   .map(([a, b, text], i) => `${i + 1}\n${stamp(a)} --> ${stamp(b)}\n${text}\n`)
   .join('\n');
@@ -169,6 +210,10 @@ for (const [name, content] of Object.entries(files)) {
 copyFileSync(
   resolve(out, 'Recoil-Foundry-YouTube-Thumbnail.png'),
   resolve(metadata, 'Recoil-Foundry-YouTube-Thumbnail.png'),
+);
+copyFileSync(
+  resolve(out, 'Recoil-Foundry-Official-Trailer.mp4'),
+  resolve(metadata, 'Recoil-Foundry-Official-Trailer.mp4'),
 );
 if (title.length > 100 || description.length > 5000 || tags.length > 500)
   throw new Error('YouTube text limits exceeded');

@@ -43,10 +43,10 @@ Ready-to-upload files are in this folder. This package has not been uploaded or 
 
 ## Export
 
-- Duration: 42.783 seconds; 2567 frames.
+- Duration: 52.383 seconds; 3143 frames.
 - Picture: 1920 × 1080, 60 fps, progressive H.264 High, YUV 4:2:0, BT.709, fast-start MP4.
 - Audio: AAC-LC stereo, 48 kHz, 384 kb/s. Measured loudness and peak values are in Quality-Report.json.
-- Thumbnail: 3840 × 2160 PNG, 16:9, composed from the actual captured game and native wordmark.
+- Thumbnail: 3840 × 2160 PNG, 16:9. An original character poster using the game's actual Night Shift outfit and Magnum weapon drawing functions, with native factory geometry and typography.
 - Music: Resonance by Scott Buckley, free commercial use under CC BY 4.0 with the supplied credit.
 
 ## Upload order

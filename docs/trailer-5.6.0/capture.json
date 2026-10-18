@@ -1,11 +1,11 @@
 {
   "version": "5.6.0",
-  "createdAt": "2026-10-18T05:10:03.651Z",
+  "createdAt": "2026-10-18T13:24:36.285Z",
   "width": 1920,
   "height": 1080,
   "fps": 60,
-  "frames": 2567,
-  "seconds": 42.78333333333333,
+  "frames": 3143,
+  "seconds": 52.38333333333333,
   "shots": [
     {
       "name": "recoil",
@@ -34,6 +34,7 @@
       "finalHp": 86,
       "kills": 3,
       "onScreen": 0.8958333333333334,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -94,6 +95,7 @@
       "finalHp": 86,
       "kills": 3,
       "onScreen": 0.8482758620689655,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -156,6 +158,7 @@
       "finalHp": 68,
       "kills": 4,
       "onScreen": 0.852112676056338,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -222,6 +225,7 @@
       "finalHp": 91,
       "kills": 5,
       "onScreen": 0.7931034482758621,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -288,6 +292,7 @@
       "finalHp": 85,
       "kills": 2,
       "onScreen": 1,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -344,6 +349,7 @@
       "finalHp": 68,
       "kills": 5,
       "onScreen": 1,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -407,6 +413,7 @@
       "finalHp": 84,
       "kills": 0,
       "onScreen": 1,
+      "playerOnScreen": 0.972027972027972,
       "retiming": [
         {
           "output": 0,
@@ -463,6 +470,7 @@
       "finalHp": 46,
       "kills": 3,
       "onScreen": 1,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -479,7 +487,7 @@
         {
           "output": 75,
           "source": 81,
-          "kind": "break",
+          "kind": "crash",
           "beat": 30
         },
         {
@@ -530,6 +538,7 @@
       "finalHp": 91,
       "kills": 4,
       "onScreen": 0.9583333333333334,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -593,6 +602,7 @@
       "finalHp": 64,
       "kills": 2,
       "onScreen": 1,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -660,6 +670,7 @@
       "finalHp": 66,
       "kills": 1,
       "onScreen": 1,
+      "playerOnScreen": 0.972027972027972,
       "retiming": [
         {
           "output": 0,
@@ -693,33 +704,36 @@
       ]
     },
     {
-      "name": "loader",
-      "stage": 3,
+      "name": "repeater",
+      "stage": 10,
       "mods": [
         "magnum",
         "rapid",
-        "kick"
+        "ricochet",
+        "airshot"
       ],
-      "seed": "ACTION-LOADER-20",
+      "startingGun": "repeater",
+      "seed": "ACTION-REPEATER-20",
       "style": 0,
-      "start": 688,
-      "length": 144,
+      "start": 446,
+      "length": 145,
       "quality": {
-        "visibleFraction": 0.7430555555555556,
+        "visibleFraction": 1,
         "blockedFireFrames": 0,
-        "longestQuietFrames": 21,
+        "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 973,
-        "span": 317,
-        "damage": 116
+        "travel": 1402,
+        "span": 604,
+        "damage": 410
       },
-      "score": 6.62,
+      "score": 17.263,
       "timelineStart": 26.4,
-      "seconds": 2.4,
-      "initialHp": 82,
+      "seconds": 2.4166666666666665,
+      "initialHp": 100,
       "finalHp": 64,
-      "kills": 0,
+      "kills": 1,
       "onScreen": 1,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
@@ -729,85 +743,417 @@
         },
         {
           "output": 39,
-          "source": 44,
+          "source": 35,
           "kind": "heavy",
           "beat": 45
         },
         {
           "output": 75,
-          "source": 80,
-          "kind": "heavy",
+          "source": 74,
+          "kind": "explode",
           "beat": 46
         },
         {
-          "output": 143,
-          "source": 143,
+          "output": 111,
+          "source": 113,
+          "kind": "kill",
+          "beat": 47
+        },
+        {
+          "output": 144,
+          "source": 144,
           "kind": "end"
         }
       ]
     },
     {
-      "name": "prism",
-      "stage": 10,
+      "name": "boss-loader",
+      "stage": 3,
       "mods": [
-        "cutting-torch",
-        "prism-array",
-        "thermal-runaway",
-        "scatter",
-        "pierce",
-        "airshot",
-        "light",
-        "leech",
+        "magnum",
+        "rapid",
         "kick"
       ],
-      "seed": "ACTION-PRISM-7",
-      "style": 1,
-      "start": 359,
-      "length": 145,
-      "quality": {
-        "visibleFraction": 0.9241379310344827,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 11,
-        "longestStallFrames": 6,
-        "travel": 1371,
-        "span": 819,
-        "damage": 329
+      "encounter": {
+        "kind": "loader",
+        "seed": "GAUNTLET-1-LOADER-4"
       },
-      "score": 14.71,
-      "timelineStart": 28.8,
-      "seconds": 2.4166666666666665,
-      "initialHp": 82,
-      "finalHp": 84,
-      "kills": 1,
-      "onScreen": 0.9586206896551724,
+      "seed": "GAUNTLET-1-LOADER-4",
+      "style": 0,
+      "start": 433,
+      "length": 218,
+      "quality": {
+        "visibleFraction": 0.8073394495412844,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 16,
+        "longestStallFrames": 2,
+        "travel": 1758,
+        "span": 793,
+        "damage": 102
+      },
+      "score": 7.414,
+      "timelineStart": 28.816666666666666,
+      "seconds": 3.6333333333333333,
+      "initialHp": 100,
+      "finalHp": 76,
+      "kills": 0,
+      "onScreen": 1,
+      "playerOnScreen": 1,
+      "bossStates": [
+        "idle",
+        "windup",
+        "rush",
+        "recover"
+      ],
       "retiming": [
         {
           "output": 0,
           "source": 0,
-          "kind": "beam-start",
+          "kind": "heavy",
           "beat": 48
         },
         {
-          "output": 38,
-          "source": 44,
-          "kind": "beam-hit",
+          "output": 37,
+          "source": 43,
+          "kind": "cargo-impact",
           "beat": 49
         },
         {
-          "output": 73,
-          "source": 73,
-          "kind": "beam-start",
+          "output": 72,
+          "source": 85,
+          "kind": "heavy",
           "beat": 50
         },
         {
           "output": 110,
-          "source": 110,
-          "kind": "beam-hit",
+          "source": 119,
+          "kind": "heavy",
           "beat": 51
         },
         {
+          "output": 182,
+          "source": 183,
+          "kind": "heavy",
+          "beat": 53
+        },
+        {
+          "output": 217,
+          "source": 217,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "boss-press",
+      "stage": 7,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "press",
+        "seed": "GAUNTLET-1-PRESS-1"
+      },
+      "seed": "GAUNTLET-1-PRESS-1",
+      "style": 0,
+      "start": 401,
+      "length": 213,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 7,
+        "travel": 2028,
+        "span": 1178,
+        "damage": 280
+      },
+      "score": 7.773,
+      "timelineStart": 32.45,
+      "seconds": 3.55,
+      "initialHp": 52,
+      "finalHp": 52,
+      "kills": 0,
+      "onScreen": 1,
+      "playerOnScreen": 1,
+      "bossStates": [
+        "recover",
+        "return",
+        "idle",
+        "windup",
+        "rush"
+      ],
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "slam",
+          "beat": 54
+        },
+        {
+          "output": 35,
+          "source": 31,
+          "kind": "heavy",
+          "beat": 55
+        },
+        {
+          "output": 108,
+          "source": 109,
+          "kind": "heavy",
+          "beat": 57
+        },
+        {
+          "output": 143,
+          "source": 139,
+          "kind": "heavy",
+          "beat": 58
+        },
+        {
+          "output": 177,
+          "source": 175,
+          "kind": "heavy",
+          "beat": 59
+        },
+        {
+          "output": 212,
+          "source": 212,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "boss-condenser",
+      "stage": 11,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "condenser",
+        "seed": "GAUNTLET-1-CONDENSER-1"
+      },
+      "seed": "GAUNTLET-1-CONDENSER-1",
+      "style": 0,
+      "start": 654,
+      "length": 217,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 2,
+        "travel": 1743,
+        "span": 386,
+        "damage": 297
+      },
+      "score": 8.582,
+      "timelineStart": 36,
+      "seconds": 3.6166666666666667,
+      "initialHp": 58,
+      "finalHp": 37,
+      "kills": 0,
+      "onScreen": 1,
+      "playerOnScreen": 1,
+      "bossStates": [
+        "followup",
+        "recover",
+        "windup"
+      ],
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 60
+        },
+        {
+          "output": 75,
+          "source": 71,
+          "kind": "heavy",
+          "beat": 62
+        },
+        {
+          "output": 111,
+          "source": 114,
+          "kind": "heavy",
+          "beat": 63
+        },
+        {
           "output": 144,
-          "source": 144,
+          "source": 150,
+          "kind": "heavy",
+          "beat": 64
+        },
+        {
+          "output": 182,
+          "source": 188,
+          "kind": "heavy",
+          "beat": 65
+        },
+        {
+          "output": 216,
+          "source": 216,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "boss-sorter",
+      "stage": 15,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "sorter",
+        "seed": "GAUNTLET-1-SORTER-0"
+      },
+      "seed": "GAUNTLET-1-SORTER-0",
+      "style": 0,
+      "start": 508,
+      "length": 216,
+      "quality": {
+        "visibleFraction": 0.9722222222222222,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 6,
+        "longestStallFrames": 4,
+        "travel": 1407,
+        "span": 273,
+        "damage": 527
+      },
+      "score": 7.027,
+      "timelineStart": 39.61666666666667,
+      "seconds": 3.6,
+      "initialHp": 100,
+      "finalHp": 100,
+      "kills": 0,
+      "onScreen": 1,
+      "playerOnScreen": 1,
+      "bossStates": [
+        "windup",
+        "recover",
+        "idle"
+      ],
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 66
+        },
+        {
+          "output": 37,
+          "source": 32,
+          "kind": "slam",
+          "beat": 67
+        },
+        {
+          "output": 72,
+          "source": 64,
+          "kind": "heavy",
+          "beat": 68
+        },
+        {
+          "output": 109,
+          "source": 100,
+          "kind": "heavy",
+          "beat": 69
+        },
+        {
+          "output": 145,
+          "source": 140,
+          "kind": "heavy",
+          "beat": 70
+        },
+        {
+          "output": 181,
+          "source": 176,
+          "kind": "heavy",
+          "beat": 71
+        },
+        {
+          "output": 215,
+          "source": 215,
+          "kind": "end"
+        }
+      ]
+    },
+    {
+      "name": "boss-interceptor",
+      "stage": 19,
+      "mods": [
+        "magnum",
+        "rapid",
+        "kick",
+        "ricochet",
+        "airshot"
+      ],
+      "encounter": {
+        "kind": "interceptor",
+        "seed": "GAUNTLET-1-INTERCEPTOR-0"
+      },
+      "seed": "GAUNTLET-1-INTERCEPTOR-0",
+      "style": 0,
+      "start": 248,
+      "length": 143,
+      "quality": {
+        "visibleFraction": 1,
+        "blockedFireFrames": 0,
+        "longestQuietFrames": 0,
+        "longestStallFrames": 0,
+        "travel": 1260,
+        "span": 449,
+        "damage": 281
+      },
+      "score": 7.788,
+      "timelineStart": 43.21666666666667,
+      "seconds": 2.3833333333333333,
+      "initialHp": 80,
+      "finalHp": 80,
+      "kills": 0,
+      "onScreen": 1,
+      "playerOnScreen": 1,
+      "bossStates": [
+        "recover",
+        "idle",
+        "windup",
+        "airborne"
+      ],
+      "retiming": [
+        {
+          "output": 0,
+          "source": 0,
+          "kind": "heavy",
+          "beat": 72
+        },
+        {
+          "output": 37,
+          "source": 36,
+          "kind": "heavy",
+          "beat": 73
+        },
+        {
+          "output": 72,
+          "source": 76,
+          "kind": "heavy",
+          "beat": 74
+        },
+        {
+          "output": 107,
+          "source": 112,
+          "kind": "heavy",
+          "beat": 75
+        },
+        {
+          "output": 142,
+          "source": 142,
           "kind": "end"
         }
       ]
@@ -826,189 +1172,39 @@
         "leech",
         "kick"
       ],
-      "seed": "ACTION-PINWHEEL-14",
-      "style": 0,
-      "start": 587,
-      "length": 144,
-      "quality": {
-        "visibleFraction": 0.9930555555555556,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 1,
-        "longestStallFrames": 4,
-        "travel": 1332,
-        "span": 762,
-        "damage": 286
-      },
-      "score": 17.303,
-      "timelineStart": 31.216666666666665,
-      "seconds": 2.4,
-      "initialHp": 84,
-      "finalHp": 73,
-      "kills": 2,
-      "onScreen": 0.8402777777777778,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "scatter",
-          "beat": 52
-        },
-        {
-          "output": 37,
-          "source": 39,
-          "kind": "scatter",
-          "beat": 53
-        },
-        {
-          "output": 73,
-          "source": 81,
-          "kind": "scatter",
-          "beat": 54
-        },
-        {
-          "output": 143,
-          "source": 143,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "saw",
-      "stage": 6,
-      "mods": [
-        "grindshot",
-        "crosscut",
-        "split",
-        "shatter",
-        "pierce",
-        "light"
-      ],
-      "seed": "ACTION-SAW-8",
-      "style": 0,
-      "start": 668,
-      "length": 72,
-      "quality": {
-        "visibleFraction": 1,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 0,
-        "longestStallFrames": 0,
-        "travel": 725,
-        "span": 412,
-        "damage": 147
-      },
-      "score": 14.282,
-      "timelineStart": 33.61666666666667,
-      "seconds": 1.2,
-      "initialHp": 27,
-      "finalHp": 27,
-      "kills": 0,
-      "onScreen": 1,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "shot",
-          "beat": 56
-        },
-        {
-          "output": 71,
-          "source": 71,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "turf",
-      "stage": 4,
-      "mods": [
-        "magnum",
-        "ricochet",
-        "airshot",
-        "light"
-      ],
-      "event": true,
-      "seed": "ACTION-TURF-16",
-      "style": 0,
-      "start": 205,
-      "length": 71,
-      "quality": {
-        "visibleFraction": 0.8591549295774648,
-        "blockedFireFrames": 0,
-        "longestQuietFrames": 10,
-        "longestStallFrames": 0,
-        "travel": 306,
-        "span": 246,
-        "damage": 135
-      },
-      "score": 17.51,
-      "timelineStart": 34.81666666666667,
-      "seconds": 1.1833333333333333,
-      "initialHp": 84,
-      "finalHp": 68,
-      "kills": 3,
-      "onScreen": 0.8732394366197183,
-      "retiming": [
-        {
-          "output": 0,
-          "source": 0,
-          "kind": "kill",
-          "beat": 58
-        },
-        {
-          "output": 35,
-          "source": 39,
-          "kind": "kill",
-          "beat": 59
-        },
-        {
-          "output": 70,
-          "source": 70,
-          "kind": "end"
-        }
-      ]
-    },
-    {
-      "name": "repeater",
-      "stage": 10,
-      "mods": [
-        "magnum",
-        "rapid",
-        "ricochet",
-        "airshot"
-      ],
-      "startingGun": "repeater",
-      "seed": "ACTION-REPEATER-18",
-      "style": 0,
-      "start": 324,
+      "seed": "ACTION-PINWHEEL-19",
+      "style": 1,
+      "start": 566,
       "length": 90,
       "quality": {
         "visibleFraction": 1,
         "blockedFireFrames": 0,
         "longestQuietFrames": 0,
         "longestStallFrames": 0,
-        "travel": 622,
-        "span": 290,
-        "damage": 300
+        "travel": 740,
+        "span": 483,
+        "damage": 368
       },
-      "score": 17.504,
-      "timelineStart": 36,
+      "score": 17.302,
+      "timelineStart": 45.6,
       "seconds": 1.5,
-      "initialHp": 100,
-      "finalHp": 82,
-      "kills": 2,
-      "onScreen": 0.9777777777777777,
+      "initialHp": 82,
+      "finalHp": 88,
+      "kills": 3,
+      "onScreen": 1,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
           "source": 0,
-          "kind": "heavy",
-          "beat": 60
+          "kind": "scatter",
+          "beat": 76
         },
         {
           "output": 38,
-          "source": 35,
+          "source": 42,
           "kind": "kill",
-          "beat": 61
+          "beat": 77
         },
         {
           "output": 89,
@@ -1046,24 +1242,25 @@
         "damage": 52
       },
       "score": 16.623,
-      "timelineStart": 37.5,
+      "timelineStart": 47.1,
       "seconds": 0.48333333333333334,
       "initialHp": 49,
       "finalHp": 53,
       "kills": 2,
       "onScreen": 1,
+      "playerOnScreen": 1,
       "retiming": [
         {
           "output": 0,
           "source": 0,
           "kind": "shell-shot",
-          "beat": 62
+          "beat": 78
         },
         {
           "output": 20,
           "source": 21,
           "kind": "kill",
-          "beat": 63
+          "beat": 79
         },
         {
           "output": 28,
@@ -1300,7 +1497,7 @@
     },
     {
       "shot": 8,
-      "kind": "break",
+      "kind": "crash",
       "beat": 30,
       "frame": 1082,
       "expectedFrame": 1082,
@@ -1428,23 +1625,31 @@
     },
     {
       "shot": 12,
-      "kind": "heavy",
+      "kind": "explode",
       "beat": 46,
       "frame": 1659,
       "expectedFrame": 1659,
       "errorFrames": 0
     },
     {
-      "shot": 13,
-      "kind": "beam-start",
-      "beat": 48,
-      "frame": 1728,
-      "expectedFrame": 1728,
+      "shot": 12,
+      "kind": "kill",
+      "beat": 47,
+      "frame": 1695,
+      "expectedFrame": 1695,
       "errorFrames": 0
     },
     {
       "shot": 13,
-      "kind": "beam-hit",
+      "kind": "heavy",
+      "beat": 48,
+      "frame": 1729,
+      "expectedFrame": 1729,
+      "errorFrames": 0
+    },
+    {
+      "shot": 13,
+      "kind": "cargo-impact",
       "beat": 49,
       "frame": 1766,
       "expectedFrame": 1766,
@@ -1452,7 +1657,7 @@
     },
     {
       "shot": 13,
-      "kind": "beam-start",
+      "kind": "heavy",
       "beat": 50,
       "frame": 1801,
       "expectedFrame": 1801,
@@ -1460,62 +1665,62 @@
     },
     {
       "shot": 13,
-      "kind": "beam-hit",
+      "kind": "heavy",
       "beat": 51,
-      "frame": 1838,
-      "expectedFrame": 1838,
+      "frame": 1839,
+      "expectedFrame": 1839,
       "errorFrames": 0
     },
     {
-      "shot": 14,
-      "kind": "scatter",
-      "beat": 52,
-      "frame": 1873,
-      "expectedFrame": 1873,
-      "errorFrames": 0
-    },
-    {
-      "shot": 14,
-      "kind": "scatter",
+      "shot": 13,
+      "kind": "heavy",
       "beat": 53,
-      "frame": 1910,
-      "expectedFrame": 1910,
+      "frame": 1911,
+      "expectedFrame": 1911,
       "errorFrames": 0
     },
     {
       "shot": 14,
-      "kind": "scatter",
+      "kind": "slam",
       "beat": 54,
-      "frame": 1946,
-      "expectedFrame": 1946,
+      "frame": 1947,
+      "expectedFrame": 1947,
       "errorFrames": 0
     },
     {
-      "shot": 15,
-      "kind": "shot",
-      "beat": 56,
-      "frame": 2017,
-      "expectedFrame": 2017,
+      "shot": 14,
+      "kind": "heavy",
+      "beat": 55,
+      "frame": 1982,
+      "expectedFrame": 1982,
       "errorFrames": 0
     },
     {
-      "shot": 16,
-      "kind": "kill",
+      "shot": 14,
+      "kind": "heavy",
+      "beat": 57,
+      "frame": 2055,
+      "expectedFrame": 2055,
+      "errorFrames": 0
+    },
+    {
+      "shot": 14,
+      "kind": "heavy",
       "beat": 58,
-      "frame": 2089,
-      "expectedFrame": 2089,
+      "frame": 2090,
+      "expectedFrame": 2090,
       "errorFrames": 0
     },
     {
-      "shot": 16,
-      "kind": "kill",
+      "shot": 14,
+      "kind": "heavy",
       "beat": 59,
       "frame": 2124,
       "expectedFrame": 2124,
       "errorFrames": 0
     },
     {
-      "shot": 17,
+      "shot": 15,
       "kind": "heavy",
       "beat": 60,
       "frame": 2160,
@@ -1523,27 +1728,147 @@
       "errorFrames": 0
     },
     {
-      "shot": 17,
-      "kind": "kill",
-      "beat": 61,
-      "frame": 2198,
-      "expectedFrame": 2198,
-      "errorFrames": 0
-    },
-    {
-      "shot": 18,
-      "kind": "shell-shot",
+      "shot": 15,
+      "kind": "heavy",
       "beat": 62,
-      "frame": 2250,
-      "expectedFrame": 2250,
+      "frame": 2235,
+      "expectedFrame": 2235,
+      "errorFrames": 0
+    },
+    {
+      "shot": 15,
+      "kind": "heavy",
+      "beat": 63,
+      "frame": 2271,
+      "expectedFrame": 2271,
+      "errorFrames": 0
+    },
+    {
+      "shot": 15,
+      "kind": "heavy",
+      "beat": 64,
+      "frame": 2304,
+      "expectedFrame": 2304,
+      "errorFrames": 0
+    },
+    {
+      "shot": 15,
+      "kind": "heavy",
+      "beat": 65,
+      "frame": 2342,
+      "expectedFrame": 2342,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "heavy",
+      "beat": 66,
+      "frame": 2377,
+      "expectedFrame": 2377,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "slam",
+      "beat": 67,
+      "frame": 2414,
+      "expectedFrame": 2414,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "heavy",
+      "beat": 68,
+      "frame": 2449,
+      "expectedFrame": 2449,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "heavy",
+      "beat": 69,
+      "frame": 2486,
+      "expectedFrame": 2486,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "heavy",
+      "beat": 70,
+      "frame": 2522,
+      "expectedFrame": 2522,
+      "errorFrames": 0
+    },
+    {
+      "shot": 16,
+      "kind": "heavy",
+      "beat": 71,
+      "frame": 2558,
+      "expectedFrame": 2558,
+      "errorFrames": 0
+    },
+    {
+      "shot": 17,
+      "kind": "heavy",
+      "beat": 72,
+      "frame": 2593,
+      "expectedFrame": 2593,
+      "errorFrames": 0
+    },
+    {
+      "shot": 17,
+      "kind": "heavy",
+      "beat": 73,
+      "frame": 2630,
+      "expectedFrame": 2630,
+      "errorFrames": 0
+    },
+    {
+      "shot": 17,
+      "kind": "heavy",
+      "beat": 74,
+      "frame": 2665,
+      "expectedFrame": 2665,
+      "errorFrames": 0
+    },
+    {
+      "shot": 17,
+      "kind": "heavy",
+      "beat": 75,
+      "frame": 2700,
+      "expectedFrame": 2700,
+      "errorFrames": 0
+    },
+    {
+      "shot": 18,
+      "kind": "scatter",
+      "beat": 76,
+      "frame": 2736,
+      "expectedFrame": 2736,
       "errorFrames": 0
     },
     {
       "shot": 18,
       "kind": "kill",
-      "beat": 63,
-      "frame": 2270,
-      "expectedFrame": 2270,
+      "beat": 77,
+      "frame": 2774,
+      "expectedFrame": 2774,
+      "errorFrames": 0
+    },
+    {
+      "shot": 19,
+      "kind": "shell-shot",
+      "beat": 78,
+      "frame": 2826,
+      "expectedFrame": 2826,
+      "errorFrames": 0
+    },
+    {
+      "shot": 19,
+      "kind": "kill",
+      "beat": 79,
+      "frame": 2846,
+      "expectedFrame": 2846,
       "errorFrames": 0
     }
   ],
@@ -1605,46 +1930,51 @@
     },
     {
       "shot": 12,
-      "rmsDb": -20.087134580405625,
-      "peak": 0.49654415249824524
+      "rmsDb": -16.904286290076502,
+      "peak": 0.6767573356628418
     },
     {
       "shot": 13,
-      "rmsDb": -20.48897665474232,
-      "peak": 0.5507177710533142
+      "rmsDb": -20.27884692586948,
+      "peak": 0.6509268283843994
     },
     {
       "shot": 14,
-      "rmsDb": -21.44553413250216,
-      "peak": 0.5316487550735474
+      "rmsDb": -20.333553908738136,
+      "peak": 0.44683384895324707
     },
     {
       "shot": 15,
-      "rmsDb": -20.87110019944095,
-      "peak": 0.7000563740730286
+      "rmsDb": -20.77716407213673,
+      "peak": 0.5240080952644348
     },
     {
       "shot": 16,
-      "rmsDb": -18.182079649697144,
-      "peak": 0.5873186588287354
+      "rmsDb": -20.747202074531987,
+      "peak": 0.5834532976150513
     },
     {
       "shot": 17,
-      "rmsDb": -18.953468677847358,
-      "peak": 0.5281078815460205
+      "rmsDb": -19.947844984912606,
+      "peak": 0.5240080952644348
     },
     {
       "shot": 18,
-      "rmsDb": -22.657205046912804,
+      "rmsDb": -22.669975671057312,
+      "peak": 0.4922715723514557
+    },
+    {
+      "shot": 19,
+      "rmsDb": -22.608318243250082,
       "peak": 0.316866397857666
     }
   ],
   "audioMix": {
     "method": "Original game cues with space for the closing fill; phrase-aligned edit into the original recorded ending, two title accents and natural ring-out; music EQ, brief ducking, measured constant gain and peak limiter",
     "musicResolution": {
-      "impact": 37.983333333333334,
-      "subtitle": 38.416666666666664,
-      "splice": 28.8,
+      "impact": 47.583333333333336,
+      "subtitle": 48.016666666666666,
+      "splice": 38.4,
       "pauseSeconds": 0,
       "sourceEnd": 263.2,
       "addedEcho": false,
@@ -1653,8 +1983,8 @@
       "subtitleFrameErrorMs": -3.67
     },
     "musicGain": 0.6,
-    "masterGainDb": 1.7400000000000002,
-    "inputLufs": -15.74,
+    "masterGainDb": 1.7899999999999991,
+    "inputLufs": -15.79,
     "inputTruePeak": -1.45,
     "sampleRate": 48000
   },
@@ -1666,20 +1996,20 @@
     "sha256": "264be9c44c32419b6de70f0ac24c92f81401419419c8fb111b8e19e62261331b",
     "sourceIn": 163.276,
     "closing": {
-      "spliceFrame": 1728,
-      "spliceAtBeat": 48,
+      "spliceFrame": 2304,
+      "spliceAtBeat": 64,
       "sourceIn": 249.676,
       "sourceOut": 263.2,
       "crossfadeSeconds": 0.025,
-      "phraseSkipBeats": 96,
-      "titleFrame": 2279,
-      "subtitleFrame": 2305,
+      "phraseSkipBeats": 80,
+      "titleFrame": 2855,
+      "subtitleFrame": 2881,
       "titleSourceSeconds": 258.85633333333334,
       "subtitleSourceSeconds": 259.29633333333334,
       "titleFrameErrorMs": 3,
       "subtitleFrameErrorMs": -3.67,
-      "method": "One additional 16-beat phrase develops the six starting tools. Skip six complete phrases (96 beats / 57.6 seconds) into the recording's original ending; retain the measured final accents and natural decay."
+      "method": "Two additional 16-beat phrases develop the weapons and five distinct boss fights. Skip five complete phrases (80 beats / 48 seconds) into the recording's original ending; retain the measured final accents and natural decay."
     }
   },
-  "method": "Actual current Game and Renderer. Six starting tools, legal checkpoint builds, ordinary scripted inputs, active health, enemy AI and collisions; source events gently retimed to recorded musical accents. No invulnerability, fabricated attacks, player saves or unlock writes. Opening starts directly in combat; game Sound cues are mixed with licensed recorded music."
+  "method": "Actual current Game and Renderer. Six starting tools, legal checkpoint builds and five live Practice bosses across five zones. Ordinary scripted inputs, active health, enemy AI and collisions; source events gently retimed to recorded musical accents. Boss cameras include the player and machine with attack/recovery sequences. No invulnerability, fabricated attacks, player saves or unlock writes. Opening starts directly in combat; game Sound cues are mixed with licensed recorded music."
 }
