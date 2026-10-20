@@ -1,8 +1,10 @@
 # itch.io launch
 
-[Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The [release operations record](../release-operations.md) identifies the current published build, verified GitHub ZIP and itch.io upload. Project ID: `5033600`. The [3.0 launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) remains public; no direct recruitment messages were sent.
+[Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The [release operations record](../release-operations.md) identifies the current published build, verified GitHub ZIP and itch.io upload. Project ID: `5033600`. The [5.6 launch devlog and ten-minute playtest invitation](https://caleb-guyer.itch.io/recoil-foundry/devlog/1717658/recoil-foundry-56-is-live-trailer-ten-minute-playtest) are public, with the official trailer, custom cover and comments enabled. The earlier [3.0 launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) remains available.
 
 Current build: **5.6.0 — Remix Gauntlet**, itch.io upload **19890526**, published 19 October 2026 from the verified `v5.6.0` release archive. The description and featured YouTube trailer reflect the current game. [Package and browser verification](../validation/itch-5.6.0-publication.md).
+
+The [active playtest guide](../playtests/5.6.0/README.md) accepts comments on the devlog or a structured GitHub issue form. Its [moderator sheet](../playtests/5.6.0/moderator.md) has ten empty observation slots and a three-fix triage table. Recruitment is open; no human sessions are claimed. [Setup and publication checks](../validation/playtest-5.6.0-setup.md).
 
 ## Page
 

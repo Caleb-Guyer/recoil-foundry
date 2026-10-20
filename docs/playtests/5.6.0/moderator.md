@@ -1,6 +1,6 @@
 # 5.6.0 playtest — moderator and triage sheet
 
-**Status: recruitment open; zero human sessions logged.** Target 5–10 willing first-time players, with returning players tracked separately. The public devlog invites volunteers; this file does not claim anyone has been recruited or observed. The ten slots below are placeholders.
+**Status: recruitment open; zero human sessions logged.** Target 5–10 willing first-time players, with returning players tracked separately. The [published launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1717658/recoil-foundry-56-is-live-trailer-ten-minute-playtest) invites volunteers; this file does not claim anyone has been recruited or observed. The ten slots below are placeholders.
 
 Give participants only the [normal game link](https://caleb-guyer.itch.io/recoil-foundry) and permission to play normally for about ten minutes or stop sooner. Do not demonstrate recoil, select upgrades, reveal encounters or suggest retrying. Observe their own choices. If they ask for help, record when it was provided and mark the session assisted.
 

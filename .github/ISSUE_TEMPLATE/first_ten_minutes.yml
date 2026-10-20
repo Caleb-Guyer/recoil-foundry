@@ -7,7 +7,7 @@ body:
       value: |
         Thanks for trying Recoil Foundry! Fill this in after playing, not during your run.
         [Play free on itch.io](https://caleb-guyer.itch.io/recoil-foundry).
-        You can also answer the three questions in the launch devlog comments instead.
+        You can also answer the three questions in the [launch devlog comments](https://caleb-guyer.itch.io/recoil-foundry/devlog/1717658/recoil-foundry-56-is-live-trailer-ten-minute-playtest) instead.
         No names, email addresses, recordings or private files are needed.
   - type: input
     id: first-time

@@ -23,7 +23,7 @@ Please add whether this was your first time, roughly how long you played, your b
 
 ## Send feedback
 
-- **Simplest:** reply in the comments on the itch.io launch devlog linked from the [game page](https://caleb-guyer.itch.io/recoil-foundry). An itch.io account is required to comment; a GitHub account is not needed for this route.
+- **Simplest:** reply in the [itch.io launch devlog comments](https://caleb-guyer.itch.io/recoil-foundry/devlog/1717658/recoil-foundry-56-is-live-trailer-ten-minute-playtest). An itch.io account is required to comment; a GitHub account is not needed for this route.
 - **Structured form:** [submit a first-ten-minutes report on GitHub](https://github.com/Caleb-Guyer/recoil-foundry/issues/new?template=first_ten_minutes.yml). This route requires a GitHub account.
 - For a reproducible problem, **Feedback** after a run or **Pause → Report an issue → Copy details** prepares the version, seed, room and build. Review the text before sharing it with your feedback.
 
