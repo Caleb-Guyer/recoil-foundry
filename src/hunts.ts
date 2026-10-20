@@ -2,9 +2,20 @@ import Matter from 'matter-js';
 import type { Game, Enemy } from './game.ts';
 import type { Prop } from './props.ts';
 import { clamp, direction, distance, type Vec, type Checkpoint } from './rules.ts';
-import { HUNTS, isHunt, planHunt, huntLevel, type HuntKind, type HuntSave } from './hunt-rules.ts';
+import {
+  HUNTS,
+  HUNT_STAGES,
+  HUNT_THRESHOLD,
+  isHunt,
+  isHuntOrder,
+  planHunt,
+  planHunts,
+  huntLevel,
+  type HuntKind,
+  type HuntSave,
+} from './hunt-rules.ts';
 import { crossesSupport } from './teamwork.ts';
-const { Body, Query } = Matter;
+const { Bodies, Body, Composite, Query } = Matter;
 export const huntMuzzle = (e: Enemy): Vec => ({
   x: e.body.position.x,
   y: e.body.position.y - (e.kind === 'bulwark' ? 95 : 27),
@@ -22,6 +33,10 @@ export class Hunts {
   game: Game;
   enabled = false;
   state: HuntSave | null = null;
+  rules: 0 | 1 | 2 = 0;
+  plans: HuntSave[] = [];
+  gate: Matter.Body | null = null;
+  previewApproach = false;
   cables: HuntCable[] = [];
   mines: HuntMine[] = [];
   plates: Prop[] = [];
@@ -31,36 +46,72 @@ export class Hunts {
   constructor(game: Game) {
     this.game = game;
   }
-  start(save: Checkpoint | undefined, rules: boolean) {
+  start(save: Checkpoint | undefined, rules: boolean | 1 | 2, order?: readonly HuntKind[]) {
     const g = this.game;
+    this.previewApproach = !!g.testRun?.huntApproach;
     this.enabled =
       g.encounters === 1 &&
       !g.practice &&
       !g.testRun &&
       !g.workshop.active &&
       !/^RF-D\d+-/.test(g.seed) &&
-      (save ? save.huntRules === 1 : rules);
-    this.state = this.enabled
-      ? save
-        ? structuredClone(save.hunt ?? null)
-        : planHunt(g.seed)
-      : null;
+      !!(save ? save.huntRules : rules);
+    this.rules = this.enabled ? (save?.huntRules ?? (rules === 1 ? 1 : 2)) : 0;
+    this.plans =
+      this.rules === 2
+        ? save
+          ? structuredClone(save.hunts!)
+          : isHuntOrder(order)
+            ? HUNT_STAGES.map((stage, i) => ({ kind: order[i], stage, phase: 'available' }))
+            : planHunts(g.seed)
+        : [];
+    this.state =
+      this.rules === 1 ? (save ? structuredClone(save.hunt ?? null) : planHunt(g.seed)) : null;
+  }
+  get reservedStages(): readonly number[] {
+    return this.rules === 2 ? HUNT_STAGES : [];
+  }
+  get order() {
+    return this.plans.map((s) => s.kind);
+  }
+  get reserved() {
+    const g = this.game;
+    return (
+      this.rules === 2 &&
+      !g.detour &&
+      !g.overtime &&
+      !g.escape &&
+      this.reservedStages.includes(g.stage)
+    );
+  }
+  get approaching() {
+    return this.previewApproach || (this.fighting && this.state?.phase === 'approach');
+  }
+  get waiting() {
+    return !!this.kind && this.approaching;
   }
   get fighting() {
     return (
       !!this.state &&
       this.game.stage === this.state.stage &&
       this.game.detour &&
-      ['fight', 'reward'].includes(this.state.phase)
+      ['approach', 'fight', 'reward'].includes(this.state.phase)
     );
   }
   get rewarding() {
     return this.fighting && this.state!.phase === 'reward';
   }
   get freeReroll() {
-    return (
-      this.state?.phase === 'finished' && this.state.reward === 'reroll' && !this.state.rerollSpent
+    return !!this.rerollCredit;
+  }
+  get rerollCredit() {
+    return (this.rules === 2 ? this.plans : [this.state]).find(
+      (s) => s?.phase === 'finished' && s.reward === 'reroll' && !s.rerollSpent,
     );
+  }
+  spendReroll() {
+    const credit = this.rerollCredit;
+    if (credit) credit.rerollSpent = true;
   }
   get kind(): HuntKind | undefined {
     return this.game.level?.hunt;
@@ -68,7 +119,12 @@ export class Hunts {
   level() {
     const g = this.game,
       forced = g.practice && isHunt(g.practice.kind) ? g.practice.kind : g.testRun?.huntTest;
-    return forced ? huntLevel(forced) : this.fighting ? huntLevel(this.state!.kind) : null;
+    if (this.rules === 2) this.state = this.plans.find((s) => s.stage === g.stage) ?? null;
+    return forced
+      ? huntLevel(forced, this.previewApproach)
+      : this.fighting
+        ? huntLevel(this.state!.kind, this.approaching)
+        : null;
   }
   reset(cleared: boolean) {
     this.cables = [];
@@ -76,9 +132,14 @@ export class Hunts {
     this.plates = [];
     this.supplies = 0;
     this.door = null;
+    this.gate = null;
     const g = this.game,
       s = this.state;
     if (this.kind) {
+      if (!this.approaching && !cleared) {
+        Body.setPosition(g.player, { x: HUNT_THRESHOLD + 95, y: 722 });
+        this.seal();
+      }
       if (!cleared && this.kind === 'bulwark') this.makePlates();
       return;
     }
@@ -89,7 +150,7 @@ export class Hunts {
       g.overtime ||
       g.escape ||
       g.level.boss ||
-      g.level.annex ||
+      (g.level.annex && this.rules !== 2) ||
       g.level.story ||
       g.level.shutdown ||
       g.level.uprising ||
@@ -103,14 +164,25 @@ export class Hunts {
       s.phase = 'skipped';
       return;
     }
-    for (const x of [1810, 1750, 1690]) {
+    // Reserved rooms always have a hatch: keep the known-clear player entrance
+    // as a fallback for tall or mirrored Annex layouts. Props cannot cancel it.
+    for (const x of this.rules === 2 ? [1760, 1660, 260, 200, 140] : [1810, 1750, 1690]) {
       if (
-        Query.region([...g.terrain, ...g.props.bodies, ...g.hazards.bodies], {
-          min: { x: x - 48, y: 644 },
-          max: { x: x + 48, y: 737 },
-        }).length === 0
+        Query.region(
+          this.rules === 2
+            ? [...g.terrain, ...g.hazards.bodies]
+            : [...g.terrain, ...g.props.bodies, ...g.hazards.bodies],
+          {
+            min: { x: x - 48, y: 644 },
+            max: { x: x + 48, y: 737 },
+          },
+        ).length === 0
       ) {
         this.door = { x, y: 740 };
+        if (this.rules === 2)
+          for (const prop of [...g.props.items])
+            if (Math.abs(prop.body.position.x - x) < 90 && prop.body.bounds.max.y > 620)
+              g.props.remove(prop);
         break;
       }
     }
@@ -130,7 +202,7 @@ export class Hunts {
       this.state?.phase !== 'available'
     )
       return false;
-    this.state.phase = 'fight';
+    this.state.phase = this.rules === 2 ? 'approach' : 'fight';
     g.detour = true;
     g.loadRoom();
     g.save();
@@ -144,6 +216,7 @@ export class Hunts {
   defeated(e: Enemy, credited: boolean) {
     if (!isHunt(e.kind)) return;
     this.clearGear();
+    this.unseal();
     const g = this.game;
     if (
       !credited ||
@@ -212,6 +285,24 @@ export class Hunts {
     this.cables = [];
     this.mines = [];
     this.plates = [];
+  }
+  seal() {
+    if (this.gate) return;
+    const g = this.game;
+    this.gate = Bodies.rectangle(HUNT_THRESHOLD, 370, 26, 740, {
+      isStatic: true,
+      friction: 0,
+      label: 'hunt-gate',
+    });
+    g.terrain.push(this.gate);
+    Composite.add(g.engine.world, this.gate);
+  }
+  unseal() {
+    if (!this.gate) return;
+    const g = this.game;
+    Composite.remove(g.engine.world, this.gate);
+    g.terrain = g.terrain.filter((b) => b !== this.gate);
+    this.gate = null;
   }
   ownedProp(tag: NonNullable<Prop['hunt']>, x: number, hp: number) {
     const p = this.game.props.spawn(
@@ -321,7 +412,9 @@ export class Hunts {
               this.supplies < 6 &&
               this.mines.length < 2 &&
               this.clearFloor(e.target.x, 14);
-        e.attack = e.attacks % 2 === 0 && deploy ? 'mortar' : 'fan';
+        // Lead with a warned volley before charges. An edge camper should
+        // have to dodge, rather than disarming the only attack before a kill.
+        e.attack = e.attacks % 2 === (e.kind === 'demolisher' ? 1 : 0) && deploy ? 'mortar' : 'fan';
         g.onSound('arm');
       }
     } else if (e.state === 'windup' && e.timer <= 0) {
@@ -369,6 +462,21 @@ export class Hunts {
   update() {
     const g = this.game;
     if (!this.kind || g.mode !== 'playing' || g.hp <= 0) return;
+    if (this.approaching) {
+      if (g.player.position.x < HUNT_THRESHOLD + 50) return;
+      if (this.state) this.state.phase = 'fight';
+      this.previewApproach = false;
+      this.seal();
+      g.spawnEnemy(this.kind, 1460, 705);
+      if (this.kind === 'bulwark') this.makePlates();
+      g.onSound('arm');
+      g.save();
+      g.onChange();
+    }
+    if (this.gate && g.player.position.x < HUNT_THRESHOLD + 28) {
+      Body.setPosition(g.player, { x: HUNT_THRESHOLD + 28, y: g.player.position.y });
+      Body.setVelocity(g.player, { x: Math.max(0, g.player.velocity.x), y: g.player.velocity.y });
+    }
     for (const c of [...this.cables]) {
       if (g.time >= c.endsAt || c.anchors.some((p) => !g.props.items.includes(p))) {
         c.anchors.forEach((p) => g.props.remove(p));

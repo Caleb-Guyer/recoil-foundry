@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Hunting Grounds — version 5.7.0.** New Campaign runs offer two different optional boss hunts in rooms 9 and 17, favoring machines you have not beaten. Marked doors lead through an approach corridor into three distinct arenas; crossing the lit threshold seals the fight. Two different victories unlock the Coil carbine, with previous victories retained. [Release notes and arena playtests](docs/releases/5.7.0.md).
+
 **Remix Gauntlet — version 5.6.0.** Your discovered boss arenas become a five-fight circuit in Practice. Carry health and upgrades, choose a fitting or repair between fights, and try Overclocked for stronger bosses and fully warned counterattacks. Earn two pictured cosmetics, track their Logbook goals, and share challenges with separate records for each gun, route and tier. [Release notes and playtests](docs/releases/5.6.0.md).
 
 **Late Shift — version 5.5.0.** Four new late boss arenas add conveyor sorting lanes, magnetic scrap, rooftop lifts and staggered crossfire. Discover their real photographs and Practice rematches, then earn four cosmetics through clean Campaign victories and track their achievements as your next goal. [Release notes and four playtests](docs/releases/5.5.0.md).

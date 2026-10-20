@@ -1,4 +1,5 @@
 import { seeded, type Checkpoint } from './rules.ts';
+import { huntDetour } from './hunt-rules.ts';
 
 export type AnnexVersion = 1 | 2 | 3 | 4 | 5 | 6;
 export function annexRevision(seed: string, save?: Pick<Checkpoint, 'annexVersion'>): AnnexVersion {
@@ -70,7 +71,7 @@ export function validRegion(d: Checkpoint) {
     return false;
   if (
     isAnnexStage(region, d.stage, !!d.overtime, annexRevision(d.seed, d)) &&
-    (d.route || d.detour || d.reward?.enteringRoute || d.reward?.enteringDetour)
+    (d.route || (d.detour && !huntDetour(d)) || d.reward?.enteringRoute || d.reward?.enteringDetour)
   )
     return false;
   return true;

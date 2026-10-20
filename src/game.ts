@@ -561,7 +561,10 @@ export class Game {
     return this.layoutSeed + (this.detour ? ':detour:' + this.stage : '');
   }
   get reservedEncounterStages() {
-    const stages = this.factory?.encounters.map((e) => e.stage);
+    const stages = [
+      ...(this.factory?.encounters.map((e) => e.stage) ?? []),
+      ...this.hunts.reservedStages,
+    ];
     return this.uprising.run
       ? [...(stages ?? []), ...uprisingForks(this.uprising.run).map((f) => f + 1)]
       : stages;
@@ -790,7 +793,8 @@ export class Game {
     recoilRules = true,
     teamworkRules = true,
     remixRules = false,
-    huntRules = false,
+    huntRules: boolean | 1 | 2 = false,
+    huntOrder?: readonly import('./hunt-rules.ts').HuntKind[],
   ) {
     this.workshop.active = workshop;
     this.gauntlet.reset();
@@ -828,7 +832,7 @@ export class Game {
       !workshop &&
       !/^RF-D\d+-/.test(this.seed) &&
       (save ? save.bossRemixes === 1 : remixRules);
-    this.hunts.start(save, huntRules);
+    this.hunts.start(save, huntRules, huntOrder);
     this.unlocks = /^RF-D\d+-/.test(this.seed) ? [] : loadUnlocks(save ? save.unlocks : unlocks);
     this.uprising.run =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
@@ -944,6 +948,9 @@ export class Game {
       !!save?.reward ||
         save?.hunt?.phase === 'reward' ||
         (save?.hunt?.phase === 'finished' && save.stage === save.hunt.stage) ||
+        !!save?.hunts?.some(
+          (s) => s.stage === save.stage && ['reward', 'finished'].includes(s.phase),
+        ) ||
         (!!this.testRun?.annexRouteTest?.fork && this.stage === 7) ||
         !!save?.reforgeRoom ||
         storyInspection ||
@@ -1005,8 +1012,12 @@ export class Game {
       ...(this.bossRemixes ? { bossRemixes: 1 as const } : {}),
       ...(this.hunts.enabled
         ? {
-            huntRules: 1 as const,
-            ...(this.hunts.state ? { hunt: structuredClone(this.hunts.state) } : {}),
+            huntRules: this.hunts.rules as 1 | 2,
+            ...(this.hunts.rules === 2
+              ? { hunts: structuredClone(this.hunts.plans) }
+              : this.hunts.state
+                ? { hunt: structuredClone(this.hunts.state) }
+                : {}),
           }
         : {}),
       ...(!/^RF-D\d+-/.test(this.seed) ? { unlocks: [...this.unlocks] } : {}),
@@ -1941,6 +1952,7 @@ export class Game {
       (!this.waves.pending || this.uprising.escapeReady) &&
       !this.auditor.pending &&
       !this.clear &&
+      !this.hunts.waiting &&
       !this.uprising.waiting &&
       (!this.maintenance.active || this.maintenance.atExit) &&
       (!this.recoil.active || this.recoil.atExit) &&
@@ -3982,7 +3994,7 @@ export class Game {
   rerollReward() {
     if (!this.canReroll) return false;
     const replacements = this.replacementOffers();
-    if (this.hunts.freeReroll) this.hunts.state!.rerollSpent = true;
+    if (this.hunts.freeReroll) this.hunts.spendReroll();
     else if (this.areaEvents.freeReroll) this.areaEvents.spendReroll();
     else this.hp -= REROLL_COST;
     this.rewardRerolled = true;

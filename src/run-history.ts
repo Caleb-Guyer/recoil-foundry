@@ -11,13 +11,15 @@ import { STAGES, validBuild, validLegacyBuild, validSavedBuild } from './rules.t
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { workshopBuild } from './workshop-build.ts';
 import { validUnlocks, type LongevityId } from './longevity.ts';
+import { isHuntOrder, type HuntKind } from './hunt-rules.ts';
 
 export const RUN_HISTORY_KEY = 'rf-run-history-v1';
 export const RUN_HISTORY_LIMIT = 10;
 export interface RunRecap {
   combatResults?: CombatResults;
   appearance?: Cosmetics;
-  huntRules?: 1;
+  huntRules?: 1 | 2;
+  huntKinds?: HuntKind[];
   bossRemixes?: 1;
   teamwork?: 1;
   recoilTrials?: true;
@@ -92,7 +94,9 @@ export function loadRunHistory(value: unknown): RunRecap[] {
     const daily = !!dailyFromSeed(raw.seed) || isUnsupportedDailySeed(raw.seed);
     if (
       (raw.mode === 'daily') !== daily ||
-      (raw.huntRules !== undefined && (raw.huntRules !== 1 || raw.encounters !== 1 || daily)) ||
+      (raw.huntRules !== undefined &&
+        (![1, 2].includes(raw.huntRules) || raw.encounters !== 1 || daily)) ||
+      (raw.huntRules === 2 ? !isHuntOrder(raw.huntKinds) : raw.huntKinds !== undefined) ||
       (raw.bossRemixes !== undefined && (raw.bossRemixes !== 1 || raw.encounters !== 1 || daily)) ||
       (raw.encounters !== undefined && (raw.encounters !== 1 || daily)) ||
       (raw.teamwork !== undefined && (raw.teamwork !== 1 || raw.encounters !== 1 || daily)) ||
@@ -115,7 +119,8 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       ...(combatResults ? { combatResults } : {}),
       ...(appearance ? { appearance } : {}),
       version: 1,
-      ...(raw.huntRules === 1 ? { huntRules: 1 as const } : {}),
+      ...(raw.huntRules ? { huntRules: raw.huntRules as 1 | 2 } : {}),
+      ...(raw.huntRules === 2 ? { huntKinds: [...raw.huntKinds] } : {}),
       ...(raw.bossRemixes === 1 ? { bossRemixes: 1 as const } : {}),
       ...(raw.recoilTrials ? { recoilTrials: true as const } : {}),
       ...(raw.encounters === 1 ? { encounters: 1 as const } : {}),
@@ -171,7 +176,8 @@ export function snapshotRun(game: Game, id: string, finishedAt = Date.now()): Ru
         version: 1,
         combatResults: game.combatReport.snapshot(),
         appearance: { ...game.cosmetics },
-        ...(game.hunts.enabled ? { huntRules: 1 as const } : {}),
+        ...(game.hunts.enabled ? { huntRules: game.hunts.rules } : {}),
+        ...(game.hunts.rules === 2 ? { huntKinds: game.hunts.order } : {}),
         ...(game.bossRemixes ? { bossRemixes: 1 as const } : {}),
         ...(game.recoil.state ? { recoilTrials: true as const } : {}),
         ...(game.encounters ? { encounters: game.encounters } : {}),

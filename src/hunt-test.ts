@@ -6,7 +6,8 @@ export function huntTestFromUrl(url: URL): Checkpoint | null {
   const p = url.searchParams;
   let invalid = false;
   p.forEach((_, k) => {
-    if (!['test', 'hunt', 'gun', 'v'].includes(k) || p.getAll(k).length !== 1) invalid = true;
+    if (!['test', 'hunt', 'gun', 'approach', 'v'].includes(k) || p.getAll(k).length !== 1)
+      invalid = true;
   });
   const kind = p.get('hunt') ?? 'cableweaver',
     gun = p.get('gun') ?? 'pistol';
@@ -15,8 +16,15 @@ export function huntTestFromUrl(url: URL): Checkpoint | null {
     p.get('test') !== 'hunt' ||
     !isHunt(kind) ||
     !isStartingGun(gun) ||
+    (p.has('approach') && !['0', '1'].includes(p.get('approach')!)) ||
     (p.has('v') && p.get('v') !== '1')
   )
     return null;
-  return { ...testCheckpoint(huntSeed(kind), 8), version: 6, huntTest: kind, startingGun: gun };
+  return {
+    ...testCheckpoint(huntSeed(kind), 8),
+    version: 6,
+    huntTest: kind,
+    startingGun: gun,
+    ...(p.get('approach') === '1' ? { huntApproach: true } : {}),
+  };
 }

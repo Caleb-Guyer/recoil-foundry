@@ -1,5 +1,11 @@
 # Browser release operations
 
+## Hunting Grounds 5.7.0 — 20 October 2026
+
+Boss hunts are reserved in rooms 9 and 17 for new Campaigns, with two different machines, preference for unbeaten hunts, marked entrances, an approach corridor and a physical arena seal. The chosen pair and each hunt phase are saved; existing saves retain their original schedule. Practice ruleset 3 separates redesigned hunt scores from earlier records. Daily generation and existing weapon licenses are retained. [Release notes and playtests](releases/5.7.0.md).
+
+Local validation and publication status are recorded in [the validation receipt](validation/hunting-grounds-5.7.0.md). The itch.io version below is the most recently verified store upload until a separate publication receipt confirms an update.
+
 ## Remix Gauntlet 5.6.0 — 19 October 2026
 
 **Published on Pages and itch.io.** Commit `621f574fef06388bc2103562500f02dd50d4d792` passed the full [Pages workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/39139833883). Immutable tag `v5.6.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/39350345762); the official ZIP is now itch.io upload **19890526**, displayed as **Recoil Foundry 5.6.0 — Remix Gauntlet** with browser playback enabled. The public game's About screen reports **5.6.0**. Its existing Continue daily, Room 1 progress summary and audio settings survive the update.

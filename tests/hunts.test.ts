@@ -151,7 +151,8 @@ test('fresh enabled Campaigns save the plan; legacy, Daily and isolated modes do
     false,
     true,
   );
-  assert.equal(cp!.huntRules, 1);
+  assert.equal(cp!.huntRules, 2);
+  assert.equal(cp!.hunts!.length, 2);
   assert(loadCheckpoint(cp));
   const c = new Game();
   c.start(cp!.seed, cp!);
@@ -159,6 +160,7 @@ test('fresh enabled Campaigns save the plan; legacy, Daily and isolated modes do
   const old = { ...cp! };
   delete old.huntRules;
   delete old.hunt;
+  delete old.hunts;
   c.start(old.seed, old);
   assert.equal(c.hunts.enabled, false);
   c.start(
@@ -185,8 +187,8 @@ test('fresh enabled Campaigns save the plan; legacy, Daily and isolated modes do
   assert.equal(c.hunts.enabled, false);
   g.setMode('dead');
   const recap = snapshotRun(g, 'hunt-recap')!;
-  assert.equal(loadRunHistory([recap])[0].huntRules, 1);
-  assert.deepEqual(loadRunHistory([{ ...recap, huntRules: 2 }]), []);
+  assert.equal(loadRunHistory([recap])[0].huntRules, 2);
+  assert.deepEqual(loadRunHistory([{ ...recap, huntRules: 3 }]), []);
 });
 test('preview URLs reject duplicate, mixed and unknown parameters and checkpoint modes', () => {
   for (const kind of HUNT_KINDS) assert(loadCheckpoint(preview(kind)));
@@ -361,7 +363,7 @@ for (const kind of HUNT_KINDS) {
     kill(g);
     assert.equal(snapshotPracticeWin(g, true), null);
   });
-  for (const gun of ['pistol', 'shotgun', 'nailgun'])
+  for (const gun of ['pistol', 'shotgun', 'nailgun', 'twinbore', 'carbine', 'repeater'])
     test(`${gun} clears ${kind} using ordinary inputs with no profile writes`, () => {
       const g = new Game();
       let writes = 0,

@@ -85,7 +85,15 @@ import { combatFeelTestFromUrl } from './combat-feel-test.ts';
 import { encounterTestFromUrl } from './encounter-test.ts';
 import { teamworkTestFromUrl } from './teamwork-test.ts';
 import { huntTestFromUrl } from './hunt-test.ts';
-import { HUNTS, isHunt, huntSeed } from './hunt-rules.ts';
+import {
+  HUNTS,
+  HUNT_KINDS,
+  isHunt,
+  isHuntOrder,
+  planHunts,
+  huntSeed,
+  type HuntKind,
+} from './hunt-rules.ts';
 import { drawArchiveImages } from './archive-images.ts';
 import { bossRemixTestFromUrl } from './boss-remix-test.ts';
 import {
@@ -519,7 +527,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Remix Gauntlet</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Hunting Grounds</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -1557,7 +1565,8 @@ function start(
   recoilOverride?: boolean,
   teamworkOverride?: boolean,
   remixOverride?: boolean,
-  huntOverride?: boolean,
+  huntOverride?: boolean | 1 | 2,
+  huntOrderOverride?: readonly HuntKind[],
 ) {
   if (progress.restoring) return;
   progress.checkExternal();
@@ -1671,6 +1680,7 @@ function start(
       url.searchParams.delete('sv');
       url.searchParams.delete('bv');
       url.searchParams.delete('hv');
+      url.searchParams.delete('hk');
     } else {
       url.searchParams.set('sg', selectedStartingGun);
     }
@@ -1730,8 +1740,21 @@ function start(
           !(seedParam === seed && entryUrl.searchParams.get('bv') === '0')),
     huntOverride ??
       (retry
-        ? game.hunts.enabled
-        : !(seedParam === seed && entryUrl.searchParams.get('hv') === '0')),
+        ? game.hunts.rules || false
+        : seedParam === seed && entryUrl.searchParams.get('hv') === '0'
+          ? false
+          : seedParam === seed && entryUrl.searchParams.get('hv') === '1'
+            ? 1
+            : 2),
+    huntOrderOverride ??
+      (retry && seed === game.seed
+        ? game.hunts.order
+        : seedParam === seed && isHuntOrder(entryUrl.searchParams.get('hk')?.split(','))
+          ? (entryUrl.searchParams.get('hk')!.split(',') as HuntKind[])
+          : planHunts(
+              seed,
+              HUNT_KINDS.filter((kind) => commendations.includes(HUNTS[kind].commendation)),
+            ).map((s) => s.kind)),
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -2194,6 +2217,8 @@ function replayFinishedRun(run: RunRecap) {
   url.searchParams.set('sv', String(run.teamwork ?? 0));
   url.searchParams.set('bv', String(run.bossRemixes ?? 0));
   url.searchParams.set('hv', String(run.huntRules ?? 0));
+  if (run.huntKinds) url.searchParams.set('hk', run.huntKinds.join(','));
+  else url.searchParams.delete('hk');
   url.searchParams.set('tv', run.recoilTrials ? '1' : '0');
   url.searchParams.set('fv', run.factory ? String(run.factoryVersion ?? 1) : '0');
   url.searchParams.set('ul', (run.unlocks ?? []).join(','));
@@ -2217,7 +2242,8 @@ function replayFinishedRun(run: RunRecap) {
     !!run.recoilTrials,
     run.teamwork === 1,
     run.bossRemixes === 1,
-    run.huntRules === 1,
+    run.huntRules ?? false,
+    run.huntKinds,
   );
 }
 function workshopFromRun(run: RunRecap) {
@@ -2849,11 +2875,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">A FREE CHALLENGE UPDATE</p><h2 id="dialog-title">Remix Gauntlet.</h2>' +
-      '<p class="update-tagline">Five departments. One lasting build.</p>' +
-      '<dl class="update-notes"><div><dt>Your discoveries become a route.</dt><dd>After a Campaign victory and your first discovered boss remix, choose Remix in Practice’s Boss Gauntlet. Pick from real arena photographs; each new discovery expands your choices.</dd></div>' +
-      '<div><dt>Push it into Overclocked.</dt><dd>Carry health and upgrades across five fights. Take a fitting or a repair between rounds. Overclocked adds stronger bosses and fully warned counter-volleys, with open recovery windows.</dd></div>' +
-      '<div><dt>Earn it. Share it.</dt><dd>Complete a route for Circuit Runner, or skip repairs for Cold Steel. Pictured rewards and trackable Logbook goals follow your progress. Share a challenge link from your result or route record; each gun, route and tier keeps its own best.</dd></div></dl>' +
+      '<p class="eyebrow">BOSS HUNTS · REBUILT</p><h2 id="dialog-title">Hunting Grounds.</h2>' +
+      '<p class="update-tagline">Find the door. Cross the threshold. Face the machine.</p>' +
+      '<dl class="update-notes"><div><dt>Two doors every new Campaign.</dt><dd>Optional hunts wait in rooms 9 and 17, in zones 3 and 5. Each run offers two different machines and favors ones you haven’t beaten. Clear the patrol, then jump at the marked hunt door.</dd></div>' +
+      '<div><dt>Three arenas with a purpose.</dt><dd>Climb the Cableweaver’s vault, shoot above the Bulwark’s shields, or dodge the Demolisher’s charges. A quiet approach leads to a lit threshold. Cross it to seal the arena and begin the fight.</dd></div>' +
+      '<div><dt>Keep what you earn.</dt><dd>Win two different hunts to unlock the Coil carbine. Previous victories still count. Each victory offers a repair or free reroll, then returns you to the cleared patrol with your build. Continue and Retry keep your hunt plan; existing saves keep their original schedule.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

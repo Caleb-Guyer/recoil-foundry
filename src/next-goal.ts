@@ -110,7 +110,7 @@ function selectGoal(p: GoalProgress, target?: string): NextGoal {
       title: 'Unlock the Coil carbine',
       summary: 'Win two different Campaign miniboss hunts.',
       requirement: 'Defeat two different hunt bosses: the Cableweaver, Bulwark or Demolisher.',
-      hint: 'Look for an optional side door from the second zone onward. Victories carry across runs; repeating the same hunt counts once.',
+      hint: 'Boss-hunt doors appear in rooms 9 and 17 (zones 3 and 5) on new Campaign runs. Win two different hunts; victories carry across runs.',
       reward: 'Coil carbine starting gun. Each first hunt victory also earns a cosmetic.',
       progress: {
         current: Math.min(2, HUNTS.filter((id) => p.earned.includes(id)).length),

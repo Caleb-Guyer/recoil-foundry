@@ -6,11 +6,11 @@ export const ENEMY_GUIDES: Record<EnemyKind, string> = {
   strider: PATROL_MACHINES.strider.guide,
   mortar: PATROL_MACHINES.mortar.guide,
   cableweaver:
-    'Rare optional hunt. Its cable anchors flash before becoming live. Jump over cables or shoot an anchor to expose the machine.',
+    'Optional hunt in zones 3 and 5. Its cable anchors flash before becoming live. Climb the cable-vault platforms or shoot an anchor to expose the machine.',
   bulwark:
-    'Rare optional hunt. Solid movable plates shield the core. Push or break them with shots, or fire from above. It has only two sets of plates.',
+    'Optional hunt in zones 3 and 5. Solid movable plates shield the core. Use the elevated depot platforms to fire from above, or break the plates. It has only two sets.',
   demolisher:
-    'Rare optional hunt. Planted charges show their blast radius and fuse. Shoot them to disarm them, or leave the circle. Its supply is finite.',
+    'Optional hunt in zones 3 and 5. Planted charges show their blast radius and fuse. Use the demolition-bay refuges, leave the circle, or shoot charges to disarm them. Its supply is finite.',
   repairer:
     'Repairs a wounded patrol through a green tether after a dashed warning. Shoot the tether or drone, or move the pair behind cover. Its repair supply is finite; it cannot repair bosses or support units.',
   relay:

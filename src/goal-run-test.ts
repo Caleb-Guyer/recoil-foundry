@@ -25,7 +25,7 @@ export function goalRunTestFromUrl(url: URL): Checkpoint | null {
   const scene = goalRunPreviewFromUrl(url);
   if (!scene) return null;
   return {
-    ...testCheckpoint('GOAL-RUN-' + scene.toUpperCase(), scene === 'hunt' ? 4 : 8),
+    ...testCheckpoint('GOAL-RUN-' + scene.toUpperCase(), 8),
     version: 6,
     ...(scene === 'upgrade'
       ? {
@@ -64,9 +64,12 @@ export function goalRunTestProgress(scene: GoalRunScene, g?: Game) {
 export function prepareGoalRunTest(g: Game, scene: GoalRunScene) {
   if (g.testRun?.seed !== 'GOAL-RUN-' + scene.toUpperCase()) return;
   if (scene === 'hunt') {
+    g.hunts.rules = 2;
+    g.hunts.plans = [
+      { kind: 'bulwark', stage: 8, phase: 'available' },
+      { kind: 'demolisher', stage: 16, phase: 'available' },
+    ];
     g.loadRoom(false, true);
-    g.hunts.state = { kind: 'bulwark', stage: g.stage as 4, phase: 'available' };
-    g.hunts.reset(true);
     if (g.hunts.door) Matter.Body.setPosition(g.player, { x: g.hunts.door.x - 120, y: 722 });
     g.onChange();
   } else if (scene === 'upgrade') {

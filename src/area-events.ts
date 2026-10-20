@@ -204,6 +204,7 @@ export class AreaEventSystem {
     if (
       !s ||
       g.stage === 0 ||
+      g.hunts.reserved ||
       g.practice ||
       g.workshop.active ||
       g.escape ||

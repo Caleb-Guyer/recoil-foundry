@@ -1225,9 +1225,11 @@ export interface RewardCheckpoint {
 }
 export interface Checkpoint {
   combatResults?: CombatResults;
-  huntRules?: 1;
+  huntRules?: 1 | 2;
   hunt?: import('./hunt-rules.ts').HuntSave;
+  hunts?: import('./hunt-rules.ts').HuntSave[];
   huntTest?: import('./hunt-rules.ts').HuntKind;
+  huntApproach?: true;
   bossRemixes?: 1;
   bossRemix?: import('./boss-remix-rules.ts').BossRemixId;
   teamwork?: 1;

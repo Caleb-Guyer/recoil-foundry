@@ -1,5 +1,5 @@
 import type { Enemy, Game } from './game.ts';
-import { HUNTS, isHunt } from './hunt-rules.ts';
+import { HUNTS, HUNT_THRESHOLD, isHunt } from './hunt-rules.ts';
 import { clamp } from './rules.ts';
 import { huntMuzzle } from './hunts.ts';
 export function drawHuntEnemy(c: CanvasRenderingContext2D, e: Enemy, portrait: boolean) {
@@ -80,25 +80,99 @@ export function drawHuntEnemy(c: CanvasRenderingContext2D, e: Enemy, portrait: b
 export function drawHunts(c: CanvasRenderingContext2D, g: Game) {
   const h = g.hunts;
   c.save();
-  if (h.door && g.clear && h.state?.phase === 'available') {
+  if (h.door && h.state?.phase === 'available') {
     const { x, y } = h.door;
-    c.fillStyle = '#172b30';
-    c.fillRect(x - 29, y - 79, 58, 79);
-    c.strokeStyle = '#d2b879';
+    const glow = c.createRadialGradient(x, y - 35, 8, x, y - 35, 150);
+    glow.addColorStop(0, '#df865b36');
+    glow.addColorStop(1, '#df865b00');
+    c.fillStyle = glow;
+    c.fillRect(x - 150, y - 185, 300, 185);
+    c.fillStyle = '#0c141a';
+    c.fillRect(x - 45, y - 104, 90, 104);
+    c.strokeStyle = '#b47758';
     c.lineWidth = 2;
-    c.strokeRect(x - 29, y - 79, 58, 79);
-    c.fillStyle = '#d2b879';
-    c.fillRect(x - 10, y - 52, 20, 3);
-    c.fillRect(x - 2, y - 60, 4, 20);
-    c.textAlign = 'right';
-    c.font = 'bold 16px sans-serif';
-    c.fillText('OPTIONAL HUNT', x + 30, y - 133);
+    c.strokeRect(x - 45, y - 104, 90, 104);
+    for (const side of [-1, 1]) {
+      c.fillStyle = '#344147';
+      c.fillRect(x + side * 39 - 4, y - 99, 8, 99);
+      c.fillStyle = g.clear ? '#e4a771' : '#856344';
+      c.fillRect(x + side * 39 - 2, y - 94, 4, 24);
+    }
+    c.fillStyle = '#b47758';
+    c.beginPath();
+    c.moveTo(x, y - 75);
+    c.lineTo(x + 14, y - 54);
+    c.lineTo(x + 8, y - 30);
+    c.lineTo(x - 8, y - 30);
+    c.lineTo(x - 14, y - 54);
+    c.closePath();
+    c.fill();
+    c.fillStyle = '#131d22';
+    c.fillRect(x - 8, y - 53, 5, 5);
+    c.fillRect(x + 3, y - 53, 5, 5);
+    c.fillStyle = '#dfaf85';
+    c.textAlign = x < 500 ? 'left' : 'right';
+    const labelX = x < 500 ? x - 45 : x + 45;
+    c.font = 'bold 13px sans-serif';
+    c.fillText('BOSS HUNT · OPTIONAL', labelX, y - 158);
+    c.font = 'bold 18px sans-serif';
+    c.fillText(HUNTS[h.state.kind].name, labelX, y - 133);
     c.font = '15px sans-serif';
-    c.fillText(HUNTS[h.state.kind].name, x + 30, y - 110);
     c.fillStyle = '#c5d6d2';
-    c.fillText('Jump at the door · Repair or free reroll', x + 30, y - 89);
+    c.fillText(
+      g.clear ? 'Jump to enter · Repair or free reroll' : 'Clear the patrol to enter',
+      labelX,
+      y - 112,
+    );
   }
   if (h.kind) {
+    const color =
+      h.kind === 'cableweaver' ? '#85d5d0' : h.kind === 'bulwark' ? '#a9bfaa' : '#e5ae73';
+    // The same authored platforms have distinct machinery around them. Keep
+    // decoration on their undersides so silhouettes and warning circles read.
+    c.strokeStyle = color + '45';
+    c.lineWidth = 2;
+    for (const s of g.level.solids.filter((s) => s.x > HUNT_THRESHOLD)) {
+      if (h.kind === 'cableweaver') {
+        for (const x of [s.x + 15, s.x + s.w - 15]) {
+          c.beginPath();
+          c.moveTo(x, s.y + s.h);
+          c.lineTo(x, s.y + s.h + 32);
+          c.stroke();
+          c.strokeRect(x - 5, s.y + s.h + 26, 10, 10);
+        }
+      } else if (h.kind === 'bulwark') {
+        c.beginPath();
+        c.moveTo(s.x + 8, s.y + s.h);
+        c.lineTo(s.x + s.w / 2, s.y + 80);
+        c.lineTo(s.x + s.w - 8, s.y + s.h);
+        c.stroke();
+      } else {
+        for (let x = s.x + 10; x < s.x + s.w - 10; x += 24) {
+          c.beginPath();
+          c.moveTo(x, s.y + 4);
+          c.lineTo(x + 15, s.y + s.h - 4);
+          c.stroke();
+        }
+      }
+    }
+    c.fillStyle = '#1d2a2e';
+    c.fillRect(HUNT_THRESHOLD - 22, 555, 12, 185);
+    c.fillRect(HUNT_THRESHOLD + 10, 555, 12, 185);
+    c.fillRect(HUNT_THRESHOLD - 22, 548, 44, 15);
+    c.fillStyle = h.gate ? '#d47d5c' : color;
+    c.fillRect(HUNT_THRESHOLD - 18, 551, 36, 5);
+    if (h.gate) {
+      c.fillStyle = '#17242a';
+      c.fillRect(HUNT_THRESHOLD - 10, 563, 20, 177);
+      c.strokeStyle = '#b47758';
+      for (let y = 570; y < 735; y += 20) {
+        c.beginPath();
+        c.moveTo(HUNT_THRESHOLD - 8, y);
+        c.lineTo(HUNT_THRESHOLD + 8, y + 12);
+        c.stroke();
+      }
+    }
     c.fillStyle = '#9ab7b8';
     c.font = 'bold 18px sans-serif';
     c.fillText(HUNTS[h.kind].name, 100, 600);
@@ -115,6 +189,13 @@ export function drawHunts(c: CanvasRenderingContext2D, g: Game) {
       line += word + ' ';
     }
     c.fillText(line, 100, y);
+    c.fillStyle = color;
+    c.font = 'bold 13px sans-serif';
+    c.fillText(
+      h.approaching ? 'CROSS THE LIT GATE TO BEGIN →' : g.clear ? 'HUNT COMPLETE' : 'ARENA SEALED',
+      100,
+      685,
+    );
   }
   for (const e of g.enemies) {
     if (!isHunt(e.kind) || e.state !== 'windup') continue;
