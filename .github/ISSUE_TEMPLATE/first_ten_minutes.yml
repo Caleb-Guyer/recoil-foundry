@@ -9,13 +9,11 @@ body:
         [Play free on itch.io](https://caleb-guyer.itch.io/recoil-foundry).
         You can also answer the three questions in the launch devlog comments instead.
         No names, email addresses, recordings or private files are needed.
-  - type: dropdown
+  - type: input
     id: first-time
     attributes:
       label: Is this your first time playing Recoil Foundry?
-      options:
-        - First time
-        - Returning player
+      placeholder: First time / returning player
     validations:
       required: true
   - type: input
@@ -49,16 +47,12 @@ body:
       description: Tell us what happened and what you expected. Nothing confusing is a useful answer too.
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: restart
     attributes:
       label: What actually happened after your first death?
-      options:
-        - I chose to start another run
-        - I tried to restart but something prevented it
-        - I stopped after the death
-        - I did not die before I stopped
-        - The run ended another way
+      description: Say what actually happened; no death before stopping is a valid answer.
+      placeholder: Restarted / tried but could not / stopped / did not die / another ending
     validations:
       required: true
   - type: textarea
