@@ -10,6 +10,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 [Watch the official gameplay trailer on YouTube — 52 seconds.](https://www.youtube.com/watch?v=rDDEY7eRPc4)
 
+**First time playing?** [Join the ten-minute 5.6 playtest](docs/playtests/5.6.0/README.md). Play normally, then share what was fun, what got in your way and whether you wanted another run.
+
 - **141 upgrades**, including 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
 - **Six starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater through different accomplishments.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.

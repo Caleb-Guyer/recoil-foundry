@@ -4,7 +4,7 @@
 
 ## First sessions
 
-For the current Dead Signal build, use the focused [3.0.2 player session sheet](playtest-3.0.2.md): invitation draft, ten anonymous slots, unprompted restart observations, conditional route observations and patch triage. The completed [3.0.2 agent self-audit](validation/first-session-3.0.2.md) is technical evidence, not a filled participant sheet.
+For the current build, use the [5.6.0 ten-minute playtest](playtests/5.6.0/README.md) and its [moderator sheet](playtests/5.6.0/moderator.md). The earlier [3.0.2 session sheet](playtest-3.0.2.md) remains historical; its completed [agent self-audit](validation/first-session-3.0.2.md) is technical evidence, not a filled participant sheet.
 
 Invite 8–12 willing players with a mixture of roguelike experience when available. Observe at least five newcomers without coaching using the [first-session sheet](first-session-playtest.md). Give them only the normal [Play link](https://caleb-guyer.github.io/recoil-foundry/). Record their own choices, questions and stopping points rather than correcting them mid-session.
 

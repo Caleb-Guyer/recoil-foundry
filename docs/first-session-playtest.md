@@ -1,5 +1,7 @@
 # First-time-player observation sheet
 
+The active post-release round is the [5.6.0 ten-minute playtest](playtests/5.6.0/README.md), with its own [moderator and triage sheet](playtests/5.6.0/moderator.md). The generic sheet below retains the earlier launch context.
+
 Optional post-release feedback form. No human participants have been observed for this release yet. This requirement was deferred from launch under the owner's [final release decision](browser-release-closeout-2.98.0.md); it is not marked passed. The agent's [five-scenario self-audit](first-session-2.93.0.md) is recorded separately.
 
 Give a first-time player the [normal game link](https://caleb-guyer.github.io/recoil-foundry/). Let them choose how to start and discover Controls or Learn to play themselves. Do not explain controls, exits or recoil beforehand. Observe roughly ten minutes or until they choose to stop. Do not reveal future bosses, secret routes or lore. Use anonymous participant numbers; no personal information is needed.

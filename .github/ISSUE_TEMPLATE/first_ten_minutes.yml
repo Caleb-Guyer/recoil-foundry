@@ -1,0 +1,75 @@
+name: First ten minutes playtest
+description: Share a real first session of Recoil Foundry 5.6. Reports are public.
+title: '[Playtest 5.6] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Recoil Foundry! Fill this in after playing, not during your run.
+        [Play free on itch.io](https://caleb-guyer.itch.io/recoil-foundry).
+        You can also answer the three questions in the launch devlog comments instead.
+        No names, email addresses, recordings or private files are needed.
+  - type: dropdown
+    id: first-time
+    attributes:
+      label: Is this your first time playing Recoil Foundry?
+      options:
+        - First time
+        - Returning player
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Version, browser and time played
+      description: Approximate details are fine. Include the room you reached if you remember.
+      placeholder: '5.6.0; Chrome on Windows; keyboard and mouse; about 10 minutes; room 3'
+  - type: dropdown
+    id: exposure
+    attributes:
+      label: What did you see before playing?
+      options:
+        - Only the normal store page
+        - Watched the trailer or other gameplay
+        - Read controls or a guide
+        - Someone explained or demonstrated the game
+        - More than one of these
+        - Not sure
+  - type: textarea
+    id: best-moment
+    attributes:
+      label: What was the best moment?
+      placeholder: A specific moment, action or upgrade you enjoyed. No highlight is a useful answer too.
+    validations:
+      required: true
+  - type: textarea
+    id: first-friction
+    attributes:
+      label: What first felt confusing, unfair or frustrating?
+      description: Tell us what happened and what you expected. Nothing confusing is a useful answer too.
+    validations:
+      required: true
+  - type: dropdown
+    id: restart
+    attributes:
+      label: What actually happened after your first death?
+      options:
+        - I chose to start another run
+        - I tried to restart but something prevented it
+        - I stopped after the death
+        - I did not die before I stopped
+        - The run ended another way
+    validations:
+      required: true
+  - type: textarea
+    id: another-run
+    attributes:
+      label: Did you want another run, and why?
+      description: Your honest reason for continuing or stopping matters more than a score.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Optional run details or extra notes
+      description: Feedback after a run, or Pause → Report an issue → Copy details, supplies version, seed and build details. Review before posting; screenshots are optional.
