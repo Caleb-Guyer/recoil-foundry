@@ -1,6 +1,6 @@
 # Browser release support
 
-Release target: **Windows desktop/laptop with keyboard and mouse**. The GitHub Pages software release is **5.1.0**, with its [Build Momentum validation](validation/build-momentum-5.1.0.md) recording the current automated and embedded-browser checks. The physical browser/hardware evidence below was collected for 2.96.1; it retains that original scope. The [release operations record](release-operations.md) preserves earlier software checks and publication history, including the itch.io release.
+Release target: **Windows desktop/laptop with keyboard and mouse**. The current software release on GitHub Pages and itch.io is **5.6.0**. Its [publication receipt](validation/itch-5.6.0-publication.md) records exact-commit CI, package verification and limited embedded-browser checks. The physical browser/hardware evidence below was collected for 2.96.1; it retains that original scope. The [release operations record](release-operations.md) preserves earlier software checks and publication history.
 
 | Browser or input                 | Status                                                                                                                                                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

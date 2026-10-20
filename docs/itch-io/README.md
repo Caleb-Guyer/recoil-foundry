@@ -2,6 +2,8 @@
 
 [Play Recoil Foundry on itch.io](https://caleb-guyer.itch.io/recoil-foundry). The [release operations record](../release-operations.md) identifies the current published build, verified GitHub ZIP and itch.io upload. Project ID: `5033600`. The [3.0 launch devlog](https://caleb-guyer.itch.io/recoil-foundry/devlog/1676915/dead-signal-is-here-recoil-foundry-30) remains public; no direct recruitment messages were sent.
 
+Current build: **5.6.0 — Remix Gauntlet**, itch.io upload **19890526**, published 19 October 2026 from the verified `v5.6.0` release archive. The description and featured YouTube trailer reflect the current game. [Package and browser verification](../validation/itch-5.6.0-publication.md).
+
 ## Page
 
 - Account: Caleb-Guyer.
@@ -15,7 +17,7 @@
 - Description: [ready-to-paste HTML](description.html).
 - Cover: [1260 × 1000](assets/cover.png). Header: [1600 × 450](assets/banner.png).
 - Screenshots: Transmission, Recoil climb and Subversion from [the Dead Signal launch kit](../launch/dead-signal/README.md), followed by the existing Loading Docks, Furnace Halls and Cooling Works images.
-- Featured video: [the official 52-second gameplay trailer on YouTube](https://www.youtube.com/watch?v=rDDEY7eRPc4), published in the **Gameplay video or trailer** field. The older Dead Signal update trailer remains linked in its description section.
+- Featured video: [the official 52-second gameplay trailer on YouTube](https://www.youtube.com/watch?v=rDDEY7eRPc4), published in the **Gameplay video or trailer** field and linked near the top of the description.
 - AI disclosure: Yes, with Code and Text & Dialog selected. The game uses code-drawn art and procedural audio; no image or audio generation model assets are used.
 - Theme: background `#0a1419`, content `#142127`, text `#e9eadc`, links/buttons `#acc3b6`. Simple sans-serif typography, visible screenshots, no additional decorative background.
 - Embed: click to launch fullscreen, with scrollbars off and Loading Docks as the launch background. Screenshots use the sidebar layout; comments are enabled.
