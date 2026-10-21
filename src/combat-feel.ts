@@ -165,6 +165,7 @@ export function drawCombatImpacts(
   g: Game,
   reduced: boolean,
   threats: Shot[],
+  opacity = 1,
 ) {
   c.save();
   c.lineCap = 'round';
@@ -172,7 +173,8 @@ export function drawCombatImpacts(
     const age = g.time - nail.at,
       p = nailPosition(nail);
     c.save();
-    c.globalAlpha = clamp((NAIL_LIFETIME - age) / 0.35, 0, 1) * effectOpacity(p, 10, threats);
+    c.globalAlpha =
+      opacity * clamp((NAIL_LIFETIME - age) / 0.35, 0, 1) * effectOpacity(p, 10, threats);
     c.translate(p.x, p.y);
     c.rotate(nail.angle + nail.body.angle);
     c.strokeStyle = '#8badae';
@@ -191,7 +193,8 @@ export function drawCombatImpacts(
   for (const impact of g.combatFeel.impacts) {
     const age = clamp((g.time - impact.at) / 0.2, 0, 1);
     c.save();
-    c.globalAlpha = (1 - age) * (reduced ? 0.3 : 0.8) * effectOpacity(impact.pos, 15, threats);
+    c.globalAlpha =
+      opacity * (1 - age) * (reduced ? 0.3 : 0.8) * effectOpacity(impact.pos, 15, threats);
     c.translate(impact.pos.x, impact.pos.y);
     c.rotate(Math.atan2(impact.normal.y, impact.normal.x));
     c.strokeStyle = impact.kind === 'nail' ? '#b5d4d0' : '#f5cd8f';

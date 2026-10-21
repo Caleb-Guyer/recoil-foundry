@@ -1,5 +1,5 @@
 import type Matter from 'matter-js';
-import type { Enemy, Shot } from './game.ts';
+import type { Enemy, Shot, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, distance } from './rules.ts';
 import { firstSolid } from './collisions.ts';
@@ -18,6 +18,35 @@ export interface EdgeCue {
   pos: Vec;
   angle: number;
   alpha: number;
+}
+
+// A bounded, presentation-only workload. Offscreen clutter must not dim this fight.
+// No seeded randomness, projectile removal or changes to damage/attack timing.
+export function combatClarity(g: Game, view: CombatView) {
+  let rounds = 0,
+    rays = 0,
+    particles = 0;
+  for (const s of g.shots) {
+    if (s.friendly && s.life > 0 && inCombatView(s.pos, view, 20)) rounds++;
+    if (rounds >= 60) break;
+  }
+  rays: for (const path of [g.torch.segments, g.torch.rear])
+    for (const ray of path) {
+      if (g.torch.active && segmentInCombatView(ray.a, ray.b, view, 20)) rays++;
+      if (rays >= 48) break rays;
+    }
+  for (const p of g.particles) {
+    if (p.life > 0 && inCombatView(p.pos, view, 20)) particles++;
+    if (particles >= 100) break;
+  }
+  const pressure = clamp((rounds * 0.45 + rays * 1.2 + particles * 0.18 - 12) / 35, 0, 1);
+  return {
+    pressure,
+    particles: 1 - pressure * 0.65,
+    friendly: 1 - pressure * 0.3,
+    glow: 1 - pressure * 0.7,
+    motion: 1 - pressure * 0.45,
+  };
 }
 
 export function inCombatView(p: Vec, view: CombatView, padding = 0) {

@@ -159,10 +159,11 @@ export function drawBlackout(
   scale: number,
   width: number,
   height: number,
+  glowGain = 1,
 ) {
   const lights = projectileLights(g, { ...camera, w: width / scale, h: height / scale });
   if (!g.areaEvents.dark) {
-    drawProjectileGlow(c, lights, camera, scale, false);
+    drawProjectileGlow(c, lights, camera, scale, false, glowGain);
     return;
   }
   let mask = masks.get(c.canvas);
@@ -200,7 +201,7 @@ export function drawBlackout(
   c.save();
   c.drawImage(mask, 0, 0, width, height);
   c.restore();
-  drawProjectileGlow(c, lights, camera, scale, true);
+  drawProjectileGlow(c, lights, camera, scale, true, glowGain);
 }
 function drawProjectileGlow(
   c: CanvasRenderingContext2D,
@@ -208,6 +209,7 @@ function drawProjectileGlow(
   camera: Vec,
   scale: number,
   dark: boolean,
+  gain = 1,
 ) {
   c.save();
   c.globalCompositeOperation = 'screen';
@@ -219,7 +221,7 @@ function drawProjectileGlow(
     glow.addColorStop(0, light.color + (dark ? '55' : '18'));
     glow.addColorStop(0.35, light.color + (dark ? '20' : '08'));
     glow.addColorStop(1, light.color + '00');
-    c.globalAlpha = light.strength;
+    c.globalAlpha = light.strength * gain;
     c.fillStyle = glow;
     c.fillRect(x - r, y - r, r * 2, r * 2);
   }

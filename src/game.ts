@@ -6,6 +6,7 @@ import { TeamworkSystem, createSupport, isSupport, SUPPORT, type SupportRig } fr
 import { teamworkLevel } from './teamwork-layout.ts';
 import { ToolroomSystem, type ToolroomShot } from './toolroom-system.ts';
 import { toolroomLevel } from './toolroom-layouts.ts';
+import { remasterTestLevel } from './room-remaster.ts';
 import { PatrolMachineSystem, createPatrolRig, type PatrolRig } from './patrol-machine-system.ts';
 import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
 import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
@@ -1296,6 +1297,7 @@ export class Game {
       this.level = reinforceSecurity(this.level, this.seed, this.stage, this.security.level);
     this.level = toolroomLevel(this, this.level);
     this.level = teamworkLevel(this, this.level);
+    this.level = remasterTestLevel(this, this.level);
     this.level = huntRoom ?? this.level;
     if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);

@@ -11,6 +11,7 @@ export function drawTorch(
   g: Game,
   reduced: boolean,
   view?: CombatView,
+  pressure = 0,
 ) {
   const t = g.torch;
   if (!t.equipped || !t.active || !['playing', 'paused'].includes(g.mode)) return;
@@ -50,7 +51,7 @@ export function drawTorch(
           c.lineTo(s.b.x, s.b.y);
         }
       c.strokeStyle = '#ebad68';
-      c.globalAlpha = 0.19 / (g.gun.pellets > 1 ? 2 : 1);
+      c.globalAlpha = (0.19 * (1 - pressure * 0.7)) / (g.gun.pellets > 1 ? 2 : 1);
       c.lineWidth = first.width + 5.4;
       c.stroke();
     }
@@ -60,14 +61,14 @@ export function drawTorch(
     c.moveTo(a.x, a.y);
     c.lineTo(s.b.x, s.b.y);
     c.strokeStyle = hot > 0.6 ? '#fff0c7' : '#ffd59b';
-    c.globalAlpha = 0.9;
+    c.globalAlpha = 0.9 * (1 - pressure * 0.3);
     c.lineWidth = rayWidth + hot * 0.6;
     c.stroke();
     if (s.body || s.cable || s.anchor) {
       const key = Math.round(s.b.x / 12) + ',' + Math.round(s.b.y / 12);
       if (impacts.has(key)) continue;
       impacts.add(key);
-      c.globalAlpha = 0.8;
+      c.globalAlpha = 0.8 * (1 - pressure * 0.5);
       c.fillStyle = '#ffdfad';
       c.beginPath();
       c.arc(s.b.x, s.b.y, 2 + hot * 2, 0, Math.PI * 2);

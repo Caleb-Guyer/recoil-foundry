@@ -16,8 +16,10 @@ import { drawStoryBackdrop, drawStoryDetails } from './story-art.ts';
 import { SPLIT_SCALE } from './mutations.ts';
 import { drawAreaEvent, drawEventEnemy, drawBlackout } from './area-event-art.ts';
 import { drawLoaderSupports } from './loader-arena-art.ts';
+import { drawRoomLandings } from './room-remaster.ts';
 import {
   attackBrace,
+  combatClarity,
   drawThreatRound,
   effectOpacity,
   incomingEdgeCues,
@@ -560,6 +562,14 @@ export class Renderer {
         c.fillRect(-w / 2, y, (w * e.hp) / e.maxHp, 3);
       }
       c.restore();
+    }
+  }
+  drawEnemyTells() {
+    const c = this.ctx,
+      g = this.game;
+    for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (e.hp <= 0 || e.spawn > 0) continue;
+      const p = e.body.position;
       if (e.allied && g.areaEvents.departingAt !== null) continue;
       this.drawTell(e);
       drawSquadTell(c, g, e);
@@ -632,6 +642,8 @@ export class Renderer {
       this.camera.y = Math.max(0, 825 - viewH);
     }
     if (framing) this.camera = { ...framing.camera };
+    const view = { x: this.camera.x, y: this.camera.y, w: viewW, h: viewH };
+    const clarity = combatClarity(g, view);
     c.save();
     c.scale(this.scale, this.scale);
     if (g.maintenance.active && g.mode !== 'title')
@@ -651,10 +663,10 @@ export class Renderer {
     c.save();
     if (!this.reduced && g.mode !== 'title') {
       const a = this.clock * 95,
-        shake = g.shake;
+        shake = g.shake * clarity.motion;
       c.translate(
-        Math.sin(a) * shake * 0.48 + g.kick.x,
-        Math.cos(a * 1.3) * shake * 0.32 + g.kick.y,
+        Math.sin(a) * shake * 0.48 + g.kick.x * clarity.motion,
+        Math.cos(a * 1.3) * shake * 0.32 + g.kick.y * clarity.motion,
       );
     }
     c.scale(this.scale, this.scale);
@@ -711,6 +723,7 @@ export class Renderer {
       drawRegionExits(c, g);
     }
     this.drawHazards();
+    drawRoomLandings(c, g.level);
     drawMaintenanceDetails(c, g);
     drawRecoilTrial(c, g);
     drawFreightLift(c, g);
@@ -742,7 +755,7 @@ export class Renderer {
     drawSapperBlasts(c, g, this.reduced);
     if (!this.reduced && !g.grounded && g.player.speed > 8) {
       g.trail.forEach((p, i) => {
-        c.globalAlpha = (1 - i / 9) * 0.1;
+        c.globalAlpha = (1 - i / 9) * 0.1 * clarity.particles;
         c.fillStyle = '#d1e2dd';
         c.fillRect(p.x - 11, p.y - 15, 22, 30);
       });
@@ -752,6 +765,7 @@ export class Renderer {
       if (this.reduced && p.kind === 'shell') continue;
       c.globalAlpha =
         (this.reduced ? 0.3 : 1) *
+        clarity.particles *
         clamp(p.life / p.max, 0, 1) *
         effectOpacity(p.pos, p.kind === 'ring' ? p.size * (1 - p.life / p.max) : p.size, threats);
       if (p.kind === 'ring') this.circle(p.pos, p.size * (1 - p.life / p.max), p.color, false, 1.5);
@@ -775,9 +789,8 @@ export class Renderer {
     drawAuditDoor(c, g, this.reduced);
     this.drawEnemies();
     drawSurveyMarks(c, g);
-    drawCombatImpacts(c, g, this.reduced, threats);
-    const view = { x: this.camera.x, y: this.camera.y, w: viewW, h: viewH };
-    drawTorch(c, g, this.reduced, view);
+    drawCombatImpacts(c, g, this.reduced, threats, clarity.particles);
+    drawTorch(c, g, this.reduced, view, clarity.pressure);
     if (g.blast.life > 0) {
       const { pos, dir, life } = g.blast,
         base = Math.atan2(dir.y, dir.x);
@@ -795,7 +808,6 @@ export class Renderer {
     g.securityCombat.draw(c);
     if (!framing || framing.player) {
       drawRecoilRace(c, g);
-      this.drawPlayer();
     }
     drawFloodwater(c, g, this.reduced);
     drawNewPaths(c, g);
@@ -821,7 +833,8 @@ export class Renderer {
       }
       if (s.friendly) {
         c.save();
-        c.globalAlpha = (s.echo ? 0.65 : 1) * effectOpacity(s.pos, s.radius, threats);
+        c.globalAlpha =
+          (s.echo ? 0.65 : 1) * clarity.friendly * effectOpacity(s.pos, s.radius, threats);
         if (s.trace) {
           const { points, bank, pierce } = s.trace;
           c.save();
@@ -829,6 +842,7 @@ export class Renderer {
           for (let i = 1; i < points.length; i++) {
             c.globalAlpha =
               effectOpacity(points[i], s.radius, threats) *
+              clarity.particles *
               (this.reduced ? 0.32 : 0.48) *
               (0.3 + (0.7 * i) / (points.length - 1));
             const color = s.vector?.boosted
@@ -908,6 +922,10 @@ export class Renderer {
       c.restore();
     }
     drawMutationTells(c, g);
+    // Keep the actual outfit above friendly rays, arcs, blasts and trails. The
+    // hostile projectile and committed warning layers remain above the player.
+    if (!framing || framing.player) this.drawPlayer(clarity.pressure);
+    this.drawEnemyTells();
     // Mortar shells and committed machine warnings share the threat layer.
     // Dense friendly beams/volleys must never paint over shootable shells or
     // their actual landing areas. All rays and physical damage remain intact.
@@ -991,7 +1009,7 @@ export class Renderer {
       }
     }
     c.restore();
-    drawBlackout(c, g, this.camera, this.scale, this.width, this.height);
+    drawBlackout(c, g, this.camera, this.scale, this.width, this.height, clarity.glow);
     if (g.areaEvents.dark && g.mode === 'playing') {
       c.save();
       c.strokeStyle = '#dce8e199';
@@ -1700,7 +1718,7 @@ export class Renderer {
       this.circle(p, 47 - e.timer * 8, '#f7bd83', false, 2);
     }
   }
-  drawPlayer() {
+  drawPlayer(pressure = 0) {
     const g = this.game,
       c = this.ctx,
       p = g.player.position,
@@ -1754,6 +1772,13 @@ export class Renderer {
     c.translate(pose.x, pose.y);
     c.rotate(pose.angle);
     c.scale(pose.scaleX, pose.scaleY);
+    if (pressure > 0) {
+      c.beginPath();
+      c.roundRect(-13, -18, 26, 31, 4);
+      c.strokeStyle = '#081216';
+      c.lineWidth = 2 + pressure * 3;
+      c.stroke();
+    }
     drawOutfit(c, g.cosmetics.outfit, d.x, pose.stride);
     c.restore();
     c.translate(0, -3);

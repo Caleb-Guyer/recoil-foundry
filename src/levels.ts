@@ -13,6 +13,7 @@ import type { MagnetPlacement } from './reclamation-layouts.ts';
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
 import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
+import { remasteredLayout } from './room-remaster.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
 import { addAngler } from './angler-layout.ts';
 import { addWallcrawler } from './wallcrawler-layout.ts';
@@ -80,6 +81,7 @@ export interface Spawn extends Vec {
   squad?: SquadTag;
 }
 export interface Layout {
+  remastered?: true;
   hazards?: HazardPlacement[];
   vents?: PressurePlacement[];
   counterweights?: CounterweightPlacement[];
@@ -751,7 +753,7 @@ function buildLevel(
     'turbine'
       ? TURBINE_ARENA
       : COOLING_BOSS;
-  const source =
+  const selectedSource =
     (!selection?.ordinary ? physicsLayout(seed, stage) : undefined) ??
     (!selection?.ordinary ? counterweightLayout(seed, stage) : undefined) ??
     (!selection?.ordinary ? pressureLayout(seed, stage) : undefined) ??
@@ -765,7 +767,8 @@ function buildLevel(
           : legacyStage >= 6 && legacyStage < 8
             ? cooling[legacyStage - 6]
             : order[legacyStage >= 9 ? legacyStage - 3 : legacyStage]);
-  if (!source) throw new RangeError('Invalid stage');
+  if (!selectedSource) throw new RangeError('Invalid stage');
+  const source = remasteredLayout(selectedSource, seed, stage);
   const rng = seeded(
     seed +
       (slot === 2

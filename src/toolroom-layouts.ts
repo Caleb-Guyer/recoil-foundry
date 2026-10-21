@@ -3,6 +3,7 @@ import type { Level, Solid, Spawn, EnemyKind } from './levels.ts';
 import { seeded, segmentBox } from './rules.ts';
 import { PROP_STATS } from './props.ts';
 import { toolroomRevision } from './toolroom-catalog.ts';
+import { roomDesign } from './room-remaster.ts';
 import {
   MACHINE_VARIANT_IDS,
   MACHINE_VARIANTS,
@@ -181,7 +182,8 @@ export function toolroomRoomLevel(
   seed: string,
   teamwork = false,
 ): Level {
-  const source = TOOLROOM_ROOMS[id],
+  const design = roomDesign(seed, 'toolroom-' + id);
+  const source = design ? { ...TOOLROOM_ROOMS[id], ...design } : TOOLROOM_ROOMS[id],
     rng = seeded(seed + ':toolroom-machines:' + stage);
   const spawns: Spawn[] = source.spawns.map((s) => ({ ...s }));
   for (const s of spawns) {
@@ -263,14 +265,17 @@ export function toolroomRoomLevel(
     area,
     solids,
     spawns,
-    route: [
-      { x: 120, y: 716 },
-      ...solids.map((s) => ({ x: s.x + s.w / 2, y: s.y - 24 })),
-      { x: 1880, y: 716 },
-    ],
+    route: design
+      ? design.route.map((p) => ({ ...p }))
+      : [
+          { x: 120, y: 716 },
+          ...solids.map((s) => ({ x: s.x + s.w / 2, y: s.y - 24 })),
+          { x: 1880, y: 716 },
+        ],
     mirrored: false,
     boss: false,
     toolroom: id,
+    ...(design ? { remastered: true as const } : {}),
     ...(intro ? { machineIntro: intro } : {}),
     setpiece: {
       rosters: [spawns.map((_, i) => i)],

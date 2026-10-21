@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Room remaster & combat clarity — version 5.8.0.** Six existing layouts gain clear ground routes, optional recoil landings, wider firing decks and cover placed around the patrol. The player and committed attack warnings remain visible above friendly effects; dense builds ease cosmetic particles, glows and camera movement. New Campaigns use the layouts; older Continue saves and Daily layouts retain their rules. [Release notes and eight isolated playtests](docs/releases/5.8.0.md).
+
 **Playtest feedback — version 5.7.2.** The existing Feedback menu asks three short questions and includes an expandable, editable run summary. Copy your answers into the itch.io discussion or open a GitHub draft. [Details and test instructions](docs/releases/5.7.2.md).
 
 **First steps — version 5.7.1.** One dismissible hint follows the actions you still need to learn in the opening room. The first upgrade opens its real before/after firing-range comparison automatically, and **Learn to play** stays available on the title screen. [Release notes and isolated first-run tests](docs/releases/5.7.1.md).

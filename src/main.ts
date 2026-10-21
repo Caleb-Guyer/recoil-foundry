@@ -84,6 +84,7 @@ import { clockOutTestFromUrl, prepareClockOutTest } from './clock-out-test.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { combatFeelTestFromUrl } from './combat-feel-test.ts';
 import { encounterTestFromUrl } from './encounter-test.ts';
+import { remasterTestFromUrl, isRemasterRoom, ROOM_REMASTERS } from './room-remaster.ts';
 import { teamworkTestFromUrl } from './teamwork-test.ts';
 import { huntTestFromUrl } from './hunt-test.ts';
 import {
@@ -661,6 +662,7 @@ let linkedTest = testEncounterFromUrl(entryUrl);
 const linkedGoalRunPreview = goalRunPreviewFromUrl(entryUrl);
 const linkedFirstRunPreview = firstRunPreviewFromUrl(entryUrl);
 let linkedRunTest =
+  remasterTestFromUrl(entryUrl) ??
   firstRunTestFromUrl(entryUrl) ??
   goalRunTestFromUrl(entryUrl) ??
   progressionTestFromUrl(entryUrl) ??
@@ -944,6 +946,13 @@ function updateTitle() {
   }
   if (linkedRunTest?.seed === 'REROLL-61')
     $('title-hint').textContent = 'Start at a reward. 64 health. R to restart test.';
+  if (linkedRunTest?.seed.startsWith('RF-C92-ROOM-')) {
+    const room = entryUrl.searchParams.get('room') ?? 'overpass';
+    if (isRemasterRoom(room)) {
+      $('play').textContent = 'Test ' + ROOM_REMASTERS[room].name + ' ↗';
+      $('title-hint').textContent = ROOM_REMASTERS[room].guide + ' Isolated playtest · R to retry.';
+    }
+  }
   if (linkedRunTest?.seed.startsWith('RF-C90-DRAFT-')) {
     $('play').textContent = 'Test build follow-ups ↗';
     $('title-hint').textContent =
