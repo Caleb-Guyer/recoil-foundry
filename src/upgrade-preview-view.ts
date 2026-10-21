@@ -19,7 +19,11 @@ export class UpgradePreviewView {
   private renderedAt = -1000;
   private reduced = false;
   private stopped = false;
-  constructor(root: HTMLElement, choices: Map<HTMLButtonElement, UpgradeInspection>) {
+  constructor(
+    root: HTMLElement,
+    choices: Map<HTMLButtonElement, UpgradeInspection>,
+    automatic = false,
+  ) {
     this.root = root;
     this.selections = choices;
     for (const button of choices.keys()) {
@@ -34,19 +38,28 @@ export class UpgradePreviewView {
           this.select(
             choices.has(document.activeElement as HTMLButtonElement)
               ? (document.activeElement as HTMLButtonElement)
-              : null,
+              : automatic
+                ? this.selected
+                : null,
           ),
         { signal: this.abort.signal },
       );
       button.addEventListener(
         'blur',
         (event) => {
-          if (!choices.has(event.relatedTarget as HTMLButtonElement) && !button.matches(':hover'))
+          if (
+            !automatic &&
+            !choices.has(event.relatedTarget as HTMLButtonElement) &&
+            !button.matches(':hover')
+          )
             this.select(null);
         },
         { signal: this.abort.signal },
       );
     }
+    // Previewing never moves focus or accepts a fitting. Keep the last comparison
+    // visible when the player moves from a card to the firing-range pictures.
+    if (automatic) this.select(choices.keys().next().value ?? null);
   }
   private clearDemos() {
     for (const { game } of this.demos) destroyUpgradeDemo(game);

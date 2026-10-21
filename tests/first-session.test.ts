@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
 import { FirstSessionGuide, audioState, controlsIntro } from '../src/first-session.ts';
+import {
+  firstRunPreviewFromUrl,
+  firstRunTestFromUrl,
+  FIRST_RUN_SCENES,
+} from '../src/first-run-test.ts';
 import { interactionCues } from '../src/interaction-cues.ts';
 import { shutdownTestFromUrl, DISCONNECT } from '../src/shutdown-layout.ts';
 import { auditorTestFromUrl } from '../src/auditor-layout.ts';
@@ -67,7 +72,7 @@ test('the harmless starting-gun warm-up teaches actual movement, jumping, shooti
   assert(!guide.complete && !guide.moved && !guide.recoiled, 'restart resets the lessons');
 });
 
-test('opening tips expire, pause with the run, hide in later rooms, and do not leak into isolated modes', () => {
+test('opening tips wait for the action, pause with the run, hide in later rooms, and can be dismissed', () => {
   const g = new Game(),
     guide = new FirstSessionGuide();
   g.start('first-session');
@@ -75,8 +80,11 @@ test('opening tips expire, pause with the run, hide in later rooms, and do not l
   assert.match(guide.message(g, 'keyboard'), /A \/ D/);
   assert.match(guide.message(g, 'controller'), /Left stick/);
   assert.match(guide.message(g, 'touch'), /left arrows/);
-  g.time += 8;
-  assert.equal(guide.message(g, 'keyboard'), '');
+  g.time += 60;
+  assert.match(guide.message(g, 'keyboard'), /A \/ D/, 'a slow reader still gets the current cue');
+  step(g, guide, 30, { right: true });
+  assert(guide.moved);
+  assert.match(guide.message(g, 'keyboard'), /Space to jump/);
   g.clear = true;
   assert.match(guide.message(g, 'keyboard'), /door.*right/);
   g.setMode('paused');
@@ -88,6 +96,75 @@ test('opening tips expire, pause with the run, hide in later rooms, and do not l
   assert.equal(guide.message(g, 'keyboard'), '');
   guide.start(g, true);
   guide.stop();
+  assert.equal(guide.message(g, 'keyboard'), '');
+});
+
+test('opening guidance tracks actions learned out of order and goes quiet after recoil is learned', () => {
+  const g = new Game(),
+    guide = new FirstSessionGuide();
+  g.start('first-session');
+  step(g, guide, 30);
+  guide.start(g);
+  step(g, guide, 1, {
+    jump: true,
+    fire: true,
+    aim: { x: g.player.position.x, y: g.player.position.y + 300 },
+  });
+  assert(guide.jumped && guide.fired && guide.recoiled);
+  assert.match(guide.message(g, 'keyboard'), /A \/ D/, 'shooting first does not skip movement');
+  step(g, guide, 40, { right: true });
+  assert(guide.complete);
+  assert.equal(guide.message(g, 'keyboard'), '');
+  g.clear = true;
+  assert.match(guide.message(g, 'keyboard'), /lit door/);
+});
+
+test('first-run preview links are strict, start with the pistol and cannot save or grant rewards', () => {
+  for (const scene of FIRST_RUN_SCENES) {
+    const url = new URL('https://test/?test=first-run&scene=' + scene + '&v=1');
+    assert.equal(firstRunPreviewFromUrl(url), scene);
+    const save = firstRunTestFromUrl(url)!;
+    assert.equal(save.startingGun, 'pistol');
+    assert.deepEqual(save.mods, []);
+    assert.equal(save.stage, 0);
+    const g = new Game(),
+      guide = new FirstSessionGuide();
+    let saves = 0;
+    g.onCheckpoint = () => saves++;
+    g.startTest(save);
+    guide.start(g);
+    if (scene === 'opening') assert.match(guide.message(g, 'keyboard'), /A \/ D/);
+    else assert.equal(guide.message(g, 'keyboard'), '');
+    if (scene === 'upgrade') {
+      assert.equal(g.mode, 'upgrade');
+      assert.deepEqual(
+        g.offers.map((m) => m.id),
+        ['magnum', 'scatter', 'rapid'],
+      );
+      g.chooseMod('scatter');
+      assert(g.mods.includes('scatter'));
+    }
+    g.save();
+    assert.equal(saves, 0);
+    assert.deepEqual(recordLogbook(loadLogbook(null), g), loadLogbook(null));
+    assert.equal(snapshotRun(g, 'first-run-preview', 1), null);
+  }
+  for (const query of [
+    'test=first-run&scene=opening',
+    'test=first-run&scene=opening&v=2',
+    'test=first-run&scene=invalid&v=1',
+    'test=first-run&scene=opening&v=1&seed=OTHER',
+    'test=first-run&scene=opening&scene=upgrade&v=1',
+    'test=first-run&scene=opening&v=1&v=1',
+  ])
+    assert.equal(firstRunTestFromUrl(new URL('https://test/?' + query)), null);
+  const g = new Game(),
+    guide = new FirstSessionGuide();
+  g.startTest({
+    ...firstRunTestFromUrl(new URL('https://test/?test=first-run&scene=opening&v=1'))!,
+    seed: 'UNRELATED',
+  });
+  guide.start(g);
   assert.equal(guide.message(g, 'keyboard'), '');
 });
 

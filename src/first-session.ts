@@ -2,6 +2,7 @@ import type { Game, Input } from './game.ts';
 import { DEFAULT_BINDINGS, bindingLabel, keyLabel, type Bindings } from './keyboard.ts';
 
 export const FIRST_SESSION_KEY = 'rf-first-session-v1';
+export const FIRST_RUN_PREVIEW_SEED = 'FIRST-RUN-OPENING';
 export type ControlDevice = 'keyboard' | 'controller' | 'touch';
 
 // Presentation only: observes the real simulation without changing a run.
@@ -16,8 +17,6 @@ export class FirstSessionGuide {
   private originX = 0;
   private shots = 0;
   private kills = 0;
-  private cue = '';
-  private cueAt = 0;
   start(g: Game, warmup = false) {
     this.active = true;
     this.warmup = warmup;
@@ -25,8 +24,6 @@ export class FirstSessionGuide {
     this.originX = g.player.position.x;
     this.shots = g.shotCount;
     this.kills = g.kills;
-    this.cue = '';
-    this.cueAt = g.time;
   }
   stop() {
     this.active = this.warmup = false;
@@ -53,7 +50,11 @@ export class FirstSessionGuide {
     if (!this.active || g.mode !== 'playing') return '';
     if (
       !this.warmup &&
-      (g.stage !== 0 || g.practice || g.testRun || g.workshop.active || g.overtime)
+      (g.stage !== 0 ||
+        g.practice ||
+        (g.testRun && g.testRun.seed !== FIRST_RUN_PREVIEW_SEED) ||
+        g.workshop.active ||
+        g.overtime)
     )
       return '';
     const key =
@@ -70,12 +71,8 @@ export class FirstSessionGuide {
                 : this.warmup && !this.hit
                   ? 'target'
                   : 'done';
-    if (key !== this.cue) {
-      this.cue = key;
-      this.cueAt = g.time;
-    }
-    // Quiet after a brief hint. Controls and the safe warm-up remain available.
-    if (!this.warmup && (key === 'done' || g.time - this.cueAt > 7)) return '';
+    // Keep one relevant cue until it is learned or dismissed, then stay quiet.
+    if (!this.warmup && key === 'done') return '';
     const text: Record<string, string> = {
       move:
         device === 'controller'

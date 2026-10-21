@@ -1,10 +1,14 @@
 # Browser release operations
 
+## First steps 5.7.1 — 20 October 2026
+
+Contextual first-room guidance, an automatic first-upgrade gun comparison and a permanently available title-screen warm-up. [Release notes and isolated tests](releases/5.7.1.md). Validation and publication must be confirmed for the exact patch commit before release.
+
 ## Hunting Grounds 5.7.0 — 20 October 2026
 
 Boss hunts are reserved in rooms 9 and 17 for new Campaigns, with two different machines, preference for unbeaten hunts, marked entrances, an approach corridor and a physical arena seal. The chosen pair and each hunt phase are saved; existing saves retain their original schedule. Practice ruleset 3 separates redesigned hunt scores from earlier records. Daily generation and existing weapon licenses are retained. [Release notes and playtests](releases/5.7.0.md).
 
-Local validation and publication status are recorded in [the validation receipt](validation/hunting-grounds-5.7.0.md). The itch.io version below is the most recently verified store upload until a separate publication receipt confirms an update.
+**Published on Pages and itch.io.** Commit `37999d934f8d0f785496f17ec7bdf3bae2f5dd4f` passed Pages workflow `39515358262`; tag `v5.7.0` passed release workflow `39518109169`. The official archive is itch.io upload **19913669**, displayed as **Recoil Foundry 5.7.0 — Hunting Grounds**. The public game's About screen reports **5.7.0**, and its previous Continue daily and audio settings remain available. [Gameplay validation](validation/hunting-grounds-5.7.0.md) and [store publication receipt](validation/itch-5.7.0-publication.md).
 
 ## Remix Gauntlet 5.6.0 — 19 October 2026
 
@@ -53,7 +57,6 @@ Fresh normal campaigns can encounter one Reclamation magnet fight in room 15. Th
 ## Maintenance Trials 3.12.0 — 27 September 2026
 
 **Published on Pages and itch.io.** Runtime commit `1791228c2f05474e0d45c4cdd95760ae841e95e3` passed all **2,084 tests**, build and deployment in [Pages CI](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36353411913). Tag `v3.12.0` passed the [release workflow](https://github.com/Caleb-Guyer/recoil-foundry/actions/runs/36354632344); the verified archive is itch.io upload `19438077`. Both public games show 3.12.0 and retain their saves. [Validation](validation/maintenance-trials-3.12.0.md) records the checksum, fixed-gun climbs, record and backup checks, and browser scope.
-
 
 ## Shifting Shafts 3.11.0 — 27 September 2026
 

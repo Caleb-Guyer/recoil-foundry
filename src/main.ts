@@ -25,6 +25,7 @@ import './upgrade-preview.css';
 import { inspectUpgrade } from './upgrade-inspection.ts';
 import { UpgradePreviewView, upgradePreviewMarkup } from './upgrade-preview-view.ts';
 import { upgradePreviewTestFromUrl } from './upgrade-preview-test.ts';
+import { firstRunPreviewFromUrl, firstRunTestFromUrl } from './first-run-test.ts';
 import {
   UPRISING_RECORDS_KEY,
   UPRISING_DISTRICTS,
@@ -658,7 +659,9 @@ const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 const linkedGoalRunPreview = goalRunPreviewFromUrl(entryUrl);
+const linkedFirstRunPreview = firstRunPreviewFromUrl(entryUrl);
 let linkedRunTest =
+  firstRunTestFromUrl(entryUrl) ??
   goalRunTestFromUrl(entryUrl) ??
   progressionTestFromUrl(entryUrl) ??
   toolroomTestFromUrl(entryUrl) ??
@@ -1150,6 +1153,13 @@ function updateTitle() {
     $('play').textContent = 'Preview goal ' + linkedGoalRunPreview;
     $('title-hint').textContent = 'Isolated goal preview. Your save stays untouched. R to retry.';
   }
+  if (linkedFirstRunPreview && linkedRunTest?.seed.startsWith('FIRST-RUN-')) {
+    $('play').textContent =
+      linkedFirstRunPreview === 'warmup'
+        ? 'Try the warm-up'
+        : 'Preview first ' + (linkedFirstRunPreview === 'opening' ? 'room' : 'upgrade');
+    $('title-hint').textContent = 'First-run preview. Your save stays untouched. R to retry.';
+  }
   updateNextGoal();
 }
 function currentGoalProgress(): GoalProgress {
@@ -1517,8 +1527,7 @@ function reloadProgress() {
 }
 function finishGuidance() {
   needsGuidance = false;
-  write(FIRST_SESSION_KEY, true);
-  $('learn').hidden = true;
+  if (!game.testRun && !linkedFirstRunPreview) write(FIRST_SESSION_KEY, true);
 }
 function updateFirstSession() {
   if (firstSession.active && (firstSession.complete || (!firstSession.warmup && game.stage > 0))) {
@@ -2083,6 +2092,8 @@ function startRunTest(save: Checkpoint) {
   activeDaily = null;
   dailyResult = null;
   game.startTest(save);
+  if (linkedFirstRunPreview === 'opening') firstSession.start(game);
+  updateFirstSession();
   if (linkedGoalRunPreview) prepareGoalRunTest(game, linkedGoalRunPreview);
   prepareClockOutTest(game);
   finishPresentationTest(game);
@@ -2879,7 +2890,8 @@ function showDialog(kind: string) {
       '<p class="update-tagline">Find the door. Cross the threshold. Face the machine.</p>' +
       '<dl class="update-notes"><div><dt>Two doors every new Campaign.</dt><dd>Optional hunts wait in rooms 9 and 17, in zones 3 and 5. Each run offers two different machines and favors ones you haven’t beaten. Clear the patrol, then jump at the marked hunt door.</dd></div>' +
       '<div><dt>Three arenas with a purpose.</dt><dd>Climb the Cableweaver’s vault, shoot above the Bulwark’s shields, or dodge the Demolisher’s charges. A quiet approach leads to a lit threshold. Cross it to seal the arena and begin the fight.</dd></div>' +
-      '<div><dt>Keep what you earn.</dt><dd>Win two different hunts to unlock the Coil carbine. Previous victories still count. Each victory offers a repair or free reroll, then returns you to the cleared patrol with your build. Continue and Retry keep your hunt plan; existing saves keep their original schedule.</dd></div></dl>' +
+      '<div><dt>Keep what you earn.</dt><dd>Win two different hunts to unlock the Coil carbine. Previous victories still count. Each victory offers a repair or free reroll, then returns you to the cleared patrol with your build. Continue and Retry keep your hunt plan; existing saves keep their original schedule.</dd></div>' +
+      '<div><dt>A clearer first run · 5.7.1.</dt><dd>One small hint follows the actions you still need to learn in the first room. Dismiss it any time. Your first upgrade opens its gun comparison automatically, and Learn to play stays on the title screen whenever you want the safe warm-up.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3513,8 +3525,11 @@ function showDialog(kind: string) {
             : '') +
           ' Extra upgrade · No health refill.</p>'
         : '') +
-      (firstRewardHelp && game.stage === 0 && !game.testRun && !game.practice
-        ? '<p class="first-reward-note">Choose one. It stays on your gun for this run.</p>'
+      ((firstRewardHelp || linkedFirstRunPreview === 'upgrade') &&
+      game.stage === 0 &&
+      (!game.testRun || linkedFirstRunPreview) &&
+      !game.practice
+        ? '<p class="first-reward-note">Compare your gun below. Choose one fitting; it stays for this run.</p>'
         : '') +
       '<div class="choices">' +
       game.offers
@@ -3597,6 +3612,7 @@ function showDialog(kind: string) {
           ),
         ]),
       ),
+      game.stage === 0 && !game.practice,
     );
     const reroll = document.getElementById('reroll');
     if (reroll)
@@ -4457,41 +4473,43 @@ function formatTime(n: number) {
 $('play').onclick = () =>
   linkedGoalPreview || linkedTrackingPreview
     ? location.assign(new URL('./', location.href).href)
-    : linkedDrill
-      ? startLinkedSupportDrill(linkedDrill)
-      : linkedGauntletPreview
-        ? startGauntlet(linkedGauntletPreview, true)
-        : linkedRemixGauntletPreview
-          ? linkedRemixGauntletPreview.setup
-            ? (() => {
-                gauntletSetupPreview = true;
-                gauntletSetupMode = 'remix';
-                showDialog('gauntlet-setup');
-              })()
-            : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
-          : linkedGauntletChallenge || invalidGauntletLink
-            ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
-            : linkedRecoilChallenge || invalidRecoilLink
-              ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-              : linkedTrial?.preview
-                ? startTrial(linkedTrial.route, true)
-                : linkedTrial || invalidTrialLink
-                  ? openTrials('title', linkedTrial?.challenge)
-                  : linkedWorkshop
-                    ? showDialog('workshop')
-                    : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                        entryUrl.searchParams.get('test') !== 'arc'
-                      ? showDialog('layout-test')
-                      : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                          linkedRunTest?.seed.startsWith('FUSIONS-')
-                        ? showDialog('upgrade-test')
-                        : linkedRunTest
-                          ? startRunTest(linkedRunTest)
-                          : linkedTest
-                            ? startPractice(linkedTest, null, { test: true })
-                            : linkedDaily
-                              ? start()
-                              : startFreshCampaign();
+    : linkedFirstRunPreview === 'warmup'
+      ? startWorkshop([], true)
+      : linkedDrill
+        ? startLinkedSupportDrill(linkedDrill)
+        : linkedGauntletPreview
+          ? startGauntlet(linkedGauntletPreview, true)
+          : linkedRemixGauntletPreview
+            ? linkedRemixGauntletPreview.setup
+              ? (() => {
+                  gauntletSetupPreview = true;
+                  gauntletSetupMode = 'remix';
+                  showDialog('gauntlet-setup');
+                })()
+              : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
+            : linkedGauntletChallenge || invalidGauntletLink
+              ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
+              : linkedRecoilChallenge || invalidRecoilLink
+                ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+                : linkedTrial?.preview
+                  ? startTrial(linkedTrial.route, true)
+                  : linkedTrial || invalidTrialLink
+                    ? openTrials('title', linkedTrial?.challenge)
+                    : linkedWorkshop
+                      ? showDialog('workshop')
+                      : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                          entryUrl.searchParams.get('test') !== 'arc'
+                        ? showDialog('layout-test')
+                        : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                            linkedRunTest?.seed.startsWith('FUSIONS-')
+                          ? showDialog('upgrade-test')
+                          : linkedRunTest
+                            ? startRunTest(linkedRunTest)
+                            : linkedTest
+                              ? startPractice(linkedTest, null, { test: true })
+                              : linkedDaily
+                                ? start()
+                                : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
@@ -4536,7 +4554,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-save-warning]').forEach((but
 });
 $('controls').onclick = openControls;
 $('learn').onclick = () => startWorkshop([], true);
-$('learn').hidden = !needsGuidance;
+$('learn').hidden = false;
 $('warmup-controls').onclick = openControls;
 $('warmup-done').onclick = menu;
 $('dismiss-tip').onclick = () => {
