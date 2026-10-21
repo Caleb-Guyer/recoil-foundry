@@ -529,7 +529,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Hunting Grounds</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Room remaster</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -2896,12 +2896,12 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">BOSS HUNTS · REBUILT</p><h2 id="dialog-title">Hunting Grounds.</h2>' +
-      '<p class="update-tagline">Find the door. Cross the threshold. Face the machine.</p>' +
-      '<dl class="update-notes"><div><dt>Two doors every new Campaign.</dt><dd>Optional hunts wait in rooms 9 and 17, in zones 3 and 5. Each run offers two different machines and favors ones you haven’t beaten. Clear the patrol, then jump at the marked hunt door.</dd></div>' +
-      '<div><dt>Three arenas with a purpose.</dt><dd>Climb the Cableweaver’s vault, shoot above the Bulwark’s shields, or dodge the Demolisher’s charges. A quiet approach leads to a lit threshold. Cross it to seal the arena and begin the fight.</dd></div>' +
-      '<div><dt>Keep what you earn.</dt><dd>Win two different hunts to unlock the Coil carbine. Previous victories still count. Each victory offers a repair or free reroll, then returns you to the cleared patrol with your build. Continue and Retry keep your hunt plan; existing saves keep their original schedule.</dd></div>' +
-      '<div><dt>A clearer first run · 5.7.1.</dt><dd>One small hint follows the actions you still need to learn in the first room. Dismiss it any time. Your first upgrade opens its gun comparison automatically, and Learn to play stays on the title screen whenever you want the safe warm-up.</dd></div></dl>' +
+      '<p class="eyebrow">5.8.0 · ROOMS & COMBAT</p><h2 id="dialog-title">Room remaster.</h2>' +
+      '<p class="update-tagline">Find a landing. Change the angle. Keep moving.</p>' +
+      '<dl class="update-notes"><div><dt>Six rooms with room to move.</dt><dd>Overpass, Cargo switchyard, Warm exchange, Upper return, Scrap bridge and Roof braces have clearer ground routes, broad upper decks and cover placed around their patrols. Low steps help you recover a missed launch. Painted platform ends mark upper landings.</dd></div>' +
+      '<div><dt>Keep your bearings.</dt><dd>Your outfit stays visible above friendly beams, blasts and trails. Committed attack warnings and hostile rounds stay above friendly effects. Busy builds ease cosmetic particles, glows and camera movement while your full gun keeps working.</dd></div>' +
+      '<div><dt>Fresh Campaign layouts.</dt><dd>Start a new Campaign to encounter the remastered designs in the room pool. Your first room keeps its familiar introduction. Continue saves and Daily layouts keep their existing routes.</dd></div>' +
+      '<div><dt>Tell us how it feels.</dt><dd>Open Feedback after a run, or Report an issue from Pause, then choose Playtest. Share your best moment, the first thing that got in your way and whether you wanted another run. You can review and edit your run summary before copying it.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
