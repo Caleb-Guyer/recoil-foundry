@@ -504,7 +504,7 @@ let reportParent = 'settings';
 let reportDraft: ReportDraft | undefined;
 function openReport() {
   reportParent = dialogKind;
-  reportDraft ??= createReportDraft(game);
+  reportDraft ??= createReportDraft(game, reportParent === 'result' ? 'playtest' : 'bug');
   showDialog('issue');
 }
 function backFromReport() {
@@ -2748,6 +2748,7 @@ function showDialog(kind: string) {
   modal.classList.toggle('progress-dialog', kind === 'progress');
   modal.classList.toggle('settings-dialog', kind === 'settings' || kind === 'pause');
   modal.classList.toggle('update-dialog', kind === 'update');
+  modal.classList.toggle('feedback-dialog', kind === 'issue');
   const content = $('dialog-content');
   modal.scrollTop = 0;
   if (kind === 'logbook' || kind === 'workshop')
@@ -2898,7 +2899,7 @@ function showDialog(kind: string) {
     content.innerHTML = creditsMarkup();
     $('back').onclick = backFromCredits;
   } else if (kind === 'issue') {
-    reportDraft ??= createReportDraft(game);
+    reportDraft ??= createReportDraft(game, reportParent === 'result' ? 'playtest' : 'bug');
     issueReportMenu(content, game, backFromReport, reportDraft, reportParent === 'result');
   } else if (kind === 'progress') {
     updateProgressPanel = progressMenu(
@@ -4248,8 +4249,12 @@ function showDialog(kind: string) {
   } else if (kind === 'pause') {
     $('back').focus({ preventScroll: true });
     modal.scrollTop = 0;
-  } else if (['controls', 'progress', 'credits', 'issue', 'next-goal'].includes(kind))
-    $('back').focus();
+  } else if (kind === 'issue') {
+    content
+      .querySelector<HTMLButtonElement>('[data-feedback-type][aria-pressed="true"]')
+      ?.focus({ preventScroll: true });
+    modal.scrollTop = 0;
+  } else if (['controls', 'progress', 'credits', 'next-goal'].includes(kind)) $('back').focus();
   if (
     [
       'upgrade',

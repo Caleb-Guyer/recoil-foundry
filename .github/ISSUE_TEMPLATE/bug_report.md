@@ -14,6 +14,6 @@ Steps to reproduce:
 
 Browser and device (optional):
 
-Game version, mode, seed, room, route and upgrades:
+Game version, mode, active run time, seed, room, route, starting gun and upgrades:
 
-<!-- Feedback after a run, or Settings / Pause → Report an issue, can fill in game details. Remove anything you do not want to share. Screenshots or a replay are welcome, but do not upload personal information or your entire browser profile. -->
+<!-- Feedback → Bug after a run, or Settings / Pause → Report an issue → Bug, can fill in game details. Remove anything you do not want to share. Active run time includes earlier play before Continue and excludes pauses. Screenshots or a replay are welcome; no personal information, save files or browser profiles are needed. -->

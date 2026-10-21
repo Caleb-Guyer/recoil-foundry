@@ -10,7 +10,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 [Watch the official gameplay trailer on YouTube — 52 seconds.](https://www.youtube.com/watch?v=rDDEY7eRPc4)
 
-**First time playing?** [Join the ten-minute 5.6 playtest](docs/playtests/5.6.0/README.md). Play normally, then share what was fun, what got in your way and whether you wanted another run.
+**First time playing?** [Join the playtest discussion](https://itch.io/t/7174290/recoil-foundry-free-browser-does-recoil-movement-make-sense-in-the-first-ten-minutes). Play normally, then share what was fun, what got in your way and whether you actually restarted. Short sessions and returning players are welcome too.
 
 - **141 upgrades**, including 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
 - **Six starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater through different accomplishments.
@@ -20,6 +20,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - A Logbook to uncover, unlocked boss Practice, a Workshop for builds, and death replays.
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
+
+**Playtest feedback — version 5.7.2.** The existing Feedback menu asks three short questions and includes an expandable, editable run summary. Copy your answers into the itch.io discussion or open a GitHub draft. [Details and test instructions](docs/releases/5.7.2.md).
 
 **First steps — version 5.7.1.** One dismissible hint follows the actions you still need to learn in the opening room. The first upgrade opens its real before/after firing-range comparison automatically, and **Learn to play** stays available on the title screen. [Release notes and isolated first-run tests](docs/releases/5.7.1.md).
 
@@ -100,7 +102,7 @@ If the game is silent, check **Sound**, **Music enabled**, and both volume slide
 
 The supported target is **Windows desktop/laptop with keyboard and mouse**. Edge has the most complete verification; basic gameplay is also owner-confirmed in Chrome and Firefox. Controller and touch are experimental. Minimum hardware requirements are not established. [Support and known limitations](docs/browser-support.md).
 
-Choose **Feedback** after a run, or **Settings or Pause → Report an issue**, to share a bug, difficulty feedback or a suggestion. Review the editable run details, then open a GitHub draft or copy the text. Nothing is submitted automatically; posting on GitHub requires an account. You can also [report a bug directly](https://github.com/Caleb-Guyer/recoil-foundry/issues/new?template=bug_report.md). Please describe what happened and how to repeat it; a screenshot or replay can help.
+Choose **Feedback** after a run, or **Settings or Pause → Report an issue → Playtest**, to answer three short questions and review an editable summary of your current run. Copy it into the linked [itch.io discussion](https://itch.io/t/7174290/recoil-foundry-free-browser-does-recoil-movement-make-sense-in-the-first-ten-minutes), or open a GitHub draft. The same menu retains Bug, Difficulty and Suggestion reports. Nothing is submitted automatically; posting requires an account on the chosen site. You can also [report a bug directly](https://github.com/Caleb-Guyer/recoil-foundry/issues/new?template=bug_report.md). Please describe what happened and how to repeat it; a screenshot or replay can help.
 
 ## Development
 

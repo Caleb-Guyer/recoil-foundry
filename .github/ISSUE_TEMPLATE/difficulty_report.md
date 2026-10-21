@@ -10,6 +10,8 @@ Which encounter or upgrade?
 
 Too easy, too hard, or unclear? What happened?
 
-Game version, mode, seed, room, route and upgrades:
+What did you try, and what would have helped?
 
-<!-- Feedback on a result screen can fill in these details. Review and edit them before posting. -->
+Game version, mode, active run time, seed, room, route, starting gun and upgrades:
+
+<!-- Feedback → Difficulty on a result screen can fill in these details. Review and edit them before posting. Active run time includes earlier play before Continue and excludes pauses. For general session feedback, use the Playtest tab or first-ten-minutes form. -->
