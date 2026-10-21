@@ -17,8 +17,8 @@ import {
   getGun,
   type Checkpoint,
 } from '../src/rules.ts';
-import { BRANCH_PARENTS, isBranch } from '../src/upgrade-branches.ts';
-import { maxCombos, withParents } from '../src/branch-builds.ts';
+import { isBranch } from '../src/upgrade-branches.ts';
+import { withParents } from '../src/branch-builds.ts';
 import { dailyForDate } from '../src/daily.ts';
 import { practiceCheckpoint } from '../src/practice.ts';
 
@@ -167,22 +167,6 @@ test('interaction requires a cleared nearby station and normal grounded input; l
   step(g, 1, { jump: true });
   assert.equal(g.mode, 'reforge');
   assert.deepEqual(g.reforge.offers, offers);
-});
-
-test('all swaps preserve path, full dependencies, legal ordering, and compatibility for every maximal build', () => {
-  for (const combo of maxCombos()) {
-    const swaps = reforgeOffers(combo.mods, 'reforge-max-' + combo.code, 11);
-    assert(swaps.length > 0 && swaps.length <= 3, combo.code);
-    assert.equal(new Set(swaps.map((s) => s.to)).size, swaps.length);
-    for (const swap of swaps) {
-      const next = nextBuild(combo.mods, swap);
-      assert(validBuild(next), `${combo.code}/${swap.from}/${swap.to}`);
-      assert.equal(next.length, combo.mods.length);
-      assert.equal(buildPath(next), buildPath(combo.mods));
-      for (const id of next)
-        for (const parent of BRANCH_PARENTS[id] ?? []) assert(next.includes(parent));
-    }
-  }
 });
 
 test('parent upgrades and the last path lock are protected, while legal beam and portal branch replacements are allowed', () => {

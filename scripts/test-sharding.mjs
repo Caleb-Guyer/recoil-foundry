@@ -1,6 +1,7 @@
 export const MAX_COMBO_TEST = 'max-combos.test.ts';
 
-// Only this fixture moves out of the regular suite. New test files remain included.
+// This entry point also imports the exhaustive catalog and Reforge assertions.
+// All other current and future test files remain in the regular suite.
 export function regularTestFiles(files) {
   if (!files.includes(MAX_COMBO_TEST)) throw new Error('Missing maximal-build fixture.');
   const selected = files
@@ -11,15 +12,30 @@ export function regularTestFiles(files) {
 }
 
 export function readMaxComboShard(env = process.env) {
-  const shardValue = env.RF_MAX_COMBO_SHARD,
-    totalValue = env.RF_MAX_COMBO_SHARDS;
+  return readShard(env, 'RF_MAX_COMBO');
+}
+
+export function readRegressionShard(env = process.env) {
+  return readShard(env, 'RF_REGRESSION');
+}
+
+function readShard(env, prefix) {
+  const shardValue = env[prefix + '_SHARD'],
+    totalValue = env[prefix + '_SHARDS'];
   if (shardValue === undefined && totalValue === undefined) return { shard: 1, total: 1 };
   if (![shardValue, totalValue].every((value) => /^[1-9]\d*$/.test(value ?? '')))
-    throw new Error('Set both RF_MAX_COMBO_SHARD and RF_MAX_COMBO_SHARDS to positive integers.');
+    throw new Error(`Set both ${prefix}_SHARD and ${prefix}_SHARDS to positive integers.`);
   const shard = Number(shardValue),
     total = Number(totalValue);
-  validateShard(shard, total);
+  validateShard(shard, total, prefix);
   return { shard, total };
+}
+
+export function selectRegularTestShard(files, { shard, total }) {
+  validateShard(shard, total, 'RF_REGRESSION');
+  if (!files.length || total > files.length)
+    throw new Error('Every regular-test shard must contain test files.');
+  return files.filter((_, index) => index % total === shard - 1);
 }
 
 export function selectMaxComboShard(combos, { shard, total }) {
@@ -30,7 +46,7 @@ export function selectMaxComboShard(combos, { shard, total }) {
   return combos.filter((_, index) => index % total === shard - 1);
 }
 
-function validateShard(shard, total) {
+function validateShard(shard, total, prefix = 'RF_MAX_COMBO') {
   if (
     !Number.isSafeInteger(shard) ||
     !Number.isSafeInteger(total) ||
@@ -38,5 +54,5 @@ function validateShard(shard, total) {
     total < 1 ||
     shard > total
   )
-    throw new Error('RF_MAX_COMBO_SHARD must be between 1 and RF_MAX_COMBO_SHARDS.');
+    throw new Error(`${prefix}_SHARD must be between 1 and ${prefix}_SHARDS.`);
 }

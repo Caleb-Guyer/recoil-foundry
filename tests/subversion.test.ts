@@ -12,8 +12,8 @@ import {
   modPathLabel,
   type Checkpoint,
 } from '../src/rules.ts';
-import { withParents, maxCombos, branchTestFromUrl } from '../src/branch-builds.ts';
-import { SUBVERSION_MODS, SPOOF, isSubversion } from '../src/subversion-rules.ts';
+import { withParents, branchTestFromUrl } from '../src/branch-builds.ts';
+import { SUBVERSION_MODS, isSubversion } from '../src/subversion-rules.ts';
 import { annexTestFromUrl } from '../src/annex-layout.ts';
 import { workshopBuild, discoverBuild } from '../src/workshop-build.ts';
 import {
@@ -166,22 +166,6 @@ for (const chain of [orders, cross])
       );
     },
   );
-
-test('old maximal-combo URLs retain their exact pre-Subversion upgrades', () => {
-  for (const combo of maxCombos()
-    .filter((c) => c.choices.includes('standing-orders'))
-    .slice(0, 24)) {
-    const oldCode = combo.code
-      .split('.')
-      .filter((p) => !isSubversion(p))
-      .join('.');
-    const save = branchTestFromUrl(new URL('https://test/?test=branches&combo=' + oldCode));
-    assert.deepEqual(
-      save?.mods,
-      combo.mods.filter((m) => !isSubversion(m)),
-    );
-  }
-});
 
 test('Standing Orders extends one ally and increases its real maximum health', () => {
   const samples = [];

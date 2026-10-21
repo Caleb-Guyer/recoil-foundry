@@ -1,17 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  availableMods,
-  getGun,
-  loadCheckpoint,
-  MODS,
-  rewardMods,
-  seeded,
-  validBuild,
-  type Vec,
-} from '../src/rules.ts';
-import { WORKSHOP_MODS } from '../src/workshop-upgrades.ts';
-import { branchTestFromUrl, maxCombos, withParents } from '../src/branch-builds.ts';
+import { getGun } from '../src/rules.ts';
 import {
   fixture,
   round,
@@ -45,55 +34,6 @@ const convoyBuild = ['suspension', 'crosshatch', 'convoy'];
 const thermalBuild = ['coolant-rounds', 'cinder', 'thermal-shock'];
 const pocketBuild = ['ricochet', 'banker', 'corner-pocket'];
 const scrapBuild = ['split', 'scrap-feed'];
-
-test('all five additions are legal, reachable, saved, represented in max builds and have isolated presets', () => {
-  assert.equal(MODS.length, 141);
-  assert.equal(WORKSHOP_MODS.length, 5);
-  const combos = maxCombos();
-  for (const m of WORKSHOP_MODS) {
-    const build = withParents([], [m.id])!;
-    assert(validBuild(build), m.id);
-    assert(!availableMods([]).some((other) => other.id === m.id));
-    assert(
-      combos.some((c) => c.mods.includes(m.id)),
-      m.id,
-    );
-    assert(
-      loadCheckpoint({
-        version: 6,
-        seed: 'workshop-upgrades',
-        stage: 8,
-        hp: 100,
-        mods: build,
-        kills: 0,
-        elapsed: 0,
-      }),
-    );
-  }
-  for (const pair of [
-    ['grapnel', 'snapback'],
-    ['convoy', 'thread-the-needle'],
-    ['convoy', 'tripline'],
-    ['thermal-shock', 'flywheel'],
-  ]) {
-    assert.equal(withParents([], pair), null);
-    assert.equal(withParents([], [...pair].reverse()), null);
-  }
-  assert(
-    !rewardMods(['coolant-rounds', 'cinder'], 100, seeded('early'), { stage: 6 }).some(
-      (m) => m.id === 'thermal-shock',
-    ),
-  );
-  assert(
-    rewardMods(['coolant-rounds', 'cinder'], 100, seeded('late'), { stage: 8 }).some(
-      (m) => m.id === 'thermal-shock',
-    ),
-  );
-  for (const key of ['grapnel', 'convoy', 'thermal', 'pocket', 'scrap']) {
-    const save = branchTestFromUrl(new URL('https://test/?test=branches&build=' + key))!;
-    assert(save && validBuild(save.mods));
-  }
-});
 
 test('Grapnel attaches through actual airborne wall impacts, keeps tangential recoil and replaces enemy links', () => {
   const g = fixture(cableBuild);

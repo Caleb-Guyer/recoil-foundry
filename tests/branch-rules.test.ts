@@ -11,13 +11,8 @@ import {
   type Checkpoint,
 } from '../src/rules.ts';
 import { BRANCH_MODS, BRANCH_GROUPS, BRANCH_PARENTS } from '../src/upgrade-branches.ts';
-import {
-  withParents,
-  maxCombos,
-  BRANCH_TEST_BUILDS,
-  branchTestFromUrl,
-} from '../src/branch-builds.ts';
-import { getLevel } from '../src/levels.ts';
+import { withParents, branchTestFromUrl } from '../src/branch-builds.ts';
+
 import { Game } from '../src/game.ts';
 import {
   loadRunHistory,
@@ -59,60 +54,6 @@ test('all branch choices require their complete parents, respect both orders and
       }
   const withoutBurst = withParents([], ['cutting-torch'])!;
   assert(!availableMods(withoutBurst).some((m) => m.id === 'pulse-chamber'));
-});
-
-test('every maximal combination is unique, legal, complete, saveable and addressed by its stable choices', () => {
-  const combos = maxCombos();
-  assert.equal(combos.length, 9216);
-  assert.equal(new Set(combos.map((c) => c.code)).size, combos.length);
-  assert.equal(new Set(combos.map((c) => [...c.mods].sort().join(','))).size, combos.length);
-  for (const combo of combos) {
-    assert(validBuild(combo.mods), combo.code);
-    assert.equal(availableMods(combo.mods, true).length, 0);
-    const save = branchTestFromUrl(new URL('https://test/?test=branches&combo=' + combo.code))!;
-    assert.deepEqual(save.mods, combo.mods);
-    assert(loadCheckpoint(save));
-  }
-  for (const mod of BRANCH_MODS) assert(combos.some((c) => c.mods.includes(mod.id)));
-});
-
-test('branch links build real mirrored rooms and bosses without touching saves, unlocks or discoveries', () => {
-  for (const key of Object.keys(BRANCH_TEST_BUILDS))
-    for (const room of ['room', 'boss'])
-      for (const mirror of ['0', '1']) {
-        const save = branchTestFromUrl(
-          new URL(`https://test/?test=branches&build=${key}&room=${room}&mirror=${mirror}`),
-        )!;
-        assert(save);
-        assert(loadCheckpoint(save));
-        assert.equal(getLevel(save.seed, save.stage).mirrored, mirror === '1');
-        const g = new Game();
-        let writes = 0,
-          victories = 0;
-        g.onCheckpoint = () => writes++;
-        g.onBossDefeated = () => victories++;
-        g.startTest(save);
-        assert.deepEqual(g.mods, save.mods);
-        assert.equal(g.hp, 100);
-        g.startTest(g.testRun!);
-        assert.deepEqual(g.mods, save.mods);
-        assert.equal(writes, 0);
-        assert.equal(victories, 0);
-      }
-  for (const query of [
-    'build=nope',
-    'build=constructor',
-    'build=__proto__',
-    'build=charge&combo=bad',
-    'combo=bad',
-    'max=2',
-    'room=unknown',
-    'mirror=2',
-    'build=pulse&build=charge',
-    'workshop=1',
-    'daily=2026-09-13',
-  ])
-    assert.equal(branchTestFromUrl(new URL('https://test/?test=branches&' + query)), null);
 });
 
 test('Daily remains one deterministic legal pick and branch parents survive Workshop edits', () => {
@@ -242,22 +183,5 @@ test('damaged legacy reward metadata is rejected without throwing during startup
       loadCheckpoint({ version: 6, mods, legacyOffers: [], reward: { offers: [] } }),
       null,
     );
-  }
-});
-
-test('pre-Melt-through maximal links retain exactly their previous upgrades', () => {
-  for (const path of ['precision', 'bullet-hell', 'demolition', 'cryogenic', 'stasis']) {
-    const c = maxCombos().find((c) => c.path === path && c.choices.includes('clean-cut'))!;
-    const oldCode = c.code
-      .split('.')
-      .filter((id) => id !== 'clean-cut')
-      .join('.');
-    const save = branchTestFromUrl(new URL('https://test/?test=branches&combo=' + oldCode))!;
-    assert(save);
-    assert.deepEqual(
-      save.mods,
-      c.mods.filter((id) => !['melt-through', 'clean-cut'].includes(id)),
-    );
-    assert(loadCheckpoint(save));
   }
 });

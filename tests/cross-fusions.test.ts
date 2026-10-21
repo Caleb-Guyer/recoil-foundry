@@ -10,21 +10,11 @@ import {
   Body,
   Composite,
 } from './branches-fixture.ts';
-import { RESONATOR, STORM_CELL } from '../src/cross-fusions.ts';
+import { STORM_CELL } from '../src/cross-fusions.ts';
 import { FLYWHEEL_DISTANCE } from '../src/mass-driver.ts';
-import {
-  getGun,
-  validBuild,
-  availableMods,
-  loadCheckpoint,
-  rewardMods,
-  seeded,
-  isFusion,
-} from '../src/rules.ts';
-import { withParents, branchTestFromUrl, maxCombos } from '../src/branch-builds.ts';
-import { workshopBuild } from '../src/workshop-build.ts';
+import { getGun } from '../src/rules.ts';
+import { withParents } from '../src/branch-builds.ts';
 const near = (a: number, b: number, e = 1e-5) => assert(Math.abs(a - b) < e, `${a} != ${b}`);
-const ids = ['resonator', 'flywheel', 'storm-cell'];
 function resonator() {
   const g = fixture(withParents([], ['resonator'])!);
   wall(g, 600, 400, 40, 600);
@@ -40,34 +30,6 @@ function cell() {
   g.fusions.storm.land(id, { x: 600, y: 728 }, floor, { x: 0, y: -1 });
   return { g, floor, id };
 }
-
-test('new fusions have complete reachable parents, one-fusion gating and safe saved/test/Workshop builds', () => {
-  for (const id of ids) {
-    const build = withParents([], [id])!;
-    assert(validBuild(build));
-    for (const other of ids) if (other !== id) assert.equal(withParents(build, [other]), null);
-    assert(!availableMods(build, true).some((m) => isFusion(m.id)));
-    assert(
-      !rewardMods(build.slice(0, -1), 100, seeded('early'), { stage: 6 }).some((m) => m.id === id),
-    );
-    assert(
-      rewardMods(build.slice(0, -1), 100, seeded('late'), { stage: 7 }).some((m) => m.id === id),
-    );
-    assert(maxCombos().some((c) => c.mods.includes(id)));
-    assert.equal(
-      workshopBuild(
-        build.filter((m) => m !== build.at(-2)),
-        build,
-      ).includes(id),
-      false,
-    );
-  }
-  for (const key of ['resonator', 'flywheel', 'storm']) {
-    const save = branchTestFromUrl(new URL(`https://test/?test=branches&build=${key}`))!;
-    assert(loadCheckpoint(save));
-    assert.equal(save.mods.filter(isFusion).length, 1);
-  }
-});
 
 test('Resonator weakens only the first two pulses and records only actual portal-crossing finisher energy', () => {
   const base = fixture(withParents([], ['pulse-chamber'])!),

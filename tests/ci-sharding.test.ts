@@ -6,6 +6,8 @@ import {
   readMaxComboShard,
   selectMaxComboShard,
   MAX_COMBO_TEST,
+  readRegressionShard,
+  selectRegularTestShard,
 } from '../scripts/test-sharding.mjs';
 
 test('eight CI shards cover every maximal build exactly once with equal current workloads', () => {
@@ -78,4 +80,65 @@ test('the regular CI suite includes every current and newly added test except th
   assert(regularTestFiles([...all, 'future-feature.test.ts']).includes('future-feature.test.ts'));
   assert.throws(() => regularTestFiles(['ordinary.test.ts']));
   assert.throws(() => regularTestFiles([MAX_COMBO_TEST]));
+});
+
+test('four regular shards cover every actual test file exactly once, including future additions', () => {
+  const all = readdirSync(new URL('../tests/', import.meta.url));
+  for (const files of [all, [...all, 'future-feature.test.ts']]) {
+    const regular = regularTestFiles(files);
+    const groups = Array.from({ length: 4 }, (_, i) =>
+      selectRegularTestShard(
+        regular,
+        readRegressionShard({ RF_REGRESSION_SHARD: String(i + 1), RF_REGRESSION_SHARDS: '4' }),
+      ),
+    );
+    assert.equal(new Set(groups.flat()).size, regular.length);
+    assert.deepEqual(groups.flat().sort(), regular);
+    assert(groups.every((group) => group.length > 0));
+    assert(
+      Math.max(...groups.map((g) => g.length)) - Math.min(...groups.map((g) => g.length)) <= 1,
+    );
+    assert.deepEqual(
+      selectRegularTestShard(regularTestFiles([...files].reverse()), { shard: 2, total: 4 }),
+      groups[1],
+      'directory enumeration order must not change the selected files',
+    );
+  }
+});
+
+test('regular runs default to the full suite and reject malformed, incomplete or empty shards', () => {
+  const files = ['a.test.ts', 'b.test.ts', 'c.test.ts'];
+  assert.deepEqual(selectRegularTestShard(files, readRegressionShard({})), files);
+  for (const [shard, total] of [
+    ['0', '4'],
+    ['5', '4'],
+    ['1', '0'],
+    ['-1', '4'],
+    ['1.5', '4'],
+    ['01', '4'],
+    ['1', 'Infinity'],
+    ['9007199254740993', '9007199254740993'],
+    ['1', undefined],
+    [undefined, '4'],
+    ['', '4'],
+    ['1', ''],
+  ])
+    assert.throws(() =>
+      readRegressionShard({ RF_REGRESSION_SHARD: shard, RF_REGRESSION_SHARDS: total }),
+    );
+  assert.throws(() => selectRegularTestShard([], { shard: 1, total: 1 }));
+  assert.throws(() => selectRegularTestShard(files, { shard: 4, total: 4 }));
+  assert.throws(() => selectRegularTestShard(files, { shard: 0, total: 3 }));
+  assert.throws(() => selectRegularTestShard(files, { shard: 4, total: 3 }));
+});
+
+test('regular and exhaustive shard settings cannot silently change each other', () => {
+  assert.deepEqual(readRegressionShard({ RF_MAX_COMBO_SHARD: '2', RF_MAX_COMBO_SHARDS: '8' }), {
+    shard: 1,
+    total: 1,
+  });
+  assert.deepEqual(readMaxComboShard({ RF_REGRESSION_SHARD: '2', RF_REGRESSION_SHARDS: '4' }), {
+    shard: 1,
+    total: 1,
+  });
 });

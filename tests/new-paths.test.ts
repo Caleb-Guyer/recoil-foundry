@@ -1,16 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  availableMods,
-  getGun,
-  loadCheckpoint,
-  MODS,
-  validBuild,
-  rewardMods,
-  seeded,
-} from '../src/rules.ts';
-import { NEW_PATH_MODS, NEW_PATH_PARENTS } from '../src/new-paths.ts';
-import { withParents, maxCombos, branchTestFromUrl } from '../src/branch-builds.ts';
+import { loadCheckpoint } from '../src/rules.ts';
+import { branchTestFromUrl } from '../src/branch-builds.ts';
 import { fixture, round, target, wall, advance, Body, Composite } from './branches-fixture.ts';
 import { COLD } from '../src/cryogenic.ts';
 import { STASIS } from '../src/stasis.ts';
@@ -39,57 +30,6 @@ function hit(g: Game, e: Enemy, extra = {}) {
   g.shots = [];
   return s;
 }
-
-test('all thirteen upgrades have legal reachable prerequisites, mutually exclusive forks and save support', () => {
-  assert.equal(NEW_PATH_MODS.length, 13);
-  assert.equal(MODS.length, 141);
-  for (const mod of NEW_PATH_MODS) {
-    const build = withParents([], [mod.id])!;
-    assert(build && validBuild(build), mod.id);
-    assert(
-      maxCombos().some((c) => c.mods.includes(mod.id)),
-      mod.id,
-    );
-    if (NEW_PATH_PARENTS[mod.id]) assert(!availableMods([]).some((m) => m.id === mod.id));
-    assert(
-      loadCheckpoint({
-        version: 6,
-        seed: 'NEW-PATHS',
-        stage: 0,
-        hp: 100,
-        mods: build,
-        kills: 0,
-        elapsed: 0,
-      }),
-    );
-  }
-  for (const roots of [
-    ['coolant-rounds', 'suspension'],
-    ['coolant-rounds', 'deadeye'],
-    ['suspension', 'shellshock'],
-    ['suspension', 'crossfire'],
-  ]) {
-    assert.equal(withParents([], roots), null);
-    assert.equal(withParents([], roots.reverse()), null);
-  }
-  for (const pair of [
-    ['deep-freeze', 'cold-snap'],
-    ['crosshatch', 'tripline'],
-  ]) {
-    assert.equal(withParents([], pair), null);
-    assert.equal(withParents([], pair.reverse()), null);
-  }
-  assert.equal(getGun(['coolant-rounds']).damage, getGun([]).damage * 0.8);
-  for (const root of ['coolant-rounds', 'suspension']) {
-    let mods = [root];
-    for (let stage = 1; stage < 20; stage++) {
-      const offers = rewardMods(mods, 1, seeded('paths-' + stage), { stage });
-      assert.equal(offers.length, 1);
-      mods.push(offers[0].id);
-      assert(validBuild(mods));
-    }
-  }
-});
 
 test('cold slows then decays, blocked shields and secondary fragments cannot stack it', () => {
   const g = fixture(['coolant-rounds']);

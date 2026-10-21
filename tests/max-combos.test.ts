@@ -1,4 +1,5 @@
 import test from 'node:test';
+import './max-combo-rules.ts';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.ts';
 import { maxCombos } from '../src/branch-builds.ts';
