@@ -5,6 +5,16 @@ import { drawCombatReportImages } from './combat-report-art.ts';
 import { SUPPORT_MASTERIES, type SupportMasteryAttempt } from './support-mastery.ts';
 import './support-drill.css';
 import { SupportDrillView } from './support-drill-view.ts';
+import './room-rematch.css';
+import { RoomRematchView } from './room-rematch-view.ts';
+import {
+  rematchEntry,
+  roomRematchSnapshot,
+  rematchPreviewFromUrl,
+  type RematchEntry,
+  type RoomRematchSnapshot,
+} from './room-rematch.ts';
+import { replayGuidance } from './replay-guidance.ts';
 import { SUPPORT_DRILLS, supportDrillFromUrl, type SupportDrillId } from './support-drill-info.ts';
 import {
   WEAPON_UNLOCKS_KEY,
@@ -566,6 +576,9 @@ game.cosmetics = { ...equippedCosmetics };
 let replayView: ReplayView | null = null;
 let upgradePreview: UpgradePreviewView | null = null;
 let supportDrill: SupportDrillView | null = null;
+let roomRematchView: RoomRematchView | null = null;
+let currentRematchEntry: RematchEntry | null = null;
+let lastRoomRematch: RoomRematchSnapshot | null = null;
 let selectedDrill: SupportDrillId = 'heat';
 let drillPreview = false;
 const previewMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -661,7 +674,9 @@ let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
 const linkedGoalRunPreview = goalRunPreviewFromUrl(entryUrl);
 const linkedFirstRunPreview = firstRunPreviewFromUrl(entryUrl);
+const linkedRematchPreview = rematchPreviewFromUrl(entryUrl);
 let linkedRunTest =
+  linkedRematchPreview?.checkpoint ??
   remasterTestFromUrl(entryUrl) ??
   firstRunTestFromUrl(entryUrl) ??
   goalRunTestFromUrl(entryUrl) ??
@@ -953,6 +968,13 @@ function updateTitle() {
       $('title-hint').textContent = ROOM_REMASTERS[room].guide + ' Isolated playtest · R to retry.';
     }
   }
+  if (linkedRematchPreview && linkedRunTest) {
+    $('play').textContent = 'Test room rematch ↗';
+    $('title-hint').textContent =
+      'Isolated ' +
+      linkedRematchPreview.scene +
+      ' test · 1 health. Let a real attack defeat you, then try Watch replay or Practice this room. Progress stays untouched.';
+  }
   if (linkedRunTest?.seed.startsWith('RF-C90-DRAFT-')) {
     $('play').textContent = 'Test build follow-ups ↗';
     $('title-hint').textContent =
@@ -1000,7 +1022,7 @@ function updateTitle() {
         : 'Watch the amber door. Full health. R to retry.';
   if (linkedRunTest?.seed.startsWith('FABRICATOR-85-'))
     $('title-hint').textContent = 'Interrupt the weld. Full health. R to retry.';
-  if (linkedRunTest?.seed === 'DEATH-REPLAY-86')
+  if (linkedRunTest?.seed === 'DEATH-REPLAY-86' && !linkedRematchPreview)
     $('title-hint').textContent = 'One health. Let an enemy hit you, then watch the replay.';
   if (linkedRunTest?.seed.startsWith('COURIER-') && linkedRunTest.reward)
     $('title-hint').textContent = 'Recovered cargo. 64 health. R to restart test.';
@@ -1410,6 +1432,8 @@ function clearInput(disarm = true) {
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
+  roomRematchView?.dispose();
+  roomRematchView = null;
   supportDrill?.dispose();
   supportDrill = null;
   upgradePreview?.dispose();
@@ -1564,10 +1588,14 @@ function backFromControls() {
   }
 }
 function updateMusic(active = pageActive && document.hasFocus() && !document.hidden) {
-  sound.updateMusic(musicScene(game), active);
+  const soundingGame = roomRematchView?.session.game ?? game;
+  sound.updateMusic(musicScene(soundingGame), active);
   sound.updateTorch(
-    active && game.mode === 'playing' && game.torch.active && game.hitStop <= 0,
-    game.torch.heat,
+    active &&
+      soundingGame.mode === 'playing' &&
+      soundingGame.torch.active &&
+      soundingGame.hitStop <= 0,
+    soundingGame.torch.heat,
   );
 }
 function start(
@@ -2575,6 +2603,7 @@ game.onDeath = (origin) => {
       player: renderer.toCanvas(game.player.position),
       ...(origin ? { origin: renderer.toCanvas(origin) } : {}),
       label: damageCauseText(game.deathCause),
+      guidance: replayGuidance(game.deathCause).tip,
     });
   } catch {
     // Optional replay capture must never block the result screen or saving.
@@ -2584,6 +2613,12 @@ game.onDeath = (origin) => {
 let savingClockOut: Game['clockOut'] | null = null;
 $('skip-clock-out').onclick = () => game.skipClockOut();
 game.onChange = () => {
+  if (game.mode === 'playing' && currentRematchEntry?.source !== game.level) {
+    currentRematchEntry = rematchEntry(game);
+    lastRoomRematch = null;
+  }
+  if (game.mode === 'dead' && !lastRoomRematch)
+    lastRoomRematch = roomRematchSnapshot(game, currentRematchEntry);
   if (!game.recoil.result) {
     recoilOutcome = null;
     recoilGhostSaved = false;
@@ -2703,7 +2738,18 @@ function backFromDrill() {
   showDialog('logbook');
   document.querySelector<HTMLButtonElement>('[data-support-drill]')?.focus({ preventScroll: true });
 }
+function addRoomRematchAction(root: HTMLElement) {
+  if (!lastRoomRematch || game.mode !== 'dead') return;
+  const button = document.createElement('button');
+  button.id = 'practice-room';
+  button.className = 'quiet';
+  button.textContent = 'Practice this room';
+  button.onclick = () => showDialog('room-rematch');
+  root.querySelector('.actions')?.append(button);
+}
 function showDialog(kind: string) {
+  roomRematchView?.dispose();
+  roomRematchView = null;
   supportDrill?.dispose();
   supportDrill = null;
   upgradePreview?.dispose();
@@ -2742,6 +2788,7 @@ function showDialog(kind: string) {
       (kind === 'result' && !!game.gauntlet.state),
   );
   modal.classList.toggle('replay-dialog', kind === 'replay');
+  modal.classList.toggle('rematch-dialog', kind === 'room-rematch');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle('goal-dialog', kind === 'next-goal');
   modal.classList.toggle('drill-dialog', kind === 'support-drill');
@@ -2896,12 +2943,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.8.0 · ROOMS & COMBAT</p><h2 id="dialog-title">Room remaster.</h2>' +
-      '<p class="update-tagline">Find a landing. Change the angle. Keep moving.</p>' +
-      '<dl class="update-notes"><div><dt>Six rooms with room to move.</dt><dd>Overpass, Cargo switchyard, Warm exchange, Upper return, Scrap bridge and Roof braces have clearer ground routes, broad upper decks and cover placed around their patrols. Low steps help you recover a missed launch. Painted platform ends mark upper landings.</dd></div>' +
-      '<div><dt>Keep your bearings.</dt><dd>Your outfit stays visible above friendly beams, blasts and trails. Committed attack warnings and hostile rounds stay above friendly effects. Busy builds ease cosmetic particles, glows and camera movement while your full gun keeps working.</dd></div>' +
-      '<div><dt>Fresh Campaign layouts.</dt><dd>Start a new Campaign to encounter the remastered designs in the room pool. Your first room keeps its familiar introduction. Continue saves and Daily layouts keep their existing routes.</dd></div>' +
-      '<div><dt>Tell us how it feels.</dt><dd>Open Feedback after a run, or Report an issue from Pause, then choose Playtest. Share your best moment, the first thing that got in your way and whether you wanted another run. You can review and edit your run summary before copying it.</dd></div></dl>' +
+      '<p class="eyebrow">5.9.0 · ROOM REMATCHES</p><h2 id="dialog-title">Try another approach.</h2>' +
+      '<p class="update-tagline">Watch the hit. Practice the room. Start your next run ready.</p>' +
+      '<dl class="update-notes"><div><dt>Practice this room.</dt><dd>After a combat-room death, retry that room with full health and your finished gun. Enemies, cover and room machinery start fresh. Retry as often as you like, then return to your original run results.</dd></div>' +
+      '<div><dt>One tip in your replay.</dt><dd>Watch replay now offers a short suggestion based on the recorded lethal attack or hazard. The same tip is tucked beside your rematch, ready when you want it.</dd></div>' +
+      '<div><dt>A place to learn.</dt><dd>Room practice grants no rewards, unlocks or records and does not advance the run. Your original result and replay stay available. Existing Practice, movement trials and extraction keep their own retry options.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3047,6 +3093,18 @@ function showDialog(kind: string) {
     replayView = new ReplayView(deathReplay, content);
     $('retry').onclick = () => start(undefined, true);
     $('back').onclick = () => showDialog('result');
+    addRoomRematchAction(content);
+  } else if (kind === 'room-rematch' && lastRoomRematch) {
+    roomRematchView = new RoomRematchView(
+      content,
+      lastRoomRematch,
+      bindings,
+      () => showDialog('result'),
+      (kind) => {
+        sound.unlock();
+        sound.play(kind);
+      },
+    );
   } else if (kind === 'security') {
     const profile = securityProfile();
     content.innerHTML = securityMenu(profile, selectedSecurity);
@@ -4234,6 +4292,7 @@ function showDialog(kind: string) {
     watch.hidden = !deathReplay.ready;
     watch.onclick = () => showDialog('replay');
     content.querySelector('.actions')?.append(watch);
+    addRoomRematchAction(content);
   }
   if (kind === 'result') {
     const feedback = document.createElement('button');
@@ -4284,6 +4343,8 @@ function showDialog(kind: string) {
   }
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (kind === 'replay') $('replay-play').focus();
+  if (kind === 'room-rematch')
+    content.querySelector<HTMLButtonElement>('[data-rematch-toggle]')?.focus();
   if (kind === 'logbook')
     content.querySelector<HTMLElement>('[data-section][aria-pressed="true"]')?.focus();
   if (inputDevice === 'controller') focusControllerMenu(modal);
@@ -4431,12 +4492,23 @@ function pollController(now: number) {
   if (sample.disconnected && inputDevice === 'controller') {
     useInputDevice('pointer');
     if (supportDrill?.isPlaying) supportDrill.toggle();
+    if (roomRematchView?.isPlaying) roomRematchView.toggle();
     if (game.mode === 'playing') showDialog('pause');
     $('save-status').textContent = 'Controller disconnected. Game paused.';
     return null;
   }
   if (sample.activity) useInputDevice('controller');
   if (inputDevice !== 'controller') return null;
+  if (roomRematchView) {
+    if (sample.back) showDialog('result');
+    else if (sample.pause) roomRematchView.toggle();
+    else if (roomRematchView.isPlaying) return sample;
+    else {
+      if (sample.navigation) navigateControllerMenu(modal, sample.navigation);
+      if (sample.confirm) confirmControllerMenu(modal);
+    }
+    return null;
+  }
   if (supportDrill) {
     if (sample.back) backFromDrill();
     else if (sample.pause) supportDrill.toggle();
@@ -4601,6 +4673,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'room-rematch') {
+    showDialog('result');
+    return;
+  }
   if (dialogKind === 'next-goal') {
     backFromGoal();
     return;
@@ -4681,6 +4757,11 @@ function cancelDialog() {
   resume();
 }
 window.addEventListener('keydown', (e) => {
+  if (roomRematchView) {
+    useInputDevice('pointer');
+    roomRematchView.keyDown(e);
+    return;
+  }
   if (supportDrill) {
     useInputDevice('pointer');
     supportDrill.keyDown(e);
@@ -4820,6 +4901,7 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
   keys.delete(e.code);
   supportDrill?.keyUp(e);
+  roomRematchView?.keyUp(e);
 });
 window.addEventListener('pointerdown', () => useInputDevice('pointer'), { capture: true });
 window.addEventListener(
@@ -4918,6 +5000,13 @@ function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   const pad = pollController(now);
+  roomRematchView?.frame(
+    dt,
+    now,
+    renderer.reduced,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+    pad,
+  );
   supportDrill?.frame(
     dt,
     now,

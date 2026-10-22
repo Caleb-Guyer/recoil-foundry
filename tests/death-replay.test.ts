@@ -241,10 +241,13 @@ function viewerFixture(t: test.TestContext) {
     captureStream: () => ({ getTracks: () => [{ stop: () => trackStops++ }] }),
   };
   const elements = new Map(
-    ['#replay-play', '#replay-save', '#replay-status', '#replay-download'].map((id) => [
-      id,
-      { disabled: false, hidden: false, textContent: '', onclick: () => {} },
-    ]),
+    [
+      '#replay-play',
+      '#replay-save',
+      '#replay-status',
+      '#replay-download',
+      '[data-replay-guidance]',
+    ].map((id) => [id, { disabled: false, hidden: false, textContent: '', onclick: () => {} }]),
   );
   const root = {
     innerHTML: '',
@@ -253,7 +256,11 @@ function viewerFixture(t: test.TestContext) {
   const replay = new DeathReplay(surface as unknown as HTMLCanvasElement);
   replay.buffer.add({ at: 0, data: new Blob(['first']), bytes: 5 });
   replay.buffer.add({ at: 5, data: new Blob(['last']), bytes: 4 });
-  replay.impact = { player: { x: 1, y: 1 }, label: 'Collision' };
+  replay.impact = {
+    player: { x: 1, y: 1 },
+    label: 'Collision',
+    guidance: 'Leave space around the machine.',
+  };
   const step = async (now: number) => {
     const batch = [...callbacks.values()];
     callbacks.clear();
@@ -284,6 +291,11 @@ test('closing playback releases late decoded images and its animation/listeners'
       }),
   );
   const view = f.view();
+  assert.equal(
+    f.elements.get('[data-replay-guidance]')!.textContent,
+    'Try this: Leave space around the machine.',
+  );
+  assert.equal(f.elements.get('[data-replay-guidance]')!.hidden, false);
   await f.step(0);
   view.dispose();
   resolve({ close: () => closed++ });

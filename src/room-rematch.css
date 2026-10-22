@@ -1,0 +1,89 @@
+dialog.rematch-dialog {
+  width: min(1280px, calc(100% - 24px));
+  padding: 22px;
+}
+.rematch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+.rematch-header h2 {
+  font-size: clamp(25px, 3vw, 36px);
+  margin: 0;
+}
+.rematch-header .eyebrow {
+  margin-top: 0;
+}
+.rematch-scope,
+.rematch-controls {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 10px 0;
+}
+.rematch-guidance {
+  margin: 8px 0 12px;
+  font-size: 13px;
+}
+.rematch-guidance p {
+  max-width: 78ch;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.rematch-canvas {
+  width: 100%;
+  height: clamp(300px, 56vh, 640px);
+  display: block;
+  background: #101817;
+  border: 1px solid #354440;
+  touch-action: none;
+  cursor: crosshair;
+}
+.rematch-canvas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.rematch-footer {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.rematch-footer progress {
+  width: 110px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.replay-guidance {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+  margin: 12px 0;
+}
+.rematch-touch {
+  display: none;
+  gap: 8px;
+  margin: 12px 0;
+}
+@media (hover: none), (pointer: coarse) {
+  .rematch-touch {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .rematch-touch button {
+    min-width: 64px;
+    min-height: 48px;
+    touch-action: none;
+  }
+}
+@media (max-width: 600px) {
+  .rematch-header,
+  .rematch-footer {
+    flex-wrap: wrap;
+  }
+  dialog.rematch-dialog {
+    padding: 16px;
+  }
+}

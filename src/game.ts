@@ -487,7 +487,8 @@ export class Game {
     if (score.level === 3) this.onCommendation('redline');
   }
   missedUpgrades = 0;
-  testRun: Checkpoint | null = null;
+  // An in-memory room copy is never a persisted checkpoint or a Practice unlock.
+  testRun: (Checkpoint & { rematchRoom?: Level }) | null = null;
   detour = false;
   maintenance = new MaintenanceSystem(this);
   recoil = new RecoilTrials(this);
@@ -766,8 +767,8 @@ export class Game {
       true,
     );
   }
-  startTest(save: Checkpoint) {
-    this.start(save.seed, save, null, save);
+  startTest(save: Checkpoint, rematchRoom?: Level) {
+    this.start(save.seed, save, null, rematchRoom ? { ...save, rematchRoom } : save);
     if (save.seed === 'EXITS-73' && this.escape) {
       Body.setPosition(this.player, { x: 6600, y: 722 });
       Body.setVelocity(this.player, { x: 0, y: 0 });
@@ -783,7 +784,7 @@ export class Game {
     seed: string,
     save?: Checkpoint,
     practice: PracticeSession | null = null,
-    testRun: Checkpoint | null = null,
+    testRun: (Checkpoint & { rematchRoom?: Level }) | null = null,
     workshop = false,
     securityLevel: SecurityLevel = 0,
     factoryRules: boolean | 1 | 2 | 3 | 4 = true,
@@ -829,7 +830,7 @@ export class Game {
     this.bossRemixes =
       this.encounters === 1 &&
       !practice &&
-      !testRun &&
+      (!testRun || !!testRun.rematchRoom) &&
       !workshop &&
       !/^RF-D\d+-/.test(this.seed) &&
       (save ? save.bossRemixes === 1 : remixRules);
@@ -849,7 +850,7 @@ export class Game {
         : null;
     this.securityRecorded = !!save?.overtime;
     this.factory =
-      !practice && !testRun && !workshop && !/^RF-D\d+-/.test(this.seed)
+      !practice && (!testRun || !!testRun.rematchRoom) && !workshop && !/^RF-D\d+-/.test(this.seed)
         ? save
           ? save.factory
             ? structuredClone(save.factory)
@@ -1005,7 +1006,10 @@ export class Game {
   }
   save() {
     if (this.practice || this.testRun || this.workshop.active) return;
-    this.onCheckpoint({
+    this.onCheckpoint(this.checkpointSnapshot());
+  }
+  checkpointSnapshot(): Checkpoint {
+    return {
       version: 6,
       startingGun: this.startingGun,
       ...(this.encounters ? { encounters: this.encounters } : {}),
@@ -1071,7 +1075,7 @@ export class Game {
             },
           }
         : {}),
-    });
+    };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
     this.uprising.clear();
@@ -1299,7 +1303,9 @@ export class Game {
     this.level = teamworkLevel(this, this.level);
     this.level = remasterTestLevel(this, this.level);
     this.level = huntRoom ?? this.level;
-    if (this.canOvertime) this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
+    if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
+    if (this.canOvertime && !this.testRun?.rematchRoom)
+      this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
     wall(this.worldWidth / 2, 790, this.worldWidth, 100);
     wall(-30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
     wall(this.worldWidth + 30, (this.worldTop + 800) / 2, 60, 900 - this.worldTop);
@@ -1396,6 +1402,7 @@ export class Game {
     this.hunts.reset(clearedRoom);
   }
   startEscape() {
+    if (this.testRun?.rematchRoom) return;
     if (this.practice || this.detour || this.workshop.active || this.shutdown.chamber) return;
     if (this.escape || this.stage !== STAGES - 1 || !this.clear || this.mode !== 'playing') return;
     this.loadRoom(true);
@@ -1976,6 +1983,10 @@ export class Game {
       this.onSound('clear');
       this.reforge.arrive();
       this.onChange();
+    }
+    if (this.testRun?.rematchRoom && this.clear) {
+      this.setMode('won');
+      return;
     }
     if (this.hunts.complete()) return;
     if (
@@ -3822,6 +3833,7 @@ export class Game {
     return this.enemies.filter((e) => !e.courier).length;
   }
   openReward(enterDetour = false, route?: RouteChoice, region?: RegionChoice) {
+    if (this.testRun?.rematchRoom) return;
     if (this.testRun?.annex) {
       if (this.mode === 'playing' && this.clear && !this.combatEnemyCount && !this.waves.pending) {
         this.setMode('won');

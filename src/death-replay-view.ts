@@ -71,6 +71,7 @@ export class DeathReplay {
     });
     this.impact = {
       label: impact.label,
+      ...(impact.guidance ? { guidance: impact.guidance } : {}),
       player: point(impact.player),
       ...(impact.origin ? { origin: point(impact.origin) } : {}),
     };
@@ -132,6 +133,7 @@ export class ReplayView {
     root.innerHTML =
       '<h2 id="dialog-title">Last moments.</h2>' +
       '<canvas class="replay-canvas" role="img" aria-label="Replay of the final seconds before death"></canvas>' +
+      '<p class="replay-guidance" data-replay-guidance hidden></p>' +
       '<div class="replay-controls"><button id="replay-play" class="quiet">Pause</button>' +
       '<button id="replay-save" class="quiet">Save clip</button>' +
       '<a id="replay-download" class="quiet" hidden>Download clip</a>' +
@@ -139,6 +141,11 @@ export class ReplayView {
       '<div class="actions"><button id="retry" class="primary">Again ↗</button>' +
       '<button id="back" class="quiet">Back</button></div>';
     this.canvas = root.querySelector('canvas')!;
+    const guidance = root.querySelector<HTMLElement>('[data-replay-guidance]');
+    if (guidance && replay.impact?.guidance) {
+      guidance.textContent = 'Try this: ' + replay.impact.guidance;
+      guidance.hidden = false;
+    }
     this.canvas.width = WIDTH;
     this.canvas.height = HEIGHT;
     this.canvas.setAttribute('aria-label', 'Death replay · ' + replay.impact?.label);

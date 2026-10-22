@@ -52,7 +52,7 @@ export class Hunts {
     this.enabled =
       g.encounters === 1 &&
       !g.practice &&
-      !g.testRun &&
+      (!g.testRun || !!g.testRun.rematchRoom) &&
       !g.workshop.active &&
       !/^RF-D\d+-/.test(g.seed) &&
       !!(save ? save.huntRules : rules);

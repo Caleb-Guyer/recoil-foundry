@@ -57,6 +57,7 @@ export interface ReplayImpact {
   player: Vec;
   origin?: Vec;
   label: string;
+  guidance?: string;
 }
 
 export function replayTestFromUrl(url: URL): Checkpoint | null {
