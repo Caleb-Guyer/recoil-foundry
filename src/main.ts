@@ -968,13 +968,6 @@ function updateTitle() {
       $('title-hint').textContent = ROOM_REMASTERS[room].guide + ' Isolated playtest · R to retry.';
     }
   }
-  if (linkedRematchPreview && linkedRunTest) {
-    $('play').textContent = 'Test room rematch ↗';
-    $('title-hint').textContent =
-      'Isolated ' +
-      linkedRematchPreview.scene +
-      ' test · 1 health. Let a real attack defeat you, then try Watch replay or Practice this room. Progress stays untouched.';
-  }
   if (linkedRunTest?.seed.startsWith('RF-C90-DRAFT-')) {
     $('play').textContent = 'Test build follow-ups ↗';
     $('title-hint').textContent =
@@ -1190,6 +1183,15 @@ function updateTitle() {
         ? 'Try the warm-up'
         : 'Preview first ' + (linkedFirstRunPreview === 'opening' ? 'room' : 'upgrade');
     $('title-hint').textContent = 'First-run preview. Your save stays untouched. R to retry.';
+  }
+  // Rematches reuse real encounter fixtures; their invitation must take
+  // precedence over those fixtures' older title labels.
+  if (linkedRematchPreview && linkedRunTest) {
+    $('play').textContent = 'Test room rematch ↗';
+    $('title-hint').textContent =
+      'Isolated ' +
+      linkedRematchPreview.scene +
+      ' test · 1 health. Let a real attack defeat you, then try Watch replay or Practice this room. Progress stays untouched.';
   }
   updateNextGoal();
 }
