@@ -1,6 +1,6 @@
 import { isHunt } from './hunt-rules.ts';
 import type { Game } from './game.ts';
-import { isBossRemix, BOSS_REMIXES } from './boss-remix-rules.ts';
+import { isBossRemix, validRemixIdentity } from './boss-remix-rules.ts';
 import { validBlueprintMods } from './blueprints.ts';
 import {
   loadEncounters,
@@ -13,7 +13,7 @@ import {
 export const PRACTICE_RECORDS_KEY = 'rf-practice-records-v1';
 // Bump whenever physics, boss AI, arenas, presets or upgrade balance changes.
 // Previous records remain readable, but never compete with a new ruleset.
-export const PRACTICE_RULESET = 3;
+export const PRACTICE_RULESET = 4;
 export const PRACTICE_RECORD_LIMIT = 200;
 export const CHALLENGE_CODE_LIMIT = 8192;
 export interface PracticeBuild extends Encounter {
@@ -48,9 +48,7 @@ function validIdentity(value: Record<string, unknown>): boolean {
     typeof value.kind !== 'string' ||
     !Object.hasOwn(PRACTICE_BOSSES, value.kind) ||
     (value.remix !== undefined &&
-      (!isBossRemix(value.remix) ||
-        BOSS_REMIXES[value.remix].boss !== value.kind ||
-        value.seed !== 'REMIX-' + value.remix)) ||
+      (!isBossRemix(value.remix) || !validRemixIdentity(value.remix, value.kind, value.seed))) ||
     typeof value.seed !== 'string' ||
     !value.seed.length ||
     value.seed.length > 40 ||

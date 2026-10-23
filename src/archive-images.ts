@@ -1,7 +1,7 @@
 import Matter from 'matter-js';
 import { BoundedCache } from './bounded-cache.ts';
 import { isHunt, huntSeed } from './hunt-rules.ts';
-import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
+import { BOSS_REMIXES, isBossRemix, currentRemixEncounter } from './boss-remix-rules.ts';
 import { Game } from './game.ts';
 import { Renderer } from './render.ts';
 import { createAuditorRig } from './auditor.ts';
@@ -38,7 +38,7 @@ export function archiveCheckpoint(id: string): Checkpoint {
   if (id.startsWith('remix:') && isBossRemix(id.slice(6))) {
     const remix = id.slice(6) as import('./boss-remix-rules.ts').BossRemixId;
     return {
-      ...testCheckpoint('REMIX-' + remix, BOSS_REMIXES[remix].stage),
+      ...testCheckpoint(currentRemixEncounter(remix).seed, BOSS_REMIXES[remix].stage),
       version: 6,
       bossRemix: remix,
     };

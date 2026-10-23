@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
-import { reclaimerFinale } from '../src/boss-progression.ts';
+import { reclaimerFinale, finalArsenalSeed } from '../src/boss-progression.ts';
 import { getLevel } from '../src/levels.ts';
 import { newCampaignSeed } from '../src/run-seed.ts';
 import { getOvertimeLevel, overtimeSeed } from '../src/overtime.ts';
@@ -40,8 +40,8 @@ function saveOf(g: Game) {
   return valid;
 }
 
-test('fresh Campaigns select the Reclaimer last with at most one earlier Interceptor', () => {
-  assert(reclaimerFinale(newCampaignSeed(undefined, () => 123)));
+test('revision 94 retains its briefly published boss order for Continue and replays', () => {
+  assert(finalArsenalSeed(newCampaignSeed(undefined, () => 123)));
   const seen = new Set<string>();
   for (let i = 0; i < 80; i++) {
     const seed = 'RF-C94-ORDER-' + i;
@@ -97,7 +97,7 @@ for (const finale of UPRISING_FINALES)
       assert.equal(continued.hp, g.hp);
       assert.deepEqual(continued.mods, g.mods);
       if (finale === 'hunted') {
-        assert(g.uprising.status.includes('Reclaimer pursuit volleys'));
+        assert(g.uprising.status.includes('Interceptor pursuit volleys'));
         const e = g.enemies[0];
         Matter.Body.setPosition(e.body, { x: 1400, y: 200 });
         Matter.Body.setPosition(g.player, { x: 1000, y: 200 });

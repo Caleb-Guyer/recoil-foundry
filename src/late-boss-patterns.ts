@@ -95,5 +95,5 @@ export function lateInterceptorAngles(id: BossRemixId | undefined, e: Enemy) {
     const shift = rig.volley > 0 ? 0.09 : 0;
     return [-0.54, -0.36, -0.18, 0.18, 0.36, 0.54].map((offset) => aim + offset + shift);
   }
-  return weaponAngles(rig.move, e.aim, e.phase, rig.caught);
+  return weaponAngles(rig.move, e.aim, e.phase, rig.caught, rig.volley);
 }

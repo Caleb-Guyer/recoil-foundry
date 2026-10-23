@@ -60,6 +60,16 @@ export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, 
   c.closePath();
   c.fill();
   c.stroke();
+  if (rig.finale) {
+    c.strokeStyle = ['#d3b188', '#eea767', '#f08368'][e.phase];
+    c.lineWidth = 2;
+    for (const side of [-1, 1]) {
+      const x = side * (31 + (open ? 5 : 0));
+      c.strokeRect(x - 3, -17, 6, 29);
+      c.fillStyle = ['#aa9b78', '#d7a06c', '#ef8e69'][e.phase];
+      for (let n = 0; n <= e.phase; n++) c.fillRect(x - 2, -13 + n * 8, 4, 4);
+    }
+  }
   c.fillStyle = '#18262a';
   c.fillRect(-21, -22, 42, 10);
   c.fillStyle = '#f0b47f';

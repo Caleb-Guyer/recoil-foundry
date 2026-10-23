@@ -33,6 +33,6 @@ export const INTERCEPTOR_VAULT: Layout = {
 export const RECLAIMER_ARENA: Layout = {
   ...INTERCEPTOR_ARENA,
   id: 'reclaimer-roof',
-  name: 'Reclaimer command roof',
+  name: 'Interceptor command roof',
   spawns: [{ kind: 'boss', x: 1450, y: 300 }],
 };

@@ -43,6 +43,24 @@ export function rivalWarningLanes(g: Game, e: Enemy): { from: Vec; to: Vec; bank
 export function drawRivalEffects(c: CanvasRenderingContext2D, g: Game, e: Enemy) {
   const rig = e.interceptor!;
   c.save();
+  if (rig.move === 'lockdown' && e.attack !== 'vault' && e.state === 'windup') {
+    c.strokeStyle = '#e8c16c';
+    c.lineWidth = 1.5;
+    c.setLineDash([5, 5]);
+    for (const point of rig.zones) {
+      c.globalAlpha = 0.6;
+      c.beginPath();
+      c.arc(point.x, point.y, g.overtime ? 90 : 80, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(point.x - 10, point.y);
+      c.lineTo(point.x + 10, point.y);
+      c.moveTo(point.x, point.y - 10);
+      c.lineTo(point.x, point.y + 10);
+      c.stroke();
+    }
+    c.setLineDash([]);
+  }
   for (const charge of rig.charges) {
     const progress = clamp(1 - charge.left / charge.duration, 0, 1);
     c.strokeStyle = '#e8c16c';

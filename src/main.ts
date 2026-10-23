@@ -167,6 +167,7 @@ import { vectorTestFromUrl } from './practice.ts';
 import { wallcrawlerTestFromUrl } from './practice.ts';
 import { counterweightTestFromUrl } from './practice.ts';
 import { grindshotTestFromUrl, interceptorGrindTestFromUrl } from './practice.ts';
+import { finaleTestFromUrl } from './final-arsenal.ts';
 import './style.css';
 import './starting-gun.css';
 import {
@@ -543,7 +544,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Enemy remaster</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Final arsenal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -761,6 +762,7 @@ let linkedRunTest =
   vectorTestFromUrl(entryUrl) ??
   counterweightTestFromUrl(entryUrl) ??
   wallcrawlerTestFromUrl(entryUrl) ??
+  finaleTestFromUrl(entryUrl) ??
   interceptorGrindTestFromUrl(entryUrl) ??
   grindshotTestFromUrl(entryUrl) ??
   crossingTestFromUrl(entryUrl) ??
@@ -955,7 +957,7 @@ function updateTitle() {
   if (linkedRunTest?.seed.startsWith('COUNTERSHOT-61-'))
     $('play').innerHTML = 'Test Countershot <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('SAW-BOSS-53-'))
-    $('play').innerHTML = 'Test Interceptor saws <span aria-hidden="true">↗</span>';
+    $('play').innerHTML = 'Test Reclaimer saws <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed === 'GRIND-52')
     $('play').innerHTML = 'Test Grindshot <span aria-hidden="true">↗</span>';
   if (linkedRunTest?.seed.startsWith('CROSSING-51-'))
@@ -994,6 +996,12 @@ function updateTitle() {
             : 'Shoot down. Go up.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
+  if (linkedRunTest?.seed.startsWith('RF-C95-F-')) {
+    $('play').textContent = linkedRunTest.overtime
+      ? 'Test NG+ Reclaimer ↗'
+      : 'Test the Reclaimer ↗';
+    $('title-hint').textContent = 'Final arsenal · normal controls · isolated test · R to retry.';
+  }
   if (linkedRunTest?.security) {
     $('play').textContent =
       'Test ' + securityLabel(linkedRunTest.security.level).split(' · ')[0] + ' ↗';
@@ -3053,11 +3061,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.11.0 · ENEMY REMASTER</p><h2 id="dialog-title">Read the machine.</h2>' +
-      '<p class="update-tagline">A locked rush. A braced gunner. A different angle.</p>' +
-      '<dl class="update-notes"><div><dt>Patrols with purpose.</dt><dd>New Campaign runners brace before a short straight rush. Gunners step along their platform before locking a shot, and later flyers change flanks between three-lane volleys. Committed attacks keep their aim.</dd></div>' +
-      '<div><dt>Three encounters to read.</dt><dd>Pursuit lane, Split-level patrol and Mortar crossing introduce a lone machine before backup arrives. Broad decks and solid shelters offer different ways through the fight.</dd></div>' +
-      '<div><dt>Wear you can see.</dt><dd>Cracked panels, dimmed lamps and exposed mechanisms show damage. Compact wreckage keeps the firing lanes clear. Room one stays calm; older saves and Daily challenges keep their existing behavior.</dd></div></dl>' +
+      '<p class="eyebrow">5.12.0 · FINAL ARSENAL</p><h2 id="dialog-title">Meet the Reclaimer.</h2>' +
+      '<p class="update-tagline">Your weapon tricks. Nineteen attacks. One final supervisor.</p>' +
+      '<dl class="update-notes"><div><dt>The rival has a name.</dt><dd>The machine that copies your gun is now the Reclaimer. It guards the last room in every new Campaign route. The other mobile security boss is the Interceptor.</dd></div>' +
+      '<div><dt>An arsenal that escalates.</dt><dd>Sweeping fans, rotating ring gaps and marked floor charges join the existing weapon tricks. Later phases link pairs of attacks, then open the armor for a longer punish window. Each volley keeps its warning and aim lock.</dd></div>' +
+      '<div><dt>A harder return.</dt><dd>New Game+ opens the full arsenal immediately, adds follow-up volleys and links attacks more tightly. Start a fresh Campaign for the new finale; older saved fights retain their rules.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

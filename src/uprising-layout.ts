@@ -1,6 +1,6 @@
 import type { Level } from './levels.ts';
 import { UPRISING_ROOMS } from './uprising-rooms.ts';
-import { reclaimerFinale } from './boss-progression.ts';
+import { reclaimerFinale, finalArsenalSeed } from './boss-progression.ts';
 import {
   UPRISING_DISTRICTS,
   uprisingRoute,
@@ -78,7 +78,10 @@ export function uprisingLevel(base: Level, run: UprisingRun, stage: number, seed
     level.magnets = [];
     level.spawns = [
       {
-        kind: finale === 'hunted' && !reclaimerFinale(seed) ? 'interceptor' : 'boss',
+        kind:
+          finalArsenalSeed(seed) || (finale === 'hunted' && !reclaimerFinale(seed))
+            ? 'interceptor'
+            : 'boss',
         x: 1400,
         y: finale === 'hunted' ? 660 : 700,
       },

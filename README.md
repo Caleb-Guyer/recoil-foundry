@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Final Arsenal — version 5.12.0.** The player-mimicking final boss is now the **Reclaimer**; the other security supervisor is the **Interceptor**. Nineteen weapon attacks escalate across three phases, with sweeping fans, rotating ring gaps, floor charges and linked attacks. New Game+ opens the full arsenal immediately and adds harder follow-ups. [Release notes and playtests](docs/releases/5.12.0.md).
+
 **Reclaimer finale — version 5.11.1.** Fresh Campaigns fight the Sorter or Interceptor in Reclamation, then face the Reclaimer in room 20. Job outcomes change the Reclaimer's defense without replacing it; new Overtime laps use the same boss order. Earned Practice keeps each encounter's original stage and upgrade count. [Release notes and four isolated tests](docs/releases/5.11.1.md).
 
 **Enemy Remaster — version 5.11.0.** Runners brace for committed rushes, gunners reposition along safe platforms, and later flyers change flanks between locked volleys. Three authored patrol encounters open with one machine before backup arrives. Visible chassis wear and compact wreckage give ordinary machines more character. New Campaigns introduce the behavior gradually; room one, earlier saves and Daily challenges keep their existing combat. [Release notes and six isolated playtests](docs/releases/5.11.0.md).

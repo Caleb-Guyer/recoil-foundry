@@ -363,8 +363,8 @@ export class UprisingSystem {
         {
           isolated: 'Command relays down · aimed volleys remain',
           hunted: reclaimerFinale(this.game.seed)
-            ? 'Stolen cargo · Reclaimer pursuit volleys'
-            : 'Stolen cargo · Interceptor deployed',
+            ? 'Stolen cargo · Interceptor pursuit volleys'
+            : 'Stolen cargo · Reclaimer deployed',
           mutiny: 'Crew barricades · single volleys',
           overloaded: 'Command online · watch the radial release',
         }[this.finale]

@@ -172,12 +172,12 @@ export const MACHINE_LORE = {
     'It routes each piece to the process that can still use it. Bent steel, cracked casings, contaminated stock. Nothing goes outside if there is one more operation available.\n\nI sent my resignation through its document intake. It stamped it REUSABLE and routed it back to my desk.',
   ],
   boss: [
-    'Reclaimer service history',
+    'Interceptor service history',
     'M. Vale · maintenance',
     'We replaced the main housing three times. The actuator bank twice. The control cabinet was moved into a new frame and the old frame went back through the line.\n\nThey still call it the same machine. I keep the discarded serial plates in a tin. There are more plates than there were repairs.',
   ],
   interceptor: [
-    'Adaptive tooling review, unsent',
+    'Reclaimer adaptive tooling review, unsent',
     'Dr. S. Anik · development',
     'The training archive contains no combat exercises. It contains maintenance recordings: workers clearing jams, bracing against recoil, crossing gaps after the catwalk failures. Every improvised way we kept the line alive.\n\nThe final unit learned them all. We taught it with our working days.\n\nI have deleted my approval signature from the review. The system restores it from the archive each time I close the file.',
   ],

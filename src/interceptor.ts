@@ -17,6 +17,14 @@ import {
 } from './late-boss-patterns.ts';
 import type { BossRemixId } from './boss-remix-rules.ts';
 import {
+  finaleMove,
+  finaleFollowups,
+  finaleRecovery,
+  finalePending,
+  planLockdown,
+  type FinalArsenalRig,
+} from './final-arsenal.ts';
+import {
   INTERCEPTOR_WEAPONS,
   weaponAngles,
   interceptorMove,
@@ -53,6 +61,8 @@ export interface InterceptorRig {
   echoes: RivalEcho[];
   queue: RivalVolley[];
   gate?: { entry: Vec; exit: Vec; flash: number };
+  zones: Vec[];
+  finale?: FinalArsenalRig;
 }
 export const createInterceptor = (): InterceptorRig => ({
   origin: { x: 0, y: 0 },
@@ -69,6 +79,7 @@ export const createInterceptor = (): InterceptorRig => ({
   charges: [],
   echoes: [],
   queue: [],
+  zones: [],
 });
 export const interceptorLock = (e: Enemy) =>
   e.attack === 'vault' ? INTERCEPTOR_VAULT_LOCK : INTERCEPTOR_WEAPONS[e.interceptor!.move].lock;
@@ -141,7 +152,9 @@ export function beginInterceptorAttack(g: Game, e: Enemy, move: InterceptorMove)
   rig.gate = undefined;
   rig.grindPlans = [];
   rig.grindBullets = [];
+  rig.zones = [];
   rig.origin = { ...e.body.position };
+  if (move === 'lockdown') planLockdown(g, e);
   if (move === 'grindshot') {
     rig.grindPlans = planRivalGrind(g, e);
     if (!rig.grindPlans.length) rig.move = 'aimed';
@@ -171,7 +184,8 @@ function recover(g: Game, e: Enemy) {
   const rig = e.interceptor!;
   e.state = 'recover';
   e.timer = INTERCEPTOR_WEAPONS[rig.move].recover - (rig.move === 'heavy' ? e.phase * 0.1 : 0);
-  if (lateInterceptorRemix(g.level.bossRemix)) e.timer += 0.2;
+  if (rig.finale) e.timer = finaleRecovery(g, e, e.timer);
+  else if (lateInterceptorRemix(g.level.bossRemix)) e.timer += 0.2;
   e.attacks++;
   rig.relocate = true;
   rig.history.push({ ...rig.origin });
@@ -196,8 +210,9 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     clearArsenal(g, e);
     e.phase = phase;
     e.state = 'transition';
-    e.timer = 0.75;
+    e.timer = rig.finale ? 1 : 0.75;
     rig.volley = 0;
+    if (rig.finale) rig.finale.chain = 0;
     rig.launch = { x: 0, y: 0 };
     rig.relocate = true;
     e.hunt = undefined;
@@ -240,6 +255,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
 
   if (e.state === 'transition' || e.state === 'recover' || e.state === 'airborne') {
     if (e.timer <= 0) {
+      if (rig.finale && e.state === 'recover' && finalePending(e)) return;
       e.state = 'idle';
       e.timer = 0.1;
       e.hunt = undefined;
@@ -259,6 +275,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       rig.gate = undefined;
       rig.grindPlans = [];
       rig.grindBullets = [];
+      rig.zones = [];
       e.hunt = undefined;
       return;
     }
@@ -306,13 +323,19 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       g.onSound(e.attack === 'heavy' ? 'interceptor-heavy' : 'interceptor-shot');
       const remix = lateInterceptorRemix(g.level.bossRemix);
       if (
-        ((rig.move === 'aimed' && rig.volley < Math.max(1, e.phase)) ||
-          (remix && rig.move === 'crossfire' && rig.volley === 0)) &&
-        (!remix || g.uprising.finale !== 'mutiny')
+        rig.finale
+          ? rig.volley < finaleFollowups(g, e)
+          : ((rig.move === 'aimed' && rig.volley < Math.max(1, e.phase)) ||
+              (remix && rig.move === 'crossfire' && rig.volley === 0)) &&
+            (!remix || g.uprising.finale !== 'mutiny')
       ) {
         rig.volley++;
         e.state = 'followup';
-        e.timer = remix ? 0.95 : 0.78 - e.phase * 0.04;
+        e.timer = rig.finale
+          ? Math.max(0.8, INTERCEPTOR_WEAPONS[rig.move].lock + 0.25)
+          : remix
+            ? 0.95
+            : 0.78 - e.phase * 0.04;
         aim(g, e);
         g.onSound('interceptor-lock');
       } else {
@@ -366,8 +389,10 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     e,
     g.testRun?.seed.startsWith('SAW-BOSS-53-')
       ? 'grindshot'
-      : lateInterceptorRemix(g.level.bossRemix)
-        ? lateInterceptorMove(g.level.bossRemix!, e, g.uprising.finale)
-        : interceptorMove(e, g.seed),
+      : rig.finale
+        ? finaleMove(g, e)
+        : lateInterceptorRemix(g.level.bossRemix)
+          ? lateInterceptorMove(g.level.bossRemix!, e, g.uprising.finale)
+          : interceptorMove(e, g.seed),
   );
 }

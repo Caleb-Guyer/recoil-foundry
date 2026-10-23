@@ -1,7 +1,7 @@
 import {
   BOSS_REMIXES,
   loadBossRemixes,
-  remixEncounter,
+  currentRemixEncounter,
   type BossRemixId,
 } from './boss-remix-rules.ts';
 import { PRACTICE_BOSSES, type Encounter } from './practice.ts';
@@ -20,7 +20,7 @@ export function remixMenuHtml(raw: unknown) {
           '">' +
           archiveMark('remix:' + id) +
           '<strong>' +
-          PRACTICE_BOSSES[BOSS_REMIXES[id].boss].name +
+          PRACTICE_BOSSES[currentRemixEncounter(id).kind].name +
           ' · ' +
           BOSS_REMIXES[id].name +
           '</strong><span>' +
@@ -43,7 +43,7 @@ export function bossRemixMenu(
   root.querySelectorAll<HTMLButtonElement>('[data-boss-remix]').forEach((button) => {
     button.onclick = () => {
       const id = button.dataset.bossRemix as BossRemixId;
-      if (seen.includes(id)) start(remixEncounter(id));
+      if (seen.includes(id)) start(currentRemixEncounter(id));
     };
   });
   root.querySelector<HTMLButtonElement>('#remix-back')!.onclick = back;

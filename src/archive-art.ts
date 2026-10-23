@@ -54,8 +54,8 @@ export const ENEMY_GUIDES: Record<EnemyKind, string> = {
   switchboard:
     'Coordinates the Annex through its signal panels. Follow the warnings between circuits.',
   interceptor:
-    'Adapts familiar weapon systems to its own attacks. Read the weapon and its recovery.',
-  boss: 'The factory’s final supervisor. Watch each committed attack and use the arena’s cover.',
+    'The factory’s final supervisor reclaims your weapon tricks. Fresh Campaigns unlock nineteen attacks across three phases. Read locked lanes, leave marked floor charges and punish the opened armor. New Game+ starts with the full arsenal.',
+  boss: 'A mobile security supervisor. Watch its locked volleys and radial releases, then attack during recovery.',
 };
 
 // Images are filled by archive-images using the production renderer.

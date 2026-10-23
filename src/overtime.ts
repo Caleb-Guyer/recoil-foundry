@@ -13,12 +13,12 @@ import { remixCooling } from './overtime-cooling.ts';
 import { remixReclamation } from './overtime-reclamation.ts';
 import { remixRooftops } from './overtime-rooftops.ts';
 import type { RouteChoice } from './rules.ts';
-import { reclaimerFinale } from './boss-progression.ts';
+import { reclaimerFinale, finalArsenalSeed } from './boss-progression.ts';
 
 // A separate, short seed keeps the first lap stable and lets an earned boss
 // victory reconstruct its ordinary Practice arena from this same seed.
 export const overtimeSeed = (seed: string) =>
-  (reclaimerFinale(seed) ? 'RF-C94-OT-' : 'OT-') +
+  (finalArsenalSeed(seed) ? 'RF-C95-OT-' : reclaimerFinale(seed) ? 'RF-C94-OT-' : 'OT-') +
   Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
 export function overtimeHealth(kind: EnemyKind, stage: number, elite?: EliteKind) {
   if (kind === 'welder') return WELDER_HP;
@@ -51,7 +51,7 @@ export function getOvertimeLevel(
     if (reclaimerFinale(seed) && stage === 19) {
       result.spawns[0].kind = 'boss';
       result.id = 'reclaimer-storm-relay';
-      result.name = 'Reclaimer storm relay';
+      result.name = 'Interceptor storm relay';
     }
     return result;
   }

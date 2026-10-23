@@ -37,8 +37,8 @@ export const ENEMY_NAMES: Record<EnemyKind, string> = {
   condenser: 'The Condenser',
   turbine: 'The Turbine',
   sorter: 'The Sorter',
-  interceptor: 'The Interceptor',
-  boss: 'The Reclaimer',
+  interceptor: 'The Reclaimer',
+  boss: 'The Interceptor',
 };
 const CAUSES = {
   shot: 'Gunfire',

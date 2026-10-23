@@ -12,7 +12,7 @@ import { RECLAMATION_LAYOUTS, SORTER_ARENA, reclamationLevel } from './reclamati
 import type { MagnetPlacement } from './reclamation-layouts.ts';
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
 import { INTERCEPTOR_ARENA, INTERCEPTOR_VAULT, RECLAIMER_ARENA } from './interceptor-layout.ts';
-import { reclaimerFinale } from './boss-progression.ts';
+import { reclaimerFinale, finalArsenalSeed } from './boss-progression.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { remasteredLayout } from './room-remaster.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
@@ -715,7 +715,9 @@ function buildLevel(
       selected === 'boss'
         ? arenas[Math.floor(seeded(seed + ':reclaimer-arena')() * arenas.length)]
         : undefined;
-    return reclamationLevel(seed, stage, alternate);
+    const level = reclamationLevel(seed, stage, alternate);
+    if (finalArsenalSeed(seed)) level.name = level.name.replace('Reclaimer', 'Interceptor');
+    return level;
   }
   if (stage === 5 && (selection?.freight ?? freightSelected(seed, stage)))
     return {

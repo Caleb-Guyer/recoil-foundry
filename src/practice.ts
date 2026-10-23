@@ -1,7 +1,12 @@
 import { isHunt, huntSeed, HUNTS } from './hunt-rules.ts';
 import { reclaimerFinale } from './boss-progression.ts';
 import { loadUnlocks } from './longevity.ts';
-import { BOSS_REMIXES, isBossRemix, type BossRemixId } from './boss-remix-rules.ts';
+import {
+  BOSS_REMIXES,
+  isBossRemix,
+  validRemixIdentity,
+  type BossRemixId,
+} from './boss-remix-rules.ts';
 import { breakableSolids } from './destruction-layout.ts';
 import { getLevel } from './levels.ts';
 import { PHYSICS_LAYOUTS, PHYSICS_STAGES, physicsVariant } from './physics-layouts.ts';
@@ -24,8 +29,8 @@ export const PRACTICE_BOSSES = {
   condenser: { name: 'The Condenser', stage: bossStage(2) },
   turbine: { name: 'The Turbine', stage: bossStage(2) },
   sorter: { name: 'The Sorter', stage: bossStage(3) },
-  interceptor: { name: 'The Interceptor', stage: bossStage(4) },
-  boss: { name: 'The Reclaimer', stage: bossStage(3) },
+  interceptor: { name: 'The Reclaimer', stage: bossStage(4) },
+  boss: { name: 'The Interceptor', stage: bossStage(3) },
 } as const;
 export type PracticeBoss = keyof typeof PRACTICE_BOSSES;
 export interface Encounter {
@@ -97,6 +102,20 @@ export function testEncounterFromUrl(url: URL): Encounter | null {
     );
   }
   const kind = requested === 'reclaimer' ? 'boss' : requested;
+  if (params.get('v') === '3' && (requested === 'reclaimer' || requested === 'interceptor')) {
+    let invalid = false;
+    params.forEach((_, key) => {
+      if (!['test', 'v'].includes(key) || params.getAll(key).length !== 1) invalid = true;
+    });
+    return invalid
+      ? null
+      : (loadEncounters([
+          {
+            kind: requested === 'reclaimer' ? 'interceptor' : 'boss',
+            seed: 'RF-C95-TEST-' + requested.toUpperCase(),
+          },
+        ])[0] ?? null);
+  }
   if (
     params.getAll('test').length !== 1 ||
     (kind !== 'turbine' && kind !== 'interceptor' && requested !== 'reclaimer') ||
@@ -134,9 +153,7 @@ export function loadEncounters(value: unknown): Encounter[] {
       !item.seed.length ||
       item.seed.length > 40 ||
       (remix !== undefined &&
-        (!isBossRemix(remix) ||
-          BOSS_REMIXES[remix].boss !== item.kind ||
-          item.seed !== 'REMIX-' + remix)) ||
+        (!isBossRemix(remix) || !validRemixIdentity(remix, item.kind, item.seed))) ||
       records.some((record) => record.kind === item.kind && record.remix === item.remix)
     )
       continue;

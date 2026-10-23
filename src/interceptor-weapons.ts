@@ -7,6 +7,7 @@ import {
 } from './interceptor-grindshot.ts';
 import type { Enemy, Game, Shot } from './game.ts';
 import type { Vec } from './rules.ts';
+import { finalArsenalSeed } from './boss-progression.ts';
 import { direction, distance, seeded, sample } from './rules.ts';
 
 export type InterceptorMove =
@@ -25,7 +26,10 @@ export type InterceptorMove =
   | 'shatter'
   | 'fold'
   | 'shockwave'
-  | 'grindshot';
+  | 'grindshot'
+  | 'sweep'
+  | 'ringburst'
+  | 'lockdown';
 export interface Weapon {
   tell: number;
   lock: number;
@@ -35,6 +39,9 @@ export interface Weapon {
   color: string;
 }
 export const INTERCEPTOR_WEAPONS: Record<InterceptorMove, Weapon> = {
+  sweep: { tell: 1.15, lock: 0.5, speed: 10, damage: 16, recover: 1.45, color: '#e8b48c' },
+  ringburst: { tell: 1.3, lock: 0.6, speed: 7.5, damage: 17, recover: 1.55, color: '#c4b5e5' },
+  lockdown: { tell: 1.4, lock: 1.4, speed: 0, damage: 20, recover: 1.5, color: '#e8c16c' },
   grindshot: { tell: 1.35, lock: 1.35, speed: 18, damage: 8, recover: 1.7, color: '#ef7264' },
   aimed: { tell: 0.92, lock: 0.36, speed: 11.5, damage: 20, recover: 1.05, color: '#f5b583' },
   heavy: { tell: 1.1, lock: 0.36, speed: 16, damage: 24, recover: 1.5, color: '#f5b583' },
@@ -78,10 +85,22 @@ export function interceptorMove(e: Enemy, seed: string): InterceptorMove {
   deck.splice(2, 0, 'grindshot');
   return deck[(e.attacks - 2) % deck.length];
 }
-export function weaponAngles(move: InterceptorMove, aim: Vec, phase: number, caught = 0): number[] {
+export function weaponAngles(
+  move: InterceptorMove,
+  aim: Vec,
+  phase: number,
+  caught = 0,
+  volley = 0,
+): number[] {
   const a = Math.atan2(aim.y, aim.x);
   const fan = (count: number, spacing: number) =>
     Array.from({ length: count }, (_, i) => a + (i - (count - 1) / 2) * spacing);
+  if (move === 'lockdown') return [];
+  if (move === 'sweep') return fan(5, 0.13).map((angle) => angle + [-0.42, 0, 0.42, 0][volley % 4]);
+  if (move === 'ringburst')
+    return Array.from({ length: 12 }, (_, i) => i)
+      .filter((i) => i % 4 !== 0)
+      .map((i) => a + (i * Math.PI) / 6 + (volley * Math.PI) / 12);
   if (move === 'crossfire') return [...fan(5, 0.21), a + Math.PI - 0.18, a + Math.PI + 0.18];
   if (move === 'precision' || move === 'capacitor' || move === 'shatter' || move === 'burst')
     return [a];
@@ -129,6 +148,19 @@ export function fireWeapon(
   origin: Vec,
   angles: number[],
 ) {
+  if (move === 'lockdown') {
+    for (const p of e.interceptor!.zones)
+      rivalCharge(
+        g,
+        e,
+        p,
+        g.overtime ? 90 : 80,
+        specDamage(g, INTERCEPTOR_WEAPONS[move].damage),
+        0.65,
+      );
+    e.interceptor!.zones = [];
+    return;
+  }
   if (move === 'grindshot') {
     fireRivalGrind(g, e);
     return;
@@ -137,7 +169,7 @@ export function fireWeapon(
   for (const a of angles) {
     if (g.shots.filter((s) => !s.friendly && s.enemyAmmo?.owner === e.id).length >= 64) break;
     const previous = g.shots.at(-1)?.id;
-    g.enemyShot(e, a, spec.speed, spec.damage, origin);
+    g.enemyShot(e, a, spec.speed, specDamage(g, spec.damage), origin);
     const shot = g.shots.at(-1);
     if (!shot || shot.id === previous || shot.friendly) continue; // blocked muzzle
     shot.enemyAmmo = { owner: e.id, kind: move, age: 0 };
@@ -147,6 +179,9 @@ export function fireWeapon(
     if (move === 'fuse' || move === 'shatter') shot.radius = 7;
     shot.life = move === 'ricochet' ? 2.4 : move === 'recall' ? 2.1 : 3;
   }
+}
+function specDamage(g: Game, damage: number) {
+  return Math.round(damage * (g.overtime && finalArsenalSeed(g.seed) ? 1.1 : 1));
 }
 export function rivalCharge(
   g: Game,
@@ -245,6 +280,7 @@ export function clearArsenal(g: Game, e: Enemy) {
   rig.echoes = [];
   rig.queue = [];
   rig.gate = undefined;
+  rig.zones = [];
   for (const s of g.shots) if (!s.friendly && s.enemyAmmo?.owner === e.id) s.life = 0;
 }
 export function updateArsenal(g: Game, e: Enemy, dt: number) {

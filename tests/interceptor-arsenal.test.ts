@@ -57,7 +57,7 @@ function shots(g: Game, n = 1) {
   }
 }
 
-test('sixteen distinct gun moves have repeatable phase decks independent of combat RNG', () => {
+test('the legacy sixteen gun moves retain repeatable phase decks independent of combat RNG', () => {
   const { g, e } = fixture(),
     seen = new Set<string>();
   for (let phase = 0; phase < 3; phase++) {
@@ -70,7 +70,12 @@ test('sixteen distinct gun moves have repeatable phase decks independent of comb
       assert.equal(interceptorMove(e, g.seed), move);
     }
   }
-  assert.deepEqual([...seen].sort(), Object.keys(INTERCEPTOR_WEAPONS).sort());
+  assert.deepEqual(
+    [...seen].sort(),
+    Object.keys(INTERCEPTOR_WEAPONS)
+      .filter((m) => !['sweep', 'ringburst', 'lockdown'].includes(m))
+      .sort(),
+  );
 });
 
 for (const move of Object.keys(INTERCEPTOR_WEAPONS) as InterceptorMove[]) {

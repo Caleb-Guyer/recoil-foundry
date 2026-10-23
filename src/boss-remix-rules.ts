@@ -56,7 +56,7 @@ export const BOSS_REMIXES = {
     boss: 'boss',
     stage: 19,
     name: 'Skybridge',
-    hint: 'Transfer lifts connect the upper decks. Change height after the aim locks; the Reclaimer uses aimed volleys, broad fans and gapped rings.',
+    hint: 'Transfer lifts connect the upper decks. Change height after the aim locks, watch the gun before each release and use the decks to cross firing lanes.',
   },
   'boss-crossfire': {
     boss: 'boss',
@@ -83,6 +83,18 @@ export function bossRemixFor(seed: string, boss: string): BossRemixId | undefine
 }
 export function remixEncounter(id: BossRemixId): Encounter {
   return { kind: BOSS_REMIXES[id].boss, seed: 'REMIX-' + id, remix: id };
+}
+export function currentRemixEncounter(id: BossRemixId): Encounter {
+  return BOSS_REMIXES[id].stage === 19
+    ? { kind: 'interceptor', seed: 'RF-C95-REMIX-' + id, remix: id }
+    : remixEncounter(id);
+}
+export function validRemixIdentity(id: BossRemixId, kind: string, seed: unknown) {
+  const old = remixEncounter(id),
+    current = currentRemixEncounter(id);
+  return (
+    (kind === old.kind && seed === old.seed) || (kind === current.kind && seed === current.seed)
+  );
 }
 export function matchesRemixBoss(id: BossRemixId, kind: string) {
   return (
@@ -136,5 +148,11 @@ export function recordBossRemix(raw: unknown, game: Game, cleared: boolean): Bos
   return p;
 }
 export function remixEncounters(raw: unknown, cleared: boolean): Encounter[] {
-  return cleared ? loadBossRemixes(raw).seen.map(remixEncounter) : [];
+  return cleared
+    ? loadBossRemixes(raw).seen.flatMap((id) =>
+        BOSS_REMIXES[id].stage === 19
+          ? [remixEncounter(id), currentRemixEncounter(id)]
+          : [remixEncounter(id)],
+      )
+    : [];
 }

@@ -2,6 +2,12 @@ import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
 import { reclaimerFinale } from './boss-progression.ts';
+import {
+  createFinalArsenal,
+  finalArsenalSeed,
+  configureFinalePreview,
+  finalePreviewLevel,
+} from './final-arsenal.ts';
 import { commandRemix, commandRemixAttack, commandRemixAngles } from './late-boss-patterns.ts';
 import { TeamworkSystem, createSupport, isSupport, SUPPORT, type SupportRig } from './teamwork.ts';
 import { teamworkLevel } from './teamwork-layout.ts';
@@ -1311,6 +1317,7 @@ export class Game {
     this.level = remasterTestLevel(this, this.level);
     this.level = huntRoom ?? this.level;
     this.level = enemyEncounterRoom(this, this.level);
+    this.level = finalePreviewLevel(this, this.level);
     if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
     if (this.canOvertime && !this.testRun?.rematchRoom)
       this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
@@ -1653,6 +1660,11 @@ export class Game {
     if (kind === 'switchboard') enemy.switchboard = createSwitchboard();
     if (kind === 'turbine') enemy.turbine = createTurbine();
     if (kind === 'interceptor') enemy.interceptor = createInterceptor();
+    if (kind === 'interceptor' && finalArsenalSeed(this.seed)) {
+      enemy.interceptor!.finale = createFinalArsenal(!!this.overtime);
+      enemy.maxHp = enemy.hp = Math.ceil(enemy.hp * (this.overtime ? 1.2 : 1.15));
+      configureFinalePreview(this, enemy);
+    }
     if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
     if (kind === 'sorter') enemy.sorter = createSorter();
     if (kind === 'scrapper') enemy.scrapper = createScrapper();
