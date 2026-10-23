@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Reclaimer finale — version 5.11.1.** Fresh Campaigns fight the Sorter or Interceptor in Reclamation, then face the Reclaimer in room 20. Job outcomes change the Reclaimer's defense without replacing it; new Overtime laps use the same boss order. Earned Practice keeps each encounter's original stage and upgrade count. [Release notes and four isolated tests](docs/releases/5.11.1.md).
+
 **Enemy Remaster — version 5.11.0.** Runners brace for committed rushes, gunners reposition along safe platforms, and later flyers change flanks between locked volleys. Three authored patrol encounters open with one machine before backup arrives. Visible chassis wear and compact wreckage give ordinary machines more character. New Campaigns introduce the behavior gradually; room one, earlier saves and Daily challenges keep their existing combat. [Release notes and six isolated playtests](docs/releases/5.11.0.md).
 
 **Loading & performance — version 5.10.0.** Optional tools and real Logbook pictures load on demand, heavy projectile sweeps do less work, and replay capture transfers smaller bitmaps. [Measured results and test links](docs/releases/5.10.0.md) · [Compare loading](https://caleb-guyer.github.io/recoil-foundry/performance.html).

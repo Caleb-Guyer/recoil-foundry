@@ -13,6 +13,7 @@ import {
   type UprisingRouteId,
 } from './uprising-model.ts';
 import { uprisingLevel } from './uprising-layout.ts';
+import { reclaimerFinale } from './boss-progression.ts';
 import { UPRISING_ROOMS } from './uprising-rooms.ts';
 import { toolroomRevision } from './toolroom-catalog.ts';
 
@@ -113,7 +114,9 @@ export class UprisingSystem {
       : Math.min(1, (this.game.time - this.boardingAt) / Math.max(0.001, this.boardingDuration));
   }
   level(base: Game['level']) {
-    return this.active && this.run ? uprisingLevel(base, this.run, this.game.stage) : base;
+    return this.active && this.run
+      ? uprisingLevel(base, this.run, this.game.stage, this.game.seed)
+      : base;
   }
   clear() {
     this.mission = null;
@@ -359,7 +362,9 @@ export class UprisingSystem {
         ' · ' +
         {
           isolated: 'Command relays down · aimed volleys remain',
-          hunted: 'Stolen cargo · Interceptor deployed',
+          hunted: reclaimerFinale(this.game.seed)
+            ? 'Stolen cargo · Reclaimer pursuit volleys'
+            : 'Stolen cargo · Interceptor deployed',
           mutiny: 'Crew barricades · single volleys',
           overloaded: 'Command online · watch the radial release',
         }[this.finale]

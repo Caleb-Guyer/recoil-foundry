@@ -56,7 +56,7 @@ export const BOSS_REMIXES = {
     boss: 'boss',
     stage: 19,
     name: 'Skybridge',
-    hint: 'Transfer lifts connect the upper decks. Change height after the aim locks; Command uses aimed volleys, broad fans and gapped rings. A pursuit rival uses scatter fire and a warned dive instead.',
+    hint: 'Transfer lifts connect the upper decks. Change height after the aim locks; the Reclaimer uses aimed volleys, broad fans and gapped rings.',
   },
   'boss-crossfire': {
     boss: 'boss',

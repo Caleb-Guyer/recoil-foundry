@@ -11,7 +11,8 @@ import {
 import { RECLAMATION_LAYOUTS, SORTER_ARENA, reclamationLevel } from './reclamation-layouts.ts';
 import type { MagnetPlacement } from './reclamation-layouts.ts';
 import { COOLING_LAYOUTS, COOLING_BOSS, TURBINE_ARENA } from './cooling-layouts.ts';
-import { INTERCEPTOR_ARENA } from './interceptor-layout.ts';
+import { INTERCEPTOR_ARENA, INTERCEPTOR_VAULT, RECLAIMER_ARENA } from './interceptor-layout.ts';
+import { reclaimerFinale } from './boss-progression.ts';
 import { ADDED_LAYOUTS } from './expanded-layouts.ts';
 import { remasteredLayout } from './room-remaster.ts';
 import { FREIGHT_LAYOUT, freightSelected } from './freight-layout.ts';
@@ -697,6 +698,12 @@ function buildLevel(
   const crossing = crossingLevel(seed, stage, selection?.crossing);
   if (crossing) return crossing;
   if (stage >= 12 && stage < 16) {
+    if (reclaimerFinale(seed)) {
+      const interceptor =
+        bossVariant === 'interceptor' ||
+        (bossVariant !== 'sorter' && seeded(seed + ':reclamation-boss')() >= 0.5);
+      return reclamationLevel(seed, stage, interceptor ? INTERCEPTOR_VAULT : undefined);
+    }
     const selected =
       bossVariant === 'boss' || bossVariant === 'sorter'
         ? bossVariant
@@ -748,7 +755,7 @@ function buildLevel(
       pick,
     ),
   ];
-  const roofBoss = INTERCEPTOR_ARENA;
+  const roofBoss = reclaimerFinale(seed) ? RECLAIMER_ARENA : INTERCEPTOR_ARENA;
   const cooling = sample(COOLING_LAYOUTS, 2, seeded(seed + ':cooling-layouts'));
   const coolingArena =
     (coolingBoss ?? (seeded(seed + ':cooling-boss')() < 0.5 ? 'condenser' : 'turbine')) ===

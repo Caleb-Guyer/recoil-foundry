@@ -984,7 +984,7 @@ function updateTitle() {
               ? 'Shoot the cable. R to restart test.'
               : 'Full health. Preset gun. R to restart test.'
     : linkedTest
-      ? `Full health. ${PRACTICE_BOSSES[linkedTest.kind].stage} upgrades. R to retry.`
+      ? `Full health. ${practiceStage(linkedTest)} upgrades. R to retry.`
       : linkedDaily
         ? `Daily · ${linkedDaily.date} · ${STARTING_GUNS[dailyStartingGun(linkedDaily.seed) ?? 'pistol'].name}`
         : invalidDailyLink
@@ -3490,7 +3490,7 @@ function showDialog(kind: string) {
       boss.name +
       (encounter.remix ? ' · ' + BOSS_REMIXES[encounter.remix].name : '') +
       '</h2><p class="practice-note">Full health · Up to ' +
-      boss.stage +
+      practiceStage(encounter) +
       ' upgrades</p>' +
       (encounter.remix
         ? '<p class="practice-note">' + BOSS_REMIXES[encounter.remix].hint + '</p>'

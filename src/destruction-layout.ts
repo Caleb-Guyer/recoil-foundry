@@ -12,7 +12,7 @@ export function breakableSolids(level: Level, seed: string, stage: number): Soli
     if (s.h <= 28) {
       // The rival's upper gantries anchor its recoil approaches and prevent
       // uninterrupted overhead firing. Its low cover can still break.
-      if (level.id === 'relay-roof') return false;
+      if (level.id === 'relay-roof' || level.id === 'interceptor-vault') return false;
       // Waypoints on a shelf identify it as a necessary part of the jump route.
       return !level.route.some(
         (p) => p.x >= s.x && p.x <= s.x + s.w && Math.abs(p.y + 20 - s.y) < 12,

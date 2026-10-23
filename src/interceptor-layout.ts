@@ -22,3 +22,17 @@ export const INTERCEPTOR_ARENA: Layout = {
     { x: 1820, y: 720 },
   ],
 };
+
+export const INTERCEPTOR_VAULT: Layout = {
+  ...INTERCEPTOR_ARENA,
+  id: 'interceptor-vault',
+  name: 'Pursuit vault',
+  area: 'reclamation',
+};
+
+export const RECLAIMER_ARENA: Layout = {
+  ...INTERCEPTOR_ARENA,
+  id: 'reclaimer-roof',
+  name: 'Reclaimer command roof',
+  spawns: [{ kind: 'boss', x: 1450, y: 300 }],
+};

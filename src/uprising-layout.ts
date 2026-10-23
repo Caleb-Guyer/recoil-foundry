@@ -1,5 +1,6 @@
 import type { Level } from './levels.ts';
 import { UPRISING_ROOMS } from './uprising-rooms.ts';
+import { reclaimerFinale } from './boss-progression.ts';
 import {
   UPRISING_DISTRICTS,
   uprisingRoute,
@@ -9,7 +10,7 @@ import {
   type UprisingRun,
 } from './uprising-model.ts';
 
-export function uprisingLevel(base: Level, run: UprisingRun, stage: number): Level {
+export function uprisingLevel(base: Level, run: UprisingRun, stage: number, seed = ''): Level {
   const level = structuredClone(base);
   const choice = run.choices.find((id) => uprisingFork(run, id) + 1 === stage);
   if (choice) {
@@ -77,7 +78,7 @@ export function uprisingLevel(base: Level, run: UprisingRun, stage: number): Lev
     level.magnets = [];
     level.spawns = [
       {
-        kind: finale === 'hunted' ? 'interceptor' : 'boss',
+        kind: finale === 'hunted' && !reclaimerFinale(seed) ? 'interceptor' : 'boss',
         x: 1400,
         y: finale === 'hunted' ? 660 : 700,
       },

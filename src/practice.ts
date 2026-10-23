@@ -1,4 +1,5 @@
 import { isHunt, huntSeed, HUNTS } from './hunt-rules.ts';
+import { reclaimerFinale } from './boss-progression.ts';
 import { loadUnlocks } from './longevity.ts';
 import { BOSS_REMIXES, isBossRemix, type BossRemixId } from './boss-remix-rules.ts';
 import { breakableSolids } from './destruction-layout.ts';
@@ -32,10 +33,12 @@ export interface Encounter {
   seed: string;
   remix?: BossRemixId;
 }
-export function practiceStage(encounter: Pick<Encounter, 'kind' | 'remix'>) {
+export function practiceStage(encounter: Pick<Encounter, 'kind' | 'remix'> & { seed?: string }) {
   return encounter.remix
     ? BOSS_REMIXES[encounter.remix].stage
-    : PRACTICE_BOSSES[encounter.kind].stage;
+    : reclaimerFinale(encounter.seed ?? '') && ['boss', 'interceptor'].includes(encounter.kind)
+      ? bossStage(encounter.kind === 'boss' ? 4 : 3)
+      : PRACTICE_BOSSES[encounter.kind].stage;
 }
 // The loadout belongs to this attempt, never to the persisted victory record.
 export interface PracticeSession extends Encounter {
@@ -60,8 +63,9 @@ export function practiceBuild(
   mods: readonly string[],
   known: readonly string[],
   remix?: BossRemixId,
+  seed?: string,
 ): string[] {
-  return workshopBuild(mods, known).slice(0, practiceStage({ kind, remix }));
+  return workshopBuild(mods, known).slice(0, practiceStage({ kind, remix, seed }));
 }
 
 // Explicit playtest links are isolated fights, never earned Practice unlocks.
@@ -104,11 +108,13 @@ export function testEncounterFromUrl(url: URL): Encounter | null {
       {
         kind,
         seed:
-          kind === 'turbine'
-            ? 'turbine-fight-1'
-            : kind === 'boss'
-              ? 'reclaimer-fight-0'
-              : 'interceptor-fight-3',
+          params.get('v') === '2' && (kind === 'boss' || kind === 'interceptor')
+            ? 'RF-C94-TEST-' + kind.toUpperCase()
+            : kind === 'turbine'
+              ? 'turbine-fight-1'
+              : kind === 'boss'
+                ? 'reclaimer-fight-0'
+                : 'interceptor-fight-3',
       },
     ])[0] ?? null
   );
@@ -145,6 +151,7 @@ export function loadEncounters(value: unknown): Encounter[] {
       kind === 'switchboard' ||
       kind === 'condenser' ||
       kind === 'boss' ||
+      (kind === 'interceptor' && reclaimerFinale(item.seed)) ||
       kind === 'sorter' ||
       getLevel(item.seed, PRACTICE_BOSSES[kind].stage).spawns[0]?.kind === kind
     )
@@ -166,7 +173,8 @@ export function practiceCheckpoint(
   if (!encounter) return null;
   const stage = practiceStage(encounter);
   const save = testCheckpoint(encounter.seed, stage);
-  if (mods !== null) save.mods = practiceBuild(encounter.kind, mods, known, encounter.remix);
+  if (mods !== null)
+    save.mods = practiceBuild(encounter.kind, mods, known, encounter.remix, encounter.seed);
   if (loadUnlocks(save.mods).length) save.unlocks = loadUnlocks(save.mods);
   if (isHunt(encounter.kind)) return { ...save, version: 6, huntTest: encounter.kind };
   if (encounter.remix) return { ...save, version: 6, bossRemix: encounter.remix };
@@ -389,11 +397,17 @@ export function overtimeRooftopsTestFromUrl(url: URL): Checkpoint | null {
     service: { stage: 18, seeds: [1, 0] },
     skyline: { stage: 18, seeds: [1, 0] },
     interceptor: { stage: 19, seeds: [0, 1] },
+    reclaimer: { stage: 19, seeds: [1, 0] },
   };
   const room = p.get('room') ?? 'antenna';
   if (!Object.hasOwn(rooms, room)) return null;
   const plan = rooms[room as keyof typeof rooms];
-  const save = testCheckpoint('OT-STORM-' + plan.seeds[p.get('mirror') === '1' ? 1 : 0], 19);
+  const save = testCheckpoint(
+    (room === 'reclaimer' ? 'RF-C94-' : '') +
+      'OT-STORM-' +
+      plan.seeds[p.get('mirror') === '1' ? 1 : 0],
+    19,
+  );
   save.stage = plan.stage;
   save.overtime = { baseMods: save.mods.length, repairs: 0, remix: 5 };
   if (plan.stage === 18) save.route = room === 'skyline' ? 'high' : 'low';

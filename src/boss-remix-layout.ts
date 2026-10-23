@@ -1,6 +1,7 @@
 import type { Game } from './game.ts';
 import type { Layout, Level } from './levels.ts';
 import { BOSS_REMIXES, bossRemixFor, type BossRemixId } from './boss-remix-rules.ts';
+import { reclaimerFinale } from './boss-progression.ts';
 
 const vent = (x: number, offset: number, length = 620) => ({
   x,
@@ -299,7 +300,7 @@ export function bossRemixLevel(g: Game, level: Level): Level {
   const layout = structuredClone(REMIX_LAYOUTS[id]);
   // Uprising can substitute its pursuit rival. Keep that consequence while
   // giving it the same authored arena and its own warned arsenal sequence.
-  if (g.stage === 19 && !forced && g.uprising.finale === 'hunted')
+  if (g.stage === 19 && !forced && g.uprising.finale === 'hunted' && !reclaimerFinale(g.seed))
     layout.spawns[0].kind = 'interceptor';
   return { ...layout, boss: true, mirrored: false, bossRemix: id };
 }

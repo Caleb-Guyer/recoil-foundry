@@ -13,11 +13,13 @@ import { remixCooling } from './overtime-cooling.ts';
 import { remixReclamation } from './overtime-reclamation.ts';
 import { remixRooftops } from './overtime-rooftops.ts';
 import type { RouteChoice } from './rules.ts';
+import { reclaimerFinale } from './boss-progression.ts';
 
 // A separate, short seed keeps the first lap stable and lets an earned boss
 // victory reconstruct its ordinary Practice arena from this same seed.
 export const overtimeSeed = (seed: string) =>
-  'OT-' + Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
+  (reclaimerFinale(seed) ? 'RF-C94-OT-' : 'OT-') +
+  Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
 export function overtimeHealth(kind: EnemyKind, stage: number, elite?: EliteKind) {
   if (kind === 'welder') return WELDER_HP;
   return Math.ceil(
@@ -36,8 +38,23 @@ export function getOvertimeLevel(
   if (remix >= 1 && stage < 4) return remixDocks(level, stage, route);
   if (remix >= 2 && stage >= 4 && stage < 8) return remixFurnace(level, stage, route);
   if (remix >= 3 && stage >= 8 && stage < 12) return remixCooling(level, stage, route);
-  if (remix >= 4 && stage >= 12 && stage < 16) return remixReclamation(level, stage, route);
-  if (remix >= 5 && stage >= 16 && stage < 20) return remixRooftops(level, stage, route);
+  if (remix >= 4 && stage >= 12 && stage < 16) {
+    const result = remixReclamation(level, stage, route);
+    if (reclaimerFinale(seed) && stage === 15 && result.spawns[0].kind === 'boss') {
+      result.spawns[0].kind = 'interceptor';
+      result.name = 'Overtime pursuit vault';
+    }
+    return result;
+  }
+  if (remix >= 5 && stage >= 16 && stage < 20) {
+    const result = remixRooftops(level, stage, route);
+    if (reclaimerFinale(seed) && stage === 19) {
+      result.spawns[0].kind = 'boss';
+      result.id = 'reclaimer-storm-relay';
+      result.name = 'Reclaimer storm relay';
+    }
+    return result;
+  }
   const rng = seeded(seed + ':overtime-roster:' + stage);
   if (level.boss) {
     // Reinforcement points are reserved before props and hazards are placed.

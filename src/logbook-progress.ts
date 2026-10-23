@@ -4,7 +4,7 @@ import { ENEMY_NAMES } from './damage-cause.ts';
 import type { EnemyKind } from './levels.ts';
 import type { Game } from './game.ts';
 import type { RunRecap } from './run-history.ts';
-import { PRACTICE_BOSSES, type Encounter } from './practice.ts';
+import { practiceStage, type Encounter } from './practice.ts';
 import type { Lore } from './lore-upgrades.ts';
 
 import { DISCONNECT_STAGES } from './shutdown-layout.ts';
@@ -83,9 +83,7 @@ export function migrateLogbook(
       ? 7
       : checkpoint?.stage,
     ...history.map((run) => (run.annex ? 7 : run.stage)),
-    ...victories.map((victory) =>
-      victory.kind === 'switchboard' ? 7 : PRACTICE_BOSSES[victory.kind].stage,
-    ),
+    ...victories.map((victory) => (victory.kind === 'switchboard' ? 7 : practiceStage(victory))),
   ].filter((stage): stage is number => stage !== undefined);
   return mergeLogbook(progress, {
     version: 1,

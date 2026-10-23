@@ -1,6 +1,7 @@
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
+import { reclaimerFinale } from './boss-progression.ts';
 import { commandRemix, commandRemixAttack, commandRemixAngles } from './late-boss-patterns.ts';
 import { TeamworkSystem, createSupport, isSupport, SUPPORT, type SupportRig } from './teamwork.ts';
 import { teamworkLevel } from './teamwork-layout.ts';
@@ -1220,7 +1221,9 @@ export class Game {
                   this.seed,
                   this.stage,
                   this.practice?.kind === 'condenser' ? 'condenser' : undefined,
-                  this.practice?.kind === 'boss' || this.practice?.kind === 'sorter'
+                  this.practice?.kind === 'boss' ||
+                    this.practice?.kind === 'sorter' ||
+                    this.practice?.kind === 'interceptor'
                     ? this.practice.kind
                     : undefined,
                   planned
@@ -2996,6 +2999,8 @@ export class Game {
         : bossAttack(e.phase, e.attacks);
       if (!commandRemix(this.level.bossRemix) && this.uprising.finale === 'overloaded')
         e.attack = ['fan', 'ring', 'aimed'][e.attacks % 3] as Enemy['attack'];
+      if (reclaimerFinale(this.seed) && this.uprising.finale === 'hunted')
+        e.attack = e.attacks % 2 === 0 ? 'aimed' : 'fan';
       if (this.uprising.finale === 'isolated' && e.attack === 'ring') e.attack = 'fan';
       e.aim = d;
       e.state = 'windup';

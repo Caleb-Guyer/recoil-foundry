@@ -1,4 +1,5 @@
 import type { Checkpoint } from './rules.ts';
+import { testCheckpoint } from './practice.ts';
 import {
   UPRISING_ROUTES,
   UPRISING_FORKS,
@@ -16,8 +17,10 @@ export function uprisingTestFromUrl(url: URL): Checkpoint | null {
   p.forEach((_, key) => {
     if (!['test', 'route', 'v'].includes(key) || p.getAll(key).length !== 1) invalid = true;
   });
-  if (p.get('test') !== 'uprising' || invalid || p.get('v') !== '1') return null;
+  if (p.get('test') !== 'uprising' || invalid || !['1', '2'].includes(p.get('v') ?? ''))
+    return null;
   const route = p.get('route');
+  if (p.get('v') === '2' && !UPRISING_FINALES.some((f) => f === route)) return null;
   const defaults: UprisingRouteId[] = ['rail-escape', 'core-defense', 'crew-relief', 'roof-escape'];
   const choose = [
     'choose',
@@ -62,13 +65,15 @@ export function uprisingTestFromUrl(url: URL): Checkpoint | null {
     .map((id) => ({ route: id, result: finale === 'overloaded' ? 'failed' : 'success' }));
   return {
     version: 6,
-    seed: 'UPRISING-' + route,
+    seed: (p.get('v') === '2' && finale ? 'RF-C94-' : '') + 'UPRISING-' + route,
     stage: job ? job.fork + 1 : 19,
     hp: 100,
     mods:
-      job && job.district === 'railworks'
-        ? ['magnum', 'light', 'airshot']
-        : ['magnum', 'light', 'airshot', 'rapid', 'scatter', 'ricochet', 'pierce', 'leech'],
+      p.get('v') === '2' && finale
+        ? testCheckpoint('preset', 19).mods
+        : job && job.district === 'railworks'
+          ? ['magnum', 'light', 'airshot']
+          : ['magnum', 'light', 'airshot', 'rapid', 'scatter', 'ricochet', 'pierce', 'leech'],
     kills: 0,
     elapsed: 0,
     uprising,
