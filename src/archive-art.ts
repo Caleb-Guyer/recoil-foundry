@@ -15,9 +15,12 @@ export const ENEMY_GUIDES: Record<EnemyKind, string> = {
     'Repairs a wounded patrol through a green tether after a dashed warning. Shoot the tether or drone, or move the pair behind cover. Its repair supply is finite; it cannot repair bosses or support units.',
   relay:
     'An amber tether charges one patrol shot. Cut the tether or defeat the unit before the marked shot fires. Charges expire, never stack, and keep the patrol’s normal attack warning and projectile speed.',
-  runner: 'Closes the distance on foot. Leave room to move and fire while it approaches.',
-  shooter: 'Fires aimed rounds from its position. Use cover and move after it commits.',
-  flyer: 'Approaches through open air and fires a spread. Change height to leave its firing lane.',
+  runner:
+    'Closes on foot. In new Campaigns from room three, braces for a short straight rush, then pauses to recover. Jump across its locked path and attack after it passes. Earlier runs keep the original pursuit.',
+  shooter:
+    'Fires aimed rounds. In new Campaigns from zone two, steps along its platform to find a lane, then stops and locks its aim before firing. Change height or take cover during the warning. Earlier runs keep fixed gunners.',
+  flyer:
+    'Approaches through open air and fires a spread. In new Campaigns from zone three, changes sides between volleys, then holds position while three firing lanes lock. Change height to leave the spread. Earlier runs keep the original approach.',
   charger: 'Warns before charging across the floor. Move out of the committed path.',
   sniper: 'Tracks, locks an aim, then fires. Move after the warning locks.',
   hopper: 'Jumps between attacks. Watch the landing position rather than chasing its takeoff.',

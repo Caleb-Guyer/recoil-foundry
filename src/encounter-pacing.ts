@@ -33,6 +33,16 @@ export function encounterPlan(
     rhythm = choices[(offset + (stage % 4) - 1) % 3];
   }
   const count = level.spawns.length;
+  if (level.remasterIntro)
+    return {
+      rhythm: 'intro',
+      opening: 1,
+      deadline: 10,
+      overlap: 0,
+      spacing: 1.4,
+      cap: 3,
+      rest: 0.6,
+    };
   const early = stage < 4;
   const settings = {
     intro: { opening: 1, deadline: 12, overlap: 0, spacing: 1.25, cap: 3, rest: 0.45 },
@@ -85,6 +95,7 @@ export function shapeEncounter(
   // Introduction fights retain the special unit they teach, on its actual anchor.
   if (
     level.boss ||
+    level.remasterIntro ||
     level.machineIntro ||
     level.freight ||
     level.teamworkIntro ||
@@ -229,6 +240,7 @@ export class EncounterPacer {
     const objective = this.game.uprising.nodes.some((node) => node.body.position === target);
     if (
       !this.active ||
+      !!e.remaster ||
       e.elite === 'volatile' ||
       !['shooter', 'flyer'].includes(e.kind) ||
       e.state !== 'idle' ||

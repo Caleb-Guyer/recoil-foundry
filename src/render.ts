@@ -2,6 +2,7 @@ import { drawHuntEnemy, drawHuntProps, drawHunts } from './hunt-art.ts';
 import { commandRemixAngles } from './late-boss-patterns.ts';
 import { drawMelt } from './melt-through.ts';
 import { drawCombatImpacts, drawNail, enemyPose, playerPose, roundFeel } from './combat-feel.ts';
+import { drawRemasteredBody, drawRemasterTell } from './enemy-remaster-art.ts';
 import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
 import { drawWelder, drawWelds } from './welder-art.ts';
 import { drawClockOut } from './clock-out-art.ts';
@@ -546,6 +547,7 @@ export class Renderer {
       }
       if (e.kind !== 'loader' && e.kind !== 'press' && e.elite !== 'volatile')
         this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
+      drawRemasteredBody(c, g, e, this.reduced);
       drawMutationBody(c, e);
       if (e.squad?.connected) {
         c.fillStyle =
@@ -572,9 +574,11 @@ export class Renderer {
       const p = e.body.position;
       if (e.allied && g.areaEvents.departingAt !== null) continue;
       this.drawTell(e);
+      drawRemasterTell(c, g, e);
       drawSquadTell(c, g, e);
       if (
         (e.kind === 'shooter' || e.kind === 'flyer') &&
+        !e.remaster &&
         !(e.squad?.kind === 'shield' && e.squad.role === 'support') &&
         e.elite !== 'volatile' &&
         e.timer < 0.4 &&

@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Enemy Remaster — version 5.11.0.** Runners brace for committed rushes, gunners reposition along safe platforms, and later flyers change flanks between locked volleys. Three authored patrol encounters open with one machine before backup arrives. Visible chassis wear and compact wreckage give ordinary machines more character. New Campaigns introduce the behavior gradually; room one, earlier saves and Daily challenges keep their existing combat. [Release notes and six isolated playtests](docs/releases/5.11.0.md).
+
 **Loading & performance — version 5.10.0.** Optional tools and real Logbook pictures load on demand, heavy projectile sweeps do less work, and replay capture transfers smaller bitmaps. [Measured results and test links](docs/releases/5.10.0.md) · [Compare loading](https://caleb-guyer.github.io/recoil-foundry/performance.html).
 
 **Room rematches & replay guidance — version 5.9.0.** After a combat-room death, choose **Practice this room** to retry the same room with your finished gun and full health. Enemies and props reset; practice grants no rewards and leaves your original results and replay intact. Watch replay offers one tip tied to the recorded lethal cause. [Release notes and three isolated playtests](docs/releases/5.9.0.md).

@@ -95,6 +95,11 @@ import { presentationTestFromUrl, finishPresentationTest } from './presentation-
 import { combatFeelTestFromUrl } from './combat-feel-test.ts';
 import { encounterTestFromUrl } from './encounter-test.ts';
 import { remasterTestFromUrl, isRemasterRoom, ROOM_REMASTERS } from './room-remaster.ts';
+import {
+  enemyRemasterTestFromUrl,
+  ENEMY_ENCOUNTERS,
+  isEnemyEncounter,
+} from './enemy-encounters.ts';
 import { teamworkTestFromUrl } from './teamwork-test.ts';
 import { huntTestFromUrl } from './hunt-test.ts';
 import {
@@ -538,7 +543,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Loading & performance</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Enemy remaster</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -711,6 +716,7 @@ const linkedFirstRunPreview = firstRunPreviewFromUrl(entryUrl);
 const linkedRematchPreview = rematchPreviewFromUrl(entryUrl);
 let linkedRunTest =
   linkedRematchPreview?.checkpoint ??
+  enemyRemasterTestFromUrl(entryUrl) ??
   remasterTestFromUrl(entryUrl) ??
   firstRunTestFromUrl(entryUrl) ??
   goalRunTestFromUrl(entryUrl) ??
@@ -1001,6 +1007,24 @@ function updateTitle() {
       $('play').textContent = 'Test ' + ROOM_REMASTERS[room].name + ' ↗';
       $('title-hint').textContent = ROOM_REMASTERS[room].guide + ' Isolated playtest · R to retry.';
     }
+  }
+  if (
+    linkedRunTest?.seed.startsWith('RF-C93-') &&
+    entryUrl.searchParams.get('test') === 'enemies'
+  ) {
+    const id = entryUrl.searchParams.get('encounter') ?? '';
+    const unit = entryUrl.searchParams.get('unit') ?? 'patrol';
+    $('play').textContent =
+      'Test ' + (isEnemyEncounter(id) ? ENEMY_ENCOUNTERS[id].name : unit) + ' ↗';
+    $('title-hint').textContent =
+      (isEnemyEncounter(id)
+        ? ENEMY_ENCOUNTERS[id].guide
+        : unit === 'runner'
+          ? 'Approach the runner, let it lock its rush, then jump across and punish its recovery.'
+          : unit === 'shooter'
+            ? 'Move around the obstacle. The gunner steps along its perch, then stops and locks a shot.'
+            : 'Change height and watch the flyer change sides between locked three-round volleys.') +
+      ' Isolated playtest · progress is not saved · R to retry.';
   }
   if (linkedRunTest?.seed.startsWith('RF-C90-DRAFT-')) {
     $('play').textContent = 'Test build follow-ups ↗';
@@ -3029,11 +3053,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.10.0 · LOADING & PERFORMANCE</p><h2 id="dialog-title">Keep the momentum.</h2>' +
-      '<p class="update-tagline">Less work before you play. Less work during the fight.</p>' +
-      '<dl class="update-notes"><div><dt>Tools load when you open them.</dt><dd>Workshop, Logbook documents, room rematches and replay viewing load on demand. Upgrade choices remain usable while their gun comparison loads.</dd></div>' +
-      '<div><dt>Heavy guns, lighter work.</dt><dd>Projectile sweeps skip distant cover before the detailed collision check. Replay snapshots shrink before transfer to the encoder. Ammunition keeps its existing colored light.</dd></div>' +
-      '<div><dt>A responsive Logbook.</dt><dd>Actual game pictures fill in as they enter view, one at a time. A bounded picture cache releases older canvases as you browse.</dd></div></dl>' +
+      '<p class="eyebrow">5.11.0 · ENEMY REMASTER</p><h2 id="dialog-title">Read the machine.</h2>' +
+      '<p class="update-tagline">A locked rush. A braced gunner. A different angle.</p>' +
+      '<dl class="update-notes"><div><dt>Patrols with purpose.</dt><dd>New Campaign runners brace before a short straight rush. Gunners step along their platform before locking a shot, and later flyers change flanks between three-lane volleys. Committed attacks keep their aim.</dd></div>' +
+      '<div><dt>Three encounters to read.</dt><dd>Pursuit lane, Split-level patrol and Mortar crossing introduce a lone machine before backup arrives. Broad decks and solid shelters offer different ways through the fight.</dd></div>' +
+      '<div><dt>Wear you can see.</dt><dd>Cracked panels, dimmed lamps and exposed mechanisms show damage. Compact wreckage keeps the firing lanes clear. Room one stays calm; older saves and Daily challenges keep their existing behavior.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

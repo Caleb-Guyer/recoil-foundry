@@ -31,6 +31,11 @@ export interface ReinforcementDoor {
 }
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
+  if (level.remasterIntro) {
+    const intro = level.spawns.find((s) => s.kind === level.remasterIntro);
+    if (intro)
+      return [[{ ...intro }], level.spawns.filter((s) => s !== intro).map((s) => ({ ...s }))];
+  }
   if (level.machineIntro) {
     const intro = level.spawns.find((s) => s.kind === level.machineIntro);
     if (intro)

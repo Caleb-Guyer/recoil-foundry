@@ -7,6 +7,8 @@ import { teamworkLevel } from './teamwork-layout.ts';
 import { ToolroomSystem, type ToolroomShot } from './toolroom-system.ts';
 import { toolroomLevel } from './toolroom-layouts.ts';
 import { remasterTestLevel } from './room-remaster.ts';
+import { enemyEncounterRoom } from './enemy-encounters.ts';
+import { EnemyRemaster, type EnemyRemasterRig } from './enemy-remaster.ts';
 import { PatrolMachineSystem, createPatrolRig, type PatrolRig } from './patrol-machine-system.ts';
 import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
 import { CombatFeel, roundFeel, type RoundFeel } from './combat-feel.ts';
@@ -226,6 +228,7 @@ export interface Input {
   aim: Vec;
 }
 export interface Enemy {
+  remaster?: EnemyRemasterRig;
   patrol?: PatrolRig;
   support?: SupportRig;
   recoilTarget?: number;
@@ -396,6 +399,7 @@ export class Game {
   breaches = new BreachSystem(this);
   waves = new ReinforcementSystem(this);
   encounters: 0 | 1 = 0;
+  enemyRemaster = new EnemyRemaster(this);
   encounterPacer = new EncounterPacer(this);
   portals = new PortalSystem(this);
   portalRequest: Vec | null = null;
@@ -1303,6 +1307,7 @@ export class Game {
     this.level = teamworkLevel(this, this.level);
     this.level = remasterTestLevel(this, this.level);
     this.level = huntRoom ?? this.level;
+    this.level = enemyEncounterRoom(this, this.level);
     if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
     if (this.canOvertime && !this.testRun?.rematchRoom)
       this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
@@ -2413,6 +2418,11 @@ export class Game {
   }
   updateEnemy(e: Enemy, dt: number) {
     if (e.hp <= 0 || !(e.allied ? this.areaEvents.allies : this.enemies).includes(e)) return;
+    if (e.remaster && e.allied) {
+      e.remaster = undefined;
+      e.state = 'idle';
+      e.timer = Math.max(e.timer, 0.7);
+    }
     if (e.allied && !this.enemies.length) return;
     e.flash = Math.max(0, e.flash - dt);
     e.shieldFlash = Math.max(0, e.shieldFlash - dt);
@@ -2466,7 +2476,8 @@ export class Game {
       return;
     }
     const coordinated = updateSquad(this, e);
-    if (!coordinated) {
+    const remastered = !coordinated && this.enemyRemaster.update(e, combatTarget);
+    if (!coordinated && !remastered) {
       if (isPatrolMachine(e.kind)) this.patrolMachines.updateEnemy(e);
       else if (e.kind === 'switchboard') this.switchboard.update(e, dt);
       else if (e.kind === 'caller') updateCaller(this, e, dt);
@@ -2504,7 +2515,7 @@ export class Game {
         });
       }
     }
-    if ((e.kind === 'shooter' && !coordinated) || e.kind === 'flyer') {
+    if (!remastered && ((e.kind === 'shooter' && !coordinated) || e.kind === 'flyer')) {
       if (
         e.timer <= 0.35 &&
         e.timer + dt > 0.35 &&
@@ -2532,6 +2543,7 @@ export class Game {
       return;
     }
     if (
+      !(e.remaster && e.kind === 'runner' && (e.state === 'windup' || e.state === 'recover')) &&
       !(
         (e.kind === 'charger' || e.kind === 'loader' || e.kind === 'kiln') &&
         e.state === 'recover'
@@ -3758,7 +3770,30 @@ export class Game {
         this.onBossDefeated(e.kind);
     this.feedback(isBoss(e.kind) ? 10 : 4);
     this.hitStop = Math.max(this.hitStop, isBoss(e.kind) ? 0.075 : 0.035);
-    this.burst(e.body.position, isBoss(e.kind) ? 45 : 16, '#f28371', isBoss(e.kind) ? 8 : 4);
+    this.burst(
+      e.body.position,
+      isBoss(e.kind) ? 45 : e.remaster ? 7 : 16,
+      '#f28371',
+      isBoss(e.kind) ? 8 : 4,
+    );
+    if (e.remaster && source !== 'cleanup') {
+      const colors =
+        e.kind === 'flyer'
+          ? ['#83b8bb', '#435b62']
+          : e.kind === 'runner'
+            ? ['#c18a70', '#64504a']
+            : ['#d0af79', '#646960'];
+      for (let i = 0; i < 4 && this.particles.length < 200; i++)
+        this.particles.push({
+          pos: { ...e.body.position },
+          vel: { x: (i - 1.5) * 1.8, y: -2.8 - (i % 2) },
+          life: 0.35,
+          max: 0.35,
+          size: e.kind === 'flyer' ? 5 : 4,
+          color: colors[i % 2],
+          kind: 'shell',
+        });
+    }
     if (this.particles.length < 220)
       this.particles.push({
         pos: { ...e.body.position },

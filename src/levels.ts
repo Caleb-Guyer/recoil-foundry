@@ -104,6 +104,8 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  enemyEncounter?: import('./enemy-encounters.ts').EnemyEncounterId;
+  remasterIntro?: import('./enemy-remaster.ts').RemasteredEnemy;
   toolroom?: import('./toolroom-layouts.ts').ToolroomRoom;
   machineIntro?: import('./patrol-machines.ts').PatrolKind;
   hunt?: import('./hunt-rules.ts').HuntKind;

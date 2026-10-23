@@ -3,6 +3,7 @@ import type { Enemy, Shot, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp, distance } from './rules.ts';
 import { firstSolid } from './collisions.ts';
+import { REMASTER_TELL, remasterKind } from './enemy-remaster.ts';
 
 export const THREAT_COLOR = '#ff8875';
 export const THREAT_CORE = '#fff0d8';
@@ -146,6 +147,9 @@ export function incomingEdgeCues(
 }
 
 export function attackBrace(e: Enemy) {
+  const kind = remasterKind(e);
+  if (e.remaster && kind)
+    return e.state === 'windup' ? clamp(1 - e.timer / REMASTER_TELL[kind], 0, 1) : 0;
   if (e.hp <= 0 || e.spawn > 0 || e.workshopTarget || e.elite === 'shielded' || e.timer <= 0)
     return 0;
   const warning =
