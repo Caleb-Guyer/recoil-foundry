@@ -1,4 +1,4 @@
-import type { LogbookProgress } from './logbook.ts';
+import type { LogbookProgress } from './logbook-progress.ts';
 import type { CommendationId } from './commendations.ts';
 import { TOOLROOM_MODS, toolroomDraftAllowed, type ToolroomFamily } from './toolroom-catalog.ts';
 

@@ -1,4 +1,5 @@
 import Matter from 'matter-js';
+import { BoundedCache } from './bounded-cache.ts';
 import { isHunt, huntSeed } from './hunt-rules.ts';
 import { BOSS_REMIXES, isBossRemix } from './boss-remix-rules.ts';
 import { Game } from './game.ts';
@@ -12,7 +13,10 @@ import { isRecoilTrial, recoilTrialCheckpoint } from './recoil-trial-rules.ts';
 import { isToolroomRoom } from './toolroom-layouts.ts';
 import { isMachineVariant, MACHINE_VARIANTS } from './patrol-machines.ts';
 
-const images = new Map<string, HTMLCanvasElement>();
+// At most 9.4 MiB of retained RGBA thumbnails, regardless of catalog size.
+const images = new BoundedCache<string, HTMLCanvasElement>(12, (canvas) => {
+  canvas.width = canvas.height = 0;
+});
 export const ARCHIVE_STAGES: Record<string, number> = {
   'area:docks': 0,
   'area:furnace': 4,
@@ -93,66 +97,129 @@ function photograph(id: string): HTMLCanvasElement {
   if (cached) return cached;
   const canvas = document.createElement('canvas');
   const g = new Game();
-  g.startTest(archiveCheckpoint(id));
-  if (id.startsWith('remix:')) for (const enemy of g.enemies) enemy.spawn = 0;
-  g.mode = 'paused';
-  const renderer = new Renderer(canvas, g);
-  canvas.width = 640;
-  canvas.height = 320;
-  renderer.width = 640;
-  renderer.height = 320;
-  renderer.reduced = true;
-  if (/^(enemy|elite|mutation|machine):/.test(id)) {
-    const enemy = prepareArchiveEnemy(g, id);
-    // Photograph the real rendered pixels, then fit their bounds. Attachments,
-    // overhead health bars and the Crane hook extend past physics body bounds.
-    const source = document.createElement('canvas');
-    source.width = source.height = 512;
-    const c = source.getContext('2d')!;
-    renderer.ctx = c;
-    c.translate(256 - enemy.body.position.x, 180 - enemy.body.position.y);
-    renderer.drawEnemies(true);
-    const pixels = c.getImageData(0, 0, 512, 512).data;
-    let left = 512,
-      top = 512,
-      right = 0,
-      bottom = 0;
-    for (let y = 0; y < 512; y++)
-      for (let x = 0; x < 512; x++) {
-        if (!pixels[(y * 512 + x) * 4 + 3]) continue;
-        left = Math.min(left, x);
-        top = Math.min(top, y);
-        right = Math.max(right, x);
-        bottom = Math.max(bottom, y);
+  try {
+    g.startTest(archiveCheckpoint(id));
+    if (id.startsWith('remix:')) for (const enemy of g.enemies) enemy.spawn = 0;
+    g.mode = 'paused';
+    const renderer = new Renderer(canvas, g);
+    canvas.width = 640;
+    canvas.height = 320;
+    renderer.width = 640;
+    renderer.height = 320;
+    renderer.reduced = true;
+    if (/^(enemy|elite|mutation|machine):/.test(id)) {
+      const enemy = prepareArchiveEnemy(g, id);
+      // Photograph the real rendered pixels, then fit their bounds. Attachments,
+      // overhead health bars and the Crane hook extend past physics body bounds.
+      const source = document.createElement('canvas');
+      source.width = source.height = 512;
+      const c = source.getContext('2d')!;
+      renderer.ctx = c;
+      c.translate(256 - enemy.body.position.x, 180 - enemy.body.position.y);
+      renderer.drawEnemies(true);
+      const pixels = c.getImageData(0, 0, 512, 512).data;
+      let left = 512,
+        top = 512,
+        right = 0,
+        bottom = 0;
+      for (let y = 0; y < 512; y++)
+        for (let x = 0; x < 512; x++) {
+          if (!pixels[(y * 512 + x) * 4 + 3]) continue;
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x);
+          bottom = Math.max(bottom, y);
+        }
+      const target = canvas.getContext('2d')!;
+      target.fillStyle = '#111c20';
+      target.fillRect(0, 0, 640, 320);
+      if (left <= right && top <= bottom) {
+        const w = right - left + 1,
+          h = bottom - top + 1;
+        const scale = Math.min(5, 460 / w, 230 / h);
+        target.drawImage(
+          source,
+          left,
+          top,
+          w,
+          h,
+          (640 - w * scale) / 2,
+          (320 - h * scale) / 2,
+          w * scale,
+          h * scale,
+        );
       }
-    const target = canvas.getContext('2d')!;
-    target.fillStyle = '#111c20';
-    target.fillRect(0, 0, 640, 320);
-    if (left <= right && top <= bottom) {
-      const w = right - left + 1,
-        h = bottom - top + 1;
-      const scale = Math.min(5, 460 / w, 230 / h);
-      target.drawImage(
-        source,
-        left,
-        top,
-        w,
-        h,
-        (640 - w * scale) / 2,
-        (320 - h * scale) / 2,
-        w * scale,
-        h * scale,
-      );
-    }
-  } else renderer.draw(0, { camera: { x: 0, y: -160 }, scale: 640 / g.worldWidth });
-  Matter.Engine.clear(g.engine);
-  Matter.Composite.clear(g.engine.world, false);
-  images.set(id, canvas);
-  return canvas;
+      source.width = source.height = 0;
+    } else renderer.draw(0, { camera: { x: 0, y: -160 }, scale: 640 / g.worldWidth });
+    images.set(id, canvas);
+    return canvas;
+  } finally {
+    Matter.Engine.clear(g.engine);
+    Matter.Composite.clear(g.engine.world, false);
+  }
+}
+const painters = new WeakMap<HTMLElement, () => void>();
+export function stopArchiveImages(root: HTMLElement) {
+  painters.get(root)?.();
+  painters.delete(root);
 }
 export function drawArchiveImages(root: HTMLElement) {
-  root.querySelectorAll<HTMLCanvasElement>('canvas[data-archive-image]').forEach((canvas) => {
-    const id = canvas.dataset.archiveImage!;
-    canvas.getContext('2d')!.drawImage(photograph(id), 0, 0, canvas.width, canvas.height);
-  });
+  stopArchiveImages(root);
+  const canvases = Array.from(
+    root.querySelectorAll<HTMLCanvasElement>('canvas[data-archive-image]'),
+  );
+  if (!canvases.length) return;
+  const pending = new Set<HTMLCanvasElement>();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let stopped = false;
+  const observer =
+    typeof IntersectionObserver === 'function'
+      ? new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            const canvas = entry.target as HTMLCanvasElement;
+            if (entry.isIntersecting) pending.add(canvas);
+            else pending.delete(canvas);
+          }
+          schedule();
+        })
+      : null;
+  const stop = () => {
+    stopped = true;
+    if (timer !== undefined) clearTimeout(timer);
+    pending.clear();
+    observer?.disconnect();
+  };
+  painters.set(root, stop);
+  function schedule() {
+    if (stopped || timer !== undefined || !pending.size) return;
+    // Yield between actual photographs, leaving menu navigation responsive.
+    timer = setTimeout(() => {
+      timer = undefined;
+      const canvas = pending.values().next().value!;
+      pending.delete(canvas);
+      if (canvas.isConnected && root.contains(canvas)) {
+        try {
+          canvas
+            .getContext('2d')
+            ?.drawImage(
+              photograph(canvas.dataset.archiveImage!),
+              0,
+              0,
+              canvas.width,
+              canvas.height,
+            );
+          observer?.unobserve(canvas);
+        } catch {
+          // Keep the rest of the catalog usable; reopening retries this picture.
+          canvas.setAttribute('aria-label', 'Picture unavailable. Reopen to retry.');
+        }
+      }
+      schedule();
+    }, 0);
+  }
+  for (const canvas of canvases) {
+    if (observer) observer.observe(canvas);
+    else pending.add(canvas);
+  }
+  schedule();
 }

@@ -1,8 +1,9 @@
+import './support-drill.css';
 import type { Input } from './game.ts';
 import type { ControllerFrame } from './controller.ts';
 import { Renderer } from './render.ts';
 import { bindingLabel, held, matches, type Bindings } from './keyboard.ts';
-import { escapeLogbook } from './logbook-menu.ts';
+import { escapeLogbook } from './html.ts';
 import { SupportDrill } from './support-drill.ts';
 import { SUPPORT_DRILLS, supportDrillMastery, type SupportDrillId } from './support-drill-info.ts';
 

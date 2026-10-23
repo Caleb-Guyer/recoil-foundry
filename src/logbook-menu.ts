@@ -1,4 +1,6 @@
-import { drawArchiveImages } from './archive-images.ts';
+import { drawArchiveImages } from './menu-images.ts';
+export { logbookCatalog } from './logbook-catalog.ts';
+export { logbookPreviewEntries } from './logbook.ts';
 import { commendationRewards, REWARD_CATALOG } from './run-rewards.ts';
 import { LOGBOOK_SECTIONS } from './logbook.ts';
 import type { LogbookEntry, LogbookSection } from './logbook.ts';
@@ -25,11 +27,8 @@ const hints = {
   records: 'Explore the Foundry to recover more documents.',
   commendations: 'Earn commendations in campaign or Daily runs.',
 };
-export const escapeLogbook = (text: string) =>
-  text.replace(
-    /[&<>"']/g,
-    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!,
-  );
+import { escapeLogbook } from './html.ts';
+export { escapeLogbook } from './html.ts';
 const fileMark =
   '<svg class="logbook-file" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 6h18l7 7v29H12zM30 6v9h7M18 23h13M18 29h13M18 35h7"/></svg>';
 const commendationMark = (earned: boolean) =>

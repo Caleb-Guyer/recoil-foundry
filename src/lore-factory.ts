@@ -1,3 +1,4 @@
+import { RECORD_RULES } from './record-index.ts';
 import type { EnemyKind } from './levels.ts';
 import type { AreaId } from './areas.ts';
 import type { Lore } from './lore-upgrades.ts';
@@ -218,10 +219,8 @@ export const TOOL_LORE: Lore = [
 
 export const RECORDS = [
   {
-    id: 'isolation-loading',
+    ...RECORD_RULES[0],
     name: 'Outside the circuit',
-    unlock: 'disconnect',
-    stage: 3,
     lore: [
       'Loading disconnect, folded service slip',
       'M. Vale · maintenance',
@@ -229,10 +228,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'isolation-heat',
+    ...RECORD_RULES[1],
     name: 'No remote reset',
-    unlock: 'disconnect',
-    stage: 7,
     lore: [
       'Thermal disconnect, carbon copy',
       'E. Holt · safety office',
@@ -240,10 +237,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'isolation-reclaim',
+    ...RECORD_RULES[2],
     name: 'The last order',
-    unlock: 'disconnect',
-    stage: 15,
     lore: [
       'Reclamation disconnect, routing correction',
       'T. Orr · dispatch',
@@ -251,9 +246,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'end-of-shift',
+    ...RECORD_RULES[3],
     name: 'End of shift',
-    unlock: 'shutdown',
     lore: [
       'Dispatch ledger, final page',
       'T. Orr · dispatch',
@@ -261,10 +255,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'last-break',
+    ...RECORD_RULES[4],
     name: 'Five minutes',
-    unlock: 'found',
-    story: 'breakroom',
     lore: [
       'Note under the fourth cup',
       'T. Orr · dispatch',
@@ -272,10 +264,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'return-address',
+    ...RECORD_RULES[5],
     name: 'Return address',
-    unlock: 'found',
-    story: 'dispatch',
     lore: [
       'Consignment 0001, seventh label',
       'T. Orr · dispatch',
@@ -283,10 +273,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'cold-control',
+    ...RECORD_RULES[6],
     name: 'Control sample',
-    unlock: 'found',
-    story: 'experiment',
     lore: [
       'Cooling trial 17, handwritten amendment',
       'Dr. S. Anik · development',
@@ -294,10 +282,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'still-here',
+    ...RECORD_RULES[7],
     name: 'Someone was here',
-    unlock: 'found',
-    story: 'hideout',
     lore: [
       'Service panel, inside face',
       'M. Vale · maintenance',
@@ -305,9 +291,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'handover',
+    ...RECORD_RULES[8],
     name: 'Last handover',
-    unlock: 'always',
     lore: [
       'Loose page inside a tool locker',
       'M. Vale · maintenance',
@@ -315,9 +300,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'continuity',
+    ...RECORD_RULES[9],
     name: 'Continuity order',
-    unlock: 'reclamation',
     lore: [
       'Operations directive 01, distribution copy',
       'Central planning office',
@@ -325,9 +309,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'breakroom',
+    ...RECORD_RULES[10],
     name: 'Four cups',
-    unlock: 'cooling',
     lore: [
       'Canteen receipt, reverse side',
       'T. Orr · dispatch',
@@ -335,9 +318,8 @@ export const RECORDS = [
     ],
   },
   {
-    id: 'departure',
+    ...RECORD_RULES[11],
     name: 'Departure record',
-    unlock: 'escaped',
     lore: [
       'Gatehouse terminal, recovered output',
       'Automatic entry / handwritten addition',

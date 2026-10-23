@@ -1,5 +1,5 @@
 import type { Checkpoint } from './rules.ts';
-import type { LogbookProgress } from './logbook.ts';
+import type { LogbookProgress } from './logbook-progress.ts';
 import type { RunRecap } from './run-history.ts';
 import type { CommendationId } from './commendations.ts';
 import { STARTING_GUN_IDS, type StartingGun } from './starting-guns.ts';

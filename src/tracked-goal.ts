@@ -1,5 +1,5 @@
 import { COMMENDATIONS } from './commendations.ts';
-import type { LogbookEntry } from './logbook.ts';
+import type { LogbookEntry } from './logbook-progress.ts';
 import { LONGEVITY_IDS, unlockGoals, type LongevityId } from './longevity.ts';
 import { MODS } from './rules.ts';
 import { goalById, goalMeasure, nextGoal, type GoalProgress } from './next-goal.ts';

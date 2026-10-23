@@ -9,6 +9,7 @@ function fixture(t: test.TestContext) {
     else Reflect.deleteProperty(globalThis, 'createImageBitmap');
   });
   const jobs: { id: number; bitmap: ImageBitmap }[] = [];
+  const sizes: ImageBitmapOptions[] = [];
   let stopped = 0,
     closed = 0,
     fallback = 0,
@@ -33,7 +34,8 @@ function fixture(t: test.TestContext) {
   Object.defineProperty(globalThis, 'createImageBitmap', {
     configurable: true,
     writable: true,
-    value: () => {
+    value: (_source: unknown, options: ImageBitmapOptions) => {
+      sizes.push(options);
       snapshots++;
       return Promise.resolve(bitmap);
     },
@@ -52,6 +54,7 @@ function fixture(t: test.TestContext) {
     bitmap,
     canvas,
     jobs,
+    sizes,
     counts: () => ({ stopped, closed, fallback, snapshots }),
     encoder: new ReplayEncoder(canvas, () => worker as unknown as Worker),
   };
@@ -80,6 +83,38 @@ test('worker capture snapshots immediately and correlates out-of-order replies w
   f.worker.onmessage({ data: { id: f.jobs[0].id, blob: new Blob(['duplicate']) } });
   assert.deepEqual(received, ['last', 'first']);
   assert.equal(f.counts().fallback, 0);
+});
+
+test('large, portrait and ultrawide sources transfer only replay-sized bitmaps without stretching', async (t) => {
+  const f = fixture(t);
+  for (const [width, height] of [
+    [3840, 2160],
+    [1178, 1307],
+    [5120, 1440],
+    [320, 180],
+  ]) {
+    f.encoder.encode({ width, height } as HTMLCanvasElement, () => {});
+    const options = f.sizes.at(-1)!;
+    assert(options.resizeWidth! <= 854 && options.resizeHeight! <= 480);
+    assert(options.resizeWidth! <= width && options.resizeHeight! <= height);
+    assert(Math.abs(options.resizeWidth! / options.resizeHeight! - width / height) < 0.01);
+  }
+  await Promise.resolve();
+  assert.equal(f.jobs.length, 4);
+});
+
+test('unavailable bitmap resizing resolves the job and uses canvas fallback on the next frame', async (t) => {
+  const f = fixture(t);
+  Object.defineProperty(globalThis, 'createImageBitmap', {
+    configurable: true,
+    value: () => Promise.reject(new Error('resize unsupported')),
+  });
+  const received: (Blob | null)[] = [];
+  f.encoder.encode(f.canvas, (blob) => received.push(blob));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(received, [null]);
+  f.encoder.encode(f.canvas, (blob) => received.push(blob));
+  assert(received[1] instanceof Blob);
 });
 
 test('worker startup failure resolves pending jobs, closes late snapshots and falls back for future captures', async (t) => {

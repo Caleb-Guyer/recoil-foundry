@@ -1,5 +1,5 @@
 import type { goalRunSummary } from './goal-run.ts';
-import { escapeLogbook } from './logbook-menu.ts';
+import { escapeLogbook } from './html.ts';
 type Summary = NonNullable<ReturnType<typeof goalRunSummary>>;
 
 export function goalRunMarkup(

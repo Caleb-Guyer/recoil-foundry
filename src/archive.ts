@@ -1,9 +1,10 @@
 import { MODS } from './rules.ts';
 import { ENEMY_NAMES } from './damage-cause.ts';
 import { AREAS } from './areas.ts';
-import { RECORDS } from './lore-factory.ts';
+import { RECORD_RULES } from './record-index.ts';
 import { COMMENDATIONS } from './commendations.ts';
-import { logbookEntries, type LogbookEntry, type LogbookProgress } from './logbook.ts';
+import type { LogbookEntry, LogbookProgress } from './logbook-progress.ts';
+import { recoveredLogbookTokens } from './logbook-notices.ts';
 import type { CommendationId } from './commendations.ts';
 import type { Enemy } from './game.ts';
 import { LONGEVITY_IDS } from './longevity.ts';
@@ -42,7 +43,7 @@ const ids = [
   ...VARIANT_IDS,
   ...TOOLROOM_ROOM_IDS.map((id) => 'room:' + id),
   ...REMIX_IDS.map((id) => 'remix:' + id),
-  ...RECORDS.map((r) => 'record:' + r.id),
+  ...RECORD_RULES.map((r) => 'record:' + r.id),
   ...COMMENDATIONS.flatMap((c) => ['commendation:' + c.id, 'commendation:' + c.id + ':earned']),
 ];
 export interface ArchiveProgress {
@@ -113,7 +114,7 @@ export function migrateArchive(
   if (raw !== null && raw !== undefined) return loadArchive(raw);
   // Existing records are the migration baseline. New discoveries after this
   // point notify individually instead of giving an established player 100 badges.
-  const recovered = logbookEntries(collected, book, earned).map(archiveToken);
+  const recovered = recoveredLogbookTokens(collected, book, earned);
   if (book.shutdown) recovered.push('region:shutdown');
   return loadArchive({ version: 1, encountered: recovered, read: recovered });
 }

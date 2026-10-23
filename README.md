@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Loading & performance — version 5.10.0.** Optional tools and real Logbook pictures load on demand, heavy projectile sweeps do less work, and replay capture transfers smaller bitmaps. [Measured results and test links](docs/releases/5.10.0.md) · [Compare loading](https://caleb-guyer.github.io/recoil-foundry/performance.html).
+
 **Room rematches & replay guidance — version 5.9.0.** After a combat-room death, choose **Practice this room** to retry the same room with your finished gun and full health. Enemies and props reset; practice grants no rewards and leaves your original results and replay intact. Watch replay offers one tip tied to the recorded lethal cause. [Release notes and three isolated playtests](docs/releases/5.9.0.md).
 
 **Room remaster & combat clarity — version 5.8.0.** Six existing layouts gain clear ground routes, optional recoil landings, wider firing decks and cover placed around the patrol. The player and committed attack warnings remain visible above friendly effects; dense builds ease cosmetic particles, glows and camera movement. New Campaigns use the layouts; older Continue saves and Daily layouts retain their rules. [Release notes and eight isolated playtests](docs/releases/5.8.0.md).

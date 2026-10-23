@@ -1,6 +1,6 @@
 import { goalPreviewProgress } from './next-goal-preview.ts';
 import { MODS } from './rules.ts';
-import { loadLogbook } from './logbook.ts';
+import { loadLogbook } from './logbook-progress.ts';
 import type { GoalProgress } from './next-goal.ts';
 export const TRACKING_PREVIEWS = ['tools', 'achievements', 'upgrades', 'fresh'] as const;
 export type TrackingPreview = (typeof TRACKING_PREVIEWS)[number];

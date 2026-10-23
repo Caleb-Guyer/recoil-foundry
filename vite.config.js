@@ -3,6 +3,12 @@ export default defineConfig({
   base: './',
   build: {
     target: 'es2022',
-    rollupOptions: { input: { game: 'index.html', diagnostics: 'diagnostics.html' } },
+    rollupOptions: {
+      input: {
+        game: 'index.html',
+        diagnostics: 'diagnostics.html',
+        performance: 'performance.html',
+      },
+    },
   },
 });

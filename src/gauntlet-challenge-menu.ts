@@ -10,7 +10,7 @@ import { gauntletChoiceName } from './gauntlet-rules.ts';
 import { isBossRemix, type BossRemixId } from './boss-remix-rules.ts';
 import { STARTING_GUNS } from './starting-guns.ts';
 import { practiceTime } from './practice-records.ts';
-import { escapeLogbook } from './logbook-menu.ts';
+import { escapeLogbook } from './html.ts';
 import type { MenuBack } from './blueprint-menu.ts';
 
 export function gauntletChallengeMenu(

@@ -36,7 +36,7 @@ import {
   loadDiscoveries,
   workshopBuild,
 } from './workshop-build.ts';
-import { LOGBOOK_KEY, loadLogbook, migrateLogbook } from './logbook.ts';
+import { LOGBOOK_KEY, loadLogbook, migrateLogbook } from './logbook-progress.ts';
 import { COMMENDATIONS_KEY, loadCommendations } from './commendations.ts';
 import { COSMETICS_KEY, loadCosmetics } from './cosmetics.ts';
 import {

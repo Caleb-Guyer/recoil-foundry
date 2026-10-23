@@ -1,5 +1,7 @@
 # Browser performance acceptance
 
+For the 5.10.0 loading update, use the [live loading comparison](https://caleb-guyer.github.io/recoil-foundry/performance.html) and [measured release report](releases/5.10.0.md). It compares the pinned 5.9.0 release with the current build in separate isolated frames and reports asset cache state. Optional historic files are requested only by this diagnostic. The simulation and replay procedure below remains the combat test.
+
 This procedure is retained for optional future testing. Release item 5 is closed under the [owner-approved scope](performance-closeout-2.96.1.md); it does not require reopening skipped tests. The [support list](browser-support.md) distinguishes observed results from waived or unavailable checks.
 
 Use the production [stability test](https://caleb-guyer.github.io/recoil-foundry/diagnostics.html) on each browser/device being considered for support. This separate diagnostic page contains late-game encounter spoilers. It does not save a run, unlock content, change preferences or upload its report.

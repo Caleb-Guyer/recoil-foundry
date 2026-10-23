@@ -1,0 +1,39 @@
+.loading-bench {
+  overflow: auto;
+}
+.loading-bench main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 16px;
+}
+.loading-bench header {
+  position: static;
+  padding: 0 0 16px;
+}
+.loading-bench table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.loading-bench caption {
+  text-align: left;
+  margin-bottom: 12px;
+  color: #b7c6c2;
+}
+.loading-bench th,
+.loading-bench td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #34464b;
+}
+.loading-bench details {
+  margin: 16px 0;
+}
+#loading-report {
+  padding: 16px;
+  background: #182023;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 480px;
+  overflow: auto;
+}

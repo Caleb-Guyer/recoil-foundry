@@ -1,12 +1,10 @@
 import './reward-cards.css';
 import './combat-report.css';
 import { combatReportMenu, type ReportGun } from './combat-report-menu.ts';
-import { drawCombatReportImages } from './combat-report-art.ts';
+import { drawCombatReportImages, cancelMenuImages } from './menu-images.ts';
 import { SUPPORT_MASTERIES, type SupportMasteryAttempt } from './support-mastery.ts';
-import './support-drill.css';
-import { SupportDrillView } from './support-drill-view.ts';
-import './room-rematch.css';
-import { RoomRematchView } from './room-rematch-view.ts';
+import type { SupportDrillView } from './support-drill-view.ts';
+import type { RoomRematchView } from './room-rematch-view.ts';
 import {
   rematchEntry,
   roomRematchSnapshot,
@@ -33,7 +31,9 @@ import { rewardCards, drawRewardImages } from './reward-cards.ts';
 import { modMark } from './upgrade-icons.ts';
 import './upgrade-preview.css';
 import { inspectUpgrade } from './upgrade-inspection.ts';
-import { UpgradePreviewView, upgradePreviewMarkup } from './upgrade-preview-view.ts';
+import type { UpgradePreviewView } from './upgrade-preview-view.ts';
+import { upgradePreviewMarkup } from './upgrade-preview-markup.ts';
+import { LazyResource, ViewLifetime } from './lazy-resource.ts';
 import { upgradePreviewTestFromUrl } from './upgrade-preview-test.ts';
 import { firstRunPreviewFromUrl, firstRunTestFromUrl } from './first-run-test.ts';
 import {
@@ -56,7 +56,7 @@ import {
   archiveToken,
   loadArchive,
 } from './archive.ts';
-import { logbookCatalog } from './logbook-catalog.ts';
+import { recoveredLogbookTokens, unreadCatalogCount } from './logbook-notices.ts';
 import {
   MILESTONES_KEY,
   loadMilestones,
@@ -106,7 +106,7 @@ import {
   huntSeed,
   type HuntKind,
 } from './hunt-rules.ts';
-import { drawArchiveImages } from './archive-images.ts';
+import { drawArchiveImages } from './menu-images.ts';
 import { bossRemixTestFromUrl } from './boss-remix-test.ts';
 import {
   BOSS_REMIXES,
@@ -127,7 +127,8 @@ import { shutdownTestFromUrl } from './shutdown-layout.ts';
 import { STORY_ROOMS, storyTestFromUrl } from './story-layout.ts';
 import { fabricatorTestFromUrl } from './fabricator-layout.ts';
 import { replayTestFromUrl } from './death-replay.ts';
-import { DeathReplay, ReplayView } from './death-replay-view.ts';
+import { DeathReplay } from './death-replay-capture.ts';
+import type { ReplayView } from './death-replay-view.ts';
 import { damageCauseText } from './damage-cause.ts';
 import {
   LOGBOOK_KEY,
@@ -135,11 +136,9 @@ import {
   mergeLogbook,
   migrateLogbook,
   recordLogbook,
-  logbookEntries,
-  logbookPreviewEntries,
   logbookLink,
-} from './logbook.ts';
-import { logbookMenu, type LogbookViewState } from './logbook-menu.ts';
+} from './logbook-progress.ts';
+import type { LogbookViewState } from './logbook-menu.ts';
 import type { EnemyKind } from './levels.ts';
 import { TURF_FORMATIONS, type TurfFormation } from './turf-formations.ts';
 import { AREA_EVENTS, eventTestFromUrl } from './area-events.ts';
@@ -189,7 +188,7 @@ import {
   workshopBuild,
   workshopLink,
 } from './workshop-build.ts';
-import { workshopMenu } from './workshop-menu.ts';
+
 import { BLUEPRINTS_KEY, loadBlueprints } from './blueprints.ts';
 import {
   STARTING_GUNS,
@@ -539,7 +538,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Room rematches</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Loading & performance</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -577,6 +576,41 @@ let replayView: ReplayView | null = null;
 let upgradePreview: UpgradePreviewView | null = null;
 let supportDrill: SupportDrillView | null = null;
 let roomRematchView: RoomRematchView | null = null;
+const optional = {
+  workshop: new LazyResource(() => import('./workshop-menu.ts')),
+  logbook: new LazyResource(() => import('./logbook-menu.ts')),
+  replay: new LazyResource(() => import('./death-replay-view.ts')),
+  rematch: new LazyResource(() => import('./room-rematch-view.ts')),
+  drill: new LazyResource(() => import('./support-drill-view.ts')),
+  upgrade: new LazyResource(() => import('./upgrade-preview-view.ts')),
+};
+const dialogLifetime = new ViewLifetime();
+let appearanceRequested = false;
+function loadUpgradeComparison(...args: ConstructorParameters<typeof UpgradePreviewView>) {
+  const current = dialogLifetime.ticket();
+  const root = args[0];
+  const idle = root.querySelector<HTMLElement>('.upgrade-preview-idle')!;
+  const load = () => {
+    idle.textContent = 'Loading gun comparison…';
+    void optional.upgrade
+      .load()
+      .then(({ UpgradePreviewView }) => {
+        if (!current() || !modal.open || !root.isConnected) return;
+        idle.textContent = 'Hover or focus a choice to compare your gun.';
+        upgradePreview = new UpgradePreviewView(...args);
+      })
+      .catch(() => {
+        if (!current() || !root.isConnected) return;
+        idle.textContent = 'Gun comparison unavailable. You can still choose an upgrade. ';
+        const retry = document.createElement('button');
+        retry.className = 'quiet';
+        retry.textContent = 'Retry comparison';
+        retry.onclick = load;
+        idle.append(retry);
+      });
+  };
+  load();
+}
 let currentRematchEntry: RematchEntry | null = null;
 let lastRoomRematch: RoomRematchSnapshot | null = null;
 let selectedDrill: SupportDrillId = 'heat';
@@ -1434,6 +1468,9 @@ function clearInput(disarm = true) {
   $('portal-touch').setAttribute('aria-pressed', 'false');
 }
 function closeDialog() {
+  dialogLifetime.invalidate();
+  cancelMenuImages($('dialog-content'));
+  appearanceRequested = false;
   roomRematchView?.dispose();
   roomRematchView = null;
   supportDrill?.dispose();
@@ -2318,8 +2355,8 @@ function backFromLogbook() {
   }
   if (logbookFromWorkshop) {
     logbookFromWorkshop = false;
+    appearanceRequested = true;
     showDialog('workshop');
-    document.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
     return;
   }
   previewLogbook = false;
@@ -2384,12 +2421,12 @@ function updateArchive(ids: readonly string[] = []) {
       until: null,
       stage: game.stage,
     };
-  const entries = logbookEntries(discovered, logbookProgress, commendations, [
+  const entries = recoveredLogbookTokens(discovered, logbookProgress, commendations, [
     ...loadArchive(before).encountered,
     ...ids,
   ]);
   const next = encounterArchive(before, [
-    ...entries.map(archiveToken),
+    ...entries,
     ...ids,
     ...(!game.practice &&
     !game.testRun &&
@@ -2447,16 +2484,13 @@ function displayedArchive() {
     : archive;
 }
 function updateLogbookBadge() {
-  const unread = logbookCatalog(
+  const unread = unreadCatalogCount(
     discovered,
-    logbookProgress,
     commendations,
-    read(ARCHIVE_KEY),
+    loadArchive(read(ARCHIVE_KEY)),
     currentGoals(),
-    read(UPRISING_RECORDS_KEY),
     weaponUnlocks(),
-    read(RECOIL_TRIALS_KEY),
-  ).filter((e) => e.unread).length;
+  );
   const badge = document.getElementById('logbook-badge');
   if (badge) badge.hidden = !unread;
   const button = document.getElementById('logbook');
@@ -2750,6 +2784,8 @@ function addRoomRematchAction(root: HTMLElement) {
   root.querySelector('.actions')?.append(button);
 }
 function showDialog(kind: string) {
+  dialogLifetime.invalidate();
+  cancelMenuImages($('dialog-content'));
   roomRematchView?.dispose();
   roomRematchView = null;
   supportDrill?.dispose();
@@ -2808,6 +2844,50 @@ function showDialog(kind: string) {
   modal.classList.toggle('update-dialog', kind === 'update');
   modal.classList.toggle('feedback-dialog', kind === 'issue');
   const content = $('dialog-content');
+  const resource =
+    kind === 'workshop' || kind === 'practice-build'
+      ? optional.workshop
+      : kind === 'logbook'
+        ? optional.logbook
+        : kind === 'room-rematch'
+          ? optional.rematch
+          : kind === 'support-drill'
+            ? optional.drill
+            : kind === 'replay'
+              ? optional.replay
+              : null;
+  if (resource && !resource.value) {
+    const current = dialogLifetime.ticket();
+    content.innerHTML =
+      '<h2 id="dialog-title">Loading…</h2><p role="status">Opening this tool.</p><div class="actions"><button id="back" class="quiet">Back</button></div>';
+    $('back').onclick = () => {
+      appearanceRequested = false;
+      if (kind === 'room-rematch' || kind === 'replay') showDialog('result');
+      else if (kind === 'support-drill') backFromDrill();
+      else if (kind === 'practice-build') backFromPracticeBuild();
+      else if (kind === 'logbook') backFromLogbook();
+      else backFromHistory();
+    };
+    if (!modal.open) modal.showModal();
+    $('back').focus({ preventScroll: true });
+    void resource
+      .load()
+      .then(() => {
+        if (current() && modal.open) showDialog(kind);
+      })
+      .catch(() => {
+        if (!current() || !modal.open) return;
+        content.querySelector('[role="status"]')!.textContent =
+          'This tool could not load. Check your connection and try again.';
+        const retry = document.createElement('button');
+        retry.textContent = 'Try again';
+        retry.className = 'primary';
+        retry.onclick = () => showDialog(kind);
+        content.querySelector('.actions')!.prepend(retry);
+        retry.focus({ preventScroll: true });
+      });
+    return;
+  }
   modal.scrollTop = 0;
   if (kind === 'logbook' || kind === 'workshop')
     commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
@@ -2852,8 +2932,12 @@ function showDialog(kind: string) {
         : undefined,
     );
   } else if (kind === 'support-drill') {
-    supportDrill = new SupportDrillView(content, selectedDrill, bindings, backFromDrill, (kind) =>
-      sound.play(kind),
+    supportDrill = new optional.drill.value!.SupportDrillView(
+      content,
+      selectedDrill,
+      bindings,
+      backFromDrill,
+      (kind) => sound.play(kind),
     );
   } else if (kind === 'starting-gun' || kind === 'goal-campaign') {
     startingGunMenu(
@@ -2945,11 +3029,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.9.0 · ROOM REMATCHES</p><h2 id="dialog-title">Try another approach.</h2>' +
-      '<p class="update-tagline">Watch the hit. Practice the room. Start your next run ready.</p>' +
-      '<dl class="update-notes"><div><dt>Practice this room.</dt><dd>After a combat-room death, retry that room with full health and your finished gun. Enemies, cover and room machinery start fresh. Retry as often as you like, then return to your original run results.</dd></div>' +
-      '<div><dt>One tip in your replay.</dt><dd>Watch replay now offers a short suggestion based on the recorded lethal attack or hazard. The same tip is tucked beside your rematch, ready when you want it.</dd></div>' +
-      '<div><dt>A place to learn.</dt><dd>Room practice grants no rewards, unlocks or records and does not advance the run. Your original result and replay stay available. Existing Practice, movement trials and extraction keep their own retry options.</dd></div></dl>' +
+      '<p class="eyebrow">5.10.0 · LOADING & PERFORMANCE</p><h2 id="dialog-title">Keep the momentum.</h2>' +
+      '<p class="update-tagline">Less work before you play. Less work during the fight.</p>' +
+      '<dl class="update-notes"><div><dt>Tools load when you open them.</dt><dd>Workshop, Logbook documents, room rematches and replay viewing load on demand. Upgrade choices remain usable while their gun comparison loads.</dd></div>' +
+      '<div><dt>Heavy guns, lighter work.</dt><dd>Projectile sweeps skip distant cover before the detailed collision check. Replay snapshots shrink before transfer to the encoder. Ammunition keeps its existing colored light.</dd></div>' +
+      '<div><dt>A responsive Logbook.</dt><dd>Actual game pictures fill in as they enter view, one at a time. A bounded picture cache releases older canvases as you browse.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -2984,12 +3068,12 @@ function showDialog(kind: string) {
   } else if (kind === 'logbook') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
     logbookProgress = mergeLogbook(logbookProgress, loadLogbook(read(LOGBOOK_KEY)));
-    logbookMenu(
+    optional.logbook.value!.logbookMenu(
       content,
       linkedTrackingPreview
         ? (() => {
             const p = titleGoalProgress();
-            return logbookCatalog(
+            return optional.logbook.value!.logbookCatalog(
               p.discovered,
               p.book,
               p.earned,
@@ -3000,8 +3084,8 @@ function showDialog(kind: string) {
             );
           })()
         : previewLogbook
-          ? logbookPreviewEntries()
-          : logbookCatalog(
+          ? optional.logbook.value!.logbookPreviewEntries()
+          : optional.logbook.value!.logbookCatalog(
               drillPreview
                 ? [...discovered, ...SUPPORT_DRILLS[selectedDrill].mods]
                 : game.testRun?.seed.startsWith('SUPPORT-4.13-') || masteryRewardPreview
@@ -3043,8 +3127,8 @@ function showDialog(kind: string) {
         ? undefined
         : () => {
             logbookFromWorkshop = false;
+            appearanceRequested = true;
             showDialog('workshop');
-            content.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
           },
       (entry) => {
         if (
@@ -3092,12 +3176,12 @@ function showDialog(kind: string) {
       content.querySelector('.logbook-preview')!.textContent =
         'Goal tracking preview · Choices stay in this preview. Your save stays untouched.';
   } else if (kind === 'replay' && deathReplay.ready) {
-    replayView = new ReplayView(deathReplay, content);
+    replayView = new optional.replay.value!.ReplayView(deathReplay, content);
     $('retry').onclick = () => start(undefined, true);
     $('back').onclick = () => showDialog('result');
     addRoomRematchAction(content);
   } else if (kind === 'room-rematch' && lastRoomRematch) {
-    roomRematchView = new RoomRematchView(
+    roomRematchView = new optional.rematch.value!.RoomRematchView(
       content,
       lastRoomRematch,
       bindings,
@@ -3140,7 +3224,7 @@ function showDialog(kind: string) {
     $('back').onclick = backFromHistory;
   } else if (kind === 'workshop') {
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
-    buildMenu = workshopMenu(
+    buildMenu = optional.workshop.value!.workshopMenu(
       content,
       discovered,
       game.workshop.active ? game.mods : workshopMods,
@@ -3192,6 +3276,10 @@ function showDialog(kind: string) {
         showStartingGuns: weaponUnlocks().started,
       },
     );
+    if (appearanceRequested) {
+      appearanceRequested = false;
+      content.querySelector<HTMLButtonElement>('[data-workshop-tab="appearance"]')?.click();
+    }
   } else if (kind === 'blueprints' && blueprintSource) {
     buildMenu = blueprintMenu(
       content,
@@ -3417,7 +3505,7 @@ function showDialog(kind: string) {
   } else if (kind === 'practice-build' && practiceTarget) {
     const encounter = practiceTarget;
     discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
-    buildMenu = workshopMenu(
+    buildMenu = optional.workshop.value!.workshopMenu(
       content,
       discovered,
       practiceDrafts[encounter.kind] ?? workshopMods,
@@ -3477,7 +3565,7 @@ function showDialog(kind: string) {
       '</div>' +
       upgradePreviewMarkup() +
       '<div class="dialog-actions"><button id="back" class="quiet">Walk away</button></div>';
-    upgradePreview = new UpgradePreviewView(
+    loadUpgradeComparison(
       content.querySelector('.upgrade-preview')!,
       new Map(
         Array.from(content.querySelectorAll<HTMLButtonElement>('[data-swap]')).map((button) => {
@@ -3667,7 +3755,7 @@ function showDialog(kind: string) {
               : 'Reroll · −' + REROLL_COST + ' health') +
           '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
         : '');
-    upgradePreview = new UpgradePreviewView(
+    loadUpgradeComparison(
       content.querySelector('.upgrade-preview')!,
       new Map(
         Array.from(content.querySelectorAll<HTMLButtonElement>('[data-mod]')).map((button) => [
@@ -5186,4 +5274,5 @@ if (
   !linkedWorkshop
 )
   openProgress();
+document.documentElement.dataset.gameReady = 'true';
 requestAnimationFrame(frame);

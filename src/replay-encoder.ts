@@ -1,6 +1,7 @@
 import { REPLAY_WIDTH, REPLAY_HEIGHT } from './death-replay.ts';
 
-// The game thread snapshots its canvas; a worker does the pixel readback/JPEG.
+// Snapshot at replay resolution before transfer; high-DPI game canvases need
+// not enqueue full-resolution bitmaps. The worker does pixel readback/JPEG.
 // A failed or unavailable worker falls back to the original canvas encoder.
 export class ReplayEncoder {
   private worker: Worker | null = null;
@@ -43,7 +44,12 @@ export class ReplayEncoder {
     this.jobs.set(id, done);
     let snapshot: Promise<ImageBitmap>;
     try {
-      snapshot = createImageBitmap(source);
+      const fit = Math.min(1, REPLAY_WIDTH / source.width, REPLAY_HEIGHT / source.height);
+      snapshot = createImageBitmap(source, {
+        resizeWidth: Math.max(1, Math.round(source.width * fit)),
+        resizeHeight: Math.max(1, Math.round(source.height * fit)),
+        resizeQuality: 'low',
+      });
     } catch {
       this.disable();
       return;

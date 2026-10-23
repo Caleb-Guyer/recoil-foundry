@@ -1,4 +1,4 @@
-import type { LogbookEntry } from './logbook.ts';
+import type { LogbookEntry } from './logbook-progress.ts';
 import { loadArchive, archiveUnread } from './archive.ts';
 import { uprisingContracts } from './uprising-model.ts';
 

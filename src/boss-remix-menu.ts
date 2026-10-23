@@ -6,7 +6,7 @@ import {
 } from './boss-remix-rules.ts';
 import { PRACTICE_BOSSES, type Encounter } from './practice.ts';
 import { archiveMark } from './archive-art.ts';
-import { drawArchiveImages } from './archive-images.ts';
+import { drawArchiveImages } from './menu-images.ts';
 import type { MenuBack } from './blueprint-menu.ts';
 
 export function remixMenuHtml(raw: unknown) {

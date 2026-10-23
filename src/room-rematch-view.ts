@@ -1,9 +1,10 @@
 import type { Input } from './game.ts';
+import './room-rematch.css';
 import type { ControllerFrame } from './controller.ts';
 import { controllerPortalTarget } from './controller-target.ts';
 import { Renderer } from './render.ts';
 import { bindingLabel, held, matches, type Bindings } from './keyboard.ts';
-import { escapeLogbook } from './logbook-menu.ts';
+import { escapeLogbook } from './html.ts';
 import { RoomRematch, type RoomRematchSnapshot } from './room-rematch.ts';
 
 export class RoomRematchView {
@@ -105,7 +106,9 @@ export class RoomRematchView {
       );
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault(), options);
     this.canvas.addEventListener('blur', () => this.resetInput(), options);
-    for (const button of Array.from(root.querySelectorAll<HTMLButtonElement>('[data-rematch-touch]'))) {
+    for (const button of Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-rematch-touch]'),
+    )) {
       const action = button.dataset.rematchTouch as keyof typeof this.touch;
       button.addEventListener(
         'pointerdown',

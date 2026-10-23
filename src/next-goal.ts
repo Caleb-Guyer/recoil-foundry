@@ -1,5 +1,5 @@
 import { COMMENDATIONS, commendationVisible, type CommendationId } from './commendations.ts';
-import type { LogbookProgress } from './logbook.ts';
+import type { LogbookProgress } from './logbook-progress.ts';
 import { unlockGoals, draftUnlocked, LONGEVITY_IDS, type LongevityId } from './longevity.ts';
 import { MODS, MOD_REQUIRES, FUSION_REQUIRES, SALVAGE_BOSSES, isSalvage } from './rules.ts';
 import { BRANCH_PARENTS } from './upgrade-branches.ts';

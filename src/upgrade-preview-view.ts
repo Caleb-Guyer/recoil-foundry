@@ -3,8 +3,7 @@ import { Renderer } from './render.ts';
 import { createUpgradeDemo, destroyUpgradeDemo, upgradeDemoInput } from './upgrade-demo.ts';
 import type { UpgradeInspection } from './upgrade-inspection.ts';
 
-export const upgradePreviewMarkup = () =>
-  '<section class="upgrade-preview" aria-label="Gun comparison"><div class="upgrade-preview-idle">Hover or focus a choice to compare your gun.</div><div class="upgrade-preview-detail" hidden><div class="upgrade-preview-heading"><strong data-preview-title></strong><span>Firing range</span></div><div class="upgrade-preview-scenes"><figure><figcaption>Current gun</figcaption><canvas data-preview-before aria-hidden="true"></canvas></figure><figure><figcaption data-preview-after-label>With upgrade</figcaption><canvas data-preview-after aria-hidden="true"></canvas></figure></div><div class="upgrade-preview-summary" id="upgrade-preview-summary" aria-live="polite"></div></div></section>';
+export { upgradePreviewMarkup } from './upgrade-preview-markup.ts';
 
 export class UpgradePreviewView {
   root: HTMLElement;
@@ -59,7 +58,13 @@ export class UpgradePreviewView {
     }
     // Previewing never moves focus or accepts a fitting. Keep the last comparison
     // visible when the player moves from a card to the firing-range pictures.
-    if (automatic) this.select(choices.keys().next().value ?? null);
+    const focused = document.activeElement as HTMLButtonElement;
+    const hovered = Array.from(choices.keys()).find((button) => button.matches(':hover'));
+    this.select(
+      choices.has(focused)
+        ? focused
+        : (hovered ?? (automatic ? (choices.keys().next().value ?? null) : null)),
+    );
   }
   private clearDemos() {
     for (const { game } of this.demos) destroyUpgradeDemo(game);

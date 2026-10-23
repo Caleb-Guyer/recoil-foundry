@@ -5,7 +5,7 @@ import {
 } from './recoil-trial-rules.ts';
 import { STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 import { MODS } from './rules.ts';
-import { escapeLogbook } from './logbook-menu.ts';
+import { escapeLogbook } from './html.ts';
 import { practiceTime } from './practice-records.ts';
 import type { MenuBack } from './blueprint-menu.ts';
 import { loadRecoilGhosts, recoilChallenge, type RecoilChallenge } from './recoil-race-rules.ts';

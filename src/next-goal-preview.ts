@@ -1,6 +1,6 @@
 import { COMMENDATIONS } from './commendations.ts';
 import { MODS } from './rules.ts';
-import { loadLogbook } from './logbook.ts';
+import { loadLogbook } from './logbook-progress.ts';
 import { loadSecurityProfile } from './security.ts';
 import { loadWeaponUnlocks, TOOL_LICENSES } from './weapon-unlocks.ts';
 import type { GoalProgress } from './next-goal.ts';

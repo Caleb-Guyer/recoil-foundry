@@ -1,0 +1,3517 @@
+{
+  "baseline": {
+    "version": "5.9.0",
+    "commit": "6aaaa0f743dc1f4fef08edb1c8bf1480e4356de1"
+  },
+  "current": {
+    "version": "5.10.0"
+  },
+  "environment": {
+    "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+    "logicalCores": 24,
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "methodology": "CPU measurements use two paired runs per version, in before/after/before/after order. Each has five 600-tick rounds per scenario; exclude the first 120 ticks per round. 4,800 measured ticks per scenario per version. No concurrent tests or artificial CPU throttling; other OS activity and thermal variation are uncontrolled. Native CPU rendering is not browser/GPU FPS.",
+  "simulationSummary": [
+    {
+      "scenario": "beam",
+      "beforeMeanMs": 1.3748369791666706,
+      "afterMeanMs": 0.9400975833333367,
+      "beforeRenderMeanMs": 2.010576708333339,
+      "afterRenderMeanMs": 2.070759416666667
+    },
+    {
+      "scenario": "explosions",
+      "beforeMeanMs": 0.762726833333334,
+      "afterMeanMs": 0.49580606250000525,
+      "beforeRenderMeanMs": 1.6550651458332934,
+      "afterRenderMeanMs": 1.6369196458333288
+    },
+    {
+      "scenario": "heat-mortar",
+      "beforeMeanMs": 0.11644174999999904,
+      "afterMeanMs": 0.11597591666664434,
+      "beforeRenderMeanMs": 0.43430633333334145,
+      "afterRenderMeanMs": 0.4469795208333479
+    }
+  ],
+  "payload": {
+    "before": {
+      "methodology": "Eager production JS graph only. Eleven fresh Node/V8 isolates; sources read before timer. Module compilation only, excluding evaluation, browser layout, process startup and network. Default gzip per file. No optional dynamic imports followed.",
+      "node": "v24.16.0",
+      "chunks": ["assets\\game-CSPlhFDC.js", "assets\\toolroom-test-DBZZ3uz3.js"],
+      "eagerBytes": 1461945,
+      "eagerGzipBytes": 477155,
+      "compileMs": {
+        "samples": [
+          21.0956, 20.703699999999998, 21.2119, 19.5013, 20.296899999999997, 20.761799999999997,
+          20.0343, 20.197999999999997, 20.556099999999997, 20.095400000000005, 20.496399999999998
+        ],
+        "median": 20.496399999999998,
+        "p95": 21.2119
+      }
+    },
+    "after": {
+      "methodology": "Eager production JS graph only. Eleven fresh Node/V8 isolates; sources read before timer. Module compilation only, excluding evaluation, browser layout, process startup and network. Default gzip per file. No optional dynamic imports followed.",
+      "node": "v24.16.0",
+      "chunks": [
+        "assets\\game-C4zdK5Os.js",
+        "assets\\version-C6wzxbun.js",
+        "assets\\toolroom-test-BuzSCIwI.js"
+      ],
+      "eagerBytes": 1340152,
+      "eagerGzipBytes": 435349,
+      "compileMs": {
+        "samples": [
+          27.526099999999992, 26.2344, 24.698099999999997, 24.334600000000002, 24.620599999999996,
+          26.5135, 23.8041, 22.749900000000004, 25.0105, 24.8446, 23.565800000000003
+        ],
+        "median": 24.698099999999997,
+        "p95": 27.526099999999992
+      }
+    }
+  },
+  "cpu": {
+    "before": [
+      {
+        "version": "5.9.0",
+        "node": "v24.16.0",
+        "canvas": "@napi-rs/canvas; CPU renderer, not browser FPS",
+        "viewport": {
+          "width": 1280,
+          "height": 720,
+          "pixelRatio": 1
+        },
+        "methodology": "Five deterministic 600-tick rounds per scenario; first 120 ticks excluded. Real simulation, renderer and ordinary inputs. Audio/replay excluded. Sequential execution; no CPU throttling.",
+        "rows": [
+          {
+            "scenario": "beam",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 1.3706422500000006,
+              "p50Ms": 1.339100000000144,
+              "p95Ms": 2.8568999999997686,
+              "maxMs": 11.89220000000023
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 1.9867102916666712,
+              "p50Ms": 2.001299999999901,
+              "p95Ms": 3.291400000000067,
+              "maxMs": 12.887300000000323
+            },
+            "transition": {
+              "samples": 10,
+              "meanMs": 17.810370000000205,
+              "p50Ms": 16.948899999999867,
+              "p95Ms": 24.040000000000077,
+              "maxMs": 24.040000000000077
+            },
+            "retries": 0,
+            "clears": 5,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 69.06480000001545
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 412.84199999999896
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 239.86739999996462
+              },
+              "drawTell": {
+                "calls": 11455,
+                "ms": 12.550099999991517
+              }
+            }
+          },
+          {
+            "scenario": "explosions",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.7877419999999992,
+              "p50Ms": 0.6305999999985943,
+              "p95Ms": 1.8526999999994587,
+              "maxMs": 24.30370000000039
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 1.6672286249999715,
+              "p50Ms": 1.5709999999999127,
+              "p95Ms": 2.742999999998574,
+              "maxMs": 8.06039999999848
+            },
+            "transition": {
+              "samples": 5,
+              "meanMs": 17.518720000000393,
+              "p50Ms": 17.038399999999456,
+              "p95Ms": 18.51560000000063,
+              "maxMs": 18.51560000000063
+            },
+            "retries": 0,
+            "clears": 0,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 56.48019999994176
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 535.5186000000613
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 324.4336000000276
+              },
+              "drawTell": {
+                "calls": 18082,
+                "ms": 32.156799999913346
+              }
+            }
+          },
+          {
+            "scenario": "heat-mortar",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.11316883333333104,
+              "p50Ms": 0.1025999999983469,
+              "p95Ms": 0.2147000000004482,
+              "maxMs": 2.6758000000008906
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 0.4206186250000125,
+              "p50Ms": 0.4157000000013795,
+              "p95Ms": 0.6401999999980035,
+              "maxMs": 3.228800000000774
+            },
+            "transition": {
+              "samples": 15,
+              "meanMs": 1.9383466666661358,
+              "p50Ms": 1.8555000000014843,
+              "p95Ms": 2.957800000000134,
+              "maxMs": 2.957800000000134
+            },
+            "retries": 0,
+            "clears": 10,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 35.47989999995116
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 71.34300000002622
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 104.86609999995198
+              },
+              "drawTell": {
+                "calls": 2420,
+                "ms": 1.3020000000651635
+              }
+            }
+          }
+        ]
+      },
+      {
+        "version": "5.9.0",
+        "node": "v24.16.0",
+        "canvas": "@napi-rs/canvas; CPU renderer, not browser FPS",
+        "viewport": {
+          "width": 1280,
+          "height": 720,
+          "pixelRatio": 1
+        },
+        "methodology": "Five deterministic 600-tick rounds per scenario; first 120 ticks excluded. Real simulation, renderer and ordinary inputs. Audio/replay excluded. Sequential execution; no CPU throttling.",
+        "rows": [
+          {
+            "scenario": "beam",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 1.3790317083333403,
+              "p50Ms": 1.3267000000000735,
+              "p95Ms": 2.875099999999975,
+              "maxMs": 10.119899999999689
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 2.0344431250000072,
+              "p50Ms": 2.047899999999572,
+              "p95Ms": 3.399699999999939,
+              "maxMs": 11.153800000000047
+            },
+            "transition": {
+              "samples": 10,
+              "meanMs": 18.10953000000014,
+              "p50Ms": 16.94380000000001,
+              "p95Ms": 26.18610000000001,
+              "maxMs": 26.18610000000001
+            },
+            "retries": 0,
+            "clears": 5,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 71.58949999998254
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 419.8946000000333
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 245.91289999997377
+              },
+              "drawTell": {
+                "calls": 11455,
+                "ms": 13.920499999977437
+              }
+            }
+          },
+          {
+            "scenario": "explosions",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.7377116666666689,
+              "p50Ms": 0.6048000000009779,
+              "p95Ms": 1.7167000000008557,
+              "maxMs": 3.358699999998862
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 1.6429016666666152,
+              "p50Ms": 1.5501000000003842,
+              "p95Ms": 2.7232999999996537,
+              "maxMs": 8.942199999999502
+            },
+            "transition": {
+              "samples": 5,
+              "meanMs": 17.995360000000073,
+              "p50Ms": 18.094900000000052,
+              "p95Ms": 18.788899999999558,
+              "maxMs": 18.788899999999558
+            },
+            "retries": 0,
+            "clears": 0,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 55.00379999991674
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 524.0325000002176
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 325.523100000044
+              },
+              "drawTell": {
+                "calls": 17764,
+                "ms": 31.409500000103435
+              }
+            }
+          },
+          {
+            "scenario": "heat-mortar",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.11971466666666705,
+              "p50Ms": 0.10729999999966822,
+              "p95Ms": 0.2348999999994703,
+              "maxMs": 2.7128999999986263
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 0.44799404166667045,
+              "p50Ms": 0.43510000000242144,
+              "p95Ms": 0.6649000000033993,
+              "maxMs": 26.52769999999873
+            },
+            "transition": {
+              "samples": 15,
+              "meanMs": 2.028886666666949,
+              "p50Ms": 1.900999999998021,
+              "p95Ms": 3.7268000000003667,
+              "maxMs": 3.7268000000003667
+            },
+            "retries": 0,
+            "clears": 10,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 36.8169000001144
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 73.62700000002951
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 107.46899999996094
+              },
+              "drawTell": {
+                "calls": 2420,
+                "ms": 1.2689999999201973
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "after": [
+      {
+        "version": "5.10.0",
+        "node": "v24.16.0",
+        "canvas": "@napi-rs/canvas; CPU renderer, not browser FPS",
+        "viewport": {
+          "width": 1280,
+          "height": 720,
+          "pixelRatio": 1
+        },
+        "methodology": "Five deterministic 600-tick rounds per scenario; first 120 ticks excluded. Real simulation, renderer and ordinary inputs. Audio/replay excluded. Sequential execution; no CPU throttling.",
+        "rows": [
+          {
+            "scenario": "beam",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.9237259166666729,
+              "p50Ms": 0.9016999999994368,
+              "p95Ms": 1.9660000000003492,
+              "maxMs": 9.3787999999995
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 2.04002991666668,
+              "p50Ms": 2.0473000000001775,
+              "p95Ms": 3.4575999999997293,
+              "maxMs": 8.515599999999722
+            },
+            "transition": {
+              "samples": 10,
+              "meanMs": 17.70325999999981,
+              "p50Ms": 16.92320000000018,
+              "p95Ms": 24.496899999999982,
+              "maxMs": 24.496899999999982
+            },
+            "retries": 0,
+            "clears": 5,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 71.54190000001972
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 423.53029999996534
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 250.25490000003697
+              },
+              "drawTell": {
+                "calls": 11455,
+                "ms": 13.803199999963908
+              }
+            }
+          },
+          {
+            "scenario": "explosions",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.5055735833333559,
+              "p50Ms": 0.44509999999900174,
+              "p95Ms": 1.0026999999990949,
+              "maxMs": 3.4992999999994936
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 1.6340856666666477,
+              "p50Ms": 1.5627000000004045,
+              "p95Ms": 2.6864999999997963,
+              "maxMs": 9.049699999999575
+            },
+            "transition": {
+              "samples": 5,
+              "meanMs": 18.067039999999544,
+              "p50Ms": 17.823300000000017,
+              "p95Ms": 19.83770000000004,
+              "maxMs": 19.83770000000004
+            },
+            "retries": 0,
+            "clears": 0,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 55.5593999999528
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 525.3495000000203
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 323.70430000000306
+              },
+              "drawTell": {
+                "calls": 17764,
+                "ms": 30.905599999714468
+              }
+            }
+          },
+          {
+            "scenario": "heat-mortar",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.11357637499999328,
+              "p50Ms": 0.10229999999864958,
+              "p95Ms": 0.21039999999993597,
+              "maxMs": 2.5165999999990163
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 0.45028391666670964,
+              "p50Ms": 0.44139999999970314,
+              "p95Ms": 0.6648999999997613,
+              "maxMs": 22.194299999999203
+            },
+            "transition": {
+              "samples": 15,
+              "meanMs": 2.2782800000003287,
+              "p50Ms": 1.9631999999983236,
+              "p95Ms": 5.3303000000014435,
+              "maxMs": 5.3303000000014435
+            },
+            "retries": 0,
+            "clears": 10,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 37.3250999999982
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 75.29639999993014
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 112.62080000008791
+              },
+              "drawTell": {
+                "calls": 2420,
+                "ms": 1.5603000000701286
+              }
+            }
+          }
+        ]
+      },
+      {
+        "version": "5.10.0",
+        "node": "v24.16.0",
+        "canvas": "@napi-rs/canvas; CPU renderer, not browser FPS",
+        "viewport": {
+          "width": 1280,
+          "height": 720,
+          "pixelRatio": 1
+        },
+        "methodology": "Five deterministic 600-tick rounds per scenario; first 120 ticks excluded. Real simulation, renderer and ordinary inputs. Audio/replay excluded. Sequential execution; no CPU throttling.",
+        "rows": [
+          {
+            "scenario": "beam",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.9564692500000005,
+              "p50Ms": 0.8993000000000393,
+              "p95Ms": 2.060699999999997,
+              "maxMs": 10.117599999999584
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 2.1014889166666544,
+              "p50Ms": 2.1238000000003012,
+              "p95Ms": 3.5245000000013533,
+              "maxMs": 9.984300000000076
+            },
+            "transition": {
+              "samples": 10,
+              "meanMs": 19.112480000000062,
+              "p50Ms": 17.509800000000723,
+              "p95Ms": 25.184499999999957,
+              "maxMs": 25.184499999999957
+            },
+            "retries": 0,
+            "clears": 5,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 74.35690000005172
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 442.95279999999957
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 258.2143999999694
+              },
+              "drawTell": {
+                "calls": 11455,
+                "ms": 14.450599999951692
+              }
+            }
+          },
+          {
+            "scenario": "explosions",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.48603854166665467,
+              "p50Ms": 0.4230999999999767,
+              "p95Ms": 1.022399999999834,
+              "maxMs": 3.0138999999999214
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 1.6397536250000098,
+              "p50Ms": 1.5666000000001077,
+              "p95Ms": 2.7484000000004016,
+              "maxMs": 5.425999999999476
+            },
+            "transition": {
+              "samples": 5,
+              "meanMs": 17.74991999999984,
+              "p50Ms": 17.76850000000013,
+              "p95Ms": 18.070799999999508,
+              "maxMs": 18.070799999999508
+            },
+            "retries": 0,
+            "clears": 0,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 53.74160000002121
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 525.9257999999863
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 329.1439000000646
+              },
+              "drawTell": {
+                "calls": 17605,
+                "ms": 30.635699999997087
+              }
+            }
+          },
+          {
+            "scenario": "heat-mortar",
+            "simulation": {
+              "samples": 2400,
+              "meanMs": 0.11837545833329538,
+              "p50Ms": 0.09670000000187429,
+              "p95Ms": 0.2139999999999418,
+              "maxMs": 24.191600000001927
+            },
+            "render": {
+              "samples": 2400,
+              "meanMs": 0.4436751249999861,
+              "p50Ms": 0.44059999999808497,
+              "p95Ms": 0.6677999999992608,
+              "maxMs": 3.387699999999313
+            },
+            "transition": {
+              "samples": 15,
+              "meanMs": 2.1028466666665433,
+              "p50Ms": 1.9668999999994412,
+              "p95Ms": 3.7736000000004424,
+              "maxMs": 3.7736000000004424
+            },
+            "retries": 0,
+            "clears": 10,
+            "methods": {
+              "drawProps": {
+                "calls": 3000,
+                "ms": 37.4576000000161
+              },
+              "drawEnemies": {
+                "calls": 3000,
+                "ms": 77.4078000000809
+              },
+              "drawPlayer": {
+                "calls": 3000,
+                "ms": 111.39429999990534
+              },
+              "drawTell": {
+                "calls": 2420,
+                "ms": 1.341799999914656
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "compilation": {
+    "before": [
+      {
+        "methodology": "Eager production JS graph only. Eleven fresh Node/V8 isolates; sources read before timer. Module compilation only, excluding evaluation, browser layout, process startup and network. Default gzip per file. No optional dynamic imports followed.",
+        "node": "v24.16.0",
+        "chunks": ["assets\\game-CSPlhFDC.js", "assets\\toolroom-test-DBZZ3uz3.js"],
+        "eagerBytes": 1461945,
+        "eagerGzipBytes": 477155,
+        "compileMs": {
+          "samples": [
+            34.71510000000001, 34.1077, 31.716, 38.468399999999995, 41.46849999999999,
+            35.380399999999995, 38.0583, 39.12650000000001, 35.2512, 40.497400000000006, 35.2661
+          ],
+          "median": 35.380399999999995,
+          "p95": 41.46849999999999
+        }
+      },
+      {
+        "methodology": "Eager production JS graph only. Eleven fresh Node/V8 isolates; sources read before timer. Module compilation only, excluding evaluation, browser layout, process startup and network. Default gzip per file. No optional dynamic imports followed.",
+        "node": "v24.16.0",
+        "chunks": ["assets\\game-CSPlhFDC.js", "assets\\toolroom-test-DBZZ3uz3.js"],
+        "eagerBytes": 1461945,
+        "eagerGzipBytes": 477155,
+        "compileMs": {
+          "samples": [
+            40.5175, 38.227599999999995, 39.6115, 38.9671, 42.4083, 39.633399999999995, 40.4451,
+            37.8041, 40.4099, 43.719699999999996, 34.6132
+          ],
+          "median": 39.633399999999995,
+          "p95": 43.719699999999996
+        }
+      }
+    ],
+    "after": [
+      {
+        "methodology": "Eager production JS graph only. Eleven fresh Node/V8 isolates; sources read before timer. Module compilation only, excluding evaluation, browser layout, process startup and network. Default gzip per file. No optional dynamic imports followed.",
+        "node": "v24.16.0",
+        "chunks": [
+          "assets\\game-C4zdK5Os.js",
+          "assets\\version-C6wzxbun.js",
+          "assets\\toolroom-test-BuzSCIwI.js"
+        ],
+        "eagerBytes": 1340152,
+        "eagerGzipBytes": 435349,
+        "compileMs": {
+          "samples": [
+            36.7163, 41.489399999999996, 38.25019999999999, 36.2992, 38.4809, 36.336299999999994,
+            35.6961, 40.363099999999996, 35.1316, 38.1303, 39.345000000000006
+          ],
+          "median": 38.1303,
+          "p95": 41.489399999999996
+        }
+      },
+      {
+        "methodology": "Eager production JS graph only. Eleven fresh Node/V8 isolates; sources read before timer. Module compilation only, excluding evaluation, browser layout, process startup and network. Default gzip per file. No optional dynamic imports followed.",
+        "node": "v24.16.0",
+        "chunks": [
+          "assets\\game-C4zdK5Os.js",
+          "assets\\version-C6wzxbun.js",
+          "assets\\toolroom-test-BuzSCIwI.js"
+        ],
+        "eagerBytes": 1340152,
+        "eagerGzipBytes": 435349,
+        "compileMs": {
+          "samples": [
+            38.60620000000001, 36.7391, 35.6493, 36.6551, 35.9432, 35.3183, 37.0697, 36.5659,
+            35.522099999999995, 37.85360000000001, 33.068799999999996
+          ],
+          "median": 36.5659,
+          "p95": 38.60620000000001
+        }
+      }
+    ],
+    "conclusion": "No consistent isolated V8 compile improvement: matched batch medians overlap. Report actual browser navigation separately using performance.html."
+  },
+  "rematchLifecycle": {
+    "version": "5.10.0",
+    "methodology": "Node simulation lifecycle audit, not browser/GPU memory. 120 independent rematch opens, four three-second input sequences and resets per open. Exact fresh-body/pair/projectile counts after every reset; no saved progress. Heap sampled after explicit GC if available.",
+    "opened": 120,
+    "resets": 480,
+    "writes": 0,
+    "timing": {
+      "samples": 600,
+      "meanMs": 0.52,
+      "p50Ms": 0.5,
+      "p95Ms": 0.8,
+      "p99Ms": 1.1,
+      "maxMs": 2.79,
+      "over20": 0,
+      "over34": 0,
+      "over50": 0
+    },
+    "forcedGC": true,
+    "samples": [
+      {
+        "cycle": 10,
+        "heapBytes": 20266928
+      },
+      {
+        "cycle": 20,
+        "heapBytes": 20457856
+      },
+      {
+        "cycle": 30,
+        "heapBytes": 20577208
+      },
+      {
+        "cycle": 40,
+        "heapBytes": 20584160
+      },
+      {
+        "cycle": 50,
+        "heapBytes": 20381192
+      },
+      {
+        "cycle": 60,
+        "heapBytes": 20520976
+      },
+      {
+        "cycle": 70,
+        "heapBytes": 20553080
+      },
+      {
+        "cycle": 80,
+        "heapBytes": 20569944
+      },
+      {
+        "cycle": 90,
+        "heapBytes": 20716712
+      },
+      {
+        "cycle": 100,
+        "heapBytes": 20744104
+      },
+      {
+        "cycle": 110,
+        "heapBytes": 20835384
+      },
+      {
+        "cycle": 120,
+        "heapBytes": 20877560
+      }
+    ]
+  },
+  "simulationSoak": {
+    "before": {
+      "version": "5.9.0",
+      "runtime": "v24.16.0",
+      "platform": "win32",
+      "cycles": 12,
+      "inputSteps": 21600,
+      "deathSteps": 25440,
+      "equivalentInputMinutes": 6,
+      "wallSeconds": 11.467891400000001,
+      "deaths": 60,
+      "clears": 34,
+      "pauseCycles": 72,
+      "menuCycles": 12,
+      "portalPairs": 3,
+      "checkpointWrites": 0,
+      "forcedGC": true,
+      "note": "Simulation-only lifecycle soak; not browser FPS, human difficulty, or low-end hardware acceptance. Maxima sampled once per simulated second. Heap sampled after identical room resets and explicit GC when available.",
+      "samples": [
+        {
+          "cycle": 1,
+          "scenario": "volley",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 1.12,
+            "p50Ms": 1,
+            "p95Ms": 2.7,
+            "p99Ms": 3.4,
+            "maxMs": 11.46,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 26,
+            "constraints": 0,
+            "pairs": 8,
+            "shots": 177,
+            "particles": 207,
+            "enemies": 8,
+            "props": 7,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 1
+          },
+          "heapUsed": 21058120,
+          "external": 12158342,
+          "arrayBuffers": 38791,
+          "rss": 205279232
+        },
+        {
+          "cycle": 2,
+          "scenario": "explosions",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.65,
+            "p50Ms": 0.5,
+            "p95Ms": 1.6,
+            "p99Ms": 2.2,
+            "maxMs": 6.12,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 26,
+            "constraints": 0,
+            "pairs": 10,
+            "shots": 68,
+            "particles": 212,
+            "enemies": 9,
+            "props": 7,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 3
+          },
+          "heapUsed": 22237984,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 261607424
+        },
+        {
+          "cycle": 3,
+          "scenario": "portals",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 1.09,
+            "p50Ms": 1,
+            "p95Ms": 2.5,
+            "p99Ms": 3,
+            "maxMs": 5.5,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 23,
+            "constraints": 0,
+            "pairs": 10,
+            "shots": 180,
+            "particles": 220,
+            "enemies": 8,
+            "props": 4,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 2
+          },
+          "heapUsed": 23121632,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 265687040
+        },
+        {
+          "cycle": 4,
+          "scenario": "beam",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 1.04,
+            "p50Ms": 1,
+            "p95Ms": 2.2,
+            "p99Ms": 2.8,
+            "maxMs": 6.34,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 29,
+            "constraints": 0,
+            "pairs": 18,
+            "shots": 180,
+            "particles": 204,
+            "enemies": 9,
+            "props": 9,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 4
+          },
+          "heapUsed": 23865568,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 282214400
+        },
+        {
+          "cycle": 5,
+          "scenario": "boss",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.12,
+            "p50Ms": 0.1,
+            "p95Ms": 0.2,
+            "p99Ms": 0.6,
+            "maxMs": 1.7,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 14,
+            "constraints": 0,
+            "pairs": 4,
+            "shots": 29,
+            "particles": 99,
+            "enemies": 1,
+            "props": 4,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 24165120,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 287272960
+        },
+        {
+          "cycle": 6,
+          "scenario": "overtime",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.26,
+            "p50Ms": 0.2,
+            "p95Ms": 0.5,
+            "p99Ms": 1,
+            "maxMs": 5.16,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 21,
+            "constraints": 0,
+            "pairs": 7,
+            "shots": 105,
+            "particles": 214,
+            "enemies": 9,
+            "props": 5,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 23536048,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 285261824
+        },
+        {
+          "cycle": 7,
+          "scenario": "thermal",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.13,
+            "p50Ms": 0.1,
+            "p95Ms": 0.2,
+            "p99Ms": 0.4,
+            "maxMs": 0.82,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 13,
+            "constraints": 0,
+            "pairs": 3,
+            "shots": 7,
+            "particles": 48,
+            "enemies": 5,
+            "props": 2,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 23689968,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 282079232
+        },
+        {
+          "cycle": 8,
+          "scenario": "repair",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.05,
+            "p50Ms": 0,
+            "p95Ms": 0.1,
+            "p99Ms": 0.2,
+            "maxMs": 1.13,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 13,
+            "constraints": 0,
+            "pairs": 5,
+            "shots": 5,
+            "particles": 43,
+            "enemies": 4,
+            "props": 4,
+            "mortarShells": 2,
+            "mortarBlasts": 1,
+            "marks": 0
+          },
+          "heapUsed": 24126552,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 281366528
+        },
+        {
+          "cycle": 9,
+          "scenario": "mortar",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.02,
+            "p50Ms": 0,
+            "p95Ms": 0.1,
+            "p99Ms": 0.1,
+            "maxMs": 0.26,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 7,
+            "constraints": 0,
+            "pairs": 2,
+            "shots": 5,
+            "particles": 40,
+            "enemies": 1,
+            "props": 1,
+            "mortarShells": 2,
+            "mortarBlasts": 2,
+            "marks": 1
+          },
+          "heapUsed": 24173416,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 281366528
+        },
+        {
+          "cycle": 10,
+          "scenario": "heat-mortar",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.05,
+            "p50Ms": 0.1,
+            "p95Ms": 0.1,
+            "p99Ms": 0.1,
+            "maxMs": 0.73,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 7,
+            "constraints": 0,
+            "pairs": 2,
+            "shots": 0,
+            "particles": 27,
+            "enemies": 1,
+            "props": 1,
+            "mortarShells": 2,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 24138128,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 281440256
+        },
+        {
+          "cycle": 11,
+          "scenario": "blast-mortar",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.03,
+            "p50Ms": 0,
+            "p95Ms": 0.1,
+            "p99Ms": 0.2,
+            "maxMs": 0.94,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 7,
+            "constraints": 0,
+            "pairs": 2,
+            "shots": 12,
+            "particles": 94,
+            "enemies": 1,
+            "props": 1,
+            "mortarShells": 2,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 24143568,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 281509888
+        },
+        {
+          "cycle": 12,
+          "scenario": "volley",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.92,
+            "p50Ms": 1,
+            "p95Ms": 2,
+            "p99Ms": 2.4,
+            "maxMs": 3.15,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 25,
+            "constraints": 0,
+            "pairs": 13,
+            "shots": 162,
+            "particles": 206,
+            "enemies": 9,
+            "props": 6,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 3
+          },
+          "heapUsed": 24266680,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 264224768
+        }
+      ],
+      "deathMemory": [
+        {
+          "retry": 1,
+          "heapUsed": 23944200,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 2,
+          "heapUsed": 22751200,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 3,
+          "heapUsed": 22933600,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 4,
+          "heapUsed": 23034672,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 5,
+          "heapUsed": 23043664,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 6,
+          "heapUsed": 23075024,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 7,
+          "heapUsed": 23091216,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 8,
+          "heapUsed": 23110128,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 9,
+          "heapUsed": 23089800,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 10,
+          "heapUsed": 23120368,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 11,
+          "heapUsed": 23144480,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 12,
+          "heapUsed": 23135280,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 13,
+          "heapUsed": 23145440,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 14,
+          "heapUsed": 23146864,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 15,
+          "heapUsed": 23144768,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 16,
+          "heapUsed": 23174560,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 17,
+          "heapUsed": 23170088,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 18,
+          "heapUsed": 23171896,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 19,
+          "heapUsed": 23146328,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 20,
+          "heapUsed": 23163336,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 21,
+          "heapUsed": 23170368,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 22,
+          "heapUsed": 23185896,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 23,
+          "heapUsed": 23186304,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 24,
+          "heapUsed": 23185384,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 25,
+          "heapUsed": 23293424,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 26,
+          "heapUsed": 23405688,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 27,
+          "heapUsed": 23340288,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 28,
+          "heapUsed": 23338248,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 29,
+          "heapUsed": 23343808,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 30,
+          "heapUsed": 23338296,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 31,
+          "heapUsed": 23349536,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 32,
+          "heapUsed": 23350120,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 33,
+          "heapUsed": 23347072,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 34,
+          "heapUsed": 23343384,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 35,
+          "heapUsed": 23370008,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 36,
+          "heapUsed": 23370624,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 37,
+          "heapUsed": 23369424,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 38,
+          "heapUsed": 23318976,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 39,
+          "heapUsed": 23330736,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 40,
+          "heapUsed": 23351728,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 41,
+          "heapUsed": 23358392,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 42,
+          "heapUsed": 23351112,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 43,
+          "heapUsed": 23367920,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 44,
+          "heapUsed": 23354064,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 45,
+          "heapUsed": 23367400,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 46,
+          "heapUsed": 23349656,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 47,
+          "heapUsed": 23369104,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 48,
+          "heapUsed": 23390784,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 49,
+          "heapUsed": 23386368,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 50,
+          "heapUsed": 23339976,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 51,
+          "heapUsed": 23375040,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 52,
+          "heapUsed": 23402208,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 53,
+          "heapUsed": 23397072,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 54,
+          "heapUsed": 23405160,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 55,
+          "heapUsed": 23380520,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 56,
+          "heapUsed": 23380688,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 57,
+          "heapUsed": 23379824,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 58,
+          "heapUsed": 23383640,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 59,
+          "heapUsed": 23396184,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 60,
+          "heapUsed": 23405272,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        }
+      ]
+    },
+    "after": {
+      "version": "5.10.0",
+      "runtime": "v24.16.0",
+      "platform": "win32",
+      "cycles": 12,
+      "inputSteps": 21600,
+      "deathSteps": 25440,
+      "equivalentInputMinutes": 6,
+      "wallSeconds": 6.835766899999999,
+      "deaths": 60,
+      "clears": 33,
+      "pauseCycles": 72,
+      "menuCycles": 12,
+      "portalPairs": 2,
+      "checkpointWrites": 0,
+      "forcedGC": true,
+      "note": "Simulation-only lifecycle soak; not browser FPS, human difficulty, or low-end hardware acceptance. Maxima sampled once per simulated second. Heap sampled after identical room resets and explicit GC when available.",
+      "samples": [
+        {
+          "cycle": 1,
+          "scenario": "volley",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.54,
+            "p50Ms": 0.4,
+            "p95Ms": 1.4,
+            "p99Ms": 2.1,
+            "maxMs": 10.83,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 24,
+            "constraints": 0,
+            "pairs": 7,
+            "shots": 155,
+            "particles": 209,
+            "enemies": 9,
+            "props": 6,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 2
+          },
+          "heapUsed": 20671152,
+          "external": 12158342,
+          "arrayBuffers": 38791,
+          "rss": 170217472
+        },
+        {
+          "cycle": 2,
+          "scenario": "explosions",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.32,
+            "p50Ms": 0.3,
+            "p95Ms": 0.7,
+            "p99Ms": 1,
+            "maxMs": 3.13,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 26,
+            "constraints": 0,
+            "pairs": 8,
+            "shots": 76,
+            "particles": 203,
+            "enemies": 9,
+            "props": 7,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 6
+          },
+          "heapUsed": 22314648,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 205750272
+        },
+        {
+          "cycle": 3,
+          "scenario": "portals",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.39,
+            "p50Ms": 0.3,
+            "p95Ms": 1.1,
+            "p99Ms": 1.6,
+            "maxMs": 4.22,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 26,
+            "constraints": 0,
+            "pairs": 8,
+            "shots": 176,
+            "particles": 217,
+            "enemies": 9,
+            "props": 4,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 2
+          },
+          "heapUsed": 22974832,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 260059136
+        },
+        {
+          "cycle": 4,
+          "scenario": "beam",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.63,
+            "p50Ms": 0.6,
+            "p95Ms": 1.3,
+            "p99Ms": 1.8,
+            "maxMs": 2.94,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 29,
+            "constraints": 0,
+            "pairs": 18,
+            "shots": 180,
+            "particles": 207,
+            "enemies": 9,
+            "props": 9,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 4
+          },
+          "heapUsed": 23728616,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 265572352
+        },
+        {
+          "cycle": 5,
+          "scenario": "boss",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.11,
+            "p50Ms": 0.1,
+            "p95Ms": 0.2,
+            "p99Ms": 0.5,
+            "maxMs": 1.27,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 14,
+            "constraints": 0,
+            "pairs": 4,
+            "shots": 29,
+            "particles": 106,
+            "enemies": 1,
+            "props": 4,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 24113184,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 287305728
+        },
+        {
+          "cycle": 6,
+          "scenario": "overtime",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.24,
+            "p50Ms": 0.2,
+            "p95Ms": 0.5,
+            "p99Ms": 0.9,
+            "maxMs": 4.14,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 19,
+            "constraints": 0,
+            "pairs": 7,
+            "shots": 92,
+            "particles": 201,
+            "enemies": 8,
+            "props": 5,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 24287080,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 278056960
+        },
+        {
+          "cycle": 7,
+          "scenario": "thermal",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.09,
+            "p50Ms": 0.1,
+            "p95Ms": 0.2,
+            "p99Ms": 0.3,
+            "maxMs": 0.84,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 13,
+            "constraints": 0,
+            "pairs": 3,
+            "shots": 7,
+            "particles": 48,
+            "enemies": 5,
+            "props": 2,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 24418192,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 277446656
+        },
+        {
+          "cycle": 8,
+          "scenario": "repair",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.05,
+            "p50Ms": 0,
+            "p95Ms": 0.1,
+            "p99Ms": 0.1,
+            "maxMs": 2.11,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 13,
+            "constraints": 0,
+            "pairs": 5,
+            "shots": 5,
+            "particles": 44,
+            "enemies": 4,
+            "props": 4,
+            "mortarShells": 2,
+            "mortarBlasts": 1,
+            "marks": 0
+          },
+          "heapUsed": 24445704,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 277499904
+        },
+        {
+          "cycle": 9,
+          "scenario": "mortar",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.03,
+            "p50Ms": 0,
+            "p95Ms": 0.1,
+            "p99Ms": 0.1,
+            "maxMs": 0.78,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 7,
+            "constraints": 0,
+            "pairs": 2,
+            "shots": 5,
+            "particles": 39,
+            "enemies": 1,
+            "props": 1,
+            "mortarShells": 2,
+            "mortarBlasts": 2,
+            "marks": 1
+          },
+          "heapUsed": 23698392,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 277499904
+        },
+        {
+          "cycle": 10,
+          "scenario": "heat-mortar",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.06,
+            "p50Ms": 0.1,
+            "p95Ms": 0.1,
+            "p99Ms": 0.1,
+            "maxMs": 0.69,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 7,
+            "constraints": 0,
+            "pairs": 2,
+            "shots": 0,
+            "particles": 27,
+            "enemies": 1,
+            "props": 1,
+            "mortarShells": 2,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 23015568,
+          "external": 12174386,
+          "arrayBuffers": 54795,
+          "rss": 277499904
+        },
+        {
+          "cycle": 11,
+          "scenario": "blast-mortar",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.04,
+            "p50Ms": 0,
+            "p95Ms": 0.1,
+            "p99Ms": 0.2,
+            "maxMs": 1.09,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 7,
+            "constraints": 0,
+            "pairs": 2,
+            "shots": 12,
+            "particles": 96,
+            "enemies": 1,
+            "props": 1,
+            "mortarShells": 2,
+            "mortarBlasts": 0,
+            "marks": 0
+          },
+          "heapUsed": 23226904,
+          "external": 12174386,
+          "arrayBuffers": 38791,
+          "rss": 276123648
+        },
+        {
+          "cycle": 12,
+          "scenario": "volley",
+          "timing": {
+            "samples": 1800,
+            "meanMs": 0.45,
+            "p50Ms": 0.3,
+            "p95Ms": 1.2,
+            "p99Ms": 1.8,
+            "maxMs": 4.1,
+            "over20": 0,
+            "over34": 0,
+            "over50": 0
+          },
+          "peaks": {
+            "bodies": 25,
+            "constraints": 0,
+            "pairs": 12,
+            "shots": 175,
+            "particles": 215,
+            "enemies": 9,
+            "props": 6,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 1
+          },
+          "heapUsed": 24098320,
+          "external": 12174386,
+          "arrayBuffers": 54795,
+          "rss": 282558464
+        }
+      ],
+      "deathMemory": [
+        {
+          "retry": 1,
+          "heapUsed": 23891888,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 2,
+          "heapUsed": 23941040,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 3,
+          "heapUsed": 23997184,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 4,
+          "heapUsed": 24010696,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 5,
+          "heapUsed": 24007192,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 6,
+          "heapUsed": 23845080,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 7,
+          "heapUsed": 22896728,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 8,
+          "heapUsed": 22917784,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 9,
+          "heapUsed": 22898176,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 10,
+          "heapUsed": 22979416,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 11,
+          "heapUsed": 23018648,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 12,
+          "heapUsed": 23056144,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 13,
+          "heapUsed": 23063792,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 14,
+          "heapUsed": 23061864,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 15,
+          "heapUsed": 23081520,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 16,
+          "heapUsed": 23051440,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 17,
+          "heapUsed": 23049512,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 18,
+          "heapUsed": 23132096,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 19,
+          "heapUsed": 23126648,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 20,
+          "heapUsed": 23148000,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 21,
+          "heapUsed": 23218360,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 22,
+          "heapUsed": 23220952,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 23,
+          "heapUsed": 23192664,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 24,
+          "heapUsed": 23242976,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 25,
+          "heapUsed": 23269888,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 26,
+          "heapUsed": 23317280,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 27,
+          "heapUsed": 23315968,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 28,
+          "heapUsed": 23290032,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 29,
+          "heapUsed": 23291048,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 30,
+          "heapUsed": 23443112,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 31,
+          "heapUsed": 23439928,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 32,
+          "heapUsed": 23469576,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 33,
+          "heapUsed": 23466832,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 34,
+          "heapUsed": 23460536,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 35,
+          "heapUsed": 23456536,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 36,
+          "heapUsed": 23475408,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 37,
+          "heapUsed": 23485112,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 38,
+          "heapUsed": 23484720,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 39,
+          "heapUsed": 23487280,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 40,
+          "heapUsed": 23494432,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 41,
+          "heapUsed": 23494112,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 42,
+          "heapUsed": 23493920,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 43,
+          "heapUsed": 23491848,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 44,
+          "heapUsed": 23468648,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 45,
+          "heapUsed": 23513048,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 46,
+          "heapUsed": 23535344,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 47,
+          "heapUsed": 23544296,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 48,
+          "heapUsed": 23545232,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 49,
+          "heapUsed": 23558112,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 50,
+          "heapUsed": 23556760,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 51,
+          "heapUsed": 23536152,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 52,
+          "heapUsed": 23551416,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 53,
+          "heapUsed": 23567712,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 54,
+          "heapUsed": 23548960,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 55,
+          "heapUsed": 23510144,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 56,
+          "heapUsed": 23517688,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 57,
+          "heapUsed": 23541232,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 58,
+          "heapUsed": 23525696,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 59,
+          "heapUsed": 23526608,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        },
+        {
+          "retry": 60,
+          "heapUsed": 23530288,
+          "counts": {
+            "bodies": 15,
+            "constraints": 0,
+            "pairs": 0,
+            "shots": 0,
+            "particles": 0,
+            "enemies": 1,
+            "props": 3,
+            "mortarShells": 0,
+            "mortarBlasts": 0,
+            "marks": 0
+          }
+        }
+      ]
+    }
+  },
+  "browserCaution": "The 5.9.0 embedded-browser capture delivered about 1 FPS despite visible/focused state and low callback work. It dropped 1,657 fixed steps in 30 seconds; this cannot establish ordinary-device FPS or a completed stress encounter. Preserve this limitation; no general FPS or low-end acceptance claim.",
+  "validation": "3,084 regular regression tests plus the new archive loading lifecycle test passed locally. All existing CI shards retained."
+}

@@ -4,6 +4,15 @@ import type { Vec } from './rules.ts';
 // Sweep an axis-aligned actor hull against a solid's actual convex vertices.
 // SAT includes the solid's edge normals, so rotated props have no phantom corners.
 export function sweepBox(from: Vec, to: Vec, half: Vec, body: Matter.Body) {
+  // Reject distant targets before allocating SAT axes/projections. Read live
+  // bounds on every query so rotating, moving and newly broken cover is exact.
+  if (
+    body.bounds.min.x > Math.max(from.x, to.x) + half.x ||
+    body.bounds.max.x < Math.min(from.x, to.x) - half.x ||
+    body.bounds.min.y > Math.max(from.y, to.y) + half.y ||
+    body.bounds.max.y < Math.min(from.y, to.y) - half.y
+  )
+    return null;
   const axes: Vec[] = [
     { x: 1, y: 0 },
     { x: 0, y: 1 },
@@ -18,10 +27,16 @@ export function sweepBox(from: Vec, to: Vec, half: Vec, body: Matter.Body) {
     leave = Infinity;
   let normal: Vec = { x: 0, y: 0 };
   for (const axis of axes) {
-    const dots = body.vertices.map((v) => v.x * axis.x + v.y * axis.y);
+    let min = Infinity,
+      max = -Infinity;
+    for (const v of body.vertices) {
+      const dot = v.x * axis.x + v.y * axis.y;
+      min = Math.min(min, dot);
+      max = Math.max(max, dot);
+    }
     const radius = half.x * Math.abs(axis.x) + half.y * Math.abs(axis.y);
-    const low = Math.min(...dots) - radius,
-      high = Math.max(...dots) + radius;
+    const low = min - radius,
+      high = max + radius;
     const start = from.x * axis.x + from.y * axis.y;
     const delta = (to.x - from.x) * axis.x + (to.y - from.y) * axis.y;
     if (Math.abs(delta) < 1e-9) {

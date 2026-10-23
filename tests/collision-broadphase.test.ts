@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { firstSolid, sweepBox } from '../src/collisions.ts';
 import { seeded } from '../src/rules.ts';
+import { sweepBox as referenceSweep } from './fixtures/sweep-v5.9.ts';
 
 test('bounded queries match exhaustive convex sweeps for rotated and moving cover and padded hulls', () => {
   const random = seeded('convex-query-audit');
@@ -27,7 +28,12 @@ test('bounded queries match exhaustive convex sweeps for rotated and moving cove
     };
     let expected: ReturnType<typeof firstSolid>;
     for (const b of bodies) {
-      const hit = sweepBox(from, to, half, b);
+      const hit = referenceSweep(from, to, half, b);
+      assert.deepEqual(
+        sweepBox(from, to, half, b),
+        hit,
+        'Direct projectile sweeps keep exact impact times and normals',
+      );
       if (hit && (!expected || hit.t < expected.t)) expected = { ...hit, body: b };
     }
     assert.deepEqual(

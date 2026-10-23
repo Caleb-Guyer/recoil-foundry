@@ -16,8 +16,8 @@ import { archiveMark } from './archive-art.ts';
 import { STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 import { MODS } from './rules.ts';
 import { practiceTime } from './practice-records.ts';
-import { escapeLogbook } from './logbook-menu.ts';
-import { drawArchiveImages } from './archive-images.ts';
+import { escapeLogbook } from './html.ts';
+import { drawArchiveImages } from './menu-images.ts';
 import { rewardCards, drawRewardImages } from './reward-cards.ts';
 import type { MenuBack } from './blueprint-menu.ts';
 
