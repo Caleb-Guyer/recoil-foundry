@@ -200,7 +200,7 @@ export class AuditorSystem {
         this.door = this.placement();
         if (this.door) {
           this.warning = AUDITOR_WARNING;
-          g.onSound('audit-arrive');
+          g.soundAt('audit-arrive', this.door, 'auditor-door');
         }
       } else {
         this.warning = Math.max(0, this.warning - dt);
@@ -232,7 +232,7 @@ export class AuditorSystem {
     if (s.visits < 3 && this.age >= AUDITOR_VISIT && !this.recall) {
       this.recall = AUDITOR_RECALL;
       e.state = 'return';
-      g.onSound('audit-recall');
+      g.soundAt('audit-recall', e.body.position, `enemy:${e.id}`);
     } else if (this.recall > 0) {
       this.recall = Math.max(0, this.recall - dt);
       if (this.recall === 0) {
@@ -273,7 +273,7 @@ export class AuditorSystem {
     g.enemies = g.enemies.filter((other) => other !== e);
     g.shots = g.shots.filter((s) => s.auditorOwner !== e.id);
     g.burst(e.body.position, 18, '#bc9d79', 4);
-    g.onSound('audit-leave');
+    g.soundAt('audit-leave', e.body.position, `enemy:${e.id}`);
     this.enemy = null;
     this.door = null;
     this.dirty = false;
@@ -291,7 +291,7 @@ export class AuditorSystem {
     this.dirty = false;
     g.shots = g.shots.filter((s) => s.auditorOwner !== e.id);
     if (credited) g.commendations.award('closed-account');
-    g.onSound('audit-defeat');
+    g.soundAt('audit-defeat', e.body.position, `enemy:${e.id}`);
     g.save();
   }
   updateEnemy(e: Enemy, dt: number) {
@@ -348,7 +348,7 @@ export class AuditorSystem {
         rig.jumpAt = g.time + 1.3;
       }
       if (grounded && Math.abs(e.body.velocity.x) > 1.5 && g.time >= rig.stepAt) {
-        g.onSound('audit-step');
+        g.soundAt('audit-step', e.body.position, `enemy:${e.id}`);
         rig.stepAt = g.time + 0.43;
       }
       if (e.timer <= 0 && (!g.adaptiveBosses || grounded) && lane && range < 850) {
@@ -369,7 +369,7 @@ export class AuditorSystem {
         e.timer = 1.05;
         e.target = { ...g.player.position };
         if (g.adaptiveBosses) Body.setVelocity(e.body, { x: 0, y: e.body.velocity.y });
-        g.onSound('audit-tell');
+        g.soundAt('audit-tell', e.body.position, `enemy:${e.id}`);
       }
     } else if (e.state === 'windup') {
       Body.setVelocity(e.body, {
@@ -386,7 +386,7 @@ export class AuditorSystem {
         rig.rounds = rig.attack === 'burst' ? 3 : rig.attack === 'sweep' ? 5 : 1;
         rig.nextShot = g.time;
         e.timer = rig.attack === 'charge' ? 0.4 : 0.75;
-        g.onSound('audit-fire');
+        g.soundAt('audit-fire', e.body.position, `enemy:${e.id}`);
       }
     } else if (e.state === 'rush') {
       if (rig.attack === 'charge') {

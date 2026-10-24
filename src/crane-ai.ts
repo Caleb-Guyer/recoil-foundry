@@ -250,7 +250,7 @@ function recover(g: Game, e: Enemy, impact: boolean) {
   if (impact) {
     g.burst(rig.head, 18, '#ffd19a', 4);
     g.feedback(4);
-    g.onSound('crane-hit');
+    g.soundAt('crane-hit', rig.head, `crane-head:${e.id}`, 'terrain');
   }
 }
 
@@ -308,7 +308,7 @@ export function updateCrane(g: Game, e: Enemy) {
         e.attacks++;
         e.state = 'idle';
         e.timer = 0.3;
-        g.onSound('enemy');
+        g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
       }
       return;
     }
@@ -325,7 +325,7 @@ export function updateCrane(g: Game, e: Enemy) {
       e.timer = 2.1;
       rig.hit = false;
       e.attacks++;
-      g.onSound(e.attack === 'sweep' ? 'crane-swing' : 'press');
+      g.soundAt(e.attack === 'sweep' ? 'crane-swing' : 'press', e.body.position, `enemy:${e.id}`);
     } else if (e.timer < -0.25) {
       e.state = 'idle';
       e.timer = 0.1;
@@ -381,7 +381,7 @@ export function updateCrane(g: Game, e: Enemy) {
       e.timer = FLAK_TELL;
       e.phase = g.overtime || e.hp < e.maxHp / 2 ? 1 : 0;
       e.aim = direction(bossMuzzle(e), g.player.position);
-      g.onSound('lock');
+      g.soundAt('lock', e.body.position, `enemy:${e.id}`);
     }
     return;
   }
@@ -393,6 +393,6 @@ export function updateCrane(g: Game, e: Enemy) {
     rig.to = plan.to;
     rig.hit = false;
     g.commendations.mastery.beginSweep(e);
-    g.onSound('crane-wind');
+    g.soundAt('crane-wind', e.body.position, `enemy:${e.id}`);
   }
 }

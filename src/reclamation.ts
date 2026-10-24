@@ -49,7 +49,7 @@ export function updateReclamationEnemy(g: Game, e: Enemy, dt: number) {
       e.attacks++;
       e.state = 'recover';
       e.timer = flying ? 1.35 : 1.15;
-      g.onSound('enemy');
+      g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
     }
     return;
   }
@@ -89,7 +89,7 @@ export function updateReclamationEnemy(g: Game, e: Enemy, dt: number) {
     e.state = 'windup';
     e.timer = 0.9;
     e.aim = direction(p, player);
-    g.onSound('lock');
+    g.soundAt('lock', e.body.position, `enemy:${e.id}`);
   }
 }
 
@@ -106,7 +106,7 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
     rig.lanes = [];
     rig.pulse = 0;
     g.feedback(5);
-    g.onSound('phase');
+    g.soundAt('phase', e.body.position, `enemy:${e.id}`);
   }
   if (e.state === 'transition') {
     Body.setVelocity(e.body, { x: e.body.velocity.x * 0.85, y: e.body.velocity.y * 0.85 });
@@ -141,7 +141,7 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
         // exposed housing after the player clears the induction lane.
         e.timer = 1.6;
         e.attacks++;
-        g.onSound('slam');
+        g.soundAt('slam', e.body.position, `enemy:${e.id}`);
         g.feedback(5);
       }
     } else {
@@ -151,7 +151,7 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
         e.state = 'recover';
         e.timer = 1.15;
         e.attacks++;
-        g.onSound('enemy');
+        g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
       }
     }
     return;
@@ -179,6 +179,6 @@ function updateSorter(g: Game, e: Enemy, dt: number) {
     e.aim = direction(p, g.player.position);
     rig.lanes =
       e.attack === 'slam' ? sorterRemixLanes(g.level.bossRemix, g.player.position.x, e.phase) : [];
-    g.onSound('lock');
+    g.soundAt('lock', e.body.position, `enemy:${e.id}`);
   }
 }

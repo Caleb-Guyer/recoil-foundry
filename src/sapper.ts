@@ -156,7 +156,7 @@ export class SapperSystem {
       this.aim(e);
       e.state = 'windup';
       e.timer = SAPPER_TELL;
-      g.onSound('sapper-lock');
+      g.soundAt('sapper-lock', e.body.position, `enemy:${e.id}`);
     }
   }
   launch(e: Enemy, origin: Vec, velocity: Vec) {
@@ -190,7 +190,7 @@ export class SapperSystem {
     };
     Body.setVelocity(p.body, velocity);
     e.attacks++;
-    g.onSound('sapper-throw');
+    g.soundAt('sapper-throw', e.body.position, `enemy:${e.id}`);
     return p;
   }
   knock(p: Prop, damage: number, velocity: Vec) {
@@ -218,7 +218,7 @@ export class SapperSystem {
     Body.setAngularVelocity(p.body, d.x * 0.13);
     p.flash = 0.09;
     g.burst(p.body.position, 3, '#f5d394', 1.5);
-    g.onSound('sapper-bat');
+    g.soundAt('sapper-bat', p.body.position, `charge:${p.body.id}`, 'casing');
   }
   beforeStep() {
     this.starts.clear();
@@ -264,7 +264,7 @@ export class SapperSystem {
       Body.setPosition(p.body, pos);
       Body.setStatic(p.body, true);
       p.body.isSensor = true;
-      g.onSound('sapper-stick');
+      g.soundAt('sapper-stick', p.body.position, `charge:${p.body.id}`, 'casing');
     }
     this.starts.clear();
   }
@@ -294,7 +294,7 @@ export class SapperSystem {
       if (left <= 0) this.detonate(p);
       else if (left < 1.2 && g.time >= charge.beep) {
         charge.beep = g.time + Math.max(0.15, left * 0.3);
-        g.onSound('sapper-tick');
+        g.soundAt('sapper-tick', p.body.position, `charge:${p.body.id}`, 'casing');
       }
     }
   }
@@ -326,7 +326,7 @@ export class SapperSystem {
     if (this.effects.length > 4) this.effects.shift();
     g.burst(pos, 16, '#efba76', 4);
     g.feedback(4);
-    g.onSound('sapper-blast');
+    g.soundAt('sapper-blast', p.body.position, `charge:${p.body.id}`, 'casing');
     if (player) g.damagePlayer(24, pos, { type: 'blast', enemy: 'sapper' });
     if (g.mode !== 'playing') return;
     for (const e of enemies) g.hitEnemy(e, isBoss(e.kind) ? 90 : 170 + g.stage * 7, pos);

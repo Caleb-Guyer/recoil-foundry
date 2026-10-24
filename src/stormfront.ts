@@ -89,7 +89,7 @@ export class StormfrontSystem {
       this.phase = 'warn';
       this.timer = STORM.warn;
       lane.depths = Array.from({ length: STORM.columns }, (_, i) => this.depth(lane, i));
-      g.onSound('storm-warn');
+      g.soundAt('storm-warn', { x: lane.x, y: STORM.top }, `storm:${this.index}`);
     } else if (this.phase === 'warn') {
       this.phase = 'strike';
       this.timer = STORM.afterglow;
@@ -100,7 +100,7 @@ export class StormfrontSystem {
       // Resolve one snapshot, without destroying cover or cancelling boss AI.
       for (const e of enemies)
         g.hitEnemy(e, isBoss(e.kind) ? STORM.boss : STORM.enemy, undefined, false, false, false);
-      g.onSound('storm-strike');
+      g.soundAt('storm-strike', { x: lane.x, y: STORM.top }, `storm:${this.index}`);
       if (player) g.damagePlayer(STORM.player, undefined, { type: 'lightning' });
     } else {
       this.phase = 'rest';

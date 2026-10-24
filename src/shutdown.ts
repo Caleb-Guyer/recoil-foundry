@@ -118,7 +118,7 @@ export class ShutdownSystem {
       return false;
     this.flash = 0.45;
     g.burst(p, 14, '#b9e4cb', 3);
-    g.onSound('shutdown-break');
+    g.soundAt('shutdown-break', p, 'shutdown-switch', 'power');
     g.feedback(2.8);
     if (this.chamber) {
       this.state!.cycle!++;

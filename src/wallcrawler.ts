@@ -99,7 +99,7 @@ export function dropWallcrawler(g: Game, e: Enemy) {
   e.timer = CRAWLER.stun;
   // Gravity and the normal collision solver handle the fall. No position warp.
   g.burst(e.body.position, 5, '#e4bd89', 2);
-  g.onSound('crawler-drop');
+  g.soundAt('crawler-drop', e.body.position, `enemy:${e.id}`);
 }
 function steer(g: Game, e: Enemy, to: Vec) {
   Body.applyForce(e.body, e.body.position, {
@@ -124,12 +124,12 @@ export function beginCrawlerAttack(g: Game, e: Enemy) {
   e.timer = CRAWLER.tell;
   rig.fired = 0;
   aim(g, e);
-  g.onSound('crawler-lock');
+  g.soundAt('crawler-lock', e.body.position, `enemy:${e.id}`);
 }
 function fire(g: Game, e: Enemy) {
   const rig = e.crawler!;
   g.enemyShot(e, rig.angles[rig.fired++], crawlerSpeed(g), g.stage >= 16 ? 18 : 14, rig.origin);
-  g.onSound('enemy');
+  g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
   if (rig.fired === 3) {
     e.state = 'recover';
     e.timer = 0.7;

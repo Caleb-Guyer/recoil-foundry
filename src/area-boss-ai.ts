@@ -56,7 +56,7 @@ function beginFlak(g: Game, e: Enemy) {
   e.timer = FLAK_TELL;
   e.aim = direction(bossMuzzle(e), g.player.position);
   if (e.kind === 'press') Body.setVelocity(e.body, { x: 0, y: 0 });
-  g.onSound('lock');
+  g.soundAt('lock', e.body.position, `enemy:${e.id}`);
 }
 
 function updateFlak(g: Game, e: Enemy) {
@@ -69,7 +69,7 @@ function updateFlak(g: Game, e: Enemy) {
   // Remix fans expose the boss; standard fans retain their short firing cooldown.
   e.state = g.level.bossRemix ? 'recover' : 'idle';
   e.timer = g.level.bossRemix ? 1.05 : 0.18;
-  g.onSound('enemy');
+  g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
 }
 
 function loaderApproach(g: Game, e: Enemy, counter: boolean, grounded: boolean, camping: boolean) {
@@ -253,7 +253,7 @@ export function updateLoader(g: Game, e: Enemy) {
           5,
         );
         g.feedback(5);
-        g.onSound('crash');
+        g.soundAt('crash', e.body.position, `enemy:${e.id}`);
         if (prop) g.props.strike(prop, 160, e.aim);
         if (weak) {
           const support = g.loaderArena.supports.find((s) => s.barrier.body === contact!.body);
@@ -268,7 +268,7 @@ export function updateLoader(g: Game, e: Enemy) {
     else if (e.timer <= 0) {
       e.state = 'rush';
       e.timer = 1.3;
-      g.onSound('loader');
+      g.soundAt('loader', e.body.position, `enemy:${e.id}`);
     }
   } else if (e.state === 'recover') {
     Body.setVelocity(e.body, { x: v.x * 0.7, y: v.y });
@@ -310,7 +310,7 @@ export function updateLoader(g: Game, e: Enemy) {
       e.attack = 'aimed';
       e.state = 'windup';
       e.timer = LOADER_TELL;
-      g.onSound('charge');
+      g.soundAt('charge', e.body.position, `enemy:${e.id}`);
     } else if (grounded && blocked) {
       Body.setVelocity(e.body, { x: sign * 5.5, y: -12.5 });
       e.timer = Math.max(e.timer, 0.6);
@@ -324,7 +324,7 @@ export function updateLoader(g: Game, e: Enemy) {
         e.attack = 'aimed';
         e.state = 'windup';
         e.timer = LOADER_TELL;
-        g.onSound('charge');
+        g.soundAt('charge', e.body.position, `enemy:${e.id}`);
       }
     }
   }
@@ -380,7 +380,7 @@ export function updatePress(g: Game, e: Enemy) {
       Body.setVelocity(e.body, { x: 0, y: 0 });
       e.state = 'rush';
       e.timer = 0.9;
-      g.onSound('press');
+      g.soundAt('press', e.body.position, `enemy:${e.id}`);
     } else if (e.timer < -0.35) {
       e.state = 'idle';
       e.timer = 0.2;
@@ -412,7 +412,7 @@ export function updatePress(g: Game, e: Enemy) {
       e.attacks++;
       g.burst({ x: p.x, y: p.y + half }, 24, '#ffcb90', 5);
       g.feedback(6);
-      g.onSound('slam');
+      g.soundAt('slam', e.body.position, `enemy:${e.id}`);
       const prop = contact && g.props.items.find((prop) => prop.body === contact.body);
       if (prop) g.props.strike(prop, 144, { x: 0, y: 1 });
       if (contact) g.destruction.hitBody(contact.body, 144, { x: 0, y: 1 });
@@ -477,7 +477,7 @@ export function updatePress(g: Game, e: Enemy) {
         e.target = { x: targetX, y: g.pressSurface(targetX, p.y + half) };
         e.state = 'windup';
         e.timer = PRESS_TELL;
-        g.onSound('lock');
+        g.soundAt('lock', e.body.position, `enemy:${e.id}`);
       }
     }
   }

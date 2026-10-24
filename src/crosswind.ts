@@ -73,11 +73,11 @@ export class CrosswindSystem {
         if (f.phase === 'rest') {
           f.phase = 'warn';
           f.timer = CROSSWIND.warn;
-          g.onSound('fan-warn');
+          g.soundAt('fan-warn', f, `fan:${this.items.indexOf(f)}`);
         } else if (f.phase === 'warn') {
           f.phase = 'gust';
           f.timer = CROSSWIND.gust;
-          g.onSound('fan-gust');
+          g.soundAt('fan-gust', f, `fan:${this.items.indexOf(f)}`);
         } else {
           f.phase = 'rest';
           f.timer = CROSSWIND.rest;

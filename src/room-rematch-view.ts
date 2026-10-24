@@ -1,4 +1,4 @@
-import type { Input } from './game.ts';
+import type { Game, Input } from './game.ts';
 import './room-rematch.css';
 import type { ControllerFrame } from './controller.ts';
 import { controllerPortalTarget } from './controller-target.ts';
@@ -31,7 +31,7 @@ export class RoomRematchView {
     snapshot: RoomRematchSnapshot,
     private readonly bindings: Bindings,
     private readonly back: () => void,
-    sound: (kind: string) => void,
+    sound: Game['onSound'],
   ) {
     this.session = new RoomRematch(snapshot);
     this.session.game.onSound = sound;

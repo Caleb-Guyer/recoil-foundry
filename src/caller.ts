@@ -85,7 +85,7 @@ export function updateCaller(g: Game, e: Enemy, dt: number) {
     r.marks = [{ ...target.position }];
     r.phase = 'recording';
     r.clock = CALLER.sample;
-    g.onSound(e.allied ? 'signal-friendly' : 'caller-record');
+    g.soundAt(e.allied ? 'signal-friendly' : 'caller-record', e.body.position, `enemy:${e.id}`);
   } else {
     r.clock -= dt;
     if (r.clock <= 0) {
@@ -96,12 +96,12 @@ export function updateCaller(g: Game, e: Enemy, dt: number) {
           r.phase = 'locked';
           r.origin = { ...e.body.position };
           r.clock = CALLER.lock;
-          g.onSound(e.allied ? 'signal-friendly' : 'caller-lock');
+          g.soundAt(e.allied ? 'signal-friendly' : 'caller-lock', e.body.position, `enemy:${e.id}`);
         }
       } else {
         const aim = direction(e.body.position, r.marks[r.next]);
         g.enemyShot(e, Math.atan2(aim.y, aim.x), CALLER.speed, CALLER.damage);
-        g.onSound('enemy');
+        g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
         e.attacks++;
         r.next++;
         if (r.next === 3) reset(e);

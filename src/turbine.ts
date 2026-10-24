@@ -71,7 +71,7 @@ function recover(g: Game, e: Enemy) {
   e.timer = TURBINE_RECOVER - e.phase * 0.1;
   e.attacks++;
   e.hunt = undefined;
-  g.onSound('turbine-open');
+  g.soundAt('turbine-open', e.body.position, `enemy:${e.id}`);
 }
 export function updateTurbine(g: Game, e: Enemy, dt: number) {
   const rig = e.turbine!;
@@ -86,7 +86,7 @@ export function updateTurbine(g: Game, e: Enemy, dt: number) {
     rig.active = 0;
     e.hunt = undefined;
     g.feedback(3);
-    g.onSound('phase');
+    g.soundAt('phase', e.body.position, `enemy:${e.id}`);
   }
   if (['windup', 'rush', 'transition', 'recover'].includes(e.state)) {
     Matter.Body.setVelocity(e.body, { x: 0, y: 0 });
@@ -109,7 +109,11 @@ export function updateTurbine(g: Game, e: Enemy, dt: number) {
       e.timer = e.attack === 'gust' ? TURBINE_GUST_TIME : 0.7;
       rig.active = 0;
       rig.sent = 0;
-      g.onSound(e.attack === 'gust' ? 'turbine-gust' : 'turbine-cut');
+      g.soundAt(
+        e.attack === 'gust' ? 'turbine-gust' : 'turbine-cut',
+        e.body.position,
+        `enemy:${e.id}`,
+      );
     }
     return;
   }
@@ -140,6 +144,6 @@ export function updateTurbine(g: Game, e: Enemy, dt: number) {
     rig.active = 0;
     e.state = 'windup';
     e.timer = e.attack === 'gust' ? TURBINE_GUST_TELL : TURBINE_SWEEP_TELL;
-    g.onSound('turbine-wind');
+    g.soundAt('turbine-wind', e.body.position, `enemy:${e.id}`);
   }
 }

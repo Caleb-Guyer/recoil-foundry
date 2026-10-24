@@ -277,7 +277,7 @@ export class MutationSystem {
         e.aim = direction(p, target);
         rig.phase = 'tell';
         rig.timer = GUNNER_TELL;
-        g.onSound('aim-warn');
+        g.soundAt('aim-warn', e.body.position, `enemy:${e.id}`);
       } else if (rig.phase === 'tell' && rig.timer <= 0) {
         this.fire(e);
         rig.phase = 'idle';
@@ -299,7 +299,7 @@ export class MutationSystem {
       }
       rig.phase = 'tell';
       rig.timer = BLINK_TELL;
-      g.onSound('aim-warn');
+      g.soundAt('aim-warn', e.body.position, `enemy:${e.id}`);
     }
     Body.applyForce(e.body, e.body.position, { x: 0, y: -e.body.mass * 0.001 });
     Body.setVelocity(e.body, { x: 0, y: 0 });
@@ -311,7 +311,7 @@ export class MutationSystem {
         g.burst(e.body.position, 8, '#bdb0ee', 2);
         Body.setPosition(e.body, dest);
         g.burst(dest, 8, '#bdb0ee', 2);
-        g.onSound('bank');
+        g.soundAt('bank', e.body.position, `enemy:${e.id}`);
       }
       rig.destination = undefined;
       rig.phase = 'recover';
@@ -343,7 +343,7 @@ export class MutationSystem {
       mutationShell: { owner: e.id },
       damageCause: { type: 'blast', enemy: 'shooter' },
     });
-    g.onSound('enemy');
+    g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
   }
   explode(s: Shot) {
     const g = this.game;
@@ -372,7 +372,7 @@ export class MutationSystem {
         kind: 'ring',
       });
     g.feedback(4);
-    g.onSound('explode');
+    g.soundAt('explode', s.pos, `round:${s.id}`, 'casing');
     for (const e of enemies) g.hitEnemy(e, 48, undefined, true, false, false);
     for (const e of allies) g.areaEvents.hitAlly(e, 48);
     if (player) g.damagePlayer(24, p, { type: 'blast', enemy: 'shooter' });

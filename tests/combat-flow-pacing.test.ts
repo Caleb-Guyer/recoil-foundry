@@ -1,3 +1,4 @@
+import type { SoundOrigin } from '../src/sound-event.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
@@ -194,9 +195,9 @@ test('legacy seeds ignore Flow metadata and retain their ordinary seeded split a
 
 test('each reserve cohort gets its own rest, complete door tell and normal entry protection', () => {
   const g = fixture();
-  let warnings = 0;
-  g.onSound = (k) => {
-    if (k === 'reinforce') warnings++;
+  const warnings: (SoundOrigin | undefined)[] = [];
+  g.onSound = (k, origin) => {
+    if (k === 'reinforce') warnings.push(origin);
   };
   killAll(g);
   step(g);
@@ -207,7 +208,10 @@ test('each reserve cohort gets its own rest, complete door tell and normal entry
   assert.equal(g.waves.flowBeat, 0);
   assert(g.waves.doors.every((d) => d.state === 'sealed'));
   nextWarning(g);
-  assert.equal(warnings, 1);
+  assert.equal(warnings.length, currentDoors(g).length);
+  assert.equal(new Set(warnings.map((origin) => origin?.source)).size, currentDoors(g).length);
+  for (const door of currentDoors(g))
+    assert(warnings.some((origin) => origin?.x === door.spawn.x && origin.y === door.spawn.y));
   assert(currentDoors(g).every((d) => Math.abs(d.timer - REINFORCEMENT_TELL) < 1e-8));
   step(g, 44);
   assert.equal(g.enemies.length, 0);
@@ -221,7 +225,7 @@ test('each reserve cohort gets its own rest, complete door tell and normal entry
   assert(g.waves.doors.filter((d) => d.flowBeat === 2).every((d) => d.state === 'sealed'));
   killAll(g);
   nextWarning(g);
-  assert.equal(warnings, 2);
+  assert.equal(warnings.length, g.waves.doors.length);
   assert(currentDoors(g).every((d) => Math.abs(d.timer - REINFORCEMENT_TELL) < 1e-8));
   step(g, 44);
   assert.equal(g.enemies.length, 0);

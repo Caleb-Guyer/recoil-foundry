@@ -1,5 +1,5 @@
 import './support-drill.css';
-import type { Input } from './game.ts';
+import type { Game, Input } from './game.ts';
 import type { ControllerFrame } from './controller.ts';
 import { Renderer } from './render.ts';
 import { bindingLabel, held, matches, type Bindings } from './keyboard.ts';
@@ -30,12 +30,15 @@ export class SupportDrillView {
   private stopped = false;
   private lastStatus = '';
   private ended = false;
+  get game() {
+    return this.drill.game;
+  }
   constructor(
     root: HTMLElement,
     id: SupportDrillId,
     bindings: Bindings,
     back: () => void,
-    sound: (kind: string) => void,
+    sound: Game['onSound'],
   ) {
     this.root = root;
     this.bindings = bindings;

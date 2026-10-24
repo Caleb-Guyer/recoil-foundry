@@ -62,7 +62,7 @@ export class HarpoonSystem {
       e.timer = HARPOON_RECOVER;
     }
     if (cue && this.game.mode === 'playing') {
-      this.game.onSound('harpoon-break');
+      this.game.soundAt('harpoon-break', e.body.position, `enemy:${e.id}`);
       if (attached) this.game.burst(harpoonMuzzle(e), 5, '#ead4a4', 2);
     }
   }
@@ -99,7 +99,7 @@ export class HarpoonSystem {
         rig.expires = g.time + 1.25;
         e.state = 'rush';
         e.attacks++;
-        g.onSound('harpoon-fire');
+        g.soundAt('harpoon-fire', e.body.position, `enemy:${e.id}`);
       }
       return;
     }
@@ -131,7 +131,7 @@ export class HarpoonSystem {
       e.aim = direction(origin, g.player.position);
       rig.origin = { ...p };
       rig.anchorHp = HARPOON_ANCHOR_HP;
-      g.onSound('harpoon-lock');
+      g.soundAt('harpoon-lock', e.body.position, `enemy:${e.id}`);
     }
   }
   private sync(e: Enemy) {
@@ -249,7 +249,7 @@ export class HarpoonSystem {
         } else
           g.damagePlayer(HARPOON_DAMAGE, e.body.position, { type: 'hook', enemy: 'harpooner' });
         if (g.mode !== 'playing') return;
-        g.onSound('harpoon-catch');
+        g.soundAt('harpoon-catch', rig.head, `harpoon:${e.id}`, 'casing');
       } else if (rig.travel >= HARPOON_RANGE) this.release(e);
     }
   }

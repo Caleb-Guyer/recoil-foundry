@@ -8,6 +8,7 @@ export default defineConfig({
         game: 'index.html',
         diagnostics: 'diagnostics.html',
         performance: 'performance.html',
+        audio: 'audio.html',
       },
     },
   },

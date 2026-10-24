@@ -149,7 +149,7 @@ export class HazardSystem {
       if (h.kind === 'crumble' && h.state === 'idle' && this.supported(this.game.player, h.body)) {
         h.state = 'warning';
         h.timer = CRUMBLE_TELL;
-        this.game.onSound('strain');
+        this.game.soundAt('strain', h.body.position, `hazard:${h.body.id}`);
       }
     }
   }
@@ -162,7 +162,7 @@ export class HazardSystem {
         h.visible = false;
         Composite.remove(this.game.engine.world, h.body);
         this.game.burst(h.body.position, 10, '#9eaaa8', 2.5);
-        this.game.onSound('break');
+        this.game.soundAt('break', h.body.position, `hazard:${h.body.id}`, 'terrain');
       }
     } else if (h.state === 'gone' && !h.permanent) {
       h.timer = Math.max(0, h.timer - dt);
@@ -170,7 +170,7 @@ export class HazardSystem {
         h.visible = true;
         h.state = 'idle';
         Composite.add(this.game.engine.world, h.body);
-        this.game.onSound('prop');
+        this.game.soundAt('prop', h.body.position, `hazard:${h.body.id}`, 'terrain');
       }
     }
   }
@@ -190,13 +190,13 @@ export class HazardSystem {
         h.state = 'warning';
         h.timer = CRUSHER_TELL;
         h.hits.clear();
-        g.onSound('machine');
+        g.soundAt('machine', h.body.position, `hazard:${h.body.id}`);
       }
     } else if (h.state === 'warning') {
       h.timer = Math.max(0, h.timer - dt);
       if (h.timer <= 0) {
         h.state = 'falling';
-        if (nearby) g.onSound('press');
+        if (nearby) g.soundAt('press', h.body.position, `hazard:${h.body.id}`);
       }
     } else if (h.state === 'falling') {
       let next = Math.min(p.y + p.travel, top + CRUSHER_SPEED * dt);
@@ -216,7 +216,7 @@ export class HazardSystem {
         if (nearby) {
           g.feedback(5);
           g.burst({ x: p.x, y: next + p.h }, 16, '#bfa185', 3.5);
-          g.onSound('slam');
+          g.soundAt('slam', h.body.position, `hazard:${h.body.id}`);
         }
       }
     } else if (h.state === 'rest') {

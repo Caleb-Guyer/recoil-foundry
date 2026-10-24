@@ -50,7 +50,7 @@ export class FabricatorSystem {
     if (frame) this.remove(frame);
     e.state = 'recover';
     e.timer = 1.3;
-    this.game.onSound('fabricator-break');
+    this.game.soundAt('fabricator-break', e.body.position, `enemy:${e.id}`);
   }
   disrupt(body: Matter.Body) {
     const e = this.game.enemies.find((other) => other.body === body);
@@ -72,7 +72,7 @@ export class FabricatorSystem {
       for (const child of [...g.enemies]) if (child.sentry?.owner === e.id) this.remove(child);
       g.shots = g.shots.filter((s) => s.sentryOwner !== e.id || s.friendly);
       e.fabricator.frame = undefined;
-      g.onSound('fabricator-down');
+      g.soundAt('fabricator-down', e.body.position, `enemy:${e.id}`);
     }
     if (e.sentry) {
       const owner = g.enemies.find((other) => other.id === e.sentry!.owner);
@@ -170,7 +170,7 @@ export class FabricatorSystem {
         rig.origin = undefined;
         e.state = 'recover';
         e.timer = 2.2;
-        g.onSound('fabricator-ready');
+        g.soundAt('fabricator-ready', e.body.position, `enemy:${e.id}`);
       }
       return;
     }
@@ -195,7 +195,7 @@ export class FabricatorSystem {
           e.state = 'windup';
           e.timer = FABRICATOR_BUILD;
           Body.setVelocity(e.body, { x: 0, y: e.body.velocity.y });
-          g.onSound('fabricator-build');
+          g.soundAt('fabricator-build', e.body.position, `enemy:${e.id}`);
           return;
         }
       }
@@ -242,14 +242,14 @@ export class FabricatorSystem {
         e.attacks++;
         e.state = 'recover';
         e.timer = 1.25;
-        g.onSound('enemy');
+        g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
       }
     } else if (e.timer <= 0 && lane) {
       e.state = 'windup';
       e.timer = SENTRY_TELL;
       rig.origin = { ...e.body.position };
       e.aim = direction(from, target);
-      g.onSound('aim-warn');
+      g.soundAt('aim-warn', e.body.position, `enemy:${e.id}`);
     }
   }
 }

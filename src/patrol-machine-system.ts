@@ -124,7 +124,7 @@ export class PatrolMachineSystem {
       );
       if (hit) {
         this.game.burst(s.pos, 6, '#d9c18d', 2);
-        this.game.onSound('armor');
+        this.game.soundAt('armor', s.pos, `mortar:${s.owner}:${s.arc.to.x}:${s.arc.to.y}`, 'armor');
       }
       return !hit;
     });
@@ -152,7 +152,12 @@ export class PatrolMachineSystem {
       this.blasts.push({ pos, radius: shell.arc.radius, until: g.time + 0.2 });
       if (this.blasts.length > 12) this.blasts.shift();
       g.burst(pos, 12, '#e4ad75', 3.5);
-      g.onSound('forge-impact');
+      g.soundAt(
+        'forge-impact',
+        pos,
+        `mortar:${shell.owner}:${shell.arc.to.x}:${shell.arc.to.y}`,
+        'terrain',
+      );
       if (
         distance(pos, g.player.position) <= shell.arc.radius + 12 &&
         distance(g.lineEnd(pos, g.player.position), g.player.position) < 1
@@ -215,12 +220,12 @@ export class PatrolMachineSystem {
           rig.variant === 'strider-survey' ? 13 : rig.variant === 'shutter-fan' ? 7.5 : 9;
         for (const angle of machineAngles(e)) g.enemyShot(e, angle, speed, 15);
       }
-      g.onSound('enemy');
+      g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
       if (rig.variant === 'shutter-burst' && e.state !== 'followup') {
         e.state = 'followup';
         e.timer = 0.95;
         e.aim = direction(p, target);
-        g.onSound('aim-warn');
+        g.soundAt('aim-warn', e.body.position, `enemy:${e.id}`);
       } else {
         e.state = 'recover';
         e.timer = e.kind === 'mortar' ? 2.7 : rig.variant === 'shutter-burst' ? 1.6 : 1.3;
@@ -250,7 +255,7 @@ export class PatrolMachineSystem {
     e.timer = tell;
     e.aim = direction(p, target);
     if (e.kind === 'mortar') rig.arcs = planMortar(g, e);
-    g.onSound(e.kind === 'mortar' ? 'kiln-wind' : 'aim-warn');
+    g.soundAt(e.kind === 'mortar' ? 'kiln-wind' : 'aim-warn', e.body.position, `enemy:${e.id}`);
     return true;
   }
 }

@@ -154,7 +154,7 @@ export class EnemyRemaster {
       e.target = { ...target };
       e.attacks++;
       brake(e);
-      g.onSound('charge');
+      g.soundAt('charge', e.body.position, `enemy:${e.id}`);
     } else g.updateRunner(e, d, dist, target);
   }
   ranged(e: Enemy, target: Vec, kind: 'shooter' | 'flyer') {
@@ -169,7 +169,7 @@ export class EnemyRemaster {
         for (const offset of kind === 'flyer' ? [-0.18, 0, 0.18] : [0])
           g.enemyShot(e, base + offset);
         e.attacks++;
-        g.onSound('enemy');
+        g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
         recover(e, kind === 'flyer' ? 0.65 : 0.5);
         e.remaster!.side *= -1;
         e.remaster!.turnUsed = false;
@@ -200,7 +200,7 @@ export class EnemyRemaster {
       e.target = { ...target };
       if (kind === 'flyer') Body.setVelocity(e.body, { x: 0, y: 0 });
       else brake(e);
-      g.onSound('aim-warn');
+      g.soundAt('aim-warn', e.body.position, `enemy:${e.id}`);
     }
   }
   walk(e: Enemy, target: Vec) {

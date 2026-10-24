@@ -63,7 +63,7 @@ export class SecurityCombat {
         fired: false,
       };
       this.counters.set(e, c);
-      g.onSound('lock');
+      g.soundAt('lock', e.body.position, `enemy:${e.id}`);
     }
     if (!c) return false;
     c.age += dt;
@@ -72,7 +72,7 @@ export class SecurityCombat {
     if (!c.fired && c.age >= SECURITY_TELL) {
       c.fired = true;
       for (const offset of c.offsets) g.enemyShot(e, Math.atan2(c.aim.y, c.aim.x) + offset);
-      g.onSound('enemy');
+      g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
     }
     if (c.age >= SECURITY_TELL + 0.12) {
       this.counters.delete(e);

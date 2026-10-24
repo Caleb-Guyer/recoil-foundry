@@ -225,7 +225,7 @@ function impact(g: Game, e: Enemy, shell: KilnShell, hit: NonNullable<ReturnType
     prop = g.props.items.find((p) => p.body === hit.body);
   g.burst(shell.pos, 16, '#f1b477', 3.8);
   g.feedback(2.5);
-  g.onSound('kiln-impact');
+  g.soundAt('kiln-impact', shell.pos, `kiln-shell:${e.id}:${shell.pos.x}`, 'terrain');
   if (prop) {
     g.props.hit(prop, 160, direction(shell.prev, shell.pos));
     return;
@@ -342,7 +342,7 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
         e.attacks++;
         e.state = 'idle';
         e.timer = 0.3;
-        g.onSound('kiln-fire');
+        g.soundAt('kiln-fire', e.body.position, `enemy:${e.id}`);
       }
       return;
     }
@@ -376,7 +376,7 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
       if (arc && rig.shells.length < 8)
         rig.shells.push({ arc, t: 0, pos: { ...arc.from }, prev: { ...arc.from } });
       e.timer = 0.18;
-      g.onSound('kiln-fire');
+      g.soundAt('kiln-fire', e.body.position, `enemy:${e.id}`);
       if (rig.next >= rig.plans.length) {
         e.attacks++;
         e.state = 'recover';
@@ -417,13 +417,13 @@ export function updateKiln(g: Game, e: Enemy, dt: number) {
     e.timer = FLAK_TELL;
     rig.plans = [];
     Body.setVelocity(e.body, { x: 0, y: 0 });
-    g.onSound('kiln-wind');
+    g.soundAt('kiln-wind', e.body.position, `enemy:${e.id}`);
   } else if (plans.length && !counter) {
     e.attack = 'mortar';
     e.state = 'windup';
     e.timer = KILN_TELL;
     rig.plans = plans;
     Body.setVelocity(e.body, { x: 0, y: 0 });
-    g.onSound('kiln-wind');
+    g.soundAt('kiln-wind', e.body.position, `enemy:${e.id}`);
   } else approach(g, e, counter || !!e.groundHunt);
 }

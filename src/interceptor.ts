@@ -181,7 +181,7 @@ export function beginInterceptorAttack(g: Game, e: Enemy, move: InterceptorMove)
   e.state = 'windup';
   e.timer =
     INTERCEPTOR_WEAPONS[rig.move].tell + (lateInterceptorRemix(g.level.bossRemix) ? 0.15 : 0);
-  g.onSound(
+  g.soundAt(
     g.finale.owns(e)
       ? ['ringburst', 'sweep', 'scatter', 'crossfire'].includes(rig.move)
         ? 'finale-fan-lock'
@@ -189,6 +189,8 @@ export function beginInterceptorAttack(g: Game, e: Enemy, move: InterceptorMove)
           ? 'finale-field-lock'
           : 'finale-aim-lock'
       : 'interceptor-lock',
+    e.body.position,
+    `enemy:${e.id}`,
   );
 }
 function recover(g: Game, e: Enemy) {
@@ -201,7 +203,7 @@ function recover(g: Game, e: Enemy) {
   rig.relocate = true;
   rig.history.push({ ...rig.origin });
   rig.history = rig.history.slice(-3);
-  g.onSound('interceptor-open');
+  g.soundAt('interceptor-open', e.body.position, `enemy:${e.id}`);
 }
 export function updateInterceptor(g: Game, e: Enemy, dt: number) {
   if (g.finale.cinema?.beforeEnemy(e)) return;
@@ -230,7 +232,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     rig.relocate = true;
     e.hunt = undefined;
     g.feedback(3);
-    g.onSound('phase');
+    g.soundAt('phase', e.body.position, `enemy:${e.id}`);
   }
   updateArsenal(g, e, dt);
   if (g.mode !== 'playing' || e.hp <= 0) return;
@@ -329,11 +331,15 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       e.state = 'airborne';
       e.timer = INTERCEPTOR_VAULT_TIME;
       rig.relocate = false;
-      g.onSound('interceptor-vault');
+      g.soundAt('interceptor-vault', e.body.position, `enemy:${e.id}`);
     } else {
       const kick = rig.move === 'capacitor' ? 14 : e.attack === 'heavy' ? 12 : 4;
       if (!g.finale.cinema?.anchored) recoil(e, { x: -e.aim.x * kick, y: -e.aim.y * kick });
-      g.onSound(e.attack === 'heavy' ? 'interceptor-heavy' : 'interceptor-shot');
+      g.soundAt(
+        e.attack === 'heavy' ? 'interceptor-heavy' : 'interceptor-shot',
+        e.body.position,
+        `enemy:${e.id}`,
+      );
       const remix = lateInterceptorRemix(g.level.bossRemix);
       if (
         rig.finale
@@ -350,7 +356,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
             ? 0.95
             : 0.78 - e.phase * 0.04;
         aim(g, e);
-        g.onSound('interceptor-lock');
+        g.soundAt('interceptor-lock', e.body.position, `enemy:${e.id}`);
       } else {
         if (rig.move === 'burst') {
           for (let n = 1; n < 4; n++)
@@ -395,7 +401,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       e.attack = 'vault';
       e.state = 'windup';
       e.timer = INTERCEPTOR_VAULT_TELL;
-      g.onSound('interceptor-lock');
+      g.soundAt('interceptor-lock', e.body.position, `enemy:${e.id}`);
       return;
     }
   }

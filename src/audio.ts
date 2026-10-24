@@ -1,6 +1,32 @@
 import { Music } from './music.ts';
 import { RainAmbience } from './rain-audio.ts';
 import type { MusicScene } from './music-score.ts';
+import { FactoryAmbience } from './factory-ambience.ts';
+import type { FactoryAudioScene } from './factory-audio-scene.ts';
+import { soundCooldownKey, spatialMix, validSoundPosition } from './sound-event.ts';
+import type { SoundListener, SoundOrigin, SoundMaterial } from './sound-event.ts';
+
+const COOLDOWN_ENTRIES = 384;
+const MATERIAL_IMPACTS = new Set([
+  'hit',
+  'armor',
+  'nail-impact',
+  'mass-impact',
+  'forge-impact',
+  'prop',
+  'break',
+  'kill',
+  'shutdown-break',
+]);
+
+interface SpatialVoice {
+  origin: SoundOrigin;
+  warning: boolean;
+  gain: GainNode;
+  panner: StereoPannerNode | null;
+  pan: number;
+  level: number;
+}
 
 const CINEMATIC_CUES = new Set([
   'cinema-start',
@@ -105,6 +131,128 @@ export class Sound {
   private scoreEnabled = true;
   private effectLevel = 1;
   private musicLevel = 1;
+  private monoEnabled = false;
+  private listener: SoundListener | null = null;
+  private cueOrigin: SoundOrigin | null = null;
+  private cueWarning = false;
+  private effectsSuspended = false;
+  private audioRoom: string | null = null;
+  private worldScene: FactoryAudioScene | null = null;
+  private worldActive = true;
+  factory: FactoryAmbience | null = null;
+  get mono() {
+    return this.monoEnabled;
+  }
+  set mono(value: boolean) {
+    this.monoEnabled = !!value;
+    this.updateOutputChannels();
+    this.updateSpatialVoices();
+    this.refreshWorld();
+  }
+  private updateOutputChannels(master = this.master) {
+    if (!master) return;
+    try {
+      // Speaker downmix combines both input channels before the compressor.
+      // Explicit stereo also restores the rain's width when mono is disabled.
+      master.channelCount = this.mono ? 1 : 2;
+      master.channelCountMode = 'explicit';
+      master.channelInterpretation = 'speakers';
+    } catch {
+      // Legacy implementations can retain the centered per-voice fallback.
+    }
+  }
+  setListener(listener: SoundListener | null) {
+    this.listener = validSoundPosition(listener) ? { x: listener.x, y: listener.y } : null;
+    this.updateSpatialVoices();
+  }
+  private updateSpatialVoice(voice: SpatialVoice, immediate = false) {
+    const c = this.context;
+    if (!c) return;
+    const mix = spatialMix(voice.origin, this.listener, this.mono, voice.warning);
+    if (immediate) {
+      voice.gain.gain.value = mix.gain;
+      if (voice.panner) voice.panner.pan.value = mix.pan;
+      voice.pan = mix.pan;
+      voice.level = mix.gain;
+    } else {
+      if (Math.abs(mix.gain - voice.level) >= 0.002) {
+        voice.gain.gain.setTargetAtTime(mix.gain, c.currentTime, 0.025);
+        voice.level = mix.gain;
+      }
+      if (voice.panner && Math.abs(mix.pan - voice.pan) >= 0.002) {
+        voice.panner.pan.setTargetAtTime(mix.pan, c.currentTime, 0.025);
+        voice.pan = mix.pan;
+      }
+    }
+  }
+  private updateSpatialVoices() {
+    this.pruneEffects();
+    for (const voice of this.effectVoices.values())
+      if (voice.spatial) this.updateSpatialVoice(voice.spatial);
+  }
+  private connectEffect(gain: GainNode, nodes: AudioNode[]) {
+    const destination = this.priorityCue
+      ? (this.effectsOutput ?? this.master!)
+      : (this.effects ?? this.master!);
+    if (!this.cueOrigin) {
+      gain.connect(destination);
+      return;
+    }
+    const spatialGain = this.context!.createGain();
+    // Older WebAudio implementations still get distance mixing in the center.
+    let panner: StereoPannerNode | null = null;
+    try {
+      if (typeof this.context!.createStereoPanner === 'function')
+        panner = this.context!.createStereoPanner();
+    } catch {}
+    const spatial: SpatialVoice = {
+      origin: { ...this.cueOrigin },
+      warning: this.cueWarning,
+      gain: spatialGain,
+      panner,
+      pan: 0,
+      level: 1,
+    };
+    this.updateSpatialVoice(spatial, true);
+    gain.connect(spatialGain);
+    nodes.push(spatialGain);
+    if (panner) {
+      spatialGain.connect(panner);
+      panner.connect(destination);
+      nodes.push(panner);
+    } else spatialGain.connect(destination);
+    return spatial;
+  }
+  private refreshWorld() {
+    this.factory?.update(
+      this.worldScene,
+      this.worldActive &&
+        !this.effectsSuspended &&
+        !this.cinematicQuiet &&
+        this.enabled &&
+        this.effectsVolume > 0,
+      this.mono,
+    );
+  }
+  updateWorld(scene: FactoryAudioScene | null, active = true) {
+    if (this.worldScene && (!scene || this.worldScene.room !== scene.room)) {
+      for (const [source, voice] of [...this.effectVoices]) {
+        if (!voice.spatial || voice.cinematic) continue;
+        try {
+          source.stop(this.context!.currentTime);
+        } catch {}
+        voice.dispose();
+      }
+    }
+    this.worldScene = scene ? { ...scene } : null;
+    this.worldActive = active;
+    if (!active) {
+      this.cancelEffects();
+      this.updateTorch(false);
+    }
+    this.pruneEffects();
+    this.refreshWorld();
+  }
   effectsOutput: GainNode | null = null;
   musicOutput: GainNode | null = null;
   get effectsVolume() {
@@ -117,7 +265,8 @@ export class Sound {
     if (!this.effectLevel) {
       this.updateTorch(false);
       this.rain?.stop();
-      this.cancelEffects(true);
+      this.factory?.stop();
+      this.cancelEffects();
     }
   }
   get musicVolume() {
@@ -141,7 +290,8 @@ export class Sound {
       this.silenceMusic();
       this.updateTorch(false);
       this.rain?.stop();
-      this.cancelEffects(true);
+      this.factory?.stop();
+      this.cancelEffects();
     }
   }
   get musicEnabled() {
@@ -160,17 +310,29 @@ export class Sound {
   private cinematicRoom: string | null = null;
   private effectVoices = new Map<
     AudioScheduledSourceNode,
-    { dispose: () => void; cinematic: boolean }
+    { dispose: () => void; cinematic: boolean; ends: number; spatial?: SpatialVoice }
   >();
   rain: RainAmbience | null = null;
+  private pruneEffects() {
+    if (!this.context) return;
+    for (const voice of this.effectVoices.values())
+      if (voice.spatial && voice.ends <= this.context.currentTime) voice.dispose();
+  }
   private cancelEffects(cinematicOnly = false) {
     for (const [source, voice] of [...this.effectVoices]) {
       if (cinematicOnly && !voice.cinematic) continue;
-      source.stop(this.context!.currentTime);
+      try {
+        source.stop(this.context!.currentTime);
+      } catch {}
       voice.dispose();
     }
   }
-  private trackEffect(source: AudioScheduledSourceNode, nodes: AudioNode[]) {
+  private trackEffect(
+    source: AudioScheduledSourceNode,
+    nodes: AudioNode[],
+    ends: number,
+    spatial?: SpatialVoice,
+  ) {
     let disposed = false;
     const dispose = () => {
       if (disposed) return;
@@ -180,7 +342,7 @@ export class Sound {
       for (const node of nodes) node.disconnect();
       this.effectVoices.delete(source);
     };
-    this.effectVoices.set(source, { dispose, cinematic: this.cinematicCue });
+    this.effectVoices.set(source, { dispose, cinematic: this.cinematicCue, ends, spatial });
     source.onended = dispose;
   }
   private effectsDuckUntil = 0;
@@ -191,6 +353,8 @@ export class Sound {
     if (
       !active ||
       this.cinematicQuiet ||
+      this.effectsSuspended ||
+      !this.worldActive ||
       !this.enabled ||
       !this.effectsVolume ||
       !c ||
@@ -241,6 +405,7 @@ export class Sound {
       try {
         c = new Context();
         const master = c.createGain();
+        this.updateOutputChannels(master);
         master.gain.value = this.enabled ? 0.34 : 0;
         const compressor = c.createDynamicsCompressor();
         compressor.threshold.value = -18;
@@ -263,6 +428,7 @@ export class Sound {
         for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
         this.music = new Music(c, musicOutput);
         this.rain = new RainAmbience(c, effectsOutput);
+        this.factory = new FactoryAmbience(c, effects);
         this.context = c;
         this.master = master;
         this.effects = effects;
@@ -277,6 +443,18 @@ export class Sound {
     if (this.context.state === 'suspended') void this.context.resume().catch(() => {});
   }
   updateMusic(scene: MusicScene, active = true) {
+    this.effectsSuspended = !active || scene.mode === 'paused';
+    if (
+      this.effectsSuspended ||
+      this.context?.state !== 'running' ||
+      (this.audioRoom !== null && this.audioRoom !== scene.room)
+    ) {
+      this.cancelEffects();
+      this.updateTorch(false);
+      if (this.audioRoom !== scene.room) this.played.clear();
+    }
+    this.audioRoom = scene.room;
+    this.pruneEffects();
     const quiet =
       scene.effectsSilent ??
       (!!scene.rain &&
@@ -287,6 +465,7 @@ export class Sound {
       this.updateTorch(false);
     }
     this.cinematicQuiet = quiet;
+    this.refreshWorld();
     const weatherActive =
       active && scene.mode === 'playing' && this.enabled && this.effectsVolume > 0;
     if (!weatherActive || (this.cinematicRoom !== null && this.cinematicRoom !== scene.room))
@@ -298,7 +477,19 @@ export class Sound {
   resetMusic() {
     this.music?.reset();
     this.rain?.stop();
-    this.cancelEffects(true);
+    this.cancelEffects();
+    this.updateTorch(false);
+    this.factory?.stop();
+    this.worldScene = null;
+    this.audioRoom = null;
+    this.effectsSuspended = false;
+    this.worldActive = true;
+    this.played.clear();
+    this.effectsDuckUntil = 0;
+    if (this.context) {
+      this.effects?.gain.cancelScheduledValues(this.context.currentTime);
+      this.effects?.gain.setValueAtTime(1, this.context.currentTime);
+    }
     this.cinematicQuiet = false;
     this.cinematicRoom = null;
   }
@@ -313,7 +504,17 @@ export class Sound {
     type: OscillatorType = 'triangle',
     delay = 0,
   ) {
-    const c = this.context!;
+    const c = this.context;
+    if (
+      !c ||
+      c.state !== 'running' ||
+      !this.enabled ||
+      !this.effectsVolume ||
+      this.effectsSuspended ||
+      !this.worldActive
+    )
+      return;
+    this.pruneEffects();
     if (this.voices >= (this.cinematicCue ? 28 : this.priorityCue ? 32 : 24)) return;
     this.voices++;
     const now = c.currentTime + delay,
@@ -327,15 +528,24 @@ export class Sound {
     gain.gain.linearRampToValueAtTime(volume, now + 0.003);
     gain.gain.exponentialRampToValueAtTime(0.001, now + length);
     osc.connect(gain);
-    gain.connect(
-      this.priorityCue ? (this.effectsOutput ?? this.master!) : (this.effects ?? this.master!),
-    );
-    this.trackEffect(osc, [osc, gain]);
+    const nodes: AudioNode[] = [osc, gain];
+    const spatial = this.connectEffect(gain, nodes);
+    this.trackEffect(osc, nodes, now + length + 0.01, spatial);
     osc.start(now);
     osc.stop(now + length + 0.01);
   }
   crack(length: number, volume: number, frequency: number, loop = false) {
-    const c = this.context!;
+    const c = this.context;
+    if (
+      !c ||
+      c.state !== 'running' ||
+      !this.enabled ||
+      !this.effectsVolume ||
+      this.effectsSuspended ||
+      !this.worldActive
+    )
+      return;
+    this.pruneEffects();
     if (this.voices >= (this.cinematicCue ? 28 : this.priorityCue ? 32 : 24)) return;
     this.voices++;
     const now = c.currentTime,
@@ -351,27 +561,67 @@ export class Sound {
     gain.gain.exponentialRampToValueAtTime(0.001, now + length);
     source.connect(filter);
     filter.connect(gain);
-    gain.connect(
-      this.priorityCue ? (this.effectsOutput ?? this.master!) : (this.effects ?? this.master!),
-    );
-    this.trackEffect(source, [source, filter, gain]);
+    const nodes: AudioNode[] = [source, filter, gain];
+    const spatial = this.connectEffect(gain, nodes);
+    this.trackEffect(source, nodes, now + length + 0.01, spatial);
     source.start(now);
     source.stop(now + length + 0.01);
   }
-  play(kind: string) {
+  private materialLayer(material: SoundMaterial) {
+    if (material === 'armor') this.tone(2300, 1350, 0.09, 0.018, 'sine');
+    else if (material === 'casing') this.tone(450, 240, 0.075, 0.025, 'triangle');
+    else if (material === 'cover') {
+      this.crack(0.05, 0.026, 2600);
+      this.tone(260, 120, 0.06, 0.018, 'triangle');
+    } else if (material === 'power') {
+      this.crack(0.065, 0.025, 3300);
+      this.tone(920, 145, 0.12, 0.018, 'square');
+    } else if (material === 'terrain') this.crack(0.055, 0.03, 650);
+  }
+  play(kind: string, origin?: SoundOrigin) {
+    const c = this.context;
+    if (
+      !this.enabled ||
+      !this.effectsVolume ||
+      this.effectsSuspended ||
+      !this.worldActive ||
+      !c ||
+      c.state !== 'running'
+    )
+      return;
+    if (this.cinematicQuiet && !CINEMATIC_CUES.has(kind)) return;
+    this.pruneEffects();
+    const key = soundCooldownKey(kind, origin);
+    const previous = this.played.get(key) ?? -10;
+    const warning = ATTACK_WARNINGS.has(kind);
+    const cooldown = warning
+      ? 0.12
+      : ['hit', 'armor', 'kill', 'nail-impact'].includes(kind)
+        ? 0.055
+        : 0.015;
+    if (c.currentTime - previous < cooldown) return;
+    this.played.delete(key);
+    this.played.set(key, c.currentTime);
+    while (this.played.size > COOLDOWN_ENTRIES)
+      this.played.delete(this.played.keys().next().value!);
+    this.cueOrigin = validSoundPosition(origin) ? { ...origin } : null;
+    this.cueWarning = warning;
+    try {
+      this.playCue(kind);
+      if (origin?.material && MATERIAL_IMPACTS.has(kind)) this.materialLayer(origin.material);
+    } finally {
+      this.cueOrigin = null;
+      this.cueWarning = false;
+      this.priorityCue = false;
+      this.cinematicCue = false;
+    }
+  }
+  private playCue(kind: string) {
     const c = this.context;
     if (!this.enabled || !this.effectsVolume || !c || c.state !== 'running') return;
     const cinematic = CINEMATIC_CUES.has(kind);
     if (this.cinematicQuiet && !cinematic) return;
-    const previous = this.played.get(kind) ?? -10;
     const warning = ATTACK_WARNINGS.has(kind);
-    const cooldown = warning
-      ? 0.12
-      : kind === 'hit' || kind === 'armor' || kind === 'kill' || kind === 'nail-impact'
-        ? 0.055
-        : 0.015;
-    if (c.currentTime - previous < cooldown) return;
-    this.played.set(kind, c.currentTime);
     this.priorityCue =
       cinematic ||
       warning ||

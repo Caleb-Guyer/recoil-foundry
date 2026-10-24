@@ -155,7 +155,7 @@ export function interruptAngler(g: Game, e: Enemy) {
   e.state = 'recover';
   e.timer = ANGLER.exposed;
   g.burst(e.body.position, 5, '#e9bb86', 2);
-  g.onSound('angler-break');
+  g.soundAt('angler-break', e.body.position, `enemy:${e.id}`);
 }
 export function beginAnglerAttack(g: Game, e: Enemy, plan = findAnglerPlan(g, e)) {
   if (!plan || e.spawn > 0 || e.hp <= 0 || g.mode !== 'playing') return false;
@@ -164,7 +164,7 @@ export function beginAnglerAttack(g: Game, e: Enemy, plan = findAnglerPlan(g, e)
   e.state = 'windup';
   e.timer = ANGLER.tell;
   e.angler!.searchAt = g.time + 0.12;
-  g.onSound('angler-lock');
+  g.soundAt('angler-lock', e.body.position, `enemy:${e.id}`);
   return true;
 }
 export function updateAngler(g: Game, e: Enemy, dt: number) {
@@ -225,7 +225,7 @@ export function updateAngler(g: Game, e: Enemy, dt: number) {
       e.state = 'recover';
       e.timer = g.stage >= 16 ? 0.85 : 1.1;
       rig.plan = undefined;
-      g.onSound('angler-fire');
+      g.soundAt('angler-fire', e.body.position, `enemy:${e.id}`);
     }
     return;
   }

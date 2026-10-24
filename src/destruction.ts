@@ -96,7 +96,7 @@ export class DestructionSystem {
     if (!piece || this.game.mode !== 'playing' || !Number.isFinite(damage) || damage <= 0) return;
     piece.hp -= damage;
     piece.flash = 0.07;
-    this.game.onSound('prop');
+    this.game.soundAt('prop', piece.body.position, `terrain:${piece.body.id}`, 'terrain');
     if (piece.hp <= 0) this.break(piece, velocity, source);
   }
   hitAlong(start: Vec, end: Vec, impact: Vec, damage: number, velocity: Vec, padding = 0) {
@@ -186,7 +186,7 @@ export class DestructionSystem {
     }
     g.burst(piece.body.position, 9, '#9dabaa', 3);
     g.feedback(2.5);
-    g.onSound('break');
+    g.soundAt('break', piece.body.position, `terrain:${piece.body.id}`, 'terrain');
   }
   releaseUnsupported() {
     const g = this.game;

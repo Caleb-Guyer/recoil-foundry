@@ -210,7 +210,7 @@ export function updateSquad(g: Game, e: Enemy): boolean {
           // Allied hulls stop the round even if they move into its lane later.
           if (distance(origin, squadLineEnd(g, e, origin, end)) > 45) {
             g.enemyShot(e, Math.atan2(e.aim.y, e.aim.x), undefined, undefined, origin);
-            g.onSound('enemy');
+            g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
           }
           e.state = 'recover';
           e.timer = 1.1;
@@ -236,7 +236,7 @@ export function updateSquad(g: Game, e: Enemy): boolean {
       e.state = 'windup';
       e.timer = SQUAD_TELL;
       rig.origin = { ...origin };
-      g.onSound('lock');
+      g.soundAt('lock', e.body.position, `enemy:${e.id}`);
     }
     return true;
   }

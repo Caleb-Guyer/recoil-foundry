@@ -1,3 +1,4 @@
+import type { SoundOrigin, SoundMaterial } from './sound-event.ts';
 import {
   FinalTransformation,
   transformedLevel,
@@ -384,7 +385,12 @@ export interface EscapeState {
   time: number;
   depart: number;
 }
+let soundSession = 0;
+
 export class Game {
+  // Cosmetic emitter identities never enter checkpoints or gameplay RNG.
+  private readonly soundSession = ++soundSession;
+  private soundRoom = 0;
   engine = Engine.create({ gravity: { x: 0, y: 1, scale: 0.001 } });
   player!: Matter.Body;
   level!: Level;
@@ -681,7 +687,19 @@ export class Game {
   rewardRerolled = false;
   onChange: () => void = () => {};
   onDeath: (origin?: Vec) => void = () => {};
-  onSound: (kind: string) => void = () => {};
+  onSound: (kind: string, origin?: SoundOrigin) => void = () => {};
+  soundAt(kind: string, position: Vec, source?: string, material?: SoundMaterial) {
+    if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+      this.onSound(kind);
+      return;
+    }
+    this.onSound(kind, {
+      x: position.x,
+      y: position.y,
+      ...(source ? { source: `${this.soundSession}:${this.soundRoom}:${source}` } : {}),
+      ...(material ? { material } : {}),
+    });
+  }
   onHaptic: (kind: 'shot' | 'land' | 'hurt', strength: number) => void = () => {};
   onCheckpoint: (save: Checkpoint | null) => void = () => {};
   onBossDefeated: (kind: EnemyKind) => void = () => {};
@@ -1121,6 +1139,7 @@ export class Game {
     };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.soundRoom++;
     this.reachedFinalePhase = 0;
     this.uprising.clear();
     this.reportedEncounters.clear();
@@ -2598,7 +2617,7 @@ export class Game {
         dist < 1450 &&
         distance(this.lineEnd(p, target), target) < 1
       )
-        this.onSound('aim-warn');
+        this.soundAt('aim-warn', e.body.position, `enemy:${e.id}`);
       if (e.timer > 0.35) e.aim = d;
       if (e.timer <= 0 && dist < 1450) {
         const base = Math.atan2(e.aim.y, e.aim.x);
@@ -2609,7 +2628,7 @@ export class Game {
           e.kind === 'flyer'
             ? [1.55, 1.35, 1.2, 1.3, 0.96][area]
             : [1.2, 1.08, 0.96, 1.05, 0.78][area];
-        this.onSound('enemy');
+        this.soundAt('enemy', e.body.position, `enemy:${e.id}`);
       } else if (e.timer <= 0) e.timer = 0.8;
     }
     if (this.mode !== 'playing' || e.hp <= 0) return;
@@ -2728,7 +2747,7 @@ export class Game {
       e.state = 'windup';
       e.timer = VOLATILE_TELL;
       e.target = { ...p };
-      this.onSound('lock');
+      this.soundAt('lock', e.body.position, `enemy:${e.id}`);
     }
   }
   detonateVolatile(e: Enemy) {
@@ -2760,7 +2779,7 @@ export class Game {
         kind: 'ring',
       });
     this.feedback(6);
-    this.onSound('explode');
+    this.soundAt('explode', e.body.position, `enemy:${e.id}`);
     if (hurtsPlayer)
       this.damagePlayer(
         Math.ceil(24 * (1 - distance(p, this.player.position) / (VOLATILE_RADIUS * 2))),
@@ -2848,7 +2867,7 @@ export class Game {
             });
           this.burst(prop ? prop.body.position : end, 12, '#ffc07a', 3.5);
           this.feedback(2);
-          this.onSound('crash');
+          this.soundAt('crash', e.body.position, `enemy:${e.id}`);
           if (prop) this.props.strike(prop, 140, e.aim);
           if (weak) this.destruction.hitBody(contact!.body, 140, e.aim);
         }
@@ -2858,7 +2877,7 @@ export class Game {
       if (e.timer <= 0) {
         e.state = 'rush';
         e.timer = 0.62;
-        this.onSound('rush');
+        this.soundAt('rush', e.body.position, `enemy:${e.id}`);
       }
     } else if (e.state === 'recover') {
       Body.setVelocity(e.body, { x: v.x * 0.75, y: v.y });
@@ -2874,7 +2893,7 @@ export class Game {
           if (!this.encounterPacer.request(e, true, CHARGE_TELL + 0.75)) return;
           e.state = 'windup';
           e.timer = CHARGE_TELL;
-          this.onSound('charge');
+          this.soundAt('charge', e.body.position, `enemy:${e.id}`);
         } else if (
           Math.abs(v.x) < 0.7 ||
           this.player.position.y < p.y - 55 ||
@@ -2964,7 +2983,7 @@ export class Game {
         e.state = 'recover';
         e.timer = 0.5;
         this.burst({ x: p.x, y: p.y + 16 }, 7, '#bc9685', 2);
-        this.onSound('land');
+        this.soundAt('land', e.body.position, `enemy:${e.id}`);
       }
     } else if (e.state === 'windup') {
       Body.setVelocity(e.body, { x: v.x * 0.65, y: v.y });
@@ -2975,7 +2994,7 @@ export class Game {
           x: clamp((e.target.x - p.x) / 42, -6.5, 6.5),
           y: -13.5 - Math.max(0, p.y - e.target.y) * 0.009,
         });
-        this.onSound('hop');
+        this.soundAt('hop', e.body.position, `enemy:${e.id}`);
       } else if (e.timer < -0.5) {
         e.state = 'airborne';
         e.timer = 0.2;
@@ -2998,12 +3017,12 @@ export class Game {
         e.aim = direction(e.body.position, this.player.position);
       if (e.timer <= 0) {
         this.enemyShot(e, Math.atan2(e.aim.y, e.aim.x), 18, 20);
-        this.onSound('snipe');
+        this.soundAt('snipe', e.body.position, `enemy:${e.id}`);
         if (e.elite === 'twin' && !second) {
           e.state = 'followup';
           e.timer = TWIN_TELL;
           e.aim = direction(e.body.position, this.player.position);
-          this.onSound('lock');
+          this.soundAt('lock', e.body.position, `enemy:${e.id}`);
         } else {
           e.state = 'recover';
           e.timer = e.elite === 'twin' ? 1.9 : 1.65;
@@ -3015,7 +3034,7 @@ export class Game {
         if (!this.encounterPacer.request(e, true, SNIPER_TELL + 0.35)) return;
         e.state = 'windup';
         e.timer = SNIPER_TELL;
-        this.onSound('lock');
+        this.soundAt('lock', e.body.position, `enemy:${e.id}`);
       }
     }
   }
@@ -3031,7 +3050,7 @@ export class Game {
       e.attacks = 0;
       this.burst(p, 25, '#ffd19b', 4);
       this.feedback(4);
-      this.onSound('phase');
+      this.soundAt('phase', e.body.position, `enemy:${e.id}`);
     }
     if (e.state === 'windup' || e.state === 'followup' || e.state === 'transition') {
       Body.setVelocity(e.body, { x: e.body.velocity.x * 0.65, y: e.body.velocity.y * 0.65 });
@@ -3051,7 +3070,7 @@ export class Game {
           e.state = 'followup';
           e.timer = commandRemix(this.level.bossRemix) ? 0.9 : 0.7;
           e.aim = d;
-          this.onSound('lock');
+          this.soundAt('lock', e.body.position, `enemy:${e.id}`);
         } else {
           e.attacks++;
           e.state = 'recover';
@@ -3059,7 +3078,7 @@ export class Game {
             ? [1.5, 1.35, 1.2][e.phase]
             : [1.1, 1, 0.9][e.phase];
         }
-        this.onSound(e.attack === 'ring' ? 'pulse' : 'enemy');
+        this.soundAt(e.attack === 'ring' ? 'pulse' : 'enemy', e.body.position, `enemy:${e.id}`);
       }
     } else if (e.timer <= 0 && bossHasLane(this, e)) {
       e.attack = commandRemix(this.level.bossRemix)
@@ -3078,7 +3097,7 @@ export class Game {
       e.aim = d;
       e.state = 'windup';
       e.timer = attackTell(e.attack) + (commandRemix(this.level.bossRemix) ? 0.2 : 0);
-      this.onSound('lock');
+      this.soundAt('lock', e.body.position, `enemy:${e.id}`);
     }
   }
   enemyShot(
@@ -3617,7 +3636,7 @@ export class Game {
             if (s.shell) s.shell.damage *= 1 + s.bankGrowth;
             if (s.bankGrowth > 0) {
               this.burst(s.pos, 4, '#a1dbbf', 2);
-              this.onSound('bank');
+              this.soundAt('bank', s.pos, `surface:${impactBody?.id ?? 'world'}`, 'terrain');
             }
             s.pos.x += nearest.normal.x;
             s.pos.y += nearest.normal.y;
@@ -3630,7 +3649,9 @@ export class Game {
             s.life = 0;
             if (impactBody && roundFeel(s) === 'nail') {
               this.combatFeel.impact(s, nearest.normal, this.time, impactBody);
-              this.onSound('nail-impact');
+              this.soundAt('nail-impact', s.pos, `surface:${impactBody.id}`, 'terrain');
+            } else if (impactBody && !nearest.prop && s.friendly && !s.allied && !s.fragment) {
+              this.soundAt('prop', s.pos, `surface:${impactBody.id}`, 'terrain');
             }
             this.grind.impact(s, nearest.body, nearest.normal);
             rivalImpact(this, s, nearest.prop?.body ?? nearest.body);
@@ -3771,7 +3792,13 @@ export class Game {
         armored ? 2 : 2.3,
         armored ? directionToHit : undefined,
       );
-      if (e.hp > 0) this.onSound(armored ? 'armor' : 'hit');
+      if (e.hp > 0)
+        this.soundAt(
+          armored ? 'armor' : 'hit',
+          impact,
+          `enemy:${e.id}`,
+          armored ? 'armor' : 'casing',
+        );
     }
     if (e.hp > 0) return blocked;
     if (this.finale.cinema?.breakForm(e)) return blocked;
@@ -3889,7 +3916,7 @@ export class Game {
         color: '#f28371',
         kind: 'ring',
       });
-    this.onSound('kill');
+    this.soundAt('kill', e.body.position, `enemy:${e.id}`, 'casing');
     if (isBoss(e.kind) && e.kind !== 'auditor' && e.kind !== 'welder')
       for (const other of [...this.enemies])
         this.hitEnemy(other, 9999, undefined, true, true, true, 'cleanup');

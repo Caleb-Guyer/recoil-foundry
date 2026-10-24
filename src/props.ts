@@ -302,10 +302,15 @@ export class PropSystem {
     if (prop.kind === 'canister' && damage > 0 && playerDamage) prop.playerArmed = true;
     prop.flash = 0.08;
     g.burst(prop.body.position, 4, prop.kind === 'canister' ? '#e4bb6e' : '#9dacaf', 2.3);
-    g.onSound('prop');
+    g.soundAt(
+      'prop',
+      prop.body.position,
+      `prop:${prop.body.id}`,
+      prop.kind === 'canister' ? 'casing' : 'cover',
+    );
     if (prop.kind === 'canister' && !Number.isFinite(prop.armedAt)) {
       prop.armedAt = g.time + 0.06;
-      g.onSound('arm');
+      g.soundAt('arm', prop.body.position, `prop:${prop.body.id}`, 'casing');
     }
     if (!prop.body.isStatic) {
       const force = clamp(
@@ -353,7 +358,7 @@ export class PropSystem {
     }
     this.game.burst(prop.body.position, 16, '#a9b5b3', 4);
     this.game.feedback(2);
-    this.game.onSound('break');
+    this.game.soundAt('break', prop.body.position, `prop:${prop.body.id}`, 'cover');
     if (!prop.welded) this.game.demolition.brokenProp(prop.body.position);
   }
   beforeStep() {
@@ -498,7 +503,7 @@ export class PropSystem {
       });
     g.feedback(7);
     g.hitStop = Math.max(g.hitStop, 0.04);
-    g.onSound('explode');
+    g.soundAt('explode', p, `prop:${prop.body.id}`, 'casing');
     for (const e of enemies) {
       g.hitEnemy(
         e,

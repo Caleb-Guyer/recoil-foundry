@@ -38,7 +38,7 @@ export function releaseScrapper(g: Game, e: Enemy, stun = false) {
   if (stun && holding && e.hp > 0) {
     e.state = 'recover';
     e.timer = SCRAPPER_STUN;
-    g.onSound('scrapper-break');
+    g.soundAt('scrapper-break', e.body.position, `enemy:${e.id}`);
     g.burst(e.body.position, 6, '#d9b991', 2);
   }
 }
@@ -106,7 +106,7 @@ export function updateScrapper(g: Game, e: Enemy) {
       rig.velocity = throwVelocity(g, rig.release, e.target, prop.body.frictionAir);
       e.aim = direction({ x: 0, y: 0 }, rig.velocity);
       e.timer = SCRAPPER_TELL;
-      g.onSound('scrapper-lock');
+      g.soundAt('scrapper-lock', e.body.position, `enemy:${e.id}`);
     } else if (distance(prop.body.position, rig.release) > 12) {
       releaseScrapper(g, e, true);
     } else if (e.timer <= 0) {
@@ -120,7 +120,7 @@ export function updateScrapper(g: Game, e: Enemy) {
       e.state = 'recover';
       e.timer = SCRAPPER_RECOVER;
       e.attacks++;
-      g.onSound('scrapper-throw');
+      g.soundAt('scrapper-throw', e.body.position, `enemy:${e.id}`);
     }
     return;
   }
@@ -165,7 +165,7 @@ export function updateScrapper(g: Game, e: Enemy) {
       });
       Composite.add(g.engine.world, rig.tether);
       Body.setVelocity(e.body, { x: 0, y: e.body.velocity.y });
-      g.onSound('scrapper-grab');
+      g.soundAt('scrapper-grab', e.body.position, `enemy:${e.id}`);
       return;
     }
   }

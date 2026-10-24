@@ -220,7 +220,7 @@ export function rivalCharge(
     body,
     local,
   });
-  g.onSound('lock');
+  g.soundAt('lock', pos, `charge:${e.id}:${pos.x}:${pos.y}`);
 }
 export function rivalImpact(g: Game, s: Shot, body?: Matter.Body) {
   if (s.friendly || !s.enemyAmmo) return;
@@ -316,7 +316,7 @@ export function updateArsenal(g: Game, e: Enemy, dt: number) {
     rig.queue.splice(rig.queue.indexOf(queued), 1);
     fireWeapon(g, e, queued.move, queued.origin, queued.angles);
     rig.muzzle = 0.16;
-    g.onSound('interceptor-shot');
+    g.soundAt('interceptor-shot', queued.origin, `enemy:${e.id}`);
   }
   for (const echo of [...rig.echoes]) {
     echo.left -= dt;
@@ -325,7 +325,7 @@ export function updateArsenal(g: Game, e: Enemy, dt: number) {
     rig.echoes.splice(rig.echoes.indexOf(echo), 1);
     if (!Matter.Query.point(g.solidBodies, echo.origin).length)
       fireWeapon(g, e, 'afterimage', echo.origin, weaponAngles('afterimage', echo.aim, e.phase));
-    g.onSound('interceptor-shot');
+    g.soundAt('interceptor-shot', echo.origin, `echo:${e.id}:${echo.origin.x}:${echo.origin.y}`);
   }
   for (const charge of [...rig.charges]) {
     if (charge.body && charge.local) {
@@ -360,7 +360,7 @@ export function updateArsenal(g: Game, e: Enemy, dt: number) {
     for (const piece of terrain)
       g.destruction.hitBody(piece.body, 90, direction(charge.pos, piece.body.position));
     g.burst(charge.pos, 18, '#e8c16c', 4);
-    g.onSound('slam');
+    g.soundAt('slam', charge.pos, `charge:${e.id}:${charge.pos.x}:${charge.pos.y}`, 'terrain');
     g.feedback(3);
     if (g.mode !== 'playing' || e.hp <= 0) return;
     if (charge.repeat) rivalCharge(g, e, charge.pos, charge.radius + 20, 14, 0.9, false);

@@ -74,7 +74,11 @@ export class AnnexSystem {
         aim: direction(this.port, g.factions.combatTarget(owner)),
         interrupted: false,
       };
-      g.onSound(owner.allied ? 'signal-friendly' : 'signal-charge');
+      g.soundAt(
+        owner.allied ? 'signal-friendly' : 'signal-charge',
+        this.port,
+        `annex-port:${owner.id}`,
+      );
       return;
     }
     if (t.phase === 'cooldown') {
@@ -92,7 +96,7 @@ export class AnnexSystem {
     this.volleys++;
     t.phase = 'cooldown';
     t.at = g.time + TRANSMISSION.cooldown;
-    g.onSound('signal-fire');
+    g.soundAt('signal-fire', this.port, `annex-port:${t.owner.id}`);
   }
   trace(from: Vec, to: Vec, radius = 0) {
     const boss = this.game.switchboard.trace(from, to, radius);
@@ -126,7 +130,7 @@ export class AnnexSystem {
     // Feedback is deliberately outside gun provenance: it cannot reboot a sender.
     g.hitEnemy(t.owner, TRANSMISSION.feedback, this.junction, true, false);
     g.burst(this.junction, 12, '#e8bb76', 2.8);
-    g.onSound('signal-cut');
+    g.soundAt('signal-cut', this.junction, `annex-junction:${t.owner.id}`, 'power');
     return true;
   }
   blast(pos: Vec, radius: number, cone: (p: Vec) => boolean) {
@@ -146,11 +150,11 @@ export class AnnexSystem {
     const d = direction(p, target);
     if (e.timer > 0.55) e.aim = d;
     if (e.timer <= 0.55 && e.timer + dt > 0.55)
-      g.onSound(e.allied ? 'signal-friendly' : 'aim-warn');
+      g.soundAt(e.allied ? 'signal-friendly' : 'aim-warn', e.body.position, `enemy:${e.id}`);
     if (e.timer <= 0) {
       if (distance(g.lineEnd(p, target, 5), target) < 1 && distance(p, target) < 1200) {
         g.enemyShot(e, Math.atan2(e.aim.y, e.aim.x), 8.5, 12);
-        g.onSound('enemy');
+        g.soundAt('enemy', e.body.position, `enemy:${e.id}`);
       }
       e.timer = 1.65;
       e.attacks++;

@@ -53,7 +53,7 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
     e.timer = 0.75;
     e.attacks = 0;
     g.feedback(3);
-    g.onSound('phase');
+    g.soundAt('phase', e.body.position, `enemy:${e.id}`);
   }
   if (['windup', 'followup', 'transition'].includes(e.state)) {
     Matter.Body.setVelocity(e.body, { x: e.body.velocity.x * 0.55, y: e.body.velocity.y * 0.55 });
@@ -77,7 +77,7 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
         e.attack === 'ring' ? 7.8 : g.stage >= 12 ? 11.6 : 10.2,
         boss ? 21 : g.stage >= 12 ? 20 : 18,
       );
-    g.onSound(e.attack === 'ring' ? 'pulse' : 'cooling-shot');
+    g.soundAt(e.attack === 'ring' ? 'pulse' : 'cooling-shot', e.body.position, `enemy:${e.id}`);
     if (boss && !second && g.level.bossRemix !== 'condenser-cold-circuit') {
       e.state = 'followup';
       e.timer = e.attack === 'ring' ? CONDENSER_PURGE_FOLLOWUP : CONDENSER_FOLLOWUP;
@@ -88,7 +88,7 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
           (g.level.bossRemix === 'condenser-purge-chamber' ? -Math.PI / 6 : Math.PI / 4);
         e.aim = { x: Math.cos(angle), y: Math.sin(angle) };
       } else e.aim = direction(e.body.position, g.player.position);
-      g.onSound('lock');
+      g.soundAt('lock', e.body.position, `enemy:${e.id}`);
     } else {
       e.attacks++;
       e.state = 'recover';
@@ -110,7 +110,7 @@ export function updateCoolingEnemy(g: Game, e: Enemy) {
         : direction(e.body.position, g.player.position);
     e.state = 'windup';
     e.timer = boss ? (e.attack === 'ring' ? 1.1 : 0.95) : SKIMMER_TELL;
-    g.onSound('lock');
+    g.soundAt('lock', e.body.position, `enemy:${e.id}`);
   }
 }
 

@@ -85,7 +85,7 @@ export class BreachSystem {
     if (g.mode !== 'playing' || !this.panels.includes(panel) || !(damage > 0)) return;
     panel.hp -= damage;
     panel.flash = 0.08;
-    g.onSound('prop');
+    g.soundAt('prop', panel.body.position, `panel:${panel.body.id}`, 'cover');
     if (panel.hp > 0) return;
     g.scrap.collect(source);
     g.support.collectPlate(source);
@@ -117,7 +117,7 @@ export class BreachSystem {
     }
     this.debris = this.debris.slice(-DEBRIS_LIMIT);
     g.feedback(2.2);
-    g.onSound('breach');
+    g.soundAt('breach', panel.body.position, `panel:${panel.body.id}`, 'cover');
     g.demolition.brokenProp(panel.body.position);
   }
   // Select all targets before damage so one blast cannot pass through its own breach.

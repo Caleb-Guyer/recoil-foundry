@@ -129,7 +129,7 @@ export class TeamworkSystem {
     e.state = 'recover';
     if (broken) {
       this.game.burst(e.body.position, 5, '#a8d9c3', 1.5);
-      this.game.onSound('support-break');
+      this.game.soundAt('support-break', e.body.position, `enemy:${e.id}`);
     }
   }
   disrupt(e: Enemy) {
@@ -170,7 +170,11 @@ export class TeamworkSystem {
         rig.phase = 'windup';
         rig.timer = SUPPORT.tell;
         e.state = 'windup';
-        g.onSound(e.kind === 'repairer' ? 'repair-warn' : 'relay-warn');
+        g.soundAt(
+          e.kind === 'repairer' ? 'repair-warn' : 'relay-warn',
+          e.body.position,
+          `enemy:${e.id}`,
+        );
       } else if (rig.phase === 'ready') this.finish(e);
       else {
         const target = this.partner(e);
@@ -188,7 +192,7 @@ export class TeamworkSystem {
           rig.phase = 'repair';
           rig.timer = 0.7;
           g.burst(target.body.position, 3, '#a8d9c3', 1);
-          g.onSound('repair-pulse');
+          g.soundAt('repair-pulse', e.body.position, `enemy:${e.id}`);
           if (rig.remaining <= 0 || target.hp >= target.maxHp) this.finish(e);
         }
       }

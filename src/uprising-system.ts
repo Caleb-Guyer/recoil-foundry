@@ -202,7 +202,7 @@ export class UprisingSystem {
       prop.uprising === 'generator' ? '#e7b67c' : '#b9e4ed',
       2,
     );
-    this.game.onSound('prop');
+    this.game.soundAt('prop', prop.body.position, `job-power:${prop.body.id}`, 'power');
   }
   damage() {
     if (this.waiting) this.hurt = true;

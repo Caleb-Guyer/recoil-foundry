@@ -80,7 +80,7 @@ export class PressureSystem {
     v.phase = 'warn';
     v.timer = v.overpressure ? PRESSURE_SHIFT.warn : PRESSURE.warn;
     v.manual = manual;
-    this.game.onSound('pressure-warn');
+    this.game.soundAt('pressure-warn', v.valve, `vent:${this.items.indexOf(v)}`);
     return true;
   }
   trace(from: Vec, to: Vec, radius = 0) {
@@ -132,7 +132,7 @@ export class PressureSystem {
           v.phase = 'burst';
           v.timer = timing.burst;
           v.launched.clear();
-          g.onSound('pressure-burst');
+          g.soundAt('pressure-burst', v, `vent:${this.items.indexOf(v)}`);
         } else if (v.phase === 'burst') {
           v.phase = 'recharge';
           v.timer = timing.recharge;
@@ -174,7 +174,7 @@ export class PressureSystem {
             next: g.time + PRESSURE_SHIFT.bossCooldown,
           });
           g.burst(e.body.position, 9, '#b3d6cd', 2.2);
-          g.onSound('pressure-open');
+          g.soundAt('pressure-open', e.body.position, `enemy:${e.id}`, 'power');
         }
         return;
       }

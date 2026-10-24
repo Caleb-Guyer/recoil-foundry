@@ -9,6 +9,7 @@ import type { FinaleServiceMenu } from './finale-service-menu.ts';
 import { finaleServiceTestFromUrl, prepareFinaleServiceTest } from './finale-service-test.ts';
 import { finalApproachTestFromUrl } from './final-approach.ts';
 import { combatFlowTestFromUrl } from './combat-flow-test.ts';
+import { factoryAudioScene } from './factory-audio-scene.ts';
 import { finalePracticePreviewFromUrl, prepareFinalePracticePreview } from './finale-practice.ts';
 import {
   rematchEntry,
@@ -558,7 +559,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Combat Flow</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Hear the Foundry</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -660,6 +661,7 @@ const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}
   bindings?: unknown;
   effectsVolume?: unknown;
   musicVolume?: unknown;
+  mono?: boolean;
 };
 const controller = new Controller(controllerSettings(prefs.controller));
 const bindings = loadBindings(prefs.bindings);
@@ -670,6 +672,7 @@ sound.enabled = prefs.sound !== false;
 sound.musicEnabled = prefs.music !== false;
 sound.effectsVolume = volumeLevel(prefs.effectsVolume);
 sound.musicVolume = volumeLevel(prefs.musicVolume);
+sound.mono = prefs.mono === true;
 renderer.reduced =
   typeof prefs.reduced === 'boolean'
     ? prefs.reduced
@@ -1580,6 +1583,7 @@ function persistSettings() {
     bindings,
     effectsVolume: sound.effectsVolume,
     musicVolume: sound.musicVolume,
+    mono: sound.mono,
   });
   updateAudioState();
   updateTitle();
@@ -1712,8 +1716,10 @@ function backFromControls() {
   }
 }
 function updateMusic(active = pageActive && document.hasFocus() && !document.hidden) {
-  const soundingGame = roomRematchView?.session.game ?? game;
+  const soundingGame = roomRematchView?.session.game ?? supportDrill?.game ?? game;
+  sound.setListener(soundingGame.player.position);
   sound.updateMusic(musicScene(soundingGame), active);
+  sound.updateWorld(factoryAudioScene(soundingGame), active);
   sound.updateTorch(
     active &&
       soundingGame.mode === 'playing' &&
@@ -2722,7 +2728,7 @@ game.onCheckpoint = (s) => {
   checkpoint = s;
   write(CHECKPOINT_KEY, s);
 };
-game.onSound = (kind) => sound.play(kind);
+game.onSound = (kind, origin) => sound.play(kind, origin);
 game.onCampaignClear = (score) => {
   progress.checkExternal();
   if (progress.blocked) return;
@@ -3113,7 +3119,7 @@ function showDialog(kind: string) {
       selectedDrill,
       bindings,
       backFromDrill,
-      (kind) => sound.play(kind),
+      (kind, origin) => sound.play(kind, origin),
     );
   } else if (kind === 'starting-gun' || kind === 'goal-campaign') {
     startingGunMenu(
@@ -3205,11 +3211,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.16.0 · COMBAT FLOW</p><h2 id="dialog-title">Read the room.</h2>' +
-      '<p class="update-tagline">Choose your target. Find your angle. Keep moving.</p>' +
-      '<dl class="update-notes"><div><dt>Six familiar rooms.</dt><dd>Overpass, Cargo Switchyard, Warm Exchange, Upper Return, Inspection Lane and Scrap Bridge gain distinct enemy combinations. Three seeded compositions change each room’s opening targets and reserve groups.</dd></div>' +
-      '<div><dt>Three deliberate beats.</dt><dd>Clear the opening, use the recovery to reposition, then meet the next group. Every reinforcement keeps its full arrival warning, and the room waits for every group before rewarding a clear.</dd></div>' +
-      '<div><dt>Work the angles.</dt><dd>Use upper decks, breakable cover and explosive props to make your build count. High and low route choices keep different layouts. Start a new Campaign to meet the revised patrols.</dd></div></dl>' +
+      '<p class="eyebrow">5.17.0 · HEAR THE FOUNDRY</p><h2 id="dialog-title">A factory you can hear.</h2>' +
+      '<p class="update-tagline">Locate the threat. Feel the impact.</p>' +
+      '<dl class="update-notes"><div><dt>Listen for the source.</dt><dd>Enemy warnings, reinforcements and machinery now come from their actual positions. Overlapping warnings keep their own voices. Use Mono audio in Settings to center them.</dd></div>' +
+      '<div><dt>Hear what you hit.</dt><dd>Metal bodies, armor, breakable cover, powered cabinets and terrain add distinct impact and destruction layers to the existing effects.</dd></div>' +
+      '<div><dt>The factory keeps working.</dt><dd>Quiet machinery, pumps, belts and rooftop wind give all five zones their own atmosphere. Power cuts and shutdowns change the machinery you hear. Ambience pauses with the game and keeps the rain approach quiet.</dd></div></dl><p><a href="./audio.html" target="_blank" rel="noopener">Open the isolated Soundcheck ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3362,9 +3368,9 @@ function showDialog(kind: string) {
       lastRoomRematch,
       bindings,
       () => showDialog('result'),
-      (kind) => {
+      (kind, origin) => {
         sound.unlock();
-        sound.play(kind);
+        sound.play(kind, origin);
       },
     );
   } else if (kind === 'security') {
@@ -4397,9 +4403,11 @@ function showDialog(kind: string) {
       volumeControl('music', sound.musicVolume) +
       '<label>Music enabled<span class="setting-value"><span id="music-state"></span><input id="music" type="checkbox" ' +
       (sound.musicEnabled ? 'checked' : '') +
-      ' /></span></label><label>Reduced effects<input id="shake" type="checkbox" aria-describedby="reduced-note" ' +
+      ' /></span></label><label>Mono audio<input id="mono-audio" type="checkbox" aria-describedby="mono-note" ' +
+      (sound.mono ? 'checked' : '') +
+      ' /></label><label>Reduced effects<input id="shake" type="checkbox" aria-describedby="reduced-note" ' +
       (renderer.reduced ? 'checked' : '') +
-      ' /></label></div><p id="reduced-note" class="controller-note">Less shake, flashes and particles. Attack warnings stay visible.</p><p id="audio-note" class="controller-note" role="status" hidden></p><details id="keyboard-settings" class="controller-settings"></details>' +
+      ' /></label></div><p id="mono-note" class="controller-note">Center all audio for one speaker or ear. Warning timing stays the same. <a href="./audio.html" target="_blank" rel="noopener">Soundcheck ↗</a></p><p id="reduced-note" class="controller-note">Less shake, flashes and particles. Attack warnings stay visible.</p><p id="audio-note" class="controller-note" role="status" hidden></p><details id="keyboard-settings" class="controller-settings"></details>' +
       controllerOptions() +
       `<div class="controls-copy" ${paused ? '' : 'hidden'}><div id="device-controls"></div><p>` +
       (game.workshop.active
@@ -4505,6 +4513,11 @@ function showDialog(kind: string) {
     $<HTMLInputElement>('music').onchange = (e) => {
       sound.musicEnabled = (e.target as HTMLInputElement).checked;
       if (sound.musicEnabled) sound.unlock();
+      persistSettings();
+      updateMusic();
+    };
+    $<HTMLInputElement>('mono-audio').onchange = (e) => {
+      sound.mono = (e.target as HTMLInputElement).checked;
       persistSettings();
       updateMusic();
     };

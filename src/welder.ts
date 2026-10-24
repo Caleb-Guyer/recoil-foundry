@@ -215,7 +215,7 @@ export class WelderSystem {
       }
       if (grounded && g.time >= rig.stepAt && Math.abs(e.body.velocity.x) > 0.6) {
         rig.stepAt = g.time + 0.55;
-        g.onSound('welder-step');
+        g.soundAt('welder-step', e.body.position, `enemy:${e.id}`);
       }
       if (e.timer <= 0) {
         rig.attack = (['seam', 'arc', 'cover', 'seam', 'arc'] as const)[e.attacks++ % 5];
@@ -226,7 +226,7 @@ export class WelderSystem {
         e.aim = direction(p, g.player.position);
         if (rig.attack === 'seam') this.traceSeams(e);
         if (rig.attack === 'cover') this.planBarriers(e);
-        g.onSound('weld-warn');
+        g.soundAt('weld-warn', e.body.position, `enemy:${e.id}`);
       }
     } else {
       Body.setVelocity(e.body, { x: e.body.velocity.x * 0.8, y: e.body.velocity.y });
@@ -235,11 +235,11 @@ export class WelderSystem {
           const angle = Math.atan2(e.aim.y, e.aim.x);
           for (const spread of [-0.22, -0.11, 0, 0.11, 0.22])
             g.enemyShot(e, angle + spread, 10, 22);
-          g.onSound('weld-fire');
+          g.soundAt('weld-fire', e.body.position, `enemy:${e.id}`);
         }
         e.state = 'recover';
         e.timer = WELDER_OPENING;
-        g.onSound('weld-vent');
+        g.soundAt('weld-vent', e.body.position, `enemy:${e.id}`);
       } else if (e.state === 'recover' && e.timer <= 0) {
         e.state = 'idle';
         e.timer = 1.4;
@@ -260,7 +260,11 @@ export class WelderSystem {
       if (s.age < WELD_TELL || s.age >= WELD_TELL + WELD_LIFE) continue;
       if (!s.ignited) {
         s.ignited = true;
-        g.onSound('weld-fire');
+        g.soundAt(
+          'weld-fire',
+          { x: (s.a.x + s.b.x) / 2, y: (s.a.y + s.b.y) / 2 },
+          `weld:${s.support.id}`,
+        );
       }
       const box = g.player.bounds;
       if (

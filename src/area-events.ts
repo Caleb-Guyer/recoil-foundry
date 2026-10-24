@@ -500,7 +500,8 @@ export class AreaEventSystem {
     if (!this.state.relays.includes(g.stage)) this.state.relays.push(g.stage);
     g.burst(box.body.position, 8, '#e8bb76', 3);
     g.waves.release();
-    g.onSound('reinforce');
+    g.soundAt('shutdown-break', box.body.position, `fuse:${box.body.id}`, 'power');
+    g.soundAt('reinforce', box.body.position, `fuse:${box.body.id}`);
   }
   free(p: Vec, margin = 28) {
     const g = this.game;
@@ -537,7 +538,7 @@ export class AreaEventSystem {
     this.hunted = this.pending = true;
     this.releaseAt = g.time + 1.1;
     g.waves.release();
-    g.onSound('reinforce');
+    g.soundAt('reinforce', this.site, 'event-terminal');
     return true;
   }
   update(dt: number) {
@@ -620,7 +621,8 @@ export class AreaEventSystem {
       y: clamp((clamp(t.y - 180, 180, 550) - p.y) * 0.035, -3, 3),
     });
     if (e.timer > 0.65) e.aim = d;
-    if (e.timer <= 0.65 && e.timer + dt > 0.65) g.onSound('aim-warn');
+    if (e.timer <= 0.65 && e.timer + dt > 0.65)
+      g.soundAt('aim-warn', e.body.position, `enemy:${e.id}`);
     if (e.timer <= 0) {
       const a = Math.atan2(e.aim.y, e.aim.x),
         count = e.attacks % 2 ? 5 : 3;
@@ -641,7 +643,7 @@ export class AreaEventSystem {
       this.powered = true;
       if (!s.relays.includes(g.stage)) s.relays.push(g.stage);
       g.waves.release();
-      g.onSound('reinforce');
+      g.soundAt('reinforce', this.site, 'event-terminal');
     }
     if (e.eventRole === 'commander') s.commander = true;
   }

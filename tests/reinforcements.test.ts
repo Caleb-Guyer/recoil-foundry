@@ -189,7 +189,11 @@ test('a fast opening clear gives the full warning and cannot clear, heal, or ope
   step(g, Math.floor(REINFORCEMENT_TELL * 60) - 1);
   assert.equal(g.enemies.length, 0);
   assert(!g.clear && g.waves.pending);
-  assert.equal(sounds.filter((sound) => sound === 'reinforce').length, 1);
+  assert.equal(
+    sounds.filter((sound) => sound === 'reinforce').length,
+    finalCount,
+    'each actual door emits its own warning',
+  );
   until(g, () => g.enemies.length > 0);
   assert(g.time - warningAt >= REINFORCEMENT_TELL - 1e-8);
   assert.equal(g.enemies.length, finalCount);

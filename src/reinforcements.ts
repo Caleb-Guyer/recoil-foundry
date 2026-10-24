@@ -363,7 +363,7 @@ export class ReinforcementSystem {
     door.spawn = replacement;
     door.timer = REINFORCEMENT_TELL;
     door.blocked = 0;
-    g.onSound('reinforce');
+    g.soundAt('reinforce', door.spawn, `door:${this.doors.indexOf(door)}`);
   }
   private updateFlow(dt: number) {
     const g = this.game,
@@ -389,8 +389,8 @@ export class ReinforcementSystem {
         for (const door of this.doors.filter((d) => d.flowBeat === flow.beat)) {
           door.state = 'warning';
           door.timer = REINFORCEMENT_TELL;
+          g.soundAt('reinforce', door.spawn, `door:${this.doors.indexOf(door)}`);
         }
-        g.onSound('reinforce');
         return;
       }
       this.openingTime += dt;
@@ -493,8 +493,8 @@ export class ReinforcementSystem {
           if ((door.delay ?? 0) > 0) continue;
           door.state = 'warning';
           door.timer = REINFORCEMENT_TELL;
+          g.soundAt('reinforce', door.spawn, `door:${this.doors.indexOf(door)}`);
         }
-        g.onSound('reinforce');
       }
       return;
     }
@@ -508,7 +508,7 @@ export class ReinforcementSystem {
         if (door.delay === 0) {
           door.state = 'warning';
           door.timer = REINFORCEMENT_TELL;
-          g.onSound('reinforce');
+          g.soundAt('reinforce', door.spawn, `door:${this.doors.indexOf(door)}`);
         }
       } else if (door.state === 'open') {
         door.timer = Math.max(0, door.timer - dt);

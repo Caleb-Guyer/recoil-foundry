@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Hear the Foundry — version 5.17.0.** Directional threats, source-aware warnings, material impact layers and five reactive factory soundscapes bring the encounters to life. Mono audio and isolated Soundcheck comparisons keep the controls accessible. [Release notes and audio tests](docs/releases/5.17.0.md).
+
 **Combat Flow — version 5.16.0.** Six familiar Campaign rooms gain three seeded tactical compositions, authored reinforcement groups and terrain that rewards different builds. High and low route choices retain distinct layouts; older saves and the Final Approach keep their existing rules. [Release notes and isolated encounter tests](docs/releases/5.16.0.md).
 
 **Final Arsenal — version 5.12.0.** The player-mimicking final boss is now the **Reclaimer**; the other security supervisor is the **Interceptor**. Nineteen weapon attacks escalate across three phases, with sweeping fans, rotating ring gaps, floor charges and linked attacks. New Game+ opens the full arsenal immediately and adds harder follow-ups. [Release notes and playtests](docs/releases/5.12.0.md).
