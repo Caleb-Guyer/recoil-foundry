@@ -216,3 +216,28 @@ test('controller changes a native collection family selector without leaving it 
   assert.equal(dom.activeElement, family);
   assert(family.events.every((event) => event === 'change'));
 });
+
+test('draft hold controls can be confirmed without accepting an upgrade, then return to the same card', () => {
+  const first = new Element(0, 0, 200, 240),
+    firstHold = new Element(0, 240, 200, 44),
+    second = new Element(220, 0, 200, 240),
+    secondHold = new Element(220, 240, 200, 44),
+    third = new Element(440, 0, 200, 240),
+    thirdHold = new Element(440, 240, 200, 44),
+    reroll = new Element(450, 600, 190, 44);
+  const page = root(first, firstHold, second, secondHold, third, thirdHold, reroll);
+  second.focus();
+  navigateControllerMenu(page, 'down');
+  assert.equal(dom.activeElement, secondHold);
+  confirmControllerMenu(page);
+  assert.equal(secondHold.clicked, 1);
+  assert.equal(first.clicked + second.clicked + third.clicked, 0);
+  navigateControllerMenu(page, 'up');
+  assert.equal(dom.activeElement, second);
+  confirmControllerMenu(page);
+  assert.equal(second.clicked, 1);
+  secondHold.disabled = true;
+  secondHold.focus();
+  confirmControllerMenu(page);
+  assert.equal(secondHold.clicked, 1, 'a used or removed hold cannot be activated');
+});

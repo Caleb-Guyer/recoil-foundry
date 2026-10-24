@@ -380,7 +380,7 @@ test('fresh Campaign seeds offer all four supports while existing seeds retain t
   const values = [35, 36];
   assert.equal(
     newCampaignSeed('RF-C88-Z', () => values.shift()!),
-    'RF-C99-10',
+    'RF-C100-10',
   );
   for (const seed of ['old-campaign', 'RF-C88-new']) {
     const mods = ['cutting-torch', 'thermal-runaway'];

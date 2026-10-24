@@ -153,6 +153,7 @@ import { damageCauseText } from './damage-cause.ts';
 import { damageHealthTrail, type DamageHit } from './damage-control.ts';
 import { damageSummaryHtml } from './damage-summary-view.ts';
 import { damageControlTestFromUrl, DAMAGE_CONTROL_SCENES } from './damage-control-test.ts';
+import { betterDraftsTestFromUrl, BETTER_DRAFTS_SCENES } from './better-drafts-test.ts';
 import {
   LOGBOOK_KEY,
   loadLogbook,
@@ -294,6 +295,7 @@ import {
   modPathLabel,
   modDescription,
   buildFollowup,
+  isSalvage,
   progressionCampaign,
   buildPath,
   PATH_NAMES,
@@ -564,7 +566,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Damage Control</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Better Drafts</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -750,9 +752,11 @@ const linkedFinalApproachTest = finalApproachTestFromUrl(entryUrl);
 const linkedCombatFlowTest = combatFlowTestFromUrl(entryUrl);
 const linkedCombatFocusTest = combatFocusTestFromUrl(entryUrl);
 const linkedDamageControlTest = damageControlTestFromUrl(entryUrl);
+const linkedBetterDraftsTest = betterDraftsTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedBetterDraftsTest?.checkpoint ??
   linkedDamageControlTest?.checkpoint ??
   linkedCombatFocusTest?.checkpoint ??
   linkedCombatFlowTest ??
@@ -1320,6 +1324,10 @@ function updateTitle() {
       ' camera · ' +
       bindingLabel(bindings, 'retry') +
       ' to retry. Continue and your saved camera preference stay untouched.';
+  }
+  if (linkedBetterDraftsTest && linkedRunTest?.seed === linkedBetterDraftsTest.checkpoint.seed) {
+    $('play').textContent = 'Test Better Drafts ↗';
+    $('title-hint').textContent = BETTER_DRAFTS_SCENES[linkedBetterDraftsTest.scene].instruction;
   }
   if (linkedDamageControlTest && linkedRunTest?.seed === linkedDamageControlTest.checkpoint.seed) {
     $('play').textContent = 'Test Damage Control ↗';
@@ -3287,11 +3295,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.19.0 · DAMAGE CONTROL</p><h2 id="dialog-title">Read the hit. Plan the retry.</h2>' +
-      '<p class="update-tagline">Know what reached you.</p>' +
-      '<dl class="update-notes"><div><dt>See an accepted hit.</dt><dd>A small directional mark follows incoming damage, and a short health trail shows what you lost. A steady outline marks the existing recovery window, including with Reduced effects.</dd></div>' +
-      '<div><dt>Review the actual hits.</dt><dd>Scrub your last moments or jump to a recorded hit. Markers show the health actually lost, its recorded source and when it happened.</dd></div>' +
-      '<div><dt>Make the retry useful.</dt><dd>Expand the damage breakdown on results. Room practice shows its own finished totals alongside the original visit, with different starting health identified.</dd></div></dl><p><a href="?test=damage&amp;scene=hit&amp;v=1">Try hit feedback ↗</a> · <a href="?test=damage&amp;scene=replay&amp;v=1">Try the hit timeline ↗</a></p>' +
+      '<p class="eyebrow">5.20.0 · BETTER DRAFTS</p><h2 id="dialog-title">Build with a direction.</h2>' +
+      '<p class="update-tagline">Keep a good card. Explore the others.</p>' +
+      '<dl class="update-notes"><div><dt>Find a useful fit.</dt><dd>New Campaign drafts consider your starting weapon and current fittings, while keeping different build directions in the choice.</dd></div>' +
+      '<div><dt>Hold one card.</dt><dd>Hold an upgrade to keep it while rerolling the other two. The same once-per-reward cost or free credit applies. You still choose one upgrade.</dd></div>' +
+      '<div><dt>See fewer repeats.</dt><dd>Recently declined upgrades are less likely to return in the same zone. Legal choices and earned rewards take priority when the pool gets small.</dd></div></dl>' +
+      '<p class="practice-record-note">Start a new Campaign for Better Drafts. Existing Continue and Daily choices keep their rules.</p>' +
+      '<p><a href="?test=drafts&amp;scene=shotgun&amp;v=1">Try weapon-aware drafts ↗</a> · <a href="?test=drafts&amp;scene=hold&amp;v=1">Try a held-card reroll ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3950,8 +3960,12 @@ function showDialog(kind: string) {
         : '') +
       '<div class="choices">' +
       game.offers
-        .map(
-          (m, i) =>
+        .map((m, i) => {
+          const holdable = game.canHoldReward && !isSalvage(m.id) && m.id !== 'repair';
+          return (
+            (holdable
+              ? '<div class="draft-choice' + (game.heldReward === m.id ? ' is-held' : '') + '">'
+              : '') +
             '<button class="mod" data-mod="' +
             m.id +
             '"><span class="mod-top">' +
@@ -3985,8 +3999,22 @@ function showDialog(kind: string) {
                   .join(' · ') +
                 '</span>'
               : '') +
-            '</button>',
-        )
+            '</button>' +
+            (holdable
+              ? '<button class="draft-hold" id="hold-mod-' +
+                m.id +
+                '" data-hold-mod="' +
+                m.id +
+                '" aria-pressed="' +
+                (game.heldReward === m.id) +
+                '" aria-label="Hold ' +
+                m.name +
+                ' for reroll" title="Keep this card while rerolling the others">' +
+                (game.heldReward === m.id ? 'Held for reroll' : 'Hold for reroll') +
+                '</button></div>'
+              : '')
+          );
+        })
         .join('') +
       '</div>' +
       upgradePreviewMarkup() +
@@ -4005,13 +4033,20 @@ function showDialog(kind: string) {
               ? 'Requires more than ' + REROLL_COST + ' health'
               : !game.canReroll
                 ? 'No full set of new upgrades available'
-                : 'Replace every card. Once per reward.') +
+                : game.heldReward
+                  ? 'Keep the held card and replace the others. Once per reward.'
+                  : 'Replace every card. Once per reward.') +
           '">' +
           (game.rewardRerolled
             ? 'Reroll used'
-            : game.hunts.freeReroll || game.areaEvents.freeReroll
-              ? 'Reroll · free'
-              : 'Reroll · −' + REROLL_COST + ' health') +
+            : (game.heldReward
+                ? game.offers.length === 3
+                  ? 'Reroll other two'
+                  : 'Reroll unheld'
+                : 'Reroll') +
+              (game.hunts.freeReroll || game.areaEvents.freeReroll
+                ? ' · free'
+                : ' · −' + REROLL_COST + ' health')) +
           '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
         : '');
     loadUpgradeComparison(
@@ -4031,15 +4066,25 @@ function showDialog(kind: string) {
       ),
       game.stage === 0 && !game.practice,
     );
+    content.querySelectorAll<HTMLButtonElement>('[data-hold-mod]').forEach((button) => {
+      button.onclick = () => {
+        sound.unlock();
+        if (game.holdReward(button.dataset.holdMod!)) {
+          // Rendering replaces the card controls; keep keyboard focus on the same hold toggle.
+          document.getElementById(button.id)?.focus();
+        }
+      };
+    });
     const reroll = document.getElementById('reroll');
     if (reroll)
       reroll.onclick = () => {
         sound.unlock();
-        const free = game.hunts.freeReroll || game.areaEvents.freeReroll;
+        const free = game.hunts.freeReroll || game.areaEvents.freeReroll,
+          held = game.offers.find((offer) => offer.id === game.heldReward);
         if (game.rerollReward()) {
-          $('reward-status').textContent = free
-            ? 'Choices replaced. Salvage used.'
-            : 'Choices replaced. ' + REROLL_COST + ' health spent.';
+          $('reward-status').textContent =
+            (held ? held.name + ' kept. Other choices replaced. ' : 'Choices replaced. ') +
+            (free ? 'Free reroll used.' : REROLL_COST + ' health spent.');
           // Do not let a second Enter on the reroll accept an unfamiliar card.
           $('dialog-title').tabIndex = -1;
           $('dialog-title').focus();

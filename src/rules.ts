@@ -717,6 +717,10 @@ export interface RewardContext {
   seed?: string;
   overtime?: boolean;
   salvage?: string | null;
+  startingGun?: StartingGun;
+  recentDeclined?: readonly string[];
+  held?: string;
+  heldIndex?: number;
 }
 export const SALVAGE_BOSSES: Readonly<Record<string, string>> = {
   loader: 'ramjet',
@@ -874,6 +878,195 @@ export function progressionCampaign(seed: string) {
   return !!revision && Number(revision[1]) >= 90;
 }
 
+export const BETTER_DRAFT_REVISION = 100;
+export const DRAFT_DECLINE_LIMIT = 9;
+export function betterDraftCampaign(seed: string) {
+  if (typeof seed !== 'string') return false;
+  const revision = /^RF-C(\d+)-/.exec(seed);
+  return !!revision && Number(revision[1]) >= BETTER_DRAFT_REVISION;
+}
+export function updateDraftDeclines(previous: readonly string[], declined: readonly string[]) {
+  const ids: string[] = [];
+  for (const id of [...previous, ...declined]) {
+    if (!MODS.some((mod) => mod.id === id)) continue;
+    const old = ids.indexOf(id);
+    if (old >= 0) ids.splice(old, 1);
+    ids.push(id);
+  }
+  return ids.slice(-DRAFT_DECLINE_LIMIT);
+}
+// Each native tool has a few useful directions, rather than a forced build.
+// Actual owned prerequisites take priority once a gun develops a mechanism.
+const DRAFT_GUN_FITS: Readonly<Record<StartingGun, readonly string[]>> = {
+  pistol: ['magnum', 'rapid', 'airshot', 'kick', 'pierce', 'burst', 'capacitor'],
+  shotgun: ['magnum', 'rapid', 'airshot', 'kick', 'collimator', 'ricochet', 'overkill-bank'],
+  nailgun: ['rapid', 'airshot', 'kick', 'burst', 'arc-coil', 'coolant-rounds', 'pierce'],
+  twinbore: ['magnum', 'rapid', 'airshot', 'kick', 'collimator', 'pierce', 'capacitor'],
+  carbine: ['magnum', 'rapid', 'airshot', 'kick', 'capacitor', 'deadeye', 'overkill-bank'],
+  repeater: ['rapid', 'airshot', 'kick', 'arc-coil', 'coolant-rounds', 'pierce', 'countershot'],
+};
+const DRAFT_TOOL_STRENGTHS: Readonly<Record<StartingGun, readonly string[]>> = {
+  pistol: ['pierce', 'burst', 'capacitor'],
+  shotgun: ['collimator', 'ricochet', 'overkill-bank'],
+  nailgun: ['burst', 'arc-coil', 'coolant-rounds'],
+  twinbore: ['collimator', 'pierce', 'capacitor'],
+  carbine: ['capacitor', 'deadeye', 'overkill-bank'],
+  repeater: ['arc-coil', 'coolant-rounds', 'countershot'],
+};
+export function draftFitReason(
+  id: string,
+  mods: readonly string[],
+  startingGun: StartingGun = 'pistol',
+): string | undefined {
+  if (buildFollowup(id, mods)) {
+    const parent = [MOD_REQUIRES[id], ...(BRANCH_PARENTS[id] ?? [])].find(
+      (candidate) => candidate && mods.includes(candidate),
+    );
+    const name = MODS.find((mod) => mod.id === parent)?.name;
+    return name ? 'Develops ' + name : 'Develops your current fittings';
+  }
+  if (!DRAFT_GUN_FITS[startingGun].includes(id)) return undefined;
+  const reasons: Readonly<Record<string, string>> = {
+    magnum: 'Heavier direct hits',
+    rapid: 'Faster follow-up shots',
+    airshot: 'Stronger airborne fire',
+    kick: 'More damage and lift',
+    pierce: 'Fire through another target',
+    burst: startingGun === 'nailgun' ? 'Faster native bursts' : 'Adds a burst of rounds',
+    capacitor: 'Charge between discharges',
+    collimator: 'Tightens your firing spread',
+    ricochet: 'Banks your whole volley',
+    'overkill-bank': 'Carries excess hit damage',
+    'arc-coil': 'Repeated hits build an arc',
+    'coolant-rounds': 'Repeated hits build cold',
+    deadeye: 'Tighter, faster direct fire',
+    countershot: 'Deflects a small enemy round',
+  };
+  return reasons[id];
+}
+const DRAFT_MOVEMENT = [
+  'light',
+  'double-jump',
+  'wing-harness',
+  'wallrunner',
+  'air-brake',
+  'fold',
+  'rewire',
+  'slingshot',
+  'grapnel',
+  'spring-step',
+  'glide-rig',
+  'ground-anchor',
+  'impulse-reserve',
+  'regulator',
+  'blast-surf',
+  'ramjet',
+  'wrecking-ball',
+  'triphammer',
+  'slipstream',
+];
+const DRAFT_DEFENSE = [
+  'leech',
+  'countershot',
+  'reprisal',
+  'scrap-armor',
+  'reinforced-plate',
+  'plate-retainer',
+  'reclamation',
+  'field-patch',
+  'breach',
+];
+export function draftRole(id: string): string {
+  if (DRAFT_MOVEMENT.includes(id)) return 'movement';
+  if (DRAFT_DEFENSE.includes(id)) return 'recovery';
+  return MOD_PATHS[id]?.path ?? 'direct';
+}
+// The legal pool is shared with historical rewards. This selector changes only
+// the new Campaign stream; an old Continue or any Daily never enters it.
+function betterRewardMods(
+  mods: readonly string[],
+  rng: () => number,
+  context: RewardContext,
+  legal: readonly Mod[],
+  salvage: Mod | undefined,
+  excluded: readonly string[],
+) {
+  const held =
+    context.held && !isSalvage(context.held)
+      ? legal.find((mod) => mod.id === context.held)
+      : undefined;
+  const offers: Mod[] = held ? [held] : [];
+  if (salvage) offers.push(salvage);
+  const pool = legal.filter(
+    (mod) => !excluded.includes(mod.id) && !offers.some((offer) => offer.id === mod.id),
+  );
+  const recent = context.recentDeclined ?? [];
+  const gun = context.startingGun ?? 'pistol';
+  const weight = (mod: Mod) =>
+    (buildFollowup(mod.id, mods) ? 2 : 1) *
+    (DRAFT_TOOL_STRENGTHS[gun].includes(mod.id) ? 2.5 : 1) *
+    (mods.includes('spoof') && isSubversion(mod.id) ? 1.5 : 1) *
+    (isFusion(mod.id) ? (context.overtime ? 0.65 : 0.18) : 1);
+  const draw = (prefer: (mod: Mod) => boolean = () => true, allowRecent = false) => {
+    if (offers.length >= 3 || !pool.length) return false;
+    // Consume un-declined options first. Narrow pools fall back naturally,
+    // without admitting owned, incompatible, locked or explicitly excluded cards.
+    // One useful fit may revisit a decline if all useful fits were declined.
+    const fresh = pool.filter((mod) => !recent.includes(mod.id));
+    let choices = (fresh.length ? fresh : pool).filter(prefer);
+    if (!choices.length && allowRecent) choices = pool.filter(prefer);
+    if (!choices.length) return false;
+    let roll = rng() * choices.reduce((sum, mod) => sum + weight(mod), 0);
+    let index = 0;
+    while (index < choices.length - 1 && roll >= weight(choices[index]))
+      roll -= weight(choices[index++]);
+    const selected = choices[index];
+    offers.push(selected);
+    pool.splice(pool.indexOf(selected), 1);
+    return true;
+  };
+  if (
+    !context.overtime &&
+    context.stage >= 0 &&
+    context.stage <= 2 &&
+    !mods.some((id) => OPENING_POWER_MODS.includes(id)) &&
+    !offers.some((mod) => OPENING_POWER_MODS.includes(mod.id))
+  ) {
+    // A recently declined power card may return only if every legal power
+    // choice was declined: opening gun strength remains more important.
+    if (!draw((mod) => OPENING_POWER_MODS.includes(mod.id))) {
+      const power = pool.filter((mod) => OPENING_POWER_MODS.includes(mod.id));
+      if (power.length && offers.length < 3) {
+        const selected = power[Math.floor(rng() * power.length)];
+        offers.push(selected);
+        pool.splice(pool.indexOf(selected), 1);
+      }
+    }
+  }
+  if (
+    context.factory &&
+    !context.overtime &&
+    context.stage >= 0 &&
+    context.stage <= 1 &&
+    !offers.some((mod) => OPENING_IDENTITY_MODS.includes(mod.id))
+  )
+    draw((mod) => OPENING_IDENTITY_MODS.includes(mod.id));
+  if (!offers.some((mod) => draftFitReason(mod.id, mods, gun)))
+    draw((mod) => !!draftFitReason(mod.id, mods, gun), true);
+  while (offers.length < 3 && pool.length) {
+    const roles = offers.map((mod) => draftRole(mod.id));
+    if (!draw((mod) => !roles.includes(draftRole(mod.id)))) draw();
+  }
+  if (held) {
+    offers.splice(offers.indexOf(held), 1);
+    const index = Number.isInteger(context.heldIndex)
+      ? Math.max(0, Math.min(offers.length, context.heldIndex!))
+      : 0;
+    offers.splice(index, 0, held);
+  }
+  return offers;
+}
+
 // A small preference for the chosen path, sampled without replacement.
 export function rewardMods(
   mods: readonly string[],
@@ -904,6 +1097,25 @@ export function rewardMods(
       !mods.includes(m.id) &&
       !excluded.includes(m.id),
   );
+  if (count === 3 && betterDraftCampaign(context.seed ?? '')) {
+    const held =
+      context.held && excluded.includes(context.held)
+        ? availableMods(mods).find(
+            (mod) =>
+              mod.id === context.held &&
+              draftUnlocked(mod.id, context.unlocks, context.seed) &&
+              toolroomStageAllowed(mod.id, context.stage, context.overtime) &&
+              supportDraftAllowed(mod.id, context.seed) &&
+              supportPoolAllowed(mod.id, context.seed) &&
+              (!SUPPORT_MODS.some((m) => m.id === mod.id) ||
+                context.overtime ||
+                context.stage >= 4) &&
+              (!isFusion(mod.id) || fusionUnlocked(context)) &&
+              (!isBranch(mod.id) || context.overtime || context.stage >= BRANCH_STAGE),
+          )
+        : undefined;
+    return betterRewardMods(mods, rng, context, held ? [...pool, held] : pool, salvage, excluded);
+  }
   if (salvage && count > 0) offers.push(salvage);
   const weight = (mod: Mod) =>
     (path && MOD_PATHS[mod.id]?.path === path ? 1.5 : 1) *
@@ -1216,6 +1428,7 @@ export const isDetourStage = (stage: number) =>
   stage !== 14 &&
   stage % ROOMS_PER_AREA === 2;
 export interface RewardCheckpoint {
+  held?: string;
   welder?: true;
   auditor?: true;
   courier?: true;
@@ -1226,6 +1439,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  draftHistory?: { zone: number; declined: string[] };
   // Snapshot the first-clear ending before the run can earn its clear rewards.
   finaleFirstClear?: 0 | 1;
   finaleService?: import('./finale-service.ts').FinaleServiceSave;
@@ -1294,6 +1508,22 @@ function validRewardCheckpoint(d: Checkpoint) {
     ![5, 6].includes(d.version) ||
     d.escape ||
     d.stage === STAGES - 1
+  )
+    return false;
+  if (
+    r.held !== undefined &&
+    (!betterDraftCampaign(d.seed) ||
+      d.version !== 6 ||
+      r.rerolled ||
+      r.courier ||
+      r.welder ||
+      r.auditor ||
+      !Array.isArray(r.offers) ||
+      r.offers.length !== 3 ||
+      typeof r.held !== 'string' ||
+      !r.offers.includes(r.held) ||
+      isSalvage(r.held) ||
+      r.held === 'repair')
   )
     return false;
   const daily = /^RF-D\d+-/.test(d.seed);
@@ -1383,6 +1613,23 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const legacy = raw.version === 3;
   const previous = raw.version === 4;
   const incoming = value as Checkpoint;
+  if (incoming.draftHistory !== undefined) {
+    const history = incoming.draftHistory;
+    if (
+      !history ||
+      typeof history !== 'object' ||
+      incoming.version !== 6 ||
+      !betterDraftCampaign(incoming.seed) ||
+      !Number.isInteger(history.zone) ||
+      history.zone < 0 ||
+      history.zone > 4 ||
+      !Array.isArray(history.declined) ||
+      history.declined.length > DRAFT_DECLINE_LIMIT ||
+      new Set(history.declined).size !== history.declined.length ||
+      history.declined.some((id) => typeof id !== 'string' || !MODS.some((mod) => mod.id === id))
+    )
+      return null;
+  }
   if (
     typeof incoming.seed === 'string' &&
     isLegacyDaily(incoming.seed) &&

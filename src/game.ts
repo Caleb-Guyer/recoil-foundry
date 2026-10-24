@@ -143,6 +143,8 @@ import {
   distance,
   seeded,
   rewardMods,
+  betterDraftCampaign,
+  updateDraftDeclines,
   getGun,
   availableMods,
   STAGES,
@@ -689,6 +691,18 @@ export class Game {
   rewardTaken = false;
   courierReward = false;
   rewardRerolled = false;
+  heldReward: string | null = null;
+  draftHistory: Checkpoint['draftHistory'];
+  get recentDeclined() {
+    return this.draftHistory?.zone === areaIndex(this.stage) ? this.draftHistory.declined : [];
+  }
+  private rememberDeclined(ids: readonly string[]) {
+    if (!betterDraftCampaign(this.seed)) return;
+    this.draftHistory = {
+      zone: areaIndex(this.stage),
+      declined: updateDraftDeclines(this.recentDeclined, ids),
+    };
+  }
   onChange: () => void = () => {};
   onDeath: (origin?: Vec) => void = () => {};
   onDamage: (hit: DamageHit) => void = () => {};
@@ -864,6 +878,11 @@ export class Game {
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
+    this.heldReward = null;
+    this.draftHistory =
+      betterDraftCampaign(this.seed) && save?.draftHistory
+        ? structuredClone(save.draftHistory)
+        : undefined;
     this.finaleFirstClear = resolveFinaleFirstClear(this.seed, save, finaleFirstClear);
     const requestedGun = save
       ? (save.startingGun ?? 'pistol')
@@ -1048,6 +1067,7 @@ export class Game {
         id === 'repair' ? REPAIR_REWARD : MODS.find((m) => m.id === id)!,
       );
       this.rewardRerolled = save.reward.rerolled;
+      this.heldReward = save.reward.held ?? null;
       this.courierReward = save.reward.courier === true;
       this.auditorReward = save.reward.auditor === true;
       this.welderReward = save.reward.welder === true;
@@ -1074,6 +1094,9 @@ export class Game {
     return {
       version: 6,
       startingGun: this.startingGun,
+      ...(betterDraftCampaign(this.seed) && this.draftHistory
+        ? { draftHistory: structuredClone(this.draftHistory) }
+        : {}),
       ...(this.finaleService.checkpoint ? { finaleService: this.finaleService.checkpoint } : {}),
       ...(cinematicFinale(this.seed)
         ? { finaleFirstClear: this.finaleFirstClear ? (1 as const) : (0 as const) }
@@ -1132,6 +1155,7 @@ export class Game {
             reward: {
               offers: this.offers.map((m) => m.id),
               rerolled: this.rewardRerolled,
+              ...(this.heldReward ? { held: this.heldReward } : {}),
               ...(this.courierReward ? { courier: true as const } : {}),
               ...(this.welderReward ? { welder: true as const } : {}),
               ...(this.auditorReward ? { auditor: true as const } : {}),
@@ -1234,6 +1258,8 @@ export class Game {
     this.auditorReward = false;
     this.welderReward = false;
     this.rewardRerolled = false;
+    this.heldReward = null;
+    if (this.draftHistory?.zone !== areaIndex(this.stage)) this.draftHistory = undefined;
     this.offers = [];
     this.shake = 0;
     this.kick = { x: 0, y: 0 };
@@ -4094,6 +4120,8 @@ export class Game {
         salvage: this.courierReward ? null : this.earnedSalvage,
         seed: this.seed,
         unlocks: this.unlocks,
+        startingGun: this.startingGun,
+        recentDeclined: this.recentDeclined,
         factory: !!this.factory,
       },
     );
@@ -4110,6 +4138,8 @@ export class Game {
             salvage: this.earnedSalvage,
             seed: this.seed,
             unlocks: this.unlocks,
+            startingGun: this.startingGun,
+            recentDeclined: this.recentDeclined,
           },
         ),
       );
@@ -4141,11 +4171,15 @@ export class Game {
     if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
     this.rewardTaken = false;
     this.rewardRerolled = false;
+    this.heldReward = null;
     this.setMode('upgrade');
     this.save();
   }
   private replacementOffers() {
-    const replacements = rewardMods(
+    const held = betterDraftCampaign(this.seed) ? this.heldReward : null;
+    const heldIndex = this.offers.findIndex((m) => m.id === held);
+    const excluded = this.offers.map((m) => m.id);
+    let replacements = rewardMods(
       this.mods,
       this.offers.length,
       seeded(
@@ -4157,20 +4191,68 @@ export class Game {
         seed: this.seed,
         factory: !!this.factory,
         unlocks: this.unlocks,
+        startingGun: this.startingGun,
+        recentDeclined: this.recentDeclined,
+        ...(held && heldIndex >= 0 ? { held, heldIndex } : {}),
       },
-      this.offers.map((m) => m.id),
+      excluded,
     );
     if (!this.areaEvents.clearance) return replacements;
-    return this.areaEvents.preferRewards(
-      replacements,
+    if (!held)
+      return this.areaEvents.preferRewards(
+        replacements,
+        rewardMods(
+          this.mods,
+          MODS.length,
+          seeded(this.layoutSeed + ':event-reroll:' + this.stage),
+          {
+            stage: this.stage,
+            seed: this.seed,
+            unlocks: this.unlocks,
+            overtime: !!this.overtime,
+          },
+        ),
+        excluded,
+      );
+    // Event priority applies only to unheld cards. The kept card stays in its slot.
+    const unheld = replacements.filter((m) => m.id !== held);
+    const preferred = this.areaEvents.preferRewards(
+      unheld,
       rewardMods(this.mods, MODS.length, seeded(this.layoutSeed + ':event-reroll:' + this.stage), {
         stage: this.stage,
         seed: this.seed,
         unlocks: this.unlocks,
         overtime: !!this.overtime,
       }),
-      this.offers.map((m) => m.id),
+      excluded,
     );
+    let i = 0;
+    replacements = replacements.map((m) => (m.id === held ? m : (preferred[i++] ?? m)));
+    return replacements;
+  }
+  get canHoldReward() {
+    return (
+      betterDraftCampaign(this.seed) &&
+      !this.workshop.active &&
+      !this.practice &&
+      !this.courierReward &&
+      !this.auditorReward &&
+      !this.welderReward &&
+      !this.hunts.rewarding &&
+      this.mode === 'upgrade' &&
+      !this.rewardTaken &&
+      !this.rewardRerolled &&
+      this.offers.length === 3 &&
+      !this.offers.some((m) => m.id === 'repair') &&
+      (this.hunts.freeReroll || this.areaEvents.freeReroll || this.hp > REROLL_COST)
+    );
+  }
+  holdReward(id: string) {
+    if (!this.canHoldReward || isSalvage(id) || !this.offers.some((m) => m.id === id)) return false;
+    this.heldReward = this.heldReward === id ? null : id;
+    this.save();
+    this.onChange();
+    return true;
   }
   get canReroll() {
     return (
@@ -4196,7 +4278,9 @@ export class Game {
     if (this.hunts.freeReroll) this.hunts.spendReroll();
     else if (this.areaEvents.freeReroll) this.areaEvents.spendReroll();
     else this.hp -= REROLL_COST;
+    this.rememberDeclined(this.offers.filter((m) => m.id !== this.heldReward).map((m) => m.id));
     this.rewardRerolled = true;
+    this.heldReward = null;
     this.offers = replacements;
     this.legacyOffers = undefined;
     this.save();
@@ -4259,6 +4343,8 @@ export class Game {
       this.onSound('upgrade');
       return;
     }
+    this.rememberDeclined(this.offers.filter((m) => m.id !== id).map((m) => m.id));
+    this.heldReward = null;
     this.route = this.enteringRoute;
     if (this.detour) {
       this.maintenance.completed();
