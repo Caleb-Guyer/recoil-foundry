@@ -77,6 +77,14 @@ export class BallisticsSystem {
   has(id: string) {
     return this.game.mods.includes(id);
   }
+  // A cinematic can discard attacks without spending the player's loaded
+  // capacitor cells, counter recovery, or progress toward the next volley.
+  clearTransient() {
+    this.shells = [];
+    this.echoes = [];
+    this.pins.clear();
+    this.rivetAt.clear();
+  }
   reset() {
     this.charges = this.idle = this.volleys = 0;
     this.shells = [];

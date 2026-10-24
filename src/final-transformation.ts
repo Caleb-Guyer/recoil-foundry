@@ -167,16 +167,29 @@ export class FinalTransformation {
     // Clear held bursts too: nothing delayed may fire through a transformation.
     g.burstRemaining = 0;
     g.fireBuffer = 0;
-    if (this.cinema) {
-      g.arcs.reset();
-      g.grind.reset();
-      g.tripwires.reset();
-      g.torch.reset();
-      g.portals.reset();
-      g.tethers.reset();
-      g.muzzle = 0;
-      g.trail = [];
-    }
+    if (this.cinema) this.clearCinemaAttacks();
+  }
+  clearCinemaAttacks() {
+    if (!this.cinema) return;
+    const g = this.game;
+    g.shots = [];
+    // Torch.reset stops an active pulse and normally flushes its molten
+    // payload. Cancel that payload first instead of firing into the movie.
+    g.melt.reset();
+    g.ballistics.clearTransient();
+    g.salvage.reset();
+    g.salvageEvolutions.reset();
+    g.fusions.resonator.reset();
+    g.fusions.storm.reset();
+    g.particles = [];
+    g.arcs.reset();
+    g.grind.reset();
+    g.tripwires.reset();
+    g.torch.reset();
+    g.portals.reset();
+    g.tethers.reset();
+    g.muzzle = 0;
+    g.trail = [];
   }
   rebuild() {
     const g = this.game,

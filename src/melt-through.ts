@@ -178,7 +178,13 @@ export class MeltThroughSystem {
   }
   private fragments(p: MeltPass, damage: number) {
     const g = this.game;
-    if (!g.mods.includes('blowout') || g.mode !== 'playing' || !(damage > 0)) return;
+    if (
+      !g.mods.includes('blowout') ||
+      g.mode !== 'playing' ||
+      !(damage > 0) ||
+      (g.finale.cinema?.waiting && !g.finale.cinema.combat)
+    )
+      return;
     const angle = Math.atan2(p.dir.y, p.dir.x);
     for (const offset of [-0.28, 0, 0.28])
       g.addShot({

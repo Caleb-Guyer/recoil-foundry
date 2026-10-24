@@ -654,7 +654,12 @@ export class Renderer {
     );
     const cinemaFocus = finaleCinemaCamera(g);
     if (cinemaFocus) {
-      desiredX = clamp(cinemaFocus.x - viewW * 0.5, 0, Math.max(0, g.worldWidth - viewW));
+      // Aircraft pickups can happen beside either roof edge; a movie camera
+      // may see beyond the playable wall to keep the real pilot in the shot.
+      desiredX =
+        g.finale.cinema?.state === 'airlift'
+          ? cinemaFocus.x - viewW * 0.5
+          : clamp(cinemaFocus.x - viewW * 0.5, 0, Math.max(0, g.worldWidth - viewW));
       desiredY = clamp(cinemaFocus.y - viewH * 0.5, g.worldTop, Math.max(g.worldTop, 835 - viewH));
     }
     if (g.finale.presenting && g.finale.enemy && !this.reduced && !g.finale.cinema?.active) {

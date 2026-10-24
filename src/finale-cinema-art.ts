@@ -567,6 +567,35 @@ function reactor(
   c.restore();
 }
 
+/**
+ * Canonical acting poses for the airlift. The same curve drives the aircraft,
+ * pilot, wreck, cable and camera, including defeats beside either roof edge.
+ */
+export function finaleAirliftStaging(wreck: Vec, time: number) {
+  const t = Math.max(0, time);
+  const falling = clamp(t / 1.2, 0, 1);
+  const groundedY = 685;
+  const wreckY = mix(Math.min(groundedY, wreck.y), groundedY, falling * falling);
+  const planeY = 195 - Math.sin(ease(t / 8) * Math.PI) * 13;
+  const relocate = ease((t - 4.4) / 1);
+  const exit = ease((t - 7.3) / 0.7);
+  const planeX = mix(mix(wreck.x + 1230, wreck.x, ease(t / 2)), 1300, relocate) - exit * 2300;
+  const roofY = groundedY - 52;
+  const lifting = ease((t - 3) / 1.4);
+  const cableY =
+    t < 3 ? mix(planeY + 53, roofY - 18, ease((t - 2) / 1)) : mix(roofY - 18, planeY + 2, lifting);
+  const pilotY = t < 3 ? mix(groundedY - 8, roofY, ease((t - 1.2) / 1)) : cableY + 18;
+  const drop = ease((t - 5.4) / 1.9);
+  return {
+    wreck: { x: wreck.x, y: wreckY },
+    plane: { x: planeX, y: planeY },
+    pilot: { x: wreck.x, y: pilotY, visible: t >= 1.2 && t < 4.4 },
+    cable: { x: wreck.x, y: cableY, visible: t >= 2 && t < 4.4 && cableY >= planeY + 53 },
+    siege: { x: 1300, y: mix(planeY + 85, 665, drop), visible: t >= 5.4, drop },
+    focus: { x: mix(wreck.x, 1300, relocate), y: 395 },
+  };
+}
+
 /** Focal points for locked acting only. The core-opening remains player led. */
 export function finaleCinemaCamera(g: Game): Vec | null {
   const cine = g.finale.cinema;
@@ -575,8 +604,10 @@ export function finaleCinemaCamera(g: Game): Vec | null {
   switch (cine.state) {
     case 'boarding':
       return { x: worldX(g, 1390), y: 555 };
-    case 'airlift':
-      return { x: worldX(g, 1190), y: 390 };
+    case 'airlift': {
+      const pose = finaleAirliftStaging({ x: worldX(g, g.finale.wreck.x), y: g.finale.wreck.y }, t);
+      return { x: worldX(g, pose.focus.x), y: pose.focus.y };
+    }
     case 'destruction':
       return { x: g.finale.wreck.x, y: Math.min(g.finale.wreck.y + 50, 460) };
     case 'escape':
@@ -620,7 +651,7 @@ export function drawFinaleCinemaBackground(c: CanvasRenderingContext2D, g: Game,
   sky.addColorStop(0, '#09131bd9');
   sky.addColorStop(1, '#182d32d0');
   c.fillStyle = sky;
-  c.fillRect(-50, -400, 2100, 1400);
+  c.fillRect(-1000, -400, 4000, 1400);
   // Layered distant buildings, retaining the game's straight industrial forms.
   for (let i = 0; i < 24; i++) {
     const xx = i * 94 - 70,
@@ -840,50 +871,56 @@ export function drawFinaleCinemaForeground(c: CanvasRenderingContext2D, g: Game,
       bloom(c, 1450, 651, 100, ease((t - 4.6) / 1.3) * 0.23);
     }
   } else if (state === 'airlift') {
-    firstHull(c, wx, wreck.y + Math.min(24, t * 5), t, Math.PI, 0.2, 1, false, true);
-    smoke(c, wx, wreck.y, t, reduced, 1.2);
-    sparks(c, wx, wreck.y, t, reduced, 0.8);
-    const pickupX = clamp(wx, 650, 1500);
-    const arrive = ease(t / 2.4),
-      relocate = ease((t - 4.7) / 0.8),
-      exit = ease((t - 7.3) / 0.7);
-    const planeX = mix(mix(2520, pickupX, arrive), 1300, relocate) - exit * 2300;
-    const planeY = 195 - Math.sin(ease(t / 8) * Math.PI) * 13;
-    transport(c, planeX, planeY, g.time, reduced);
-    if (t > 2 && t < 5.2) {
-      const down = ease((t - 2) / 1.2),
-        up = ease((t - 3.4) / 1.3);
-      const bottom = mix(planeY + 57, wreck.y - 21, down * (1 - up));
-      line(c, [planeX + 10, planeY + 53, planeX + 10, bottom], '#a2b1a6', 2);
+    const pose = finaleAirliftStaging({ x: wx, y: wreck.y }, t);
+    firstHull(c, pose.wreck.x, pose.wreck.y, t, Math.PI, 0.2, 1, false, true);
+    smoke(c, pose.wreck.x, pose.wreck.y, t, reduced, 1.2);
+    sparks(c, pose.wreck.x, pose.wreck.y, t, reduced, 0.8);
+    if (t >= 1.2 && t < 1.9) {
+      smoke(c, wx, 725, t, reduced, 1.1);
+      sparks(c, wx, 725, t, reduced, 0.65);
+    }
+    if (pose.cable.visible) {
+      line(c, [pose.cable.x, pose.plane.y + 53, pose.cable.x, pose.cable.y], '#a2b1a6', 2);
       line(
         c,
         [
-          planeX + 2,
-          bottom - 5,
-          planeX + 2,
-          bottom + 6,
-          planeX + 18,
-          bottom + 6,
-          planeX + 18,
-          bottom - 5,
+          pose.cable.x - 8,
+          pose.cable.y - 5,
+          pose.cable.x - 8,
+          pose.cable.y + 6,
+          pose.cable.x + 8,
+          pose.cable.y + 6,
+          pose.cable.x + 8,
+          pose.cable.y - 5,
         ],
         '#7d9088',
         3,
       );
-      if (t > 3.2 && t < 4.9) pilot(c, g, planeX + 10, bottom - 10, 0, 1, -1, true);
     }
-    if (t > 5.2) {
-      const drop = ease((t - 5.2) / 2.1),
-        sy = mix(planeY + 80, 665, drop);
+    if (pose.pilot.visible) pilot(c, g, pose.pilot.x, pose.pilot.y, 0, 1, -1, true);
+    if (pose.siege.visible) {
       if (t < 7.4)
         for (const side of [-1, 1])
-          line(c, [planeX + side * 63, planeY + 42, 1300 + side * 65, sy - 49], '#a2b0a4', 2);
-      siegeHull(c, 1300, sy, g.time, Math.PI, false, false, drop);
+          line(
+            c,
+            [
+              pose.plane.x + side * 63,
+              pose.plane.y + 42,
+              pose.siege.x + side * 65,
+              pose.siege.y - 49,
+            ],
+            '#a2b0a4',
+            2,
+          );
+      siegeHull(c, pose.siege.x, pose.siege.y, g.time, Math.PI, false, false, pose.siege.drop);
       if (t > 7.1) {
         sparks(c, 1300, 720, t, reduced, 1.2);
         smoke(c, 1300, 725, t, reduced, 1.4);
       }
     }
+    // The fuselage occludes the last part of the lift as the pilot enters its
+    // open belly. He is fully inside before the aircraft starts crossing town.
+    transport(c, pose.plane.x, pose.plane.y, g.time, reduced);
   } else if (state === 'core-opening') {
     siegeHull(c, wx, Math.min(665, wreck.y + t * 4), t, Math.PI, false, true);
     smoke(c, wx, wreck.y - 20, t, reduced, 1.9);

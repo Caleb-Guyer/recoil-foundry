@@ -1951,6 +1951,12 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.updateShots(dt);
     this.torch.afterStep(dt);
+    if (this.finale.cinema?.waiting && !this.finale.cinema.combat) {
+      // A finishing hit may have switched scenes inside a weapon callback.
+      // Keep the physics step, but cancel every remaining combat callback.
+      this.finale.quiet();
+      return;
+    }
     this.tripwires.afterStep();
     this.fusions.storm.afterStep();
     if (this.mode !== 'playing') return;
@@ -3418,6 +3424,7 @@ export class Game {
                 false,
                 false,
               );
+            if (this.finale.cinema?.waiting && !this.finale.cinema.combat) return;
             s.life = 0;
             continue;
           }
@@ -3452,6 +3459,9 @@ export class Game {
             s.reflected ? 'reflection' : undefined,
             shotTrace(s),
           );
+          // A cinematic form break cancels this round before split, Fuse or
+          // other post-hit effects can repopulate the freshly cleared arena.
+          if (this.finale.cinema?.waiting && !this.finale.cinema.combat) return;
           this.support.gunHit(e, previousHp, s);
           this.toolroom.gunHit(e, previousHp, s, blocked);
           this.spoof.hit(e, previousHp, primaryGunShot(s));

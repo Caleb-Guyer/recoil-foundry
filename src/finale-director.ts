@@ -257,6 +257,22 @@ export class FinaleDirector {
     }
   }
   beforeTick(dt: number) {
+    if (!this.combat && this.state !== 'complete') {
+      // Attacks can finish their callback after the chassis breaks. Discard
+      // those leftovers before any movie frame or movable background step.
+      this.finale.clearCinemaAttacks();
+      // Orbit rounds are already earned ammunition. Firing is disabled during
+      // every scene, so its short release allowance must wait with the player.
+      const step =
+        dt > 0 && Number.isFinite(dt)
+          ? this.locked
+            ? Math.min(dt, 0.05)
+            : this.game.hitStop > 0
+              ? 0
+              : dt
+          : 0;
+      for (const round of this.game.fusions.orbit) round.at += step;
+    }
     if (!this.locked) return false;
     if (dt > 0 && Number.isFinite(dt)) this.game.time += Math.min(dt, 0.05);
     this.advance(dt);

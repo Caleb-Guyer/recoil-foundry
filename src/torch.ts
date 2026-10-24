@@ -623,7 +623,10 @@ export class TorchSystem {
         this.stop();
         return;
       }
-      const s = this.pulse!;
+      // A ray can break a cinematic chassis and synchronously cancel this
+      // pulse. Later rays from the captured path must not reuse that pulse.
+      const s = this.pulse;
+      if (!s || (g.finale.cinema?.waiting && !g.finale.cinema.combat)) return;
       s.weaponTrace = segment.weaponTrace;
       if (segment.valve) g.pressure.trigger(segment.valve);
       if (segment.floodValve) g.floodgate.trigger(segment.floodValve);
@@ -676,6 +679,12 @@ export class TorchSystem {
           undefined,
           segment.weaponTrace,
         );
+        if (
+          this.pulse !== s ||
+          g.mode !== 'playing' ||
+          (g.finale.cinema?.waiting && !g.finale.cinema.combat)
+        )
+          return;
         g.support.gunHit(e, previousHp, s, true);
         g.toolroom.gunHit(e, previousHp, s, blocked);
         g.spoof.hit(e, previousHp, true);
