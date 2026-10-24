@@ -5,6 +5,14 @@ import type { Level } from './levels.ts';
 import type { Cosmetics } from './cosmetics.ts';
 import { practiceCheckpoint } from './practice.ts';
 import { replayGuidance } from './replay-guidance.ts';
+import {
+  finalePracticeFor,
+  finalePracticeGuidance,
+  isFinalePracticePhase,
+  startFinalePracticePhase,
+  type FinalePracticePhase,
+  type FinalePracticeSnapshot,
+} from './finale-practice.ts';
 
 export interface RematchEntry {
   source: Level;
@@ -12,6 +20,7 @@ export interface RematchEntry {
   checkpoint: Checkpoint;
 }
 export interface RoomRematchSnapshot {
+  finalePractice?: FinalePracticeSnapshot;
   level: Level;
   checkpoint: Checkpoint;
   cosmetics: Cosmetics;
@@ -43,7 +52,9 @@ export function roomRematchSnapshot(
 ): RoomRematchSnapshot | null {
   if (g.mode !== 'dead' || !entry || entry.source !== g.level || g.practice || g.workshop.active)
     return null;
+  const finalePractice = finalePracticeFor(g);
   return {
+    ...(finalePractice ? { finalePractice } : {}),
     level: structuredClone(entry.level),
     checkpoint: {
       ...structuredClone(entry.checkpoint),
@@ -53,23 +64,48 @@ export function roomRematchSnapshot(
       startingGun: g.startingGun,
       mods: [...g.mods],
       legacyMods: g.legacyMods ? [...g.legacyMods] : undefined,
+      finaleService: g.finaleService.checkpoint,
       combatResults: undefined,
     },
     cosmetics: { ...g.cosmetics },
-    guidance: replayGuidance(g.deathCause),
+    guidance: finalePractice
+      ? finalePracticeGuidance(finalePractice.deathPhase, finalePractice.cause)
+      : replayGuidance(g.deathCause),
   };
 }
 export class RoomRematch {
   readonly game = new Game();
   readonly snapshot: RoomRematchSnapshot;
+  finalePhase: FinalePracticePhase | null = null;
   constructor(snapshot: RoomRematchSnapshot) {
     this.snapshot = structuredClone(snapshot);
+    const finale = this.snapshot.finalePractice;
+    if (
+      finale &&
+      isFinalePracticePhase(finale.deathPhase) &&
+      isFinalePracticePhase(finale.reached) &&
+      finale.deathPhase <= finale.reached
+    )
+      this.finalePhase = finale.deathPhase;
+    else delete this.snapshot.finalePractice;
     this.reset();
   }
   reset() {
     this.game.cosmetics = { ...this.snapshot.cosmetics };
     this.game.startTest(this.snapshot.checkpoint, this.snapshot.level);
+    if (this.finalePhase !== null) startFinalePracticePhase(this.game, this.finalePhase);
     this.game.setMode('paused');
+  }
+  selectFinalePhase(phase: number): boolean {
+    if (
+      !isFinalePracticePhase(phase) ||
+      !this.snapshot.finalePractice ||
+      phase > this.snapshot.finalePractice.reached
+    )
+      return false;
+    this.finalePhase = phase;
+    this.reset();
+    return true;
   }
   tick(dt: number, input: Input) {
     this.game.tick(dt, input);

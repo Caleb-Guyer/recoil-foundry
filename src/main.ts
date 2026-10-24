@@ -5,6 +5,10 @@ import { drawCombatReportImages, cancelMenuImages } from './menu-images.ts';
 import { SUPPORT_MASTERIES, type SupportMasteryAttempt } from './support-mastery.ts';
 import type { SupportDrillView } from './support-drill-view.ts';
 import type { RoomRematchView } from './room-rematch-view.ts';
+import type { FinaleServiceMenu } from './finale-service-menu.ts';
+import { finaleServiceTestFromUrl, prepareFinaleServiceTest } from './finale-service-test.ts';
+import { finalApproachTestFromUrl } from './final-approach.ts';
+import { finalePracticePreviewFromUrl, prepareFinalePracticePreview } from './finale-practice.ts';
 import {
   rematchEntry,
   roomRematchSnapshot,
@@ -553,7 +557,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>The Reclaimer</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>The Final Approach</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -591,11 +595,13 @@ let replayView: ReplayView | null = null;
 let upgradePreview: UpgradePreviewView | null = null;
 let supportDrill: SupportDrillView | null = null;
 let roomRematchView: RoomRematchView | null = null;
+let finaleServiceMenu: FinaleServiceMenu | null = null;
 const optional = {
   workshop: new LazyResource(() => import('./workshop-menu.ts')),
   logbook: new LazyResource(() => import('./logbook-menu.ts')),
   replay: new LazyResource(() => import('./death-replay-view.ts')),
   rematch: new LazyResource(() => import('./room-rematch-view.ts')),
+  finaleService: new LazyResource(() => import('./finale-service-menu.ts')),
   drill: new LazyResource(() => import('./support-drill-view.ts')),
   upgrade: new LazyResource(() => import('./upgrade-preview-view.ts')),
 };
@@ -725,7 +731,13 @@ const linkedNgPlusNotice = ngPlusNoticePreviewFromUrl(entryUrl);
 const linkedGoalRunPreview = goalRunPreviewFromUrl(entryUrl);
 const linkedFirstRunPreview = firstRunPreviewFromUrl(entryUrl);
 const linkedRematchPreview = rematchPreviewFromUrl(entryUrl);
+const linkedFinalePracticePreview = finalePracticePreviewFromUrl(entryUrl);
+const linkedFinaleServiceTest = finaleServiceTestFromUrl(entryUrl);
+const linkedFinalApproachTest = finalApproachTestFromUrl(entryUrl);
 let linkedRunTest =
+  linkedFinalePracticePreview?.checkpoint ??
+  linkedFinaleServiceTest ??
+  linkedFinalApproachTest ??
   linkedRematchPreview?.checkpoint ??
   enemyRemasterTestFromUrl(entryUrl) ??
   remasterTestFromUrl(entryUrl) ??
@@ -1271,6 +1283,23 @@ function updateTitle() {
       linkedRematchPreview.scene +
       ' test · 1 health. Let a real attack defeat you, then try Watch replay or Practice this room. Progress stays untouched.';
   }
+  if (linkedFinalApproachTest && linkedRunTest) {
+    $('play').textContent = 'Test the final approach ↗';
+    $('title-hint').textContent =
+      'An isolated rooftop room. Pistol and ordinary movement. ' +
+      bindingLabel(bindings, 'retry') +
+      ' to retry; Campaign progress stays untouched.';
+  }
+  if (linkedFinaleServiceTest && linkedRunTest) {
+    $('play').textContent = 'Test the final service stop ↗';
+    $('title-hint').textContent =
+      'Repair, preview a legal refit, or walk past. This isolated test keeps your saved run untouched.';
+  }
+  if (linkedFinalePracticePreview && linkedRunTest) {
+    $('play').textContent = 'Test boss phase practice ↗';
+    $('title-hint').textContent =
+      'Opens an isolated defeat screen. Choose Practice boss phases to replay only the forms reached, with the same build.';
+  }
   updateNextGoal();
 }
 function currentGoalProgress(): GoalProgress {
@@ -1513,6 +1542,8 @@ function clearInput(disarm = true) {
 }
 function closeDialog() {
   dialogLifetime.invalidate();
+  finaleServiceMenu?.dispose();
+  finaleServiceMenu = null;
   cancelMenuImages($('dialog-content'));
   appearanceRequested = false;
   roomRematchView?.dispose();
@@ -2227,6 +2258,22 @@ function startRunTest(save: Checkpoint) {
   activeDaily = null;
   dailyResult = null;
   game.startTest(save);
+  prepareFinaleServiceTest(game, entryUrl);
+  if (
+    linkedFinalePracticePreview &&
+    prepareFinalePracticePreview(game, linkedFinalePracticePreview)
+  ) {
+    currentRematchEntry = rematchEntry(game);
+    game.damagePlayer(100, undefined, {
+      type:
+        linkedFinalePracticePreview.phase === 0
+          ? 'shot'
+          : linkedFinalePracticePreview.phase === 1
+            ? 'blast'
+            : 'induction',
+      enemy: 'interceptor',
+    });
+  }
   if (linkedFirstRunPreview === 'opening') firstSession.start(game);
   updateFirstSession();
   if (linkedGoalRunPreview) prepareGoalRunTest(game, linkedGoalRunPreview);
@@ -2836,6 +2883,7 @@ game.onChange = () => {
   updateFirstSession();
   if (game.mode === 'upgrade') showDialog('upgrade');
   if (game.mode === 'reforge') showDialog('reforge');
+  if (game.mode === 'finale-service') showDialog('finale-service');
   if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
 };
 function openSupportDrill(id: SupportDrillId) {
@@ -2859,12 +2907,23 @@ function addRoomRematchAction(root: HTMLElement) {
   if (!lastRoomRematch || game.mode !== 'dead') return;
   const button = document.createElement('button');
   button.id = 'practice-room';
-  button.className = 'quiet';
-  button.textContent = 'Practice this room';
+  button.className = lastRoomRematch.finalePractice ? 'primary' : 'quiet';
+  button.textContent = lastRoomRematch.finalePractice
+    ? 'Practice boss phases'
+    : 'Practice this room';
   button.onclick = () => showDialog('room-rematch');
-  root.querySelector('.actions')?.append(button);
+  const actions = root.querySelector('.actions');
+  if (lastRoomRematch.finalePractice) {
+    actions?.querySelectorAll('.primary').forEach((action) => {
+      action.classList.remove('primary');
+      action.classList.add('quiet');
+    });
+    actions?.prepend(button);
+  } else actions?.append(button);
 }
 function showDialog(kind: string) {
+  finaleServiceMenu?.dispose();
+  finaleServiceMenu = null;
   if (kind === 'result' && pendingNgPlusNotice && game.mode === 'won') kind = 'ngplus-unlocked';
   dialogLifetime.invalidate();
   cancelMenuImages($('dialog-content'));
@@ -2888,7 +2947,10 @@ function showDialog(kind: string) {
     (kind === 'upgrade' && game.offers.length === 1) ||
     (kind === 'reforge' && game.reforge.offers.length === 1);
   modal.classList.toggle('single-upgrade', singleUpgrade);
-  modal.classList.toggle('upgrade-dialog', kind === 'upgrade' || kind === 'reforge');
+  modal.classList.toggle(
+    'upgrade-dialog',
+    kind === 'upgrade' || kind === 'reforge' || kind === 'finale-service',
+  );
   modal.classList.toggle('practice-dialog', kind === 'practice' || kind === 'practice-setup');
   modal.classList.toggle(
     'workshop-dialog',
@@ -2927,24 +2989,30 @@ function showDialog(kind: string) {
   modal.classList.toggle('feedback-dialog', kind === 'issue');
   const content = $('dialog-content');
   const resource =
-    kind === 'workshop' || kind === 'practice-build'
-      ? optional.workshop
-      : kind === 'logbook'
-        ? optional.logbook
-        : kind === 'room-rematch'
-          ? optional.rematch
-          : kind === 'support-drill'
-            ? optional.drill
-            : kind === 'replay'
-              ? optional.replay
-              : null;
+    kind === 'finale-service'
+      ? optional.finaleService
+      : kind === 'workshop' || kind === 'practice-build'
+        ? optional.workshop
+        : kind === 'logbook'
+          ? optional.logbook
+          : kind === 'room-rematch'
+            ? optional.rematch
+            : kind === 'support-drill'
+              ? optional.drill
+              : kind === 'replay'
+                ? optional.replay
+                : null;
   if (resource && !resource.value) {
     const current = dialogLifetime.ticket();
     content.innerHTML =
       '<h2 id="dialog-title">Loading…</h2><p role="status">Opening this tool.</p><div class="actions"><button id="back" class="quiet">Back</button></div>';
     $('back').onclick = () => {
       appearanceRequested = false;
-      if (kind === 'room-rematch' || kind === 'replay') showDialog('result');
+      if (kind === 'finale-service') {
+        game.finaleService.leave();
+        closeDialog();
+        canvas.focus();
+      } else if (kind === 'room-rematch' || kind === 'replay') showDialog('result');
       else if (kind === 'support-drill') backFromDrill();
       else if (kind === 'practice-build') backFromPracticeBuild();
       else if (kind === 'logbook') backFromLogbook();
@@ -2982,7 +3050,23 @@ function showDialog(kind: string) {
           SUPPORT_MASTERIES.map((m) => m.id),
         )
       : commendations;
-  if (kind === 'next-goal') {
+  if (kind === 'finale-service') {
+    finaleServiceMenu = new optional.finaleService.value!.FinaleServiceMenu(
+      content,
+      game.finaleService,
+      {
+        closed: () => {
+          closeDialog();
+          canvas.focus();
+        },
+        unlockAudio: () => sound.unlock(),
+        initialPanel:
+          linkedFinaleServiceTest && entryUrl.searchParams.get('choice') === 'refit'
+            ? 'offers'
+            : 'home',
+      },
+    );
+  } else if (kind === 'next-goal') {
     const p = game.mode === 'title' ? titleGoalProgress() : currentGoalProgress();
     const goal =
       goalParent === 'pause' && activeGoalRun
@@ -3111,11 +3195,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.14.0 · THE RECLAIMER</p><h2 id="dialog-title">One last shift.</h2>' +
-      '<p class="update-tagline">Rain. A familiar face. Three machines to destroy.</p>' +
-      '<dl class="update-notes"><div><dt>The double.</dt><dd>Walk through the rain and watch your corrupted counterpart board its machine. The finale tells its story through action, with a simple red health bar.</dd></div>' +
-      '<div><dt>Three complete fights.</dt><dd>Destroy the first chassis, face the airlifted Siege, then keep moving while the Reclaimer opens the city core and boards Rupture. Every form has a full health bar. More attacks and faster arena pressure demand movement and careful openings.</dd></div>' +
-      '<div><dt>Finish the shift.</dt><dd>Your first victory ends with the Reclaimer’s destruction and unlocks New Game+ for future Campaign runs. On later runs, pursue its escape through Overtime for the final explosion. Older saved runs keep their original finale.</dd></div></dl>' +
+      '<p class="eyebrow">5.15.0 · THE FINAL APPROACH</p><h2 id="dialog-title">Before the storm.</h2>' +
+      '<p class="update-tagline">Read the warnings. Tune your build. Face the Reclaimer.</p>' +
+      '<dl class="update-notes"><div><dt>The final rooftops.</dt><dd>Three new late-Campaign layouts foreshadow the aircraft and city core. Locked firing lanes and floor marks teach the finale’s warnings, one at a time.</dd></div>' +
+      '<div><dt>One last service.</dt><dd>Before the boss, recover up to 25 health or preview one legal refit in your current upgrade path. Keep your weapon and its combinations. You can also walk past.</dd></div>' +
+      '<div><dt>Learn the fight.</dt><dd>After a finale defeat, practice the Chassis, Siege or Rupture with the build you brought. Only forms reached in that attempt are available. Return to your original result whenever you want.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4527,6 +4611,7 @@ function showDialog(kind: string) {
     [
       'upgrade',
       'reforge',
+      'finale-service',
       'practice',
       'practice-setup',
       'result',
@@ -4544,8 +4629,12 @@ function showDialog(kind: string) {
   }
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
   if (kind === 'replay') $('replay-play').focus();
-  if (kind === 'room-rematch')
-    content.querySelector<HTMLButtonElement>('[data-rematch-toggle]')?.focus();
+  if (kind === 'room-rematch') {
+    content
+      .querySelector<HTMLButtonElement>('[data-rematch-toggle]')
+      ?.focus({ preventScroll: true });
+    modal.scrollTop = 0;
+  }
   if (kind === 'logbook')
     content.querySelector<HTMLElement>('[data-section][aria-pressed="true"]')?.focus();
   if (inputDevice === 'controller') focusControllerMenu(modal);
@@ -4874,6 +4963,15 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'finale-service') {
+    if (finaleServiceMenu) finaleServiceMenu.back();
+    else {
+      game.finaleService.leave();
+      closeDialog();
+      canvas.focus();
+    }
+    return;
+  }
   if (dialogKind === 'ngplus-unlocked') {
     $('ngplus-continue').click();
     return;
@@ -5205,6 +5303,12 @@ function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   const pad = pollController(now);
+  finaleServiceMenu?.frame(
+    dt,
+    now,
+    renderer.reduced || previewMotion.matches,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+  );
   roomRematchView?.frame(
     dt,
     now,

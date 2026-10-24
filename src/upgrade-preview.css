@@ -115,3 +115,46 @@ dialog.upgrade-dialog {
     transform: none;
   }
 }
+
+/* Service cards do not contain the icon column used by ordinary upgrade cards. */
+.upgrade-dialog .mod[data-service],
+.upgrade-dialog .mod[data-service-offer] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.upgrade-dialog .mod[data-service] > strong,
+.upgrade-dialog .mod[data-service-offer] > strong {
+  align-self: stretch;
+}
+.upgrade-dialog .mod[data-service] > span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.upgrade-dialog .mod[data-service-offer] .reforge-arrow {
+  margin: 0;
+}
+.upgrade-dialog .mod[data-service]:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+.finale-service-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+.finale-service-actions .primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+@media (max-width: 450px) {
+  .finale-service-actions > button {
+    flex: 1 1 140px;
+    min-height: 44px;
+  }
+}

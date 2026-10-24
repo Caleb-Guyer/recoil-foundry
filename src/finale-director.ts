@@ -168,6 +168,7 @@ export class FinaleDirector {
       e = f.enemy!,
       g = this.game;
     f.phase = e.phase = phase;
+    g.reachedFinalePhase = Math.max(g.reachedFinalePhase, phase) as 0 | 1 | 2;
     f.rebuild();
     const [w, h] = [
       [66, 74],

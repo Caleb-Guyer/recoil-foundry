@@ -9,3 +9,6 @@ export const transformedFinale = (seed: string) => Number(/^RF-C(\d+)-/.exec(see
 
 // Revision 97 owns the visual, independently depleted three-form finale.
 export const cinematicFinale = (seed: string) => Number(/^RF-C(\d+)-/.exec(seed)?.[1] ?? 0) >= 97;
+
+// Revision 98 adds the final approach rooms and one service choice per shift.
+export const finalApproachSeed = (seed: string) => Number(/^RF-C(\d+)-/.exec(seed)?.[1] ?? 0) >= 98;

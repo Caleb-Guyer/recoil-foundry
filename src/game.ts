@@ -8,6 +8,8 @@ import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
 import { reclaimerFinale, cinematicFinale } from './boss-progression.ts';
 import { resolveFinaleFirstClear } from './finale-progression.ts';
+import { FinaleService } from './finale-service.ts';
+import { FinalApproachSystem, finalApproachLevel } from './final-approach.ts';
 import {
   createFinalArsenal,
   finalArsenalSeed,
@@ -228,7 +230,15 @@ import {
 } from './escape-layout.ts';
 export type { EnemyKind } from './levels.ts';
 const { Engine, Bodies, Body, Composite, Query } = Matter;
-export type Mode = 'title' | 'playing' | 'paused' | 'upgrade' | 'reforge' | 'dead' | 'won';
+export type Mode =
+  | 'title'
+  | 'playing'
+  | 'paused'
+  | 'upgrade'
+  | 'reforge'
+  | 'finale-service'
+  | 'dead'
+  | 'won';
 export interface Input {
   left: boolean;
   right: boolean;
@@ -592,6 +602,9 @@ export class Game {
   get layoutSeed() {
     return this.overtime ? overtimeSeed(this.seed) : this.seed;
   }
+  reachedFinalePhase: 0 | 1 | 2 = 0;
+  finaleService = new FinaleService(this);
+  finalApproach = new FinalApproachSystem(this);
   finaleFirstClear = true;
   get canOvertime() {
     return (
@@ -967,6 +980,7 @@ export class Game {
       !save.overtime &&
       !save.escape &&
       !save.detour;
+    this.finaleService.start(save);
     this.loadRoom(
       save?.escape === true,
       !!save?.reward ||
@@ -1020,9 +1034,11 @@ export class Game {
     this.setMode(
       save?.reward || this.hunts.rewarding
         ? 'upgrade'
-        : save?.reforgeRoom?.open && this.reforge.site
-          ? 'reforge'
-          : 'playing',
+        : this.finaleService.open && this.finaleService.available
+          ? 'finale-service'
+          : save?.reforgeRoom?.open && this.reforge.site
+            ? 'reforge'
+            : 'playing',
     );
     this.save();
   }
@@ -1034,6 +1050,7 @@ export class Game {
     return {
       version: 6,
       startingGun: this.startingGun,
+      ...(this.finaleService.checkpoint ? { finaleService: this.finaleService.checkpoint } : {}),
       ...(cinematicFinale(this.seed)
         ? { finaleFirstClear: this.finaleFirstClear ? (1 as const) : (0 as const) }
         : {}),
@@ -1103,6 +1120,7 @@ export class Game {
     };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.reachedFinalePhase = 0;
     this.uprising.clear();
     this.reportedEncounters.clear();
     this.clockOut = new ClockOut();
@@ -1157,6 +1175,7 @@ export class Game {
     this.pressure.clear();
     this.crosswind.clear();
     this.stormfront.clear();
+    this.finalApproach.clear();
     this.portals.reset();
     this.demolition.clear();
     this.portalRequest = null;
@@ -1331,6 +1350,7 @@ export class Game {
     this.level = remasterTestLevel(this, this.level);
     this.level = huntRoom ?? this.level;
     this.level = enemyEncounterRoom(this, this.level);
+    this.level = finalApproachLevel(this, this.level);
     this.level = finalePreviewLevel(this, this.level);
     this.level = transformedLevel(this, this.level);
     if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
@@ -1415,6 +1435,7 @@ export class Game {
     this.pressure.reset();
     this.crosswind.reset();
     this.stormfront.reset();
+    this.finalApproach.reset(clearedRoom);
     this.workshop.reset();
     this.areaEvents.reset(clearedRoom);
     this.mutations.reset(clearedRoom);
@@ -1431,6 +1452,7 @@ export class Game {
     this.uprising.reset(clearedRoom);
     this.hunts.reset(clearedRoom);
     this.finale.reset();
+    this.finaleService.reset();
   }
   startEscape() {
     if (this.testRun?.rematchRoom) return;
@@ -1722,6 +1744,7 @@ export class Game {
         firePressed: false,
         portal: undefined,
       };
+    if (input.jump && this.finaleService.interact()) return;
     if (input.jump && this.reforge.interact()) return;
     if (this.escape?.phase === 'extracting') {
       this.updateExtraction(dt);
@@ -1920,6 +1943,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.crosswind.beforeStep(dt);
     this.stormfront.beforeStep(dt);
+    this.finalApproach.beforeStep(dt);
     this.finale.update(dt);
     if (this.mode !== 'playing') return;
     this.props.beforeStep();

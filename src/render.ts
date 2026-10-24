@@ -1,3 +1,9 @@
+import { drawFinaleService } from './finale-service-art.ts';
+import {
+  drawFinalApproachBackdrop,
+  drawFinalApproachDetails,
+  drawFinalApproachThreat,
+} from './final-approach-art.ts';
 import { drawFinalArena, drawFinalThreat, drawFinalHud } from './final-transformation-art.ts';
 import {
   drawFinaleCinemaBackground,
@@ -718,6 +724,7 @@ export class Renderer {
     drawFinalArena(c, g, this.reduced);
     drawStoryBackdrop(c, g, this.reduced);
     drawShutdownBackdrop(c, g);
+    drawFinalApproachBackdrop(c, g, this.reduced);
     drawFinaleCinemaBackground(c, g, this.reduced);
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);
@@ -768,6 +775,8 @@ export class Renderer {
     }
     this.drawHazards();
     drawRoomLandings(c, g.level);
+    drawFinalApproachDetails(c, g, this.reduced);
+    drawFinaleService(c, g, this.reduced);
     drawMaintenanceDetails(c, g);
     drawRecoilTrial(c, g);
     drawFreightLift(c, g);
@@ -978,6 +987,7 @@ export class Renderer {
       )
         drawInterceptorThreats(c, g, e, this.reduced);
     drawFinalThreat(c, g);
+    drawFinalApproachThreat(c, g, this.reduced);
     // Mortar shells and committed machine warnings share the threat layer.
     // Dense friendly beams/volleys must never paint over shootable shells or
     // their actual landing areas. All rays and physical damage remain intact.

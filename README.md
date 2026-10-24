@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**The Reclaimer — version 5.14.0.** A rain-only approach leads into a visual finale: a corrupted double boards its chassis, an aircraft delivers the Siege, and the city core opens into Rupture. Three full health bars, escalating attacks and physical arenas lead to distinct first-clear and New Game+ endings. [Release notes and isolated playtests](docs/releases/5.14.0.md).
+**The Final Approach — version 5.15.0.** Three late-Campaign rooftop rooms foreshadow the finale and teach its locked warnings. An optional service stop offers a limited repair or previewed legal refit; after defeat, practice only the boss forms you reached with your actual build. [Release notes and isolated playtests](docs/releases/5.15.0.md).
 
 **Final Arsenal — version 5.12.0.** The player-mimicking final boss is now the **Reclaimer**; the other security supervisor is the **Interceptor**. Nineteen weapon attacks escalate across three phases, with sweeping fans, rotating ring gaps, floor charges and linked attacks. New Game+ opens the full arsenal immediately and adds harder follow-ups. [Release notes and playtests](docs/releases/5.12.0.md).
 

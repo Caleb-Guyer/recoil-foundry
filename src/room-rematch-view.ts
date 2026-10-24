@@ -6,6 +6,7 @@ import { Renderer } from './render.ts';
 import { bindingLabel, held, matches, type Bindings } from './keyboard.ts';
 import { escapeLogbook } from './html.ts';
 import { RoomRematch, type RoomRematchSnapshot } from './room-rematch.ts';
+import { FINALE_PRACTICE_FORMS, finalePracticeGuidance } from './finale-practice.ts';
 
 export class RoomRematchView {
   readonly session: RoomRematch;
@@ -34,15 +35,37 @@ export class RoomRematchView {
   ) {
     this.session = new RoomRematch(snapshot);
     this.session.game.onSound = sound;
+    const finale = snapshot.finalePractice;
     root.innerHTML =
-      '<div class="rematch-header"><div><p class="eyebrow">ONE-ROOM PRACTICE</p><h2 id="dialog-title">' +
-      escapeLogbook(snapshot.level.name) +
+      '<div class="rematch-header"><div><p class="eyebrow">' +
+      (finale ? 'BOSS PRACTICE' : 'ONE-ROOM PRACTICE') +
+      '</p><h2 id="dialog-title">' +
+      escapeLogbook(finale ? 'The Reclaimer' : snapshot.level.name) +
       '.</h2></div>' +
       '<button class="quiet" data-rematch-back>Back to run results</button></div>' +
       '<p class="rematch-scope">Your finished gun · Full health · No rewards or saved progress</p>' +
-      '<details class="rematch-guidance"><summary>' +
+      (finale
+        ? '<div class="rematch-phases" role="group" aria-label="Practice a reached form">' +
+          FINALE_PRACTICE_FORMS.map(
+            (name, phase) =>
+              '<button class="quiet" data-rematch-phase="' +
+              phase +
+              '" aria-pressed="' +
+              (phase === this.session.finalePhase) +
+              '"' +
+              (phase > finale.reached
+                ? ' disabled title="Reach this form in your run to practice it."'
+                : '') +
+              '>' +
+              name +
+              (phase > finale.reached ? ' · Locked' : '') +
+              '</button>',
+          ).join('') +
+          '</div>'
+        : '') +
+      '<details class="rematch-guidance"><summary data-rematch-guidance-label>' +
       escapeLogbook(snapshot.guidance.label) +
-      ' · One tip</summary><p>' +
+      ' · One tip</summary><p data-rematch-guidance-tip>' +
       escapeLogbook(snapshot.guidance.tip) +
       '</p></details>' +
       '<canvas class="rematch-canvas" tabindex="0" role="img" aria-label="Room rematch" aria-describedby="rematch-controls"></canvas>' +
@@ -71,6 +94,20 @@ export class RoomRematchView {
     root.querySelector<HTMLButtonElement>('[data-rematch-back]')!.onclick = back;
     root.querySelector<HTMLButtonElement>('[data-rematch-toggle]')!.onclick = () => this.toggle();
     root.querySelector<HTMLButtonElement>('[data-rematch-retry]')!.onclick = () => this.retry();
+    root.querySelectorAll<HTMLButtonElement>('[data-rematch-phase]').forEach((button) => {
+      button.onclick = () => {
+        const phase = Number(button.dataset.rematchPhase);
+        this.resetInput();
+        if (!this.session.selectFinalePhase(phase)) return;
+        this.renderer.reset();
+        this.begun = this.ended = false;
+        this.update();
+        root
+          .querySelector<HTMLButtonElement>('[data-rematch-toggle]')!
+          .focus({ preventScroll: true });
+      };
+    });
+    this.update();
     const options = { signal: this.abort.signal };
     const aim = (e: PointerEvent) => {
       const r = this.canvas.getBoundingClientRect();
@@ -196,22 +233,55 @@ export class RoomRematchView {
     health.setAttribute('aria-valuetext', Math.ceil(g.hp) + ' health');
     const status =
       g.mode === 'won'
-        ? 'Room cleared. Practice grants no rewards.'
+        ? this.session.finalePhase !== null
+          ? 'Form cleared. Practice grants no rewards.'
+          : 'Room cleared. Practice grants no rewards.'
         : g.mode === 'dead'
           ? 'Try another approach, or return to your run results.'
           : this.isPlaying
-            ? 'Clear this room. Your original run stays finished.'
+            ? this.session.finalePhase !== null
+              ? 'Defeat this form. Your original run stays finished.'
+              : 'Clear this room. Your original run stays finished.'
             : this.begun
               ? 'Paused. Resume when you are ready.'
               : 'Begin when you are ready.';
+    const phase = this.session.finalePhase,
+      finale = this.session.snapshot.finalePractice;
+    if (phase !== null && finale) {
+      const guidance = finalePracticeGuidance(
+        phase,
+        phase === finale.deathPhase ? finale.cause : null,
+      );
+      this.root.querySelector<HTMLElement>('[data-rematch-guidance-label]')!.textContent =
+        guidance.label + ' · One tip';
+      this.root.querySelector<HTMLElement>('[data-rematch-guidance-tip]')!.textContent =
+        guidance.tip;
+      this.root
+        .querySelectorAll<HTMLButtonElement>('[data-rematch-phase]')
+        .forEach((button) =>
+          button.setAttribute(
+            'aria-pressed',
+            String(Number(button.dataset.rematchPhase) === phase),
+          ),
+        );
+      this.root.querySelector<HTMLButtonElement>('[data-rematch-retry]')!.textContent =
+        'Retry form';
+    }
     const cue = this.root.querySelector<HTMLElement>('[data-rematch-status]')!;
     if (cue.textContent !== status) cue.textContent = status;
     const toggle = this.root.querySelector<HTMLButtonElement>('[data-rematch-toggle]')!;
-    toggle.textContent = this.isPlaying
-      ? 'Pause rematch'
-      : this.begun
-        ? 'Resume rematch'
-        : 'Begin rematch';
+    toggle.textContent =
+      this.session.finalePhase !== null
+        ? this.isPlaying
+          ? 'Pause practice'
+          : this.begun
+            ? 'Resume practice'
+            : 'Begin practice'
+        : this.isPlaying
+          ? 'Pause rematch'
+          : this.begun
+            ? 'Resume rematch'
+            : 'Begin rematch';
     toggle.disabled = terminal;
     if (terminal && !this.ended) {
       this.ended = true;

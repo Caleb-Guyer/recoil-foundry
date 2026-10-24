@@ -87,3 +87,28 @@ dialog.rematch-dialog {
     padding: 16px;
   }
 }
+
+.rematch-phases {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.rematch-phases button {
+  min-height: 40px;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+.rematch-phases button[aria-pressed='true'] {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: #263731;
+}
+.rematch-phases button:disabled {
+  opacity: 0.45;
+}
+
+/* Keep the phase picker and practice controls together on laptop screens. */
+dialog.rematch-dialog:has(.rematch-phases) .rematch-canvas {
+  height: clamp(220px, calc(100dvh - 390px), 540px);
+}
