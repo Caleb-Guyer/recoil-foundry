@@ -7,6 +7,7 @@ import {
   type CameraMode,
   type CombatCameraInput,
 } from './combat-camera.ts';
+import { drawDamageFeedback, showDamageFeedback } from './damage-feedback-art.ts';
 import { drawFinaleService } from './finale-service-art.ts';
 import {
   drawFinalApproachBackdrop,
@@ -1014,6 +1015,17 @@ export class Renderer {
     // Keep the actual outfit above friendly rays, arcs, blasts and trails. The
     // hostile projectile and committed warning layers remain above the player.
     if (!framing || framing.player) this.drawPlayer(clarity.pressure);
+    if (showDamageFeedback(g, !!framing))
+      drawDamageFeedback(
+        c,
+        g.damageControl.lastHit,
+        g.time,
+        g.player.position,
+        this.scale,
+        this.reduced,
+        clarity.pressure,
+        g.hurtAt,
+      );
     drawFinaleCinemaForeground(c, g, this.reduced);
     this.drawEnemyTells();
     for (const e of g.enemies)
@@ -1172,10 +1184,6 @@ export class Renderer {
       c.restore();
     }
     drawFinalHud(c, g, this.width, this.height);
-    if (g.mode === 'playing' && g.time - g.hurtAt < 0.2) {
-      c.fillStyle = 'rgba(222,64,44,' + (0.2 - (g.time - g.hurtAt)) * 0.28 + ')';
-      c.fillRect(0, 0, this.width, this.height);
-    }
     if (g.escape?.phase === 'extracting' && g.mode !== 'title') {
       const fade = clamp((g.escape.depart / EXTRACTION_DURATION - 0.82) / 0.18, 0, 1);
       if (fade > 0) {
@@ -1882,7 +1890,6 @@ export class Renderer {
       c.lineTo(4, 21);
       c.stroke();
     }
-    if (g.time - g.hurtAt < 0.75) c.globalAlpha = 0.4 + Math.abs(Math.sin(g.time * 28)) * 0.6;
     c.save();
     c.translate(pose.x, pose.y);
     c.rotate(pose.angle);

@@ -1,0 +1,68 @@
+.replay-timeline {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  margin-top: 12px;
+  color: var(--muted, #a8b6b3);
+  font-size: 12px;
+}
+.replay-timeline output {
+  font-variant-numeric: tabular-nums;
+}
+.replay-track {
+  position: relative;
+  grid-column: 1 / -1;
+  padding-bottom: 6px;
+}
+#replay-scrub {
+  display: block;
+  width: 100%;
+  margin: 0;
+  accent-color: #e28b78;
+  cursor: pointer;
+}
+#replay-scrub:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+#replay-scrub:focus-visible {
+  outline: 2px solid #e6b373;
+  outline-offset: 4px;
+}
+.replay-hit-marks {
+  position: absolute;
+  inset: 0 7px;
+  pointer-events: none;
+}
+.replay-hit-marks span {
+  position: absolute;
+  top: 16px;
+  width: 2px;
+  height: 5px;
+  background: #e28b78;
+  transform: translateX(-1px);
+}
+.replay-hit-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+}
+.replay-hit-jumps button {
+  max-width: 100%;
+  padding: 7px 9px;
+  font-size: 12px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.replay-hit-detail {
+  min-height: 1.4em;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted, #a8b6b3);
+}
+@media (max-width: 600px) {
+  .replay-hit-jumps button {
+    flex-basis: 100%;
+  }
+}

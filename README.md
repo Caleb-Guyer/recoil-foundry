@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Damage Control — version 5.19.0.** Directional hit feedback, a health-loss trail and a steady recovery outline make accepted damage readable. Scrub the last moments, jump to recorded hits and compare actual damage in private room rematches. [Release notes and isolated hit/replay tests](docs/releases/5.19.0.md).
+
 **Combat Focus — version 5.18.0.** Smooth recoil framing, saved Follow/Steady/Wide camera modes and edge warnings for committed offscreen attacks make fast fights easier to read. Cover and cancelled attacks suppress warnings, and isolated comparisons leave your saved camera preference untouched. [Release notes and camera/encounter tests](docs/releases/5.18.0.md).
 
 **Hear the Foundry — version 5.17.0.** Directional threats, source-aware warnings, material impact layers and five reactive factory soundscapes bring the encounters to life. Mono audio and isolated Soundcheck comparisons keep the controls accessible. [Release notes and audio tests](docs/releases/5.17.0.md).

@@ -26,6 +26,7 @@ import { remasterTestLevel } from './room-remaster.ts';
 import { enemyEncounterRoom } from './enemy-encounters.ts';
 import { combatFlowLevel } from './combat-flow-rooms.ts';
 import { combatFocusLevel, prepareCombatFocus } from './combat-focus-test.ts';
+import { damageControlLevel, prepareDamageControl } from './damage-control-test.ts';
 import { EnemyRemaster, type EnemyRemasterRig } from './enemy-remaster.ts';
 import { PatrolMachineSystem, createPatrolRig, type PatrolRig } from './patrol-machine-system.ts';
 import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
@@ -63,6 +64,7 @@ import { CrosswindSystem } from './crosswind.ts';
 import { StormfrontSystem } from './stormfront.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
+import { DamageControl, DAMAGE_RECOVERY, type DamageHit } from './damage-control.ts';
 import { WorkshopSystem, workshopLevel, type WorkshopTarget } from './workshop.ts';
 import { workshopBuild, loadDiscoveries } from './workshop-build.ts';
 import { MassDriverSystem, MASS_DRIVER, type MassFlight } from './mass-driver.ts';
@@ -645,6 +647,7 @@ export class Game {
     }));
   }
   hp = 100;
+  damageControl = new DamageControl();
   deathCause: DamageCause | null = null;
   mods: string[] = [];
   legacyMods?: string[];
@@ -688,6 +691,7 @@ export class Game {
   rewardRerolled = false;
   onChange: () => void = () => {};
   onDeath: (origin?: Vec) => void = () => {};
+  onDamage: (hit: DamageHit) => void = () => {};
   onSound: (kind: string, origin?: SoundOrigin) => void = () => {};
   soundAt(kind: string, position: Vec, source?: string, material?: SoundMaterial) {
     if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
@@ -1140,6 +1144,7 @@ export class Game {
     };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.damageControl.reset();
     this.soundRoom++;
     this.reachedFinalePhase = 0;
     this.uprising.clear();
@@ -1374,6 +1379,7 @@ export class Game {
     this.level = combatFlowLevel(this, this.level);
     this.level = finalApproachLevel(this, this.level);
     this.level = combatFocusLevel(this, this.level);
+    this.level = damageControlLevel(this, this.level);
     this.level = finalePreviewLevel(this, this.level);
     this.level = transformedLevel(this, this.level);
     if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
@@ -1477,6 +1483,7 @@ export class Game {
     this.finale.reset();
     this.finaleService.reset();
     prepareCombatFocus(this);
+    prepareDamageControl(this);
   }
   startEscape() {
     if (this.testRun?.rematchRoom) return;
@@ -3928,8 +3935,9 @@ export class Game {
   damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }, shot?: Shot) {
     if (this.workshop.active || this.finale.safe) return;
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
-    if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
+    if (this.mode !== 'playing' || this.time - this.hurtAt < DAMAGE_RECOVERY) return;
     if (shot && this.support.absorb(shot)) return;
+    const hpBefore = this.hp;
     this.hp = Math.max(0, this.hp - amount);
     if (this.practice && amount > 0) this.practiceHits++;
     if (amount > 0) this.maintenance.damaged();
@@ -3945,6 +3953,33 @@ export class Game {
     if (from) {
       const d = direction(from, this.player.position);
       Body.setVelocity(this.player, { x: clamp(this.player.velocity.x + d.x * 4, -23, 23), y: -5 });
+    }
+    const incoming =
+      shot &&
+      Number.isFinite(shot.vel.x) &&
+      Number.isFinite(shot.vel.y) &&
+      Math.hypot(shot.vel.x, shot.vel.y) > 0.001
+        ? { x: -shot.vel.x, y: -shot.vel.y }
+        : from
+          ? { x: from.x - this.player.position.x, y: from.y - this.player.position.y }
+          : undefined;
+    const hit = this.damageControl.record({
+      at: this.time,
+      elapsed: this.elapsed,
+      hpBefore,
+      hpAfter: this.hp,
+      player: this.player.position,
+      origin: from,
+      direction: incoming,
+      cause,
+    });
+    if (hit) {
+      // Optional presentation observers cannot block lethal handling or saving.
+      try {
+        this.onDamage(hit);
+      } catch {
+        /* Replay/feedback is optional. */
+      }
     }
     if (this.hp <= 0) this.die(cause, from);
   }

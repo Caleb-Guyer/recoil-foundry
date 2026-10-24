@@ -1,3 +1,4 @@
+import type { DamageRoomSummary } from './damage-control.ts';
 import Matter from 'matter-js';
 import { Game, type Input } from './game.ts';
 import type { Checkpoint } from './rules.ts';
@@ -20,6 +21,8 @@ export interface RematchEntry {
   checkpoint: Checkpoint;
 }
 export interface RoomRematchSnapshot {
+  damageSummary?: DamageRoomSummary;
+  startingHp?: number;
   finalePractice?: FinalePracticeSnapshot;
   level: Level;
   checkpoint: Checkpoint;
@@ -55,6 +58,8 @@ export function roomRematchSnapshot(
   const finalePractice = finalePracticeFor(g);
   return {
     ...(finalePractice ? { finalePractice } : {}),
+    damageSummary: structuredClone(g.damageControl.summary()),
+    startingHp: entry.checkpoint.hp,
     level: structuredClone(entry.level),
     checkpoint: {
       ...structuredClone(entry.checkpoint),
@@ -77,6 +82,7 @@ export class RoomRematch {
   readonly game = new Game();
   readonly snapshot: RoomRematchSnapshot;
   finalePhase: FinalePracticePhase | null = null;
+  attemptStartingHp = 100;
   constructor(snapshot: RoomRematchSnapshot) {
     this.snapshot = structuredClone(snapshot);
     const finale = this.snapshot.finalePractice;
@@ -94,6 +100,7 @@ export class RoomRematch {
     this.game.cosmetics = { ...this.snapshot.cosmetics };
     this.game.startTest(this.snapshot.checkpoint, this.snapshot.level);
     if (this.finalePhase !== null) startFinalePracticePhase(this.game, this.finalePhase);
+    this.attemptStartingHp = this.game.hp;
     this.game.setMode('paused');
   }
   selectFinalePhase(phase: number): boolean {
@@ -106,6 +113,11 @@ export class RoomRematch {
     this.finalePhase = phase;
     this.reset();
     return true;
+  }
+  get damageResult(): DamageRoomSummary | null {
+    return this.game.mode === 'dead' || this.game.mode === 'won'
+      ? this.game.damageControl.summary()
+      : null;
   }
   tick(dt: number, input: Input) {
     this.game.tick(dt, input);

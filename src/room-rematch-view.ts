@@ -1,3 +1,4 @@
+import { rematchDamageHtml } from './damage-summary-view.ts';
 import type { Game, Input } from './game.ts';
 import './room-rematch.css';
 import type { ControllerFrame } from './controller.ts';
@@ -25,6 +26,7 @@ export class RoomRematchView {
   private begun = false;
   private stopped = false;
   private ended = false;
+  private damageMarkup = '';
   private touch = { left: false, right: false, jump: false };
   private padAim = { x: 1, y: 0 };
   constructor(
@@ -73,6 +75,7 @@ export class RoomRematchView {
       '<canvas class="rematch-canvas" tabindex="0" role="img" aria-label="Room rematch" aria-describedby="rematch-controls"></canvas>' +
       '<div class="rematch-footer"><progress max="100" value="100" aria-label="Rematch health"></progress>' +
       '<span data-rematch-status role="status">Begin when you are ready.</span></div>' +
+      '<div data-rematch-damage></div>' +
       '<p id="rematch-controls" class="rematch-controls">' +
       escapeLogbook(bindingLabel(bindings, 'left') + ' / ' + bindingLabel(bindings, 'right')) +
       ' move · ' +
@@ -270,6 +273,19 @@ export class RoomRematchView {
         );
       this.root.querySelector<HTMLButtonElement>('[data-rematch-retry]')!.textContent =
         'Retry form';
+    }
+    const damageResult = this.session.damageResult;
+    const damageMarkup = damageResult
+      ? rematchDamageHtml(
+          this.session.snapshot,
+          damageResult,
+          g.mode as 'won' | 'dead',
+          this.session.attemptStartingHp,
+        )
+      : '';
+    if (damageMarkup !== this.damageMarkup) {
+      this.damageMarkup = damageMarkup;
+      this.root.querySelector<HTMLElement>('[data-rematch-damage]')!.innerHTML = damageMarkup;
     }
     const cue = this.root.querySelector<HTMLElement>('[data-rematch-status]')!;
     if (cue.textContent !== status) cue.textContent = status;

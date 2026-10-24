@@ -150,6 +150,9 @@ import { replayTestFromUrl } from './death-replay.ts';
 import { DeathReplay } from './death-replay-capture.ts';
 import type { ReplayView } from './death-replay-view.ts';
 import { damageCauseText } from './damage-cause.ts';
+import { damageHealthTrail, type DamageHit } from './damage-control.ts';
+import { damageSummaryHtml } from './damage-summary-view.ts';
+import { damageControlTestFromUrl, DAMAGE_CONTROL_SCENES } from './damage-control-test.ts';
 import {
   LOGBOOK_KEY,
   loadLogbook,
@@ -559,9 +562,9 @@ function backFromUpdate() {
 document.getElementById('app')!.innerHTML = `
 <main id="arena">
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
- <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
+ <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Combat Focus</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Damage Control</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -582,6 +585,7 @@ const game = new Game(),
   renderer = new Renderer(canvas, game),
   sound = new Sound();
 const deathReplay = new DeathReplay();
+const pendingDamageHits: DamageHit[] = [];
 const firstSession = new FirstSessionGuide();
 let needsGuidance =
   read(FIRST_SESSION_KEY) !== true &&
@@ -745,9 +749,11 @@ const linkedFinaleServiceTest = finaleServiceTestFromUrl(entryUrl);
 const linkedFinalApproachTest = finalApproachTestFromUrl(entryUrl);
 const linkedCombatFlowTest = combatFlowTestFromUrl(entryUrl);
 const linkedCombatFocusTest = combatFocusTestFromUrl(entryUrl);
+const linkedDamageControlTest = damageControlTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedDamageControlTest?.checkpoint ??
   linkedCombatFocusTest?.checkpoint ??
   linkedCombatFlowTest ??
   linkedFinalePracticePreview?.checkpoint ??
@@ -1314,6 +1320,14 @@ function updateTitle() {
       ' camera · ' +
       bindingLabel(bindings, 'retry') +
       ' to retry. Continue and your saved camera preference stay untouched.';
+  }
+  if (linkedDamageControlTest && linkedRunTest?.seed === linkedDamageControlTest.checkpoint.seed) {
+    $('play').textContent = 'Test Damage Control ↗';
+    $('title-hint').textContent =
+      DAMAGE_CONTROL_SCENES[linkedDamageControlTest.scene].instruction +
+      ' ' +
+      bindingLabel(bindings, 'retry') +
+      ' to retry. Continue and unlocks stay untouched.';
   }
   if (linkedFinalApproachTest && linkedRunTest) {
     $('play').textContent = 'Test the final approach ↗';
@@ -2803,10 +2817,34 @@ deathReplay.onReady = () => {
   const button = document.getElementById('watch-replay');
   if (button) button.hidden = !deathReplay.ready;
 };
+game.onDamage = (hit) => {
+  pendingDamageHits.push(hit);
+  if (pendingDamageHits.length > 16) pendingDamageHits.shift();
+};
+function flushDamageHits() {
+  // Project after the world draw, using the exact backing-canvas transform
+  // captured in that frame. Lethal callbacks flush before transient cleanup.
+  for (const hit of pendingDamageHits.splice(0)) {
+    deathReplay.recordHit(
+      {
+        id: hit.id,
+        at: hit.elapsed,
+        damage: hit.damage,
+        hpBefore: hit.hpBefore,
+        hpAfter: hit.hpAfter,
+        player: renderer.toCanvas(hit.player),
+        ...(hit.origin ? { origin: renderer.toCanvas(hit.origin) } : {}),
+        label: damageCauseText(hit.cause),
+      },
+      canvas,
+    );
+  }
+}
 game.onDeath = (origin) => {
   // This hook runs before transient combat objects are removed by setMode.
   try {
     renderer.draw(performance.now());
+    flushDamageHits();
     deathReplay.finish(canvas, game.elapsed, {
       player: renderer.toCanvas(game.player.position),
       ...(origin ? { origin: renderer.toCanvas(origin) } : {}),
@@ -2815,6 +2853,7 @@ game.onDeath = (origin) => {
     });
   } catch {
     // Optional replay capture must never block the result screen or saving.
+    pendingDamageHits.length = 0;
     deathReplay.reset();
   }
 };
@@ -2843,6 +2882,7 @@ game.onChange = () => {
   updateLogbook();
   if (replayRoom !== game.level || game.mode === 'title' || game.mode === 'won') {
     replayRoom = game.level;
+    pendingDamageHits.length = 0;
     deathReplay.reset();
   }
   captureFinishedRun();
@@ -3247,11 +3287,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.18.0 · COMBAT FOCUS</p><h2 id="dialog-title">Keep the fight in view.</h2>' +
-      '<p class="update-tagline">Follow the flight. See the danger.</p>' +
-      '<dl class="update-notes"><div><dt>A camera that follows recoil.</dt><dd>Follow anticipates climbs and falls, with a little more room during fast movement. Steady keeps a fixed zoom; Wide shows more of the room. Choose Camera framing in Settings.</dd></div>' +
-      '<div><dt>Warnings for real danger.</dt><dd>Small edge chevrons follow committed offscreen shots and approaching rounds. They disappear when the threat is visible, passes safely or is blocked by cover.</dd></div>' +
-      '<div><dt>Your preferred view.</dt><dd>Camera framing saves separately from Reduced effects. The finale keeps its authored shots. Isolated comparisons leave Continue and your saved camera choice untouched.</dd></div></dl><p><a href="?test=focus&amp;scene=climb&amp;camera=follow&amp;v=1">Try the recoil ascent ↗</a> · <a href="?test=focus&amp;scene=crossfire&amp;camera=follow&amp;v=1">Try offscreen crossfire ↗</a></p>' +
+      '<p class="eyebrow">5.19.0 · DAMAGE CONTROL</p><h2 id="dialog-title">Read the hit. Plan the retry.</h2>' +
+      '<p class="update-tagline">Know what reached you.</p>' +
+      '<dl class="update-notes"><div><dt>See an accepted hit.</dt><dd>A small directional mark follows incoming damage, and a short health trail shows what you lost. A steady outline marks the existing recovery window, including with Reduced effects.</dd></div>' +
+      '<div><dt>Review the actual hits.</dt><dd>Scrub your last moments or jump to a recorded hit. Markers show the health actually lost, its recorded source and when it happened.</dd></div>' +
+      '<div><dt>Make the retry useful.</dt><dd>Expand the damage breakdown on results. Room practice shows its own finished totals alongside the original visit, with different starting health identified.</dd></div></dl><p><a href="?test=damage&amp;scene=hit&amp;v=1">Try hit feedback ↗</a> · <a href="?test=damage&amp;scene=replay&amp;v=1">Try the hit timeline ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4661,6 +4701,8 @@ function showDialog(kind: string) {
     watch.onclick = () => showDialog('replay');
     content.querySelector('.actions')?.append(watch);
     addRoomRematchAction(content);
+    const damage = game.damageControl.summary();
+    if (damage.hits) content.insertAdjacentHTML('beforeend', damageSummaryHtml(damage));
   }
   if (kind === 'result') {
     const feedback = document.createElement('button');
@@ -5485,6 +5527,11 @@ function frame(now: number) {
       : null;
   updateFinalePresentation();
   renderer.draw(now);
+  flushDamageHits();
+  const trail = $('health-trail');
+  const trailWidth =
+    Number(damageHealthTrail(game.damageControl.lastHit, game.time, game.hp).toFixed(2)) + '%';
+  if (trail.style.width !== trailWidth) trail.style.width = trailWidth;
   if (game.mode === 'playing' && !game.workshop.active) deathReplay.capture(canvas, game.elapsed);
   if (now - hudAt > 80) {
     hudAt = now;

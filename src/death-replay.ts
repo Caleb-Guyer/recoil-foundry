@@ -42,7 +42,13 @@ export function replayTiming(duration: number, played: number) {
   const slowAt = Math.max(0, duration - 0.6);
   const end = slowAt + (duration - slowAt) * 3;
   return {
-    at: Math.min(duration, played <= slowAt ? Math.max(0, played) : slowAt + (played - slowAt) / 3),
+    at:
+      played >= end
+        ? duration
+        : Math.min(
+            duration,
+            played <= slowAt ? Math.max(0, played) : slowAt + (played - slowAt) / 3,
+          ),
     done: played >= end + 0.8,
   };
 }
@@ -51,6 +57,76 @@ export function replayFrameIndex(frames: readonly { at: number }[], at: number) 
   let index = 0;
   while (index + 1 < frames.length && frames[index + 1].at <= at) index++;
   return index;
+}
+
+export const REPLAY_HITS = 32;
+export interface ReplayHit {
+  id: number;
+  // Capture uses elapsed gameplay seconds; published timeline hits start at zero.
+  at: number;
+  damage: number;
+  hpBefore: number;
+  hpAfter: number;
+  player: Vec;
+  origin?: Vec;
+  label: string;
+}
+const finitePoint = (p: Vec | undefined) => !!p && Number.isFinite(p.x) && Number.isFinite(p.y);
+export function validReplayHit(hit: ReplayHit) {
+  return (
+    Number.isSafeInteger(hit.id) &&
+    hit.id >= 0 &&
+    Number.isFinite(hit.at) &&
+    hit.at >= 0 &&
+    Number.isFinite(hit.damage) &&
+    hit.damage > 0 &&
+    Number.isFinite(hit.hpBefore) &&
+    Number.isFinite(hit.hpAfter) &&
+    hit.hpAfter >= 0 &&
+    hit.hpBefore > hit.hpAfter &&
+    Math.abs(hit.hpBefore - hit.hpAfter - hit.damage) <= 1e-6 * Math.max(1, hit.hpBefore) &&
+    finitePoint(hit.player) &&
+    (!hit.origin || finitePoint(hit.origin)) &&
+    typeof hit.label === 'string' &&
+    hit.label.trim().length > 0
+  );
+}
+
+export function replayHitsInBuffer(
+  frames: readonly { at: number }[],
+  hits: readonly ReplayHit[],
+): readonly Readonly<ReplayHit>[] {
+  if (!frames.length) return Object.freeze([]);
+  const start = frames[0].at,
+    end = frames.at(-1)!.at;
+  return Object.freeze(
+    hits
+      .filter((hit) => validReplayHit(hit) && hit.at >= start && hit.at <= end)
+      .sort((a, b) => a.at - b.at || a.id - b.id)
+      .slice(-REPLAY_HITS)
+      .map((hit) =>
+        Object.freeze({
+          ...hit,
+          at: hit.at - start,
+          label: hit.label
+            .trim()
+            .replace(/[\u0000-\u001f]/g, ' ')
+            .slice(0, 120),
+          player: Object.freeze({ ...hit.player }),
+          ...(hit.origin ? { origin: Object.freeze({ ...hit.origin }) } : {}),
+        }),
+      ),
+  );
+}
+
+// Invert the slow-motion playback clock for a precise keyboard/range seek.
+export function replayPlayedAt(duration: number, at: number) {
+  const position = Math.max(0, Math.min(duration, Number.isFinite(at) ? at : 0));
+  const slowAt = Math.max(0, duration - 0.6);
+  // Native range controls serialize decimal values with limited precision.
+  // Resolve the endpoint before the slow-motion inverse can lose another ULP.
+  if (position > 0 && duration - position <= 1e-6) return slowAt + (duration - slowAt) * 3;
+  return position <= slowAt ? position : slowAt + (position - slowAt) * 3;
 }
 
 export interface ReplayImpact {

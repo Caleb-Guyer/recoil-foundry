@@ -1666,7 +1666,7 @@ body[data-input='controller'] canvas {
   background: #193d51;
 }
 
-body[data-workshop='true'] #health {
+body[data-workshop='true'] .health-meter {
   visibility: hidden;
 }
 .workshop-tools {
@@ -2621,7 +2621,7 @@ body[data-clock-out='true'] .touch-controls {
 }
 
 /* The finale tells its story with staging and sound. Escape remains available. */
-body[data-finale-scene='true'] .hud > progress,
+body[data-finale-scene='true'] .hud > .health-meter,
 body[data-finale-scene='true'] #stage,
 body[data-finale-scene='true'] #factory-condition,
 body[data-finale-scene='true'] #commendation-notice,
@@ -2646,4 +2646,53 @@ body[data-finale-movie='true'] .touch-controls {
 .settings-list select:focus-visible {
   outline: 2px solid #edbd72;
   outline-offset: 3px;
+}
+
+.health-meter {
+  position: relative;
+  width: 108px;
+  height: 5px;
+  background: #3b4747;
+}
+.health-meter progress {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+#health::-webkit-progress-bar {
+  background: transparent;
+}
+#health-trail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  background: #c88670;
+}
+.damage-summary {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #354440;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+.damage-summary summary {
+  cursor: pointer;
+  color: #d5dfd6;
+}
+.damage-summary p,
+.damage-summary ul {
+  color: var(--muted);
+  margin: 8px 0;
+}
+.damage-summary ul {
+  padding-left: 20px;
+}
+
+@media (max-width: 600px) {
+  .health-meter {
+    width: 85px;
+  }
 }
