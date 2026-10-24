@@ -9,6 +9,8 @@ import type { FinaleServiceMenu } from './finale-service-menu.ts';
 import { finaleServiceTestFromUrl, prepareFinaleServiceTest } from './finale-service-test.ts';
 import { finalApproachTestFromUrl } from './final-approach.ts';
 import { combatFlowTestFromUrl } from './combat-flow-test.ts';
+import { combatFocusTestFromUrl, COMBAT_FOCUS_SCENES } from './combat-focus-test.ts';
+import { CAMERA_MODES, loadCameraMode, type CameraMode } from './combat-camera.ts';
 import { factoryAudioScene } from './factory-audio-scene.ts';
 import { finalePracticePreviewFromUrl, prepareFinalePracticePreview } from './finale-practice.ts';
 import {
@@ -559,7 +561,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Hear the Foundry</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Combat Focus</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -662,7 +664,10 @@ const prefs = (rawSettings && typeof rawSettings === 'object' ? rawSettings : {}
   effectsVolume?: unknown;
   musicVolume?: unknown;
   mono?: boolean;
+  camera?: unknown;
 };
+let preferredCameraMode = loadCameraMode(prefs.camera);
+renderer.cameraMode = preferredCameraMode;
 const controller = new Controller(controllerSettings(prefs.controller));
 const bindings = loadBindings(prefs.bindings);
 let bindingEditor: ReturnType<typeof keyboardMenu> | null = null;
@@ -739,7 +744,11 @@ const linkedFinalePracticePreview = finalePracticePreviewFromUrl(entryUrl);
 const linkedFinaleServiceTest = finaleServiceTestFromUrl(entryUrl);
 const linkedFinalApproachTest = finalApproachTestFromUrl(entryUrl);
 const linkedCombatFlowTest = combatFlowTestFromUrl(entryUrl);
+const linkedCombatFocusTest = combatFocusTestFromUrl(entryUrl);
+let focusCameraPreview = !!linkedCombatFocusTest;
+if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedCombatFocusTest?.checkpoint ??
   linkedCombatFlowTest ??
   linkedFinalePracticePreview?.checkpoint ??
   linkedFinaleServiceTest ??
@@ -1296,6 +1305,16 @@ function updateTitle() {
       bindingLabel(bindings, 'retry') +
       ' to retry; Continue and unlocks stay untouched.';
   }
+  if (linkedCombatFocusTest && linkedRunTest?.seed === linkedCombatFocusTest.checkpoint.seed) {
+    $('play').textContent = 'Test Combat Focus ↗';
+    $('title-hint').textContent =
+      COMBAT_FOCUS_SCENES[linkedCombatFocusTest.scene].instruction +
+      ' ' +
+      CAMERA_MODES[renderer.cameraMode].label +
+      ' camera · ' +
+      bindingLabel(bindings, 'retry') +
+      ' to retry. Continue and your saved camera preference stay untouched.';
+  }
   if (linkedFinalApproachTest && linkedRunTest) {
     $('play').textContent = 'Test the final approach ↗';
     $('title-hint').textContent =
@@ -1584,6 +1603,7 @@ function persistSettings() {
     effectsVolume: sound.effectsVolume,
     musicVolume: sound.musicVolume,
     mono: sound.mono,
+    camera: preferredCameraMode,
   });
   updateAudioState();
   updateTitle();
@@ -1790,6 +1810,8 @@ function start(
   linkedTrial = null;
   invalidTrialLink = false;
   linkedRunTest = null;
+  renderer.cameraMode = preferredCameraMode;
+  focusCameraPreview = false;
   linkedWorkshop = false;
   previewCommendations = false;
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
@@ -1980,6 +2002,8 @@ function startPractice(
   closeDialog();
   activeDaily = null;
   dailyResult = null;
+  renderer.cameraMode = preferredCameraMode;
+  focusCameraPreview = false;
   game.startPractice(encounter, mods, discovered);
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
@@ -2019,6 +2043,8 @@ function startTrial(route: TrialRoute, preview = false, challenge?: TrialChallen
   sound.resetMusic();
   closeDialog();
   if (!game.maintenance.startTrial(route, profile, preview)) return;
+  renderer.cameraMode = preferredCameraMode;
+  focusCameraPreview = false;
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -2079,6 +2105,8 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun, challenge?
   closeDialog();
   const ghost =
     loadRecoilGhosts(read(RECOIL_GHOSTS_KEY)).find((r) => r.kind === kind && r.gun === gun) ?? null;
+  renderer.cameraMode = preferredCameraMode;
+  focusCameraPreview = false;
   game.recoil.startPractice(
     kind,
     gun,
@@ -2129,6 +2157,8 @@ function startGauntlet(
   closeDialog();
   game.setMode('title');
   if (!game.gauntlet.begin(gun, access, preview, { ...options, seen })) return;
+  renderer.cameraMode = preferredCameraMode;
+  focusCameraPreview = false;
   finishedRun = null;
   pendingNgPlusNotice = false;
   ngPlusNoticeRecorded = false;
@@ -2273,6 +2303,10 @@ function startRunTest(save: Checkpoint) {
   closeDialog();
   activeDaily = null;
   dailyResult = null;
+  const focus = linkedCombatFocusTest && save.seed === linkedCombatFocusTest.checkpoint.seed;
+  if (!focus) renderer.cameraMode = preferredCameraMode;
+  else if (!focusCameraPreview) renderer.cameraMode = linkedCombatFocusTest!.camera;
+  focusCameraPreview = !!focus;
   game.startTest(save);
   prepareFinaleServiceTest(game, entryUrl);
   if (
@@ -2361,6 +2395,8 @@ function startWorkshop(
     workshopStartingGun = startingGun = availableStartingGun(startingGun, weaponUnlocks());
     if (!previewCommendations) write(WORKSHOP_BUILD_KEY, workshopMods);
   }
+  renderer.cameraMode = preferredCameraMode;
+  focusCameraPreview = false;
   game.startWorkshop(discovered, warmup ? [] : workshopMods, warmup ? 'pistol' : startingGun);
   if (warmup) firstSession.start(game, true);
   updateFirstSession();
@@ -3211,11 +3247,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.17.0 · HEAR THE FOUNDRY</p><h2 id="dialog-title">A factory you can hear.</h2>' +
-      '<p class="update-tagline">Locate the threat. Feel the impact.</p>' +
-      '<dl class="update-notes"><div><dt>Listen for the source.</dt><dd>Enemy warnings, reinforcements and machinery now come from their actual positions. Overlapping warnings keep their own voices. Use Mono audio in Settings to center them.</dd></div>' +
-      '<div><dt>Hear what you hit.</dt><dd>Metal bodies, armor, breakable cover, powered cabinets and terrain add distinct impact and destruction layers to the existing effects.</dd></div>' +
-      '<div><dt>The factory keeps working.</dt><dd>Quiet machinery, pumps, belts and rooftop wind give all five zones their own atmosphere. Power cuts and shutdowns change the machinery you hear. Ambience pauses with the game and keeps the rain approach quiet.</dd></div></dl><p><a href="./audio.html" target="_blank" rel="noopener">Open the isolated Soundcheck ↗</a></p>' +
+      '<p class="eyebrow">5.18.0 · COMBAT FOCUS</p><h2 id="dialog-title">Keep the fight in view.</h2>' +
+      '<p class="update-tagline">Follow the flight. See the danger.</p>' +
+      '<dl class="update-notes"><div><dt>A camera that follows recoil.</dt><dd>Follow anticipates climbs and falls, with a little more room during fast movement. Steady keeps a fixed zoom; Wide shows more of the room. Choose Camera framing in Settings.</dd></div>' +
+      '<div><dt>Warnings for real danger.</dt><dd>Small edge chevrons follow committed offscreen shots and approaching rounds. They disappear when the threat is visible, passes safely or is blocked by cover.</dd></div>' +
+      '<div><dt>Your preferred view.</dt><dd>Camera framing saves separately from Reduced effects. The finale keeps its authored shots. Isolated comparisons leave Continue and your saved camera choice untouched.</dd></div></dl><p><a href="?test=focus&amp;scene=climb&amp;camera=follow&amp;v=1">Try the recoil ascent ↗</a> · <a href="?test=focus&amp;scene=crossfire&amp;camera=follow&amp;v=1">Try offscreen crossfire ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3372,6 +3408,7 @@ function showDialog(kind: string) {
         sound.unlock();
         sound.play(kind, origin);
       },
+      renderer.cameraMode,
     );
   } else if (kind === 'security') {
     const profile = securityProfile();
@@ -4407,7 +4444,22 @@ function showDialog(kind: string) {
       (sound.mono ? 'checked' : '') +
       ' /></label><label>Reduced effects<input id="shake" type="checkbox" aria-describedby="reduced-note" ' +
       (renderer.reduced ? 'checked' : '') +
-      ' /></label></div><p id="mono-note" class="controller-note">Center all audio for one speaker or ear. Warning timing stays the same. <a href="./audio.html" target="_blank" rel="noopener">Soundcheck ↗</a></p><p id="reduced-note" class="controller-note">Less shake, flashes and particles. Attack warnings stay visible.</p><p id="audio-note" class="controller-note" role="status" hidden></p><details id="keyboard-settings" class="controller-settings"></details>' +
+      ' /></label><label>Camera framing<select id="camera-mode" aria-describedby="camera-note">' +
+      (Object.keys(CAMERA_MODES) as CameraMode[])
+        .map(
+          (mode) =>
+            '<option value="' +
+            mode +
+            '"' +
+            (renderer.cameraMode === mode ? ' selected' : '') +
+            '>' +
+            CAMERA_MODES[mode].label +
+            '</option>',
+        )
+        .join('') +
+      '</select></label></div><p id="camera-note" class="controller-note">Follow tracks recoil flights. Steady holds the zoom. Wide shows more of the room.' +
+      (focusCameraPreview ? ' Camera choices in this isolated preview stay here.' : '') +
+      '</p><p id="mono-note" class="controller-note">Center all audio for one speaker or ear. Warning timing stays the same. <a href="./audio.html" target="_blank" rel="noopener">Soundcheck ↗</a></p><p id="reduced-note" class="controller-note">Less shake, flashes and particles. Attack warnings stay visible.</p><p id="audio-note" class="controller-note" role="status" hidden></p><details id="keyboard-settings" class="controller-settings"></details>' +
       controllerOptions() +
       `<div class="controls-copy" ${paused ? '' : 'hidden'}><div id="device-controls"></div><p>` +
       (game.workshop.active
@@ -4520,6 +4572,15 @@ function showDialog(kind: string) {
       sound.mono = (e.target as HTMLInputElement).checked;
       persistSettings();
       updateMusic();
+    };
+    $<HTMLSelectElement>('camera-mode').onchange = (e) => {
+      renderer.cameraMode = loadCameraMode((e.target as HTMLSelectElement).value);
+      const preview = focusCameraPreview;
+      if (preview) updateTitle();
+      else {
+        preferredCameraMode = renderer.cameraMode;
+        persistSettings();
+      }
     };
     $<HTMLInputElement>('shake').onchange = (e) => {
       renderer.reduced = (e.target as HTMLInputElement).checked;

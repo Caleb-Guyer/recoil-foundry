@@ -25,6 +25,7 @@ import { toolroomLevel } from './toolroom-layouts.ts';
 import { remasterTestLevel } from './room-remaster.ts';
 import { enemyEncounterRoom } from './enemy-encounters.ts';
 import { combatFlowLevel } from './combat-flow-rooms.ts';
+import { combatFocusLevel, prepareCombatFocus } from './combat-focus-test.ts';
 import { EnemyRemaster, type EnemyRemasterRig } from './enemy-remaster.ts';
 import { PatrolMachineSystem, createPatrolRig, type PatrolRig } from './patrol-machine-system.ts';
 import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
@@ -1372,6 +1373,7 @@ export class Game {
     this.level = enemyEncounterRoom(this, this.level);
     this.level = combatFlowLevel(this, this.level);
     this.level = finalApproachLevel(this, this.level);
+    this.level = combatFocusLevel(this, this.level);
     this.level = finalePreviewLevel(this, this.level);
     this.level = transformedLevel(this, this.level);
     if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
@@ -1474,6 +1476,7 @@ export class Game {
     this.hunts.reset(clearedRoom);
     this.finale.reset();
     this.finaleService.reset();
+    prepareCombatFocus(this);
   }
   startEscape() {
     if (this.testRun?.rematchRoom) return;

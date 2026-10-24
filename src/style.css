@@ -2633,3 +2633,17 @@ body[data-finale-movie='true'] .touch-controls {
   visibility: hidden;
   pointer-events: none;
 }
+
+.settings-list select {
+  max-width: 55%;
+  padding: 8px 12px;
+  border: 1px solid #52635e;
+  border-radius: 4px;
+  background: #172025;
+  color: #e9ece0;
+  font: inherit;
+}
+.settings-list select:focus-visible {
+  outline: 2px solid #edbd72;
+  outline-offset: 3px;
+}

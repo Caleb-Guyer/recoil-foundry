@@ -1,3 +1,12 @@
+import {
+  advanceCombatCamera,
+  cameraBaseScale,
+  cameraFrameDelta,
+  combatCameraScale,
+  combatCameraTarget,
+  type CameraMode,
+  type CombatCameraInput,
+} from './combat-camera.ts';
 import { drawFinaleService } from './finale-service-art.ts';
 import {
   drawFinalApproachBackdrop,
@@ -133,6 +142,7 @@ export class Renderer {
   scale = 1;
   camera: Vec = { x: 0, y: 0 };
   reduced = false;
+  cameraMode: CameraMode = 'follow';
   portalAim: Vec | null | undefined;
   goalCue: GoalCue | null = null;
   last = 0;
@@ -143,6 +153,20 @@ export class Renderer {
     const m = this.worldTransform;
     return { x: m.a * point.x + m.c * point.y + m.e, y: m.b * point.x + m.d * point.y + m.f };
   }
+  private cameraInput(): CombatCameraInput {
+    const g = this.game;
+    return {
+      width: this.width,
+      height: this.height,
+      worldWidth: g.worldWidth,
+      worldTop: g.worldTop,
+      player: g.player?.position ?? { x: 140, y: 700 },
+      velocity: g.player?.velocity ?? { x: 0, y: 0 },
+      aim: g.aim,
+      mode: this.cameraMode,
+      centered: g.maintenance.active || (g.recoil.active && g.recoil.kind === 'launch'),
+    };
+  }
   constructor(canvas: HTMLCanvasElement, game: Game) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
@@ -151,29 +175,23 @@ export class Renderer {
   }
   resize() {
     const r = this.canvas.getBoundingClientRect();
-    this.width = r.width;
-    this.height = r.height;
-    const d = Math.min(devicePixelRatio || 1, 2);
-    this.canvas.width = Math.round(r.width * d);
-    this.canvas.height = Math.round(r.height * d);
-    this.scale = clamp(r.height / 830, 0.55, 1.6);
+    this.width = Number.isFinite(r.width) ? Math.max(1, r.width) : 1;
+    this.height = Number.isFinite(r.height) ? Math.max(1, r.height) : 1;
+    const ratio = globalThis.devicePixelRatio;
+    const d = Number.isFinite(ratio) ? clamp(ratio, 1, 2) : 1;
+    this.canvas.width = Math.round(this.width * d);
+    this.canvas.height = Math.round(this.height * d);
+    this.scale = combatCameraScale(this.cameraInput());
   }
   toWorld(x: number, y: number): Vec {
     return { x: x / this.scale + this.camera.x, y: y / this.scale + this.camera.y };
   }
   reset() {
-    const viewW = this.width / this.scale;
-    this.camera = {
-      x:
-        this.game.escape && this.game.overtime
-          ? clamp(
-              this.game.player.position.x - viewW * 0.42,
-              0,
-              Math.max(0, this.game.worldWidth - viewW),
-            )
-          : 0,
-      y: Math.max(0, WORLD.floor - this.height / this.scale + 90),
-    };
+    const input = this.cameraInput();
+    this.scale = combatCameraScale(input);
+    const target = combatCameraTarget(input, this.scale);
+    this.camera = { x: target.x, y: target.y };
+    this.portalRevision = this.game.portals.revision;
   }
   line(a: Vec, b: Vec, color: string, width = 1) {
     const c = this.ctx;
@@ -629,10 +647,25 @@ export class Renderer {
     if (framing) this.scale = framing.scale;
     const c = this.ctx,
       g = this.game,
-      dt = Math.min(0.05, (now - this.last) / 1000 || 1 / 60);
-    this.last = now;
-    if (!framing) {
-      const base = clamp(this.height / 830, 0.55, 1.6);
+      dt = cameraFrameDelta(now, this.last);
+    if (Number.isFinite(now)) this.last = now;
+    const ordinary =
+      !framing &&
+      g.mode !== 'title' &&
+      !g.finale.cinema?.active &&
+      !(g.finale.presenting && g.finale.enemy);
+    const portalSnap = this.portalRevision !== g.portals.revision;
+    const followed = ordinary
+      ? advanceCombatCamera(
+          { ...this.camera, scale: this.scale },
+          this.cameraInput(),
+          g.mode === 'playing' ? dt : 0,
+          portalSnap,
+        )
+      : null;
+    if (followed) this.scale = followed.scale;
+    else if (!framing) {
+      const base = cameraBaseScale(this.height);
       this.scale = finaleCinemaScale(g, base, this.width, this.height, this.reduced);
     }
     if (g.mode === 'playing' || g.mode === 'title') this.clock += dt;
@@ -680,10 +713,13 @@ export class Renderer {
         Math.max(g.worldTop, 835 - viewH),
       );
     }
-    const follow = this.portalRevision !== g.portals.revision ? 1 : 1 - Math.exp(-dt * 9);
+    const follow = portalSnap ? 1 : 1 - Math.exp(-dt * 9);
     this.portalRevision = g.portals.revision;
-    this.camera.x += (desiredX - this.camera.x) * follow;
-    this.camera.y += (desiredY - this.camera.y) * follow;
+    if (followed) this.camera = { x: followed.x, y: followed.y };
+    else {
+      this.camera.x += (desiredX - this.camera.x) * follow;
+      this.camera.y += (desiredY - this.camera.y) * follow;
+    }
     if (g.mode === 'title') {
       this.camera.x = 200;
       this.camera.y = Math.max(0, 825 - viewH);
@@ -1087,7 +1123,15 @@ export class Renderer {
       c.stroke();
       c.restore();
     }
-    if (g.mode === 'playing' && !g.clear && !g.workshop.active && !g.escape) {
+    if (
+      g.mode === 'playing' &&
+      !g.clear &&
+      !g.workshop.active &&
+      !g.escape &&
+      !framing &&
+      !g.areaEvents.dark &&
+      !g.finale.cinema?.active
+    ) {
       c.save();
       // Screen-space cues do not jitter with recoil or screen shake.
       for (const cue of incomingEdgeCues(
@@ -1097,6 +1141,14 @@ export class Renderer {
         g.time,
         g.solidBodies,
         28 / this.scale,
+        g.enemies,
+        (e) =>
+          !g.cryogenic.frozen(e) &&
+          !g.salvageEvolutions.carried(e) &&
+          !g.ballistics.pinned(e) &&
+          !g.tethers.staggered(e) &&
+          !g.pressure.staggered(e) &&
+          !g.massDriver.staggered(e),
       )) {
         c.save();
         c.translate(

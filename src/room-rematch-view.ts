@@ -3,6 +3,7 @@ import './room-rematch.css';
 import type { ControllerFrame } from './controller.ts';
 import { controllerPortalTarget } from './controller-target.ts';
 import { Renderer } from './render.ts';
+import type { CameraMode } from './combat-camera.ts';
 import { bindingLabel, held, matches, type Bindings } from './keyboard.ts';
 import { escapeLogbook } from './html.ts';
 import { RoomRematch, type RoomRematchSnapshot } from './room-rematch.ts';
@@ -32,6 +33,7 @@ export class RoomRematchView {
     private readonly bindings: Bindings,
     private readonly back: () => void,
     sound: Game['onSound'],
+    cameraMode: CameraMode = 'follow',
   ) {
     this.session = new RoomRematch(snapshot);
     this.session.game.onSound = sound;
@@ -91,6 +93,8 @@ export class RoomRematchView {
       '<button class="quiet" data-rematch-retry>Retry room</button></div>';
     this.canvas = root.querySelector('canvas')!;
     this.renderer = new Renderer(this.canvas, this.session.game);
+    this.renderer.cameraMode = cameraMode;
+    this.renderer.reset();
     root.querySelector<HTMLButtonElement>('[data-rematch-back]')!.onclick = back;
     root.querySelector<HTMLButtonElement>('[data-rematch-toggle]')!.onclick = () => this.toggle();
     root.querySelector<HTMLButtonElement>('[data-rematch-retry]')!.onclick = () => this.retry();
@@ -307,7 +311,6 @@ export class RoomRematchView {
       }
       this.renderer.resize();
     }
-    this.renderer.scale = Math.max(0.72, this.renderer.scale);
     this.renderer.reduced = reduced;
     if (active && this.isPlaying) {
       this.accumulator = Math.min(0.08, this.accumulator + dt);

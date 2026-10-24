@@ -105,7 +105,7 @@ test('Turf War allies have steady closed shield silhouettes independent of blue 
   assert.deepEqual(later.paths, paths, 'the ally marker does not rely on blinking or motion');
 });
 
-test('edge cues mark newly fired incoming shots and merge a volley into one brief flash', () => {
+test('edge cues merge imminent volleys and persist independently of launch age', () => {
   const shot = round();
   const before = structuredClone(shot);
   const cue = cues([shot])[0];
@@ -114,8 +114,9 @@ test('edge cues mark newly fired incoming shots and merge a volley into one brie
   assert.equal(cue.pos.y, 400);
   assert.equal(cue.angle, 0);
   assert.equal(cues([shot, round({ id: 2, pos: { x: 1100, y: 408 } })]).length, 1);
-  assert(cues([shot], [], 0.35)[0].alpha < cue.alpha);
-  assert.equal(cues([shot], [], EDGE_CUE_TIME).length, 0);
+  assert.deepEqual(cues([shot], [], 0.35)[0], cue);
+  assert.equal(cues([shot], [], EDGE_CUE_TIME + 2).length, 1);
+  assert(cues([round({ pos: { x: 1050, y: 400 } })])[0].alpha > cue.alpha);
   assert.deepEqual(shot, before, 'Rendering must not alter projectile state');
 });
 
@@ -129,8 +130,10 @@ test('edge cues omit friendly, reflected, spent, departing, missed and visible a
     { vel: { x: 0, y: 0 } },
     { pos: { x: 1100, y: 600 } },
     { pos: { x: 950, y: 400 } },
-    { launch: { pos: { x: 950, y: 400 }, at: 0 } },
-    { launch: undefined },
+    { allied: true },
+    { reflected: true },
+    { damage: 0 },
+    { launch: { pos: { x: 1200, y: 400 }, at: 2 } },
   ])
     assert.equal(cues([round(change)]).length, 0, JSON.stringify(change));
 });

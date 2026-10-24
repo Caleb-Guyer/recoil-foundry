@@ -4,11 +4,15 @@ import type { Vec } from './rules.ts';
 import { clamp, distance } from './rules.ts';
 import { firstSolid } from './collisions.ts';
 import { REMASTER_TELL, remasterKind } from './enemy-remaster.ts';
+import { TWIN_LOCK } from './enemies.ts';
+import { SQUAD_LOCK, squadGunOrigin } from './squads.ts';
+import { machineAngles } from './patrol-machine-system.ts';
 
 export const THREAT_COLOR = '#ff8875';
 export const THREAT_CORE = '#fff0d8';
 export const THREAT_BACK = '#102025';
-export const EDGE_CUE_TIME = 0.42;
+// Look ahead to imminent contact, not back to when the projectile was fired.
+export const EDGE_CUE_TIME = 1.6;
 export interface CombatView {
   x: number;
   y: number;
@@ -19,6 +23,10 @@ export interface EdgeCue {
   pos: Vec;
   angle: number;
   alpha: number;
+  phase?: 'tell' | 'shot';
+  impactIn?: number;
+  fireIn?: number;
+  source?: number;
 }
 
 // A bounded, presentation-only workload. Offscreen clutter must not dim this fight.
@@ -84,6 +92,86 @@ export function effectOpacity(p: Vec, radius: number, threats: readonly Shot[]) 
   return opacity;
 }
 
+interface LockedFire {
+  origin: Vec;
+  angles: number[];
+  lock: number;
+  range: number;
+  alliedHulls: boolean;
+}
+const finitePoint = (p: Vec) => Number.isFinite(p.x) && Number.isFinite(p.y);
+
+// Mirror only committed straight-shot states from the actual AI. Tracking
+// sights, idle cooldowns, unsupported archetypes and melee windups are silent.
+function lockedFire(e: Enemy, enemies: readonly Enemy[]): LockedFire | null {
+  if (
+    e.hp <= 0 ||
+    e.spawn > 0 ||
+    e.allied ||
+    e.workshopTarget ||
+    e.courier ||
+    e.eventRole ||
+    e.mutation ||
+    e.elite === 'volatile' ||
+    !Number.isFinite(e.timer) ||
+    e.timer < 0 ||
+    !finitePoint(e.aim) ||
+    Math.hypot(e.aim.x, e.aim.y) < 0.1
+  )
+    return null;
+  const origin = squadGunOrigin(e);
+  const angle = Math.atan2(e.aim.y, e.aim.x);
+  let lock = 0;
+  let angles = [angle];
+  let alliedHulls = !!e.squad;
+  if (e.remaster && (e.kind === 'shooter' || e.kind === 'flyer')) {
+    if (e.state !== 'windup') return null;
+    lock = REMASTER_TELL[e.kind];
+    if (e.kind === 'flyer') angles = [-0.18, 0, 0.18].map((offset) => angle + offset);
+  } else if (e.kind === 'sniper') {
+    if (e.state !== 'windup' && e.state !== 'followup') return null;
+    lock = e.state === 'followup' ? TWIN_LOCK : 0.32;
+  } else if (e.kind === 'shutter' || e.kind === 'strider') {
+    if (!e.patrol || (e.state !== 'windup' && e.state !== 'followup')) return null;
+    lock = 0.4;
+    angles = machineAngles(e);
+  } else if (e.kind === 'shooter' || e.kind === 'flyer') {
+    if (e.squad?.kind === 'shield' && e.squad.role === 'support') {
+      if (
+        e.state !== 'windup' ||
+        !e.squad.connected ||
+        !e.squad.origin ||
+        distance(origin, e.squad.origin) > 20 ||
+        !enemies.some(
+          (other) =>
+            other !== e &&
+            other.hp > 0 &&
+            other.spawn <= 0 &&
+            other.squad?.kind === 'shield' &&
+            other.squad.role === 'lead' &&
+            distance(other.body.position, e.body.position) <= 950,
+        )
+      )
+        return null;
+      lock = SQUAD_LOCK;
+    } else {
+      if (e.state !== 'idle') return null;
+      lock = 0.35;
+      if (e.kind === 'flyer') angles = [-0.18, 0, 0.18].map((offset) => angle + offset);
+    }
+  } else return null;
+  if (e.timer > lock) return null;
+  return { origin, angles, lock, range: 1450, alliedHulls };
+}
+
+function laneApproach(origin: Vec, heading: Vec, player: Vec, radius: number) {
+  const along = (player.x - origin.x) * heading.x + (player.y - origin.y) * heading.y;
+  if (along <= 0) return null;
+  const closest = { x: origin.x + heading.x * along, y: origin.y + heading.y * along };
+  if (distance(closest, player) > 32 + radius) return null;
+  return { along, closest };
+}
+
 export function incomingEdgeCues(
   shots: readonly Shot[],
   player: Vec,
@@ -91,32 +179,25 @@ export function incomingEdgeCues(
   time: number,
   solids: Matter.Body[],
   inset: number,
+  enemies: readonly Enemy[] = [],
+  isAttackActive?: (enemy: Enemy) => boolean,
 ): EdgeCue[] {
-  const cues: EdgeCue[] = [];
-  if (!inCombatView(player, view)) return cues;
-  for (const shot of shots) {
-    const launch = shot.launch;
-    if (shot.friendly || shot.allied || shot.life <= 0 || !launch) continue;
-    const age = time - launch.at;
-    if (
-      age < 0 ||
-      age >= EDGE_CUE_TIME ||
-      inCombatView(launch.pos, view, 12) ||
-      inCombatView(shot.pos, view, shot.radius)
-    )
-      continue;
-    const speed = Math.hypot(shot.vel.x, shot.vel.y);
-    if (speed < 0.01) continue;
-    const dx = shot.vel.x / speed,
-      dy = shot.vel.y / speed;
-    const along = (player.x - shot.pos.x) * dx + (player.y - shot.pos.y) * dy;
-    if (along <= 0 || along > Math.min(1400, speed * 60 * shot.life)) continue;
-    const closest = { x: shot.pos.x + dx * along, y: shot.pos.y + dy * along };
-    if (distance(closest, player) > 65 + shot.radius) continue;
-    // Actual solid geometry includes movable crates and broken/moving terrain.
-    if (firstSolid(shot.pos, closest, { x: shot.radius, y: shot.radius }, solids)) continue;
-    const outward = { x: shot.pos.x - player.x, y: shot.pos.y - player.y };
-    const margin = Math.min(inset, view.w / 4, view.h / 4);
+  if (
+    !Number.isFinite(time) ||
+    !finitePoint(player) ||
+    !Number.isFinite(inset) ||
+    !finitePoint(view) ||
+    !Number.isFinite(view.w) ||
+    !Number.isFinite(view.h) ||
+    view.w <= 0 ||
+    view.h <= 0 ||
+    !inCombatView(player, view)
+  )
+    return [];
+  const candidates: (EdgeCue & { urgency: number })[] = [];
+  const project = (from: Vec, cue: Omit<EdgeCue, 'pos' | 'angle'>, urgency: number) => {
+    const outward = { x: from.x - player.x, y: from.y - player.y };
+    const margin = Math.max(0, Math.min(inset, view.w / 4, view.h / 4));
     const tx =
       outward.x > 0
         ? (view.x + view.w - margin - player.x) / outward.x
@@ -130,16 +211,117 @@ export function incomingEdgeCues(
           ? (view.y + margin - player.y) / outward.y
           : Infinity;
     const travel = Math.max(0, Math.min(tx, ty));
-    const pos = {
-      x: clamp(player.x + outward.x * travel, view.x + margin, view.x + view.w - margin),
-      y: clamp(player.y + outward.y * travel, view.y + margin, view.y + view.h - margin),
-    };
-    const cue = {
-      pos,
+    candidates.push({
+      ...cue,
+      urgency,
+      pos: {
+        x: clamp(player.x + outward.x * travel, view.x + margin, view.x + view.w - margin),
+        y: clamp(player.y + outward.y * travel, view.y + margin, view.y + view.h - margin),
+      },
       angle: Math.atan2(outward.y, outward.x),
-      alpha: 0.85 * (1 - age / EDGE_CUE_TIME),
-    };
-    const nearby = cues.find((other) => distance(other.pos, pos) < 60);
+    });
+  };
+  for (const shot of shots) {
+    if (
+      shot.friendly ||
+      shot.allied ||
+      shot.reflected ||
+      !Number.isFinite(shot.life) ||
+      !Number.isFinite(shot.damage) ||
+      shot.life <= 0 ||
+      shot.damage <= 0 ||
+      !finitePoint(shot.pos) ||
+      !finitePoint(shot.vel) ||
+      !Number.isFinite(shot.radius) ||
+      shot.radius < 0 ||
+      shot.meltTransit ||
+      ['setting', 'parked', 'queued'].includes(shot.stasis?.phase ?? '') ||
+      (shot.launch && time < shot.launch.at) ||
+      inCombatView(shot.pos, view, shot.radius)
+    )
+      continue;
+    const speed = Math.hypot(shot.vel.x, shot.vel.y);
+    if (speed < 0.01) continue;
+    const heading = { x: shot.vel.x / speed, y: shot.vel.y / speed };
+    const approach = laneApproach(shot.pos, heading, player, shot.radius);
+    if (!approach) continue;
+    const impactIn = Math.max(0, (approach.along - 26 - shot.radius) / (speed * 60));
+    if (impactIn > EDGE_CUE_TIME || impactIn > shot.life) continue;
+    // Read live convex cover, including moved crates and destroyed terrain.
+    if (firstSolid(shot.pos, approach.closest, { x: shot.radius, y: shot.radius }, solids))
+      continue;
+    if (
+      shot.allyBlock !== undefined &&
+      firstSolid(
+        shot.pos,
+        approach.closest,
+        { x: shot.radius, y: shot.radius },
+        enemies
+          .filter((e) => e.id !== shot.allyBlock && e.hp > 0 && e.spawn <= 0)
+          .map((e) => e.body),
+      )
+    )
+      continue;
+    project(
+      shot.pos,
+      {
+        phase: 'shot',
+        impactIn,
+        source: shot.id,
+        alpha: 0.5 + 0.35 * (1 - impactIn / EDGE_CUE_TIME),
+      },
+      impactIn,
+    );
+  }
+  for (const e of enemies) {
+    if (
+      (isAttackActive && !isAttackActive(e)) ||
+      !finitePoint(e.body.position) ||
+      inCombatView(e.body.position, view, 30)
+    )
+      continue;
+    const fire = lockedFire(e, enemies);
+    if (!fire || distance(fire.origin, player) > fire.range) continue;
+    if (firstSolid(e.body.position, fire.origin, { x: 4, y: 4 }, solids)) continue;
+    for (const angle of fire.angles) {
+      const heading = { x: Math.cos(angle), y: Math.sin(angle) };
+      const approach = laneApproach(fire.origin, heading, player, 5);
+      if (
+        !approach ||
+        approach.along > fire.range ||
+        firstSolid(fire.origin, approach.closest, { x: 5, y: 5 }, solids)
+      )
+        continue;
+      if (
+        fire.alliedHulls &&
+        firstSolid(
+          fire.origin,
+          approach.closest,
+          { x: 5, y: 5 },
+          enemies
+            .filter((other) => other !== e && other.hp > 0 && other.spawn <= 0)
+            .map((other) => other.body),
+        )
+      )
+        continue;
+      project(
+        fire.origin,
+        {
+          phase: 'tell',
+          fireIn: e.timer,
+          source: e.id,
+          alpha: 0.5 + 0.25 * (1 - e.timer / fire.lock),
+        },
+        e.timer + 0.25,
+      );
+    }
+  }
+  // Select by urgency before the cap, rather than by array/insertion order.
+  // Nearby rays and rounds from a single volley share one restrained chevron.
+  const cues: EdgeCue[] = [];
+  candidates.sort((a, b) => a.urgency - b.urgency || (a.source ?? 0) - (b.source ?? 0));
+  for (const { urgency: _urgency, ...cue } of candidates) {
+    const nearby = cues.find((other) => distance(other.pos, cue.pos) < 60);
     if (nearby) nearby.alpha = Math.max(nearby.alpha, cue.alpha);
     else if (cues.length < 4) cues.push(cue);
   }
