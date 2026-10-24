@@ -86,14 +86,16 @@ export function remixEncounter(id: BossRemixId): Encounter {
 }
 export function currentRemixEncounter(id: BossRemixId): Encounter {
   return BOSS_REMIXES[id].stage === 19
-    ? { kind: 'interceptor', seed: 'RF-C95-REMIX-' + id, remix: id }
+    ? { kind: 'interceptor', seed: 'RF-C96-REMIX-' + id, remix: id }
     : remixEncounter(id);
 }
 export function validRemixIdentity(id: BossRemixId, kind: string, seed: unknown) {
   const old = remixEncounter(id),
     current = currentRemixEncounter(id);
   return (
-    (kind === old.kind && seed === old.seed) || (kind === current.kind && seed === current.seed)
+    (kind === old.kind && seed === old.seed) ||
+    (kind === current.kind &&
+      (seed === current.seed || (BOSS_REMIXES[id].stage === 19 && seed === 'RF-C95-REMIX-' + id)))
   );
 }
 export function matchesRemixBoss(id: BossRemixId, kind: string) {
@@ -151,7 +153,11 @@ export function remixEncounters(raw: unknown, cleared: boolean): Encounter[] {
   return cleared
     ? loadBossRemixes(raw).seen.flatMap((id) =>
         BOSS_REMIXES[id].stage === 19
-          ? [remixEncounter(id), currentRemixEncounter(id)]
+          ? [
+              remixEncounter(id),
+              { ...currentRemixEncounter(id), seed: 'RF-C95-REMIX-' + id },
+              currentRemixEncounter(id),
+            ]
           : [remixEncounter(id)],
       )
     : [];

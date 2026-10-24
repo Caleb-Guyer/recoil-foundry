@@ -1,3 +1,4 @@
+import { drawFinalHull } from './final-transformation-art.ts';
 import type { Enemy, Game } from './game.ts';
 import { interceptorLock } from './interceptor.ts';
 import { clamp } from './rules.ts';
@@ -11,34 +12,12 @@ export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, 
   const warning = e.spawn <= 0 && (e.state === 'windup' || e.state === 'followup');
   const locked = e.timer <= interceptorLock(e),
     open = e.state === 'recover';
-  c.save();
-  drawRivalEffects(c, g, e);
-  drawRivalGrind(c, g, e, reduced);
-  if (warning) {
-    c.strokeStyle = e.attack === 'vault' ? '#f5b583' : INTERCEPTOR_WEAPONS[rig.move].color;
-    c.lineWidth = locked ? (rig.move === 'capacitor' || rig.move === 'precision' ? 2.5 : 1.5) : 1;
-    c.globalAlpha = locked ? 0.6 : 0.27;
-    c.setLineDash(locked ? [] : [5, 9]);
-    for (const lane of rivalWarningLanes(g, e)) {
-      c.beginPath();
-      c.moveTo(lane.from.x, lane.from.y);
-      c.lineTo(lane.to.x, lane.to.y);
-      c.stroke();
-    }
-    c.setLineDash([]);
-    if (e.attack === 'vault') {
-      c.globalAlpha = 0.35;
-      c.strokeStyle = '#b2ccc4';
-      const end = g.lineEnd(p, { x: p.x + rig.launch.x * 19, y: p.y + rig.launch.y * 19 }, 28);
-      c.beginPath();
-      c.moveTo(p.x, p.y);
-      c.lineTo(end.x, end.y);
-      c.stroke();
-      c.beginPath();
-      c.arc(end.x, end.y, 5, 0, Math.PI * 2);
-      c.stroke();
-    }
+  if (!g.finale.owns(e)) drawInterceptorThreats(c, g, e, reduced);
+  if (g.finale.owns(e) && e.phase > 0) {
+    drawFinalHull(c, g, e, reduced);
+    return;
   }
+  c.save();
   c.globalAlpha = clamp(1 - e.spawn / 0.65, 0.15, 1);
   c.translate(p.x, p.y);
   c.save();
@@ -90,7 +69,10 @@ export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, 
   c.restore();
   c.save();
   c.rotate(Math.atan2(e.aim.y, e.aim.x));
-  const kick = reduced ? 0 : rig.muzzle * 24;
+  const arrival =
+    g.finale.owns(e) && g.finale.state === 'intro' ? clamp(g.finale.clock / 1.4, 0, 1) : 1;
+  c.globalAlpha *= arrival;
+  const kick = (reduced ? 0 : rig.muzzle * 24) + (1 - arrival) * 38;
   c.translate(-kick, 0);
   c.fillStyle = '#273338';
   c.fillRect(8, -8, 34, 16);
@@ -140,6 +122,47 @@ export function drawInterceptor(c: CanvasRenderingContext2D, g: Game, e: Enemy, 
     c.fillRect(-31, -44, 62, 3);
     c.fillStyle = '#e9b584';
     c.fillRect(-31, -44, (62 * e.hp) / e.maxHp, 3);
+  }
+  c.restore();
+}
+
+export function drawInterceptorThreats(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+) {
+  const rig = e.interceptor!,
+    p = e.body.position;
+  const warning = e.spawn <= 0 && (e.state === 'windup' || e.state === 'followup');
+  const locked = e.timer <= interceptorLock(e);
+  c.save();
+  drawRivalEffects(c, g, e);
+  drawRivalGrind(c, g, e, reduced);
+  if (warning) {
+    c.strokeStyle = e.attack === 'vault' ? '#f5b583' : INTERCEPTOR_WEAPONS[rig.move].color;
+    c.lineWidth = locked ? (rig.move === 'capacitor' || rig.move === 'precision' ? 2.5 : 1.5) : 1;
+    c.globalAlpha = locked ? 0.6 : 0.27;
+    c.setLineDash(locked ? [] : [5, 9]);
+    for (const lane of rivalWarningLanes(g, e)) {
+      c.beginPath();
+      c.moveTo(lane.from.x, lane.from.y);
+      c.lineTo(lane.to.x, lane.to.y);
+      c.stroke();
+    }
+    c.setLineDash([]);
+    if (e.attack === 'vault') {
+      c.globalAlpha = 0.35;
+      c.strokeStyle = '#b2ccc4';
+      const end = g.lineEnd(p, { x: p.x + rig.launch.x * 19, y: p.y + rig.launch.y * 19 }, 28);
+      c.beginPath();
+      c.moveTo(p.x, p.y);
+      c.lineTo(end.x, end.y);
+      c.stroke();
+      c.beginPath();
+      c.arc(end.x, end.y, 5, 0, Math.PI * 2);
+      c.stroke();
+    }
   }
   c.restore();
 }

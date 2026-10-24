@@ -1,3 +1,4 @@
+import { transformedFinale } from './boss-progression.ts';
 import { WELDER_HP } from './welder-rules.ts';
 import type { Level, Spawn } from './levels.ts';
 import { getLevel } from './levels.ts';
@@ -18,8 +19,13 @@ import { reclaimerFinale, finalArsenalSeed } from './boss-progression.ts';
 // A separate, short seed keeps the first lap stable and lets an earned boss
 // victory reconstruct its ordinary Practice arena from this same seed.
 export const overtimeSeed = (seed: string) =>
-  (finalArsenalSeed(seed) ? 'RF-C95-OT-' : reclaimerFinale(seed) ? 'RF-C94-OT-' : 'OT-') +
-  Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
+  (transformedFinale(seed)
+    ? 'RF-C96-OT-'
+    : finalArsenalSeed(seed)
+      ? 'RF-C95-OT-'
+      : reclaimerFinale(seed)
+        ? 'RF-C94-OT-'
+        : 'OT-') + Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
 export function overtimeHealth(kind: EnemyKind, stage: number, elite?: EliteKind) {
   if (kind === 'welder') return WELDER_HP;
   return Math.ceil(

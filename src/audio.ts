@@ -25,6 +25,12 @@ const ATTACK_WARNINGS = new Set([
   'phase',
   'interceptor-lock',
   'interceptor-heavy',
+  'finale-arrival',
+  'finale-transform',
+  'finale-fan-lock',
+  'finale-field-lock',
+  'finale-aim-lock',
+  'finale-arena-warn',
   'loader',
   'press',
   'scrapper-lock',
@@ -61,6 +67,12 @@ const WARNING_HOLD: Record<string, number> = {
   'scrap-release': 1.15,
   'storm-warn': 1.5,
   'interceptor-lock': 0.35,
+  'finale-arrival': 1.1,
+  'finale-transform': 1.3,
+  'finale-fan-lock': 0.92,
+  'finale-field-lock': 1.4,
+  'finale-aim-lock': 0.92,
+  'finale-arena-warn': 1.65,
   'crane-wind': 0.42,
   'kiln-wind': 0.4,
   machine: 0.45,
@@ -292,7 +304,9 @@ export class Sound {
         : 0.015;
     if (c.currentTime - previous < cooldown) return;
     this.played.set(kind, c.currentTime);
-    this.priorityCue = warning || ['hurt', 'win', 'dead', 'shutdown-stop'].includes(kind);
+    this.priorityCue =
+      warning ||
+      ['hurt', 'win', 'dead', 'shutdown-stop', 'finale-shutdown', 'finale-release'].includes(kind);
     if (kind === 'shutdown-break') {
       this.crack(0.16, 0.08, 900);
       this.tone(270, 90, 0.35, 0.06, 'triangle');
@@ -612,6 +626,29 @@ export class Sound {
     } else if (kind === 'cargo-impact') {
       this.tone(75, 28, 0.23, 0.19);
       this.crack(0.16, 0.16, 700);
+    } else if (kind === 'finale-arrival') {
+      this.tone(66, 110, 1, 0.075, 'triangle');
+      this.tone(330, 220, 0.3, 0.04, 'triangle', 0.55);
+    } else if (kind === 'finale-transform') {
+      this.crack(0.4, 0.085, 700);
+      this.tone(55, 165, 0.85, 0.09, 'sawtooth');
+      this.tone(330, 440, 0.4, 0.04, 'triangle', 0.9);
+    } else if (kind === 'finale-shutdown') {
+      this.tone(220, 33, 1.6, 0.09, 'sawtooth');
+      this.crack(0.35, 0.07, 650);
+    } else if (kind === 'finale-release') {
+      for (const [i, pitch] of [294, 370, 440].entries())
+        this.tone(pitch, pitch, 1, 0.035, 'triangle', i * 0.18);
+    } else if (kind === 'finale-fan-lock') {
+      for (let i = 0; i < 3; i++)
+        this.tone(390 + i * 100, 460 + i * 100, 0.12, 0.035, 'triangle', i * 0.1);
+    } else if (kind === 'finale-field-lock' || kind === 'finale-arena-warn') {
+      for (let i = 0; i < 2; i++) this.tone(220, 330, 0.16, 0.05, 'square', i * 0.35);
+    } else if (kind === 'finale-aim-lock') {
+      this.tone(680, 880, 0.2, 0.055, 'sine');
+    } else if (kind === 'finale-arena-fire') {
+      this.crack(0.18, 0.1, 1100);
+      this.tone(100, 35, 0.3, 0.09, 'triangle');
     } else if (kind === 'interceptor-lock') {
       this.tone(290, 540, 0.22, 0.07, 'triangle');
       this.tone(540, 540, 0.09, 0.035, 'sine', 0.25);

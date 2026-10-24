@@ -1,3 +1,4 @@
+import { drawFinalArena, drawFinalThreat, drawFinalHud } from './final-transformation-art.ts';
 import { drawHuntEnemy, drawHuntProps, drawHunts } from './hunt-art.ts';
 import { commandRemixAngles } from './late-boss-patterns.ts';
 import { drawMelt } from './melt-through.ts';
@@ -41,7 +42,7 @@ import { drawCrossing } from './crossing-art.ts';
 import { drawMagnets, drawReclamationEnemy } from './reclamation-art.ts';
 import { drawCoolant, drawCoolingEnemy } from './cooling.ts';
 import { drawTurbine, drawBlade } from './turbine-art.ts';
-import { drawInterceptor } from './interceptor-art.ts';
+import { drawInterceptor, drawInterceptorThreats } from './interceptor-art.ts';
 import { drawRivalShot } from './interceptor-effects.ts';
 import { drawDemolition } from './demolition-art.ts';
 import { drawPortals } from './portal-art.ts';
@@ -625,18 +626,30 @@ export class Renderer {
     const viewW = this.width / this.scale,
       viewH = this.height / this.scale;
     const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
-    const desiredX = clamp(
+    let desiredX = clamp(
       (g.maintenance.active || (g.recoil.active && g.recoil.kind === 'launch')) && viewW >= 780
         ? 1000 - viewW / 2
         : g.player.position.x - viewW * 0.42 + lead,
       0,
       Math.max(0, g.worldWidth - viewW),
     );
-    const desiredY = clamp(
+    let desiredY = clamp(
       g.player.position.y - viewH * 0.58,
       g.worldTop,
       Math.max(g.worldTop, 835 - viewH),
     );
+    if (g.finale.presenting && g.finale.enemy && !this.reduced) {
+      desiredX = clamp(
+        g.finale.enemy.body.position.x - viewW * 0.5,
+        0,
+        Math.max(0, g.worldWidth - viewW),
+      );
+      desiredY = clamp(
+        g.finale.enemy.body.position.y - viewH * 0.42,
+        g.worldTop,
+        Math.max(g.worldTop, 835 - viewH),
+      );
+    }
     const follow = this.portalRevision !== g.portals.revision ? 1 : 1 - Math.exp(-dt * 9);
     this.portalRevision = g.portals.revision;
     this.camera.x += (desiredX - this.camera.x) * follow;
@@ -678,6 +691,7 @@ export class Renderer {
     this.worldTransform = c.getTransform();
     drawStormRain(c, g, this.reduced);
     this.drawBreachBackdrop();
+    drawFinalArena(c, g, this.reduced);
     drawStoryBackdrop(c, g, this.reduced);
     drawShutdownBackdrop(c, g);
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
@@ -930,6 +944,8 @@ export class Renderer {
     // hostile projectile and committed warning layers remain above the player.
     if (!framing || framing.player) this.drawPlayer(clarity.pressure);
     this.drawEnemyTells();
+    for (const e of g.enemies) if (g.finale.owns(e)) drawInterceptorThreats(c, g, e, this.reduced);
+    drawFinalThreat(c, g);
     // Mortar shells and committed machine warnings share the threat layer.
     // Dense friendly beams/volleys must never paint over shootable shells or
     // their actual landing areas. All rays and physical damage remain intact.
@@ -1061,6 +1077,7 @@ export class Renderer {
       }
       c.restore();
     }
+    drawFinalHud(c, g, this.width, this.height);
     if (g.mode === 'playing' && g.time - g.hurtAt < 0.2) {
       c.fillStyle = 'rgba(222,64,44,' + (0.2 - (g.time - g.hurtAt)) * 0.28 + ')';
       c.fillRect(0, 0, this.width, this.height);

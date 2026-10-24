@@ -544,7 +544,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Final arsenal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Rupture</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -996,11 +996,13 @@ function updateTitle() {
             : 'Shoot down. Go up.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
-  if (linkedRunTest?.seed.startsWith('RF-C95-F-')) {
+  if (linkedRunTest && /^RF-C9[56]-F-/.test(linkedRunTest.seed)) {
     $('play').textContent = linkedRunTest.overtime
       ? 'Test NG+ Reclaimer ↗'
       : 'Test the Reclaimer ↗';
-    $('title-hint').textContent = 'Final arsenal · normal controls · isolated test · R to retry.';
+    $('title-hint').textContent = linkedRunTest.seed.startsWith('RF-C96-')
+      ? 'Three forms · normal controls · isolated test · R to retry.'
+      : 'Final arsenal · normal controls · isolated test · R to retry.';
   }
   if (linkedRunTest?.security) {
     $('play').textContent =
@@ -3061,11 +3063,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.12.0 · FINAL ARSENAL</p><h2 id="dialog-title">Meet the Reclaimer.</h2>' +
-      '<p class="update-tagline">Your weapon tricks. Nineteen attacks. One final supervisor.</p>' +
-      '<dl class="update-notes"><div><dt>The rival has a name.</dt><dd>The machine that copies your gun is now the Reclaimer. It guards the last room in every new Campaign route. The other mobile security boss is the Interceptor.</dd></div>' +
-      '<div><dt>An arsenal that escalates.</dt><dd>Sweeping fans, rotating ring gaps and marked floor charges join the existing weapon tricks. Later phases link pairs of attacks, then open the armor for a longer punish window. Each volley keeps its warning and aim lock.</dd></div>' +
-      '<div><dt>A harder return.</dt><dd>New Game+ opens the full arsenal immediately, adds follow-up volleys and links attacks more tightly. Start a fresh Campaign for the new finale; older saved fights retain their rules.</dd></div></dl>' +
+      '<p class="eyebrow">5.13.0 · RUPTURE</p><h2 id="dialog-title">The factory fights back.</h2>' +
+      '<p class="update-tagline">Three forms. A transforming arena. One final command.</p>' +
+      '<dl class="update-notes"><div><dt>Mimic. Siege frame. Rupture core.</dt><dd>The Reclaimer unfolds into three distinct forms. Siege decks rise, then the roof tears open as floor batteries, reactor columns and crosscuts change how you cross the arena. Phase gates keep all three forms in the fight.</dd></div>' +
+      '<div><dt>A harder finale.</dt><dd>More durability, paired attacks in phase two and three-attack chains in the last phase. New Game+ has broader arena strikes and tighter recovery. Every new strike has a full warning and an escape route.</dd></div>' +
+      '<div><dt>Make it count.</dt><dd>A skippable entrance, an original layered finale score, visible armor transformations and a machine shutdown give the encounter its own beginning and ending. Start a new Campaign; older saved fights retain their rules.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4076,6 +4078,17 @@ function showDialog(kind: string) {
       game.testRun?.seed.startsWith('CLOCK-OUT-') ||
       activeGoalScope === 'preview'
         ? '<p class="presentation-note">Preview · progress is not saved.</p>'
+        : '') +
+      (win &&
+      !game.testRun &&
+      !game.practice &&
+      !game.shutdown.complete &&
+      /^RF-C(?:9[6-9]|[1-9][0-9]{2,})-/.test(game.seed)
+        ? '<p class="presentation-note">' +
+          (game.overtime
+            ? 'Reclaimer overdrive defeated · both shifts complete.'
+            : 'Reclaimer defeated · all three forms dismantled.') +
+          '</p>'
         : '') +
       (win
         ? '<p class="ending-note">' +

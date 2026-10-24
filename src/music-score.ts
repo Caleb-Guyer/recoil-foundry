@@ -1,9 +1,10 @@
+import { finalMusicNotes } from './final-score.ts';
 import type { Game, Mode } from './game.ts';
 import type { AreaId } from './areas.ts';
 import { isBoss } from './enemies.ts';
 import { annexMusicNotes } from './annex-score.ts';
 
-export type MusicTheme = AreaId | 'annex' | 'clock-out';
+export type MusicTheme = AreaId | 'annex' | 'clock-out' | 'reclaimer' | 'reclaimer-overtime';
 
 export interface MusicScene {
   area: AreaId;
@@ -26,6 +27,8 @@ export interface MusicNote {
 
 export const MUSIC_PROFILES: Record<MusicTheme, { bpm: number }> = {
   'clock-out': { bpm: 80 },
+  reclaimer: { bpm: 132 },
+  'reclaimer-overtime': { bpm: 144 },
   docks: { bpm: 88 },
   furnace: { bpm: 104 },
   cooling: { bpm: 98 },
@@ -37,6 +40,17 @@ export const MUSIC_PROFILES: Record<MusicTheme, { bpm: number }> = {
 const unit = (value: number) => (Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0);
 
 export function musicScene(game: Game): MusicScene {
+  if (game.finale.active && !game.escape)
+    return {
+      area: 'rooftops',
+      theme: game.overtime ? 'reclaimer-overtime' : 'reclaimer',
+      room: game.seed + ':transformed-finale',
+      mode: game.mode,
+      intensity: 0.7 + game.finale.phase * 0.15,
+      boss: true,
+      bossPhase: game.finale.phase,
+      clear: ['defeat', 'complete'].includes(game.finale.state),
+    };
   if (game.overtime && game.stage === 19 && game.clear) {
     return {
       area: 'rooftops',
@@ -215,6 +229,8 @@ export function musicNotes(
 ): MusicNote[] {
   if (!Number.isFinite(step)) return [];
   if (area === 'clock-out') return clockOutNotes(step);
+  if (area === 'reclaimer' || area === 'reclaimer-overtime')
+    return finalMusicNotes(step, bossPhase, area === 'reclaimer-overtime', clear);
   if (area === 'annex') return annexMusicNotes(step, unit(intensity), boss, clear, bossPhase);
   const position = ((Math.floor(step) % 64) + 64) % 64;
   const bar = Math.floor(position / 16);

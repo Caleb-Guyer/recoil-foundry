@@ -226,7 +226,7 @@ test('pause, hitstop, phase transitions and death cannot leave unmarked arsenal 
   assert.equal(g.hp, 100);
 });
 test('current arena Practice and old score identities remain distinct and playable', () => {
-  assert.equal(PRACTICE_RULESET, 4);
+  assert.equal(PRACTICE_RULESET, 5);
   for (const id of ['boss-skybridge', 'boss-crossfire'] as const) {
     const record = currentRemixEncounter(id),
       g = new Game();
@@ -268,7 +268,7 @@ test('strict finale links build legal isolated scenes, honor mirrors and never w
     '&attack=bad',
     '&mirror=2',
     '&arena=bad',
-    '&v=2',
+    '&v=3',
     '&phase=2&phase=3',
     '&hp=999',
     '&fight=overtime&arena=crossfire',

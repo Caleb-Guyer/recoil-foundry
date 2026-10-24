@@ -1,3 +1,8 @@
+import {
+  FinalTransformation,
+  transformedLevel,
+  transformedFinale,
+} from './final-transformation.ts';
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
@@ -433,6 +438,7 @@ export class Game {
   salvageEvolutions = new SalvageEvolutionSystem(this);
   earnedSalvage: string | null = null;
   clockOut = new ClockOut();
+  finale = new FinalTransformation(this);
   escape: EscapeState | null = null;
   extractionLift: Matter.Body | null = null;
   overtimeLift: Matter.Body | null = null;
@@ -1318,6 +1324,7 @@ export class Game {
     this.level = huntRoom ?? this.level;
     this.level = enemyEncounterRoom(this, this.level);
     this.level = finalePreviewLevel(this, this.level);
+    this.level = transformedLevel(this, this.level);
     if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
     if (this.canOvertime && !this.testRun?.rematchRoom)
       this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
@@ -1415,6 +1422,7 @@ export class Game {
     this.recoil.reset(clearedRoom);
     this.uprising.reset(clearedRoom);
     this.hunts.reset(clearedRoom);
+    this.finale.reset();
   }
   startEscape() {
     if (this.testRun?.rematchRoom) return;
@@ -1663,6 +1671,10 @@ export class Game {
     if (kind === 'interceptor' && finalArsenalSeed(this.seed)) {
       enemy.interceptor!.finale = createFinalArsenal(!!this.overtime);
       enemy.maxHp = enemy.hp = Math.ceil(enemy.hp * (this.overtime ? 1.2 : 1.15));
+      if (transformedFinale(this.seed)) {
+        enemy.maxHp = enemy.hp = Math.ceil(enemy.hp * (this.overtime ? 1.18 : 1.2));
+        enemy.phase = 0;
+      }
       configureFinalePreview(this, enemy);
     }
     if (kind === 'interceptor' && this.overtime) enemy.attacks = 2;
@@ -1688,6 +1700,7 @@ export class Game {
   }
   tick(dt: number, input: Input) {
     if (this.mode !== 'playing') return;
+    if (this.finale.beforeTick(dt, input)) return;
     if (this.shutdown.complete)
       input = {
         ...input,
@@ -1897,6 +1910,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.crosswind.beforeStep(dt);
     this.stormfront.beforeStep(dt);
+    this.finale.update(dt);
     if (this.mode !== 'playing') return;
     this.props.beforeStep();
     this.sappers.beforeStep();
@@ -1981,6 +1995,7 @@ export class Game {
       (!this.waves.pending || this.uprising.escapeReady) &&
       !this.auditor.pending &&
       !this.clear &&
+      !this.finale.presenting &&
       !this.hunts.waiting &&
       !this.uprising.waiting &&
       (!this.maintenance.active || this.maintenance.atExit) &&
@@ -2003,6 +2018,10 @@ export class Game {
       this.onSound('clear');
       this.reforge.arrive();
       this.onChange();
+    }
+    if (this.finale.cleared && this.testRun && !this.practice && this.clear) {
+      this.setMode('won');
+      return;
     }
     if (this.testRun?.rematchRoom && this.clear) {
       this.setMode('won');
@@ -3680,6 +3699,7 @@ export class Game {
     if (e.kind === 'boss')
       damage *=
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
+    damage = this.finale.limitDamage(e, damage);
     const healthLost = Math.min(e.hp, Math.max(0, damage));
     e.hp -= damage;
     if (credited && source !== 'cleanup') this.commendations.weapons.hit(e, healthLost, trace);
@@ -3708,6 +3728,7 @@ export class Game {
       if (e.hp > 0) this.onSound(armored ? 'armor' : 'hit');
     }
     if (e.hp > 0) return blocked;
+    this.finale.defeated(e);
     this.auditor.killed(e, credited && source !== 'cleanup');
     this.welder.killed(e, credited && source !== 'cleanup');
     if (credited) this.commendations.defeated(e, source, trace);
@@ -3828,7 +3849,7 @@ export class Game {
     return blocked;
   }
   damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }, shot?: Shot) {
-    if (this.workshop.active) return;
+    if (this.workshop.active || this.finale.presenting) return;
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     if (shot && this.support.absorb(shot)) return;

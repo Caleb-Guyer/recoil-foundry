@@ -112,6 +112,9 @@ function recoil(e: Enemy, impulse: Vec) {
   });
 }
 export function clearRivalHull(g: Game, pos: Vec) {
+  const b = g.finale.active ? g.finale.enemy?.body.bounds : undefined;
+  const halfW = b ? Math.max(32, (b.max.x - b.min.x) / 2 + 2) : 32;
+  const halfH = b ? Math.max(36, (b.max.y - b.min.y) / 2 + 2) : 36;
   return (
     pos.x >= 40 &&
     pos.x <= g.worldWidth - 40 &&
@@ -119,10 +122,10 @@ export function clearRivalHull(g: Game, pos: Vec) {
     pos.y <= 700 &&
     !g.solidBodies.some(
       (b) =>
-        pos.x + 32 > b.bounds.min.x &&
-        pos.x - 32 < b.bounds.max.x &&
-        pos.y + 36 > b.bounds.min.y &&
-        pos.y - 36 < b.bounds.max.y,
+        pos.x + halfW > b.bounds.min.x &&
+        pos.x - halfW < b.bounds.max.x &&
+        pos.y + halfH > b.bounds.min.y &&
+        pos.y - halfH < b.bounds.max.y,
     ) &&
     distance(pos, g.player.position) >= 180
   );
@@ -178,7 +181,15 @@ export function beginInterceptorAttack(g: Game, e: Enemy, move: InterceptorMove)
   e.state = 'windup';
   e.timer =
     INTERCEPTOR_WEAPONS[rig.move].tell + (lateInterceptorRemix(g.level.bossRemix) ? 0.15 : 0);
-  g.onSound('interceptor-lock');
+  g.onSound(
+    g.finale.owns(e)
+      ? ['ringburst', 'sweep', 'scatter', 'crossfire'].includes(rig.move)
+        ? 'finale-fan-lock'
+        : ['lockdown', 'shockwave', 'fuse'].includes(rig.move)
+          ? 'finale-field-lock'
+          : 'finale-aim-lock'
+      : 'interceptor-lock',
+  );
 }
 function recover(g: Game, e: Enemy) {
   const rig = e.interceptor!;
@@ -205,8 +216,9 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     x: 0,
     y: -e.body.mass * (e.state === 'airborne' ? 0.00075 : 0.001),
   });
-  const phase = bossPhase(e.hp, e.maxHp, !!g.overtime);
+  const phase = g.finale.owns(e) ? g.finale.phaseFor(e) : bossPhase(e.hp, e.maxHp, !!g.overtime);
   if (phase > e.phase) {
+    if (g.finale.transform(e, phase)) return;
     clearArsenal(g, e);
     e.phase = phase;
     e.state = 'transition';

@@ -1,3 +1,4 @@
+import { transformedFinale } from './boss-progression.ts';
 import type { Game, Enemy } from './game.ts';
 import type { Level } from './levels.ts';
 import type { InterceptorMove } from './interceptor-weapons.ts';
@@ -86,14 +87,17 @@ export function finaleRecovery(g: Game, e: Enemy, ordinary: number) {
   rig.used.push(e.interceptor!.move);
   rig.used = [...new Set(rig.used)];
   rig.last = e.interceptor!.move;
-  const chain = (g.overtime || e.phase >= 2) && g.uprising.finale !== 'mutiny';
-  rig.chain = chain ? (rig.chain + 1) % 2 : 0;
+  const revised = transformedFinale(g.seed);
+  const chain = (g.overtime || e.phase >= (revised ? 1 : 2)) && g.uprising.finale !== 'mutiny';
+  rig.chain = chain ? (rig.chain + 1) % (revised && e.phase === 2 ? 3 : 2) : 0;
   // A short break separates linked attacks; every second attack exposes a
   // proper punish window. Attack warnings themselves never run faster.
-  return chain && rig.chain === 1
+  return chain && rig.chain !== 0
     ? g.overtime
       ? 0.65
-      : 0.8
+      : revised
+        ? 0.68
+        : 0.8
     : Math.max(g.overtime ? 1.15 : 1.4, ordinary);
 }
 export function finalePending(e: Enemy) {
@@ -142,7 +146,7 @@ type Preview = {
   mirror: boolean;
 };
 export function finalePreview(seed: string): Preview | null {
-  const match = /^RF-C95-F-([CO])-([123])-([ASRL])-([012])-([01])$/.exec(seed);
+  const match = /^RF-C9[56]-F-([CO])-([123])-([ASRL])-([012])-([01])$/.exec(seed);
   if (!match) return null;
   return {
     overtime: match[1] === 'O',
@@ -177,16 +181,17 @@ export function finaleTestFromUrl(url: URL): Checkpoint | null {
     !Object.hasOwn(ATTACKS, attack) ||
     !['relay', 'skybridge', 'crossfire'].includes(arena) ||
     !['0', '1'].includes(mirror) ||
-    (p.has('v') && p.get('v') !== '1') ||
-    (fight === 'overtime' && ((phase === '1' && p.has('phase')) || arena !== 'relay'))
+    (p.has('v') && !['1', '2'].includes(p.get('v')!)) ||
+    (fight === 'overtime' &&
+      ((phase === '1' && p.has('phase') && p.get('v') !== '2') || arena !== 'relay'))
   )
     return null;
   const overtime = fight === 'overtime';
   const seed =
-    'RF-C95-F-' +
+    (p.get('v') === '2' ? 'RF-C96-F-' : 'RF-C95-F-') +
     (overtime ? 'O' : 'C') +
     '-' +
-    (overtime && !p.has('phase') ? '2' : phase) +
+    (overtime && !p.has('phase') && p.get('v') !== '2' ? '2' : phase) +
     '-' +
     { arsenal: 'A', sweep: 'S', ring: 'R', lockdown: 'L' }[attack]! +
     '-' +
@@ -208,8 +213,8 @@ export function finaleTestFromUrl(url: URL): Checkpoint | null {
 export function configureFinalePreview(g: Game, e: Enemy) {
   const p = g.testRun && finalePreview(g.testRun.seed);
   if (!p || !e.interceptor?.finale) return;
-  e.hp = e.maxHp * [1, 0.65, 0.31][p.phase];
-  if (p.overtime) e.hp = e.maxHp * (p.phase === 1 ? 1 : 0.49);
+  e.hp = e.maxHp * (transformedFinale(g.seed) ? [1, 0.68, 0.34] : [1, 0.65, 0.31])[p.phase];
+  if (p.overtime && !transformedFinale(g.seed)) e.hp = e.maxHp * (p.phase === 1 ? 1 : 0.49);
   e.phase = p.phase;
   if (p.phase > 0 || p.attack) e.interceptor.finale.completed = 2;
 }

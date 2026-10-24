@@ -1058,3 +1058,64 @@ test('Stormfront reserves warning voices, ducks through its full tell and respec
   sound.play('storm-strike');
   assert.equal(context.sources.length, muted);
 });
+
+test('Reclaimer warning families stay distinct and audible through saturated gunfire', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const signatures: number[][] = [];
+  for (const kind of [
+    'finale-aim-lock',
+    'finale-fan-lock',
+    'finale-field-lock',
+    'finale-arena-warn',
+  ]) {
+    for (let i = 0; i < 30; i++) {
+      sound.play('shot');
+      context.currentTime += 0.02;
+    }
+    const first = context.sources.length;
+    sound.play(kind);
+    const added = context.sources.slice(first);
+    assert(added.length > 0, kind + ' must retain reserved warning voices');
+    signatures.push(added.filter((s) => s.kind === 'oscillator').map((s) => s.frequency.value));
+    assert(sound.voices <= 32);
+    assert(
+      sound.music!.duckUntil >= context.currentTime + (kind === 'finale-arena-warn' ? 1.65 : 0.92),
+    );
+    context.advance(2);
+    assert.equal(sound.voices, 0);
+  }
+  assert.notDeepEqual(signatures[0], signatures[1]);
+  assert.notDeepEqual(signatures[1], signatures[2]);
+  sound.effectsVolume = 0;
+  const count = context.sources.length;
+  sound.play('finale-transform');
+  assert.equal(context.sources.length, count);
+});
+test('Reclaimer music preserves its transport through all forms and stays within the voice budget', () => {
+  const { context, music } = fixture();
+  let peak = 0;
+  for (const theme of ['reclaimer', 'reclaimer-overtime'] as const) {
+    for (const bossPhase of [0, 1, 2]) {
+      const step = music.step;
+      for (let frame = 0; frame < 1000; frame++) {
+        music.update(scene({ theme, boss: true, bossPhase }));
+        peak = Math.max(peak, music.voiceCount);
+        context.advance(frame === 700 ? 15 : 1 / 60);
+      }
+      assert(music.step > step || bossPhase === 0);
+      const before = music.step;
+      music.update(scene({ theme, boss: true, bossPhase }));
+      assert(music.step >= before);
+    }
+    const before = [...music.voices];
+    music.update(scene({ theme, boss: true, bossPhase: 2, clear: true }));
+    assert(before.every((v) => v.ends <= context.currentTime + 0.04));
+    music.update(scene({ theme, boss: true, bossPhase: 2, mode: 'paused' }));
+    context.advance(0.05);
+    assert.equal(music.voiceCount, 0);
+  }
+  assert(peak <= MUSIC_VOICES);
+});
