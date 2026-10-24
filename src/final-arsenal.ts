@@ -1,4 +1,5 @@
-import { transformedFinale } from './boss-progression.ts';
+import { transformedFinale, cinematicFinale } from './boss-progression.ts';
+import type { FinaleScene } from './finale-director.ts';
 import type { Game, Enemy } from './game.ts';
 import type { Level } from './levels.ts';
 import type { InterceptorMove } from './interceptor-weapons.ts';
@@ -55,10 +56,17 @@ export function finaleMove(g: Game, e: Enemy): InterceptorMove {
   if (preview?.attack) return preview.attack;
   if (!g.overtime && rig.completed < 2) return rig.completed === 0 ? 'aimed' : 'heavy';
   const phase = Math.min(2, e.phase + (g.uprising.finale === 'overloaded' ? 1 : 0));
-  const pool = (g.overtime || phase >= 2 ? FINAL_MOVES : phase === 1 ? SECOND : OPENING).filter(
+  const pool = (
+    g.overtime || phase >= 2 || cinematicFinale(g.seed)
+      ? FINAL_MOVES
+      : phase === 1
+        ? SECOND
+        : OPENING
+  ).filter(
     (move) =>
-      g.uprising.finale !== 'isolated' ||
-      !['ringburst', 'lockdown', 'shockwave', 'afterimage'].includes(move),
+      (!cinematicFinale(g.seed) || e.phase === 0 || !['fold', 'shockwave'].includes(move)) &&
+      (g.uprising.finale !== 'isolated' ||
+        !['ringburst', 'lockdown', 'shockwave', 'afterimage'].includes(move)),
   );
   let choices = pool.filter((m) => !rig.used.includes(m) && m !== rig.last);
   if (!choices.length) {
@@ -77,7 +85,8 @@ export function finaleFollowups(g: Game, e: Enemy) {
   if (move === 'sweep') return g.overtime ? 3 : 2;
   if (move === 'ringburst') return g.overtime ? 2 : 1;
   if (move === 'aimed') return g.overtime || e.phase > 0 ? 2 : 1;
-  if (move === 'crossfire') return 1;
+  if (move === 'crossfire') return cinematicFinale(g.seed) && (g.overtime || e.phase === 2) ? 2 : 1;
+  if (cinematicFinale(g.seed) && move === 'heavy' && (e.phase > 0 || g.overtime)) return 1;
   if (move === 'scatter' && g.overtime) return 1;
   return 0;
 }
@@ -144,10 +153,11 @@ type Preview = {
   attack?: InterceptorMove;
   arena: number;
   mirror: boolean;
+  scene?: FinaleScene;
 };
 export function finalePreview(seed: string): Preview | null {
-  const match = /^RF-C9[56]-F-([CO])-([123])-([ASRL])-([012])-([01])$/.exec(seed);
-  if (!match) return null;
+  const match = /^RF-C9[567]-F-([CO])-([123])-([ASRL])-([012])-([01])(?:-([ABICEX]))?$/.exec(seed);
+  if (!match || (match[6] && !cinematicFinale(seed))) return null;
   return {
     overtime: match[1] === 'O',
     phase: Number(match[2]) - 1,
@@ -156,6 +166,20 @@ export function finalePreview(seed: string): Preview | null {
     ],
     arena: Number(match[4]),
     mirror: match[5] === '1',
+    ...(match[6]
+      ? {
+          scene: (
+            {
+              A: 'approach',
+              B: 'boarding',
+              I: 'airlift',
+              C: 'core-opening',
+              E: 'destruction',
+              X: 'escape',
+            } as const
+          )[match[6] as 'A' | 'B' | 'I' | 'C' | 'E' | 'X'],
+        }
+      : {}),
   };
 }
 export function finaleTestFromUrl(url: URL): Checkpoint | null {
@@ -164,7 +188,16 @@ export function finaleTestFromUrl(url: URL): Checkpoint | null {
   let invalid = false;
   p.forEach((_, key) => {
     if (
-      !['test', 'fight', 'phase', 'attack', 'arena', 'mirror', 'v'].includes(key) ||
+      ![
+        'test',
+        'fight',
+        'phase',
+        'attack',
+        'arena',
+        'mirror',
+        'v',
+        ...(p.get('v') === '3' ? ['scene', 'first'] : []),
+      ].includes(key) ||
       p.getAll(key).length !== 1
     )
       invalid = true;
@@ -181,24 +214,45 @@ export function finaleTestFromUrl(url: URL): Checkpoint | null {
     !Object.hasOwn(ATTACKS, attack) ||
     !['relay', 'skybridge', 'crossfire'].includes(arena) ||
     !['0', '1'].includes(mirror) ||
-    (p.has('v') && !['1', '2'].includes(p.get('v')!)) ||
+    (p.has('v') && !['1', '2', '3'].includes(p.get('v')!)) ||
     (fight === 'overtime' &&
-      ((phase === '1' && p.has('phase') && p.get('v') !== '2') || arena !== 'relay'))
+      ((phase === '1' && p.has('phase') && !['2', '3'].includes(p.get('v')!)) || arena !== 'relay'))
   )
     return null;
+  if (p.has('first') && !['0', '1'].includes(p.get('first')!)) return null;
+  if (
+    p.has('scene') &&
+    !['approach', 'boarding', 'airlift', 'core', 'destruction', 'escape'].includes(p.get('scene')!)
+  )
+    return null;
+  if (p.get('scene') === 'escape' && (fight === 'overtime' || p.get('first') !== '0')) return null;
   const overtime = fight === 'overtime';
   const seed =
-    (p.get('v') === '2' ? 'RF-C96-F-' : 'RF-C95-F-') +
+    (p.get('v') === '3' ? 'RF-C97-F-' : p.get('v') === '2' ? 'RF-C96-F-' : 'RF-C95-F-') +
     (overtime ? 'O' : 'C') +
     '-' +
-    (overtime && !p.has('phase') && p.get('v') !== '2' ? '2' : phase) +
+    (overtime && !p.has('phase') && !['2', '3'].includes(p.get('v')!) ? '2' : phase) +
     '-' +
     { arsenal: 'A', sweep: 'S', ring: 'R', lockdown: 'L' }[attack]! +
     '-' +
     ['relay', 'skybridge', 'crossfire'].indexOf(arena) +
     '-' +
-    mirror;
+    mirror +
+    (p.get('v') === '3' && p.has('scene')
+      ? '-' +
+        (
+          {
+            approach: 'A',
+            boarding: 'B',
+            airlift: 'I',
+            core: 'C',
+            destruction: 'E',
+            escape: 'X',
+          } as const
+        )[p.get('scene') as 'approach' | 'boarding' | 'airlift' | 'core' | 'destruction' | 'escape']
+      : '');
   const cp: Checkpoint = { ...testCheckpoint(seed, 19), version: 6 };
+  if (p.get('v') === '3') cp.finaleFirstClear = overtime || p.get('first') === '0' ? 0 : 1;
   if (arena !== 'relay') cp.bossRemix = arena === 'skybridge' ? 'boss-skybridge' : 'boss-crossfire';
   if (overtime) {
     cp.overtime = { baseMods: cp.mods.length, repairs: 0, remix: 5 };
@@ -213,7 +267,13 @@ export function finaleTestFromUrl(url: URL): Checkpoint | null {
 export function configureFinalePreview(g: Game, e: Enemy) {
   const p = g.testRun && finalePreview(g.testRun.seed);
   if (!p || !e.interceptor?.finale) return;
-  e.hp = e.maxHp * (transformedFinale(g.seed) ? [1, 0.68, 0.34] : [1, 0.65, 0.31])[p.phase];
+  e.hp =
+    e.maxHp *
+    (cinematicFinale(g.seed)
+      ? [1, 1, 1]
+      : transformedFinale(g.seed)
+        ? [1, 0.68, 0.34]
+        : [1, 0.65, 0.31])[p.phase];
   if (p.overtime && !transformedFinale(g.seed)) e.hp = e.maxHp * (p.phase === 1 ? 1 : 0.49);
   e.phase = p.phase;
   if (p.phase > 0 || p.attack) e.interceptor.finale.completed = 2;

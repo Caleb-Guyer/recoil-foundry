@@ -15,6 +15,11 @@ import {
 } from './tracked-goal.ts';
 import { loadCheckpoint } from './rules.ts';
 import {
+  FINALE_PROGRESS_KEY,
+  loadFinaleProgress,
+  validFinaleProgress,
+} from './finale-progression.ts';
+import {
   UPRISING_RECORDS_KEY,
   loadUprisingRecords,
   validUprisingRecords,
@@ -61,6 +66,7 @@ export const PROGRESS_KEY = 'rf-progress-v1';
 export const CHECKPOINT_KEY = 'rf-checkpoint-v5';
 export const BACKUP_LIMIT = 1024 * 1024;
 export const PROGRESS_KEYS = [
+  FINALE_PROGRESS_KEY,
   BOSS_REMIXES_KEY,
   WEAPON_UNLOCKS_KEY,
   RUN_REWARDS_KEY,
@@ -150,6 +156,7 @@ function normalize(read: (key: string) => unknown): ProgressValues {
   const history = loadRunHistory(read(RUN_HISTORY_KEY));
   const book = migrateLogbook(read(LOGBOOK_KEY), checkpoint, history, victories);
   const values: ProgressValues = {
+    [FINALE_PROGRESS_KEY]: loadFinaleProgress(read(FINALE_PROGRESS_KEY)),
     [WEAPON_UNLOCKS_KEY]: migrateWeaponUnlocks(
       read(WEAPON_UNLOCKS_KEY),
       checkpoint,
@@ -227,6 +234,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       !keysOnly(raw, PROGRESS_KEYS) ||
       !PROGRESS_KEYS.every(
         (k) =>
+          k === FINALE_PROGRESS_KEY ||
           k === BOSS_REMIXES_KEY ||
           k === WEAPON_UNLOCKS_KEY ||
           k === RUN_REWARDS_KEY ||
@@ -247,6 +255,8 @@ export function validateProgress(raw: unknown): ProgressValues | null {
           Object.hasOwn(raw, k),
       )
     )
+      return null;
+    if (Object.hasOwn(raw, FINALE_PROGRESS_KEY) && !validFinaleProgress(raw[FINALE_PROGRESS_KEY]))
       return null;
     if (Object.hasOwn(raw, BOSS_REMIXES_KEY) && !validBossRemixes(raw[BOSS_REMIXES_KEY]))
       return null;

@@ -1,13 +1,18 @@
 import assert from 'node:assert/strict';
 import { type Game, type Input } from '../src/game.ts';
 import { distance } from '../src/rules.ts';
-import { dodgePilot } from './combat-pilot.ts';
+import { dodgePilot, type CombatPilotOptions } from './combat-pilot.ts';
 import { blackoutInput } from './blackout-pilot.ts';
 import { torchPattern } from '../src/torch-pattern.ts';
 
 // Ordinary input only: navigate around shelves, use recoil to climb, and
 // deliberately release charged weapons. Health, AI and physics stay intact.
-export function playRoom(g: Game, seconds: number, stop: () => boolean = () => false) {
+export function playRoom(
+  g: Game,
+  seconds: number,
+  stop: () => boolean = () => false,
+  pilotOptions: CombatPilotOptions = {},
+) {
   let stuck = 0,
     lastX = g.player.position.x,
     advanceUntil = 0,
@@ -29,7 +34,7 @@ export function playRoom(g: Game, seconds: number, stop: () => boolean = () => f
           distance(a.body.position, g.player.position) -
           distance(b.body.position, g.player.position),
       )[0];
-    let input: Partial<Input> = target ? dodgePilot(g, target) : {};
+    let input: Partial<Input> = target ? dodgePilot(g, target, true, pilotOptions) : {};
     stuck = Math.abs(g.player.position.x - lastX) < 0.2 ? stuck + 1 : 0;
     lastX = g.player.position.x;
     if (

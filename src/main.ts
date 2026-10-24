@@ -90,6 +90,13 @@ import { ANNEX_ALTERNATES } from './annex-alternates.ts';
 import { REGION_NAMES } from './regions.ts';
 import { createReportDraft, issueReportMenu, type ReportDraft } from './issue-report.ts';
 import { endingCopy } from './ending.ts';
+import {
+  FINALE_PROGRESS_KEY,
+  loadFinaleProgress,
+  shouldShowNgPlusNotice,
+  ngPlusNoticeMarkup,
+  ngPlusNoticePreviewFromUrl,
+} from './finale-progression.ts';
 import { clockOutTestFromUrl, prepareClockOutTest } from './clock-out-test.ts';
 import { presentationTestFromUrl, finishPresentationTest } from './presentation-test.ts';
 import { combatFeelTestFromUrl } from './combat-feel-test.ts';
@@ -515,6 +522,8 @@ function securityProfile() {
 }
 const logbookView: LogbookViewState = { section: 'equipment', selected: 'tool', query: '' };
 let finishedRun: RunRecap | null = null;
+let pendingNgPlusNotice = false;
+let ngPlusNoticeRecorded = false;
 let creditsParent = 'settings';
 let reportParent = 'settings';
 let reportDraft: ReportDraft | undefined;
@@ -544,7 +553,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Rupture</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>The Reclaimer</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -712,6 +721,7 @@ if (previewCommendations) logbookView.section = 'commendations';
 const linkedLogbook = logbookLink(entryUrl);
 let previewLogbook = linkedLogbook === 'preview';
 let linkedTest = testEncounterFromUrl(entryUrl);
+const linkedNgPlusNotice = ngPlusNoticePreviewFromUrl(entryUrl);
 const linkedGoalRunPreview = goalRunPreviewFromUrl(entryUrl);
 const linkedFirstRunPreview = firstRunPreviewFromUrl(entryUrl);
 const linkedRematchPreview = rematchPreviewFromUrl(entryUrl);
@@ -996,11 +1006,11 @@ function updateTitle() {
             : 'Shoot down. Go up.';
   if (linkedRunTest?.seed.startsWith('UPGRADES-'))
     $('title-hint').textContent = 'Choose a build. Try its follow-up. R to retry.';
-  if (linkedRunTest && /^RF-C9[56]-F-/.test(linkedRunTest.seed)) {
+  if (linkedRunTest && /^RF-C9[567]-F-/.test(linkedRunTest.seed)) {
     $('play').textContent = linkedRunTest.overtime
       ? 'Test NG+ Reclaimer ↗'
       : 'Test the Reclaimer ↗';
-    $('title-hint').textContent = linkedRunTest.seed.startsWith('RF-C96-')
+    $('title-hint').textContent = /^RF-C9[67]-/.test(linkedRunTest.seed)
       ? 'Three forms · normal controls · isolated test · R to retry.'
       : 'Final arsenal · normal controls · isolated test · R to retry.';
   }
@@ -1725,6 +1735,8 @@ function start(
     return;
   }
   finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
   firstSession.stop();
   runCommendations = [];
   linkedTest = null;
@@ -1874,6 +1886,9 @@ function start(
               seed,
               HUNT_KINDS.filter((kind) => commendations.includes(HUNTS[kind].commendation)),
             ).map((s) => s.kind)),
+    retry && seed === game.seed && game.mode !== 'won'
+      ? game.finaleFirstClear
+      : !weaponUnlocks().cleared,
   );
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
@@ -1910,6 +1925,8 @@ function startPractice(
   activePracticeChallenge = options.challenge ? structuredClone(options.challenge) : null;
   firstSession.stop();
   finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
   runCommendations = [];
   sound.unlock();
   sound.resetMusic();
@@ -1943,6 +1960,8 @@ function startTrial(route: TrialRoute, preview = false, challenge?: TrialChallen
   clearInput();
   firstSession.stop();
   finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
   runCommendations = [];
   trialCaptured = false;
   trialOutcome = null;
@@ -2001,6 +2020,8 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun, challenge?
   clearInput();
   firstSession.stop();
   finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
   runCommendations = [];
   recoilOutcome = null;
   recoilGhostSaved = false;
@@ -2062,6 +2083,8 @@ function startGauntlet(
   game.setMode('title');
   if (!game.gauntlet.begin(gun, access, preview, { ...options, seen })) return;
   finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
   runCommendations = [];
   savedGauntlet = null;
   gauntletOutcome = null;
@@ -2195,6 +2218,8 @@ function startRunTest(save: Checkpoint) {
   }
   firstSession.stop();
   finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
   runCommendations = [];
   sound.unlock();
   sound.resetMusic();
@@ -2260,6 +2285,8 @@ function startWorkshop(
   resetRunGoal();
   firstSession.stop();
   finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
   runCommendations = [];
   sound.unlock();
   sound.resetMusic();
@@ -2302,6 +2329,18 @@ function captureFinishedRun() {
     n.toString(16).padStart(8, '0'),
   ).join('');
   if (game.mode === 'won') {
+    pendingNgPlusNotice = shouldShowNgPlusNotice(
+      {
+        seed: game.seed,
+        firstClear: game.finaleFirstClear,
+        won: true,
+        overtime: !!game.overtime,
+        daily: !!activeDaily,
+        shutdown: game.shutdown.complete,
+        isolated: false,
+      },
+      read(FINALE_PROGRESS_KEY),
+    );
     unlockStartingGun('shotgun');
     if (game.overtime) unlockStartingGun('nailgun');
   }
@@ -2682,7 +2721,15 @@ game.onDeath = (origin) => {
 };
 let savingClockOut: Game['clockOut'] | null = null;
 $('skip-clock-out').onclick = () => game.skipClockOut();
+function updateFinalePresentation() {
+  const cinema = game.finale.cinema;
+  document.body.dataset.finaleMovie = String(!!cinema?.locked && game.mode !== 'title');
+  document.body.dataset.finaleScene = String(
+    !!cinema?.active && !cinema.combat && cinema.state !== 'complete' && game.mode !== 'title',
+  );
+}
 game.onChange = () => {
+  updateFinalePresentation();
   if (game.mode === 'playing' && currentRematchEntry?.source !== game.level) {
     currentRematchEntry = rematchEntry(game);
     lastRoomRematch = null;
@@ -2818,6 +2865,7 @@ function addRoomRematchAction(root: HTMLElement) {
   root.querySelector('.actions')?.append(button);
 }
 function showDialog(kind: string) {
+  if (kind === 'result' && pendingNgPlusNotice && game.mode === 'won') kind = 'ngplus-unlocked';
   dialogLifetime.invalidate();
   cancelMenuImages($('dialog-content'));
   roomRematchView?.dispose();
@@ -3063,11 +3111,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.13.0 · RUPTURE</p><h2 id="dialog-title">The factory fights back.</h2>' +
-      '<p class="update-tagline">Three forms. A transforming arena. One final command.</p>' +
-      '<dl class="update-notes"><div><dt>Mimic. Siege frame. Rupture core.</dt><dd>The Reclaimer unfolds into three distinct forms. Siege decks rise, then the roof tears open as floor batteries, reactor columns and crosscuts change how you cross the arena. Phase gates keep all three forms in the fight.</dd></div>' +
-      '<div><dt>A harder finale.</dt><dd>More durability, paired attacks in phase two and three-attack chains in the last phase. New Game+ has broader arena strikes and tighter recovery. Every new strike has a full warning and an escape route.</dd></div>' +
-      '<div><dt>Make it count.</dt><dd>A skippable entrance, an original layered finale score, visible armor transformations and a machine shutdown give the encounter its own beginning and ending. Start a new Campaign; older saved fights retain their rules.</dd></div></dl>' +
+      '<p class="eyebrow">5.14.0 · THE RECLAIMER</p><h2 id="dialog-title">One last shift.</h2>' +
+      '<p class="update-tagline">Rain. A familiar face. Three machines to destroy.</p>' +
+      '<dl class="update-notes"><div><dt>The double.</dt><dd>Walk through the rain and watch your corrupted counterpart board its machine. The finale tells its story through action, with a simple red health bar.</dd></div>' +
+      '<div><dt>Three complete fights.</dt><dd>Destroy the first chassis, face the airlifted Siege, then keep moving while the Reclaimer opens the city core and boards Rupture. Every form has a full health bar. More attacks and faster arena pressure demand movement and careful openings.</dd></div>' +
+      '<div><dt>Finish the shift.</dt><dd>Your first victory ends with the Reclaimer’s destruction and unlocks New Game+ for future Campaign runs. On later runs, pursue its escape through Overtime for the final explosion. Older saved runs keep their original finale.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4036,6 +4084,23 @@ function showDialog(kind: string) {
         showDialog('practice-share');
       };
     $('menu').onclick = menu;
+  } else if (kind === 'ngplus-unlocked') {
+    content.innerHTML = ngPlusNoticeMarkup();
+    if (pendingNgPlusNotice && !ngPlusNoticeRecorded) {
+      ngPlusNoticeRecorded = true;
+      write(FINALE_PROGRESS_KEY, {
+        ...loadFinaleProgress(read(FINALE_PROGRESS_KEY)),
+        ngPlusNoticeSeen: true,
+      });
+    }
+    $('ngplus-continue').onclick = () => {
+      pendingNgPlusNotice = false;
+      if (game.mode === 'won' || game.mode === 'dead') showDialog('result');
+      else {
+        closeDialog();
+        if (game.mode === 'title') $('play').focus();
+      }
+    };
   } else if (kind === 'result') {
     const win = game.mode === 'won';
     if (activeDaily && !dailyResult) {
@@ -4465,6 +4530,7 @@ function showDialog(kind: string) {
       'practice',
       'practice-setup',
       'result',
+      'ngplus-unlocked',
       'gauntlet-setup',
       'gauntlet-run',
       'gauntlet-challenge',
@@ -4808,6 +4874,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'ngplus-unlocked') {
+    $('ngplus-continue').click();
+    return;
+  }
   if (dialogKind === 'room-rematch') {
     showDialog('result');
     return;
@@ -5225,6 +5295,7 @@ function frame(now: number) {
           goalHuntLabel(activeGoalRun.id, game.hunts.state.kind, goalRunProfile),
         )
       : null;
+  updateFinalePresentation();
   renderer.draw(now);
   if (game.mode === 'playing' && !game.workshop.active) deathReplay.capture(canvas, game.elapsed);
   if (now - hudAt > 80) {
@@ -5311,6 +5382,7 @@ if (
 )
   openControls();
 if (linkedLogbook || previewCommendations) showDialog('logbook');
+if (linkedNgPlusNotice) showDialog('ngplus-unlocked');
 if (
   entryUrl.searchParams.get('progress') === '1' &&
   !linkedRunTest &&

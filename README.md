@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Rupture — version 5.13.0.** The Reclaimer unfolds from Mimic into Siege frame and Rupture core. Physical decks rebuild between forms; floor batteries, reactor columns and crosscuts escalate the arena. More durability, longer attack chains and broader New Game+ strikes make the finale harder. A skippable entrance, original layered score and machine shutdown give the fight its own beginning and ending. [Release notes and phase playtests](docs/releases/5.13.0.md).
+**The Reclaimer — version 5.14.0.** A rain-only approach leads into a visual finale: a corrupted double boards its chassis, an aircraft delivers the Siege, and the city core opens into Rupture. Three full health bars, escalating attacks and physical arenas lead to distinct first-clear and New Game+ endings. [Release notes and isolated playtests](docs/releases/5.14.0.md).
 
 **Final Arsenal — version 5.12.0.** The player-mimicking final boss is now the **Reclaimer**; the other security supervisor is the **Interceptor**. Nineteen weapon attacks escalate across three phases, with sweeping fans, rotating ring gaps, floor charges and linked attacks. New Game+ opens the full arsenal immediately and adds harder follow-ups. [Release notes and playtests](docs/releases/5.12.0.md).
 

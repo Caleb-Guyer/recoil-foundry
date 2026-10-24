@@ -72,6 +72,7 @@ class SourceNodeMock extends AudioNodeMock {
   detune = new AudioParamMock();
   playbackRate = new AudioParamMock();
   buffer: unknown = null;
+  loop = false;
   startTime: number | undefined;
   stopTime = Infinity;
   stopCalls: number[] = [];
@@ -1118,4 +1119,188 @@ test('Reclaimer music preserves its transport through all forms and stays within
     assert.equal(music.voiceCount, 0);
   }
   assert(peak <= MUSIC_VOICES);
+});
+
+test('cinematic approach plays only one reusable rain source and suppresses combat and music', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  sound.play('shot');
+  const previousEffects = [...context.sources];
+  const approach = scene({
+    area: 'rooftops',
+    theme: 'reclaimer',
+    room: 'finale:rain',
+    cinema: 'approach',
+    rain: true,
+    musicSilent: true,
+  });
+  sound.updateMusic(approach);
+  assert(previousEffects.every((source) => source.disconnected));
+  assert.equal(sound.voices, 0);
+  assert(sound.rain!.active);
+  assert.equal(sound.music!.running, false);
+  const count = context.sources.length;
+  for (let frame = 0; frame < 600; frame++) {
+    sound.play('shot');
+    sound.play('finale-arrival');
+    sound.play('finale-fan-lock');
+    sound.updateTorch(true, 1);
+    sound.updateMusic(approach);
+    context.advance(1 / 60);
+  }
+  assert.equal(
+    context.sources.length,
+    count,
+    'Rain must not allocate a voice per frame or droplet',
+  );
+  assert.equal(context.sources.filter((source) => source.loop && !source.disconnected).length, 1);
+  sound.musicEnabled = false;
+  sound.musicVolume = 0;
+  sound.updateMusic(approach);
+  assert(sound.rain!.active, 'Rain belongs to effects, independently of music mute');
+});
+
+test('rain stops and disconnects on pause, focus loss, effects/master mute, reset and room exit', (t) => {
+  installContext(t);
+  const cinematic = scene({ cinema: 'duel', rain: true, room: 'finale:weather' });
+  for (const stop of [
+    'pause',
+    'focus',
+    'effects',
+    'master',
+    'reset',
+    'exit',
+    'suspended',
+  ] as const) {
+    const sound = new Sound();
+    sound.unlock();
+    const context = sound.context as unknown as AudioContextMock;
+    sound.updateMusic(cinematic);
+    const weather = context.sources.find((source) => source.loop)!;
+    assert(weather, stop);
+    if (stop === 'pause') sound.updateMusic({ ...cinematic, mode: 'paused' });
+    if (stop === 'focus') sound.updateMusic(cinematic, false);
+    if (stop === 'effects') sound.effectsVolume = 0;
+    if (stop === 'master') sound.enabled = false;
+    if (stop === 'reset') sound.resetMusic();
+    if (stop === 'exit') sound.updateMusic(scene({ room: 'next-room' }));
+    if (stop === 'suspended') {
+      context.state = 'suspended';
+      sound.updateMusic(cinematic);
+    }
+    assert.equal(sound.rain!.active, false, stop);
+    assert(weather.disconnected, stop + ' must disconnect the loop immediately');
+    assert.equal(weather.stopTime, context.currentTime, stop);
+  }
+});
+
+test('cinematic cues cancel future notes on focus loss and never replay a missed scene on resume', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const cinematic = scene({
+    cinema: 'boarding',
+    rain: true,
+    musicSilent: true,
+    room: 'finale:weather',
+  });
+  sound.updateMusic(cinematic);
+  const start = context.sources.length;
+  // A timeline cue may arrive immediately before the next MusicScene update.
+  sound.play('cinema-rupture');
+  const cue = context.sources.slice(start);
+  assert.equal(cue.length, 4);
+  assert(cue.some((source) => source.startTime! > context.currentTime + 1));
+  context.deliverEnded = false;
+  sound.updateMusic(cinematic, false);
+  assert(cue.every((source) => source.disconnected && source.stopTime <= context.currentTime));
+  assert.equal(sound.voices, 0, 'Cancelling queued cinema voices must reclaim the voice budget');
+  const count = context.sources.length;
+  context.advance(20);
+  sound.updateMusic(cinematic);
+  assert.equal(
+    context.sources.length,
+    count + 1,
+    'Resume starts rain only, with no old scene sounds',
+  );
+  assert.equal(sound.music!.running, false);
+  assert.equal(sound.voices, 0);
+});
+
+test('cinematic score begins with combat, escalates without restarting and leaves rain after destruction', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const cinematic = scene({
+    area: 'rooftops',
+    theme: 'reclaimer',
+    boss: true,
+    room: 'finale:weather',
+    cinema: 'approach',
+    rain: true,
+    musicSilent: true,
+  });
+  sound.updateMusic(cinematic);
+  assert.equal(sound.music!.voiceCount, 0);
+  for (const [index, state] of ['duel', 'siege', 'rupture'].entries()) {
+    const before = sound.music!.step;
+    for (let frame = 0; frame < 150; frame++) {
+      sound.updateMusic({ ...cinematic, cinema: state, musicSilent: false, bossPhase: index });
+      context.advance(1 / 60);
+    }
+    assert(sound.music!.running);
+    assert(sound.music!.voiceCount > 0 && sound.music!.voiceCount <= MUSIC_VOICES);
+    assert(sound.music!.step > before, 'Transformation must retain the score transport');
+    assert.equal(context.sources.filter((source) => source.loop && !source.disconnected).length, 1);
+  }
+  sound.updateMusic({ ...cinematic, cinema: 'destruction', musicSilent: true, clear: true });
+  context.advance(0.05);
+  assert.equal(sound.music!.running, false);
+  assert.equal(sound.music!.voiceCount, 0);
+  assert(sound.rain!.active);
+});
+
+test('cinematic spectacle leaves reserved voice capacity and each cue has its own sound signature', (t) => {
+  installContext(t);
+  const sound = new Sound();
+  sound.unlock();
+  const context = sound.context as unknown as AudioContextMock;
+  const signatures: string[] = [];
+  for (const kind of [
+    'cinema-start',
+    'cinema-plane',
+    'cinema-cable',
+    'cinema-impact',
+    'cinema-core',
+    'cinema-rupture',
+    'cinema-escape',
+    'cinema-explosion',
+  ]) {
+    for (let i = 0; i < 30; i++) sound.tone(200, 40, 0.2, 0.05);
+    const start = context.sources.length;
+    sound.play(kind);
+    const cue = context.sources.slice(start);
+    assert(cue.length > 0 && cue.length <= 4, kind);
+    assert(
+      sound.voices <= 28,
+      'Cinematics leave four additional priority voices for gameplay warnings',
+    );
+    signatures.push(
+      JSON.stringify(
+        cue.map((source) => [
+          source.kind,
+          source.frequency.value,
+          source.stopTime - context.currentTime,
+        ]),
+      ),
+    );
+    context.advance(5);
+    assert.equal(sound.voices, 0);
+    assert(cue.every((source) => source.disconnected));
+  }
+  assert.equal(new Set(signatures).size, 8);
 });

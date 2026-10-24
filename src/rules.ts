@@ -1,4 +1,5 @@
 import { validHunt, huntDetour } from './hunt-rules.ts';
+import { validFinaleClassification } from './finale-progression.ts';
 import { loadCombatResults, type CombatResults } from './combat-report.ts';
 import { legacyTorchPattern, torchRayCount } from './torch-pattern.ts';
 import { validAreaEvent } from './area-events.ts';
@@ -1224,6 +1225,8 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  // Snapshot the first-clear ending before the run can earn its clear rewards.
+  finaleFirstClear?: 0 | 1;
   combatResults?: CombatResults;
   huntRules?: 1 | 2;
   hunt?: import('./hunt-rules.ts').HuntSave;
@@ -1422,6 +1425,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   )
     return null;
   const stages = legacy ? 12 : previous ? 16 : STAGES;
+  if (!validFinaleClassification(d)) return null;
   if (
     d.bossRemixes !== undefined &&
     (d.bossRemixes !== 1 || d.encounters !== 1 || d.version !== 6 || /^RF-D\d+-/.test(d.seed))

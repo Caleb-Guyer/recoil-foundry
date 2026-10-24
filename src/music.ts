@@ -121,6 +121,7 @@ export class Music {
     if (
       !enabled ||
       !active ||
+      scene.musicSilent ||
       this.context.state !== 'running' ||
       (!['playing', 'upgrade'].includes(scene.mode) && !(scene.mode === 'won' && scene.outro))
     ) {

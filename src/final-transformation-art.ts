@@ -1,6 +1,7 @@
 import type { Game, Enemy } from './game.ts';
 import { clamp } from './rules.ts';
 import { FINAL_FORMS, FINAL_WARNING } from './final-transformation.ts';
+import { drawFinaleCinemaHud } from './finale-cinema-art.ts';
 
 const COLORS = ['#d1b28b', '#f2b26e', '#a6e9e1'];
 export function drawFinalHull(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
@@ -117,6 +118,7 @@ export function drawFinalHull(c: CanvasRenderingContext2D, g: Game, e: Enemy, re
 }
 
 export function drawFinalArena(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
+  if (g.finale.cinema?.active) return;
   const f = g.finale;
   if (!f.active || g.mode === 'title') return;
   const phase = f.phase,
@@ -198,6 +200,8 @@ export function drawFinalArena(c: CanvasRenderingContext2D, g: Game, reduced: bo
 }
 
 export function drawFinalThreat(c: CanvasRenderingContext2D, g: Game) {
+  if (g.finale.cinema?.active && !['duel', 'siege', 'rupture'].includes(g.finale.cinema.state))
+    return;
   const f = g.finale,
     strike = f.strike;
   if (!strike || f.state !== 'combat') return;
@@ -236,6 +240,10 @@ export function drawFinalThreat(c: CanvasRenderingContext2D, g: Game) {
 }
 
 export function drawFinalHud(c: CanvasRenderingContext2D, g: Game, w: number, h: number) {
+  if (g.finale.cinema?.active) {
+    drawFinaleCinemaHud(c, g, w, h);
+    return;
+  }
   const f = g.finale,
     e = f.enemy;
   if (!f.active || !e || g.mode === 'title' || g.escape) return;

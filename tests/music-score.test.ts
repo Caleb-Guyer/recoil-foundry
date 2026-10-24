@@ -232,3 +232,51 @@ test('scene pressure stays bounded under many attacks and score queries never co
   }
   assert.equal(JSON.stringify(game.level), layout);
 });
+
+test('cinematic score follows scene clocks without changing recorded revision 96', () => {
+  const game = {
+    finale: { active: true, state: 'combat', phase: 0 },
+    escape: null,
+    overtime: false,
+    seed: 'RF-C96-score-test',
+    mode: 'playing',
+  } as unknown as Game;
+  const legacy = musicScene(game);
+  assert.equal(legacy.room, 'RF-C96-score-test:transformed-finale');
+  assert.equal(legacy.rain, undefined);
+  assert.equal(legacy.musicSilent, undefined);
+  const cinema = { active: true, state: 'approach', clock: 0 };
+  Object.assign(game.finale, { cinema });
+  game.seed = 'RF-C97-score-test';
+  assert.equal(musicScene(game).rain, true);
+  assert.equal(musicScene(game).musicSilent, true);
+  cinema.state = 'boarding';
+  cinema.clock = 3.99;
+  assert.equal(musicScene(game).musicSilent, true);
+  cinema.clock = 4;
+  assert.equal(musicScene(game).musicSilent, true, 'Score waits for actual combat');
+  assert.equal(
+    musicScene(game).effectsSilent,
+    false,
+    'The machine can activate after four seconds',
+  );
+  const room = musicScene(game).room;
+  let previousIntensity = 0;
+  for (const [phase, state] of ['duel', 'siege', 'rupture'].entries()) {
+    game.finale.phase = phase as 0 | 1 | 2;
+    cinema.state = state;
+    const score = musicScene(game);
+    assert.equal(score.room, room);
+    assert.equal(score.bossPhase, phase);
+    assert.equal(score.rain, true);
+    assert.equal(score.musicSilent, false);
+    assert(score.intensity > previousIntensity);
+    previousIntensity = score.intensity;
+  }
+  game.overtime = true;
+  assert.equal(musicScene(game).theme, 'reclaimer-overtime');
+  cinema.state = 'destruction';
+  cinema.clock = 4;
+  assert.equal(musicScene(game).musicSilent, true);
+  assert.equal(musicScene(game).clear, true);
+});

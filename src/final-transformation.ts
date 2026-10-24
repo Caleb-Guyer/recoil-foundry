@@ -5,7 +5,8 @@ import { clamp, distance, type Vec } from './rules.ts';
 import { clearArsenal } from './interceptor-weapons.ts';
 import { finalePreview } from './final-arsenal.ts';
 
-import { transformedFinale } from './boss-progression.ts';
+import { transformedFinale, cinematicFinale } from './boss-progression.ts';
+import { FinaleDirector, cinemaSolids } from './finale-director.ts';
 export { transformedFinale };
 export const FINAL_FORMS = ['Mimic', 'Siege frame', 'Rupture core'] as const;
 export const FINAL_THRESHOLDS = [0.68, 0.34, 0] as const;
@@ -30,6 +31,9 @@ export function transformedLevel(g: Game, level: Level): Level {
   // The finale's machinery replaces the patrol, rather than adding threats to it.
   return {
     ...level,
+    ...(cinematicFinale(g.seed)
+      ? { solids: cinemaSolids(0, level.mirrored, level.bossRemix) }
+      : {}),
     spawns: level.spawns.filter((e) => e.kind === 'interceptor'),
     hazards: [],
     conductors: [],
@@ -67,6 +71,7 @@ export class FinalTransformation {
   constructor(game: Game) {
     this.game = game;
   }
+  cinema: FinaleDirector | null = null;
   enemy: Enemy | null = null;
   phase = 0;
   hullScale = 1;
@@ -83,16 +88,24 @@ export class FinalTransformation {
     return this.state !== 'off';
   }
   get presenting() {
-    return ['intro', 'transform', 'defeat'].includes(this.state);
+    return this.cinema ? this.cinema.locked : ['intro', 'transform', 'defeat'].includes(this.state);
+  }
+  get waiting() {
+    return this.cinema ? this.cinema.waiting : this.presenting;
+  }
+  get safe() {
+    return this.cinema ? !this.cinema.combat && this.cinema.state !== 'complete' : this.presenting;
   }
   owns(e: Enemy) {
     return this.active && this.enemy === e;
   }
   phaseFor(e: Enemy) {
+    if (this.cinema) return e.phase;
     return e.hp <= e.maxHp * 0.34 + 1e-7 ? 2 : e.hp <= e.maxHp * 0.68 + 1e-7 ? 1 : 0;
   }
   reset() {
     const g = this.game;
+    this.cinema = null;
     this.enemy = null;
     this.state = 'off';
     this.clock = 0;
@@ -107,6 +120,11 @@ export class FinalTransformation {
     const e = g.enemies.find((e) => e.kind === 'interceptor');
     if (!e?.interceptor?.finale) return;
     this.enemy = e;
+    if (cinematicFinale(g.seed)) {
+      this.cinema = new FinaleDirector(g, this, e);
+      this.cinema.reset();
+      return;
+    }
     const preview = g.testRun && finalePreview(g.testRun.seed);
     this.phase = preview ? preview.phase : 0;
     e.phase = this.phase;
@@ -119,6 +137,7 @@ export class FinalTransformation {
   }
   limitDamage(e: Enemy, amount: number) {
     if (!this.owns(e)) return amount;
+    if (this.cinema) return this.cinema.combat ? Math.max(0, Math.min(amount, e.hp)) : 0;
     if (this.presenting || e.phase < this.phaseFor(e)) return 0;
     return Math.max(0, Math.min(amount, e.hp - e.maxHp * FINAL_THRESHOLDS[e.phase]));
   }
@@ -148,6 +167,16 @@ export class FinalTransformation {
     // Clear held bursts too: nothing delayed may fire through a transformation.
     g.burstRemaining = 0;
     g.fireBuffer = 0;
+    if (this.cinema) {
+      g.arcs.reset();
+      g.grind.reset();
+      g.tripwires.reset();
+      g.torch.reset();
+      g.portals.reset();
+      g.tethers.reset();
+      g.muzzle = 0;
+      g.trail = [];
+    }
   }
   rebuild() {
     const g = this.game,
@@ -172,7 +201,9 @@ export class FinalTransformation {
     g.torch.reset();
     g.portals.reset();
     g.tethers.reset();
-    const solids = formSolids(this.phase, g.level.mirrored, g.level.bossRemix === 'boss-skybridge');
+    const solids = this.cinema
+      ? cinemaSolids(this.phase, g.level.mirrored, g.level.bossRemix)
+      : formSolids(this.phase, g.level.mirrored, g.level.bossRemix === 'boss-skybridge');
     g.level.solids = solids;
     for (const s of solids) {
       const b = Matter.Bodies.rectangle(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h, {
@@ -197,7 +228,7 @@ export class FinalTransformation {
         }
       }
     }
-    if (e) {
+    if (e && !this.cinema) {
       const scale = this.phase === 2 ? 1.4 : 1.25;
       Matter.Body.scale(e.body, scale / this.hullScale, scale / this.hullScale);
       Matter.Body.setInertia(e.body, Infinity);
@@ -216,6 +247,7 @@ export class FinalTransformation {
     this.cycle = 0;
   }
   beforeTick(dt: number, input: Input) {
+    if (this.cinema) return this.cinema.beforeTick(dt);
     if (!this.presenting) return false;
     if (!(dt > 0) || !Number.isFinite(dt)) return true;
     this.clock += Math.min(dt, 0.05);
@@ -277,6 +309,8 @@ export class FinalTransformation {
     return { kind, rects, left: FINAL_WARNING, fired: false };
   }
   update(dt: number) {
+    this.cinema?.update(dt);
+    if (this.cinema && !this.cinema.combat) return;
     if (this.state !== 'combat' || !this.enemy || this.enemy.hp <= 0 || this.phase === 0) return;
     const g = this.game;
     if (this.strike) {
@@ -298,7 +332,17 @@ export class FinalTransformation {
         g.onSound('finale-arena-fire');
       } else {
         this.strike = null;
-        this.nextStrike = g.overtime ? 2.1 : this.phase === 2 ? 3 : 4;
+        this.nextStrike = this.cinema
+          ? g.overtime
+            ? 1.3
+            : this.phase === 2
+              ? 1.8
+              : 2.2
+          : g.overtime
+            ? 2.1
+            : this.phase === 2
+              ? 3
+              : 4;
       }
     } else {
       this.nextStrike -= dt;
@@ -310,6 +354,10 @@ export class FinalTransformation {
   }
   defeated(e: Enemy) {
     if (!this.owns(e)) return;
+    if (this.cinema) {
+      this.cinema.defeated(e);
+      return;
+    }
     this.wreck = { ...e.body.position };
     this.state = 'defeat';
     this.clock = 0;

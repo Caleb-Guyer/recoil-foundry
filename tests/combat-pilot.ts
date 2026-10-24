@@ -18,6 +18,9 @@ export interface CombatPilotOptions {
   aim?: Vec;
   fire?: boolean;
   beamAware?: boolean;
+  // Opt in only for the cinematic audit. Ordinary pilots retain their exact
+  // old decisions; this reads the same locked arena shapes the player sees.
+  arenaAware?: boolean;
 }
 
 // Test-only player: compare short movement trajectories with visible bolts and
@@ -30,6 +33,8 @@ export function dodgePilot(
   allowFire = true,
   options: CombatPilotOptions = {},
 ): Partial<Input> {
+  const arena =
+    options.arenaAware && g.finale.strike && !g.finale.strike.fired ? g.finale.strike : null;
   const p = g.player.position,
     target = e.harpoon?.phase === 'latched' ? harpoonMuzzle(e) : e.body.position;
   const boxes = g.solidBodies.map((b) => ({
@@ -403,7 +408,10 @@ export function dodgePilot(
                 });
           // Slow explosive volleys need enough look-ahead to include their
           // recoil landing, rather than choosing a safe first half of a jump.
-          const horizon = g.gun.shellshock ? 60 : 40;
+          const horizon = Math.max(
+            g.gun.shellshock ? 60 : 40,
+            arena ? Math.min(100, Math.ceil(arena.left * 60) + 6) : 0,
+          );
           const beam = options.beamAware && g.torch.equipped ? beamRecoilForecast(g) : undefined;
           for (let frame = 1; frame <= horizon; frame++) {
             const time = g.time + frame / 60,
@@ -489,6 +497,21 @@ export function dodgePilot(
                   vy = 0;
                 }
               }
+            // A snapshot never chases this candidate path. Walk out of its
+            // horizontal footprint, or jump/recoil above a floor/crosscut at
+            // the actual fire deadline. This changes inputs, never the arena.
+            if (
+              arena &&
+              Math.abs(frame / 60 - arena.left) < 0.04 &&
+              arena.rects.some(
+                (rect) =>
+                  x + 17 > rect.x &&
+                  x - 17 < rect.x + rect.w &&
+                  y + 22 > rect.y &&
+                  y - 22 < rect.y + rect.h,
+              )
+            )
+              score += 8000 / (frame + 8);
             for (const b of bolts) {
               const t = frame - b.delay;
               if (t < 0 || t > b.life) continue;

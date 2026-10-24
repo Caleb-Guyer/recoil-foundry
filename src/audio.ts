@@ -1,5 +1,17 @@
 import { Music } from './music.ts';
+import { RainAmbience } from './rain-audio.ts';
 import type { MusicScene } from './music-score.ts';
+
+const CINEMATIC_CUES = new Set([
+  'cinema-start',
+  'cinema-plane',
+  'cinema-cable',
+  'cinema-impact',
+  'cinema-core',
+  'cinema-rupture',
+  'cinema-escape',
+  'cinema-explosion',
+]);
 
 const ATTACK_WARNINGS = new Set([
   'repair-warn',
@@ -102,7 +114,11 @@ export class Sound {
     this.effectLevel = volumeLevel(value);
     if (this.context)
       this.effectsOutput?.gain.setTargetAtTime(this.effectLevel, this.context.currentTime, 0.012);
-    if (!this.effectLevel) this.updateTorch(false);
+    if (!this.effectLevel) {
+      this.updateTorch(false);
+      this.rain?.stop();
+      this.cancelEffects(true);
+    }
   }
   get musicVolume() {
     return this.musicLevel;
@@ -124,6 +140,8 @@ export class Sound {
     if (!value) {
       this.silenceMusic();
       this.updateTorch(false);
+      this.rain?.stop();
+      this.cancelEffects(true);
     }
   }
   get musicEnabled() {
@@ -137,12 +155,47 @@ export class Sound {
   master: GainNode | null = null;
   effects: GainNode | null = null;
   private priorityCue = false;
+  private cinematicCue = false;
+  private cinematicQuiet = false;
+  private cinematicRoom: string | null = null;
+  private effectVoices = new Map<
+    AudioScheduledSourceNode,
+    { dispose: () => void; cinematic: boolean }
+  >();
+  rain: RainAmbience | null = null;
+  private cancelEffects(cinematicOnly = false) {
+    for (const [source, voice] of [...this.effectVoices]) {
+      if (cinematicOnly && !voice.cinematic) continue;
+      source.stop(this.context!.currentTime);
+      voice.dispose();
+    }
+  }
+  private trackEffect(source: AudioScheduledSourceNode, nodes: AudioNode[]) {
+    let disposed = false;
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      source.onended = null;
+      this.voices--;
+      for (const node of nodes) node.disconnect();
+      this.effectVoices.delete(source);
+    };
+    this.effectVoices.set(source, { dispose, cinematic: this.cinematicCue });
+    source.onended = dispose;
+  }
   private effectsDuckUntil = 0;
   noise: AudioBuffer | null = null;
   private torchVoice: { osc: OscillatorNode; gain: GainNode; frequency: number } | null = null;
   updateTorch(active: boolean, heat = 0) {
     const c = this.context;
-    if (!active || !this.enabled || !this.effectsVolume || !c || c.state !== 'running') {
+    if (
+      !active ||
+      this.cinematicQuiet ||
+      !this.enabled ||
+      !this.effectsVolume ||
+      !c ||
+      c.state !== 'running'
+    ) {
       const voice = this.torchVoice;
       if (voice && c) {
         voice.gain.gain.setTargetAtTime(0, c.currentTime, 0.02);
@@ -209,6 +262,7 @@ export class Sound {
         const data = noise.getChannelData(0);
         for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
         this.music = new Music(c, musicOutput);
+        this.rain = new RainAmbience(c, effectsOutput);
         this.context = c;
         this.master = master;
         this.effects = effects;
@@ -223,10 +277,30 @@ export class Sound {
     if (this.context.state === 'suspended') void this.context.resume().catch(() => {});
   }
   updateMusic(scene: MusicScene, active = true) {
+    const quiet =
+      scene.effectsSilent ??
+      (!!scene.rain &&
+        !!scene.musicSilent &&
+        ['approach', 'boarding'].includes(scene.cinema ?? ''));
+    if (quiet && !this.cinematicQuiet) {
+      this.cancelEffects();
+      this.updateTorch(false);
+    }
+    this.cinematicQuiet = quiet;
+    const weatherActive =
+      active && scene.mode === 'playing' && this.enabled && this.effectsVolume > 0;
+    if (!weatherActive || (this.cinematicRoom !== null && this.cinematicRoom !== scene.room))
+      this.cancelEffects(true);
+    this.cinematicRoom = scene.rain ? scene.room : null;
+    this.rain?.update(!!scene.rain && weatherActive, scene.rainIntensity);
     this.music?.update(scene, this.enabled && this.musicEnabled && this.musicVolume > 0, active);
   }
   resetMusic() {
     this.music?.reset();
+    this.rain?.stop();
+    this.cancelEffects(true);
+    this.cinematicQuiet = false;
+    this.cinematicRoom = null;
   }
   silenceMusic() {
     this.music?.stop();
@@ -240,7 +314,7 @@ export class Sound {
     delay = 0,
   ) {
     const c = this.context!;
-    if (this.voices >= (this.priorityCue ? 32 : 24)) return;
+    if (this.voices >= (this.cinematicCue ? 28 : this.priorityCue ? 32 : 24)) return;
     this.voices++;
     const now = c.currentTime + delay,
       osc = c.createOscillator(),
@@ -256,23 +330,20 @@ export class Sound {
     gain.connect(
       this.priorityCue ? (this.effectsOutput ?? this.master!) : (this.effects ?? this.master!),
     );
-    osc.onended = () => {
-      this.voices--;
-      osc.disconnect();
-      gain.disconnect();
-    };
+    this.trackEffect(osc, [osc, gain]);
     osc.start(now);
     osc.stop(now + length + 0.01);
   }
-  crack(length: number, volume: number, frequency: number) {
+  crack(length: number, volume: number, frequency: number, loop = false) {
     const c = this.context!;
-    if (this.voices >= (this.priorityCue ? 32 : 24)) return;
+    if (this.voices >= (this.cinematicCue ? 28 : this.priorityCue ? 32 : 24)) return;
     this.voices++;
     const now = c.currentTime,
       source = c.createBufferSource(),
       filter = c.createBiquadFilter(),
       gain = c.createGain();
     source.buffer = this.noise;
+    source.loop = loop;
     filter.type = 'bandpass';
     filter.frequency.value = frequency;
     filter.Q.value = 0.6;
@@ -283,18 +354,15 @@ export class Sound {
     gain.connect(
       this.priorityCue ? (this.effectsOutput ?? this.master!) : (this.effects ?? this.master!),
     );
-    source.onended = () => {
-      this.voices--;
-      source.disconnect();
-      filter.disconnect();
-      gain.disconnect();
-    };
+    this.trackEffect(source, [source, filter, gain]);
     source.start(now);
     source.stop(now + length + 0.01);
   }
   play(kind: string) {
     const c = this.context;
     if (!this.enabled || !this.effectsVolume || !c || c.state !== 'running') return;
+    const cinematic = CINEMATIC_CUES.has(kind);
+    if (this.cinematicQuiet && !cinematic) return;
     const previous = this.played.get(kind) ?? -10;
     const warning = ATTACK_WARNINGS.has(kind);
     const cooldown = warning
@@ -305,8 +373,50 @@ export class Sound {
     if (c.currentTime - previous < cooldown) return;
     this.played.set(kind, c.currentTime);
     this.priorityCue =
+      cinematic ||
       warning ||
       ['hurt', 'win', 'dead', 'shutdown-stop', 'finale-shutdown', 'finale-release'].includes(kind);
+    if (cinematic) {
+      this.cinematicCue = true;
+      this.music?.duck(kind === 'cinema-explosion' ? 4 : kind === 'cinema-plane' ? 2.5 : 1.25);
+      if (kind === 'cinema-start') {
+        this.tone(42, 82, 1.5, 0.1, 'sawtooth');
+        this.tone(660, 110, 0.3, 0.05, 'triangle', 0.12);
+        this.crack(0.3, 0.08, 1200);
+      } else if (kind === 'cinema-plane') {
+        this.tone(32, 86, 3.2, 0.09, 'sawtooth');
+        this.tone(58, 104, 2.6, 0.045, 'triangle', 0.2);
+        this.crack(3, 0.1, 470, true);
+      } else if (kind === 'cinema-cable') {
+        this.tone(140, 340, 1.8, 0.05, 'sawtooth');
+        this.tone(1400, 410, 0.15, 0.045, 'triangle');
+        this.crack(0.16, 0.065, 2400);
+      } else if (kind === 'cinema-impact') {
+        this.tone(72, 24, 1.4, 0.19, 'sine');
+        this.tone(240, 65, 0.55, 0.065, 'triangle');
+        this.crack(0.75, 0.16, 680, true);
+      } else if (kind === 'cinema-core') {
+        this.tone(36, 68, 3.4, 0.09, 'sawtooth');
+        this.tone(110, 45, 1.2, 0.06, 'triangle', 0.2);
+        this.crack(2.8, 0.065, 380, true);
+      } else if (kind === 'cinema-rupture') {
+        this.tone(48, 240, 2.3, 0.085, 'sawtooth');
+        this.tone(97, 482, 2.3, 0.045, 'sine');
+        this.tone(880, 132, 0.4, 0.07, 'triangle', 2.2);
+        this.crack(0.25, 0.08, 1700);
+      } else if (kind === 'cinema-escape') {
+        this.tone(110, 720, 0.6, 0.07, 'sawtooth');
+        this.crack(1.3, 0.07, 1400, true);
+      } else if (kind === 'cinema-explosion') {
+        this.tone(100, 22, 3.6, 0.18, 'sine');
+        this.tone(210, 34, 1.4, 0.08, 'sawtooth');
+        this.crack(2.8, 0.16, 620, true);
+        this.tone(960, 190, 0.35, 0.035, 'triangle', 0.18);
+      }
+      this.cinematicCue = false;
+      this.priorityCue = false;
+      return;
+    }
     if (kind === 'shutdown-break') {
       this.crack(0.16, 0.08, 900);
       this.tone(270, 90, 0.35, 0.06, 'triangle');

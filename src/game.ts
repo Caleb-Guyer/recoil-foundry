@@ -6,7 +6,8 @@ import {
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
-import { reclaimerFinale } from './boss-progression.ts';
+import { reclaimerFinale, cinematicFinale } from './boss-progression.ts';
+import { resolveFinaleFirstClear } from './finale-progression.ts';
 import {
   createFinalArsenal,
   finalArsenalSeed,
@@ -591,6 +592,7 @@ export class Game {
   get layoutSeed() {
     return this.overtime ? overtimeSeed(this.seed) : this.seed;
   }
+  finaleFirstClear = true;
   get canOvertime() {
     return (
       !this.workshop.active &&
@@ -599,7 +601,8 @@ export class Game {
       !!this.escape &&
       !this.detour &&
       this.stage === STAGES - 1 &&
-      !dailyFromSeed(this.seed)
+      !dailyFromSeed(this.seed) &&
+      (!cinematicFinale(this.seed) || !this.finaleFirstClear)
     );
   }
   get canBranch() {
@@ -814,6 +817,7 @@ export class Game {
     remixRules = false,
     huntRules: boolean | 1 | 2 = false,
     huntOrder?: readonly import('./hunt-rules.ts').HuntKind[],
+    finaleFirstClear = true,
   ) {
     this.workshop.active = workshop;
     this.gauntlet.reset();
@@ -823,6 +827,7 @@ export class Game {
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
+    this.finaleFirstClear = resolveFinaleFirstClear(this.seed, save, finaleFirstClear);
     const requestedGun = save
       ? (save.startingGun ?? 'pistol')
       : practice || testRun || workshop
@@ -1029,6 +1034,9 @@ export class Game {
     return {
       version: 6,
       startingGun: this.startingGun,
+      ...(cinematicFinale(this.seed)
+        ? { finaleFirstClear: this.finaleFirstClear ? (1 as const) : (0 as const) }
+        : {}),
       ...(this.encounters ? { encounters: this.encounters } : {}),
       ...(this.teamwork.enabled ? { teamwork: 1 as const } : {}),
       ...(this.bossRemixes ? { bossRemixes: 1 as const } : {}),
@@ -1446,6 +1454,7 @@ export class Game {
     )
       return false;
     this.recordCampaignClear();
+    this.finaleFirstClear = false;
     this.areaEvents.state = null;
     this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 5 };
     this.welder.state = planWelder(this.seed);
@@ -1701,6 +1710,7 @@ export class Game {
   tick(dt: number, input: Input) {
     if (this.mode !== 'playing') return;
     if (this.finale.beforeTick(dt, input)) return;
+    input = this.finale.cinema?.filterInput(input) ?? input;
     if (this.shutdown.complete)
       input = {
         ...input,
@@ -1995,7 +2005,7 @@ export class Game {
       (!this.waves.pending || this.uprising.escapeReady) &&
       !this.auditor.pending &&
       !this.clear &&
-      !this.finale.presenting &&
+      !this.finale.waiting &&
       !this.hunts.waiting &&
       !this.uprising.waiting &&
       (!this.maintenance.active || this.maintenance.atExit) &&
@@ -3728,6 +3738,7 @@ export class Game {
       if (e.hp > 0) this.onSound(armored ? 'armor' : 'hit');
     }
     if (e.hp > 0) return blocked;
+    if (this.finale.cinema?.breakForm(e)) return blocked;
     this.finale.defeated(e);
     this.auditor.killed(e, credited && source !== 'cleanup');
     this.welder.killed(e, credited && source !== 'cleanup');
@@ -3849,7 +3860,7 @@ export class Game {
     return blocked;
   }
   damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }, shot?: Shot) {
-    if (this.workshop.active || this.finale.presenting) return;
+    if (this.workshop.active || this.finale.safe) return;
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < 0.75) return;
     if (shot && this.support.absorb(shot)) return;

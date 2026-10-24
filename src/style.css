@@ -2619,3 +2619,17 @@ body[data-clock-out='true'] .touch-controls {
     bottom: max(88px, env(safe-area-inset-bottom));
   }
 }
+
+/* The finale tells its story with staging and sound. Escape remains available. */
+body[data-finale-scene='true'] .hud > progress,
+body[data-finale-scene='true'] #stage,
+body[data-finale-scene='true'] #factory-condition,
+body[data-finale-scene='true'] #commendation-notice,
+body[data-finale-scene='true'] #uprising-status,
+body[data-finale-scene='true'] #first-session-tip {
+  visibility: hidden;
+}
+body[data-finale-movie='true'] .touch-controls {
+  visibility: hidden;
+  pointer-events: none;
+}

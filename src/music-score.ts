@@ -16,6 +16,12 @@ export interface MusicScene {
   clear: boolean;
   bossPhase?: number;
   outro?: boolean;
+  // Weather uses the effects bus; the score can be silent beneath the same rain.
+  rain?: boolean;
+  rainIntensity?: number;
+  musicSilent?: boolean;
+  effectsSilent?: boolean;
+  cinema?: string;
 }
 
 export interface MusicNote {
@@ -40,6 +46,35 @@ export const MUSIC_PROFILES: Record<MusicTheme, { bpm: number }> = {
 const unit = (value: number) => (Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0);
 
 export function musicScene(game: Game): MusicScene {
+  const cinema = (
+    game.finale as typeof game.finale & {
+      cinema?: { active: boolean; state: string; clock: number };
+    }
+  ).cinema;
+  if (game.finale.active && !game.escape && cinema?.active && cinema.state !== 'off') {
+    const quiet = cinema.state === 'approach' || (cinema.state === 'boarding' && cinema.clock < 4);
+    const aftermath = ['escape', 'destruction', 'complete'].includes(cinema.state);
+    return {
+      area: 'rooftops',
+      theme: game.overtime ? 'reclaimer-overtime' : 'reclaimer',
+      room: game.seed + ':cinematic-finale',
+      mode: game.mode,
+      intensity: aftermath ? 0 : 0.72 + game.finale.phase * 0.14,
+      boss: true,
+      bossPhase: game.finale.phase,
+      clear: aftermath,
+      rain: true,
+      rainIntensity: quiet || aftermath ? 1 : 0.6,
+      // The final detonation leaves only rain, even when result UI arrives.
+      effectsSilent: quiet,
+      musicSilent:
+        quiet ||
+        cinema.state === 'boarding' ||
+        (cinema.state === 'destruction' && cinema.clock >= 3.8) ||
+        cinema.state === 'complete',
+      cinema: cinema.state,
+    };
+  }
   if (game.finale.active && !game.escape)
     return {
       area: 'rooftops',

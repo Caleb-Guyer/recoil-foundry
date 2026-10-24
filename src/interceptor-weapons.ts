@@ -7,7 +7,7 @@ import {
 } from './interceptor-grindshot.ts';
 import type { Enemy, Game, Shot } from './game.ts';
 import type { Vec } from './rules.ts';
-import { finalArsenalSeed } from './boss-progression.ts';
+import { finalArsenalSeed, cinematicFinale } from './boss-progression.ts';
 import { direction, distance, seeded, sample } from './rules.ts';
 
 export type InterceptorMove =
@@ -181,7 +181,16 @@ export function fireWeapon(
   }
 }
 function specDamage(g: Game, damage: number) {
-  return Math.round(damage * (g.overtime && finalArsenalSeed(g.seed) ? 1.1 : 1));
+  return Math.round(
+    damage *
+      (cinematicFinale(g.seed)
+        ? g.overtime
+          ? 1.25
+          : 1.12
+        : g.overtime && finalArsenalSeed(g.seed)
+          ? 1.1
+          : 1),
+  );
 }
 export function rivalCharge(
   g: Game,

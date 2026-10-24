@@ -1,4 +1,11 @@
 import { drawFinalArena, drawFinalThreat, drawFinalHud } from './final-transformation-art.ts';
+import {
+  drawFinaleCinemaBackground,
+  drawFinaleCinemaForeground,
+  drawFinaleCinemaPortrait,
+  finaleCinemaCamera,
+  finaleCinemaScale,
+} from './finale-cinema-art.ts';
 import { drawHuntEnemy, drawHuntProps, drawHunts } from './hunt-art.ts';
 import { commandRemixAngles } from './late-boss-patterns.ts';
 import { drawMelt } from './melt-through.ts';
@@ -188,6 +195,7 @@ export class Renderer {
     const c = this.ctx,
       g = this.game;
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (!portrait && g.finale.cinema?.active && g.finale.owns(e)) continue;
       if (e.patrol) {
         drawPatrolMachine(c, g, e, portrait);
         continue;
@@ -255,7 +263,8 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'interceptor') {
-        drawInterceptor(c, g, e, this.reduced);
+        if (portrait) drawFinaleCinemaPortrait(c, g, e);
+        else drawInterceptor(c, g, e, this.reduced);
         continue;
       }
       if (e.kind === 'turbine') {
@@ -571,6 +580,7 @@ export class Renderer {
     const c = this.ctx,
       g = this.game;
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
+      if (g.finale.cinema?.active && g.finale.owns(e)) continue;
       if (e.hp <= 0 || e.spawn > 0) continue;
       const p = e.body.position;
       if (e.allied && g.areaEvents.departingAt !== null) continue;
@@ -615,6 +625,10 @@ export class Renderer {
       g = this.game,
       dt = Math.min(0.05, (now - this.last) / 1000 || 1 / 60);
     this.last = now;
+    if (!framing) {
+      const base = clamp(this.height / 830, 0.55, 1.6);
+      this.scale = finaleCinemaScale(g, base, this.width, this.height, this.reduced);
+    }
     if (g.mode === 'playing' || g.mode === 'title') this.clock += dt;
     const threats = g.shots.filter((shot) => !shot.friendly && !shot.allied && shot.life > 0);
     const ratio = this.canvas.width / this.width;
@@ -638,7 +652,12 @@ export class Renderer {
       g.worldTop,
       Math.max(g.worldTop, 835 - viewH),
     );
-    if (g.finale.presenting && g.finale.enemy && !this.reduced) {
+    const cinemaFocus = finaleCinemaCamera(g);
+    if (cinemaFocus) {
+      desiredX = clamp(cinemaFocus.x - viewW * 0.5, 0, Math.max(0, g.worldWidth - viewW));
+      desiredY = clamp(cinemaFocus.y - viewH * 0.5, g.worldTop, Math.max(g.worldTop, 835 - viewH));
+    }
+    if (g.finale.presenting && g.finale.enemy && !this.reduced && !g.finale.cinema?.active) {
       desiredX = clamp(
         g.finale.enemy.body.position.x - viewW * 0.5,
         0,
@@ -694,6 +713,7 @@ export class Renderer {
     drawFinalArena(c, g, this.reduced);
     drawStoryBackdrop(c, g, this.reduced);
     drawShutdownBackdrop(c, g);
+    drawFinaleCinemaBackground(c, g, this.reduced);
     if (!g.areaEvents.dark) drawReinforcementDoors(c, g, this.reduced);
     drawCounterweightMounts(c, g);
     const palette = g.annex.active
@@ -728,6 +748,7 @@ export class Renderer {
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
     if (
       framing?.navigation !== false &&
+      !g.finale.cinema?.active &&
       !g.workshop.active &&
       !g.areaEvents.dark &&
       !g.shutdown.chamber
@@ -927,7 +948,7 @@ export class Renderer {
     }
     drawAreaEvent(c, g);
     drawInteractionCues(c, g);
-    if (this.goalCue && g.mode === 'playing') {
+    if (this.goalCue && g.mode === 'playing' && !g.finale.cinema?.active) {
       const { pos, text } = this.goalCue;
       c.save();
       c.font = '13px sans-serif';
@@ -943,8 +964,14 @@ export class Renderer {
     // Keep the actual outfit above friendly rays, arcs, blasts and trails. The
     // hostile projectile and committed warning layers remain above the player.
     if (!framing || framing.player) this.drawPlayer(clarity.pressure);
+    drawFinaleCinemaForeground(c, g, this.reduced);
     this.drawEnemyTells();
-    for (const e of g.enemies) if (g.finale.owns(e)) drawInterceptorThreats(c, g, e, this.reduced);
+    for (const e of g.enemies)
+      if (
+        g.finale.owns(e) &&
+        (!g.finale.cinema?.active || ['duel', 'siege', 'rupture'].includes(g.finale.cinema.state))
+      )
+        drawInterceptorThreats(c, g, e, this.reduced);
     drawFinalThreat(c, g);
     // Mortar shells and committed machine warnings share the threat layer.
     // Dense friendly beams/volleys must never paint over shootable shells or
@@ -997,7 +1024,7 @@ export class Renderer {
     }
 
     if (g.escape) this.drawExtraction(true);
-    if (g.mode === 'playing' && g.escape?.phase !== 'extracting') {
+    if (g.mode === 'playing' && g.escape?.phase !== 'extracting' && !g.finale.cinema?.locked) {
       const a = g.aim,
         r = 6 + g.muzzle * 70;
       this.circle(a, r, '#dce8e1', false, 1 / this.scale);

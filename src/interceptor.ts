@@ -204,6 +204,7 @@ function recover(g: Game, e: Enemy) {
   g.onSound('interceptor-open');
 }
 export function updateInterceptor(g: Game, e: Enemy, dt: number) {
+  if (g.finale.cinema?.beforeEnemy(e)) return;
   const rig = e.interceptor!;
   rig.muzzle = Math.max(0, rig.muzzle - dt);
   if (rig.gate?.flash) {
@@ -331,7 +332,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       g.onSound('interceptor-vault');
     } else {
       const kick = rig.move === 'capacitor' ? 14 : e.attack === 'heavy' ? 12 : 4;
-      recoil(e, { x: -e.aim.x * kick, y: -e.aim.y * kick });
+      if (!g.finale.cinema?.anchored) recoil(e, { x: -e.aim.x * kick, y: -e.aim.y * kick });
       g.onSound(e.attack === 'heavy' ? 'interceptor-heavy' : 'interceptor-shot');
       const remix = lateInterceptorRemix(g.level.bossRemix);
       if (
@@ -378,7 +379,10 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
   if (e.timer > 0) return;
   const hasLane = bossHasLane(g, e);
   const overhead = g.player.position.y < e.body.position.y - 140;
-  if (rig.relocate || !hasLane || overhead || distance(e.body.position, g.player.position) < 180) {
+  if (
+    !g.finale.cinema?.anchored &&
+    (rig.relocate || !hasLane || overhead || distance(e.body.position, g.player.position) < 180)
+  ) {
     const target = bossHuntTarget(g, e, hasLane);
     const length = distance(e.body.position, target);
     if (length > 8) {
@@ -395,7 +399,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       return;
     }
   }
-  if (!hasLane) return;
+  if (!hasLane && !g.finale.cinema?.anchored) return;
   beginInterceptorAttack(
     g,
     e,
