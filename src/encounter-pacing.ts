@@ -1,4 +1,5 @@
 import type { Game, Enemy } from './game.ts';
+import { combatFlowSeed, validCombatFlowSpec } from './combat-flow-rules.ts';
 import type { Level, Spawn } from './levels.ts';
 import { isBoss } from './enemies.ts';
 import { clamp, distance, seeded, type Vec } from './rules.ts';
@@ -6,6 +7,7 @@ import { clamp, distance, seeded, type Vec } from './rules.ts';
 export type EncounterRhythm = 'intro' | 'ambush' | 'crossfire' | 'traversal' | 'breather' | 'boss';
 export interface EncounterPlan {
   rhythm: EncounterRhythm;
+  flow?: true;
   opening: number;
   deadline: number;
   overlap: number;
@@ -21,6 +23,19 @@ export function encounterPlan(
   stage: number,
   mission?: 'steal' | 'escape' | 'sabotage' | 'defend' | null,
 ): EncounterPlan {
+  if (combatFlowSeed(seed) && validCombatFlowSpec(level.combatFlow, level.spawns.length)) {
+    const flow = level.combatFlow;
+    return {
+      flow: true,
+      rhythm: (['crossfire', 'ambush', 'traversal'] as const)[flow.variant],
+      opening: flow.beats[0].length,
+      deadline: flow.deadline,
+      overlap: flow.overlap ?? 0,
+      spacing: 0,
+      cap: flow.cap,
+      rest: flow.rest,
+    };
+  }
   let rhythm: EncounterRhythm;
   if (level.boss) rhythm = 'boss';
   else if (stage === 0) rhythm = 'intro';
@@ -94,6 +109,7 @@ export function shapeEncounter(
 ) {
   // Introduction fights retain the special unit they teach, on its actual anchor.
   if (
+    plan.flow ||
     level.boss ||
     level.remasterIntro ||
     level.machineIntro ||
@@ -166,6 +182,10 @@ export class EncounterPacer {
   readonly game: Game;
   grants = new Map<number, Grant>();
   waiting = new Map<number, Wait>();
+  flowRecoveryUntil = 0;
+  get flowActive() {
+    return this.active && this.game.waves.flowBeat !== null;
+  }
   constructor(game: Game) {
     this.game = game;
   }
@@ -184,6 +204,7 @@ export class EncounterPacer {
   clear() {
     this.grants.clear();
     this.waiting.clear();
+    this.flowRecoveryUntil = 0;
   }
   prune() {
     const g = this.game,
@@ -194,10 +215,32 @@ export class EncounterPacer {
       if (!live.has(id) || g.time - wait.seen > 0.25) this.waiting.delete(id);
   }
   request(e: Enemy, heavy: boolean, duration: number, target: Vec = this.game.player.position) {
-    if (!this.active || e.allied || e.squad || e.eventRole || e.courier) return true;
+    if (!this.active || e.allied || (e.squad && !this.flowActive) || e.eventRole || e.courier)
+      return true;
     const g = this.game;
     this.prune();
     if (this.grants.has(e.id)) return true;
+    // These limits admit only new tells. An already warned shot, landing or
+    // charge always keeps its complete timing and damage.
+    if (this.flowActive) {
+      if (g.time < this.flowRecoveryUntil) return false;
+      // Do not queue an unavailable heavy lane ahead of a readable light answer.
+      if (heavy && g.patrolMachines.shells.length > 0) return false;
+      const entering = g.waves.doors.some(
+        (door) => door.state === 'warning' || door.state === 'open',
+      );
+      const machinery =
+        g.hazards.items.some(
+          (hazard) =>
+            ['warning', 'falling'].includes(hazard.state) &&
+            Math.abs(hazard.body.position.x - target.x) < 420,
+        ) ||
+        g.pressure.items.some(
+          (vent) => ['warn', 'burst'].includes(vent.phase) && distance(vent, target) < 420,
+        ) ||
+        (g.stormfront.items.length > 0 && g.stormfront.phase !== 'rest');
+      if (heavy && (entering || machinery)) return false;
+    }
     const wait = this.waiting.get(e.id) ?? { since: g.time, seen: g.time };
     wait.seen = g.time;
     this.waiting.set(e.id, wait);
@@ -207,15 +250,20 @@ export class EncounterPacer {
     if (first !== e.id) return false;
     const angle = Math.atan2(e.body.position.y - target.y, e.body.position.x - target.x);
     const grants = [...this.grants.values()];
-    const activeHeavy = g.enemies.some(
-      (other) =>
-        other !== e &&
-        other.hp > 0 &&
-        other.spawn <= 0 &&
-        !other.allied &&
-        (isBoss(other.kind) || ['charger', 'hopper', 'sniper'].includes(other.kind)) &&
-        ['windup', 'followup', 'rush', 'airborne'].includes(other.state),
-    );
+    const activeHeavy =
+      g.enemies.some(
+        (other) =>
+          other !== e &&
+          other.hp > 0 &&
+          other.spawn <= 0 &&
+          !other.allied &&
+          (isBoss(other.kind) ||
+            ['charger', 'hopper', 'sniper'].includes(other.kind) ||
+            (this.flowActive &&
+              (other.kind === 'mortar' || (other.kind === 'runner' && !!other.remaster)))) &&
+          ['windup', 'followup', 'rush', 'airborne'].includes(other.state),
+      ) ||
+      (this.flowActive && g.patrolMachines.shells.length > 0);
     const limit = ['intro', 'breather'].includes(g.waves.plan!.rhythm) ? 1 : 2;
     if (
       grants.length >= limit ||
@@ -253,6 +301,15 @@ export class EncounterPacer {
     if (!this.request(e, false, 0.7, target)) e.timer = 0.4 + dt + 0.0001;
   }
   recovery(e: Enemy, previous: Enemy['state']) {
+    if (this.flowActive && previous !== 'recover' && e.state === 'recover' && !e.allied) {
+      const gun = this.game.gun;
+      e.timer = Math.max(
+        e.timer,
+        clamp(gun.interval * (gun.burstCount === 3 ? 3.1 : 1) + 0.12, 0.35, 0.85),
+      );
+      if (['runner', 'charger', 'hopper', 'sniper', 'mortar'].includes(e.kind))
+        this.flowRecoveryUntil = Math.max(this.flowRecoveryUntil, this.game.time + 0.22);
+    }
     if (!this.active || !isBoss(e.kind) || previous === 'recover' || e.state !== 'recover') return;
     const gun = this.game.gun;
     // Every base tool gets a complete firing cycle in a boss's exposed opening.

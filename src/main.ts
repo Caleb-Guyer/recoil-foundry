@@ -8,6 +8,7 @@ import type { RoomRematchView } from './room-rematch-view.ts';
 import type { FinaleServiceMenu } from './finale-service-menu.ts';
 import { finaleServiceTestFromUrl, prepareFinaleServiceTest } from './finale-service-test.ts';
 import { finalApproachTestFromUrl } from './final-approach.ts';
+import { combatFlowTestFromUrl } from './combat-flow-test.ts';
 import { finalePracticePreviewFromUrl, prepareFinalePracticePreview } from './finale-practice.ts';
 import {
   rematchEntry,
@@ -557,7 +558,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><progress id="health" max="100" value="100" aria-label="Health"></progress><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>The Final Approach</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Combat Flow</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -734,7 +735,9 @@ const linkedRematchPreview = rematchPreviewFromUrl(entryUrl);
 const linkedFinalePracticePreview = finalePracticePreviewFromUrl(entryUrl);
 const linkedFinaleServiceTest = finaleServiceTestFromUrl(entryUrl);
 const linkedFinalApproachTest = finalApproachTestFromUrl(entryUrl);
+const linkedCombatFlowTest = combatFlowTestFromUrl(entryUrl);
 let linkedRunTest =
+  linkedCombatFlowTest ??
   linkedFinalePracticePreview?.checkpoint ??
   linkedFinaleServiceTest ??
   linkedFinalApproachTest ??
@@ -1282,6 +1285,13 @@ function updateTitle() {
       'Isolated ' +
       linkedRematchPreview.scene +
       ' test · 1 health. Let a real attack defeat you, then try Watch replay or Practice this room. Progress stays untouched.';
+  }
+  if (linkedCombatFlowTest && linkedRunTest) {
+    $('play').textContent = 'Test Combat Flow ↗';
+    $('title-hint').textContent =
+      'An isolated three-beat fight with your selected weapon and build. ' +
+      bindingLabel(bindings, 'retry') +
+      ' to retry; Continue and unlocks stay untouched.';
   }
   if (linkedFinalApproachTest && linkedRunTest) {
     $('play').textContent = 'Test the final approach ↗';
@@ -3195,11 +3205,11 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.15.0 · THE FINAL APPROACH</p><h2 id="dialog-title">Before the storm.</h2>' +
-      '<p class="update-tagline">Read the warnings. Tune your build. Face the Reclaimer.</p>' +
-      '<dl class="update-notes"><div><dt>The final rooftops.</dt><dd>Three new late-Campaign layouts foreshadow the aircraft and city core. Locked firing lanes and floor marks teach the finale’s warnings, one at a time.</dd></div>' +
-      '<div><dt>One last service.</dt><dd>Before the boss, recover up to 25 health or preview one legal refit in your current upgrade path. Keep your weapon and its combinations. You can also walk past.</dd></div>' +
-      '<div><dt>Learn the fight.</dt><dd>After a finale defeat, practice the Chassis, Siege or Rupture with the build you brought. Only forms reached in that attempt are available. Return to your original result whenever you want.</dd></div></dl>' +
+      '<p class="eyebrow">5.16.0 · COMBAT FLOW</p><h2 id="dialog-title">Read the room.</h2>' +
+      '<p class="update-tagline">Choose your target. Find your angle. Keep moving.</p>' +
+      '<dl class="update-notes"><div><dt>Six familiar rooms.</dt><dd>Overpass, Cargo Switchyard, Warm Exchange, Upper Return, Inspection Lane and Scrap Bridge gain distinct enemy combinations. Three seeded compositions change each room’s opening targets and reserve groups.</dd></div>' +
+      '<div><dt>Three deliberate beats.</dt><dd>Clear the opening, use the recovery to reposition, then meet the next group. Every reinforcement keeps its full arrival warning, and the room waits for every group before rewarding a clear.</dd></div>' +
+      '<div><dt>Work the angles.</dt><dd>Use upper decks, breakable cover and explosive props to make your build count. High and low route choices keep different layouts. Start a new Campaign to meet the revised patrols.</dd></div></dl>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

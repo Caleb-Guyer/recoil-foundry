@@ -364,8 +364,8 @@ test('direct form and transition previews retain exact physical hulls through th
 
 test('revision 97 Campaign, Overtime and remix identities remain distinct from archived revision 96', () => {
   const currentSeed = newCampaignSeed(undefined, () => 12345);
-  assert(currentSeed.startsWith('RF-C98-'));
-  assert(overtimeSeed(currentSeed).startsWith('RF-C98-OT-'));
+  assert(currentSeed.startsWith('RF-C99-'));
+  assert(overtimeSeed(currentSeed).startsWith('RF-C99-OT-'));
   assert(cinematicFinale(currentSeed));
   assert(cinematicFinale(overtimeSeed(currentSeed)));
   const oldSeed = 'RF-C96-ARCHIVED';

@@ -1,4 +1,5 @@
 import type Matter from 'matter-js';
+import { combatFlowSeed, validCombatFlowSpec, type CombatFlowSpec } from './combat-flow-rules.ts';
 import type { Game } from './game.ts';
 import type { Level, Spawn } from './levels.ts';
 import { ENEMY_STATS, isBoss } from './enemies.ts';
@@ -28,9 +29,17 @@ export interface ReinforcementDoor {
   blocked: number;
   attackDelay: number;
   delay?: number;
+  flowBeat?: number;
 }
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
+  if (combatFlowSeed(seed) && validCombatFlowSpec(level.combatFlow, level.spawns.length)) {
+    const beats = level.combatFlow.beats;
+    return [
+      beats[0].map((i) => ({ ...level.spawns[i] })),
+      beats.slice(1).flatMap((beat) => beat.map((i) => ({ ...level.spawns[i] }))),
+    ];
+  }
   if (level.remasterIntro) {
     const intro = level.spawns.find((s) => s.kind === level.remasterIntro);
     if (intro)
@@ -154,6 +163,10 @@ export class ReinforcementSystem {
   openingCount = 0;
   openingTime = 0;
   plan: EncounterPlan | null = null;
+  flow: { spec: CombatFlowSpec; beat: number; rest: number | null } | null = null;
+  get flowBeat(): number | null {
+    return this.flow?.beat ?? null;
+  }
   constructor(game: Game) {
     this.game = game;
   }
@@ -166,6 +179,7 @@ export class ReinforcementSystem {
   release() {
     if (!this.held) return false;
     this.held = false;
+    if (this.flow) return true;
     this.phase = this.doors.length ? 'warning' : 'done';
     for (const door of this.doors) {
       if (this.plan && (door.delay ?? 0) > 0) continue;
@@ -181,6 +195,7 @@ export class ReinforcementSystem {
     this.openingCount = 0;
     this.openingTime = 0;
     this.plan = null;
+    this.flow = null;
     this.game.encounterPacer.clear();
   }
   reset(level: Level) {
@@ -188,6 +203,54 @@ export class ReinforcementSystem {
     const g = this.game;
     // Turf formations are placed after props and moving terrain are ready.
     if (g.areaEvents.encounter === 'turf') return [];
+    if (
+      combatFlowSeed(g.seed) &&
+      validCombatFlowSpec(level.combatFlow, level.spawns.length) &&
+      g.encounters === 1 &&
+      !g.overtime &&
+      !g.practice &&
+      !g.workshop.active &&
+      !g.detour &&
+      !g.escape &&
+      !level.boss &&
+      !level.annex &&
+      !level.freight &&
+      !level.crossing &&
+      !level.floodgate &&
+      !level.story &&
+      !level.sortingPit &&
+      !level.courier &&
+      !level.shutdown &&
+      !level.uprising &&
+      !level.hunt &&
+      !level.security &&
+      !level.machineIntro &&
+      !level.remasterIntro &&
+      !level.teamworkIntro &&
+      !level.fabricatorIntro &&
+      !level.harpoonIntro &&
+      !level.anglerIntro &&
+      !level.crawlerIntro &&
+      !level.sapperIntro
+    ) {
+      const spec = structuredClone(level.combatFlow);
+      this.flow = { spec, beat: 0, rest: null };
+      this.plan = encounterPlan(level, g.roomSeed, g.stage);
+      this.openingCount = spec.beats[0].length;
+      const random = seeded(g.roomSeed + ':flow-entry-v1:' + g.stage);
+      this.doors = spec.beats.slice(1).flatMap((beat, offset) =>
+        beat.map((i) => ({
+          spawn: { ...level.spawns[i] },
+          state: 'sealed' as const,
+          timer: 0,
+          blocked: 0,
+          attackDelay: 0.75 + random() * 0.45,
+          flowBeat: offset + 1,
+        })),
+      );
+      this.phase = 'opening';
+      return spec.beats[0].map((i) => ({ ...level.spawns[i] }));
+    }
     const [opening, final] =
       g.overtime && level.boss
         ? [level.spawns.slice(0, 1), level.spawns.slice(1)]
@@ -276,7 +339,16 @@ export class ReinforcementSystem {
           ['flyer', 'skimmer', 'sifter'].includes(door.spawn.kind),
       )
       .filter((s) => !g.level.freight || Math.abs(s.y - door.spawn.y) < 40)
-      .map((anchor) => ({ ...door.spawn, x: anchor.x, y: anchor.y }))
+      .map((anchor) => ({
+        ...door.spawn,
+        x: anchor.x,
+        // A Flow reserve may have a different hull height from the old anchor.
+        // Reuse its supported foot line, never bury a taller machine in a deck.
+        y:
+          this.flow && !['flyer', 'skimmer', 'sifter'].includes(door.spawn.kind)
+            ? anchor.y + ENEMY_STATS[anchor.kind].h / 2 - ENEMY_STATS[door.spawn.kind].h / 2
+            : anchor.y,
+      }))
       .filter(
         (s) =>
           distance(s, door.spawn) > 40 &&
@@ -293,9 +365,90 @@ export class ReinforcementSystem {
     door.blocked = 0;
     g.onSound('reinforce');
   }
+  private updateFlow(dt: number) {
+    const g = this.game,
+      flow = this.flow!;
+    for (const door of this.doors) {
+      if (door.state === 'open') {
+        door.timer = Math.max(0, door.timer - dt);
+        if (door.timer === 0) door.state = 'spent';
+      }
+    }
+    if (this.phase === 'final' || this.phase === 'done') {
+      if (!g.combatEnemyCount) this.phase = 'done';
+      return;
+    }
+    if (this.phase === 'opening') {
+      if (flow.rest !== null) {
+        flow.rest = Math.max(0, flow.rest - dt);
+        if (flow.rest > 1e-8) return;
+        flow.beat++;
+        flow.rest = null;
+        this.openingTime = 0;
+        this.phase = 'warning';
+        for (const door of this.doors.filter((d) => d.flowBeat === flow.beat)) {
+          door.state = 'warning';
+          door.timer = REINFORCEMENT_TELL;
+        }
+        g.onSound('reinforce');
+        return;
+      }
+      this.openingTime += dt;
+      if (
+        g.combatEnemyCount <= (flow.spec.overlap ?? 0) ||
+        this.openingTime >= flow.spec.deadline
+      ) {
+        // Rest starts only after this cohort is active, not from room entry.
+        // Even a fast clear leaves time before the next complete door warning.
+        flow.rest = flow.spec.rest;
+      }
+      return;
+    }
+    const cohort = this.doors.filter((d) => d.flowBeat === flow.beat && d.state === 'warning');
+    for (const door of cohort) door.timer = Math.max(0, door.timer - dt);
+    if (!cohort.length || cohort.some((door) => door.timer > 1e-8)) return;
+    if (g.combatEnemyCount + cohort.length > flow.spec.cap) return;
+    const blocked = cohort.filter((door) => !this.canEnter(door.spawn));
+    if (blocked.length) {
+      for (const door of blocked) {
+        door.blocked += dt;
+        if (door.blocked >= 0.5) this.relocate(door);
+      }
+      return;
+    }
+    // Admit an authored pair together. Occupancy cannot strand a support unit
+    // alone while its partner is waiting behind a blocked door.
+    for (const door of cohort) {
+      const s = door.spawn;
+      const enemy = g.spawnEnemy(
+        s.kind,
+        s.x,
+        s.y,
+        s.elite,
+        door.attackDelay,
+        s.squad,
+        s.mutation,
+        s.machineVariant,
+      );
+      if (!enemy) continue;
+      enemy.fromDoor = true;
+      door.state = 'open';
+      door.timer = REINFORCEMENT_ENTRY;
+      door.blocked = 0;
+    }
+    if (cohort.some((door) => door.state === 'warning')) return;
+    this.openingCount = flow.spec.beats[flow.beat].length;
+    this.openingTime = 0;
+    this.phase = flow.beat === flow.spec.beats.length - 1 ? 'final' : 'opening';
+  }
   update(dt: number) {
     const g = this.game;
     if (this.held || g.mode !== 'playing' || g.escape || (g.level.boss && !g.overtime)) return;
+    if (this.flow) {
+      if (!(dt > 0) || !Number.isFinite(dt) || g.hitStop > 0) return;
+      this.updateFlow(Math.min(dt, 0.1));
+      return;
+    }
     if (this.phase === 'opening') {
       if (g.level.freight) return;
       if (
