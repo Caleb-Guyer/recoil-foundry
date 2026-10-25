@@ -1,3 +1,5 @@
+import { toolsOfTradeTestFromUrl } from './tools-of-trade-test.ts';
+import type { ToolTrialView } from './tool-trial-view.ts';
 import { uprisingRemasterTestFromUrl } from './uprising-remaster-test.ts';
 import { uprisingRemasterObjective } from './uprising-remaster-rules.ts';
 import { UPRISING_JOB_EFFECTS } from './uprising-job-copy.ts';
@@ -235,6 +237,7 @@ import {
 import { BLUEPRINTS_KEY, loadBlueprints } from './blueprints.ts';
 import {
   STARTING_GUNS,
+  STARTING_GUN_IDS,
   dailyStartingGun,
   isStartingGun,
   type StartingGun,
@@ -584,7 +587,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Uprising Remaster</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Tools of the Trade</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -622,6 +625,12 @@ game.cosmetics = { ...equippedCosmetics };
 let replayView: ReplayView | null = null;
 let upgradePreview: UpgradePreviewView | null = null;
 let supportDrill: SupportDrillView | null = null;
+let toolTrialView: ToolTrialView | null = null;
+let selectedToolTrial: StartingGun = 'pistol';
+let toolTrialScene: 'range' | 'converted' = 'range';
+let toolTrialParent: 'starting-gun' | 'goal-campaign' = 'starting-gun';
+let toolPickerPreview = false;
+let toolPickerSelection: StartingGun | null = null;
 let roomRematchView: RoomRematchView | null = null;
 let finaleServiceMenu: FinaleServiceMenu | null = null;
 let jobPaymentMenu: UprisingRewardMenu | null = null;
@@ -633,6 +642,7 @@ const optional = {
   jobPayment: new LazyResource(() => import('./uprising-reward-menu.ts')),
   finaleService: new LazyResource(() => import('./finale-service-menu.ts')),
   drill: new LazyResource(() => import('./support-drill-view.ts')),
+  toolTrial: new LazyResource(() => import('./tool-trial-view.ts')),
   upgrade: new LazyResource(() => import('./upgrade-preview-view.ts')),
   routePreview: new LazyResource(() => import('./route-preview-view.ts')),
 };
@@ -811,9 +821,11 @@ const linkedBossRemasterTest = bossRemasterTestFromUrl(entryUrl);
 const linkedFirstShiftTest = firstShiftTestFromUrl(entryUrl);
 const linkedRivalShiftTest = rivalShiftTestFromUrl(entryUrl);
 const linkedUprisingRemasterTest = uprisingRemasterTestFromUrl(entryUrl);
+const linkedToolsTest = toolsOfTradeTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedToolsTest?.checkpoint ??
   linkedUprisingRemasterTest?.checkpoint ??
   linkedRivalShiftTest?.checkpoint ??
   linkedFirstShiftTest?.checkpoint ??
@@ -1405,6 +1417,18 @@ function updateTitle() {
             : 'Fight the Turbine after Core sabotage. Its phase updraft shafts stay disabled.') +
       ' R restarts; Continue and unlocks stay untouched.';
   }
+  if (linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed) {
+    $('play').textContent =
+      linkedToolsTest.scene === 'picker'
+        ? 'Test Try tool ↗'
+        : 'Test ' + STARTING_GUNS[linkedToolsTest.gun].name + ' ↗';
+    $('title-hint').textContent =
+      linkedToolsTest.scene === 'picker'
+        ? 'Try any tool, return to the picker, or start an isolated test. Your unlocks and Continue stay untouched.'
+        : 'A private range with native weapon handling. ' +
+          (linkedToolsTest.scene === 'converted' ? 'Compare the converted ammunition. ' : '') +
+          'Your unlocks and Continue stay untouched.';
+  }
   if (linkedRivalShiftTest && linkedRunTest?.seed === linkedRivalShiftTest.checkpoint.seed) {
     $('play').textContent = 'Test Rival Shift ↗';
     $('title-hint').textContent =
@@ -1719,6 +1743,8 @@ function closeDialog() {
   roomRematchView = null;
   supportDrill?.dispose();
   supportDrill = null;
+  toolTrialView?.dispose();
+  toolTrialView = null;
   upgradePreview?.dispose();
   upgradePreview = null;
   buildMenu = null;
@@ -1873,10 +1899,22 @@ function backFromControls() {
   }
 }
 function updateMusic(active = pageActive && document.hasFocus() && !document.hidden) {
-  const soundingGame = roomRematchView?.session.game ?? supportDrill?.game ?? game;
+  const soundingGame =
+    toolTrialView?.game ?? roomRematchView?.session.game ?? supportDrill?.game ?? game;
   sound.setListener(soundingGame.player.position);
   sound.updateMusic(musicScene(soundingGame), active);
   sound.updateWorld(factoryAudioScene(soundingGame), active);
+  sound.updateToolAudio(
+    active &&
+      soundingGame.mode === 'playing' &&
+      soundingGame.hitStop <= 0 &&
+      soundingGame.startingGun === 'repeater' &&
+      !soundingGame.torch.equipped &&
+      !soundingGame.massDriver.equipped &&
+      !soundingGame.gun.shellshock &&
+      soundingGame.time - soundingGame.lastShot <=
+        Math.min(0.22, Math.max(0.055, soundingGame.gun.interval * 1.3)),
+  );
   sound.updateTorch(
     active &&
       soundingGame.mode === 'playing' &&
@@ -1947,6 +1985,8 @@ function start(
   linkedTrial = null;
   invalidTrialLink = false;
   linkedRunTest = null;
+  toolPickerPreview = false;
+  toolPickerSelection = null;
   renderer.cameraMode = preferredCameraMode;
   focusCameraPreview = false;
   linkedWorkshop = false;
@@ -2507,7 +2547,32 @@ function unlockStartingGun(gun: 'shotgun' | 'nailgun') {
   earnRunRewards(['gun:' + gun]);
   updateArchive(['gun:' + gun]);
 }
+function openToolTrial(
+  gun: StartingGun,
+  parent: 'starting-gun' | 'goal-campaign' = 'starting-gun',
+  scene: 'range' | 'converted' = 'range',
+) {
+  if (!toolPickerPreview && !unlockedStartingGuns(weaponUnlocks()).includes(gun)) return;
+  sound.unlock();
+  toolPickerSelection = selectedToolTrial = gun;
+  toolTrialParent = parent;
+  toolTrialScene = scene;
+  showDialog('tool-trial');
+}
+function backFromToolTrial() {
+  showDialog(toolTrialParent);
+  document.getElementById('try-tool')?.focus({ preventScroll: true });
+}
+function startLinkedToolsTest() {
+  if (!linkedToolsTest || linkedRunTest?.seed !== linkedToolsTest.checkpoint.seed) return;
+  toolPickerPreview = true;
+  toolPickerSelection = linkedToolsTest.gun;
+  if (linkedToolsTest.scene === 'picker') showDialog('starting-gun');
+  else openToolTrial(linkedToolsTest.gun, 'starting-gun', linkedToolsTest.scene);
+}
 function startFreshCampaign() {
+  toolPickerPreview = false;
+  toolPickerSelection = null;
   if (weaponUnlocks().started) showDialog('starting-gun');
   else start(undefined, false, undefined, undefined, undefined, undefined, undefined, 'pistol');
 }
@@ -3149,6 +3214,8 @@ function showDialog(kind: string) {
   roomRematchView = null;
   supportDrill?.dispose();
   supportDrill = null;
+  toolTrialView?.dispose();
+  toolTrialView = null;
   upgradePreview?.dispose();
   upgradePreview = null;
   if (kind === 'upgrade' && game.uprising.choices.length) kind = 'uprising';
@@ -3192,7 +3259,7 @@ function showDialog(kind: string) {
   modal.classList.toggle('rematch-dialog', kind === 'room-rematch');
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle('goal-dialog', kind === 'next-goal');
-  modal.classList.toggle('drill-dialog', kind === 'support-drill');
+  modal.classList.toggle('drill-dialog', kind === 'support-drill' || kind === 'tool-trial');
   modal.classList.toggle(
     'ending-dialog',
     kind === 'result' &&
@@ -3208,28 +3275,31 @@ function showDialog(kind: string) {
   modal.classList.toggle('feedback-dialog', kind === 'issue');
   const content = $('dialog-content');
   const resource =
-    kind === 'job-payment'
-      ? optional.jobPayment
-      : kind === 'finale-service'
-        ? optional.finaleService
-        : kind === 'workshop' || kind === 'practice-build'
-          ? optional.workshop
-          : kind === 'logbook'
-            ? optional.logbook
-            : kind === 'room-rematch'
-              ? optional.rematch
-              : kind === 'support-drill'
-                ? optional.drill
-                : kind === 'replay'
-                  ? optional.replay
-                  : null;
+    kind === 'tool-trial'
+      ? optional.toolTrial
+      : kind === 'job-payment'
+        ? optional.jobPayment
+        : kind === 'finale-service'
+          ? optional.finaleService
+          : kind === 'workshop' || kind === 'practice-build'
+            ? optional.workshop
+            : kind === 'logbook'
+              ? optional.logbook
+              : kind === 'room-rematch'
+                ? optional.rematch
+                : kind === 'support-drill'
+                  ? optional.drill
+                  : kind === 'replay'
+                    ? optional.replay
+                    : null;
   if (resource && !resource.value) {
     const current = dialogLifetime.ticket();
     content.innerHTML =
       '<h2 id="dialog-title">Loading…</h2><p role="status">Opening this tool.</p><div class="actions"><button id="back" class="quiet">Back</button></div>';
     $('back').onclick = () => {
       appearanceRequested = false;
-      if (kind === 'job-payment') {
+      if (kind === 'tool-trial') backFromToolTrial();
+      else if (kind === 'job-payment') {
         game.save();
         menu();
       } else if (kind === 'finale-service') {
@@ -3362,11 +3432,28 @@ function showDialog(kind: string) {
       backFromDrill,
       (kind, origin) => sound.play(kind, origin),
     );
+  } else if (kind === 'tool-trial') {
+    toolTrialView = new optional.toolTrial.value!.ToolTrialView(
+      content,
+      selectedToolTrial,
+      {
+        bindings,
+        back: backFromToolTrial,
+        sound: (kind, origin) => sound.play(kind, origin),
+        unlockAudio: () => sound.unlock(),
+        stopAudio: () => sound.resetMusic(),
+      },
+      toolTrialScene,
+    );
   } else if (kind === 'starting-gun' || kind === 'goal-campaign') {
     startingGunMenu(
       content,
-      selectedStartingGun,
-      (gun) =>
+      toolPickerSelection ?? selectedStartingGun,
+      (gun) => {
+        if (toolPickerPreview && linkedToolsTest) {
+          startRunTest({ ...structuredClone(linkedToolsTest.checkpoint), startingGun: gun });
+          return;
+        }
         start(
           undefined,
           false,
@@ -3376,10 +3463,18 @@ function showDialog(kind: string) {
           undefined,
           undefined,
           gun,
-        ),
+        );
+      },
       kind === 'goal-campaign' ? () => showDialog('next-goal') : closeDialog,
-      unlockedStartingGuns(weaponUnlocks()),
+      toolPickerPreview ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
+      {
+        tryTool: (gun) => openToolTrial(gun, kind),
+        onSelect: (gun) => {
+          toolPickerSelection = gun;
+        },
+      },
     );
+    if (toolPickerPreview) $('start-with-gun').textContent = 'Start test';
     if (kind === 'goal-campaign') {
       const level = goalCampaignSecurity ?? selectedSecurity;
       content.querySelector('.starting-gun-intro')!.textContent =
@@ -3452,13 +3547,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.25.0 · UPRISING REMASTER</p><h2 id="dialog-title">Make the job count.</h2>' +
-      '<p class="update-tagline">Different objectives. A choice of payment.</p>' +
-      '<dl class="update-notes"><div><dt>Eleven jobs, distinct sequences.</dt><dd>Protect moving cargo, restore successive crew stations, extract stolen prototypes through pursuit or open a service bridge through sabotage. Authored response crews keep each job different.</dd></div>' +
-      '<div><dt>Choose your payment.</dt><dd>Successful jobs offer repairs, a free upgrade reroll or one legal refit. Preview your actual gun before accepting a refit. Each job pays once.</dd></div>' +
-      '<div><dt>Consequences that last.</dt><dd>Completed jobs show their effect on the factory and final defense. Core sabotage now keeps the Turbine’s phase updraft shafts disabled too.</dd></div></dl>' +
-      '<p class="practice-record-note">Start a new Campaign for the remastered jobs. Earlier Continue and Daily missions keep their rules; discoveries and unlocks are preserved.</p>' +
-      '<p>Try: <a href="?test=uprising-remaster&amp;route=rail-guard&amp;v=1">Convoy ↗</a> · <a href="?test=uprising-remaster&amp;route=rail-heist&amp;v=1">Heist ↗</a> · <a href="?test=uprising-remaster&amp;route=core-sabotage&amp;v=1">Sabotage ↗</a> · <a href="?test=uprising-remaster&amp;route=rewards&amp;v=1">Payments ↗</a></p>' +
+      '<p class="eyebrow">5.26.0 · TOOLS OF THE TRADE</p><h2 id="dialog-title">Know your tool.</h2>' +
+      '<p class="update-tagline">Mechanical feedback. A range before the run.</p>' +
+      '<dl class="update-notes"><div><dt>Every discharge has a mechanism.</dt><dd>The Coil carbine discharges and recovers its coils. Twinbore cycles both barrels. Pressure repeater works its feed as actual shots build pressure.</dd></div>' +
+      '<div><dt>Hear the work.</dt><dd>Distinct mechanical layers follow real firing cadence, with a restrained pressure rise and release for sustained repeater fire. Pause, mute and background rules still apply.</dd></div>' +
+      '<div><dt>Try before a run.</dt><dd>Select an unlocked gun in the weapon picker and choose Try tool. Use the native range, reset freely, then return to the same selection. Your current run and progress stay untouched.</dd></div></dl>' +
+      '<p class="practice-record-note">Weapon balance, upgrade combinations, existing saves and Daily rules are unchanged. First-time players still begin with the Service pistol.</p>' +
+      '<p>Try: <a href="?test=tools-of-trade&amp;gun=carbine&amp;scene=range&amp;v=1">Coil carbine ↗</a> · <a href="?test=tools-of-trade&amp;gun=twinbore&amp;scene=range&amp;v=1">Twinbore ↗</a> · <a href="?test=tools-of-trade&amp;gun=repeater&amp;scene=range&amp;v=1">Repeater ↗</a> · <a href="?test=tools-of-trade&amp;gun=carbine&amp;scene=picker&amp;v=1">Try tool ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4929,6 +5024,8 @@ function showDialog(kind: string) {
   )
     insertGoalResult();
   if (!modal.open) modal.showModal();
+  if (kind === 'tool-trial')
+    content.querySelector<HTMLCanvasElement>('.tool-trial-canvas')?.focus({ preventScroll: true });
   updateControlHints();
   updateSaveStatus();
   if (kind === 'settings') {
@@ -5117,6 +5214,7 @@ function pollController(now: number) {
   if (sample.connected !== wasConnected) updateControlHints();
   if (sample.disconnected && inputDevice === 'controller') {
     useInputDevice('pointer');
+    if (toolTrialView?.isPlaying) toolTrialView.toggle();
     if (supportDrill?.isPlaying) supportDrill.toggle();
     if (roomRematchView?.isPlaying) roomRematchView.toggle();
     if (game.mode === 'playing') showDialog('pause');
@@ -5125,6 +5223,16 @@ function pollController(now: number) {
   }
   if (sample.activity) useInputDevice('controller');
   if (inputDevice !== 'controller') return null;
+  if (toolTrialView) {
+    if (sample.back) backFromToolTrial();
+    else if (sample.pause) toolTrialView.toggle();
+    else if (toolTrialView.isPlaying) return sample;
+    else {
+      if (sample.navigation) navigateControllerMenu(modal, sample.navigation);
+      if (sample.confirm) confirmControllerMenu(modal);
+    }
+    return null;
+  }
   if (roomRematchView) {
     if (sample.back) showDialog('result');
     else if (sample.pause) roomRematchView.toggle();
@@ -5183,45 +5291,47 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedGoalPreview || linkedTrackingPreview
-    ? location.assign(new URL('./', location.href).href)
-    : linkedFirstRunPreview === 'warmup'
-      ? startWorkshop([], true)
-      : linkedDrill
-        ? startLinkedSupportDrill(linkedDrill)
-        : linkedGauntletPreview
-          ? startGauntlet(linkedGauntletPreview, true)
-          : linkedRemixGauntletPreview
-            ? linkedRemixGauntletPreview.setup
-              ? (() => {
-                  gauntletSetupPreview = true;
-                  gauntletSetupMode = 'remix';
-                  showDialog('gauntlet-setup');
-                })()
-              : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
-            : linkedGauntletChallenge || invalidGauntletLink
-              ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
-              : linkedRecoilChallenge || invalidRecoilLink
-                ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-                : linkedTrial?.preview
-                  ? startTrial(linkedTrial.route, true)
-                  : linkedTrial || invalidTrialLink
-                    ? openTrials('title', linkedTrial?.challenge)
-                    : linkedWorkshop
-                      ? showDialog('workshop')
-                      : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                          entryUrl.searchParams.get('test') !== 'arc'
-                        ? showDialog('layout-test')
-                        : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                            linkedRunTest?.seed.startsWith('FUSIONS-')
-                          ? showDialog('upgrade-test')
-                          : linkedRunTest
-                            ? startRunTest(linkedRunTest)
-                            : linkedTest
-                              ? startPractice(linkedTest, null, { test: true })
-                              : linkedDaily
-                                ? start()
-                                : startFreshCampaign();
+  linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+    ? startLinkedToolsTest()
+    : linkedGoalPreview || linkedTrackingPreview
+      ? location.assign(new URL('./', location.href).href)
+      : linkedFirstRunPreview === 'warmup'
+        ? startWorkshop([], true)
+        : linkedDrill
+          ? startLinkedSupportDrill(linkedDrill)
+          : linkedGauntletPreview
+            ? startGauntlet(linkedGauntletPreview, true)
+            : linkedRemixGauntletPreview
+              ? linkedRemixGauntletPreview.setup
+                ? (() => {
+                    gauntletSetupPreview = true;
+                    gauntletSetupMode = 'remix';
+                    showDialog('gauntlet-setup');
+                  })()
+                : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
+              : linkedGauntletChallenge || invalidGauntletLink
+                ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
+                : linkedRecoilChallenge || invalidRecoilLink
+                  ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+                  : linkedTrial?.preview
+                    ? startTrial(linkedTrial.route, true)
+                    : linkedTrial || invalidTrialLink
+                      ? openTrials('title', linkedTrial?.challenge)
+                      : linkedWorkshop
+                        ? showDialog('workshop')
+                        : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                            entryUrl.searchParams.get('test') !== 'arc'
+                          ? showDialog('layout-test')
+                          : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                              linkedRunTest?.seed.startsWith('FUSIONS-')
+                            ? showDialog('upgrade-test')
+                            : linkedRunTest
+                              ? startRunTest(linkedRunTest)
+                              : linkedTest
+                                ? startPractice(linkedTest, null, { test: true })
+                                : linkedDaily
+                                  ? start()
+                                  : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
@@ -5299,6 +5409,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'tool-trial') {
+    backFromToolTrial();
+    return;
+  }
   if (dialogKind === 'job-payment') {
     jobPaymentMenu?.back();
     return;
@@ -5400,6 +5514,11 @@ function cancelDialog() {
   resume();
 }
 window.addEventListener('keydown', (e) => {
+  if (toolTrialView) {
+    useInputDevice('pointer');
+    toolTrialView.keyDown(e);
+    return;
+  }
   if (roomRematchView) {
     useInputDevice('pointer');
     roomRematchView.keyDown(e);
@@ -5547,6 +5666,7 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => {
   keys.delete(e.code);
+  toolTrialView?.keyUp(e);
   supportDrill?.keyUp(e);
   roomRematchView?.keyUp(e);
 });
@@ -5661,6 +5781,13 @@ function frame(now: number) {
     modal.open && pageActive && document.hasFocus() && !document.hidden,
   );
   roomRematchView?.frame(
+    dt,
+    now,
+    renderer.reduced,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+    pad,
+  );
+  toolTrialView?.frame(
     dt,
     now,
     renderer.reduced,

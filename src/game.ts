@@ -2190,7 +2190,7 @@ export class Game {
     });
     this.combatFeel.update(
       this.time,
-      this.combatFeel.nails.length ? Composite.allBodies(this.engine.world) : [],
+      this.combatFeel.hasAttachments ? Composite.allBodies(this.engine.world) : [],
       this.onSound,
     );
     this.trail.unshift({ ...this.player.position });
@@ -2416,6 +2416,7 @@ export class Game {
       this.combatFeel.pumpStartedAt = this.time;
       this.combatFeel.pumpAt = this.time + clamp(this.gun.interval * 0.72, 0.02, 0.42) * 0.65;
     }
+    this.combatFeel.discharge(this, rail);
     const baseDamage =
       this.gun.damage *
       (this.grounded ? 1 : this.gun.airDamage) *
@@ -3579,7 +3580,14 @@ export class Game {
         if (nearest.body && !nearest.enemy && this.melt.begin(s, nearest.body)) continue;
         const impactDamage = this.massDriver.impactDamage(s);
         s.impactNormal = { ...nearest.normal };
-        this.combatFeel.impact(s, nearest.normal, this.time);
+        this.combatFeel.impact(
+          s,
+          nearest.normal,
+          this.time,
+          s.nativeTool === 'carbine'
+            ? (nearest.enemy?.body ?? nearest.prop?.body ?? nearest.body)
+            : undefined,
+        );
         if (s.mutationShell) {
           this.mutations.explode(s);
           if (this.mode !== 'playing') return;

@@ -236,6 +236,7 @@ export class Sound {
   }
   updateWorld(scene: FactoryAudioScene | null, active = true) {
     if (this.worldScene && (!scene || this.worldScene.room !== scene.room)) {
+      this.resetToolCadence();
       for (const [source, voice] of [...this.effectVoices]) {
         if (!voice.spatial || voice.cinematic) continue;
         try {
@@ -319,6 +320,7 @@ export class Sound {
       if (voice.spatial && voice.ends <= this.context.currentTime) voice.dispose();
   }
   private cancelEffects(cinematicOnly = false) {
+    this.resetToolCadence();
     for (const [source, voice] of [...this.effectVoices]) {
       if (cinematicOnly && !voice.cinematic) continue;
       try {
@@ -346,6 +348,39 @@ export class Sound {
     source.onended = dispose;
   }
   private effectsDuckUntil = 0;
+  private repeaterLast: number | null = null;
+  private repeaterPressure = 0;
+  private repeaterOrigin: SoundOrigin | null = null;
+  private resetToolCadence() {
+    this.repeaterLast = null;
+    this.repeaterPressure = 0;
+    this.repeaterOrigin = null;
+  }
+  /** Only real discharge events build pressure. Frame updates can release it, never start it. */
+  updateToolAudio(firing: boolean) {
+    const c = this.context;
+    if (
+      !c ||
+      c.state !== 'running' ||
+      !this.enabled ||
+      !this.effectsVolume ||
+      this.effectsSuspended ||
+      !this.worldActive ||
+      this.cinematicQuiet
+    ) {
+      this.resetToolCadence();
+      return;
+    }
+    if (this.repeaterLast === null) return;
+    const elapsed = c.currentTime - this.repeaterLast;
+    if (elapsed < 0 || elapsed > 0.35) {
+      this.resetToolCadence();
+      return;
+    }
+    if (firing) return;
+    this.play('repeater-release', this.repeaterOrigin ?? undefined);
+    this.resetToolCadence();
+  }
   noise: AudioBuffer | null = null;
   private torchVoice: { osc: OscillatorNode; gain: GainNode; frequency: number } | null = null;
   updateTorch(active: boolean, heat = 0) {
@@ -622,6 +657,21 @@ export class Sound {
     const cinematic = CINEMATIC_CUES.has(kind);
     if (this.cinematicQuiet && !cinematic) return;
     const warning = ATTACK_WARNINGS.has(kind);
+    if (
+      [
+        'shot',
+        'scatter',
+        'heavy',
+        'charged',
+        'mass-shot',
+        'shell-shot',
+        'carbine-shot',
+        'twinbore-shot',
+        'shotgun-shot',
+        'nail-shot',
+      ].includes(kind)
+    )
+      this.resetToolCadence();
     this.priorityCue =
       cinematic ||
       warning ||
@@ -836,16 +886,32 @@ export class Sound {
       this.tone(420, 180, 0.085, 0.045, 'triangle');
       this.crack(0.035, 0.035, 1100);
     } else if (kind === 'carbine-shot') {
-      this.tone(820, 150, 0.07, 0.075, 'sawtooth');
-      this.tone(120, 35, 0.14, 0.16, 'triangle');
-      this.crack(0.055, 0.11, 2100);
+      // A short coil snap, solid report, then the bolt returning to battery.
+      this.tone(920, 210, 0.055, 0.07, 'sine');
+      this.tone(130, 38, 0.13, 0.15, 'triangle');
+      this.crack(0.045, 0.1, 2200);
+      this.tone(1300, 260, 0.075, 0.022, 'sine', 0.035);
+      this.tone(500, 280, 0.022, 0.025, 'triangle', 0.12);
     } else if (kind === 'twinbore-shot') {
-      this.tone(160, 45, 0.1, 0.15, 'triangle');
-      this.crack(0.05, 0.1, 1550);
-      this.tone(320, 95, 0.05, 0.035, 'square', 0.015);
+      // Two closely paired bores, followed by a quiet two-part action reset.
+      this.tone(145, 48, 0.075, 0.11, 'triangle');
+      this.tone(210, 62, 0.075, 0.085, 'triangle', 0.018);
+      this.crack(0.055, 0.12, 1350);
+      this.tone(320, 175, 0.026, 0.023, 'square', 0.115);
+      this.tone(190, 360, 0.022, 0.018, 'triangle', 0.14);
     } else if (kind === 'repeater-shot') {
-      this.tone(390, 110, 0.035, 0.065, 'triangle');
-      this.crack(0.026, 0.085, 2600);
+      const gap = this.repeaterLast === null ? Infinity : c.currentTime - this.repeaterLast;
+      this.repeaterPressure =
+        gap >= 0 && gap <= 0.28 ? Math.min(1, this.repeaterPressure + 0.13) : 0;
+      this.repeaterLast = c.currentTime;
+      this.repeaterOrigin = this.cueOrigin ? { ...this.cueOrigin } : null;
+      const pressure = this.repeaterPressure;
+      this.tone(390 + pressure * 130, 110 + pressure * 80, 0.035, 0.065, 'triangle');
+      this.crack(0.026, 0.078 + pressure * 0.007, 2600 + pressure * 700);
+      this.tone(105 + pressure * 60, 100 + pressure * 50, 0.07, 0.018, 'triangle', 0.024);
+    } else if (kind === 'repeater-release') {
+      this.tone(180 + this.repeaterPressure * 80, 70, 0.09, 0.022, 'triangle');
+      this.crack(0.045, 0.022, 850);
     } else if (kind === 'shotgun-shot') {
       this.tone(92, 28, 0.19, 0.23);
       this.crack(0.14, 0.19, 1000);

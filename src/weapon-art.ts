@@ -4,6 +4,7 @@ import type { Game } from './game.ts';
 import { clamp } from './rules.ts';
 import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
 import { pumpCycle } from './combat-feel.ts';
+import { toolHandling } from './tool-handling.ts';
 
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
@@ -34,9 +35,10 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     drawTorchWeapon(c, g, reduced);
     return;
   }
+  const handling = toolHandling(g);
   const massDriver = g.massDriver.equipped,
-    carbine = g.startingGun === 'carbine' && !massDriver && !g.gun.shellshock,
-    twinbore = g.startingGun === 'twinbore' && !massDriver && !g.gun.shellshock,
+    carbine = handling.native === 'carbine',
+    twinbore = handling.native === 'twinbore',
     repeater = g.startingGun === 'repeater',
     shotgun = g.startingGun === 'shotgun' && !massDriver && !g.gun.shellshock,
     heavy = g.mods.includes('magnum') || massDriver || carbine,
@@ -47,12 +49,14 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     piercing = g.mods.includes('pierce'),
     banking = g.mods.includes('ricochet') || g.mods.includes('banker'),
     shotAge = Math.max(0, g.time - g.lastShot),
-    flash = clamp(g.muzzle / 0.065, 0, 1),
+    flash = clamp((handling.native ? 0.065 - shotAge : g.muzzle) / 0.065, 0, 1),
     spring = clamp(1 - shotAge / (heavy ? 0.18 : 0.11), 0, 1),
     punch = Math.max(flash, spring * spring),
     motion = reduced ? 0.16 : 1,
     receiverKick = punch * (shotgun ? 4.2 : heavy ? 2.2 : 2.8) * motion,
-    barrelKick = punch * (shotgun ? 1.5 : heavy ? 4.8 : 0.4) * motion,
+    barrelKick =
+      (carbine ? handling.kick * 3.2 : twinbore ? 0 : punch * (shotgun ? 1.5 : heavy ? 4.8 : 0.4)) *
+      motion,
     muzzle = massDriver
       ? 45
       : carbine
@@ -111,7 +115,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   // coherent shape with the scatter attachment.
   c.save();
   c.translate(-barrelKick, 0);
-  if (heavy) {
+  if (heavy && !twinbore) {
     c.fillStyle = '#b1bdae';
     c.beginPath();
     c.moveTo(18, -7);
@@ -129,7 +133,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(19, 4, 12, 3);
     c.fillStyle = '#384c41';
     c.fillRect(28, -3, 3, 6);
-  } else {
+  } else if (!twinbore) {
     c.fillStyle = '#718779';
     c.fillRect(20, -4, muzzle - 20, 8);
     c.fillStyle = '#b7c5b2';
@@ -148,7 +152,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(40, -8, 4, 2);
     c.fillStyle = '#15282c';
     c.fillRect(43, -6, 2, 12);
-  } else if (scatter) {
+  } else if (scatter && !twinbore) {
     c.fillStyle = '#718879';
     c.beginPath();
     c.moveTo(muzzle - 10, -4);
@@ -166,7 +170,7 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(muzzle - 2, -muzzleHalf + 2, 2, muzzleHalf * 2 - 4);
     c.fillStyle = '#a3b697';
     c.fillRect(muzzle - 2, -0.75, 2, 1.5);
-  } else {
+  } else if (!twinbore) {
     c.fillStyle = '#394f42';
     c.fillRect(muzzle - 5, -muzzleHalf, 5, muzzleHalf * 2);
     c.fillStyle = '#b6c5ab';
@@ -181,8 +185,15 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   if (carbine) {
     c.fillStyle = '#546e72';
     c.fillRect(32, -5, 14, 10);
-    c.fillStyle = '#9ddae0';
-    for (let i = 0; i < 3; i++) c.fillRect(33 + i * 4, -6, 2, 12);
+    for (let i = 0; i < 3; i++) {
+      const charge = handling.coilCharge[i];
+      c.fillStyle = '#314b50';
+      c.fillRect(33 + i * 4, -6, 2, 12);
+      c.fillStyle = '#9ddae0';
+      c.fillRect(33 + i * 4, -6, 2, 12 * charge);
+      c.fillStyle = '#d7f1e9';
+      c.fillRect(33 + i * 4, -6 + 10 * charge, 2, 1);
+    }
     c.fillStyle = '#263b3e';
     c.fillRect(45, -4, 2, 8);
     c.fillStyle = '#c8d6c7';
@@ -190,12 +201,19 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(30, -11, 3, 4);
   }
   if (twinbore) {
-    c.fillStyle = '#a5b8a2';
-    c.fillRect(25, -7, 15, 4);
-    c.fillRect(25, 3, 15, 4);
-    c.fillStyle = '#253a31';
-    c.fillRect(38, -6, 2, 2);
-    c.fillRect(38, 4, 2, 2);
+    for (const [index, y] of [-5, 5].entries()) {
+      const kick = handling.twinKick[index] * motion;
+      c.fillStyle = '#354d41';
+      c.fillRect(22, y - 3, 17, 6);
+      c.fillStyle = '#a5b8a2';
+      c.fillRect(25 - kick, y - 2, 15, 4);
+      c.fillStyle = '#d2ddc8';
+      c.fillRect(26 - kick, y - 2, 11, 1);
+      c.fillStyle = '#253a31';
+      c.fillRect(38 - kick, y - 1, 2, 2);
+    }
+    c.fillStyle = '#526b58';
+    c.fillRect(23, -1, 9, 2);
   }
   if (banking) {
     c.fillStyle = '#c0ab7c';
@@ -229,7 +247,17 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillStyle = '#3a5148';
     c.fillRect(18, 7, 10, 7);
     c.fillStyle = '#a8c0b2';
-    for (let i = 0; i < 3; i++) c.fillRect(20 + i * 3, 8, 1, 5);
+    for (let i = 0; i < 3; i++) {
+      const active = handling.native === 'repeater',
+        offset = active ? handling.feedTravel * motion : 0;
+      c.fillRect(20 + i * 3, 8 + (active && i === handling.feed ? offset : 0), 1, 5 - offset);
+    }
+    if (handling.native === 'repeater') {
+      c.fillStyle = '#243b35';
+      c.fillRect(17, 16, 12, 3);
+      c.fillStyle = '#ddb984';
+      c.fillRect(18, 17, 10 * handling.pressure, 1);
+    }
   }
   c.fillStyle = finish.shell;
   c.beginPath();
@@ -256,6 +284,14 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillRect(10, -3, 11, 2);
     c.fillStyle = '#637e68';
     c.fillRect(9, 1, 6, 2);
+  }
+  if (handling.native === 'repeater') {
+    c.fillStyle = '#243b35';
+    c.fillRect(13, 0, 11, 4);
+    c.fillStyle = '#bad1c4';
+    c.fillRect(14 - handling.feedTravel * motion, 1, 9, 2);
+    c.fillStyle = '#526f60';
+    c.fillRect(14, 3, 8, 1);
   }
   if (g.gun.redline && g.evolutions.redline > 0) {
     c.fillStyle = '#eead76';
@@ -301,8 +337,24 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   if (flash > 0) {
     const tip = muzzle - barrelKick;
     c.globalAlpha *= flash * (reduced ? 0.28 : 0.9);
-    c.fillStyle = g.chargedFlash ? '#edf5b9' : '#ffe4ad';
-    if (reduced) c.fillRect(tip, -2, 3, 4);
+    c.fillStyle = g.chargedFlash ? '#edf5b9' : carbine ? '#b9ecf2' : '#ffe4ad';
+    if (twinbore) {
+      // Both rounds leave the paired chambers in this discharge. Never invent
+      // a delayed second shot to animate one barrel after the other.
+      for (const [index, y] of [-5, 5].entries()) {
+        const x = muzzle - handling.twinKick[index] * motion;
+        if (reduced) c.fillRect(x, y - 1.5, 3, 3);
+        else {
+          c.beginPath();
+          c.moveTo(x, y - 2.5);
+          c.lineTo(x + 13, y);
+          c.lineTo(x, y + 2.5);
+          c.lineTo(x + 2, y);
+          c.closePath();
+          c.fill();
+        }
+      }
+    } else if (reduced) c.fillRect(tip, -2, 3, 4);
     else {
       const length =
           (shotgun ? 23 : heavy ? 20 : burst ? 10 : 14) +

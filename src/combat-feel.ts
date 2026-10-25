@@ -2,11 +2,13 @@ import type Matter from 'matter-js';
 import type { Enemy, Game, Shot } from './game.ts';
 import { clamp, direction, type Vec } from './rules.ts';
 import { attackBrace, effectOpacity } from './combat-readability.ts';
+import { nativeMechanism, type ToolMechanism } from './tool-handling.ts';
 
 export type RoundFeel = 'pellet' | 'nail';
 export const NAIL_LIFETIME = 1.8;
 export const MAX_EMBEDDED_NAILS = 64;
 export const MAX_COMBAT_IMPACTS = 48;
+export const COIL_IMPACT_LIFETIME = 0.24;
 
 // Snapshot the native tool at discharge; converted ammunition keeps its own art.
 export function roundFeel(s: Shot): RoundFeel | undefined {
@@ -88,7 +90,10 @@ interface CombatImpact {
   normal: Vec;
   at: number;
   seed: number;
-  kind: RoundFeel;
+  kind: RoundFeel | 'coil';
+  body?: Matter.Body;
+  local?: Vec;
+  localNormal?: Vec;
 }
 
 // All clocks and variation are cosmetic: no physics, damage or seeded RNG calls.
@@ -99,6 +104,31 @@ export class CombatFeel {
   landingStrength = 0;
   pumpAt: number | null = null;
   pumpStartedAt = -100;
+  tool: ToolMechanism | null = null;
+  toolAt = -100;
+  toolConvertedAt: number | null = null;
+  toolPressure = 0;
+  feedIndex = 0;
+  private dischargeCount = -1;
+  get hasAttachments() {
+    return this.nails.length > 0 || this.impacts.some((i) => !!i.body);
+  }
+  pressureAt(time: number) {
+    return this.tool === 'repeater'
+      ? this.toolPressure * Math.exp(-Math.max(0, time - this.toolAt) / 0.48)
+      : 0;
+  }
+  discharge(g: Game, converted = false) {
+    if (g.lastShot !== g.time || g.shotCount === this.dischargeCount) return;
+    this.dischargeCount = g.shotCount;
+    this.toolConvertedAt = converted ? g.time : null;
+    const tool = nativeMechanism(g);
+    const previous = tool === this.tool ? this.pressureAt(g.time) : 0;
+    this.tool = tool;
+    this.toolAt = g.time;
+    this.toolPressure = tool === 'repeater' ? clamp(previous + 0.28, 0, 1) : 0;
+    this.feedIndex = tool === 'repeater' ? (this.feedIndex + 1) % 3 : 0;
+  }
   reset() {
     this.nails = [];
     this.impacts = [];
@@ -106,22 +136,73 @@ export class CombatFeel {
     this.pumpStartedAt = -100;
     this.landedAt = -100;
     this.landingStrength = 0;
+    this.tool = null;
+    this.toolAt = -100;
+    this.toolConvertedAt = null;
+    this.toolPressure = 0;
+    this.feedIndex = 0;
+    this.dischargeCount = -1;
   }
   land(time: number, speed: number) {
     this.landedAt = time;
     this.landingStrength = clamp(speed / 12, 0, 1);
   }
   impact(s: Shot, normal: Vec, time: number, body?: Matter.Body) {
-    const kind = roundFeel(s);
-    if (!kind) return;
+    const coil =
+      s.nativeTool === 'carbine' &&
+      s.friendly &&
+      !s.fragment &&
+      !s.allied &&
+      !s.reflected &&
+      !s.echo &&
+      !s.shell &&
+      !s.blade &&
+      !s.rail &&
+      !s.massDriver &&
+      !s.enemyAmmo &&
+      !s.molten &&
+      !s.stasis &&
+      !s.charged &&
+      !s.counter &&
+      !!body;
+    const kind = coil ? 'coil' : roundFeel(s);
+    if (!kind || ![s.pos.x, s.pos.y, normal.x, normal.y, time].every(Number.isFinite)) return;
+    if (coil && this.impacts.some((i) => i.kind === 'coil' && i.seed === s.id && i.body === body))
+      return;
+    let attachment: Pick<CombatImpact, 'body' | 'local' | 'localNormal'> = {};
+    let position = { ...s.pos };
+    if (coil && body) {
+      // Only the supplied swept-contact body is used. Never search for a second
+      // target or draw a line beyond the surface that actually stopped this step.
+      position = { x: s.pos.x - normal.x * s.radius, y: s.pos.y - normal.y * s.radius };
+      const dx = position.x - body.position.x,
+        dy = position.y - body.position.y,
+        cos = Math.cos(body.angle),
+        sin = Math.sin(body.angle);
+      attachment = {
+        body,
+        local: { x: dx * cos + dy * sin, y: -dx * sin + dy * cos },
+        localNormal: { x: normal.x * cos + normal.y * sin, y: -normal.x * sin + normal.y * cos },
+      };
+    }
     // Nearby pellets share a compact impact; no screen-filling blast clouds.
     if (
       !this.impacts.some(
         (i) =>
-          i.at === time && i.kind === kind && Math.hypot(i.pos.x - s.pos.x, i.pos.y - s.pos.y) < 7,
+          i.at === time &&
+          i.kind === kind &&
+          (kind !== 'coil' || i.body === body) &&
+          Math.hypot(i.pos.x - s.pos.x, i.pos.y - s.pos.y) < 7,
       )
     ) {
-      this.impacts.push({ pos: { ...s.pos }, normal: { ...normal }, at: time, seed: s.id, kind });
+      this.impacts.push({
+        pos: position,
+        normal: { ...normal },
+        at: time,
+        seed: s.id,
+        kind,
+        ...attachment,
+      });
       if (this.impacts.length > MAX_COMBAT_IMPACTS) this.impacts.shift();
     }
     if (kind !== 'nail' || !body) return;
@@ -139,10 +220,14 @@ export class CombatFeel {
     if (this.nails.length > MAX_EMBEDDED_NAILS) this.nails.shift();
   }
   update(time: number, bodies: readonly Matter.Body[], sound: (kind: string) => void) {
-    this.impacts = this.impacts.filter((i) => time - i.at < 0.2);
+    const active = this.hasAttachments ? new Set(bodies) : null;
+    this.impacts = this.impacts.filter(
+      (i) =>
+        time - i.at < (i.kind === 'coil' ? COIL_IMPACT_LIFETIME : 0.2) &&
+        (!i.body || active?.has(i.body)),
+    );
     if (this.nails.length) {
-      const active = new Set(bodies);
-      this.nails = this.nails.filter((n) => time - n.at < NAIL_LIFETIME && active.has(n.body));
+      this.nails = this.nails.filter((n) => time - n.at < NAIL_LIFETIME && active?.has(n.body));
     }
     if (this.pumpAt !== null && time >= this.pumpAt) {
       this.pumpAt = null;
@@ -157,6 +242,23 @@ export function nailPosition(nail: EmbeddedNail): Vec {
   return {
     x: nail.body.position.x + nail.local.x * cos - nail.local.y * sin,
     y: nail.body.position.y + nail.local.x * sin + nail.local.y * cos,
+  };
+}
+
+export function combatImpactFrame(impact: CombatImpact) {
+  const { body, local, localNormal } = impact;
+  if (!body || !local || !localNormal) return { pos: impact.pos, normal: impact.normal };
+  const cos = Math.cos(body.angle),
+    sin = Math.sin(body.angle);
+  return {
+    pos: {
+      x: body.position.x + local.x * cos - local.y * sin,
+      y: body.position.y + local.x * sin + local.y * cos,
+    },
+    normal: {
+      x: localNormal.x * cos - localNormal.y * sin,
+      y: localNormal.x * sin + localNormal.y * cos,
+    },
   };
 }
 
@@ -191,12 +293,41 @@ export function drawCombatImpacts(
     c.restore();
   }
   for (const impact of g.combatFeel.impacts) {
-    const age = clamp((g.time - impact.at) / 0.2, 0, 1);
+    const coil = impact.kind === 'coil',
+      age = clamp((g.time - impact.at) / (coil ? COIL_IMPACT_LIFETIME : 0.2), 0, 1),
+      { pos, normal } = combatImpactFrame(impact);
+    if (age >= 1) continue;
     c.save();
     c.globalAlpha =
-      opacity * (1 - age) * (reduced ? 0.3 : 0.8) * effectOpacity(impact.pos, 15, threats);
-    c.translate(impact.pos.x, impact.pos.y);
-    c.rotate(Math.atan2(impact.normal.y, impact.normal.x));
+      opacity *
+      (1 - age) *
+      (reduced ? (coil ? 0.4 : 0.3) : 0.8) *
+      effectOpacity(pos, coil ? 10 : 15, threats);
+    c.translate(pos.x, pos.y);
+    c.rotate(Math.atan2(normal.y, normal.x));
+    if (coil) {
+      c.strokeStyle = '#9ee4ef';
+      c.lineWidth = 1.3;
+      c.beginPath();
+      c.arc(0, 0, 2.5, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(-2, -4);
+      c.lineTo(2, 4);
+      c.moveTo(-2, 4);
+      c.lineTo(2, -4);
+      c.stroke();
+      if (!reduced) {
+        c.beginPath();
+        for (const side of [-1, 1]) {
+          c.moveTo(2, side * 3);
+          c.lineTo(6 + age * 3, side * 5);
+        }
+        c.stroke();
+      }
+      c.restore();
+      continue;
+    }
     c.strokeStyle = impact.kind === 'nail' ? '#b5d4d0' : '#f5cd8f';
     c.lineWidth = impact.kind === 'pellet' ? 2 : 1.3;
     for (let i = 0; i < (reduced ? 1 : 3); i++) {

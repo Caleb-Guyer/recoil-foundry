@@ -1,12 +1,17 @@
 import { WEAPON_REQUIREMENTS } from './weapon-unlocks.ts';
 import { STARTING_GUN_IDS, STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 
+export interface StartingGunMenuOptions {
+  tryTool?: (gun: StartingGun) => void;
+  onSelect?: (gun: StartingGun) => void;
+}
 export function startingGunMenu(
   root: HTMLElement,
   selected: StartingGun,
   play: (gun: StartingGun) => void,
   back: () => void,
   unlocked: readonly StartingGun[] = ['pistol'],
+  options: StartingGunMenuOptions = {},
 ) {
   if (!unlocked.includes(selected)) selected = 'pistol';
   root.innerHTML =
@@ -20,7 +25,9 @@ export function startingGunMenu(
     }).join('') +
     '</div><p class="starting-gun-detail" id="starting-gun-detail" aria-live="polite">' +
     STARTING_GUNS[selected].description +
-    '</p><div class="actions"><button id="start-with-gun" class="primary">Start run</button><button id="starting-gun-back" class="quiet">Back</button></div>';
+    '</p><div class="actions"><button id="start-with-gun" class="primary">Start run</button>' +
+    (options.tryTool ? '<button id="try-tool" class="quiet">Try tool</button>' : '') +
+    '<button id="starting-gun-back" class="quiet">Back</button></div>';
   const buttons = root.querySelectorAll<HTMLButtonElement>('[data-starting-gun]');
   buttons.forEach((button) => {
     button.onclick = () => {
@@ -29,8 +36,16 @@ export function startingGunMenu(
       root.querySelector<HTMLElement>('#starting-gun-detail')!.textContent =
         STARTING_GUNS[selected].description;
       buttons.forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+      options.onSelect?.(selected);
     };
   });
-  root.querySelector<HTMLButtonElement>('#start-with-gun')!.onclick = () => play(selected);
+  root.querySelector<HTMLButtonElement>('#start-with-gun')!.onclick = () => {
+    if (unlocked.includes(selected)) play(selected);
+  };
+  const trial = root.querySelector<HTMLButtonElement>('#try-tool');
+  if (trial)
+    trial.onclick = () => {
+      if (unlocked.includes(selected)) options.tryTool?.(selected);
+    };
   root.querySelector<HTMLButtonElement>('#starting-gun-back')!.onclick = back;
 }
