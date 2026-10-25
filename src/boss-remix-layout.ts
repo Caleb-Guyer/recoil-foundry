@@ -1,3 +1,4 @@
+import { bossRemasterCampaign } from './boss-remaster-layout.ts';
 import type { Game } from './game.ts';
 import type { Layout, Level } from './levels.ts';
 import { BOSS_REMIXES, bossRemixFor, type BossRemixId } from './boss-remix-rules.ts';
@@ -291,6 +292,13 @@ export function bossRemixLevel(g: Game, level: Level): Level {
   if (g.overtime || g.escape || g.detour || g.workshop.active || g.inAnnex || !level.boss)
     return level;
   const forced = g.practice?.remix ?? g.testRun?.bossRemix;
+  if (
+    !forced &&
+    bossRemasterCampaign(g.seed) &&
+    ((g.stage === 11 && level.spawns[0]?.kind === 'condenser') ||
+      (g.stage === 15 && level.spawns[0]?.kind === 'sorter'))
+  )
+    return level;
   const id =
     forced ??
     (g.bossRemixes && !g.practice && !g.testRun

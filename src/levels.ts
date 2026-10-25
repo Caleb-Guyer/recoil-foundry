@@ -105,6 +105,7 @@ export interface Layout {
   route: Vec[];
 }
 export interface Level extends Layout {
+  bossRemaster?: import('./boss-remaster-layout.ts').RemasteredBoss;
   combatFlow?: import('./combat-flow-rules.ts').CombatFlowSpec;
   enemyEncounter?: import('./enemy-encounters.ts').EnemyEncounterId;
   remasterIntro?: import('./enemy-remaster.ts').RemasteredEnemy;

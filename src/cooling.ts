@@ -187,7 +187,7 @@ export function drawCoolingEnemy(c: CanvasRenderingContext2D, g: Game, e: Enemy,
     c.fillRect(-r, -(boss ? 50 : 28), (r * 2 * e.hp) / e.maxHp, 3);
   }
   c.restore();
-  if (warning && e.spawn <= 0) {
+  if (warning && e.spawn <= 0 && (!boss || !g.bossRemaster.owns(e))) {
     c.save();
     c.strokeStyle = '#ebc28c';
     c.lineWidth = e.timer <= COOLING_LOCK ? 1.8 : 1;

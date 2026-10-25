@@ -75,9 +75,15 @@ export function drawReclamationEnemy(
 ) {
   const p = e.body.position,
     boss = e.kind === 'sorter',
-    flying = e.kind === 'sifter';
+    flying = e.kind === 'sifter',
+    remastered = boss && g.bossRemaster.owns(e);
   c.save();
-  if (boss && e.sorter && ((e.state === 'windup' && e.attack === 'slam') || e.sorter.pulse > 0)) {
+  if (
+    !remastered &&
+    boss &&
+    e.sorter &&
+    ((e.state === 'windup' && e.attack === 'slam') || e.sorter.pulse > 0)
+  ) {
     const pulse = e.sorter.pulse > 0,
       locked = e.timer <= SORTER_LOCK;
     for (const x of e.sorter.lanes) {
@@ -98,7 +104,7 @@ export function drawReclamationEnemy(
       }
     }
   }
-  if (e.state === 'windup' && (!boss || e.attack === 'fan')) {
+  if (!remastered && e.state === 'windup' && (!boss || e.attack === 'fan')) {
     const length = boss ? 650 : 480,
       angle = Math.atan2(e.aim.y, e.aim.x);
     c.strokeStyle = e.timer <= 0.5 ? '#e5b182' : '#94735e';
@@ -191,7 +197,7 @@ export function drawReclamationEnemy(
     c.fillStyle = color;
     c.fillRect(-w / 2, y, w * clamp(e.hp / e.maxHp, 0, 1), 3);
   }
-  if (e.state === 'transition' && !reduced) {
+  if (!remastered && e.state === 'transition' && !reduced) {
     c.strokeStyle = '#e7c28a';
     c.lineWidth = 2;
     c.beginPath();

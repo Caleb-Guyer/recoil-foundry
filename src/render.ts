@@ -1,3 +1,4 @@
+import { drawBossRemaster, drawBossRemasterWarnings } from './boss-remaster-art.ts';
 import {
   advanceCombatCamera,
   cameraBaseScale,
@@ -878,6 +879,8 @@ export class Renderer {
     drawCourierWorld(c, g);
     drawAuditDoor(c, g, this.reduced);
     this.drawEnemies();
+    const remasteredBoss = g.bossRemaster.visual;
+    if (remasteredBoss) drawBossRemaster(c, remasteredBoss, this.reduced);
     drawSurveyMarks(c, g);
     drawCombatImpacts(c, g, this.reduced, threats, clarity.particles);
     drawTorch(c, g, this.reduced, view, clarity.pressure);
@@ -1028,6 +1031,7 @@ export class Renderer {
       );
     drawFinaleCinemaForeground(c, g, this.reduced);
     this.drawEnemyTells();
+    if (remasteredBoss) drawBossRemasterWarnings(c, remasteredBoss, this.reduced);
     for (const e of g.enemies)
       if (
         g.finale.owns(e) &&
@@ -1161,6 +1165,7 @@ export class Renderer {
           !g.tethers.staggered(e) &&
           !g.pressure.staggered(e) &&
           !g.massDriver.staggered(e),
+        g.bossRemaster,
       )) {
         c.save();
         c.translate(

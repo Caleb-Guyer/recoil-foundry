@@ -7,6 +7,8 @@ import {
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
+import { BossRemasterSystem } from './boss-remaster.ts';
+import { bossRemasterLevel } from './boss-remaster-layout.ts';
 import { reclaimerFinale, cinematicFinale } from './boss-progression.ts';
 import { resolveFinaleFirstClear } from './finale-progression.ts';
 import { FinaleService } from './finale-service.ts';
@@ -439,6 +441,7 @@ export class Game {
   waves = new ReinforcementSystem(this);
   encounters: 0 | 1 = 0;
   enemyRemaster = new EnemyRemaster(this);
+  bossRemaster = new BossRemasterSystem(this);
   encounterPacer = new EncounterPacer(this);
   portals = new PortalSystem(this);
   portalRequest: Vec | null = null;
@@ -825,6 +828,7 @@ export class Game {
     this.loadRoom();
   }
   setMode(mode: Mode) {
+    if (mode === 'dead' || mode === 'title') this.bossRemaster.clear();
     if (mode === 'dead') this.gauntlet.died();
     if (mode === 'won') this.recordCampaignClear();
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.securityCombat.reset();
@@ -1264,6 +1268,7 @@ export class Game {
     };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.bossRemaster.clear();
     this.routePreviewCache.clear();
     this.routePreviewContext = '';
     this.damageControl.reset();
@@ -1474,6 +1479,7 @@ export class Game {
       this.level = welderLevel(this.level, this.welder.state, this.stage);
     if (this.practice?.kind === 'welder') this.level = welderPracticeLevel(this.seed);
     this.level = bossRemixLevel(this, this.level);
+    this.level = bossRemasterLevel(this, this.level);
     if (
       !escapeRoom &&
       !this.overtime &&
@@ -1616,6 +1622,7 @@ export class Game {
     this.finaleService.reset();
     prepareCombatFocus(this);
     prepareDamageControl(this);
+    this.bossRemaster.reset(clearedRoom);
     const routeTest =
       this.testRun && this.testRun.stage === this.stage ? chooseRouteTestIdentity(this.seed) : null;
     if (routeTest && this.stage === routeTest.destinationStage - 1) {
@@ -2209,6 +2216,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.recoil.race.afterStep();
     this.hunts.update();
+    this.bossRemaster.afterStep();
     if (
       (!this.combatEnemyCount || this.uprising.escapeReady) &&
       !this.areaEvents.waiting &&
@@ -2217,6 +2225,7 @@ export class Game {
       !this.auditor.pending &&
       !this.clear &&
       !this.finale.waiting &&
+      !this.bossRemaster.waiting &&
       !this.hunts.waiting &&
       !this.uprising.waiting &&
       (!this.maintenance.active || this.maintenance.atExit) &&
@@ -2733,7 +2742,9 @@ export class Game {
     const coordinated = updateSquad(this, e);
     const remastered = !coordinated && this.enemyRemaster.update(e, combatTarget);
     if (!coordinated && !remastered) {
-      if (isPatrolMachine(e.kind)) this.patrolMachines.updateEnemy(e);
+      if (this.bossRemaster.tryUpdate(e, dt)) {
+        // Revised boss AI; native contact, damage and room completion continue below.
+      } else if (isPatrolMachine(e.kind)) this.patrolMachines.updateEnemy(e);
       else if (e.kind === 'switchboard') this.switchboard.update(e, dt);
       else if (e.kind === 'caller') updateCaller(this, e, dt);
       else if (e.kind === 'switchman') this.annex.updateSwitchman(e, dt);
@@ -3963,6 +3974,7 @@ export class Game {
     if (e.hp > 0) return blocked;
     if (this.finale.cinema?.breakForm(e)) return blocked;
     this.finale.defeated(e);
+    this.bossRemaster.defeated(e);
     this.auditor.killed(e, credited && source !== 'cleanup');
     this.welder.killed(e, credited && source !== 'cleanup');
     if (credited) this.commendations.defeated(e, source, trace);

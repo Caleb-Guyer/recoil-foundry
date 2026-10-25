@@ -7,6 +7,7 @@ import { REMASTER_TELL, remasterKind } from './enemy-remaster.ts';
 import { TWIN_LOCK } from './enemies.ts';
 import { SQUAD_LOCK, squadGunOrigin } from './squads.ts';
 import { machineAngles } from './patrol-machine-system.ts';
+import type { BossRemasterCue, BossRemasterVisual } from './boss-remaster-cues.ts';
 
 export const THREAT_COLOR = '#ff8875';
 export const THREAT_CORE = '#fff0d8';
@@ -172,6 +173,48 @@ function laneApproach(origin: Vec, heading: Vec, player: Vec, radius: number) {
   return { along, closest };
 }
 
+interface BossWarningSource {
+  owns(enemy: Enemy): boolean;
+  readonly visual: BossRemasterVisual | null;
+  readonly rig: { readonly remaining: number } | null;
+}
+
+// Test the actual 26 x 36 player hull against the supplied, butt-ended strip.
+// The rig has already clipped projectile paths to cover. Reconstructing a fan
+// or extending an endpoint here would invent attacks beyond that cover.
+function bossSegmentTouchesPlayer(from: Vec, to: Vec, width: number, player: Vec) {
+  if (!finitePoint(from) || !finitePoint(to) || !Number.isFinite(width) || width <= 0) return false;
+  const length = distance(from, to);
+  if (length <= 0.001) return false;
+  const dx = (to.x - from.x) / length,
+    dy = (to.y - from.y) / length;
+  const x = player.x - (from.x + to.x) / 2,
+    y = player.y - (from.y + to.y) / 2;
+  const halfLength = length / 2,
+    radius = width / 2;
+  // Separating axes for the player rectangle and the oriented cue rectangle.
+  return (
+    Math.abs(x) < 13 + Math.abs(dx) * halfLength + Math.abs(dy) * radius &&
+    Math.abs(y) < 18 + Math.abs(dy) * halfLength + Math.abs(dx) * radius &&
+    Math.abs(x * dx + y * dy) < halfLength + 13 * Math.abs(dx) + 18 * Math.abs(dy) &&
+    Math.abs(-x * dy + y * dx) < radius + 13 * Math.abs(dy) + 18 * Math.abs(dx)
+  );
+}
+function bossCueTouchesPlayer(cue: BossRemasterCue, player: Vec) {
+  if (!cue.active && !cue.locked) return false;
+  if (cue.kind === 'lane')
+    return (
+      [cue.x, cue.width, cue.top, cue.bottom].every(Number.isFinite) &&
+      cue.width > 0 &&
+      cue.bottom > cue.top &&
+      player.x + 13 > cue.x - cue.width / 2 &&
+      player.x - 13 < cue.x + cue.width / 2 &&
+      player.y + 18 > cue.top &&
+      player.y - 18 < cue.bottom
+    );
+  if (cue.kind === 'segment') return bossSegmentTouchesPlayer(cue.from, cue.to, cue.width, player);
+  return cue.ends.some((end) => bossSegmentTouchesPlayer(cue.from, end, cue.width, player));
+}
 export function incomingEdgeCues(
   shots: readonly Shot[],
   player: Vec,
@@ -181,6 +224,7 @@ export function incomingEdgeCues(
   inset: number,
   enemies: readonly Enemy[] = [],
   isAttackActive?: (enemy: Enemy) => boolean,
+  bossWarnings?: BossWarningSource,
 ): EdgeCue[] {
   if (
     !Number.isFinite(time) ||
@@ -280,6 +324,40 @@ export function incomingEdgeCues(
       inCombatView(e.body.position, view, 30)
     )
       continue;
+    if (bossWarnings?.owns(e)) {
+      const visual = bossWarnings.visual,
+        remaining = bossWarnings.rig?.remaining;
+      if (
+        e.hp > 0 &&
+        e.spawn <= 0 &&
+        !e.allied &&
+        visual?.stage === 'combat' &&
+        finitePoint(visual.center) &&
+        remaining !== undefined &&
+        Number.isFinite(remaining) &&
+        remaining >= 0 &&
+        remaining <= EDGE_CUE_TIME &&
+        visual.warnings.some((cue) => bossCueTouchesPlayer(cue, player))
+      ) {
+        const fireIn = visual.warnings.some(
+          (cue) => cue.active && bossCueTouchesPlayer(cue, player),
+        )
+          ? 0
+          : remaining;
+        project(
+          visual.center,
+          {
+            phase: 'tell',
+            fireIn,
+            source: e.id,
+            alpha: 0.5 + 0.3 * (1 - fireIn / EDGE_CUE_TIME),
+          },
+          fireIn + 0.25,
+        );
+      }
+      // Owned rigs are authoritative even during startup, breaks and recovery.
+      continue;
+    }
     const fire = lockedFire(e, enemies);
     if (!fire || distance(fire.origin, player) > fire.range) continue;
     if (firstSolid(e.body.position, fire.origin, { x: 4, y: 4 }, solids)) continue;
