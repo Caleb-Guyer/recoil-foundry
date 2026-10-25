@@ -27,6 +27,10 @@ import { enemyEncounterRoom } from './enemy-encounters.ts';
 import { combatFlowLevel } from './combat-flow-rooms.ts';
 import { combatFocusLevel, prepareCombatFocus } from './combat-focus-test.ts';
 import { damageControlLevel, prepareDamageControl } from './damage-control-test.ts';
+import { remasterRouteLevel } from './route-remaster.ts';
+import { chooseRouteCampaign, recordRouteDecision, type RouteDecision } from './route-history.ts';
+import type { RoutePreview } from './route-preview.ts';
+import { chooseRouteTestIdentity } from './choose-route-test.ts';
 import { EnemyRemaster, type EnemyRemasterRig } from './enemy-remaster.ts';
 import { PatrolMachineSystem, createPatrolRig, type PatrolRig } from './patrol-machine-system.ts';
 import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
@@ -586,6 +590,92 @@ export class Game {
         ? [dailyRoute(this.seed, this.stage + 1)]
         : ['low', 'high'];
   }
+  routeHistory: RouteDecision[] = [];
+  private routePreviewCache = new Map<RouteChoice, RoutePreview | null>();
+  private routePreviewContext = '';
+  get nearbyRoutePreview(): RoutePreview | null {
+    if (
+      !chooseRouteCampaign(this.seed) ||
+      this.overtime ||
+      this.mode !== 'playing' ||
+      !this.clear ||
+      this.combatEnemyCount ||
+      this.waves.pending ||
+      !this.canChooseRoute
+    )
+      return null;
+    const p = this.player.position;
+    const choices = this.routeChoices.map((route) => ({
+      route,
+      x: DETOUR_DOOR.x,
+      y: (route === 'high' ? this.branchDoor.floor : this.level.freight ? FREIGHT.dock : 740) - 32,
+    }));
+    const nearest = choices.sort(
+      (a, b) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(p.x - b.x, p.y - b.y),
+    )[0];
+    return nearest && Math.hypot(p.x - nearest.x, p.y - nearest.y) <= 205
+      ? this.createRoutePreview(nearest.route)
+      : null;
+  }
+  // Resolve the exact native destination in a detached world. No callbacks,
+  // ticking, combat RNG consumption or source checkpoint writes are involved.
+  createRoutePreview(route: RouteChoice): RoutePreview | null {
+    if (
+      !chooseRouteCampaign(this.seed) ||
+      this.overtime ||
+      this.practice ||
+      this.workshop.active ||
+      !this.canChooseRoute ||
+      !this.routeChoices.includes(route)
+    )
+      return null;
+    const snapshot = this.checkpointSnapshot();
+    // The same cleared room can still gain a completed job consequence or a
+    // fitting. Cache actual destination inputs, excluding counters that change
+    // as time passes or health recovers while the invitation stays visible.
+    const {
+      elapsed: _elapsed,
+      hp: _hp,
+      kills: _kills,
+      combatResults: _combatResults,
+      ...context
+    } = snapshot;
+    const contextKey = JSON.stringify(context);
+    if (contextKey !== this.routePreviewContext) {
+      this.routePreviewCache.clear();
+      this.routePreviewContext = contextKey;
+    }
+    if (this.routePreviewCache.has(route)) return this.routePreviewCache.get(route) ?? null;
+    const checkpoint = structuredClone(snapshot);
+    checkpoint.stage = this.stage + 1;
+    checkpoint.route = route;
+    checkpoint.missedUpgrades = (checkpoint.missedUpgrades ?? 0) + 1;
+    delete checkpoint.reward;
+    delete checkpoint.escape;
+    delete checkpoint.detour;
+    delete checkpoint.reforgeRoom;
+    let destination: Game | undefined;
+    try {
+      destination = new Game();
+      destination.start(this.seed, checkpoint);
+      const preview: RoutePreview = {
+        route,
+        stage: destination.stage,
+        level: structuredClone(destination.level),
+        checkpoint: destination.checkpointSnapshot(),
+      };
+      this.routePreviewCache.set(route, preview);
+      return preview;
+    } catch {
+      this.routePreviewCache.set(route, null);
+      return null;
+    } finally {
+      if (destination) {
+        Composite.clear(destination.engine.world, false);
+        Engine.clear(destination.engine);
+      }
+    }
+  }
   detourStepsReady = false;
   get canDetour() {
     return (
@@ -878,6 +968,9 @@ export class Game {
     this.practiceHits = 0;
     this.testRun = testRun ? structuredClone(testRun) : null;
     this.seed = seed.slice(0, 40) || 'RECOIL';
+    this.routeHistory = chooseRouteCampaign(this.seed)
+      ? structuredClone(save?.routeHistory ?? [])
+      : [];
     this.heldReward = null;
     this.draftHistory =
       betterDraftCampaign(this.seed) && save?.draftHistory
@@ -1094,6 +1187,9 @@ export class Game {
     return {
       version: 6,
       startingGun: this.startingGun,
+      ...(chooseRouteCampaign(this.seed) && this.routeHistory.length
+        ? { routeHistory: structuredClone(this.routeHistory) }
+        : {}),
       ...(betterDraftCampaign(this.seed) && this.draftHistory
         ? { draftHistory: structuredClone(this.draftHistory) }
         : {}),
@@ -1168,6 +1264,8 @@ export class Game {
     };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.routePreviewCache.clear();
+    this.routePreviewContext = '';
     this.damageControl.reset();
     this.soundRoom++;
     this.reachedFinalePhase = 0;
@@ -1340,6 +1438,14 @@ export class Game {
       !this.level.overtimeRooftops
     ) {
       this.level = getRouteLevel(this.layoutSeed, this.stage, this.route);
+      if (!this.overtime)
+        this.level = remasterRouteLevel(
+          this.level,
+          this.seed,
+          this.stage,
+          this.route,
+          this.teamwork.enabled,
+        );
       if (this.overtime) this.level = reinforceRoute(this.level, this.seed, this.stage);
     }
     if (this.inAnnex && this.stage < 11)
@@ -1510,6 +1616,24 @@ export class Game {
     this.finaleService.reset();
     prepareCombatFocus(this);
     prepareDamageControl(this);
+    const routeTest =
+      this.testRun && this.testRun.stage === this.stage ? chooseRouteTestIdentity(this.seed) : null;
+    if (routeTest && this.stage === routeTest.destinationStage - 1) {
+      // This explicit fixture begins after the patrol was cleared. Ordinary
+      // Campaigns never enter this branch, and no playtest victory is recorded.
+      for (const enemy of this.enemies) Composite.remove(this.engine.world, enemy.body);
+      this.enemies = [];
+      this.waves.clear();
+      this.clear = true;
+      this.clearAt = this.time;
+      this.extendDetourSteps();
+      Body.setPosition(this.player, {
+        x: routeTest.route === 'high' ? 1898 : 1865,
+        y: (routeTest.route === 'high' ? this.branchDoor.floor : 740) - 18,
+      });
+      Body.setVelocity(this.player, { x: 0, y: 0 });
+      this.grounded = true;
+    }
   }
   startEscape() {
     if (this.testRun?.rematchRoom) return;
@@ -4360,6 +4484,8 @@ export class Game {
       else this.stage++;
     }
     this.loadRoom();
+    if (chooseRouteCampaign(this.seed) && !this.overtime && this.route)
+      this.routeHistory = recordRouteDecision(this.routeHistory, this.stage, this.route);
     this.setMode('playing');
     this.save();
     this.onSound('upgrade');

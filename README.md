@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Choose Your Route — version 5.21.0.** Four Furnace and Cooling branches gain authored cover, upper flanks and machinery. Approach a cleared route exit to see its actual destination; accepted choices stay in collapsed Campaign progress. [Release notes and isolated room/preview tests](docs/releases/5.21.0.md).
+
 **Better Drafts — version 5.20.0.** New Campaign choices consider your current weapon and fittings while retaining other build directions. Hold one ordinary upgrade during a reroll, and see fewer recently declined choices in the same zone. Continue and Daily choices retain their original rules. [Release notes and isolated draft tests](docs/releases/5.20.0.md).
 
 **Damage Control — version 5.19.0.** Directional hit feedback, a health-loss trail and a steady recovery outline make accepted damage readable. Scrub the last moments, jump to recorded hits and compare actual damage in private room rematches. [Release notes and isolated hit/replay tests](docs/releases/5.19.0.md).

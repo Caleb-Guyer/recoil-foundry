@@ -1,0 +1,49 @@
+.route-preview {
+  position: absolute;
+  z-index: 3;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(260px, calc(100% - 32px));
+  padding: 10px;
+  border: 1px solid #4c625d;
+  background: #132024f2;
+  color: #e9eadf;
+  box-shadow: 0 5px 18px #0004;
+  pointer-events: none;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.route-preview-label {
+  display: block;
+  margin-bottom: 3px;
+  color: #a5beb7;
+  font-size: 10px;
+}
+.route-preview strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.route-preview canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 320 / 136;
+  margin: 8px 0 6px;
+  border: 1px solid #314641;
+}
+.route-preview-traits {
+  display: block;
+  color: #bed0c7;
+  font-size: 11px;
+}
+@media (max-height: 540px) {
+  .route-preview {
+    top: 48px;
+    width: min(220px, calc(100% - 32px));
+    padding: 7px;
+  }
+  .route-preview canvas {
+    margin: 5px 0;
+  }
+}

@@ -805,7 +805,7 @@ export class Renderer {
       this.drawExit();
     drawWorkshopMounts(c, g);
     drawReforge(c, g, this.reduced);
-    if (!g.areaEvents.dark) {
+    if (framing?.navigation !== false && !g.areaEvents.dark) {
       drawDetourDoor(c, g);
       drawRouteExits(c, g);
       drawRegionExits(c, g);

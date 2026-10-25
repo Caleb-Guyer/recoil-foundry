@@ -2733,3 +2733,31 @@ body[data-finale-movie='true'] .touch-controls {
     width: 85px;
   }
 }
+
+.route-history {
+  margin-top: 16px;
+  border-top: 1px solid #354440;
+  padding-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.route-history summary {
+  cursor: pointer;
+  color: var(--ink);
+}
+.route-history ol {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.route-history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.route-history strong {
+  font-weight: 500;
+  color: var(--ink);
+}

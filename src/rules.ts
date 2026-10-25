@@ -1,4 +1,5 @@
 import { validHunt, huntDetour } from './hunt-rules.ts';
+import { loadRouteHistory, type RouteDecision } from './route-history.ts';
 import { validFinaleClassification } from './finale-progression.ts';
 import { validFinaleService } from './finale-service.ts';
 import { loadCombatResults, type CombatResults } from './combat-report.ts';
@@ -1439,6 +1440,7 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  routeHistory?: RouteDecision[];
   draftHistory?: { zone: number; declined: string[] };
   // Snapshot the first-clear ending before the run can earn its clear rewards.
   finaleFirstClear?: 0 | 1;
@@ -1613,6 +1615,22 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const legacy = raw.version === 3;
   const previous = raw.version === 4;
   const incoming = value as Checkpoint;
+  if (incoming.routeHistory !== undefined) {
+    const routes = loadRouteHistory(
+      incoming.routeHistory,
+      incoming.seed,
+      incoming.stage,
+      !!incoming.overtime,
+    );
+    if (
+      incoming.version !== 6 ||
+      routes === null ||
+      (!incoming.overtime &&
+        incoming.route !== undefined &&
+        routes.some((entry) => entry.stage === incoming.stage && entry.route !== incoming.route))
+    )
+      return null;
+  }
   if (incoming.draftHistory !== undefined) {
     const history = incoming.draftHistory;
     if (

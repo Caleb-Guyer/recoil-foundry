@@ -155,6 +155,13 @@ import { damageSummaryHtml } from './damage-summary-view.ts';
 import { damageControlTestFromUrl, DAMAGE_CONTROL_SCENES } from './damage-control-test.ts';
 import { betterDraftsTestFromUrl, BETTER_DRAFTS_SCENES } from './better-drafts-test.ts';
 import {
+  chooseRouteTestFromUrl,
+  CHOOSE_ROUTE_SCENES,
+  CHOOSE_ROUTE_ROOMS,
+} from './choose-route-test.ts';
+import type { RoutePreviewView } from './route-preview-view.ts';
+import { chooseRouteCampaign } from './route-history.ts';
+import {
   LOGBOOK_KEY,
   loadLogbook,
   mergeLogbook,
@@ -566,7 +573,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Better Drafts</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Choose Your Route</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -614,7 +621,40 @@ const optional = {
   finaleService: new LazyResource(() => import('./finale-service-menu.ts')),
   drill: new LazyResource(() => import('./support-drill-view.ts')),
   upgrade: new LazyResource(() => import('./upgrade-preview-view.ts')),
+  routePreview: new LazyResource(() => import('./route-preview-view.ts')),
 };
+let routePreviewView: RoutePreviewView | null = null;
+let routePreviewLoading = false;
+let routePreviewFailed = '';
+function updateRouteInvitation() {
+  if (modal.open || game.mode !== 'playing' || !pageActive || document.hidden) {
+    routePreviewView?.update(null);
+    return;
+  }
+  const preview = game.nearbyRoutePreview;
+  if (!preview) {
+    routePreviewView?.update(null);
+    routePreviewFailed = '';
+    return;
+  }
+  if (optional.routePreview.value) {
+    routePreviewView ??= new optional.routePreview.value.RoutePreviewView($('arena'));
+    routePreviewView.update(preview);
+    return;
+  }
+  const room = game.seed + ':' + game.stage;
+  if (!routePreviewLoading && routePreviewFailed !== room) {
+    routePreviewLoading = true;
+    void optional.routePreview
+      .load()
+      .catch(() => {
+        routePreviewFailed = room;
+      })
+      .finally(() => {
+        routePreviewLoading = false;
+      });
+  }
+}
 const dialogLifetime = new ViewLifetime();
 let appearanceRequested = false;
 function loadUpgradeComparison(...args: ConstructorParameters<typeof UpgradePreviewView>) {
@@ -753,9 +793,11 @@ const linkedCombatFlowTest = combatFlowTestFromUrl(entryUrl);
 const linkedCombatFocusTest = combatFocusTestFromUrl(entryUrl);
 const linkedDamageControlTest = damageControlTestFromUrl(entryUrl);
 const linkedBetterDraftsTest = betterDraftsTestFromUrl(entryUrl);
+const linkedChooseRouteTest = chooseRouteTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedChooseRouteTest?.checkpoint ??
   linkedBetterDraftsTest?.checkpoint ??
   linkedDamageControlTest?.checkpoint ??
   linkedCombatFocusTest?.checkpoint ??
@@ -1324,6 +1366,13 @@ function updateTitle() {
       ' camera · ' +
       bindingLabel(bindings, 'retry') +
       ' to retry. Continue and your saved camera preference stay untouched.';
+  }
+  if (linkedChooseRouteTest && linkedRunTest?.seed === linkedChooseRouteTest.checkpoint.seed) {
+    $('play').textContent = 'Test Choose Your Route ↗';
+    $('title-hint').textContent =
+      CHOOSE_ROUTE_ROOMS[linkedChooseRouteTest.room].name +
+      ' · ' +
+      CHOOSE_ROUTE_SCENES[linkedChooseRouteTest.scene].instruction;
   }
   if (linkedBetterDraftsTest && linkedRunTest?.seed === linkedBetterDraftsTest.checkpoint.seed) {
     $('play').textContent = 'Test Better Drafts ↗';
@@ -3022,6 +3071,7 @@ function addRoomRematchAction(root: HTMLElement) {
   } else actions?.append(button);
 }
 function showDialog(kind: string) {
+  routePreviewView?.update(null);
   finaleServiceMenu?.dispose();
   finaleServiceMenu = null;
   if (kind === 'result' && pendingNgPlusNotice && game.mode === 'won') kind = 'ngplus-unlocked';
@@ -3295,13 +3345,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.20.0 · BETTER DRAFTS</p><h2 id="dialog-title">Build with a direction.</h2>' +
-      '<p class="update-tagline">Keep a good card. Explore the others.</p>' +
-      '<dl class="update-notes"><div><dt>Find a useful fit.</dt><dd>New Campaign drafts consider your starting weapon and current fittings, while keeping different build directions in the choice.</dd></div>' +
-      '<div><dt>Hold one card.</dt><dd>Hold an upgrade to keep it while rerolling the other two. The same once-per-reward cost or free credit applies. You still choose one upgrade.</dd></div>' +
-      '<div><dt>See fewer repeats.</dt><dd>Recently declined upgrades are less likely to return in the same zone. Legal choices and earned rewards take priority when the pool gets small.</dd></div></dl>' +
-      '<p class="practice-record-note">Start a new Campaign for Better Drafts. Existing Continue and Daily choices keep their rules.</p>' +
-      '<p><a href="?test=drafts&amp;scene=shotgun&amp;v=1">Try weapon-aware drafts ↗</a> · <a href="?test=drafts&amp;scene=hold&amp;v=1">Try a held-card reroll ↗</a></p>' +
+      '<p class="eyebrow">5.21.0 · CHOOSE YOUR ROUTE</p><h2 id="dialog-title">Find your way through.</h2>' +
+      '<p class="update-tagline">Different paths. Different fights.</p>' +
+      '<dl class="update-notes"><div><dt>Four remastered branches.</dt><dd>Boiler tunnels, Flue bridges, Intake channels and Cooling towers bring sheltered lanes, raised flanks and machinery to the middle zones.</dd></div>' +
+      '<div><dt>See the next room.</dt><dd>After clearing a room, approach a route door for a small view of its actual destination and terrain. The preview stays out of combat.</dd></div>' +
+      '<div><dt>Remember your path.</dt><dd>Accepted route choices stay in Campaign progress, under Routes taken. A pending upgrade does not commit a route.</dd></div></dl>' +
+      '<p class="practice-record-note">Start a new Campaign. Existing Continue, Daily and New Game+ layouts keep their rules.</p>' +
+      '<p><a href="?test=route-choice&amp;scene=room&amp;room=boiler-tunnels&amp;v=1">Try a remastered room ↗</a> · <a href="?test=route-choice&amp;scene=preview&amp;room=flue-bridges&amp;v=1">Try the route previews ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3865,7 +3915,7 @@ function showDialog(kind: string) {
     uprisingRouteMenu(content, game);
   } else if (kind === 'uprising-map') {
     content.innerHTML =
-      '<h2 id="dialog-title">Factory routes.</h2>' +
+      '<h2 id="dialog-title">Campaign progress.</h2>' +
       uprisingMap(game) +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = () => showDialog('pause');
@@ -3924,7 +3974,11 @@ function showDialog(kind: string) {
                   : game.maintenance.scheduled
                     ? 'ROOM CLEAR · MAINTENANCE NEXT'
                     : 'ROOM CLEAR · CHALLENGE NEXT'
-                : 'ROOM CLEAR') +
+                : game.enteringRoute && chooseRouteCampaign(game.seed)
+                  ? 'ROOM CLEAR · ' +
+                    (game.enteringRoute === 'high' ? 'HIGH' : 'LOW') +
+                    ' ROUTE NEXT'
+                  : 'ROOM CLEAR') +
       '</p><h2 id="dialog-title">' +
       (game.recoil.active && game.recoil.result
         ? 'Trial complete.'
@@ -4627,8 +4681,8 @@ function showDialog(kind: string) {
                   : '') +
       (paused
         ? '<button id="pause-logbook" class="quiet">Logbook</button>' +
-          (game.uprising.run && !game.overtime
-            ? '<button id="factory-map" class="quiet">Factory routes</button>'
+          ((game.uprising.run && !game.overtime) || game.routeHistory.length
+            ? '<button id="factory-map" class="quiet">Campaign progress</button>'
             : '') +
           (game.uprising.waiting
             ? '<button id="skip-job" class="quiet">Skip current job</button>'
@@ -5446,6 +5500,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((b) => {
 function loseFocus() {
   bindingEditor?.cancel();
   pageActive = false;
+  routePreviewView?.update(null);
   updateMusic(false);
   clearInput();
   if (game.mode === 'playing') showDialog('pause');
@@ -5572,6 +5627,7 @@ function frame(now: number) {
       : null;
   updateFinalePresentation();
   renderer.draw(now);
+  updateRouteInvitation();
   flushDamageHits();
   const trail = $('health-trail');
   const trailWidth =

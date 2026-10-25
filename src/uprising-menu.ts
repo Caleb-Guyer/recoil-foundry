@@ -1,4 +1,5 @@
 import type { Game } from './game.ts';
+import { routeHistoryMarkup } from './route-history.ts';
 import {
   uprisingForks,
   UPRISING_DISTRICTS,
@@ -10,7 +11,8 @@ import {
 
 export function uprisingMap(game: Game) {
   const run = game.uprising.run;
-  if (!run) return '';
+  const history = routeHistoryMarkup(game.routeHistory, !!game.overtime);
+  if (!run) return history;
   const forks = uprisingForks(run);
   return (
     '<ol class="uprising-map" aria-label="Factory route">' +
@@ -41,7 +43,8 @@ export function uprisingMap(game: Game) {
       .join('') +
     '</ol><p class="uprising-finale">Final defense: <strong>' +
     FINALE_NAMES[uprisingFinale(run)] +
-    '</strong>. Successful objectives can change this response.</p>'
+    '</strong>. Successful objectives can change this response.</p>' +
+    history
   );
 }
 
