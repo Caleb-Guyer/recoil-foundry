@@ -1,3 +1,4 @@
+import { segmentBox } from './rules.ts';
 import type Matter from 'matter-js';
 import type { Enemy, Shot, Game } from './game.ts';
 import type { Vec } from './rules.ts';
@@ -213,6 +214,20 @@ function bossCueTouchesPlayer(cue: BossRemasterCue, player: Vec) {
       player.y - 18 < cue.bottom
     );
   if (cue.kind === 'segment') return bossSegmentTouchesPlayer(cue.from, cue.to, cue.width, player);
+  if (cue.kind === 'hull') {
+    if (
+      !finitePoint(cue.from) ||
+      !finitePoint(cue.to) ||
+      ![cue.halfWidth, cue.halfHeight].every((n) => Number.isFinite(n) && n > 0)
+    )
+      return false;
+    return !!segmentBox(
+      cue.from,
+      cue.to,
+      { x: player.x - 13 - cue.halfWidth, y: player.y - 18 - cue.halfHeight },
+      { x: player.x + 13 + cue.halfWidth, y: player.y + 18 + cue.halfHeight },
+    );
+  }
   return cue.ends.some((end) => bossSegmentTouchesPlayer(cue.from, end, cue.width, player));
 }
 export function incomingEdgeCues(
@@ -318,10 +333,18 @@ export function incomingEdgeCues(
     );
   }
   for (const e of enemies) {
+    // The Crane's physical hook can be far from its rail chassis. A visible
+    // hook needs no offscreen marker; an offscreen hook uses its real origin.
+    const hookWarning =
+      bossWarnings?.owns(e) &&
+      e.kind === 'crane' &&
+      e.crane &&
+      bossWarnings.visual?.warnings.some((cue) => cue.kind === 'hull');
+    const warningOrigin = hookWarning && e.crane ? e.crane.head : e.body.position;
     if (
       (isAttackActive && !isAttackActive(e)) ||
-      !finitePoint(e.body.position) ||
-      inCombatView(e.body.position, view, 30)
+      !finitePoint(warningOrigin) ||
+      inCombatView(warningOrigin, view, 30)
     )
       continue;
     if (bossWarnings?.owns(e)) {
@@ -345,7 +368,7 @@ export function incomingEdgeCues(
           ? 0
           : remaining;
         project(
-          visual.center,
+          e.kind === 'crane' ? warningOrigin : visual.center,
           {
             phase: 'tell',
             fireIn,

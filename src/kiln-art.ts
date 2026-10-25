@@ -79,7 +79,11 @@ function drawKilnEffects(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced
     c.restore();
   }
 
-  if ((e.state === 'windup' || e.state === 'rush') && e.attack !== 'flak') {
+  if (
+    (e.state === 'windup' || e.state === 'rush') &&
+    e.attack !== 'flak' &&
+    !g.bossRemaster.owns(e)
+  ) {
     const locked = e.state === 'rush' || e.timer <= KILN_LOCK,
       plans = e.state === 'rush' ? kiln.plans.slice(kiln.next) : kiln.plans;
     for (const arc of plans) {
@@ -119,7 +123,7 @@ function drawKilnEffects(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced
     c.fillRect(shell.pos.x - 2, shell.pos.y - 2, 4, 4);
   }
 
-  if (e.state === 'windup' && e.attack === 'flak') {
+  if (e.state === 'windup' && e.attack === 'flak' && !g.bossRemaster.owns(e)) {
     const origin = kilnMuzzle(e),
       angles = flakAngles(Math.atan2(e.aim.y, e.aim.x), e.phase === 1),
       locked = e.timer <= FLAK_LOCK;
@@ -246,7 +250,7 @@ export function drawKiln(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced
   c.restore();
   c.fillStyle = open ? '#efca8f' : '#bb7750';
   c.fillRect(-3, -37, 6, 3);
-  if (e.state === 'windup' && e.spawn <= 0) {
+  if (e.state === 'windup' && e.spawn <= 0 && !g.bossRemaster.owns(e)) {
     const tell = e.attack === 'flak' ? FLAK_TELL : KILN_TELL,
       lock = e.attack === 'flak' ? FLAK_LOCK : KILN_LOCK,
       charge = clamp(1 - e.timer / tell, 0, 1);

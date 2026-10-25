@@ -18,6 +18,14 @@ export type BossRemasterCue = BossCueBase &
       }
     | { readonly kind: 'segment'; readonly from: Vec; readonly to: Vec; readonly width: number }
     | {
+        /** Exact swept axis-aligned rectangular body, including its endpoint hulls. */
+        readonly kind: 'hull';
+        readonly from: Vec;
+        readonly to: Vec;
+        readonly halfWidth: number;
+        readonly halfHeight: number;
+      }
+    | {
         readonly kind: 'fan';
         readonly from: Vec;
         readonly ends: readonly Vec[];
@@ -25,7 +33,7 @@ export type BossRemasterCue = BossCueBase &
       }
   );
 export interface BossRemasterVisual {
-  readonly kind: 'condenser' | 'sorter';
+  readonly kind: 'loader' | 'crane' | 'press' | 'kiln' | 'condenser' | 'sorter';
   readonly center: Vec;
   readonly phase: number;
   readonly stage: 'startup' | 'transition' | 'combat' | 'destroyed';

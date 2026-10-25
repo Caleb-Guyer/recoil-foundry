@@ -1,3 +1,4 @@
+import { FIRST_SHIFT_BOSSES, firstShiftCampaign, isFirstShiftBoss } from './first-shift-rules.ts';
 import { bossRemasterCampaign } from './boss-remaster-layout.ts';
 import type { Game } from './game.ts';
 import type { Layout, Level } from './levels.ts';
@@ -292,6 +293,14 @@ export function bossRemixLevel(g: Game, level: Level): Level {
   if (g.overtime || g.escape || g.detour || g.workshop.active || g.inAnnex || !level.boss)
     return level;
   const forced = g.practice?.remix ?? g.testRun?.bossRemix;
+  const earlyKind = level.spawns[0]?.kind;
+  if (
+    !forced &&
+    firstShiftCampaign(g.seed) &&
+    isFirstShiftBoss(earlyKind) &&
+    g.stage === FIRST_SHIFT_BOSSES[earlyKind].stage
+  )
+    return level;
   if (
     !forced &&
     bossRemasterCampaign(g.seed) &&

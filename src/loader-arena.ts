@@ -31,7 +31,9 @@ export class LoaderArenaSystem {
     this.clear();
     const g = this.game;
     if (
-      (g.level.id !== 'loader-bay' && !g.level.bossRemix?.startsWith('loader-')) ||
+      (g.level.id !== 'loader-bay' &&
+        g.level.bossRemaster !== 'loader' &&
+        !g.level.bossRemix?.startsWith('loader-')) ||
       !g.enemies.some((e) => e.kind === 'loader')
     )
       return;

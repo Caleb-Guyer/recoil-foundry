@@ -1,3 +1,4 @@
+import { firstShiftLevel } from './first-shift-layout.ts';
 import type { SoundOrigin, SoundMaterial } from './sound-event.ts';
 import {
   FinalTransformation,
@@ -1479,7 +1480,7 @@ export class Game {
       this.level = welderLevel(this.level, this.welder.state, this.stage);
     if (this.practice?.kind === 'welder') this.level = welderPracticeLevel(this.seed);
     this.level = bossRemixLevel(this, this.level);
-    this.level = bossRemasterLevel(this, this.level);
+    this.level = bossRemasterLevel(this, firstShiftLevel(this, this.level));
     if (
       !escapeRoom &&
       !this.overtime &&
@@ -2823,6 +2824,7 @@ export class Game {
           e.kind === 'angler') &&
         e.state === 'recover'
       ) &&
+      !(e.kind === 'press' && this.bossRemaster.owns(e)) &&
       (e.kind !== 'press' || e.state === 'rush') &&
       e.kind !== 'sentry' &&
       e.kind !== 'crane' &&

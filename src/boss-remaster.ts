@@ -1,3 +1,6 @@
+import { LoaderRemaster, CraneRemaster } from './first-shift-docks.ts';
+import { PressRemaster, KilnRemaster } from './first-shift-furnace.ts';
+import { firstShiftTestIdentity } from './first-shift-test.ts';
 import Matter from 'matter-js';
 import type { Enemy, Game } from './game.ts';
 import type { BossRemasterVisual } from './boss-remaster-cues.ts';
@@ -14,7 +17,14 @@ const STARTUP = 1.25,
 export class BossRemasterSystem {
   readonly game: Game;
   enemy: Enemy | null = null;
-  rig: CondenserRemaster | SorterRemaster | null = null;
+  rig:
+    | CondenserRemaster
+    | SorterRemaster
+    | LoaderRemaster
+    | CraneRemaster
+    | PressRemaster
+    | KilnRemaster
+    | null = null;
   private kind: RemasteredBoss | null = null;
   private began = 0;
   private destroyedAt: number | null = null;
@@ -66,7 +76,7 @@ export class BossRemasterSystem {
     };
   }
   clear() {
-    if (this.rig instanceof CondenserRemaster) this.rig.cancel();
+    if (this.rig && 'cancel' in this.rig) this.rig.cancel();
     this.enemy = null;
     this.rig = null;
     this.kind = null;
@@ -83,13 +93,26 @@ export class BossRemasterSystem {
     if (!enemy) return;
     const fixture =
       g.testRun?.seed === g.seed && g.testRun.stage === g.stage
-        ? bossRemasterTestIdentity(g.seed)
+        ? (firstShiftTestIdentity(g.seed) ?? bossRemasterTestIdentity(g.seed))
         : null;
-    if (fixture && fixture.boss === kind) enemy.hp = enemy.maxHp * [1, 0.6, 0.25][fixture.phase];
+    if (fixture && fixture.boss === kind) {
+      const fullOvertime = 'ng' in fixture && fixture.ng && fixture.phase === 1;
+      enemy.hp = enemy.maxHp * (fullOvertime ? 1 : [1, 0.6, 0.25][fixture.phase]);
+    }
     this.enemy = enemy;
     this.kind = kind;
     this.rig =
-      kind === 'condenser' ? new CondenserRemaster(g, enemy) : new SorterRemaster(g, enemy);
+      kind === 'condenser'
+        ? new CondenserRemaster(g, enemy)
+        : kind === 'sorter'
+          ? new SorterRemaster(g, enemy)
+          : kind === 'loader'
+            ? new LoaderRemaster(g, enemy)
+            : kind === 'crane'
+              ? new CraneRemaster(g, enemy)
+              : kind === 'press'
+                ? new PressRemaster(g, enemy)
+                : new KilnRemaster(g, enemy);
     this.phase = this.rig.phase;
     this.began = g.time;
     this.coolantEnabled = !!g.level.coolant?.length;
@@ -138,13 +161,17 @@ export class BossRemasterSystem {
     const g = this.game,
       rig = this.rig!;
     if (g.time - this.began < STARTUP) {
-      Matter.Body.applyForce(enemy.body, enemy.body.position, {
-        x: 0,
-        y: -enemy.body.mass * 0.001,
-      });
+      if (this.kind !== 'loader' && this.kind !== 'kiln')
+        Matter.Body.applyForce(enemy.body, enemy.body.position, {
+          x: 0,
+          y: -enemy.body.mass * 0.001,
+        });
       Matter.Body.setVelocity(enemy.body, {
         x: enemy.body.velocity.x * 0.4,
-        y: enemy.body.velocity.y * 0.4,
+        y:
+          this.kind === 'loader' || this.kind === 'kiln'
+            ? enemy.body.velocity.y
+            : enemy.body.velocity.y * 0.4,
       });
       enemy.state = 'transition';
       return true;
@@ -171,7 +198,7 @@ export class BossRemasterSystem {
     if (!this.owns(enemy) || this.destroyedAt !== null) return;
     this.destroyedAt = this.game.time;
     this.wreck = { ...enemy.body.position };
-    if (this.rig instanceof CondenserRemaster) this.rig.cancel();
+    if (this.rig && 'cancel' in this.rig) this.rig.cancel();
     this.ownRounds();
     this.stopBelts();
     this.pendingMagnets = null;

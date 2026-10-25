@@ -153,7 +153,12 @@ export function drawCrane(
   }
 
   if (e.spawn > 0) c.globalAlpha *= clamp(1 - e.spawn / 0.65, 0.15, 1);
-  if (e.spawn <= 0 && e.state === 'windup' && (e.attack === 'sweep' || e.attack === 'slam'))
+  if (
+    !g.bossRemaster.owns(e) &&
+    e.spawn <= 0 &&
+    e.state === 'windup' &&
+    (e.attack === 'sweep' || e.attack === 'slam')
+  )
     drawStrikeTell(c, e);
 
   for (const side of [-1, 1]) {
@@ -256,7 +261,7 @@ export function drawCrane(
   for (let x = -18; x <= 18; x += 12) c.fillRect(x, 16, 5, 5);
   c.fillStyle = '#81937e';
   c.fillRect(-15, 5, 30, 2);
-  if (e.state === 'windup' && e.attack !== 'flak') {
+  if (e.state === 'windup' && e.attack !== 'flak' && !g.bossRemaster.owns(e)) {
     const tell = e.attack === 'slam' ? CRANE_SLAM_TELL : CRANE_SWEEP_TELL,
       charge = clamp(1 - e.timer / tell, 0, 1);
     c.fillStyle = e.timer <= CRANE_LOCK ? '#ffe0a4' : '#c9a270';
@@ -284,6 +289,7 @@ export function drawCrane(
     }
     c.stroke();
   }
-  if (e.spawn <= 0 && e.state === 'windup' && e.attack === 'flak') drawFlak(c, g, e);
+  if (e.spawn <= 0 && e.state === 'windup' && e.attack === 'flak' && !g.bossRemaster.owns(e))
+    drawFlak(c, g, e);
   c.restore();
 }

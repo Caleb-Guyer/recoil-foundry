@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**First Shift — version 5.23.0.** The Loader, Crane, Press and Kiln gain distinct three-phase encounters, authored arenas, committed attack sequences and recovery openings. Mechanical startups, phase damage and destruction give the early bosses a consistent presentation; new New Game+ laps open with harder patterns. [Release notes and isolated boss/phase tests](docs/releases/5.23.0.md).
+
 **Boss Remaster — version 5.22.0.** The Condenser gains pressure volleys, purge gaps and cooling fronts; the Sorter combines locked induction, magnetic sweeps and scrap blades. Three phases reshape coolant lanes, belts and magnets, with brief machine startups, phase breaks and destruction. [Release notes and isolated boss/phase tests](docs/releases/5.22.0.md).
 
 **Choose Your Route — version 5.21.0.** Four Furnace and Cooling branches gain authored cover, upper flanks and machinery. Approach a cleared route exit to see its actual destination; accepted choices stay in collapsed Campaign progress. [Release notes and isolated room/preview tests](docs/releases/5.21.0.md).

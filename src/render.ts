@@ -355,7 +355,7 @@ export class Renderer {
         this.line({ x: 24, y: -7 }, { x: 42, y: 11 }, '#b79a87', 5);
         c.fillStyle = e.state === 'recover' ? '#ffe2a0' : '#b26855';
         for (let i = 0; i < 3; i++) c.fillRect(-32 + i * 13, -5, 7, 11);
-        if (e.state === 'windup' && e.attack !== 'flak') {
+        if (e.state === 'windup' && e.attack !== 'flak' && !g.bossRemaster.owns(e)) {
           c.fillStyle = '#ffd19a';
           c.fillRect(44, -20, 8, 50 * clamp(1 - e.timer / LOADER_TELL, 0, 1));
         }
@@ -1737,6 +1737,7 @@ export class Renderer {
     }
   }
   drawTell(e: Enemy) {
+    if (this.game.bossRemaster.owns(e)) return;
     drawBossSignal(this.ctx, this.game, e, this.reduced);
     if (e.attack === 'flak') return;
     if (e.spawn > 0 || (e.state !== 'windup' && e.state !== 'followup')) return;

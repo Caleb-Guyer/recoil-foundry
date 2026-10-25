@@ -1,7 +1,10 @@
 import type { Game } from './game.ts';
 import type { Level, Solid } from './levels.ts';
 import type { MagnetPlacement } from './reclamation-layouts.ts';
-export type RemasteredBoss = 'condenser' | 'sorter';
+export type RemasteredBoss =
+  | 'condenser'
+  | 'sorter'
+  | import('./first-shift-rules.ts').FirstShiftBoss;
 export function bossRemasterCampaign(seed: unknown) {
   return typeof seed === 'string' && Number(/^RF-C(\d+)-/.exec(seed)?.[1]) >= 102;
 }
