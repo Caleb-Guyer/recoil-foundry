@@ -1,3 +1,4 @@
+import { uprisingRemasterSeed } from './uprising-remaster-rules.ts';
 import { rivalShiftLevel } from './rival-shift-layout.ts';
 import { firstShiftLevel } from './first-shift-layout.ts';
 import type { SoundOrigin, SoundMaterial } from './sound-event.ts';
@@ -1017,6 +1018,8 @@ export class Game {
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
         ? structuredClone(save ? (save.uprising ?? null) : uprising)
         : null;
+    if (!save && this.uprising.run && uprisingRemasterSeed(this.seed))
+      this.uprising.run.version = 3;
     this.security =
       !practice && !workshop && !/^RF-D\d+-/.test(this.seed)
         ? save?.security
@@ -4379,11 +4382,15 @@ export class Game {
       !this.welderReward &&
       !this.hunts.rewarding &&
       this.mode === 'upgrade' &&
+      !this.uprising.pendingPayment &&
       !this.rewardTaken &&
       !this.rewardRerolled &&
       this.offers.length === 3 &&
       !this.offers.some((m) => m.id === 'repair') &&
-      (this.hunts.freeReroll || this.areaEvents.freeReroll || this.hp > REROLL_COST)
+      (this.hunts.freeReroll ||
+        this.areaEvents.freeReroll ||
+        this.uprising.freeReroll ||
+        this.hp > REROLL_COST)
     );
   }
   holdReward(id: string) {
@@ -4405,7 +4412,11 @@ export class Game {
       !dailyFromSeed(this.seed) &&
       !this.rewardTaken &&
       !this.rewardRerolled &&
-      (this.hunts.freeReroll || this.areaEvents.freeReroll || this.hp > REROLL_COST) &&
+      !this.uprising.pendingPayment &&
+      (this.hunts.freeReroll ||
+        this.areaEvents.freeReroll ||
+        this.uprising.freeReroll ||
+        this.hp > REROLL_COST) &&
       this.offers.length > 0 &&
       !this.offers.some((m) => m.id === 'repair') &&
       this.replacementOffers().length === this.offers.length
@@ -4416,6 +4427,7 @@ export class Game {
     const replacements = this.replacementOffers();
     if (this.hunts.freeReroll) this.hunts.spendReroll();
     else if (this.areaEvents.freeReroll) this.areaEvents.spendReroll();
+    else if (this.uprising.freeReroll) this.uprising.spendReroll();
     else this.hp -= REROLL_COST;
     this.rememberDeclined(this.offers.filter((m) => m.id !== this.heldReward).map((m) => m.id));
     this.rewardRerolled = true;
@@ -4427,9 +4439,38 @@ export class Game {
     this.onChange();
     return true;
   }
+  applyJobRefit(mods: readonly string[]) {
+    this.mods = [...mods];
+    this.gun = getGun(this.mods, this.startingGun);
+    this.melt.reset();
+    this.massDriver.reset();
+    this.arcs.reset();
+    this.grind.reset();
+    this.torch.reset();
+    this.tripwires.reset();
+    this.salvage.reset();
+    this.salvageEvolutions.reset();
+    this.tethers.reset();
+    this.evolutions.reset();
+    this.ballistics.reset();
+    this.cryogenic.reset();
+    this.stasis.reset();
+    this.mobility.reset();
+    this.grapnel.reset();
+    this.scrap.reset();
+    this.support.reset();
+    this.fusions.reset();
+    this.demolition.clear();
+    this.shots = [];
+    this.burstRemaining = this.fireBuffer = this.jumpBuffer = 0;
+    this.portalRequest = null;
+    this.landingReady = this.chargedFlash = false;
+    this.blast.life = this.muzzle = 0;
+    this.shootAt = this.time;
+  }
   chooseMod(id: string) {
     if (this.hunts.rewarding) return;
-    if (this.uprising.choices.length) return;
+    if (this.uprising.choices.length || this.uprising.pendingPayment) return;
     if (this.practice || this.workshop.active) return;
     if (
       this.mode !== 'upgrade' ||

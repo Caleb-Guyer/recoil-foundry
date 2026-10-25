@@ -1,3 +1,5 @@
+import { uprisingRemasterSeed, uprisingRemasterObjective } from './uprising-remaster-rules.ts';
+import { UPRISING_JOB_EFFECTS } from './uprising-job-copy.ts';
 import type { Game } from './game.ts';
 import { routeHistoryMarkup } from './route-history.ts';
 import {
@@ -32,7 +34,18 @@ export function uprisingMap(game: Game) {
           '</strong><small>' +
           (outcome
             ? outcome.result === 'success'
-              ? 'Complete' + (outcome.clean ? ' · no damage' : '')
+              ? 'Complete' +
+                (outcome.clean ? ' · no damage' : '') +
+                (outcome.reward
+                  ? outcome.reward.selected
+                    ? ' · ' +
+                      {
+                        repair: 'Repair',
+                        reroll: outcome.reward.rerollSpent ? 'Reroll spent' : 'Reroll ready',
+                        refit: 'Refit',
+                      }[outcome.reward.selected]
+                    : ' · payment pending'
+                  : '')
               : 'Objective missed'
             : id
               ? 'Route committed'
@@ -50,6 +63,7 @@ export function uprisingMap(game: Game) {
 
 export function uprisingRouteMenu(content: HTMLElement, game: Game) {
   const routes = game.uprising.choices;
+  const remastered = game.uprising.run?.version === 3 && uprisingRemasterSeed(game.seed);
   const benefits: Record<UprisingRouteId, string> = {
     'rail-heist': 'Stolen cargo draws pursuit crews.',
     'rail-escape': 'Evacuate without a cargo pursuit.',
@@ -64,6 +78,7 @@ export function uprisingRouteMenu(content: HTMLElement, game: Game) {
     'roof-relief': 'Crew cover in the final fight.',
   };
   const objective = (id: UprisingRouteId) => {
+    if (remastered) return uprisingRemasterObjective(id);
     const r = uprisingRoute(id);
     return r.mission === 'steal'
       ? 'Break the case, then collect the prototype.'
@@ -97,11 +112,15 @@ export function uprisingRouteMenu(content: HTMLElement, game: Game) {
           '</span><p>' +
           objective(r.id) +
           '</p><small class="uprising-effect">' +
-          benefits[r.id] +
+          (remastered ? UPRISING_JOB_EFFECTS[r.id] : benefits[r.id]) +
           '</small></button>',
       )
       .join('') +
-    '</div><p class="hint uprising-reward">Success restores 8 health. Skip a job from Pause.</p><details class="uprising-progress"><summary>Campaign progress</summary>' +
+    '</div><p class="hint uprising-reward">' +
+    (remastered
+      ? 'Success earns one payment: repair, a reroll credit or a legal refit. Skip a job from Pause.'
+      : 'Success restores 8 health. Skip a job from Pause.') +
+    '</p><details class="uprising-progress"><summary>Campaign progress</summary>' +
     uprisingMap(game) +
     '<p class="hint">Extra jobs unlock through contracts in the Logbook.</p></details>';
   content

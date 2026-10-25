@@ -1,3 +1,4 @@
+import { drawUprisingRemaster } from './uprising-remaster-art.ts';
 import type { Game } from './game.ts';
 import type { Vec } from './rules.ts';
 
@@ -92,6 +93,10 @@ export function drawUprisingScenery(
 export function drawUprising(c: CanvasRenderingContext2D, g: Game) {
   const u = g.uprising;
   if (!u.active || g.mode === 'title') return;
+  if (u.remaster.eligible) {
+    drawUprisingRemaster(c, g);
+    return;
+  }
   c.save();
   c.lineWidth = 3;
   for (const a of u.anchors) {

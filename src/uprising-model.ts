@@ -1,4 +1,12 @@
+import {
+  validUprisingReward,
+  validUprisingRewardShape,
+  currentBuildMatchesReward,
+  type UprisingReward,
+} from './uprising-rewards.ts';
+import { uprisingRemasterSeed } from './uprising-remaster-rules.ts';
 import type { Checkpoint } from './rules.ts';
+import { loadUnlocks } from './longevity.ts';
 
 export const UPRISING_FORKS = [4, 8, 12, 16] as const;
 const LEGACY_UPRISING_FORKS = [0, 4, 12, 16] as const;
@@ -153,9 +161,10 @@ export interface UprisingOutcome {
   route: UprisingRouteId;
   result: 'success' | 'failed';
   clean?: true;
+  reward?: UprisingReward;
 }
 export interface UprisingRun {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   choices: UprisingRouteId[];
   outcomes: UprisingOutcome[];
   unlocks: UprisingContractId[];
@@ -233,7 +242,7 @@ export function newUprising(raw: unknown = null, plan?: readonly UprisingRouteId
 export function validUprisingRun(raw: unknown): raw is UprisingRun {
   if (
     !object(raw) ||
-    ![1, 2].includes(raw.version as number) ||
+    ![1, 2, 3].includes(raw.version as number) ||
     !Object.keys(raw).every((k) =>
       ['version', 'choices', 'outcomes', 'unlocks', 'plan'].includes(k),
     ) ||
@@ -265,10 +274,14 @@ export function validUprisingRun(raw: unknown): raw is UprisingRun {
     raw.outcomes.every(
       (o, i) =>
         object(o) &&
-        Object.keys(o).every((k) => ['route', 'result', 'clean'].includes(k)) &&
+        Object.keys(o).every((k) =>
+          ['route', 'result', 'clean', ...(raw.version === 3 ? ['reward'] : [])].includes(k),
+        ) &&
         o.route === (raw.choices as string[])[i] &&
         ['success', 'failed'].includes(o.result as string) &&
-        (o.clean === undefined || (o.clean === true && o.result === 'success')),
+        (o.clean === undefined || (o.clean === true && o.result === 'success')) &&
+        (o.reward === undefined ||
+          (raw.version === 3 && o.result === 'success' && validUprisingRewardShape(o.reward))),
     )
   );
 }
@@ -276,7 +289,45 @@ export function validUprisingCheckpoint(d: Checkpoint) {
   if (d.uprising === undefined) return true;
   const u = d.uprising;
   if (d.version !== 6 || /^RF-D\d+-/.test(d.seed) || !validUprisingRun(u)) return false;
+  if (u.version === 3) {
+    if (!uprisingRemasterSeed(d.seed)) return false;
+    const payments = u.outcomes.filter((o) => o.reward);
+    if (
+      !payments.every(
+        (o) =>
+          validUprisingReward(o.reward, { seed: d.seed, route: o.route }) &&
+          o.reward!.startingGun === (d.startingGun ?? 'pistol'),
+      )
+    )
+      return false;
+    const pending = payments.filter((o) => !o.reward!.selected);
+    if (
+      pending.length > 1 ||
+      pending.some(
+        (o) =>
+          !!d.overtime ||
+          !!d.detour ||
+          !!d.escape ||
+          d.stage !== o.reward!.stage ||
+          !!d.reward?.rerolled ||
+          !!d.reward?.held ||
+          !!d.reward?.auditor ||
+          !!d.reward?.courier ||
+          !!d.reward?.welder ||
+          JSON.stringify(o.reward!.unlocks) !== JSON.stringify(loadUnlocks(d.unlocks)) ||
+          !currentBuildMatchesReward(o.reward!, d.mods, d.startingGun ?? 'pistol', d.legacyMods),
+      )
+    )
+      return false;
+  }
   const forks = uprisingForks(u);
+  // Overtime keeps the completed first-lap job history, including unspent payment credits.
+  if (d.overtime)
+    return (
+      u.choices.length === forks.length &&
+      u.outcomes.length === forks.length &&
+      u.outcomes.every((o) => !o.reward || !!o.reward.selected)
+    );
   const minimum = forks.filter((f) => f < d.stage).length;
   const maximum = forks.filter((f) => f <= d.stage).length;
   const resolved = forks.filter((f) => f + 1 < d.stage || (f + 1 === d.stage && !!d.reward)).length;

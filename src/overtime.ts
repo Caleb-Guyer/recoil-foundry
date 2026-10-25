@@ -1,3 +1,4 @@
+import { uprisingRemasterSeed } from './uprising-remaster-rules.ts';
 import { rivalShiftCampaign } from './rival-shift-rules.ts';
 import { firstShiftCampaign } from './first-shift-rules.ts';
 import { combatFlowSeed } from './combat-flow-rules.ts';
@@ -22,23 +23,25 @@ import { reclaimerFinale, finalArsenalSeed } from './boss-progression.ts';
 // A separate, short seed keeps the first lap stable and lets an earned boss
 // victory reconstruct its ordinary Practice arena from this same seed.
 export const overtimeSeed = (seed: string) =>
-  (rivalShiftCampaign(seed)
-    ? 'RF-C104-OT-'
-    : firstShiftCampaign(seed)
-      ? 'RF-C103-OT-'
-      : combatFlowSeed(seed)
-        ? 'RF-C99-OT-'
-        : finalApproachSeed(seed)
-          ? 'RF-C98-OT-'
-          : cinematicFinale(seed)
-            ? 'RF-C97-OT-'
-            : transformedFinale(seed)
-              ? 'RF-C96-OT-'
-              : finalArsenalSeed(seed)
-                ? 'RF-C95-OT-'
-                : reclaimerFinale(seed)
-                  ? 'RF-C94-OT-'
-                  : 'OT-') + Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
+  (uprisingRemasterSeed(seed)
+    ? 'RF-C105-OT-'
+    : rivalShiftCampaign(seed)
+      ? 'RF-C104-OT-'
+      : firstShiftCampaign(seed)
+        ? 'RF-C103-OT-'
+        : combatFlowSeed(seed)
+          ? 'RF-C99-OT-'
+          : finalApproachSeed(seed)
+            ? 'RF-C98-OT-'
+            : cinematicFinale(seed)
+              ? 'RF-C97-OT-'
+              : transformedFinale(seed)
+                ? 'RF-C96-OT-'
+                : finalArsenalSeed(seed)
+                  ? 'RF-C95-OT-'
+                  : reclaimerFinale(seed)
+                    ? 'RF-C94-OT-'
+                    : 'OT-') + Math.floor(seeded(seed + ':overtime')() * 0xffffffff).toString(36);
 export function overtimeHealth(kind: EnemyKind, stage: number, elite?: EliteKind) {
   if (kind === 'welder') return WELDER_HP;
   return Math.ceil(

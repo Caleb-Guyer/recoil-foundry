@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Uprising Remaster — version 5.25.0.** Eleven optional jobs gain moving convoys, research interlocks, sequential crew defenses, lowered bridges and authored counterattacks. Success offers a repair, free reroll credit or legal refit before the ordinary upgrade. Compact route summaries explain lasting consequences, and Core sabotage keeps Turbine fans disabled through every phase. [Release notes and isolated job/reward tests](docs/releases/5.25.0.md).
+
 **Rival Shift — version 5.24.0.** Turbine links committed gusts, blade sweeps and repositioning while updraft shafts open. The Reclamation Interceptor adds flanking salvos, fork gaps and radial bursts over changing floor belts. Both gain three phases, mechanical transitions, destruction and harder New Game+ patterns. [Release notes and isolated boss/phase tests](docs/releases/5.24.0.md).
 
 **First Shift — version 5.23.0.** The Loader, Crane, Press and Kiln gain distinct three-phase encounters, authored arenas, committed attack sequences and recovery openings. Mechanical startups, phase damage and destruction give the early bosses a consistent presentation; new New Game+ laps open with harder patterns. [Release notes and isolated boss/phase tests](docs/releases/5.23.0.md).

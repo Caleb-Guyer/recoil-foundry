@@ -9,7 +9,7 @@ export function uprisingCatalog(rawArchive: unknown, records: unknown): LogbookE
       id: 'railworks',
       name: 'Railworks',
       description:
-        'Moving railcars, stolen prototypes and evacuation platforms. Choose a job after room one.',
+        'Moving railcars, stolen prototypes and evacuation platforms. Choose a job after room five.',
       lore: [
         'Dispatch record · unscheduled train',
         'T. Orr · dispatch',
@@ -20,7 +20,7 @@ export function uprisingCatalog(rawArchive: unknown, records: unknown): LogbookE
       id: 'core',
       name: 'Foundry Core',
       description:
-        'Powered platforms and production relays. Cut production, protect the generator or recover research. Choose a job after room five.',
+        'Powered platforms and production relays. Cut production, protect the generator or recover research. Choose a job after room nine.',
       lore: [
         'Production notice · power allocation',
         'M. Vale · maintenance',

@@ -1,3 +1,13 @@
+import { UprisingRemaster } from './uprising-remaster.ts';
+import { uprisingRemasterSeed } from './uprising-remaster-rules.ts';
+import { UPRISING_REMASTER_ROOMS } from './uprising-remaster-rooms.ts';
+import {
+  newJobReward,
+  chooseUprisingReward,
+  uprisingRerollCredits,
+  spendUprisingReroll,
+  type UprisingRewardChoice,
+} from './uprising-rewards.ts';
 import Matter from 'matter-js';
 import type { Game, Input, Enemy, Shot } from './game.ts';
 import type { Prop } from './props.ts';
@@ -32,8 +42,10 @@ export class UprisingSystem {
   patrolClearedAt: number | null = null;
   anchors: { body: Matter.Body; x: number; y: number }[] = [];
   game: Game;
+  remaster: UprisingRemaster;
   constructor(game: Game) {
     this.game = game;
+    this.remaster = new UprisingRemaster(game);
   }
   get active() {
     const g = this.game;
@@ -67,14 +79,18 @@ export class UprisingSystem {
     return this.active && !!this.mission && !this.outcome;
   }
   get escapeReady() {
-    return this.active && this.kind === 'escape' && this.outcome?.result === 'success';
+    return this.remaster.eligible
+      ? this.remaster.evacuated
+      : this.active && this.kind === 'escape' && this.outcome?.result === 'success';
   }
   get finale() {
     return this.active && this.game.stage === 19 && this.run ? uprisingFinale(this.run) : null;
   }
   get room() {
     return this.active && this.mission && this.game.level.id === 'uprising-' + this.mission
-      ? UPRISING_ROOMS[this.mission]
+      ? (this.run?.version === 3 && uprisingRemasterSeed(this.game.seed)
+          ? UPRISING_REMASTER_ROOMS
+          : UPRISING_ROOMS)[this.mission]
       : null;
   }
   get switchTarget() {
@@ -119,6 +135,7 @@ export class UprisingSystem {
       : base;
   }
   clear() {
+    this.remaster.clear();
     this.mission = null;
     this.nodes = [];
     this.anchors = [];
@@ -154,9 +171,13 @@ export class UprisingSystem {
           cover.hp = cover.maxHp = 150;
         }
       }
+      this.remaster.reset();
       return;
     }
-    if (this.kind === 'escape') return;
+    if (this.kind === 'escape') {
+      this.remaster.reset();
+      return;
+    }
     for (const { x, y } of this.room?.objectives ?? []) {
       const prop = g.props.spawn(this.kind === 'defend' ? 'cargo' : 'crate', x, y);
       Matter.Body.setStatic(prop.body, true);
@@ -170,6 +191,7 @@ export class UprisingSystem {
             : 100;
       this.nodes.push(prop);
     }
+    this.remaster.reset();
   }
   choose(id: UprisingRouteId) {
     if (!this.run || !this.choices.some((r) => r.id === id)) return false;
@@ -187,6 +209,7 @@ export class UprisingSystem {
     playerDamage = direct || !!(source?.friendly && !source.allied),
   ) {
     if (!this.nodes.includes(prop) || !this.waiting || !(damage > 0)) return;
+    if (this.remaster.eligible && !this.remaster.canHit(prop)) return;
     if (prop.uprising === 'generator' && this.armedAt === null) return;
     if (
       (prop.uprising === 'generator' && playerDamage) ||
@@ -208,6 +231,7 @@ export class UprisingSystem {
     if (this.waiting) this.hurt = true;
   }
   target(enemy: Enemy): Vec | null {
+    if (this.remaster.eligible) return this.remaster.target(enemy);
     return this.waiting &&
       this.kind === 'defend' &&
       this.armedAt !== null &&
@@ -228,8 +252,17 @@ export class UprisingSystem {
     for (const node of this.nodes)
       if (this.game.props.items.includes(node)) this.game.props.remove(node);
     if (success) {
-      this.game.hp = Math.min(100, this.game.hp + 8);
-      this.game.onUprisingMission(this.mission, clean);
+      if (this.run.version === 3 && uprisingRemasterSeed(this.game.seed))
+        this.outcome!.reward = newJobReward(
+          this.game.seed,
+          this.mission,
+          this.game.mods,
+          this.game.startingGun,
+          this.game.unlocks,
+          this.game.legacyMods,
+        );
+      else this.game.hp = Math.min(100, this.game.hp + 8);
+      if (!this.game.testRun) this.game.onUprisingMission(this.mission, clean);
       this.game.onSound('clear');
     }
     this.game.save();
@@ -242,6 +275,10 @@ export class UprisingSystem {
   update(input: Input, dt: number) {
     const g = this.game;
     if (!this.active || g.mode !== 'playing' || g.hitStop > 0) return;
+    if (this.remaster.eligible) {
+      this.remaster.update(input, dt);
+      return;
+    }
     for (const [i, a] of this.anchors.entries()) {
       const rail = g.level.uprising === 'railworks';
       const powered =
@@ -355,7 +392,70 @@ export class UprisingSystem {
       }
     }
   }
+  get pendingPayment() {
+    const reward = this.outcome?.reward;
+    return this.active &&
+      this.run?.version === 3 &&
+      uprisingRemasterSeed(this.game.seed) &&
+      reward &&
+      !reward.selected &&
+      reward.stage === this.game.stage
+      ? reward
+      : null;
+  }
+  get freeReroll() {
+    return (
+      this.run?.version === 3 &&
+      uprisingRemasterSeed(this.game.seed) &&
+      uprisingRerollCredits(this.run.outcomes) > 0
+    );
+  }
+  spendReroll() {
+    return this.run?.version === 3 && spendUprisingReroll(this.run.outcomes);
+  }
+  claimPayment(choice: UprisingRewardChoice) {
+    const g = this.game,
+      reward = this.pendingPayment;
+    if (
+      !reward ||
+      !this.mission ||
+      !this.outcome ||
+      g.mode !== 'upgrade' ||
+      g.rewardTaken ||
+      g.rewardRerolled ||
+      g.heldReward ||
+      g.practice ||
+      g.workshop.active ||
+      g.courierReward ||
+      g.auditorReward ||
+      g.welderReward
+    )
+      return false;
+    const payment = chooseUprisingReward(reward, choice, {
+      seed: g.seed,
+      route: this.mission,
+      mods: g.mods,
+      startingGun: g.startingGun,
+      hp: g.hp,
+      unlocks: g.unlocks,
+      legacyMods: g.legacyMods,
+    });
+    if (!payment) return false;
+    this.outcome.reward = payment.reward;
+    g.hp = payment.hp;
+    if (choice === 'refit') {
+      g.applyJobRefit(payment.mods);
+      g.mode = 'playing';
+      g.openReward(g.enteringDetour, g.enteringRoute ?? undefined);
+    } else {
+      g.save();
+      g.onChange();
+    }
+    g.onSound('upgrade');
+    return true;
+  }
   get status() {
+    if (this.remaster.eligible) return this.remaster.status;
     if (this.finale)
       return (
         FINALE_NAMES[this.finale] +

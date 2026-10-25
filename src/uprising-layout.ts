@@ -1,3 +1,5 @@
+import { uprisingRemasterSeed } from './uprising-remaster-rules.ts';
+import { UPRISING_REMASTER_ROOMS } from './uprising-remaster-rooms.ts';
 import type { Level } from './levels.ts';
 import { UPRISING_ROOMS } from './uprising-rooms.ts';
 import { reclaimerFinale, finalArsenalSeed } from './boss-progression.ts';
@@ -15,7 +17,11 @@ export function uprisingLevel(base: Level, run: UprisingRun, stage: number, seed
   const choice = run.choices.find((id) => uprisingFork(run, id) + 1 === stage);
   if (choice) {
     const route = uprisingRoute(choice);
-    const room = structuredClone(UPRISING_ROOMS[choice]);
+    const room = structuredClone(
+      (run.version === 3 && uprisingRemasterSeed(seed) ? UPRISING_REMASTER_ROOMS : UPRISING_ROOMS)[
+        choice
+      ],
+    );
     return {
       id: 'uprising-' + choice,
       name: UPRISING_DISTRICTS[route.district] + ' · ' + route.name,

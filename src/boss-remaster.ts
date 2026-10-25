@@ -1,3 +1,4 @@
+import { successfulUprising } from './uprising-model.ts';
 import { rivalShiftFans, rivalShiftBelts } from './rival-shift-layout.ts';
 import { TurbineRemaster } from './turbine-remaster.ts';
 import { ReclamationInterceptorRemaster } from './reclamation-interceptor-remaster.ts';
@@ -38,6 +39,7 @@ export class BossRemasterSystem {
   private phase = 0;
   private arenaPhase = -1;
   private coolantEnabled = false;
+  private fansEnabled = true;
   private magnetsEnabled = false;
   private pendingMagnets: MagnetPlacement[] | null = null;
   constructor(game: Game) {
@@ -131,6 +133,7 @@ export class BossRemasterSystem {
     this.phase = this.rig.phase;
     this.began = g.time;
     this.coolantEnabled = !!g.level.coolant?.length;
+    this.fansEnabled = !(g.uprising.active && successfulUprising(g.uprising.run, 'core-sabotage'));
     this.magnetsEnabled = !!g.level.magnets?.length;
     this.applyArena(this.phase);
     this.stopBelts();
@@ -149,7 +152,7 @@ export class BossRemasterSystem {
     const g = this.game;
     this.arenaPhase = phase;
     if (this.kind === 'turbine') {
-      g.level.fans = rivalShiftFans(phase, g.level.mirrored);
+      g.level.fans = this.fansEnabled ? rivalShiftFans(phase, g.level.mirrored) : [];
       g.crosswind.reset(); // Every new shaft retains its full rest and warning.
     }
     if (this.kind === 'boss') {

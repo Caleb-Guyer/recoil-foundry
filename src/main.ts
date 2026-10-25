@@ -1,3 +1,7 @@
+import { uprisingRemasterTestFromUrl } from './uprising-remaster-test.ts';
+import { uprisingRemasterObjective } from './uprising-remaster-rules.ts';
+import { UPRISING_JOB_EFFECTS } from './uprising-job-copy.ts';
+import type { UprisingRewardMenu } from './uprising-reward-menu.ts';
 import { rivalShiftTestFromUrl } from './rival-shift-test.ts';
 import { RIVAL_SHIFT_BOSSES } from './rival-shift-rules.ts';
 import { firstShiftTestFromUrl } from './first-shift-test.ts';
@@ -56,6 +60,8 @@ import {
   recordUprising,
   uprisingContracts,
   uprisingFinale,
+  uprisingRoute,
+  FINALE_NAMES,
   uprisingPlan,
   type UprisingRun,
 } from './uprising-model.ts';
@@ -578,7 +584,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Rival Shift</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Uprising Remaster</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -618,11 +624,13 @@ let upgradePreview: UpgradePreviewView | null = null;
 let supportDrill: SupportDrillView | null = null;
 let roomRematchView: RoomRematchView | null = null;
 let finaleServiceMenu: FinaleServiceMenu | null = null;
+let jobPaymentMenu: UprisingRewardMenu | null = null;
 const optional = {
   workshop: new LazyResource(() => import('./workshop-menu.ts')),
   logbook: new LazyResource(() => import('./logbook-menu.ts')),
   replay: new LazyResource(() => import('./death-replay-view.ts')),
   rematch: new LazyResource(() => import('./room-rematch-view.ts')),
+  jobPayment: new LazyResource(() => import('./uprising-reward-menu.ts')),
   finaleService: new LazyResource(() => import('./finale-service-menu.ts')),
   drill: new LazyResource(() => import('./support-drill-view.ts')),
   upgrade: new LazyResource(() => import('./upgrade-preview-view.ts')),
@@ -802,9 +810,11 @@ const linkedChooseRouteTest = chooseRouteTestFromUrl(entryUrl);
 const linkedBossRemasterTest = bossRemasterTestFromUrl(entryUrl);
 const linkedFirstShiftTest = firstShiftTestFromUrl(entryUrl);
 const linkedRivalShiftTest = rivalShiftTestFromUrl(entryUrl);
+const linkedUprisingRemasterTest = uprisingRemasterTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedUprisingRemasterTest?.checkpoint ??
   linkedRivalShiftTest?.checkpoint ??
   linkedFirstShiftTest?.checkpoint ??
   linkedBossRemasterTest?.checkpoint ??
@@ -1378,6 +1388,23 @@ function updateTitle() {
       bindingLabel(bindings, 'retry') +
       ' to retry. Continue and your saved camera preference stay untouched.';
   }
+  if (
+    linkedUprisingRemasterTest &&
+    linkedRunTest?.seed === linkedUprisingRemasterTest.checkpoint.seed
+  ) {
+    $('play').textContent = 'Test Uprising Remaster ↗';
+    $('title-hint').textContent =
+      (linkedUprisingRemasterTest.scene === 'job'
+        ? uprisingRemasterObjective(
+            linkedUprisingRemasterTest.route as import('./uprising-model.ts').UprisingRouteId,
+          )
+        : linkedUprisingRemasterTest.scene === 'choose'
+          ? 'Compare the next job choices.'
+          : linkedUprisingRemasterTest.scene === 'rewards'
+            ? 'Choose one job payment, then an ordinary upgrade.'
+            : 'Fight the Turbine after Core sabotage. Its phase updraft shafts stay disabled.') +
+      ' R restarts; Continue and unlocks stay untouched.';
+  }
   if (linkedRivalShiftTest && linkedRunTest?.seed === linkedRivalShiftTest.checkpoint.seed) {
     $('play').textContent = 'Test Rival Shift ↗';
     $('title-hint').textContent =
@@ -1684,6 +1711,8 @@ function closeDialog() {
   dialogLifetime.invalidate();
   finaleServiceMenu?.dispose();
   finaleServiceMenu = null;
+  jobPaymentMenu?.dispose();
+  jobPaymentMenu = null;
   cancelMenuImages($('dialog-content'));
   appearanceRequested = false;
   roomRematchView?.dispose();
@@ -3111,6 +3140,8 @@ function showDialog(kind: string) {
   routePreviewView?.update(null);
   finaleServiceMenu?.dispose();
   finaleServiceMenu = null;
+  jobPaymentMenu?.dispose();
+  jobPaymentMenu = null;
   if (kind === 'result' && pendingNgPlusNotice && game.mode === 'won') kind = 'ngplus-unlocked';
   dialogLifetime.invalidate();
   cancelMenuImages($('dialog-content'));
@@ -3121,6 +3152,7 @@ function showDialog(kind: string) {
   upgradePreview?.dispose();
   upgradePreview = null;
   if (kind === 'upgrade' && game.uprising.choices.length) kind = 'uprising';
+  if (kind === 'upgrade' && game.uprising.pendingPayment) kind = 'job-payment';
   buildMenu = null;
   modal.setAttribute('aria-labelledby', 'dialog-title');
   bindingEditor?.cancel();
@@ -3136,7 +3168,7 @@ function showDialog(kind: string) {
   modal.classList.toggle('single-upgrade', singleUpgrade);
   modal.classList.toggle(
     'upgrade-dialog',
-    kind === 'upgrade' || kind === 'reforge' || kind === 'finale-service',
+    kind === 'upgrade' || kind === 'reforge' || kind === 'finale-service' || kind === 'job-payment',
   );
   modal.classList.toggle('practice-dialog', kind === 'practice' || kind === 'practice-setup');
   modal.classList.toggle(
@@ -3176,26 +3208,31 @@ function showDialog(kind: string) {
   modal.classList.toggle('feedback-dialog', kind === 'issue');
   const content = $('dialog-content');
   const resource =
-    kind === 'finale-service'
-      ? optional.finaleService
-      : kind === 'workshop' || kind === 'practice-build'
-        ? optional.workshop
-        : kind === 'logbook'
-          ? optional.logbook
-          : kind === 'room-rematch'
-            ? optional.rematch
-            : kind === 'support-drill'
-              ? optional.drill
-              : kind === 'replay'
-                ? optional.replay
-                : null;
+    kind === 'job-payment'
+      ? optional.jobPayment
+      : kind === 'finale-service'
+        ? optional.finaleService
+        : kind === 'workshop' || kind === 'practice-build'
+          ? optional.workshop
+          : kind === 'logbook'
+            ? optional.logbook
+            : kind === 'room-rematch'
+              ? optional.rematch
+              : kind === 'support-drill'
+                ? optional.drill
+                : kind === 'replay'
+                  ? optional.replay
+                  : null;
   if (resource && !resource.value) {
     const current = dialogLifetime.ticket();
     content.innerHTML =
       '<h2 id="dialog-title">Loading…</h2><p role="status">Opening this tool.</p><div class="actions"><button id="back" class="quiet">Back</button></div>';
     $('back').onclick = () => {
       appearanceRequested = false;
-      if (kind === 'finale-service') {
+      if (kind === 'job-payment') {
+        game.save();
+        menu();
+      } else if (kind === 'finale-service') {
         game.finaleService.leave();
         closeDialog();
         canvas.focus();
@@ -3237,7 +3274,40 @@ function showDialog(kind: string) {
           SUPPORT_MASTERIES.map((m) => m.id),
         )
       : commendations;
-  if (kind === 'finale-service') {
+  if (kind === 'job-payment') {
+    const reward = game.uprising.pendingPayment,
+      route = game.uprising.mission;
+    if (!reward || !route) {
+      showDialog('upgrade');
+      return;
+    }
+    jobPaymentMenu = new optional.jobPayment.value!.UprisingRewardMenu(
+      content,
+      {
+        reward,
+        seed: game.seed,
+        route,
+        mods: game.mods,
+        startingGun: game.startingGun,
+        hp: game.hp,
+        unlocks: game.unlocks,
+        legacyMods: game.legacyMods,
+        title: uprisingRoute(route).name + ' complete.',
+        consequence:
+          UPRISING_JOB_EFFECTS[route] +
+          ' Final defense: ' +
+          FINALE_NAMES[game.uprising.finale ?? uprisingFinale(game.uprising.run!)] +
+          '.',
+      },
+      {
+        choose: (choice) => game.uprising.claimPayment(choice),
+        completed: () => {
+          if (dialogKind === 'job-payment') showDialog('upgrade');
+        },
+        unlockAudio: () => sound.unlock(),
+      },
+    );
+  } else if (kind === 'finale-service') {
     finaleServiceMenu = new optional.finaleService.value!.FinaleServiceMenu(
       content,
       game.finaleService,
@@ -3382,13 +3452,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.24.0 · RIVAL SHIFT</p><h2 id="dialog-title">Two rivals. New openings.</h2>' +
-      '<p class="update-tagline">Read the lane. Take the opening.</p>' +
-      '<dl class="update-notes"><div><dt>The Turbine.</dt><dd>Committed gusts and blade sequences build across three phases. Shelter behind real cover, cross the airflow and use recovery to return fire.</dd></div>' +
-      '<div><dt>The Reclamation Interceptor.</dt><dd>Firing lanes, flanking moves and linked volleys demand a change of position. Every follow-up has its own warning; the exposed recovery remains your opening.</dd></div>' +
-      '<div><dt>A harder second shift.</dt><dd>Authored arenas, mechanical startups, visible phase wear and destruction complete both encounters. New Game+ begins with the harder patterns and native support machines.</dd></div></dl>' +
-      '<p class="practice-record-note">Start a new Campaign. Earlier Continue, Daily, New Game+ and recorded Practice encounters keep their rules.</p>' +
-      '<p>Try: <a href="?test=rival-shift&amp;boss=turbine&amp;v=1">Turbine ↗</a> · <a href="?test=rival-shift&amp;boss=interceptor&amp;v=1">Interceptor ↗</a></p>' +
+      '<p class="eyebrow">5.25.0 · UPRISING REMASTER</p><h2 id="dialog-title">Make the job count.</h2>' +
+      '<p class="update-tagline">Different objectives. A choice of payment.</p>' +
+      '<dl class="update-notes"><div><dt>Eleven jobs, distinct sequences.</dt><dd>Protect moving cargo, restore successive crew stations, extract stolen prototypes through pursuit or open a service bridge through sabotage. Authored response crews keep each job different.</dd></div>' +
+      '<div><dt>Choose your payment.</dt><dd>Successful jobs offer repairs, a free upgrade reroll or one legal refit. Preview your actual gun before accepting a refit. Each job pays once.</dd></div>' +
+      '<div><dt>Consequences that last.</dt><dd>Completed jobs show their effect on the factory and final defense. Core sabotage now keeps the Turbine’s phase updraft shafts disabled too.</dd></div></dl>' +
+      '<p class="practice-record-note">Start a new Campaign for the remastered jobs. Earlier Continue and Daily missions keep their rules; discoveries and unlocks are preserved.</p>' +
+      '<p>Try: <a href="?test=uprising-remaster&amp;route=rail-guard&amp;v=1">Convoy ↗</a> · <a href="?test=uprising-remaster&amp;route=rail-heist&amp;v=1">Heist ↗</a> · <a href="?test=uprising-remaster&amp;route=core-sabotage&amp;v=1">Sabotage ↗</a> · <a href="?test=uprising-remaster&amp;route=rewards&amp;v=1">Payments ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4120,7 +4190,10 @@ function showDialog(kind: string) {
           ' title="' +
           (game.rewardRerolled
             ? 'Once per reward'
-            : !game.hunts.freeReroll && !game.areaEvents.freeReroll && game.hp <= REROLL_COST
+            : !game.hunts.freeReroll &&
+                !game.areaEvents.freeReroll &&
+                !game.uprising.freeReroll &&
+                game.hp <= REROLL_COST
               ? 'Requires more than ' + REROLL_COST + ' health'
               : !game.canReroll
                 ? 'No full set of new upgrades available'
@@ -4135,7 +4208,7 @@ function showDialog(kind: string) {
                   ? 'Reroll other two'
                   : 'Reroll unheld'
                 : 'Reroll') +
-              (game.hunts.freeReroll || game.areaEvents.freeReroll
+              (game.hunts.freeReroll || game.areaEvents.freeReroll || game.uprising.freeReroll
                 ? ' · free'
                 : ' · −' + REROLL_COST + ' health')) +
           '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
@@ -4170,7 +4243,8 @@ function showDialog(kind: string) {
     if (reroll)
       reroll.onclick = () => {
         sound.unlock();
-        const free = game.hunts.freeReroll || game.areaEvents.freeReroll,
+        const free =
+            game.hunts.freeReroll || game.areaEvents.freeReroll || game.uprising.freeReroll,
           held = game.offers.find((offer) => offer.id === game.heldReward);
         if (game.rerollReward()) {
           $('reward-status').textContent =
@@ -5225,6 +5299,10 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'job-payment') {
+    jobPaymentMenu?.back();
+    return;
+  }
   if (dialogKind === 'finale-service') {
     if (finaleServiceMenu) finaleServiceMenu.back();
     else {
@@ -5416,6 +5494,10 @@ window.addEventListener('keydown', (e) => {
   }
   if (game.mode === 'upgrade') {
     const i = Number(e.key) - 1;
+    if (dialogKind === 'job-payment') {
+      jobPaymentMenu?.activate(i);
+      return;
+    }
     if (game.hunts.rewarding) {
       if (i === 0 || i === 1) {
         sound.unlock();
@@ -5566,6 +5648,12 @@ function frame(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   const pad = pollController(now);
+  jobPaymentMenu?.frame(
+    dt,
+    now,
+    renderer.reduced || previewMotion.matches,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+  );
   finaleServiceMenu?.frame(
     dt,
     now,

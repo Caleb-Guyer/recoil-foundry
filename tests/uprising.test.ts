@@ -177,7 +177,7 @@ test('Continue keeps version-one job schedules, checkpoints and map labels intac
     assert.equal(continued.level.id, 'uprising-' + route.id);
     assert(loadCheckpoint(checkpoint(continued)));
   }
-  assert(!validUprisingRun({ ...newUprising(), version: 3 }));
+  assert(!validUprisingRun({ ...newUprising(), version: 4 }));
 });
 
 test('strict preview links, saved run chronology and shared plan access', () => {
