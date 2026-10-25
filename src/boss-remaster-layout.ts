@@ -4,6 +4,8 @@ import type { MagnetPlacement } from './reclamation-layouts.ts';
 export type RemasteredBoss =
   | 'condenser'
   | 'sorter'
+  | 'turbine'
+  | 'boss'
   | import('./first-shift-rules.ts').FirstShiftBoss;
 export function bossRemasterCampaign(seed: unknown) {
   return typeof seed === 'string' && Number(/^RF-C(\d+)-/.exec(seed)?.[1]) >= 102;

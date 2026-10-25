@@ -117,7 +117,7 @@ const visual = (kind: BossRemasterVisual['kind']): BossRemasterVisual => ({
 });
 
 test('warning footprints exactly retain supplied lanes, clipped rays and sweep extents in both effects modes', () => {
-  for (const kind of ['condenser', 'sorter'] as const) {
+  for (const kind of ['condenser', 'sorter', 'turbine', 'boss'] as const) {
     const state = visual(kind),
       before = structuredClone(state),
       ordinary = canvas(),
@@ -156,7 +156,7 @@ test('warning footprints exactly retain supplied lanes, clipped rays and sweep e
 });
 
 test('startup, phase breaks and destruction are deterministic bounded native art without text or input mutation', () => {
-  for (const kind of ['condenser', 'sorter'] as const)
+  for (const kind of ['condenser', 'sorter', 'turbine', 'boss'] as const)
     for (const stage of ['startup', 'transition', 'combat', 'destroyed'] as const)
       for (const progress of [0, 0.25, 0.6, 1])
         for (const effects of [false, true]) {

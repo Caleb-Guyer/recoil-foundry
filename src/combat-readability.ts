@@ -358,15 +358,17 @@ export function incomingEdgeCues(
         finitePoint(visual.center) &&
         remaining !== undefined &&
         Number.isFinite(remaining) &&
-        remaining >= 0 &&
-        remaining <= EDGE_CUE_TIME &&
-        visual.warnings.some((cue) => bossCueTouchesPlayer(cue, player))
+        remaining >= 0
       ) {
-        const fireIn = visual.warnings.some(
-          (cue) => cue.active && bossCueTouchesPlayer(cue, player),
-        )
-          ? 0
-          : remaining;
+        // A salvo's active window is not its next release. Use the rig's exact
+        // per-lane schedule when available; older continuous hazards retain
+        // their native remaining-time fallback and immediate active geometry.
+        const releases = visual.warnings
+          .filter((cue) => bossCueTouchesPlayer(cue, player))
+          .map((cue) => (cue.active ? 0 : (cue.fireIn ?? remaining)))
+          .filter((at) => Number.isFinite(at) && at >= 0 && at <= EDGE_CUE_TIME);
+        const fireIn = Math.min(...releases);
+        if (!Number.isFinite(fireIn)) continue;
         project(
           e.kind === 'crane' ? warningOrigin : visual.center,
           {

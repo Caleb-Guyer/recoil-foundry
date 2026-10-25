@@ -1,3 +1,4 @@
+import { drawRivalMachine, drawRivalWreck } from './rival-shift-art.ts';
 import type { Vec } from './rules.ts';
 import type { BossRemasterCue, BossRemasterVisual } from './boss-remaster-cues.ts';
 
@@ -109,7 +110,7 @@ function debris(c: CanvasRenderingContext2D, state: BossRemasterVisual, reduced:
 const firstShift = (kind: BossRemasterVisual['kind']) =>
   kind === 'loader' || kind === 'crane' || kind === 'press' || kind === 'kiln';
 const warningColor = (kind: BossRemasterVisual['kind']) =>
-  kind === 'condenser' ? '#9bd5d0' : kind === 'kiln' ? '#efb278' : '#e0b07a';
+  kind === 'condenser' || kind === 'turbine' ? '#9bd5d0' : kind === 'kiln' ? '#efb278' : '#e0b07a';
 
 /** Small additions to the native body: no replacement rig or false collision face. */
 function firstShiftMachine(
@@ -290,14 +291,17 @@ export function drawBossRemaster(
   c.save();
   c.translate(state.center.x, state.center.y);
   if (state.stage === 'destroyed') {
-    if (firstShift(state.kind)) firstShiftWreck(c, state, reduced);
+    if (state.kind === 'turbine' || state.kind === 'boss') drawRivalWreck(c, state, reduced);
+    else if (firstShift(state.kind)) firstShiftWreck(c, state, reduced);
     else debris(c, state, reduced);
     c.restore();
     return;
   }
   const opening =
     state.stage === 'startup' ? 1 - p : state.stage === 'transition' ? Math.sin(p * Math.PI) : 0;
-  if (firstShift(state.kind)) {
+  if (state.kind === 'turbine' || state.kind === 'boss') {
+    drawRivalMachine(c, state, reduced);
+  } else if (firstShift(state.kind)) {
     firstShiftMachine(c, state.kind, phase, opening, reduced);
   } else if (state.kind === 'condenser') {
     condenserCollar(c, phase, opening * (reduced ? 9 : 20));

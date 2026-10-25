@@ -1,3 +1,4 @@
+import { rivalShiftCampaign, RIVAL_SHIFT_BOSSES } from './rival-shift-rules.ts';
 import { FIRST_SHIFT_BOSSES, firstShiftCampaign, isFirstShiftBoss } from './first-shift-rules.ts';
 import { bossRemasterCampaign } from './boss-remaster-layout.ts';
 import type { Game } from './game.ts';
@@ -294,6 +295,13 @@ export function bossRemixLevel(g: Game, level: Level): Level {
     return level;
   const forced = g.practice?.remix ?? g.testRun?.bossRemix;
   const earlyKind = level.spawns[0]?.kind;
+  if (
+    !forced &&
+    rivalShiftCampaign(g.seed) &&
+    (earlyKind === 'turbine' || earlyKind === 'boss') &&
+    g.stage === RIVAL_SHIFT_BOSSES[earlyKind].stage
+  )
+    return level;
   if (
     !forced &&
     firstShiftCampaign(g.seed) &&

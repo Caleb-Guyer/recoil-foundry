@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Rival Shift — version 5.24.0.** Turbine links committed gusts, blade sweeps and repositioning while updraft shafts open. The Reclamation Interceptor adds flanking salvos, fork gaps and radial bursts over changing floor belts. Both gain three phases, mechanical transitions, destruction and harder New Game+ patterns. [Release notes and isolated boss/phase tests](docs/releases/5.24.0.md).
+
 **First Shift — version 5.23.0.** The Loader, Crane, Press and Kiln gain distinct three-phase encounters, authored arenas, committed attack sequences and recovery openings. Mechanical startups, phase damage and destruction give the early bosses a consistent presentation; new New Game+ laps open with harder patterns. [Release notes and isolated boss/phase tests](docs/releases/5.23.0.md).
 
 **Boss Remaster — version 5.22.0.** The Condenser gains pressure volleys, purge gaps and cooling fronts; the Sorter combines locked induction, magnetic sweeps and scrap blades. Three phases reshape coolant lanes, belts and magnets, with brief machine startups, phase breaks and destruction. [Release notes and isolated boss/phase tests](docs/releases/5.22.0.md).

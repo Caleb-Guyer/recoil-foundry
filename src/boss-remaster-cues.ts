@@ -4,6 +4,8 @@ interface BossCueBase {
   /** Actual tell completion; never a separate presentation clock. */
   readonly progress: number;
   readonly active: boolean;
+  /** Seconds until this committed lane releases its next pending round. */
+  readonly fireIn?: number;
   readonly locked?: boolean;
 }
 export type BossRemasterCue = BossCueBase &
@@ -33,11 +35,20 @@ export type BossRemasterCue = BossCueBase &
       }
   );
 export interface BossRemasterVisual {
-  readonly kind: 'loader' | 'crane' | 'press' | 'kiln' | 'condenser' | 'sorter';
+  readonly kind:
+    | 'loader'
+    | 'crane'
+    | 'press'
+    | 'kiln'
+    | 'condenser'
+    | 'sorter'
+    | 'turbine'
+    | 'boss';
   readonly center: Vec;
   readonly phase: number;
   readonly stage: 'startup' | 'transition' | 'combat' | 'destroyed';
   readonly progress: number;
   readonly age?: number;
+  readonly exposed?: boolean;
   readonly warnings: readonly BossRemasterCue[];
 }

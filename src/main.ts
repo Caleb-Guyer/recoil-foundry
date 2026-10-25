@@ -1,3 +1,5 @@
+import { rivalShiftTestFromUrl } from './rival-shift-test.ts';
+import { RIVAL_SHIFT_BOSSES } from './rival-shift-rules.ts';
 import { firstShiftTestFromUrl } from './first-shift-test.ts';
 import { FIRST_SHIFT_BOSSES } from './first-shift-rules.ts';
 import { bossRemasterTestFromUrl } from './boss-remaster-test.ts';
@@ -576,7 +578,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>First Shift</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Rival Shift</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -799,9 +801,11 @@ const linkedBetterDraftsTest = betterDraftsTestFromUrl(entryUrl);
 const linkedChooseRouteTest = chooseRouteTestFromUrl(entryUrl);
 const linkedBossRemasterTest = bossRemasterTestFromUrl(entryUrl);
 const linkedFirstShiftTest = firstShiftTestFromUrl(entryUrl);
+const linkedRivalShiftTest = rivalShiftTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedRivalShiftTest?.checkpoint ??
   linkedFirstShiftTest?.checkpoint ??
   linkedBossRemasterTest?.checkpoint ??
   linkedChooseRouteTest?.checkpoint ??
@@ -1373,6 +1377,15 @@ function updateTitle() {
       ' camera · ' +
       bindingLabel(bindings, 'retry') +
       ' to retry. Continue and your saved camera preference stay untouched.';
+  }
+  if (linkedRivalShiftTest && linkedRunTest?.seed === linkedRivalShiftTest.checkpoint.seed) {
+    $('play').textContent = 'Test Rival Shift ↗';
+    $('title-hint').textContent =
+      RIVAL_SHIFT_BOSSES[linkedRivalShiftTest.boss].name +
+      ' · phase ' +
+      (linkedRivalShiftTest.phase + 1) +
+      (linkedRivalShiftTest.ng ? ' · New Game+' : '') +
+      '. Use cover, change height and punish recovery. R restarts; Continue and unlocks stay untouched.';
   }
   if (linkedFirstShiftTest && linkedRunTest?.seed === linkedFirstShiftTest.checkpoint.seed) {
     $('play').textContent = 'Test First Shift ↗';
@@ -3369,13 +3382,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.23.0 · FIRST SHIFT</p><h2 id="dialog-title">Meet the shift supervisors.</h2>' +
-      '<p class="update-tagline">Four machines. Four ways to fight.</p>' +
-      '<dl class="update-notes"><div><dt>The Loader and Crane.</dt><dd>Committed rams, collapsing cargo and changing hook paths escalate into linked attacks. Use the raised flanks and real machinery to find an opening.</dd></div>' +
-      '<div><dt>The Press and Kiln.</dt><dd>Read crush paths, cross the heat lanes and punish recovery. Separate warnings keep each follow-up readable as the phases build.</dd></div>' +
-      '<div><dt>A complete first shift.</dt><dd>Brief mechanical startups, visible phase damage and destruction bring the early bosses up to the middle factory. New Game+ starts with the harder patterns.</dd></div></dl>' +
+      '<p class="eyebrow">5.24.0 · RIVAL SHIFT</p><h2 id="dialog-title">Two rivals. New openings.</h2>' +
+      '<p class="update-tagline">Read the lane. Take the opening.</p>' +
+      '<dl class="update-notes"><div><dt>The Turbine.</dt><dd>Committed gusts and blade sequences build across three phases. Shelter behind real cover, cross the airflow and use recovery to return fire.</dd></div>' +
+      '<div><dt>The Reclamation Interceptor.</dt><dd>Firing lanes, flanking moves and linked volleys demand a change of position. Every follow-up has its own warning; the exposed recovery remains your opening.</dd></div>' +
+      '<div><dt>A harder second shift.</dt><dd>Authored arenas, mechanical startups, visible phase wear and destruction complete both encounters. New Game+ begins with the harder patterns and native support machines.</dd></div></dl>' +
       '<p class="practice-record-note">Start a new Campaign. Earlier Continue, Daily, New Game+ and recorded Practice encounters keep their rules.</p>' +
-      '<p>Try: <a href="?test=first-shift&amp;boss=loader&amp;v=1">Loader ↗</a> · <a href="?test=first-shift&amp;boss=crane&amp;v=1">Crane ↗</a> · <a href="?test=first-shift&amp;boss=press&amp;v=1">Press ↗</a> · <a href="?test=first-shift&amp;boss=kiln&amp;v=1">Kiln ↗</a></p>' +
+      '<p>Try: <a href="?test=rival-shift&amp;boss=turbine&amp;v=1">Turbine ↗</a> · <a href="?test=rival-shift&amp;boss=interceptor&amp;v=1">Interceptor ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

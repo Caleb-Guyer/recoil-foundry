@@ -1,3 +1,4 @@
+import { rivalShiftLevel } from './rival-shift-layout.ts';
 import { firstShiftLevel } from './first-shift-layout.ts';
 import type { SoundOrigin, SoundMaterial } from './sound-event.ts';
 import {
@@ -1480,7 +1481,7 @@ export class Game {
       this.level = welderLevel(this.level, this.welder.state, this.stage);
     if (this.practice?.kind === 'welder') this.level = welderPracticeLevel(this.seed);
     this.level = bossRemixLevel(this, this.level);
-    this.level = bossRemasterLevel(this, firstShiftLevel(this, this.level));
+    this.level = rivalShiftLevel(this, bossRemasterLevel(this, firstShiftLevel(this, this.level)));
     if (
       !escapeRoom &&
       !this.overtime &&

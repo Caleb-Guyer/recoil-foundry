@@ -1,3 +1,7 @@
+import { rivalShiftFans, rivalShiftBelts } from './rival-shift-layout.ts';
+import { TurbineRemaster } from './turbine-remaster.ts';
+import { ReclamationInterceptorRemaster } from './reclamation-interceptor-remaster.ts';
+import { rivalShiftTestIdentity } from './rival-shift-test.ts';
 import { LoaderRemaster, CraneRemaster } from './first-shift-docks.ts';
 import { PressRemaster, KilnRemaster } from './first-shift-furnace.ts';
 import { firstShiftTestIdentity } from './first-shift-test.ts';
@@ -18,6 +22,8 @@ export class BossRemasterSystem {
   readonly game: Game;
   enemy: Enemy | null = null;
   rig:
+    | TurbineRemaster
+    | ReclamationInterceptorRemaster
     | CondenserRemaster
     | SorterRemaster
     | LoaderRemaster
@@ -72,10 +78,13 @@ export class BossRemasterSystem {
           ? clamp(1 - this.rig.remaining / this.rig.duration, 0, 1)
           : 1,
       age,
+      exposed: this.enemy.state === 'recover',
       warnings: startup ? [] : this.rig.cues,
     };
   }
   clear() {
+    this.stopBelts();
+    if (this.kind === 'turbine') this.game.crosswind.clear();
     if (this.rig && 'cancel' in this.rig) this.rig.cancel();
     this.enemy = null;
     this.rig = null;
@@ -93,7 +102,9 @@ export class BossRemasterSystem {
     if (!enemy) return;
     const fixture =
       g.testRun?.seed === g.seed && g.testRun.stage === g.stage
-        ? (firstShiftTestIdentity(g.seed) ?? bossRemasterTestIdentity(g.seed))
+        ? (rivalShiftTestIdentity(g.seed) ??
+          firstShiftTestIdentity(g.seed) ??
+          bossRemasterTestIdentity(g.seed))
         : null;
     if (fixture && fixture.boss === kind) {
       const fullOvertime = 'ng' in fixture && fixture.ng && fixture.phase === 1;
@@ -102,17 +113,21 @@ export class BossRemasterSystem {
     this.enemy = enemy;
     this.kind = kind;
     this.rig =
-      kind === 'condenser'
-        ? new CondenserRemaster(g, enemy)
-        : kind === 'sorter'
-          ? new SorterRemaster(g, enemy)
-          : kind === 'loader'
-            ? new LoaderRemaster(g, enemy)
-            : kind === 'crane'
-              ? new CraneRemaster(g, enemy)
-              : kind === 'press'
-                ? new PressRemaster(g, enemy)
-                : new KilnRemaster(g, enemy);
+      kind === 'turbine'
+        ? new TurbineRemaster(g, enemy)
+        : kind === 'boss'
+          ? new ReclamationInterceptorRemaster(g, enemy)
+          : kind === 'condenser'
+            ? new CondenserRemaster(g, enemy)
+            : kind === 'sorter'
+              ? new SorterRemaster(g, enemy)
+              : kind === 'loader'
+                ? new LoaderRemaster(g, enemy)
+                : kind === 'crane'
+                  ? new CraneRemaster(g, enemy)
+                  : kind === 'press'
+                    ? new PressRemaster(g, enemy)
+                    : new KilnRemaster(g, enemy);
     this.phase = this.rig.phase;
     this.began = g.time;
     this.coolantEnabled = !!g.level.coolant?.length;
@@ -126,12 +141,21 @@ export class BossRemasterSystem {
     g.shots = g.shots.filter((s) => s.friendly || s.damageCause?.enemy !== this.kind);
   }
   private stopBelts() {
-    if (this.kind === 'sorter') for (const belt of this.game.conveyors.items) belt.speed = 0;
+    if (this.kind === 'sorter' || this.kind === 'boss')
+      for (const belt of this.game.conveyors.items) belt.speed = 0;
   }
   private applyArena(phase: number) {
     if (this.arenaPhase === phase) return;
     const g = this.game;
     this.arenaPhase = phase;
+    if (this.kind === 'turbine') {
+      g.level.fans = rivalShiftFans(phase, g.level.mirrored);
+      g.crosswind.reset(); // Every new shaft retains its full rest and warning.
+    }
+    if (this.kind === 'boss') {
+      g.conveyors.clear();
+      g.conveyors.items = rivalShiftBelts(phase, g.level.mirrored);
+    }
     if (this.kind === 'condenser' && this.coolantEnabled)
       g.level.coolant = remasterPools(phase, g.level.mirrored);
     if (this.kind === 'sorter') {
@@ -181,10 +205,14 @@ export class BossRemasterSystem {
       this.phase = rig.phase;
       this.ownRounds();
       this.stopBelts();
+      if (this.kind === 'turbine') g.crosswind.clear();
     }
     if (rig.state !== 'transition') {
       if (this.arenaPhase !== this.phase) this.applyArena(this.phase);
-      else if (this.kind === 'sorter') {
+      else if (this.kind === 'boss') {
+        const belts = rivalShiftBelts(this.phase, g.level.mirrored);
+        g.conveyors.items.forEach((b, i) => (b.speed = belts[i]?.speed ?? 0));
+      } else if (this.kind === 'sorter') {
         const speeds = this.phase === 0 ? [1.3, -1.3] : this.phase === 1 ? [-1.6, 1.6] : [2, -2];
         g.conveyors.items.forEach((b, i) => (b.speed = speeds[i] * (g.level.mirrored ? -1 : 1)));
       }
@@ -202,6 +230,7 @@ export class BossRemasterSystem {
     this.ownRounds();
     this.stopBelts();
     this.pendingMagnets = null;
+    if (this.kind === 'turbine') this.game.crosswind.clear();
     this.game.soundAt('slam', enemy.body.position, `enemy:${enemy.id}`);
   }
 }
