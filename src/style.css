@@ -2778,3 +2778,29 @@ body[data-finale-movie='true'] .touch-controls {
     min-height: 92px;
   }
 }
+
+/* The incoming bench uses real health and the existing compact damage meter. */
+body[data-workshop='true'][data-workshop-scenario='incoming'] .health-meter {
+  visibility: visible;
+}
+.workshop-range {
+  max-width: 175px;
+  border: 1px solid #42565b;
+  border-radius: 3px;
+  padding: 5px 7px;
+  color: #dce6db;
+  background: #152125;
+  font: inherit;
+  font-size: 12px;
+}
+.workshop-range:focus-visible {
+  outline: 2px solid #eabf81;
+  outline-offset: 3px;
+}
+@media (max-width: 620px) {
+  .workshop-range {
+    max-width: 112px;
+    padding-inline: 3px;
+    font-size: 11px;
+  }
+}

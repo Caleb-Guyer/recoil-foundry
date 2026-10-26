@@ -1,0 +1,22 @@
+{
+  "version": "5.29.0",
+  "regularTests": 4230,
+  "regularFailures": 0,
+  "modelFittings": 161,
+  "modelGuns": 6,
+  "modelFitRemovalComparisons": 966,
+  "privateSceneGunFixtures": 42,
+  "nativeRangeAndLegacyTests": 33,
+  "editorAndSharedPreviewFocusedTests": 167,
+  "browserAudio": "Sound OFF; Music OFF",
+  "browserChecks": [
+    "Prism Array actual5-to10beam preview",
+    "fit and undo",
+    "description search + movement + compatible filters",
+    "reviewed cascade and clear/cancel/undo",
+    "blocked fitting inspection and collected prerequisite navigation",
+    "temporary blueprint navigation without draft loss",
+    "range selector and real incoming health feedback"
+  ],
+  "scope": "Native automated and agent-controlled checks; no human win-rate or playtest claim."
+}

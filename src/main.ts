@@ -1,3 +1,5 @@
+import { buildBenchTestFromUrl } from './build-bench-test.ts';
+import { WORKSHOP_SCENARIOS, isWorkshopScenario, type WorkshopScenario } from './workshop.ts';
 import {
   reclaimerArsenalTestFromUrl,
   prepareReclaimerArsenalTest,
@@ -503,7 +505,12 @@ const blueprintStore: BlueprintStore = {
 };
 let blueprintSource: RunRecap | null = null;
 let blueprintParent = 'result';
-let buildMenu: MenuBack | null = null;
+let buildMenu:
+  | (MenuBack & {
+      dispose?(): void;
+      frame?(dt: number, now: number, reduced: boolean, active: boolean): void;
+    })
+  | null = null;
 let practiceTarget: Encounter | null = null;
 let practiceEditorParent = 'practice-setup';
 const practiceDrafts: Partial<Record<PracticeBoss, string[]>> = {};
@@ -598,7 +605,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>The Reclaimer’s Arsenal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Build Bench</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -728,7 +735,9 @@ const workshopTools = document.createElement('div');
 workshopTools.className = 'workshop-tools';
 workshopTools.hidden = true;
 workshopTools.innerHTML =
-  '<button id="workshop-edit" class="quiet">Build</button><button id="workshop-reset" class="icon" aria-label="Reset Workshop" title="Reset room · R">↻</button>';
+  '<button id="workshop-edit" class="quiet">Build</button><select id="workshop-range" class="workshop-range" aria-label="Range scenario">' +
+  WORKSHOP_SCENARIOS.map((s) => '<option value="' + s.id + '">' + s.label + '</option>').join('') +
+  '</select><button id="workshop-reset" class="icon" aria-label="Reset Workshop" title="Reset room · R">↻</button>';
 document.querySelector('.run-info')!.prepend(workshopTools);
 const warmupTools = document.createElement('div');
 warmupTools.className = 'workshop-tools';
@@ -838,6 +847,20 @@ const linkedToolsTest = toolsOfTradeTestFromUrl(entryUrl);
 const linkedFactoryUnbound = factoryUnboundTestFromUrl(entryUrl);
 const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
+const linkedBuildBench = buildBenchTestFromUrl(entryUrl);
+let benchPreviewOpen = false;
+let benchDraft = [...(linkedBuildBench?.mods ?? [])];
+let benchGun = linkedBuildBench?.gun ?? 'pistol';
+let benchRange: WorkshopScenario = linkedBuildBench?.range ?? 'standard';
+let workshopRange: WorkshopScenario = 'standard';
+let benchBlueprints = loadBlueprints([]);
+const benchBlueprintStore: BlueprintStore = {
+  read: () => structuredClone(benchBlueprints),
+  write: async (slots) => {
+    benchBlueprints = loadBlueprints(slots);
+    return true;
+  },
+};
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
@@ -1525,6 +1548,10 @@ function updateTitle() {
     $('title-hint').textContent =
       linkedReclaimerArsenal.hint + ' ' + bindingLabel(bindings, 'retry') + ' to retry.';
   }
+  if (linkedBuildBench) {
+    $('play').textContent = 'Test Build Bench / ' + linkedBuildBench.title + ' ↗';
+    $('title-hint').textContent = linkedBuildBench.hint;
+  }
   updateNextGoal();
 }
 function currentGoalProgress(): GoalProgress {
@@ -1783,6 +1810,7 @@ function closeDialog() {
   toolTrialView = null;
   upgradePreview?.dispose();
   upgradePreview = null;
+  buildMenu?.dispose?.();
   buildMenu = null;
   bindingEditor?.cancel();
   bindingEditor = null;
@@ -2026,6 +2054,7 @@ function start(
   renderer.cameraMode = preferredCameraMode;
   focusCameraPreview = false;
   linkedWorkshop = false;
+  benchPreviewOpen = false;
   previewCommendations = false;
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   equippedCosmetics = loadCosmetics(equippedCosmetics, commendations);
@@ -2619,6 +2648,10 @@ function startWorkshop(
   warmup = false,
   startingGun: StartingGun = workshopStartingGun,
 ) {
+  if (benchPreviewOpen && linkedBuildBench && !warmup) {
+    startBuildBenchRange(mods, startingGun);
+    return;
+  }
   resetRunGoal();
   firstSession.stop();
   finishedRun = null;
@@ -2637,13 +2670,46 @@ function startWorkshop(
   }
   renderer.cameraMode = preferredCameraMode;
   focusCameraPreview = false;
-  game.startWorkshop(discovered, warmup ? [] : workshopMods, warmup ? 'pistol' : startingGun);
+  game.startWorkshop(
+    discovered,
+    warmup ? [] : workshopMods,
+    warmup ? 'pistol' : startingGun,
+    warmup ? 'standard' : workshopRange,
+  );
   if (warmup) firstSession.start(game, true);
   updateFirstSession();
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
+}
+function startBuildBenchRange(mods: readonly string[] = benchDraft, gun: StartingGun = benchGun) {
+  if (!linkedBuildBench) return;
+  benchPreviewOpen = true;
+  benchDraft = workshopBuild(mods, linkedBuildBench.known);
+  benchGun = gun;
+  resetRunGoal();
+  firstSession.stop();
+  finishedRun = null;
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  activeDaily = null;
+  dailyResult = null;
+  game.startWorkshop(linkedBuildBench.known, benchDraft, benchGun, benchRange);
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
+  canvas.focus();
+}
+function startLinkedBuildBench() {
+  if (!linkedBuildBench) return;
+  benchPreviewOpen = true;
+  benchDraft = [...linkedBuildBench.mods];
+  benchGun = linkedBuildBench.gun;
+  benchRange = linkedBuildBench.range;
+  if (linkedBuildBench.editor) showDialog('workshop');
+  else startBuildBenchRange();
 }
 function menu() {
   firstSession.stop();
@@ -3141,6 +3207,14 @@ game.onChange = () => {
   }
   document.body.dataset.mode = game.mode;
   document.body.dataset.workshop = String(game.workshop.active);
+  document.body.dataset.workshopScenario = game.workshop.active ? game.workshop.scenario : '';
+  if (game.workshop.active) {
+    $<HTMLSelectElement>('workshop-range').value = game.workshop.scenario;
+    $('workshop-range').title =
+      WORKSHOP_SCENARIOS.find((s) => s.id === game.workshop.scenario)?.hint ?? '';
+    if (benchPreviewOpen) benchRange = game.workshop.scenario;
+    else workshopRange = game.workshop.scenario;
+  }
   workshopTools.hidden = !game.workshop.active;
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent = game.workshop.active
@@ -3263,6 +3337,7 @@ function showDialog(kind: string) {
   if (kind === 'upgrade' && game.uprising.pendingPayment) kind = 'job-payment';
   if (kind === 'upgrade' && game.shiftRun.evolutionDue) kind = 'shift-evolution';
   else if (kind === 'upgrade' && game.shiftRun.leaseDue) kind = 'shift-lease';
+  buildMenu?.dispose?.();
   buildMenu = null;
   modal.setAttribute('aria-labelledby', 'dialog-title');
   bindingEditor?.cancel();
@@ -3615,14 +3690,14 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.28.0 · THE RECLAIMER\'S ARSENAL</p><h2 id="dialog-title">Break his arsenal.</h2>' +
-      '<p class="update-tagline">Three forms. New openings. A city coming apart.</p>' +
-      '<dl class="update-notes"><div><dt>Chassis counter-dash.</dt><dd>Bait a committed charge, leave its locked lane and use the recovery to fight back.</dd></div>' +
-      '<div><dt>Siege air support.</dt><dd>Break armor to expose the hull while aircraft cross the city and bomb marked lanes.</dd></div>' +
-      '<div><dt>Rupture core.</dt><dd>Move with rotating core beams as the platforms crack and fall around you.</dd></div></dl>' +
-      '<p>New Game+ combines the arsenal with harder pressure, full warnings and openings to retaliate. Your earned weapon and upgrades stay with you.</p>' +
-      '<p class="practice-record-note">Fresh Campaign runs use the new arsenal. Existing saved runs and archived Daily challenges retain their original encounter rules.</p>' +
-      '<p>Try: <a href="?test=arsenal&amp;form=chassis&amp;v=1">Chassis ↗</a> · <a href="?test=arsenal&amp;form=siege&amp;v=1">Siege ↗</a> · <a href="?test=arsenal&amp;form=rupture&amp;v=1">Rupture ↗</a> · <a href="?test=arsenal&amp;form=rupture&amp;fight=overtime&amp;v=1">New Game+ ↗</a> · <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.28.0.md" target="_blank" rel="noopener noreferrer">Release details ↗</a></p>' +
+      '<p class="eyebrow">5.29.0 · BUILD BENCH</p><h2 id="dialog-title">Find your next combination.</h2>' +
+      '<p class="update-tagline">Understand the fittings. Test the whole gun.</p>' +
+      '<dl class="update-notes"><div><dt>Browse by mechanic.</dt><dd>Search names and descriptions, filter collected upgrades by mechanic, and find legal follow-ups for your build.</dd></div>' +
+      '<div><dt>Know what changes.</dt><dd>Inspect prerequisites, fusion paths and conflicts before fitting an upgrade. See every dependent removal before confirming it.</dd></div>' +
+      '<div><dt>Compare your real gun.</dt><dd>Preview the complete before-and-after firing pattern inside Workshop, then fit it or keep experimenting.</dd></div>' +
+      '<div><dt>Choose the test.</dt><dd>Grouped targets, warned incoming shots, breakable cover and a recoil course exercise your collected build. Reset or change range without losing fittings.</dd></div></dl>' +
+      '<p class="practice-record-note">Workshop uses collected upgrades and unlocked weapons. Private test links supply a temporary collection and leave your Continue, discoveries and saved builds untouched.</p>' +
+      '<p>Try: <a href="?test=build-bench&amp;scene=browse&amp;v=1">Browse fittings ↗</a> · <a href="?test=build-bench&amp;scene=comparison&amp;v=1">Gun comparison ↗</a> · <a href="?test=build-bench&amp;scene=incoming&amp;v=1">Incoming fire ↗</a> · <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.29.0.md" target="_blank" rel="noopener noreferrer">All tests ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -3813,57 +3888,80 @@ function showDialog(kind: string) {
     );
     $('back').onclick = backFromHistory;
   } else if (kind === 'workshop') {
-    discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+    const bench = benchPreviewOpen ? linkedBuildBench : null;
+    if (!bench)
+      discovered = loadDiscoveries([...discovered, ...loadDiscoveries(read(DISCOVERIES_KEY))]);
+    const known = bench ? bench.known : discovered;
     buildMenu = optional.workshop.value!.workshopMenu(
       content,
-      discovered,
-      game.workshop.active ? game.mods : workshopMods,
+      known,
+      bench ? benchDraft : game.workshop.active ? game.mods : workshopMods,
       game.workshop.active,
       (mods, gun) => startWorkshop(mods, false, gun),
       backFromHistory,
+      bench
+        ? undefined
+        : {
+            game,
+            earned: visibleCommendations,
+            defeated: logbookProgress.enemies,
+            discovered,
+            revealed: displayedArchive().encountered,
+            preview: previewCommendations || masteryRewardPreview,
+            unseen:
+              previewCommendations || game.testRun
+                ? []
+                : unseenAppearanceItems(
+                    visibleCommendations,
+                    read(APPEARANCE_ITEMS_SEEN_KEY),
+                    read(APPEARANCE_SEEN_KEY),
+                  ),
+            viewed: (id) => {
+              if (previewCommendations || game.testRun) return;
+              write(
+                APPEARANCE_ITEMS_SEEN_KEY,
+                acknowledgeAppearanceItem(read(APPEARANCE_ITEMS_SEEN_KEY), commendations, id),
+              );
+              updateAppearanceBadge();
+            },
+            equip: (selection) => {
+              game.cosmetics = selection;
+              if (!previewCommendations && !game.testRun) {
+                equippedCosmetics = selection;
+                write(COSMETICS_KEY, selection);
+              }
+            },
+            logbook: () => {
+              logbookFromWorkshop = true;
+              logbookView.section = 'commendations';
+              logbookView.query = '';
+              logbookView.selected = '';
+              showDialog('logbook');
+            },
+          },
       {
-        game,
-        earned: visibleCommendations,
-        defeated: logbookProgress.enemies,
-        discovered,
-        revealed: displayedArchive().encountered,
-        preview: previewCommendations || masteryRewardPreview,
-        unseen:
-          previewCommendations || game.testRun
-            ? []
-            : unseenAppearanceItems(
-                visibleCommendations,
-                read(APPEARANCE_ITEMS_SEEN_KEY),
-                read(APPEARANCE_SEEN_KEY),
-              ),
-        viewed: (id) => {
-          if (previewCommendations || game.testRun) return;
-          write(
-            APPEARANCE_ITEMS_SEEN_KEY,
-            acknowledgeAppearanceItem(read(APPEARANCE_ITEMS_SEEN_KEY), commendations, id),
-          );
-          updateAppearanceBadge();
+        title: bench ? 'Build Bench test' : undefined,
+        note: bench ? bench.hint : undefined,
+        blueprints: bench ? benchBlueprintStore : blueprintStore,
+        startingGun: bench
+          ? benchGun
+          : game.workshop.active
+            ? game.startingGun
+            : workshopStartingGun,
+        unlockedGuns: bench ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
+        showStartingGuns: !!bench || weaponUnlocks().started,
+        initialBrowse: bench?.initialBrowse,
+        initialInspect: bench?.initialInspect,
+        range: {
+          value: bench ? benchRange : workshopRange,
+          choices: WORKSHOP_SCENARIOS,
+          change: (id) => {
+            if (isWorkshopScenario(id)) {
+              if (bench) benchRange = id;
+              else workshopRange = id;
+            }
+          },
         },
-        equip: (selection) => {
-          game.cosmetics = selection;
-          if (!previewCommendations && !game.testRun) {
-            equippedCosmetics = selection;
-            write(COSMETICS_KEY, selection);
-          }
-        },
-        logbook: () => {
-          logbookFromWorkshop = true;
-          logbookView.section = 'commendations';
-          logbookView.query = '';
-          logbookView.selected = '';
-          showDialog('logbook');
-        },
-      },
-      {
-        blueprints: blueprintStore,
-        startingGun: game.workshop.active ? game.startingGun : workshopStartingGun,
-        unlockedGuns: unlockedStartingGuns(weaponUnlocks()),
-        showStartingGuns: weaponUnlocks().started,
       },
     );
     if (appearanceRequested) {
@@ -5374,47 +5472,49 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-    ? startLinkedToolsTest()
-    : linkedGoalPreview || linkedTrackingPreview
-      ? location.assign(new URL('./', location.href).href)
-      : linkedFirstRunPreview === 'warmup'
-        ? startWorkshop([], true)
-        : linkedDrill
-          ? startLinkedSupportDrill(linkedDrill)
-          : linkedGauntletPreview
-            ? startGauntlet(linkedGauntletPreview, true)
-            : linkedRemixGauntletPreview
-              ? linkedRemixGauntletPreview.setup
-                ? (() => {
-                    gauntletSetupPreview = true;
-                    gauntletSetupMode = 'remix';
-                    showDialog('gauntlet-setup');
-                  })()
-                : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
-              : linkedGauntletChallenge || invalidGauntletLink
-                ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
-                : linkedRecoilChallenge || invalidRecoilLink
-                  ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-                  : linkedTrial?.preview
-                    ? startTrial(linkedTrial.route, true)
-                    : linkedTrial || invalidTrialLink
-                      ? openTrials('title', linkedTrial?.challenge)
-                      : linkedWorkshop
-                        ? showDialog('workshop')
-                        : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                            entryUrl.searchParams.get('test') !== 'arc'
-                          ? showDialog('layout-test')
-                          : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                              linkedRunTest?.seed.startsWith('FUSIONS-')
-                            ? showDialog('upgrade-test')
-                            : linkedRunTest
-                              ? startRunTest(linkedRunTest)
-                              : linkedTest
-                                ? startPractice(linkedTest, null, { test: true })
-                                : linkedDaily
-                                  ? start()
-                                  : startFreshCampaign();
+  linkedBuildBench
+    ? startLinkedBuildBench()
+    : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+      ? startLinkedToolsTest()
+      : linkedGoalPreview || linkedTrackingPreview
+        ? location.assign(new URL('./', location.href).href)
+        : linkedFirstRunPreview === 'warmup'
+          ? startWorkshop([], true)
+          : linkedDrill
+            ? startLinkedSupportDrill(linkedDrill)
+            : linkedGauntletPreview
+              ? startGauntlet(linkedGauntletPreview, true)
+              : linkedRemixGauntletPreview
+                ? linkedRemixGauntletPreview.setup
+                  ? (() => {
+                      gauntletSetupPreview = true;
+                      gauntletSetupMode = 'remix';
+                      showDialog('gauntlet-setup');
+                    })()
+                  : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
+                : linkedGauntletChallenge || invalidGauntletLink
+                  ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
+                  : linkedRecoilChallenge || invalidRecoilLink
+                    ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+                    : linkedTrial?.preview
+                      ? startTrial(linkedTrial.route, true)
+                      : linkedTrial || invalidTrialLink
+                        ? openTrials('title', linkedTrial?.challenge)
+                        : linkedWorkshop
+                          ? showDialog('workshop')
+                          : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                              entryUrl.searchParams.get('test') !== 'arc'
+                            ? showDialog('layout-test')
+                            : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                                linkedRunTest?.seed.startsWith('FUSIONS-')
+                              ? showDialog('upgrade-test')
+                              : linkedRunTest
+                                ? startRunTest(linkedRunTest)
+                                : linkedTest
+                                  ? startPractice(linkedTest, null, { test: true })
+                                  : linkedDaily
+                                    ? start()
+                                    : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
@@ -5481,6 +5581,15 @@ $('practice').onclick = () => {
 $('workshop').onclick = () => showDialog('workshop');
 $('workshop-edit').onclick = () => showDialog('workshop');
 $('workshop-reset').onclick = () => startWorkshop(game.mods, false, game.startingGun);
+$('workshop-range').onchange = () => {
+  const id = $<HTMLSelectElement>('workshop-range').value;
+  if (!isWorkshopScenario(id) || !game.workshop.active) return;
+  if (benchPreviewOpen) benchRange = id;
+  else workshopRange = id;
+  game.setWorkshopScenario(id);
+  renderer.reset();
+  canvas.focus();
+};
 $('pause').onclick = pause;
 installDialogDismissal(
   modal,
@@ -5906,6 +6015,12 @@ function frame(now: number) {
     renderer.reduced,
     modal.open && pageActive && document.hasFocus() && !document.hidden,
     pad,
+  );
+  buildMenu?.frame?.(
+    dt,
+    now,
+    renderer.reduced || previewMotion.matches,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
   );
   upgradePreview?.frame(
     dt,

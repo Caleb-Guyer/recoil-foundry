@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Build Bench — version 5.29.0.** Search collected fittings by effect or mechanic, inspect legal upgrade paths and dependency removals, compare the actual complete gun, and choose grouped targets, incoming fire, cover or recoil ranges. [Release notes and seven isolated Workshop tests](docs/releases/5.29.0.md).
+
 **The Reclaimer’s Arsenal — version 5.28.0.** The Chassis commits to counter-dashes, Siege calls traveling bombing runs and exposes its core when armor breaks, and Rupture sweeps rotating core beams across collapsing platforms. New Game+ combines the mechanics with stronger sequences. [Release notes and direct tests for all three forms and New Game+](docs/releases/5.28.0.md).
 
 **Reclaimer pursuit — version 5.27.1.** All three final forms reposition around real cover, use stronger attack sequences and retain warned arena pressure after sabotage. Repairs current 5.27.0 Continue saves. [Release notes and isolated phase, shelter and New Game+ tests](docs/releases/5.27.1.md).

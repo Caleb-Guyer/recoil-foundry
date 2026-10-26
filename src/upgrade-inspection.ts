@@ -65,9 +65,14 @@ export function inspectUpgrade(
   hp = 100,
   remove?: string,
   seed?: string,
+  proposedMods?: readonly string[],
 ): UpgradeInspection {
   const base = mods.filter((id) => id !== remove);
-  const afterMods = mod.id === 'repair' ? [...base] : [...new Set([...base, mod.id])];
+  const afterMods = proposedMods
+    ? [...proposedMods]
+    : mod.id === 'repair'
+      ? [...base]
+      : [...new Set([...base, mod.id])];
   const changes: UpgradeChange[] = [];
   const add = (label: string, before: string, after: string) => {
     if (before !== after) changes.push({ label, before, after });
@@ -175,6 +180,25 @@ export function inspectUpgrade(
     for (const [id, label, value] of conditional)
       add(label, base.includes(id) ? value : 'None', afterMods.includes(id) ? value : 'None');
     add('Air damage', number(before.airDamage * 100) + '%', number(after.airDamage * 100) + '%');
+    const enhancedBeam = (ids: readonly string[]) =>
+      ids.includes('cutting-torch') && ['piston-lance', 'cable-saw'].includes(morph(ids) ?? '');
+    const beamEnergy = (ids: readonly string[]) =>
+      !ids.includes('cutting-torch')
+        ? 'No beam'
+        : enhancedBeam(ids)
+          ? '+35% pulse energy / +1 penetration'
+          : 'Native pulse energy';
+    if (enhancedBeam(mods) || enhancedBeam(afterMods))
+      add('Beam energy', beamEnergy(mods), beamEnergy(afterMods));
+    const returnStrike = (ids: readonly string[]) =>
+      ids.includes('cutting-torch')
+        ? 'None'
+        : ids.includes('recall')
+          ? 'Native Recall return'
+          : morph(ids) === 'cable-saw'
+            ? 'One 50% secondary pass'
+            : 'None';
+    add('Return strike', returnStrike(mods), returnStrike(afterMods));
   }
   const connections: string[] = [];
   if (remove) {
@@ -186,22 +210,6 @@ export function inspectUpgrade(
     if ((SHIFT_MORPHS as readonly string[]).includes(mod.id)) {
       const gun = getGun(afterMods, startingGun),
         beam = afterMods.includes('cutting-torch');
-      if (mod.id === 'piston-lance' || mod.id === 'cable-saw') {
-        if (beam)
-          changes.push({
-            label: 'Beam energy',
-            before: 'Current',
-            after: '+35% pulse energy / +1 penetration',
-          });
-        else if (mod.id === 'cable-saw')
-          changes.push({
-            label: 'Return strike',
-            before: 'None',
-            after: afterMods.includes('recall')
-              ? 'Keep native Recall return'
-              : 'One 50% secondary pass',
-          });
-      }
       connections.push(
         'Keeps ' +
           (beam
@@ -302,4 +310,24 @@ export function inspectUpgrade(
     changes,
     connections,
   };
+}
+
+/** Compare a reviewed Workshop edit, including every dependent fitting it removes. */
+export function inspectBuildChange(
+  before: readonly string[],
+  after: readonly string[],
+  mod: Mod,
+  startingGun: StartingGun,
+  seed?: string,
+): UpgradeInspection {
+  const result = inspectUpgrade(before, mod, startingGun, 100, undefined, seed, after);
+  const removed = before.filter((id) => !after.includes(id));
+  if (removed.length) {
+    result.connections = [
+      'Removes ' + removed.map(name).join(' + ') + '.',
+      'All other fitted upgrades remain in the proposed build.',
+    ];
+    result.description = 'Compare the complete gun before and after this removal.';
+  }
+  return result;
 }

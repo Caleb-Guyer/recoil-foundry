@@ -81,7 +81,13 @@ import { StormfrontSystem } from './stormfront.ts';
 import { LoaderArenaSystem } from './loader-arena.ts';
 import { loadDamageCause, type DamageCause } from './damage-cause.ts';
 import { DamageControl, DAMAGE_RECOVERY, type DamageHit } from './damage-control.ts';
-import { WorkshopSystem, workshopLevel, type WorkshopTarget } from './workshop.ts';
+import {
+  WorkshopSystem,
+  workshopLevel,
+  isWorkshopScenario,
+  type WorkshopTarget,
+  type WorkshopScenario,
+} from './workshop.ts';
 import { workshopBuild, loadDiscoveries } from './workshop-build.ts';
 import { MassDriverSystem, MASS_DRIVER, type MassFlight } from './mass-driver.ts';
 import { TripwireSystem } from './tripwire.ts';
@@ -935,7 +941,9 @@ export class Game {
     discovered: readonly string[],
     mods: readonly string[] = [],
     startingGun: StartingGun = 'pistol',
+    scenario: WorkshopScenario = this.workshop.active ? this.workshop.scenario : 'standard',
   ) {
+    this.workshop.scenario = isWorkshopScenario(scenario) ? scenario : 'standard';
     this.workshop.discovered = loadDiscoveries(discovered);
     const build = workshopBuild(mods, this.workshop.discovered);
     this.start(
@@ -954,6 +962,15 @@ export class Game {
       null,
       true,
     );
+  }
+  setWorkshopScenario(scenario: WorkshopScenario) {
+    if (!this.workshop.active || !isWorkshopScenario(scenario)) return false;
+    this.startWorkshop(this.workshop.discovered, this.mods, this.startingGun, scenario);
+    return true;
+  }
+  resetWorkshop() {
+    if (!this.workshop.active) return false;
+    return this.setWorkshopScenario(this.workshop.scenario);
   }
   startTest(save: Checkpoint, rematchRoom?: Level) {
     this.start(save.seed, save, null, rematchRoom ? { ...save, rematchRoom } : save);
@@ -1426,7 +1443,7 @@ export class Game {
         : undefined;
     const huntRoom = this.hunts.level();
     this.level = this.workshop.active
-      ? workshopLevel()
+      ? workshopLevel(this.workshop.scenario)
       : escapeRoom
         ? {
             ...ESCAPE_LAYOUT,
@@ -2770,7 +2787,7 @@ export class Game {
     if (this.pressure.staggered(e)) return;
     if (this.massDriver.staggered(e)) return;
     if (e.workshopTarget) {
-      this.workshop.move(e);
+      this.workshop.move(e, dt);
       return;
     }
     if (isSupport(e.kind)) {
@@ -3424,6 +3441,7 @@ export class Game {
     });
   }
   updateShots(dt: number) {
+    const workshopRevision = this.workshop.revision;
     this.stasis.update();
     this.massDriver.update(dt);
     if (this.mode !== 'playing') return;
@@ -3832,6 +3850,7 @@ export class Game {
         } else if (nearest.player) {
           rivalImpact(this, s);
           this.damagePlayer(s.damage, s.pos, s.damageCause ?? { type: 'shot' }, s);
+          if (this.workshop.revision !== workshopRevision) return;
           s.life = 0;
           if (this.mode !== 'playing') return;
         } else {
@@ -4192,7 +4211,7 @@ export class Game {
     return blocked;
   }
   damagePlayer(amount: number, from?: Vec, cause: DamageCause = { type: 'unknown' }, shot?: Shot) {
-    if (this.workshop.active || this.finale.safe) return;
+    if ((this.workshop.active && this.workshop.scenario !== 'incoming') || this.finale.safe) return;
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.mode !== 'playing' || this.time - this.hurtAt < DAMAGE_RECOVERY) return;
     if (shot && this.support.absorb(shot)) return;
@@ -4245,7 +4264,12 @@ export class Game {
   die(cause: DamageCause = { type: 'unknown' }, origin?: Vec) {
     if (this.mode === 'dead' || this.mode === 'won') return;
     if (this.workshop.active) {
-      this.startWorkshop(this.workshop.discovered, this.mods);
+      this.startWorkshop(
+        this.workshop.discovered,
+        this.mods,
+        this.startingGun,
+        this.workshop.scenario,
+      );
       return;
     }
     this.deathCause = loadDamageCause(cause);

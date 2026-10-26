@@ -620,6 +620,7 @@ export class Renderer {
       drawSquadTell(c, g, e);
       if (
         (e.kind === 'shooter' || e.kind === 'flyer') &&
+        !e.workshopTarget &&
         !e.remaster &&
         !(e.squad?.kind === 'shield' && e.squad.role === 'support') &&
         e.elite !== 'volatile' &&
