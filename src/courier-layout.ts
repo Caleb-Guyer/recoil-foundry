@@ -130,9 +130,10 @@ export function courierTestFromUrl(url: URL): Checkpoint | null {
           reward: {
             courier: true as const,
             rerolled: false,
-            offers: rewardMods(mods, 3, seeded(seed + ':courier-rewards:4'), { stage: 4 }).map(
-              (m) => m.id,
-            ),
+            offers: rewardMods(mods, 3, seeded(seed + ':courier-rewards:4'), {
+              stage: 4,
+              seed,
+            }).map((m) => m.id),
           },
         }
       : {}),

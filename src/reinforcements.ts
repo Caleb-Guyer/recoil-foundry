@@ -33,6 +33,7 @@ export interface ReinforcementDoor {
 }
 
 export function splitWaves(level: Level, seed: string, stage: number): [Spawn[], Spawn[]] {
+  if (level.shiftRoute) return [level.spawns.map((s) => ({ ...s })), []];
   if (combatFlowSeed(seed) && validCombatFlowSpec(level.combatFlow, level.spawns.length)) {
     const beats = level.combatFlow.beats;
     return [

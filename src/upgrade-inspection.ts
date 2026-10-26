@@ -3,6 +3,7 @@ import { BRANCH_PARENTS } from './upgrade-branches.ts';
 import type { StartingGun } from './starting-guns.ts';
 import { SHELL_DIRECT } from './demolition.ts';
 import { legacyTorchPattern, torchRayCount } from './torch-pattern.ts';
+import { SHIFT_MORPHS, isShiftMod } from './shift-catalog.ts';
 
 export interface UpgradeChange {
   label: string;
@@ -23,7 +24,7 @@ const number = (n: number) => String(Math.round(n * 10) / 10);
 const seconds = (n: number) => String(Math.round(n * 100) / 100) + 's';
 const beams = (n: number) => n + (n === 1 ? ' beam' : ' beams');
 const name = (id: string) => MODS.find((m) => m.id === id)?.name ?? id;
-const fireKind = (mods: readonly string[]) =>
+const payloadKind = (mods: readonly string[]) =>
   mods.includes('cutting-torch')
     ? mods.includes('charge-lens')
       ? 'Charged lance'
@@ -33,6 +34,27 @@ const fireKind = (mods: readonly string[]) =>
       : mods.includes('shellshock')
         ? 'Shells'
         : 'Rounds';
+
+const morph = (mods: readonly string[]) => SHIFT_MORPHS.find((id) => mods.includes(id));
+const fireKind = (mods: readonly string[]) => {
+  const id = morph(mods);
+  return id ? name(id) + ' / ' + payloadKind(mods) : payloadKind(mods);
+};
+const triggerKind = (mods: readonly string[]) =>
+  morph(mods) === 'seeker-rack'
+    ? 'Paint, then release native salvo'
+    : mods.includes('charge-lens')
+      ? 'Hold charge, release'
+      : 'Hold fire';
+const payloadScale = (mods: readonly string[]) => (morph(mods) === 'piston-lance' ? 1.25 : 1);
+const morphPierce = (mods: readonly string[]) =>
+  Number(['piston-lance', 'cable-saw'].includes(morph(mods) ?? ''));
+const reachKind = (mods: readonly string[]) =>
+  morph(mods) === 'piston-lance'
+    ? 'Short thrust and return'
+    : morph(mods) === 'cable-saw'
+      ? 'Short cable arc and return'
+      : 'Native reach';
 
 // Compare the actual combined build. Conditional bonuses and secondary damage
 // stay in contextual copy rather than becoming a misleading aggregate DPS stat.
@@ -74,14 +96,16 @@ export function inspectUpgrade(
         after.rearVolley ? number(count) : '0',
       );
     }
-    if (beforeKind === afterKind) {
+    add('Trigger', triggerKind(mods), triggerKind(afterMods));
+    add('Reach', reachKind(mods), reachKind(afterMods));
+    if (payloadKind(mods) === payloadKind(afterMods)) {
       const beam = afterMods.includes('cutting-torch');
       if (!beam) {
-        const direct = beforeKind === 'Shells' ? SHELL_DIRECT : 1;
+        const direct = payloadKind(mods) === 'Shells' ? SHELL_DIRECT : 1;
         add(
           before.pellets > 1 || after.pellets > 1 ? 'Hit / pellet' : 'Direct hit',
-          number(before.damage * direct),
-          number(after.damage * direct),
+          number(before.damage * direct * payloadScale(mods)),
+          number(after.damage * direct * payloadScale(afterMods)),
         );
         const rate = (g: typeof before) =>
           g.burstCount / (g.interval * (g.burstCount === 3 ? 3.1 : 1));
@@ -90,7 +114,7 @@ export function inspectUpgrade(
         add('Lanes', number(before.lanes), number(after.lanes));
       } else {
         const cycle = (g: typeof before) => g.interval * (g.burstCount === 3 ? 3.1 : 1);
-        if (afterKind === 'Charged lance')
+        if (payloadKind(afterMods) === 'Charged lance')
           add('Full charge', seconds(before.interval * 3), seconds(after.interval * 3));
         else add('Pulse cycle', seconds(cycle(before)), seconds(cycle(after)));
       }
@@ -104,7 +128,12 @@ export function inspectUpgrade(
             '%',
         });
       add('Banks', number(before.bounces), number(after.bounces));
-      if (!beam) add('Pass-throughs', number(before.pierce), number(after.pierce));
+      if (!beam)
+        add(
+          'Pass-throughs',
+          number(before.pierce + morphPierce(mods)),
+          number(after.pierce + morphPierce(afterMods)),
+        );
     }
     add('Move speed', number(before.speed * 100) + '%', number(after.speed * 100) + '%');
     add('Healing / kill', number(before.heal), number(after.heal));
@@ -153,6 +182,70 @@ export function inspectUpgrade(
     const lost = MODS.find((m) => m.id === remove);
     if (lost) connections.push('Give up: ' + modDescription(lost, mods, startingGun, seed));
   }
+  if (isShiftMod(mod.id)) {
+    if ((SHIFT_MORPHS as readonly string[]).includes(mod.id)) {
+      const gun = getGun(afterMods, startingGun),
+        beam = afterMods.includes('cutting-torch');
+      if (mod.id === 'piston-lance' || mod.id === 'cable-saw') {
+        if (beam)
+          changes.push({
+            label: 'Beam energy',
+            before: 'Current',
+            after: '+35% pulse energy / +1 penetration',
+          });
+        else if (mod.id === 'cable-saw')
+          changes.push({
+            label: 'Return strike',
+            before: 'None',
+            after: afterMods.includes('recall')
+              ? 'Keep native Recall return'
+              : 'One 50% secondary pass',
+          });
+      }
+      connections.push(
+        'Keeps ' +
+          (beam
+            ? beams(torchRayCount(gun, afterMods, seed))
+            : gun.pellets + ' pellets x ' + gun.lanes + ' lanes') +
+          (gun.burstCount === 3 ? ' and the native three-shot sequence.' : '.'),
+      );
+      if (afterMods.includes('shellshock'))
+        connections.push('Shell blasts and their owned follow-ups remain active.');
+      if (afterMods.includes('mass-driver'))
+        connections.push('Steel-ball mass, penetration and impact fittings remain active.');
+    }
+    const mechanic: Record<string, string> = {
+      'polarity-rounds': 'Alternate real hit polarity; heavy machines resist the physical pull.',
+      'ricochet-harness': 'One paid recoil collision earns a rebound; walking cannot trigger it.',
+      'spring-rivets': 'Airborne surface hits install pads. Jump beside a live pad to launch.',
+      'slip-gauge':
+        'A real near miss earns the next directional airborne jump. It grants no invulnerability.',
+      'wake-wire': 'Release after recoil flight to arm the path you actually travelled.',
+      'false-silhouette':
+        'A recoil reversal leaves the decoy; attacks already committed keep their aim.',
+      'gimbal-mount':
+        'Movement steers recoil while your aim and firing pattern remain independent.',
+      'momentum-exchange':
+        'One direct hit per discharge transfers momentum; heavy targets resist it.',
+      'offset-nozzle':
+        'The next whole discharge uses the installed muzzle while your body keeps the kick.',
+      'momentum-battery': 'Grounded shots bank recoil; the next grounded jump spends that reserve.',
+      'catch-chamber':
+        'Countershot keeps its shared recharge. Captured rounds cannot capture or recharge more ammunition.',
+      'gate-snare':
+        'Only the two visible segments can trigger the trap. Replacing a portal removes it.',
+      'hot-wire':
+        'The cable receives part of the real beam energy. Cover or a broken link stops it.',
+      'ghost-shift':
+        "Copies use the ally's exposed position, retain the volley, and cannot create further echoes or allies.",
+      windmill:
+        'Each saw becomes one finite swept blade; it gives up its remaining surface travel.',
+      'scrap-comet':
+        'Only loose expendable debris joins the physical cluster. Objectives and fixed machinery stay clear.',
+    };
+    if (mechanic[mod.id]) connections.push(mechanic[mod.id]);
+  }
+
   const parents = [
     ...new Set([
       ...(MOD_REQUIRES[mod.id] ? [MOD_REQUIRES[mod.id]] : []),

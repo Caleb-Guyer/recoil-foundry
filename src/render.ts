@@ -1,3 +1,8 @@
+import { drawShiftRun } from './shift-run-art.ts';
+import { drawShiftMorphs } from './shift-morph-art.ts';
+import { drawShiftUpgrades } from './shift-upgrades-art.ts';
+import { drawShiftFusions } from './shift-fusions-art.ts';
+import { drawShiftRoute } from './shift-route-art.ts';
 import { drawBossRemaster, drawBossRemasterWarnings } from './boss-remaster-art.ts';
 import {
   advanceCombatCamera,
@@ -774,6 +779,7 @@ export class Renderer {
         ? UPRISING_PALETTES[g.level.uprising]
         : AREAS[g.level.area];
     for (const b of g.terrain) {
+      if (g.shiftRoutes.owns(b)) continue;
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
         continue;
       const x = b.bounds.min.x,
@@ -827,6 +833,8 @@ export class Renderer {
     drawSortingPit(c, g, this.reduced);
     drawPressure(c, g, this.reduced);
     drawCrosswind(c, g, this.reduced);
+    drawShiftRoute(c, g, this.reduced);
+    drawShiftRun(c, g, this.reduced);
     drawStormfront(c, g, this.reduced);
     drawAnnex(c, g, this.reduced);
     drawSwitchboardArena(c, g);
@@ -907,6 +915,9 @@ export class Renderer {
     drawTethers(c, g, this.reduced);
     drawArcs(c, g, this.reduced);
     drawGrindshot(c, g, this.reduced);
+    drawShiftUpgrades(c, g, this.reduced);
+    drawShiftFusions(c, g, this.reduced);
+    drawShiftMorphs(c, g, this.reduced);
     drawBossSalvage(c, g, this.reduced);
     drawBallistics(c, g, this.reduced);
     drawFusions(c, g, this.reduced);

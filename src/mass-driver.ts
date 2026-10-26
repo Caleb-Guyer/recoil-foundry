@@ -136,6 +136,7 @@ export class MassDriverSystem {
         )
           m.penetrating.delete(id);
       }
+      g.shiftFusions.comet(s, dt);
       m.age += dt;
       if (m.age >= MASS_DRIVER.life || s.life <= dt) {
         this.finish(s);
@@ -206,6 +207,7 @@ export class MassDriverSystem {
     return impulse;
   }
   hitProp(s: Shot, prop: Prop, normal: Vec) {
+    this.game.shiftFusions.releaseComet(s);
     const g = this.game;
     const before = { ...prop.body.velocity };
     // Loose machinery takes less structural damage so a deliberate bank can
@@ -226,6 +228,7 @@ export class MassDriverSystem {
       );
   }
   hitEnemy(s: Shot, e: Enemy, normal: Vec) {
+    this.game.shiftFusions.releaseComet(s);
     const g = this.game;
     if (
       e.hp <= 0 ||
@@ -251,6 +254,7 @@ export class MassDriverSystem {
     this.push(s, e.body, normal, true);
   }
   bounce(s: Shot, normal: Vec, body?: Matter.Body, bank = true) {
+    this.game.shiftFusions.releaseComet(s);
     if (s.bounces <= 0 || Math.hypot(s.vel.x, s.vel.y) < 2.2) {
       if (dropForgePower(s) >= DROP_FORGE.slam) this.clang(s);
       this.finish(s, true, body);
@@ -309,6 +313,7 @@ export class MassDriverSystem {
     }
   }
   finish(s: Shot, payload = true, body?: Matter.Body) {
+    this.game.shiftFusions.releaseComet(s);
     if (s.life <= 0) return;
     // Expiring on a floor spends the stored roll on that real support. Density
     // culling and mid-air expiry do not create an extra surface or saw pair.

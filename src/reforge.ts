@@ -122,6 +122,7 @@ export class ReforgeSystem {
       return false;
     this.state!.used = true;
     g.mods = [...g.mods.filter((id) => id !== swap.from), swap.to];
+    g.shiftRun.fitted();
     g.gun = getGun(g.mods, g.startingGun);
     // A replaced weapon cannot leave charged, parked or delayed attacks alive.
     // Keep world geometry and the room's spent portal budget intact.
@@ -143,6 +144,9 @@ export class ReforgeSystem {
     g.scrap.reset();
     g.support.reset();
     g.fusions.reset();
+    g.shiftUpgrades.reset();
+    g.shiftFusions.reset();
+    g.shiftMorphs.reset();
     g.demolition.clear();
     if (swap.from === 'fold') g.portals.reset();
     g.shots = [];

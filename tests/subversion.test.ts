@@ -1,3 +1,4 @@
+import { isShiftMod } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, type Enemy } from '../src/game.ts';
@@ -80,13 +81,15 @@ test('all five upgrades are reachable, branch prerequisites are mandatory, and c
 });
 
 test('all Subversion upgrade pairs respect prerequisites in either order and leave base gun stats stable', () => {
-  let pairs = 0;
+  let pairs = 0,
+    archivedPairs = 0;
   for (let i = 0; i < MODS.length; i++)
     for (let j = i + 1; j < MODS.length; j++) {
       const a = MODS[i].id,
         b = MODS[j].id;
       if (!isSubversion(a) && !isSubversion(b)) continue;
       pairs++;
+      if (!isShiftMod(a) && !isShiftMod(b)) archivedPairs++;
       const ab = withParents([], [a, b]),
         ba = withParents([], [b, a]);
       assert.equal(!!ab, !!ba, a + '/' + b);
@@ -95,7 +98,9 @@ test('all Subversion upgrade pairs respect prerequisites in either order and lea
         assert.deepEqual(getGun(ab), getGun(ba));
       }
     }
-  assert.equal(pairs, 690);
+  const count = MODS.filter((m) => isSubversion(m.id)).length;
+  assert.equal(pairs, count * (MODS.length - count) + (count * (count - 1)) / 2);
+  assert.equal(archivedPairs, 690, 'all archived Subversion pairs remain covered');
 });
 
 test('reward weighting favors owned Subversion without allowing the opposite fork', () => {

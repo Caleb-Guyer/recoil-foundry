@@ -2761,3 +2761,20 @@ body[data-finale-movie='true'] .touch-controls {
   font-weight: 500;
   color: var(--ink);
 }
+
+/* Service choices stay a compact two-column workbench. */
+.shift-office-dialog .choices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.shift-office-dialog .mod {
+  min-height: 112px;
+  padding: 18px;
+}
+@media (max-width: 620px) {
+  .shift-office-dialog .choices {
+    grid-template-columns: 1fr;
+  }
+  .shift-office-dialog .mod {
+    min-height: 92px;
+  }
+}

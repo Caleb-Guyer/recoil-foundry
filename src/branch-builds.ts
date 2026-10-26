@@ -10,6 +10,7 @@ import { BRANCH_GROUPS, BRANCH_PARENTS } from './upgrade-branches.ts';
 import { getLevel } from './levels.ts';
 import { isSubversion } from './subversion-rules.ts';
 import { LONGEVITY_IDS, loadUnlocks } from './longevity.ts';
+import { shiftOfferAllowed, isShiftMod } from './shift-catalog.ts';
 import { TOOLROOM_IDS } from './toolroom-catalog.ts';
 
 export function withParents(build: readonly string[], wanted: readonly string[]): string[] | null {
@@ -32,11 +33,11 @@ export function withParents(build: readonly string[], wanted: readonly string[])
   };
   return wanted.every(add) ? result : null;
 }
-export function completeBuild(build: readonly string[]) {
+export function completeBuild(build: readonly string[], seed?: string) {
   const result = [...build];
   if (!validBuild(result)) return null;
   for (;;) {
-    const next = availableMods(result, true)[0];
+    const next = availableMods(result, true).find((m) => shiftOfferAllowed(m.id, seed, 20));
     if (!next) return result;
     result.push(next.id);
   }
@@ -586,13 +587,15 @@ export function maxCombos(): readonly MaxCombo[] {
         if (index === groups.length) {
           const options = build.some(isFusion)
             ? [build]
-            : Object.keys(FUSION_REQUIRES).flatMap((id) => {
-                const mods = withParents(build, [id]);
-                return mods ? [mods] : [];
-              });
+            : Object.keys(FUSION_REQUIRES)
+                .filter((id) => !isShiftMod(id))
+                .flatMap((id) => {
+                  const mods = withParents(build, [id]);
+                  return mods ? [mods] : [];
+                });
           if (!options.length) options.push(build);
           for (const [i, option] of options.entries()) {
-            const mods = completeBuild(option)!;
+            const mods = completeBuild(option, 'RF-C105-MAX')!;
             const key = [...mods].sort().join(',');
             if (seen.has(key)) continue;
             seen.add(key);
@@ -663,7 +666,7 @@ export function branchTestFromUrl(url: URL): Checkpoint | null {
     const key = p.get('build') ?? 'pulse';
     if (!Object.hasOwn(BRANCH_TEST_BUILDS, key)) return null;
     const preset = BRANCH_TEST_BUILDS[key];
-    mods = p.get('max') === '1' ? completeBuild(preset.mods) : [...preset.mods];
+    mods = p.get('max') === '1' ? completeBuild(preset.mods, 'RF-C105-MAX') : [...preset.mods];
   }
   if (!mods || !validBuild(mods)) return null;
   // Published catalog links name their release; keep those historical guns.

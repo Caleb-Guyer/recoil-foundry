@@ -1,6 +1,6 @@
 // Bump when layouts, upgrade pools, or gameplay balance change. Old links must
 // not silently become a different challenge under the same identity.
-export const DAILY_RULESET = 90;
+export const DAILY_RULESET = 91;
 export const SUPPORTED_DAILY_RULESETS = [
   78,
   79,
@@ -14,6 +14,7 @@ export const SUPPORTED_DAILY_RULESETS = [
   87,
   88,
   89,
+  90,
   DAILY_RULESET,
 ] as const;
 export const isLegacyDaily = (seed: string) => /^RF-D78-/.test(seed);

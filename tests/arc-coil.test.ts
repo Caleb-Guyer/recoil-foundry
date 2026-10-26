@@ -1,3 +1,4 @@
+import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isSubversion } from '../src/subversion-rules.ts';
@@ -94,7 +95,12 @@ function tick(g: Game, n = 1, input: Partial<Input> = {}) {
 }
 
 test('Arc Coil is shared, costs 10 percent round damage, and Daisy Chain requires its parent', () => {
-  assert.equal(MODS.length, 141);
+  assert.equal(
+    MODS.filter((m) => !isShiftMod(m.id)).length,
+    141,
+    'the archived catalog stays intact',
+  );
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
   for (const path of [[], ['deadeye'], ['crossfire'], ['shellshock']]) {
     assert(availableMods(path).some((m) => m.id === 'arc-coil'));
     assert(!availableMods(path).some((m) => m.id === 'daisy-chain'));
@@ -528,39 +534,45 @@ test('Daily rewards remain deterministic and valid with both new mods in the poo
 test('Overtime builds that exhausted the previous pool can resume and earn Arc Coil after an older repair', () => {
   const mods: string[] = [];
   while (true) {
-    const next = availableMods(mods).find(
-      (m) =>
-        !isSubversion(m.id) &&
-        !TOOLROOM_IDS.includes(m.id as never) &&
-        ![
-          'double-jump',
-          'wing-harness',
-          'ground-fault',
-          'static-reservoir',
-          'conductive-tether',
-          'arc-coil',
-          'daisy-chain',
-          'rail-spike',
-          'orbit',
-          'implosion',
-          'vector',
-          'afterburner',
-          'mass-driver',
-          'retrace',
-          'wallrunner',
-          'air-brake',
-          'grapnel',
-          'corner-pocket',
-          'scrap-feed',
-          'collimator',
-          'heat-relay',
-          'overkill-bank',
-          'scrap-armor',
-        ].includes(m.id),
-    );
+    const next = availableMods(mods)
+      .filter((m) => shiftOfferAllowed(m.id, 'old-repair', 20))
+      .find(
+        (m) =>
+          !isSubversion(m.id) &&
+          !TOOLROOM_IDS.includes(m.id as never) &&
+          ![
+            'double-jump',
+            'wing-harness',
+            'ground-fault',
+            'static-reservoir',
+            'conductive-tether',
+            'arc-coil',
+            'daisy-chain',
+            'rail-spike',
+            'orbit',
+            'implosion',
+            'vector',
+            'afterburner',
+            'mass-driver',
+            'retrace',
+            'wallrunner',
+            'air-brake',
+            'grapnel',
+            'corner-pocket',
+            'scrap-feed',
+            'collimator',
+            'heat-relay',
+            'overkill-bank',
+            'scrap-armor',
+          ].includes(m.id),
+      );
     if (!next) break;
     mods.push(next.id);
   }
+  assert(
+    mods.every((id) => !isShiftMod(id)),
+    'an archived exhausted save cannot own future fittings',
+  );
   const stage = mods.length - 19 + 1;
   assert(stage > 0 && stage < 20);
   const save: Checkpoint = {

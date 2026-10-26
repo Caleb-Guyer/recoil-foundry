@@ -35,6 +35,10 @@ export interface FinaleServiceSave {
 // The service adjusts fittings, never the weapon the player brought in. Keep
 // fire mechanisms and earned fusions even when they have no dependent upgrade.
 const IDENTITIES = new Set([
+  'piston-lance',
+  'cable-saw',
+  'seeker-rack',
+  'foamcaster',
   'cutting-torch',
   'shellshock',
   'mass-driver',
@@ -308,6 +312,7 @@ export class FinaleService {
     )
       return false;
     g.mods = serviceBuild(g.mods, swap);
+    g.shiftRun.fitted();
     g.gun = getGun(g.mods, g.startingGun);
     // Reuse Reforge's cleanup contract without rebuilding the arena or giving
     // back spent room resources. No parked old projectile survives a refit.
@@ -329,6 +334,9 @@ export class FinaleService {
     g.scrap.reset();
     g.support.reset();
     g.fusions.reset();
+    g.shiftUpgrades.reset();
+    g.shiftFusions.reset();
+    g.shiftMorphs.reset();
     g.demolition.clear();
     g.shots = [];
     g.burstRemaining = g.fireBuffer = g.jumpBuffer = 0;

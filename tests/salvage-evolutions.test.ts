@@ -1,3 +1,4 @@
+import { isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import { LONGEVITY_IDS, draftUnlocked } from '../src/longevity.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -472,34 +473,40 @@ test('living throws and dead wrecks pass through Fold without striking along the
 test('previously exhausted Overtime saves with salvage can resume and earn their new evolutions', () => {
   const mods = ['deadeye', 'ramjet', 'cinder', 'crosswind'];
   while (true) {
-    const next = availableMods(mods).find(
-      (m) =>
-        !isBranch(m.id) &&
-        !isSubversion(m.id) &&
-        !LONGEVITY_IDS.includes(m.id as never) &&
-        ![
-          'wrecking-ball',
-          'flashpoint',
-          'slipstream',
-          'grindshot',
-          'corner-cutter',
-          'vector',
-          'afterburner',
-          'retrace',
-          'wallrunner',
-          'air-brake',
-          'grapnel',
-          'corner-pocket',
-          'scrap-feed',
-          'collimator',
-          'heat-relay',
-          'overkill-bank',
-          'scrap-armor',
-        ].includes(m.id),
-    );
+    const next = availableMods(mods)
+      .filter((m) => shiftOfferAllowed(m.id, 'OLD-SALVAGE', 20))
+      .find(
+        (m) =>
+          !isBranch(m.id) &&
+          !isSubversion(m.id) &&
+          !LONGEVITY_IDS.includes(m.id as never) &&
+          ![
+            'wrecking-ball',
+            'flashpoint',
+            'slipstream',
+            'grindshot',
+            'corner-cutter',
+            'vector',
+            'afterburner',
+            'retrace',
+            'wallrunner',
+            'air-brake',
+            'grapnel',
+            'corner-pocket',
+            'scrap-feed',
+            'collimator',
+            'heat-relay',
+            'overkill-bank',
+            'scrap-armor',
+          ].includes(m.id),
+      );
     if (!next) break;
     mods.push(next.id);
   }
+  assert(
+    mods.every((id) => !isShiftMod(id)),
+    'an archived exhausted save cannot own future fittings',
+  );
   const save = {
     version: 5,
     seed: 'OLD-SALVAGE',
@@ -515,7 +522,7 @@ test('previously exhausted Overtime saves with salvage can resume and earn their
   assert(loadCheckpoint(save));
   assert.deepEqual(
     availableMods(mods)
-      .filter((m) => draftUnlocked(m.id))
+      .filter((m) => draftUnlocked(m.id) && shiftOfferAllowed(m.id, 'OLD-SALVAGE', 20))
       .map((m) => m.id),
     [
       'wrecking-ball',

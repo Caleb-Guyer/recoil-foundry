@@ -12,7 +12,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 **First time playing?** [Join the playtest discussion](https://itch.io/t/7174290/recoil-foundry-free-browser-does-recoil-movement-make-sense-in-the-first-ten-minutes). Play normally, then share what was fun, what got in your way and whether you actually restarted. Short sessions and returning players are welcome too.
 
-- **141 upgrades**, including 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
+- **161 upgrades**, including 20 Factory Unbound fittings and 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
 - **Six starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater through different accomplishments.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Tools of the Trade — version 5.26.0.** The Coil carbine, Twinbore and Pressure repeater gain shot-driven mechanisms and procedural handling sounds. Select an unlocked gun and use Try tool to test its native handling in a separate range, then return to the same picker. Weapon balance, upgrade combinations and saved progress are preserved. [Release notes and isolated weapon/range tests](docs/releases/5.26.0.md).
+**Factory Unbound — version 5.27.0.** Ten upgrades, four weapon morphs and six fusions preserve earned firing patterns while changing how you fight. Five alternate districts add low gravity, indexed platforms, real mirrors, optional airlock pressure and a return through your actual damage. Later service junctions offer prototype leases, power routing and earned experiment evolutions. [Release notes and isolated tests for all 28 concepts](docs/releases/5.27.0.md).
 
 **Uprising Remaster — version 5.25.0.** Eleven optional jobs gain moving convoys, research interlocks, sequential crew defenses, lowered bridges and authored counterattacks. Success offers a repair, free reroll credit or legal refit before the ordinary upgrade. Compact route summaries explain lasting consequences, and Core sabotage keeps Turbine fans disabled through every phase. [Release notes and isolated job/reward tests](docs/releases/5.25.0.md).
 

@@ -1,3 +1,4 @@
+import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
@@ -113,7 +114,12 @@ test('twelve upgrades have legal prerequisite chains, path locks, saves and reac
     'afterimage',
     'parallax',
   ];
-  assert.equal(MODS.length, 141);
+  assert.equal(
+    MODS.filter((m) => !isShiftMod(m.id)).length,
+    141,
+    'the archived catalog stays intact',
+  );
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
   for (const id of ids) {
     const parents = ancestors(id),
       build = [...parents, id];

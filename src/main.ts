@@ -1,3 +1,6 @@
+import { shiftRunSummary } from './shift-run-summary.ts';
+import { factoryUnboundTestFromUrl } from './factory-unbound-test.ts';
+import type { ShiftOfficeMenu } from './shift-office-menu.ts';
 import { toolsOfTradeTestFromUrl } from './tools-of-trade-test.ts';
 import type { ToolTrialView } from './tool-trial-view.ts';
 import { uprisingRemasterTestFromUrl } from './uprising-remaster-test.ts';
@@ -587,7 +590,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Tools of the Trade</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Factory Unbound</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -633,8 +636,10 @@ let toolPickerPreview = false;
 let toolPickerSelection: StartingGun | null = null;
 let roomRematchView: RoomRematchView | null = null;
 let finaleServiceMenu: FinaleServiceMenu | null = null;
+let shiftOfficeMenu: ShiftOfficeMenu | null = null;
 let jobPaymentMenu: UprisingRewardMenu | null = null;
 const optional = {
+  shiftOffice: new LazyResource(() => import('./shift-office-menu.ts')),
   workshop: new LazyResource(() => import('./workshop-menu.ts')),
   logbook: new LazyResource(() => import('./logbook-menu.ts')),
   replay: new LazyResource(() => import('./death-replay-view.ts')),
@@ -822,9 +827,11 @@ const linkedFirstShiftTest = firstShiftTestFromUrl(entryUrl);
 const linkedRivalShiftTest = rivalShiftTestFromUrl(entryUrl);
 const linkedUprisingRemasterTest = uprisingRemasterTestFromUrl(entryUrl);
 const linkedToolsTest = toolsOfTradeTestFromUrl(entryUrl);
+const linkedFactoryUnbound = factoryUnboundTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedFactoryUnbound?.checkpoint ??
   linkedToolsTest?.checkpoint ??
   linkedUprisingRemasterTest?.checkpoint ??
   linkedRivalShiftTest?.checkpoint ??
@@ -1491,6 +1498,11 @@ function updateTitle() {
     $('title-hint').textContent =
       'Opens an isolated defeat screen. Choose Practice boss phases to replay only the forms reached, with the same build.';
   }
+  if (linkedFactoryUnbound && linkedRunTest?.seed === linkedFactoryUnbound.checkpoint.seed) {
+    $('play').textContent = 'Test ' + linkedFactoryUnbound.title + ' ↗';
+    $('title-hint').textContent =
+      linkedFactoryUnbound.hint + ' ' + bindingLabel(bindings, 'retry') + ' to retry.';
+  }
   updateNextGoal();
 }
 function currentGoalProgress(): GoalProgress {
@@ -1733,6 +1745,8 @@ function clearInput(disarm = true) {
 }
 function closeDialog() {
   dialogLifetime.invalidate();
+  shiftOfficeMenu?.dispose();
+  shiftOfficeMenu = null;
   finaleServiceMenu?.dispose();
   finaleServiceMenu = null;
   jobPaymentMenu?.dispose();
@@ -3162,6 +3176,7 @@ game.onChange = () => {
   updateTitle();
   updateFirstSession();
   if (game.mode === 'upgrade') showDialog('upgrade');
+  if (game.mode === 'shift-office') showDialog('shift-office');
   if (game.mode === 'reforge') showDialog('reforge');
   if (game.mode === 'finale-service') showDialog('finale-service');
   if (game.mode === 'dead' || (game.mode === 'won' && !game.clockOut.active)) showDialog('result');
@@ -3203,6 +3218,8 @@ function addRoomRematchAction(root: HTMLElement) {
 }
 function showDialog(kind: string) {
   routePreviewView?.update(null);
+  shiftOfficeMenu?.dispose();
+  shiftOfficeMenu = null;
   finaleServiceMenu?.dispose();
   finaleServiceMenu = null;
   jobPaymentMenu?.dispose();
@@ -3220,6 +3237,8 @@ function showDialog(kind: string) {
   upgradePreview = null;
   if (kind === 'upgrade' && game.uprising.choices.length) kind = 'uprising';
   if (kind === 'upgrade' && game.uprising.pendingPayment) kind = 'job-payment';
+  if (kind === 'upgrade' && game.shiftRun.evolutionDue) kind = 'shift-evolution';
+  else if (kind === 'upgrade' && game.shiftRun.leaseDue) kind = 'shift-lease';
   buildMenu = null;
   modal.setAttribute('aria-labelledby', 'dialog-title');
   bindingEditor?.cancel();
@@ -3233,9 +3252,14 @@ function showDialog(kind: string) {
     (kind === 'upgrade' && game.offers.length === 1) ||
     (kind === 'reforge' && game.reforge.offers.length === 1);
   modal.classList.toggle('single-upgrade', singleUpgrade);
+  modal.classList.toggle('shift-office-dialog', kind.startsWith('shift-'));
   modal.classList.toggle(
     'upgrade-dialog',
-    kind === 'upgrade' || kind === 'reforge' || kind === 'finale-service' || kind === 'job-payment',
+    kind === 'upgrade' ||
+      kind === 'reforge' ||
+      kind === 'finale-service' ||
+      kind === 'job-payment' ||
+      kind.startsWith('shift-'),
   );
   modal.classList.toggle('practice-dialog', kind === 'practice' || kind === 'practice-setup');
   modal.classList.toggle(
@@ -3274,8 +3298,9 @@ function showDialog(kind: string) {
   modal.classList.toggle('update-dialog', kind === 'update');
   modal.classList.toggle('feedback-dialog', kind === 'issue');
   const content = $('dialog-content');
-  const resource =
-    kind === 'tool-trial'
+  const resource = kind.startsWith('shift-')
+    ? optional.shiftOffice
+    : kind === 'tool-trial'
       ? optional.toolTrial
       : kind === 'job-payment'
         ? optional.jobPayment
@@ -3298,7 +3323,12 @@ function showDialog(kind: string) {
       '<h2 id="dialog-title">Loading…</h2><p role="status">Opening this tool.</p><div class="actions"><button id="back" class="quiet">Back</button></div>';
     $('back').onclick = () => {
       appearanceRequested = false;
-      if (kind === 'tool-trial') backFromToolTrial();
+      if (kind === 'shift-office') {
+        game.shiftRun.closeOffice();
+        closeDialog();
+        canvas.focus();
+      } else if (kind === 'shift-lease' || kind === 'shift-evolution') return;
+      else if (kind === 'tool-trial') backFromToolTrial();
       else if (kind === 'job-payment') {
         game.save();
         menu();
@@ -3376,6 +3406,20 @@ function showDialog(kind: string) {
         },
         unlockAudio: () => sound.unlock(),
       },
+    );
+  } else if (kind.startsWith('shift-')) {
+    shiftOfficeMenu = new optional.shiftOffice.value!.ShiftOfficeMenu(
+      content,
+      game,
+      () => {
+        if (game.mode === 'upgrade') showDialog('upgrade');
+        else {
+          closeDialog();
+          canvas.focus();
+        }
+      },
+      () => sound.unlock(),
+      kind === 'shift-lease' ? 'lease' : kind === 'shift-evolution' ? 'evolution' : 'office',
     );
   } else if (kind === 'finale-service') {
     finaleServiceMenu = new optional.finaleService.value!.FinaleServiceMenu(
@@ -3547,13 +3591,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.26.0 · TOOLS OF THE TRADE</p><h2 id="dialog-title">Know your tool.</h2>' +
-      '<p class="update-tagline">Mechanical feedback. A range before the run.</p>' +
-      '<dl class="update-notes"><div><dt>Every discharge has a mechanism.</dt><dd>The Coil carbine discharges and recovers its coils. Twinbore cycles both barrels. Pressure repeater works its feed as actual shots build pressure.</dd></div>' +
-      '<div><dt>Hear the work.</dt><dd>Distinct mechanical layers follow real firing cadence, with a restrained pressure rise and release for sustained repeater fire. Pause, mute and background rules still apply.</dd></div>' +
-      '<div><dt>Try before a run.</dt><dd>Select an unlocked gun in the weapon picker and choose Try tool. Use the native range, reset freely, then return to the same selection. Your current run and progress stay untouched.</dd></div></dl>' +
-      '<p class="practice-record-note">Weapon balance, upgrade combinations, existing saves and Daily rules are unchanged. First-time players still begin with the Service pistol.</p>' +
-      '<p>Try: <a href="?test=tools-of-trade&amp;gun=carbine&amp;scene=range&amp;v=1">Coil carbine ↗</a> · <a href="?test=tools-of-trade&amp;gun=twinbore&amp;scene=range&amp;v=1">Twinbore ↗</a> · <a href="?test=tools-of-trade&amp;gun=repeater&amp;scene=range&amp;v=1">Repeater ↗</a> · <a href="?test=tools-of-trade&amp;gun=carbine&amp;scene=picker&amp;v=1">Try tool ↗</a></p>' +
+      '<p class="eyebrow">5.27.0 · FACTORY UNBOUND</p><h2 id="dialog-title">Build a different shift.</h2>' +
+      '<p class="update-tagline">New fittings. New machinery. Another way through.</p>' +
+      '<dl class="update-notes"><div><dt>Twenty new fittings.</dt><dd>Ten upgrades, four weapon morphs and six fusions keep your earned firing patterns while changing how you move, shoot and use the factory.</dd></div>' +
+      '<div><dt>Five alternate districts.</dt><dd>Cross the Vacuum Docks, rotate Turntable Works, bank through Prism Glassworks, push the Express Airlocks or revisit your real damage in the Rework Loop.</dd></div>' +
+      '<div><dt>Make the shift yours.</dt><dd>Later service junctions offer prototype loans, three power circuits and field experiments with two earned evolutions each. Walk past to keep your route.</dd></div></dl>' +
+      '<p class="practice-record-note">Fresh Campaign runs use the new pool. Existing saved runs and archived Daily challenges retain their original choices. The first room stays focused on the basics.</p>' +
+      '<p>Try: <a href="?test=factory-unbound&amp;scene=piston-lance&amp;v=1">Piston Lance ↗</a> · <a href="?test=factory-unbound&amp;scene=prism-glassworks&amp;v=1">Prism Glassworks ↗</a> · <a href="?test=factory-unbound&amp;scene=lease&amp;v=1">Service junction ↗</a> · <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.27.0.md" target="_blank" rel="noopener noreferrer">All 28 tests ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4285,7 +4329,8 @@ function showDialog(kind: string) {
           ' title="' +
           (game.rewardRerolled
             ? 'Once per reward'
-            : !game.hunts.freeReroll &&
+            : !game.shiftRun.freeReroll &&
+                !game.hunts.freeReroll &&
                 !game.areaEvents.freeReroll &&
                 !game.uprising.freeReroll &&
                 game.hp <= REROLL_COST
@@ -4303,7 +4348,10 @@ function showDialog(kind: string) {
                   ? 'Reroll other two'
                   : 'Reroll unheld'
                 : 'Reroll') +
-              (game.hunts.freeReroll || game.areaEvents.freeReroll || game.uprising.freeReroll
+              (game.shiftRun.freeReroll ||
+              game.hunts.freeReroll ||
+              game.areaEvents.freeReroll ||
+              game.uprising.freeReroll
                 ? ' · free'
                 : ' · −' + REROLL_COST + ' health')) +
           '</button><span id="reward-status" class="sr-only" role="status"></span></div>'
@@ -4339,7 +4387,10 @@ function showDialog(kind: string) {
       reroll.onclick = () => {
         sound.unlock();
         const free =
-            game.hunts.freeReroll || game.areaEvents.freeReroll || game.uprising.freeReroll,
+            game.shiftRun.freeReroll ||
+            game.hunts.freeReroll ||
+            game.areaEvents.freeReroll ||
+            game.uprising.freeReroll,
           held = game.offers.find((offer) => offer.id === game.heldReward);
         if (game.rerollReward()) {
           $('reward-status').textContent =
@@ -4852,6 +4903,7 @@ function showDialog(kind: string) {
           game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
           '</ul></details>'
         : '') +
+      (paused ? shiftRunSummary(game) : '') +
       (paused && game.level.bossRemix
         ? '<p class="practice-note">Arena · ' +
           BOSS_REMIXES[game.level.bossRemix].name +
@@ -5159,7 +5211,11 @@ function updateControlHints() {
           (game.mods.includes('rewire') ? 'Reposition freely.' : 'One pair per room.') +
           '</p>'
         : '') +
-      (game.mods.includes('charge-lens') ? '<p>Hold fire to charge. Release to shoot.</p>' : '') +
+      (game.shiftMorphs.equipped === 'seeker-rack'
+        ? '<p>Hold fire over exposed machines until their locks fill. Release to launch your salvo.</p>'
+        : game.mods.includes('charge-lens')
+          ? '<p>Hold fire to charge. Release to shoot.</p>'
+          : '') +
       flightHints;
   if (copy)
     copy.innerHTML =
@@ -5178,11 +5234,13 @@ function updateControlHints() {
       (pad
         ? '<p>Left stick: move · Right stick: aim</p><p>LB / L1: jump · RT / R2: fire</p>'
         : `<p><kbd>${keyLabel(bindings.left[0])}</kbd> <kbd>${keyLabel(bindings.right[0])}</kbd> Move <span>·</span> <kbd>${keyLabel(bindings.jump[0])}</kbd> Jump</p><p>Mouse to aim. Left click or ${bindingLabel(bindings, 'fire')} to fire.</p>`) +
-      (game.mods.includes('charge-lens')
-        ? '<p>Hold ' +
-          (pad ? 'RT / R2' : 'left click or ' + bindingLabel(bindings, 'fire')) +
-          ' to charge. Release to fire.</p><p>Release downward in the air to climb.</p>'
-        : '<p>Shoot down in the air to climb.</p>') +
+      (game.shiftMorphs.equipped === 'seeker-rack'
+        ? '<p>Hold fire over exposed machines to paint them. Release to launch your native salvo.</p>'
+        : game.mods.includes('charge-lens')
+          ? '<p>Hold ' +
+            (pad ? 'RT / R2' : 'left click or ' + bindingLabel(bindings, 'fire')) +
+            ' to charge. Release to fire.</p><p>Release downward in the air to climb.</p>'
+          : '<p>Shoot down in the air to climb.</p>') +
       flightHints;
   const status = document.getElementById('controller-status');
   $('workshop-reset').title = 'Reset room · ' + bindingLabel(bindings, 'retry');
@@ -5409,6 +5467,15 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind.startsWith('shift-')) {
+    if (shiftOfficeMenu) shiftOfficeMenu.back();
+    else if (dialogKind === 'shift-office') {
+      game.shiftRun.closeOffice();
+      closeDialog();
+      canvas.focus();
+    }
+    return;
+  }
   if (dialogKind === 'tool-trial') {
     backFromToolTrial();
     return;
@@ -5611,6 +5678,14 @@ window.addEventListener('keydown', (e) => {
     }
     return;
   }
+  if (dialogKind.startsWith('shift-') && modal.open) {
+    const i = Number(e.key) - 1;
+    if (Number.isInteger(i) && i >= 0)
+      $('dialog-content')
+        .querySelectorAll<HTMLButtonElement>('[data-shift]:not(:disabled)')
+        [i]?.click();
+    return;
+  }
   if (game.mode === 'upgrade') {
     const i = Number(e.key) - 1;
     if (dialogKind === 'job-payment') {
@@ -5769,6 +5844,12 @@ function frame(now: number) {
   lastTime = now;
   const pad = pollController(now);
   jobPaymentMenu?.frame(
+    dt,
+    now,
+    renderer.reduced || previewMotion.matches,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+  );
+  shiftOfficeMenu?.frame(
     dt,
     now,
     renderer.reduced || previewMotion.matches,

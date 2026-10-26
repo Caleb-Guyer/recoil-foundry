@@ -1,3 +1,4 @@
+import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, type Input, type Enemy } from '../src/game.ts';
@@ -100,7 +101,12 @@ test('Annex links select legal isolated presets, rejecting ambiguous or mixed ru
   const g = new Game();
   g.start('normal-campaign');
   assert(!g.annex.active && !g.spoof.equipped);
-  assert.equal(MODS.length, 141);
+  assert.equal(
+    MODS.filter((m) => !isShiftMod(m.id)).length,
+    141,
+    'the archived catalog stays intact',
+  );
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
   const disabled = preset();
   disabled.annex!.spoof = false;
   disabled.mods = disabled.mods.filter((id) => id !== 'spoof');

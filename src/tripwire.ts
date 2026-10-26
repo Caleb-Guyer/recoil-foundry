@@ -147,6 +147,10 @@ export class TripwireSystem {
     if (Matter.Vertices.contains(body.vertices, next.pos)) return;
     const a = this.anchor,
       length = a ? distance(a.pos, next.pos) : 0;
+    if (a && g.shiftFusions.linkGate(a, next)) {
+      this.anchor = null;
+      return;
+    }
     // Repeated fire at one spot keeps the original pin rather than drawing stubs.
     if (a && length < TRIPWIRE.min) return;
     if (a && length <= TRIPWIRE.max && this.clear(a.pos, next.pos)) {

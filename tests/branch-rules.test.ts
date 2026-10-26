@@ -1,3 +1,4 @@
+import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -25,7 +26,12 @@ import { dailyForDate } from '../src/daily.ts';
 
 test('all branch choices require their complete parents, respect both orders and enter at stage seven', () => {
   assert.equal(BRANCH_MODS.length, 14);
-  assert.equal(MODS.length, 141);
+  assert.equal(
+    MODS.filter((m) => !isShiftMod(m.id)).length,
+    141,
+    'the archived catalog stays intact',
+  );
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
   for (const mod of BRANCH_MODS) {
     const parents = withParents([], BRANCH_PARENTS[mod.id])!;
     assert(validBuild([...parents, mod.id]));

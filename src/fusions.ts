@@ -37,7 +37,7 @@ export class FusionSystem {
   fireRail(d: Vec, damage: number) {
     const g = this.game,
       radius = 5.5;
-    const origin = { x: g.player.position.x, y: g.player.position.y - 3 };
+    const origin = g.primaryOrigin();
     const muzzle = { x: origin.x + d.x * 26, y: origin.y + d.y * 26 };
     const pos = g.lineEnd(origin, muzzle, radius);
     if (g.pressure.trace(origin, pos, radius)) Object.assign(pos, origin);

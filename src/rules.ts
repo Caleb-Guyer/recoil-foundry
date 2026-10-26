@@ -1,3 +1,13 @@
+import { validShiftRunSave, shiftBonus } from './shift-run.ts';
+import {
+  SHIFT_MODS,
+  SHIFT_FUSIONS,
+  compatibleShift,
+  shiftOfferAllowed,
+  shiftCampaign,
+  isShiftMod,
+} from './shift-catalog.ts';
+import { validShiftRouteSave, validReworkSnapshot } from './shift-routes.ts';
 import { validHunt, huntDetour } from './hunt-rules.ts';
 import { loadRouteHistory, type RouteDecision } from './route-history.ts';
 import { validFinaleClassification } from './finale-progression.ts';
@@ -539,6 +549,7 @@ export const MODS = [
       'Landed bomblets link into brief electrical traps. 28% smaller shell explosions. Keep three cells.',
     mark: 'storm-cell',
   },
+  ...SHIFT_MODS,
 ] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
@@ -702,6 +713,7 @@ export const MOD_PATHS: Record<string, { path: BuildPath }> = {
   'storm-cell': { path: 'demolition' },
 };
 export const FUSION_REQUIRES: Record<string, readonly string[]> = {
+  ...SHIFT_FUSIONS,
   'rail-spike': ['deadeye', 'capacitor'],
   orbit: ['crossfire', 'recall'],
   implosion: ['shellshock', 'fuse'],
@@ -793,6 +805,7 @@ export const TORCH_ALTERNATIVES = [
 ] as const;
 export function compatibleMod(mods: readonly string[], id: string, legacy = false) {
   return (
+    compatibleShift(mods, id) &&
     compatibleBranch(mods, id) &&
     (legacy ||
       !(
@@ -1083,6 +1096,7 @@ export function rewardMods(
         toolroomStageAllowed(mod.id, context.stage, context.overtime) &&
         supportDraftAllowed(mod.id, context.seed) &&
         supportPoolAllowed(mod.id, context.seed) &&
+        shiftOfferAllowed(mod.id, context.seed, context.overtime ? 20 : context.stage) &&
         (!SUPPORT_MODS.some((m) => m.id === mod.id) || context.overtime || context.stage >= 4) &&
         !excluded.includes(mod.id) &&
         (!isLegacyDaily(context.seed ?? '') || !isSubversion(mod.id)) &&
@@ -1108,6 +1122,7 @@ export function rewardMods(
               toolroomStageAllowed(mod.id, context.stage, context.overtime) &&
               supportDraftAllowed(mod.id, context.seed) &&
               supportPoolAllowed(mod.id, context.seed) &&
+              shiftOfferAllowed(mod.id, context.seed, context.overtime ? 20 : context.stage) &&
               (!SUPPORT_MODS.some((m) => m.id === mod.id) ||
                 context.overtime ||
                 context.stage >= 4) &&
@@ -1440,6 +1455,10 @@ export interface RewardCheckpoint {
   enteringRoute?: RouteChoice;
 }
 export interface Checkpoint {
+  factoryUnbound?: { scene: string; form: 'rounds' | 'beam' | 'shell' | 'ball' };
+  shiftRun?: import('./shift-run.ts').ShiftRunSave;
+  shiftRoute?: import('./shift-routes.ts').ShiftRouteSave;
+  shiftRework?: import('./shift-routes.ts').ReworkSnapshot;
   routeHistory?: RouteDecision[];
   draftHistory?: { zone: number; declined: string[] };
   // Snapshot the first-clear ending before the run can earn its clear rewards.
@@ -1594,7 +1613,10 @@ function validRewardCheckpoint(d: Checkpoint) {
       !r.rerolled &&
       r.offers.length === 1 &&
       availableMods(d.mods).filter(
-        (m) => draftUnlocked(m.id, d.unlocks, d.seed) && supportPoolAllowed(m.id, d.seed),
+        (m) =>
+          draftUnlocked(m.id, d.unlocks, d.seed) &&
+          supportPoolAllowed(m.id, d.seed) &&
+          shiftOfferAllowed(m.id, d.seed, 20),
       ).length === 0
     );
   const legal = availableMods(d.mods, true, !!d.legacyOffers);
@@ -1602,6 +1624,7 @@ function validRewardCheckpoint(d: Checkpoint) {
     (id) =>
       draftUnlocked(id, d.unlocks, d.seed) &&
       supportDraftAllowed(id, d.seed) &&
+      shiftOfferAllowed(id, d.seed, d.overtime ? 20 : d.stage) &&
       toolroomStageAllowed(id, d.stage, !!d.overtime) &&
       legal.some((m) => m.id === id) &&
       (!isSalvage(id) || (!r.rerolled && id === r.salvage)) &&
@@ -1615,6 +1638,22 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
   const legacy = raw.version === 3;
   const previous = raw.version === 4;
   const incoming = value as Checkpoint;
+  if (typeof incoming.seed !== 'string') return null;
+  if (incoming.factoryUnbound !== undefined) return null;
+  if (
+    incoming.shiftRun !== undefined &&
+    (!Array.isArray(incoming.mods) ||
+      typeof incoming.seed !== 'string' ||
+      /^RF-D/.test(incoming.seed) ||
+      !validShiftRunSave(
+        incoming.shiftRun,
+        incoming.mods,
+        incoming.overtime ? 19 : incoming.stage,
+      ) ||
+      !shiftCampaign(incoming.seed))
+  )
+    return null;
+  const shiftExtra = shiftBonus(incoming);
   if (incoming.routeHistory !== undefined) {
     const routes = loadRouteHistory(
       incoming.routeHistory,
@@ -1759,7 +1798,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         overtime.remix === 5) &&
       Array.isArray(completed) &&
       Number.isInteger(overtime.baseMods) &&
-      overtime.baseMods === STAGES - 1 + completed.length - missed + courierBonus &&
+      overtime.baseMods === STAGES - 1 + completed.length - missed + courierBonus + shiftExtra &&
       Number.isInteger(overtime.repairs) &&
       overtime.repairs >= 0 &&
       overtime.repairs <= d.stage + welderBonus(d.welder) &&
@@ -1778,6 +1817,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
             )
             .every(
               (m) =>
+                isShiftMod(m.id) ||
                 isFusion(m.id) ||
                 isBranch(m.id) ||
                 NEW_PATH_MODS.some((mod) => mod.id === m.id) ||
@@ -1812,6 +1852,12 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
         (index === 0 || completed[index - 1] < area),
     );
   const valid =
+    (d.shiftRoute === undefined ||
+      (shiftCampaign(d.seed) &&
+        validShiftRouteSave(d.shiftRoute) &&
+        d.shiftRoute.stage === d.stage)) &&
+    (d.shiftRework === undefined ||
+      (shiftCampaign(d.seed) && validReworkSnapshot(d.shiftRework))) &&
     validFactory(d) &&
     validUprisingCheckpoint(d) &&
     validSecurityRun(d) &&
@@ -1862,7 +1908,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
           (d.detour && !huntDetour(d) ? 1 : 0) +
           completed.length -
           missed +
-          courierBonus) &&
+          courierBonus +
+          shiftExtra) &&
     (d.detour === undefined ||
       (d.detour === true &&
         (huntDetour(d) ||
@@ -1873,14 +1920,17 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       (d.escape === true &&
         (d.stage === stages - 1 || oldEscape) &&
         (!!overtime ||
-          d.mods.length === stages - 1 + completed.length - missed + courierBonus ||
+          d.mods.length === stages - 1 + completed.length - missed + courierBonus + shiftExtra ||
           (oldEscape && completed.length === 0))));
   if (
     !valid ||
     (d.unlocks !== undefined &&
       (!validUnlocks(d.unlocks) || (/^RF-D\d+-/.test(d.seed) && d.unlocks.length > 0))) ||
     d.mods.some(
-      (id) => !draftUnlocked(id, d.unlocks, d.seed) || !supportDraftAllowed(id, d.seed),
+      (id) =>
+        !draftUnlocked(id, d.unlocks, d.seed) ||
+        !supportDraftAllowed(id, d.seed) ||
+        !shiftOfferAllowed(id, d.seed, d.overtime ? 20 : d.stage),
     ) ||
     !validRewardCheckpoint(d) ||
     !validRegion(d) ||

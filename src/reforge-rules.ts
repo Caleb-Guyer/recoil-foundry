@@ -11,6 +11,7 @@ import {
   isFusion,
   type Checkpoint,
 } from './rules.ts';
+import { shiftCampaign, shiftOfferAllowed } from './shift-catalog.ts';
 import { BRANCH_STAGE, BRANCH_PARENTS, isBranch } from './upgrade-branches.ts';
 import { dailyForDate } from './daily.ts';
 import { draftUnlocked } from './longevity.ts';
@@ -55,10 +56,15 @@ export function legalSwaps(
   );
   for (const from of mods.slice(legacyMods?.length ?? 0)) {
     // Removing a parent must never strand an existing evolution or fusion.
-    if (required.has(from)) continue;
+    if (
+      required.has(from) ||
+      (shiftCampaign(seed) && ['ricochet-harness', 'spring-rivets', 'slip-gauge'].includes(from))
+    )
+      continue;
     const remaining = mods.filter((id) => id !== from);
     for (const mod of availableMods(remaining)) {
       if (
+        !shiftOfferAllowed(mod.id, seed, stage) ||
         !draftUnlocked(mod.id, unlocks, seed) ||
         mod.id === from ||
         (isFusion(mod.id) && !fusionUnlocked({ stage })) ||

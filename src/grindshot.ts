@@ -185,6 +185,7 @@ export class GrindshotSystem {
         saw.life = 0;
         continue;
       }
+      if (g.shiftFusions.catchSaw(saw)) continue;
       const points = grindRail(saw.body);
       let budget = GRIND.speed * dt;
       let a = points[saw.edge],

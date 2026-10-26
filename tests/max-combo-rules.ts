@@ -1,3 +1,4 @@
+import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import { Game } from '../src/game.ts';
 import { getLevel } from '../src/levels.ts';
 // These original tests share one catalog generation with the Workshop simulations.
@@ -56,7 +57,15 @@ test('every maximal combination is unique, legal, complete, saveable and address
   assert.equal(new Set(combos.map((c) => [...c.mods].sort().join(','))).size, combos.length);
   for (const combo of selectedRuleCombos(combos)) {
     assert(validBuild(combo.mods), combo.code);
-    assert.equal(availableMods(combo.mods, true).length, 0);
+    assert(
+      combo.mods.every((id) => !isShiftMod(id)),
+      'legacy maximal codes cannot acquire future morphs',
+    );
+    assert.equal(
+      availableMods(combo.mods, true).filter((m) => shiftOfferAllowed(m.id, 'RF-C105-MAX', 20))
+        .length,
+      0,
+    );
     const save = branchTestFromUrl(new URL('https://test/?test=branches&combo=' + combo.code))!;
     assert.deepEqual(save.mods, combo.mods);
     assert(loadCheckpoint(save));
@@ -111,7 +120,8 @@ test('new fusions have complete reachable parents, one-fusion gating and safe sa
 
 test('all thirteen upgrades have legal reachable prerequisites, mutually exclusive forks and save support', () => {
   assert.equal(NEW_PATH_MODS.length, 13);
-  assert.equal(MODS.length, 141);
+  assert.equal(MODS.filter((m) => !isShiftMod(m.id)).length, 141);
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
   for (const mod of NEW_PATH_MODS) {
     const build = withParents([], [mod.id])!;
     assert(build && validBuild(build), mod.id);
@@ -193,7 +203,8 @@ test('old maximal-combo URLs retain their exact pre-Subversion upgrades', () => 
 });
 
 test('all five additions are legal, reachable, saved, represented in max builds and have isolated presets', () => {
-  assert.equal(MODS.length, 141);
+  assert.equal(MODS.filter((m) => !isShiftMod(m.id)).length, 141);
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
   assert.equal(WORKSHOP_MODS.length, 5);
   const combos = maxCombos();
   for (const m of WORKSHOP_MODS) {

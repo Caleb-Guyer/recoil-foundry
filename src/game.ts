@@ -1,3 +1,10 @@
+import { factoryUnboundRoom, prepareFactoryUnbound } from './factory-unbound-room.ts';
+import { shiftOfferAllowed } from './shift-catalog.ts';
+import { ShiftMorphs } from './shift-morphs.ts';
+import { ShiftRun } from './shift-run.ts';
+import { ShiftUpgrades } from './shift-upgrades.ts';
+import { ShiftFusions } from './shift-fusions.ts';
+import { ShiftRoutes } from './shift-routes.ts';
 import { uprisingRemasterSeed } from './uprising-remaster-rules.ts';
 import { rivalShiftLevel } from './rival-shift-layout.ts';
 import { firstShiftLevel } from './first-shift-layout.ts';
@@ -254,7 +261,8 @@ export type Mode =
   | 'reforge'
   | 'finale-service'
   | 'dead'
-  | 'won';
+  | 'won'
+  | 'shift-office';
 export interface Input {
   left: boolean;
   right: boolean;
@@ -417,6 +425,12 @@ export class Game {
   spoof = new SpoofSystem(this);
   support = new SupportSystem(this);
   toolroom = new ToolroomSystem(this);
+  shiftUpgrades = new ShiftUpgrades(this);
+  shiftFusions = new ShiftFusions(this);
+  shiftRoutes = new ShiftRoutes(this);
+  shiftRun = new ShiftRun(this);
+  shiftMorphs = new ShiftMorphs(this);
+  private shiftOrigin: Vec | null = null;
   patrolMachines = new PatrolMachineSystem(this);
   combatReport = new CombatReport(this);
   mutations = new MutationSystem(this);
@@ -846,6 +860,8 @@ export class Game {
     if (mode !== 'playing') {
       this.stasis.held = false;
       this.mobility.pause();
+      this.shiftUpgrades.pause();
+      this.shiftMorphs.pause();
       this.burstRemaining = 0;
       this.portalRequest = null;
       if (this.mods.includes('charge-lens')) this.torch.stop();
@@ -890,6 +906,10 @@ export class Game {
       this.toolroom.reset();
       this.patrolMachines.clear();
       this.fusions.reset();
+      this.shiftFusions.reset();
+      this.shiftUpgrades.reset();
+      this.shiftMorphs.reset();
+      this.shiftOrigin = null;
       this.harpoons.clear();
     }
     this.mode = mode;
@@ -1125,6 +1145,8 @@ export class Game {
       !save.overtime &&
       !save.escape &&
       !save.detour;
+    this.shiftRoutes.start(save ?? testRun ?? undefined);
+    this.shiftRun.start(save ?? testRun ?? undefined);
     this.finaleService.start(save);
     this.loadRoom(
       save?.escape === true,
@@ -1186,6 +1208,7 @@ export class Game {
             ? 'reforge'
             : 'playing',
     );
+    prepareFactoryUnbound(this);
     this.save();
   }
   save() {
@@ -1195,7 +1218,12 @@ export class Game {
   checkpointSnapshot(): Checkpoint {
     return {
       version: 6,
+      ...(this.shiftRun.snapshot() ? { shiftRun: this.shiftRun.snapshot() } : {}),
       startingGun: this.startingGun,
+      ...(this.shiftRoutes.snapshot() ? { shiftRoute: this.shiftRoutes.snapshot() } : {}),
+      ...(this.shiftRoutes.lastRework
+        ? { shiftRework: structuredClone(this.shiftRoutes.lastRework) }
+        : {}),
       ...(chooseRouteCampaign(this.seed) && this.routeHistory.length
         ? { routeHistory: structuredClone(this.routeHistory) }
         : {}),
@@ -1324,6 +1352,10 @@ export class Game {
     this.toolroom.reset();
     this.patrolMachines.clear();
     this.fusions.reset();
+    this.shiftFusions.reset();
+    this.shiftUpgrades.reset();
+    this.shiftMorphs.reset();
+    this.shiftOrigin = null;
     this.harpoons.clear();
     this.magnets.items = [];
     this.conveyors.clear();
@@ -1525,6 +1557,8 @@ export class Game {
     this.level = damageControlLevel(this, this.level);
     this.level = finalePreviewLevel(this, this.level);
     this.level = transformedLevel(this, this.level);
+    this.level = factoryUnboundRoom(this, this.level);
+    if (!escapeRoom && !this.detour && !huntRoom) this.level = this.shiftRoutes.level(this.level);
     if (this.testRun?.rematchRoom) this.level = structuredClone(this.testRun.rematchRoom);
     if (this.canOvertime && !this.testRun?.rematchRoom)
       this.level.solids.push(...OVERTIME_STEPS.map((s) => ({ ...s })));
@@ -1628,6 +1662,8 @@ export class Game {
     prepareCombatFocus(this);
     prepareDamageControl(this);
     this.bossRemaster.reset(clearedRoom);
+    this.shiftRoutes.reset(clearedRoom);
+    this.shiftRun.resetRoom();
     const routeTest =
       this.testRun && this.testRun.stage === this.stage ? chooseRouteTestIdentity(this.seed) : null;
     if (routeTest && this.stage === routeTest.destinationStage - 1) {
@@ -1671,6 +1707,7 @@ export class Game {
     this.recordCampaignClear();
     this.finaleFirstClear = false;
     this.areaEvents.state = null;
+    this.shiftRun.finishLap();
     this.overtime = { baseMods: this.mods.length, repairs: 0, remix: 5 };
     this.welder.state = planWelder(this.seed);
     this.stage = 0;
@@ -1757,6 +1794,10 @@ export class Game {
     this.toolroom.reset();
     this.patrolMachines.clear();
     this.fusions.reset();
+    this.shiftFusions.reset();
+    this.shiftUpgrades.reset();
+    this.shiftMorphs.reset();
+    this.shiftOrigin = null;
     this.harpoons.clear();
     this.demolition.clear();
     this.escape.depart = 0;
@@ -1939,6 +1980,8 @@ export class Game {
       };
     if (input.jump && this.finaleService.interact()) return;
     if (input.jump && this.reforge.interact()) return;
+    if (input.jump && this.shiftRun.interact()) return;
+    if (input.jump && this.shiftRoutes.interact()) return;
     if (this.escape?.phase === 'extracting') {
       this.updateExtraction(dt);
       return;
@@ -1948,6 +1991,7 @@ export class Game {
     this.kick.y *= 0.72;
     this.muzzle = Math.max(0, this.muzzle - dt);
     this.land = Math.max(0, this.land - dt);
+    input = this.shiftMorphs.input(dt, input);
     // Keep jump taps through the tiny impact pause.
     if (input.jump) this.jumpBuffer = this.areaEvents.input(true) ? 0 : 0.12;
     if (input.firePressed) this.fireBuffer = 0.12;
@@ -1963,6 +2007,8 @@ export class Game {
     this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
+    this.shiftUpgrades.beforeStep(dt, input);
+    this.shiftRoutes.beforeStep(input, dt);
     this.support.update(dt);
     this.toolroom.update(dt);
     this.cryogenic.update(dt);
@@ -1981,6 +2027,7 @@ export class Game {
     this.demolition.update();
     if (this.mode !== 'playing') return;
     this.tripwires.beforeStep();
+    this.shiftFusions.beforeStep(dt);
     const wasGrounded = this.grounded,
       vy = this.player.velocity.y;
     const counterweightSupport = this.counterweights.supporting(this.player);
@@ -2069,6 +2116,7 @@ export class Game {
       this.jumpCut = true;
     }
     this.mobility.update(input);
+    this.shiftUpgrades.afterGround(input, wasGrounded);
     if (this.torch.equipped) {
       this.torch.beforeStep(
         dt,
@@ -2145,6 +2193,9 @@ export class Game {
     this.portals.beforeStep();
     this.counterweights.beforeStep();
     this.uprising.update(input, dt);
+    this.shiftMorphs.tick(dt);
+    this.shiftRun.tick(dt, input);
+    this.shiftUpgrades.beforeIntegrate(dt);
     Engine.update(this.engine, 1000 / 60);
     this.commendations.weapons.sampleGround();
     this.counterweights.afterStep();
@@ -2161,6 +2212,8 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.hazards.afterStep(dt);
     this.recoil.afterStep();
+    this.shiftUpgrades.afterStep(dt, input);
+    this.shiftRoutes.afterStep(dt);
     this.containPlayer();
     this.harpoons.afterStep(dt);
     if (this.mode !== 'playing') return;
@@ -2179,6 +2232,7 @@ export class Game {
     if (this.mode !== 'playing') return;
     this.arcs.update();
     this.grind.update(dt);
+    this.shiftFusions.afterStep(dt);
     if (this.mode !== 'playing') return;
     this.breaches.update(dt);
     this.particles = this.particles.filter((p) => {
@@ -2233,12 +2287,14 @@ export class Game {
       !this.bossRemaster.waiting &&
       !this.hunts.waiting &&
       !this.uprising.waiting &&
+      !this.shiftRoutes.pending &&
       (!this.maintenance.active || this.maintenance.atExit) &&
       (!this.recoil.active || this.recoil.atExit) &&
       (!this.freight.active || this.freight.arrived)
     ) {
       this.clear = true;
       this.clearAt = this.time;
+      this.shiftRun.roomCleared();
       this.maintenance.completed();
       this.recoil.completed();
       this.arcs.reset();
@@ -2362,6 +2418,8 @@ export class Game {
     this.muzzle = 0.065;
     const d = direction(this.player.position, this.aim);
     if (d.x === 0 && d.y === 0) d.x = 1;
+    Object.assign(origin, this.shiftUpgrades.origin(origin, d));
+    this.shiftOrigin = origin;
     const impulse =
       this.gun.recoil *
       this.mobility.shot(d) *
@@ -2369,9 +2427,10 @@ export class Game {
       (charged ? 1.25 : 1) *
       (rail ? RAIL_RECOIL : 1);
     const beforeRecoil = this.player.velocity.y;
+    const shiftDelta = this.shiftUpgrades.recoilDelta(d, impulse);
     Body.setVelocity(this.player, {
-      x: clamp(this.player.velocity.x - d.x * impulse, -23, 23),
-      y: clamp(this.player.velocity.y - d.y * impulse, -21, 20),
+      x: clamp(this.player.velocity.x + shiftDelta.x, -23, 23),
+      y: clamp(this.player.velocity.y + shiftDelta.y, -21, 20),
     });
     this.commendations.mastery.recoiled(beforeRecoil - this.player.velocity.y);
     this.salvage.launch(d, impulse);
@@ -2463,20 +2522,21 @@ export class Game {
         color: '#bdae84',
         kind: 'shell',
       });
+    this.shiftOrigin = null;
+  }
+  primaryOrigin(): Vec {
+    return this.shiftOrigin ?? { x: this.player.position.x, y: this.player.position.y - 3 };
   }
   fireVolley(d: Vec, damage: number, charged: boolean, primary = true) {
-    const pos = { x: this.player.position.x + d.x * 26, y: this.player.position.y - 3 + d.y * 26 };
+    const baseOrigin = this.primaryOrigin();
+    const pos = { x: baseOrigin.x + d.x * 26, y: baseOrigin.y + d.y * 26 };
     const radius = this.massDriver.equipped
       ? MASS_DRIVER.radius
       : this.mods.includes('magnum') || this.startingGun === 'carbine'
         ? 4
         : 2.5;
-    const spawn = this.lineEnd(
-      { x: this.player.position.x, y: this.player.position.y - 3 },
-      pos,
-      radius,
-    );
-    const valveOrigin = { x: this.player.position.x, y: this.player.position.y - 3 };
+    const spawn = this.lineEnd(baseOrigin, pos, radius);
+    const valveOrigin = baseOrigin;
     if (this.pressure.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (this.floodgate.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
     if (this.sortingPit.trace(valveOrigin, spawn, radius)) Object.assign(spawn, valveOrigin);
@@ -2504,7 +2564,7 @@ export class Game {
           spread;
         let waypoints: Vec[] | undefined;
         if (this.gun.convergence && this.gun.lanes > 1) {
-          const origin = { x: this.player.position.x, y: this.player.position.y - 3 };
+          const origin = baseOrigin;
           const rear = d.x * (this.aim.x - origin.x) + d.y * (this.aim.y - origin.y) < 0;
           const target = rear
             ? { x: origin.x * 2 - this.aim.x, y: origin.y * 2 - this.aim.y }
@@ -2682,7 +2742,9 @@ export class Game {
     this.massDriver.prepare(shot);
     if (shot.friendly && !shot.fragment && !shot.echo && !shot.reflected)
       shot.feedGeneration ??= this.shotCount;
+    this.shiftUpgrades.tag(shot);
     this.stasis.prepare(shot);
+    this.shiftMorphs.prepare(shot);
     this.shots.push(shot);
     return shot;
   }
@@ -2727,7 +2789,10 @@ export class Game {
     if (this.courier.updateEnemy(e, dt)) return;
     if (this.mutations.updateEnemy(e, dt)) return;
     this.securityCombat.update(e, dt);
-    const combatTarget = this.uprising.target(e) ?? this.areaEvents.combatTarget(e);
+    const combatTarget =
+      this.shiftUpgrades.decoyTarget(e) ??
+      this.uprising.target(e) ??
+      this.areaEvents.combatTarget(e);
     this.encounterPacer.prepareRanged(e, dt, combatTarget);
     // Shorten downtime only. Every marked attack and spawn keeps its full tell.
     e.timer -=
@@ -2992,14 +3057,15 @@ export class Game {
     let t = 1;
     for (const b of this.terrainBodies) {
       if (b === ignore) continue;
-      const hit = this.counterweights.owns(b)
-        ? sweepBox(start, end, { x: padding, y: padding }, b)
-        : segmentBox(
-            start,
-            end,
-            { x: b.bounds.min.x - padding, y: b.bounds.min.y - padding },
-            { x: b.bounds.max.x + padding, y: b.bounds.max.y + padding },
-          );
+      const hit =
+        this.counterweights.owns(b) || this.shiftRoutes.owns(b)
+          ? sweepBox(start, end, { x: padding, y: padding }, b)
+          : segmentBox(
+              start,
+              end,
+              { x: b.bounds.min.x - padding, y: b.bounds.min.y - padding },
+              { x: b.bounds.max.x + padding, y: b.bounds.max.y + padding },
+            );
       if (hit) t = Math.min(t, hit.t);
     }
     for (const prop of this.props.items) {
@@ -3292,6 +3358,7 @@ export class Game {
     origin: Vec = squadGunOrigin(e),
     blade = false,
   ) {
+    if (this.shiftFusions.suppressAllyFire(e)) return;
     if (
       e.squad?.kind === 'shield' &&
       e.squad.role === 'support' &&
@@ -3364,6 +3431,7 @@ export class Game {
     for (const s of this.shots) updateAnglerShot(this, s);
     for (const s of this.shots) if (!s.meltTransit) this.ballistics.flight(s, dt);
     for (const s of this.shots) if (!s.meltTransit) steerVector(s, this.aim, dt);
+    for (const s of this.shots) this.shiftMorphs.updateShot(s, dt);
     this.ballistics.reflect(dt);
     for (const s of [...this.shots]) {
       updateAnglerShot(this, s);
@@ -3440,6 +3508,7 @@ export class Game {
             s.angler ||
             s.tripwire !== undefined ||
             this.counterweights.owns(body) ||
+            this.shiftRoutes.owns(body) ||
             (s.friendly && this.mods.includes('melt-through') && this.terrain.includes(body))
               ? sweepBox(s.pos, end, { x: s.radius, y: s.radius }, body)
               : segmentBox(
@@ -3577,6 +3646,19 @@ export class Game {
         this.stasis.abandon(s);
         remaining -= segment * nearest.t;
         s.waypoints = undefined;
+        if (
+          nearest.body &&
+          !nearest.enemy &&
+          this.shiftRoutes.reflect(s, nearest.body, nearest.normal)
+        ) {
+          remaining = Math.max(0, remaining - 0.002);
+          continue;
+        }
+        if (nearest.body && !nearest.enemy) {
+          this.shiftUpgrades.terrainHit(s, nearest.body, nearest.normal);
+          this.shiftRun.terrainHit(s, nearest.body);
+          this.shiftMorphs.terrainHit(s, nearest.body, nearest.normal);
+        }
         if (nearest.body && !nearest.enemy && this.melt.begin(s, nearest.body)) continue;
         const impactDamage = this.massDriver.impactDamage(s);
         s.impactNormal = { ...nearest.normal };
@@ -3706,6 +3788,7 @@ export class Game {
             s.life = 0;
             continue;
           }
+          this.shiftUpgrades.primaryHit(e, s);
           this.salvage.impact(s);
           this.cryogenic.hit(e, s);
           this.stasis.hit(s);
@@ -4243,6 +4326,7 @@ export class Game {
     this.auditorReward = false;
     this.welderReward = false;
     this.enteringRoute = this.canChooseRoute ? (route ?? this.routeChoices[0]) : null;
+    if (this.clear && this.shiftRun.enabled) this.shiftRoutes.remember();
     this.courier.leave();
     this.courierReward = this.courier.state?.status === 'collected';
     this.welderReward =
@@ -4319,6 +4403,7 @@ export class Game {
       if (spoof) this.offers.splice(Math.max(0, this.offers.length - 1), 1, spoof);
     }
     if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
+    this.offers = this.shiftRun.offers(this.offers);
     this.rewardTaken = false;
     this.rewardRerolled = false;
     this.heldReward = null;
@@ -4395,7 +4480,8 @@ export class Game {
       !this.rewardRerolled &&
       this.offers.length === 3 &&
       !this.offers.some((m) => m.id === 'repair') &&
-      (this.hunts.freeReroll ||
+      (this.shiftRun.freeReroll ||
+        this.hunts.freeReroll ||
         this.areaEvents.freeReroll ||
         this.uprising.freeReroll ||
         this.hp > REROLL_COST)
@@ -4421,7 +4507,10 @@ export class Game {
       !this.rewardTaken &&
       !this.rewardRerolled &&
       !this.uprising.pendingPayment &&
-      (this.hunts.freeReroll ||
+      !this.shiftRun.leaseDue &&
+      !this.shiftRun.evolutionDue &&
+      (this.shiftRun.freeReroll ||
+        this.hunts.freeReroll ||
         this.areaEvents.freeReroll ||
         this.uprising.freeReroll ||
         this.hp > REROLL_COST) &&
@@ -4433,7 +4522,8 @@ export class Game {
   rerollReward() {
     if (!this.canReroll) return false;
     const replacements = this.replacementOffers();
-    if (this.hunts.freeReroll) this.hunts.spendReroll();
+    if (this.shiftRun.freeReroll) this.shiftRun.spendReroll();
+    else if (this.hunts.freeReroll) this.hunts.spendReroll();
     else if (this.areaEvents.freeReroll) this.areaEvents.spendReroll();
     else if (this.uprising.freeReroll) this.uprising.spendReroll();
     else this.hp -= REROLL_COST;
@@ -4449,6 +4539,7 @@ export class Game {
   }
   applyJobRefit(mods: readonly string[]) {
     this.mods = [...mods];
+    this.shiftRun.fitted();
     this.gun = getGun(this.mods, this.startingGun);
     this.melt.reset();
     this.massDriver.reset();
@@ -4468,6 +4559,10 @@ export class Game {
     this.scrap.reset();
     this.support.reset();
     this.fusions.reset();
+    this.shiftFusions.reset();
+    this.shiftUpgrades.reset();
+    this.shiftMorphs.reset();
+    this.shiftOrigin = null;
     this.demolition.clear();
     this.shots = [];
     this.burstRemaining = this.fireBuffer = this.jumpBuffer = 0;
@@ -4477,6 +4572,7 @@ export class Game {
     this.shootAt = this.time;
   }
   chooseMod(id: string) {
+    if (this.shiftRun.leaseDue || this.shiftRun.evolutionDue) return;
     if (this.hunts.rewarding) return;
     if (this.uprising.choices.length || this.uprising.pendingPayment) return;
     if (this.practice || this.workshop.active) return;
@@ -4492,7 +4588,9 @@ export class Game {
         this.overtime &&
         availableMods(this.mods).filter(
           (m) =>
-            draftUnlocked(m.id, this.unlocks, this.seed) && supportPoolAllowed(m.id, this.seed),
+            draftUnlocked(m.id, this.unlocks, this.seed) &&
+            supportPoolAllowed(m.id, this.seed) &&
+            shiftOfferAllowed(m.id, this.seed, 20),
         ).length === 0
       ) &&
         !availableMods(this.mods, true, !!this.legacyOffers?.includes(id)).some((m) => m.id === id))
@@ -4502,6 +4600,7 @@ export class Game {
     this.rewardTaken = true;
     if (id === 'repair' && this.overtime) this.overtime.repairs++;
     else this.mods.push(id);
+    this.shiftRun.fitted();
     if (this.legacyOffers?.includes(id)) this.legacyMods = [...this.mods];
     this.legacyOffers = undefined;
     this.gun = getGun(this.mods, this.startingGun);

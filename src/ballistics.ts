@@ -189,6 +189,7 @@ export class BallisticsSystem {
     s.vel = { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed };
   }
   record(afterId: number, origin: Vec, forward: Vec) {
+    this.game.shiftFusions.recordVolley(afterId, origin, forward);
     if (!this.has('afterimage') || ++this.volleys % 4) return;
     if (this.echoes.filter((e) => !e.fired).length >= ECHO_LIMIT) return;
     const shots = this.game.shots.filter(
@@ -541,6 +542,7 @@ export class BallisticsSystem {
     if (b.pierce) b.trace = { bank: false, pierce: true, points: [{ ...bullet }] };
     g.burst(bullet, 4, '#b9e1d5', 2);
     g.onSound('bank');
+    g.shiftFusions.capture(b);
     return true;
   }
 }

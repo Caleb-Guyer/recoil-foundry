@@ -1,3 +1,4 @@
+import { sweepBox } from './collisions.ts';
 import Matter from 'matter-js';
 import type { Game } from './game.ts';
 import type { Level } from './levels.ts';
@@ -107,6 +108,26 @@ export class HazardSystem {
     for (let i = 0; i < riders.length; i++)
       for (const actor of actors)
         if (!riders.includes(actor) && this.supported(actor, riders[i])) riders.push(actor);
+    // New temporary supports and indexed machinery can obstruct an empty shaft.
+    const newObstacles = [
+      ...this.game.shiftRoutes.rotors.map((m) => m.body),
+      ...this.game.shiftRoutes.mirrors.map((m) => m.body),
+      ...this.game.shiftMorphs.foams.map((f) => f.body),
+    ];
+    const nextCenter = { x: h.placement.x, y: top + h.placement.h / 2 };
+    if (
+      newObstacles.some(
+        (b) =>
+          b !== h.body &&
+          sweepBox(
+            h.body.position,
+            nextCenter,
+            { x: h.placement.w / 2 - 0.25, y: h.placement.h / 2 - 0.25 },
+            b,
+          ),
+      )
+    )
+      return false;
     // A moved crate or a fixture ceiling must never squeeze a rider through solid cover.
     if (
       riders.some((rider) => {

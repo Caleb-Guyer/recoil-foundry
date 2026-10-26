@@ -2,6 +2,35 @@ import type { Mod } from './rules.ts';
 
 export function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'polarity-rounds': 'M5 15h16v16H5zM35 15h16v16H35zM9 23h8M13 19v8M39 23h8M24 18l8 5-8 5',
+    'ricochet-harness': 'M8 6v36M12 35l16-22 16 22M20 13h8v8M39 31l5 4 4-5',
+    'spring-rivets': 'M6 39h44M12 34l19-6-19-6 19-6M31 10v18M25 10h12M37 19l10-10M41 9h6v6',
+    'slip-gauge': 'M9 11h6M9 19h6M9 27h6M9 35h6M21 9v30M30 32l17-17M39 15h8v8M29 19h4',
+    'wake-wire': 'M5 35l9-13 9 7 9-15 19-5M12 17l4-6 4 6M17 39l5-4 5 4M34 31l5-6 5 6',
+    'false-silhouette': 'M12 9h12v13H12zM9 26h18v15H9zM35 12h10v10H35zM32 27h16v13H32zM28 6v36',
+    'gimbal-mount':
+      'M28 10a14 14 0 1 0 0 28 14 14 0 0 0 0-28M28 4v12M28 32v12M8 24h12M36 24h12M23 24h10M28 19v10',
+    'momentum-exchange':
+      'M6 12h14v14H6zM36 24h14v14H36zM23 15h23M40 9l6 6-6 6M33 34H10M16 28l-6 6 6 6',
+    'offset-nozzle': 'M6 28h15v8H6zM21 32h8M34 8h14v8H34zM34 12h-8v12M42 16v17M37 28l5 5 5-5',
+    'momentum-battery': 'M15 12h26v29H15zM22 6h12v6M21 21h14M21 28h14M8 20l-5 8h8M48 28l5-8h-8',
+    'piston-lance': 'M5 16h15v16H5zM20 20h13v8H20zM33 22h12M45 13v22M49 13v22M8 11h10M8 37h10',
+    'cable-saw':
+      'M5 13h14v10H5zM19 18q11 0 12 13M34 19l5 4 6-1 1 6 5 4-5 4-1 6-6-1-5 4-4-5-6-1 1-6-4-5 5-4zM34 30h6',
+    'seeker-rack':
+      'M6 16h20v21H6zM10 19v14M16 19v14M22 19v14M35 7h-5v5M47 7h5v5M30 23v5h5M52 23v5h-5M37 17h8M41 13v8',
+    foamcaster: 'M5 18h17v13H5zM22 20l10-5v19l-10-5M37 21h5M42 14h5M41 30h7M36 39h16v5H36z',
+    'catch-chamber':
+      'M14 10v28M20 10v28M6 24h8M20 24h10M34 11h15v26H34zM38 17h7M38 24h7M38 31h7M27 17l6 7-6 7',
+    'gate-snare':
+      'M12 8c-9 0-9 30 0 30M12 8c9 0 9 30 0 30M43 8c-9 0-9 30 0 30M43 8c9 0 9 30 0 30M3 42l9-18M43 24l10-18M25 14v6M25 27v6',
+    'hot-wire': 'M5 12h10v10H5zM41 25h10v10H41zM15 17l26 13M23 10l4 9-4 7 5 8M32 14l4 8-3 7 4 9',
+    'ghost-shift':
+      'M7 9h17v13H7zM5 26h21v15H5zM34 12h15v9H34zM32 25h19v13H32zM24 15h7M28 11l4 4-4 4M37 32h10',
+    windmill:
+      'M27 9l8-5 3 10-8 9M41 22l10 5-5 9-12-6M29 35l-2 12-10-3 2-13M15 26L4 21l5-9 12 5M22 21h10v10H22z',
+    'scrap-comet':
+      'M6 10l17 12M4 24h17M8 37l15-9M39 14a11 11 0 1 0 0 22 11 11 0 0 0 0-22M28 6h6v6h-6zM47 35h6v6h-6zM27 37h5v5h-5z',
     'spring-step': 'M12 40h32M18 35l20-7-20-7 20-7M28 6V2M23 7l5-5 5 5',
     'glide-rig': 'M5 12l23 10 23-10-11 21-12-5-12 5L5 12M28 28v14',
     'impulse-reserve': 'M10 35l18-9 18 9M28 26V7M21 14l7-7 7 7M11 41h34',

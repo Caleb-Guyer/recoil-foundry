@@ -1,3 +1,4 @@
+import { shiftOfferAllowed, isShiftMod } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
@@ -142,10 +143,13 @@ test('an exhausted pool cannot spend health or trap a held selection', () => {
   const g = begin(18, 'RF-C100-EXHAUSTION', false);
   g.overtime = { baseMods: 19, repairs: 0 };
   let guard = 0;
-  while (availableMods(g.mods).length > 3) {
+  const archivedPool = () =>
+    availableMods(g.mods).filter((m) => shiftOfferAllowed(m.id, g.seed, 20));
+  while (archivedPool().length > 3) {
     assert(guard++ < 200);
-    g.mods.push(availableMods(g.mods)[0].id);
+    g.mods.push(archivedPool()[0].id);
   }
+  assert(g.mods.every((id) => !isShiftMod(id)));
   g.gun = getGun(g.mods, g.startingGun);
   g.openReward();
   assert.equal(g.offers.length, 3);

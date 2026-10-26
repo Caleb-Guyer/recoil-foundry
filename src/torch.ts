@@ -79,16 +79,17 @@ export function traceTorch(
 ): TorchSegment[] {
   let d = direction(g.player.position, g.aim);
   if (!d.x && !d.y) d = { x: 1, y: 0 };
+  d = g.shiftMorphs.beamDirection(d);
   if (rear) d = { x: -d.x, y: -d.y };
   if (angle)
     d = {
       x: d.x * Math.cos(angle) - d.y * Math.sin(angle),
       y: d.x * Math.sin(angle) + d.y * Math.cos(angle),
     };
-  let from = { x: g.player.position.x, y: g.player.position.y - 3 },
-    remaining = TORCH.range * g.toolroom.rangeScale,
+  let from = g.shiftMorphs.beamOrigin(g.torch.muzzleOrigin),
+    remaining = g.shiftMorphs.beamRange(TORCH.range * g.toolroom.rangeScale),
     banks = g.gun.bounces,
-    pierce = g.gun.pierce + (g.torch?.extraPierce ?? 0),
+    pierce = g.shiftMorphs.beamPierce(g.gun.pierce + (g.torch?.extraPierce ?? 0)),
     gain = 1,
     pocketSpent = start?.pocketSpent ?? !!start,
     meltSpent = start?.meltSpent ?? false;
@@ -215,6 +216,15 @@ export function traceTorch(
       segment.prop = prop;
       break;
     }
+    const mirror = g.shiftRoutes.mirrorDirection(hit.body, hit.normal, d, n);
+    if (mirror) {
+      d = mirror;
+      gain *= 1 + g.gun.bankGrowth;
+      weaponTrace = { ...weaponTrace, banked: true };
+      from = add(point, hit.normal, 0.6);
+      remaining -= 0.6;
+      continue;
+    }
     const melt = !meltSpent && meltPass(g, hit.body, point, d, radius);
     if (melt && melt.length < remaining) {
       segment.melt = melt;
@@ -292,6 +302,17 @@ export class TorchSystem {
   private boost = 1;
   private recoilBoost = 1;
   private pulse: Shot | null = null;
+  private remoteOrigin: Vec | null = null;
+  get muzzleOrigin(): Vec {
+    return (
+      this.remoteOrigin ??
+      this.game.shiftUpgrades.origin(
+        { x: this.game.player.position.x, y: this.game.player.position.y - 3 },
+        direction(this.game.player.position, this.game.aim),
+        false,
+      )
+    );
+  }
   private processed = new Set<object>();
   private fracture = new Map<number, number>();
   private reflected = false;
@@ -315,6 +336,7 @@ export class TorchSystem {
     this.until = -1;
     this.restartAt = -1;
     this.pulse = null;
+    this.remoteOrigin = null;
     this.processed.clear();
     this.fracture.clear();
     this.revision = -1;
@@ -335,6 +357,7 @@ export class TorchSystem {
     this.burnUntil = -1;
     this.stepBurn = 0;
     this.active = false;
+    this.remoteOrigin = null;
     this.segments = [];
     this.rear = [];
     this.heat = 0;
@@ -405,6 +428,9 @@ export class TorchSystem {
         capacitor = g.ballistics.discharge();
       g.landingReady = false;
       g.shotCount++;
+      const localOrigin = { x: g.player.position.x, y: g.player.position.y - 3 };
+      const paidOrigin = g.shiftUpgrades.origin(localOrigin, d);
+      this.remoteOrigin = distance(localOrigin, paidOrigin) > 0.1 ? paidOrigin : null;
       g.onHaptic('shot', g.grounded ? 0.25 : 0.45);
       const evolution = g.evolutions.discharge(g.shotCount);
       // Redline remains responsive to actual speed during continuous thrust.
@@ -443,6 +469,7 @@ export class TorchSystem {
         discharge: g.shotCount,
       };
       g.toolroom.tag(this.pulse);
+      g.shiftUpgrades.tag(this.pulse);
       this.processed.clear();
       this.fracture.clear();
       this.reflected = this.wind = false;
@@ -462,9 +489,10 @@ export class TorchSystem {
       (g.grounded ? 0.21 * g.toolroom.groundScale : 1) *
       this.recoilBoost;
     const beforeRecoil = g.player.velocity.y;
+    const shiftDelta = g.shiftUpgrades.recoilDelta(d, impulse);
     Matter.Body.setVelocity(g.player, {
-      x: clamp(g.player.velocity.x - d.x * impulse, -23, 23),
-      y: clamp(g.player.velocity.y - d.y * impulse, -21, 20),
+      x: clamp(g.player.velocity.x + shiftDelta.x, -23, 23),
+      y: clamp(g.player.velocity.y + shiftDelta.y, -21, 20),
     });
     g.commendations.mastery.recoiled(beforeRecoil - g.player.velocity.y);
     // Ramjet still requires fast travel; a beam renews its launch, not its hits.
@@ -478,6 +506,7 @@ export class TorchSystem {
       g.gun.pellets *
       this.pulseGain *
       TORCH.output *
+      g.shiftMorphs.beamGain() *
       this.boost *
       (g.grounded ? 1 : g.gun.airDamage) *
       (1 + g.evolutions.redline)
@@ -590,6 +619,11 @@ export class TorchSystem {
       1 + (g.mods.includes('charge-lens') ? this.heat : (old + this.heat) * 0.5) * TORCH.heatBonus;
     const all = [...this.segments, ...this.rear],
       damaged = new Set<string>();
+    const shiftScale = g.shiftFusions.beamSample(
+      all,
+      (this.payload() * burn) / this.period,
+      this.pulse!.id,
+    );
     // Contact effects still share one discharge. Sum the rays reaching a prop
     // before breaking it, so another ray cannot shoot through it in this step.
     const impacts = new Map<object, number>();
@@ -641,6 +675,7 @@ export class TorchSystem {
       };
       s.damage =
         this.payload() *
+        shiftScale *
         segment.gain *
         (segment.enemy?.id === this.target && (!this.legacyPattern || (segment.ray ?? 0) === 0)
           ? hot
@@ -689,6 +724,7 @@ export class TorchSystem {
         g.toolroom.gunHit(e, previousHp, s, blocked);
         g.spoof.hit(e, previousHp, true);
         if (!blocked) {
+          g.shiftUpgrades.primaryHit(e, s);
           g.evolutions.hit(s);
           if (first) {
             g.ballistics.rivet(e, s);
@@ -714,6 +750,9 @@ export class TorchSystem {
         else if (segment.anchor) g.harpoons.hitAnchor(segment.anchor, damage);
         else if (segment.prop) g.props.hit(segment.prop, damage, s.vel, impact);
         else if (segment.body) {
+          if (segment.normal) g.shiftUpgrades.terrainHit(impact, segment.body, segment.normal);
+          g.shiftRun.terrainHit(impact, segment.body);
+          if (segment.normal) g.shiftMorphs.terrainHit(impact, segment.body, segment.normal);
           g.counterweights.hit(segment.body, segment.b, s.vel, damage);
           g.grapnel.impact(impact, segment.body, segment.normal);
           g.breaches.hitBody(segment.body, damage, s.vel, impact);

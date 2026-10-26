@@ -1,3 +1,4 @@
+import { isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import { LONGEVITY_IDS } from '../src/longevity.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -177,30 +178,36 @@ test('actual rewards, Daily choices and Continue preserve fusion eligibility', (
 test('old exhausted Overtime builds with repairs resume and can earn their new fusion', () => {
   const mods = ['deadeye'];
   for (;;) {
-    const next = availableMods(mods).find(
-      (m) =>
-        !isFusion(m.id) &&
-        !isSubversion(m.id) &&
-        !LONGEVITY_IDS.includes(m.id as never) &&
-        ![
-          'vector',
-          'afterburner',
-          'mass-driver',
-          'retrace',
-          'wallrunner',
-          'air-brake',
-          'grapnel',
-          'corner-pocket',
-          'scrap-feed',
-          'collimator',
-          'heat-relay',
-          'overkill-bank',
-          'scrap-armor',
-        ].includes(m.id),
-    );
+    const next = availableMods(mods)
+      .filter((m) => shiftOfferAllowed(m.id, 'OLD-REPAIR', 20))
+      .find(
+        (m) =>
+          !isFusion(m.id) &&
+          !isSubversion(m.id) &&
+          !LONGEVITY_IDS.includes(m.id as never) &&
+          ![
+            'vector',
+            'afterburner',
+            'mass-driver',
+            'retrace',
+            'wallrunner',
+            'air-brake',
+            'grapnel',
+            'corner-pocket',
+            'scrap-feed',
+            'collimator',
+            'heat-relay',
+            'overkill-bank',
+            'scrap-armor',
+          ].includes(m.id),
+      );
     if (!next) break;
     mods.push(next.id);
   }
+  assert(
+    mods.every((id) => !isShiftMod(id)),
+    'an archived exhausted save cannot own future fittings',
+  );
   const save: Checkpoint = {
     ...testCheckpoint('OLD-REPAIR', 0),
     mods,

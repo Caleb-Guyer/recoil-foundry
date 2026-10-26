@@ -1,3 +1,4 @@
+import { SHIFT_LORE } from './shift-lore.ts';
 import type { MODS } from './rules.ts';
 import { TOOLROOM_LORE } from './toolroom-catalog.ts';
 
@@ -6,6 +7,7 @@ export type Lore = readonly [source: string, author: string, text: string];
 // These are original Foundry documents. Mechanical descriptions live in the upgrade catalog.
 export const UPGRADE_LORE = {
   ...TOOLROOM_LORE,
+  ...SHIFT_LORE,
   collimator: [
     'Optics alignment · patient hands',
     'Dr. S. Anik · development',

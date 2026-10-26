@@ -1,3 +1,4 @@
+import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fixture, target, round, advance, beam, Body } from './branches-fixture.ts';
@@ -46,7 +47,12 @@ const hit = (g: Game, e: ReturnType<typeof target>, s: ReturnType<typeof round>)
 test('24 distinct fittings have legal parents, real icons, lore and meaningful inspection changes', () => {
   assert.equal(TOOLROOM_IDS.length, 24);
   assert.equal(new Set(TOOLROOM_IDS).size, 24);
-  assert.equal(MODS.length, 141);
+  assert.equal(
+    MODS.filter((m) => !isShiftMod(m.id)).length,
+    141,
+    'the archived catalog stays intact',
+  );
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
   for (const fitting of TOOLROOM_MODS) {
     const mods: string[] = [];
     let id = TOOLROOM_PARENTS[fitting.id];

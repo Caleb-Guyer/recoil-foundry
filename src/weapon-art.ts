@@ -1,3 +1,4 @@
+import { drawShiftMorphWeapon } from './shift-morph-art.ts';
 import { drawTorchWeapon } from './torch-art.ts';
 import { GUN_FINISHES, drawFinishMark } from './cosmetics.ts';
 import type { Game } from './game.ts';
@@ -30,6 +31,10 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
     c.fillStyle = g.scrap.loaded ? '#dec297' : '#63756a';
     for (let i = 0; i < 3; i++) c.fillRect(9 + i * 4, -12, 2, 4);
     c.restore();
+  }
+  if (g.shiftMorphs.equipped) {
+    drawShiftMorphWeapon(c, g, reduced);
+    return;
   }
   if (g.torch.equipped) {
     drawTorchWeapon(c, g, reduced);

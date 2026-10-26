@@ -81,7 +81,10 @@ export class StasisSystem {
     const g = this.game;
     if (!g.mods.includes('suspension')) return;
     if (g.mods.includes('convoy')) this.track();
-    if (!fire && this.held && !g.mods.includes('tripline')) this.release(this.stock);
+    if (!fire && this.held) {
+      if (!g.mods.includes('tripline')) this.release(this.stock);
+      g.shiftFusions.releaseCaptured();
+    }
     this.held = fire;
   }
   update() {
