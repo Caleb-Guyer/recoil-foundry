@@ -1,3 +1,7 @@
+import {
+  reclaimerArsenalTestFromUrl,
+  prepareReclaimerArsenalTest,
+} from './reclaimer-arsenal-test.ts';
 import { shiftRunSummary } from './shift-run-summary.ts';
 import { factoryUnboundTestFromUrl } from './factory-unbound-test.ts';
 import {
@@ -594,7 +598,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Factory Unbound</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>The Reclaimer’s Arsenal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -833,9 +837,11 @@ const linkedUprisingRemasterTest = uprisingRemasterTestFromUrl(entryUrl);
 const linkedToolsTest = toolsOfTradeTestFromUrl(entryUrl);
 const linkedFactoryUnbound = factoryUnboundTestFromUrl(entryUrl);
 const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
+const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedReclaimerArsenal?.checkpoint ??
   linkedReclaimerPressure?.checkpoint ??
   linkedFactoryUnbound?.checkpoint ??
   linkedToolsTest?.checkpoint ??
@@ -1513,6 +1519,11 @@ function updateTitle() {
     $('play').textContent = 'Test ' + linkedReclaimerPressure.title + ' ↗';
     $('title-hint').textContent =
       linkedReclaimerPressure.hint + ' ' + bindingLabel(bindings, 'retry') + ' to retry.';
+  }
+  if (linkedReclaimerArsenal && linkedRunTest?.seed === linkedReclaimerArsenal.checkpoint.seed) {
+    $('play').textContent = 'Test ' + linkedReclaimerArsenal.title + ' ↗';
+    $('title-hint').textContent =
+      linkedReclaimerArsenal.hint + ' ' + bindingLabel(bindings, 'retry') + ' to retry.';
   }
   updateNextGoal();
 }
@@ -2511,6 +2522,7 @@ function startRunTest(save: Checkpoint) {
   focusCameraPreview = !!focus;
   game.startTest(save);
   prepareReclaimerPressureTest(game, linkedReclaimerPressure);
+  prepareReclaimerArsenalTest(game, linkedReclaimerArsenal);
   prepareFinaleServiceTest(game, entryUrl);
   if (
     linkedFinalePracticePreview &&
@@ -3603,14 +3615,14 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.27.1 · FACTORY UNBOUND</p><h2 id="dialog-title">Build a different shift.</h2>' +
-      '<p class="update-tagline">New fittings. New machinery. Another way through.</p>' +
-      '<p><strong>Reclaimer pursuit.</strong> All three forms reposition between attacks. Sabotage still disables city machinery, while his own warned attacks keep the pressure on. <a href="?test=reclaimer&amp;phase=3&amp;build=reported&amp;route=isolated&amp;spot=right&amp;v=1">Test the reported safe angle</a> or <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.27.1.md" target="_blank" rel="noopener noreferrer">read the patch details</a>.</p>' +
-      '<dl class="update-notes"><div><dt>Twenty new fittings.</dt><dd>Ten upgrades, four weapon morphs and six fusions keep your earned firing patterns while changing how you move, shoot and use the factory.</dd></div>' +
-      '<div><dt>Five alternate districts.</dt><dd>Cross the Vacuum Docks, rotate Turntable Works, bank through Prism Glassworks, push the Express Airlocks or revisit your real damage in the Rework Loop.</dd></div>' +
-      '<div><dt>Make the shift yours.</dt><dd>Later service junctions offer prototype loans, three power circuits and field experiments with two earned evolutions each. Walk past to keep your route.</dd></div></dl>' +
-      '<p class="practice-record-note">Fresh Campaign runs use the new pool. Existing saved runs and archived Daily challenges retain their original choices. The first room stays focused on the basics.</p>' +
-      '<p>Try: <a href="?test=factory-unbound&amp;scene=piston-lance&amp;v=1">Piston Lance ↗</a> · <a href="?test=factory-unbound&amp;scene=prism-glassworks&amp;v=1">Prism Glassworks ↗</a> · <a href="?test=factory-unbound&amp;scene=lease&amp;v=1">Service junction ↗</a> · <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.27.0.md" target="_blank" rel="noopener noreferrer">All 28 tests ↗</a></p>' +
+      '<p class="eyebrow">5.28.0 · THE RECLAIMER\'S ARSENAL</p><h2 id="dialog-title">Break his arsenal.</h2>' +
+      '<p class="update-tagline">Three forms. New openings. A city coming apart.</p>' +
+      '<dl class="update-notes"><div><dt>Chassis counter-dash.</dt><dd>Bait a committed charge, leave its locked lane and use the recovery to fight back.</dd></div>' +
+      '<div><dt>Siege air support.</dt><dd>Break armor to expose the hull while aircraft cross the city and bomb marked lanes.</dd></div>' +
+      '<div><dt>Rupture core.</dt><dd>Move with rotating core beams as the platforms crack and fall around you.</dd></div></dl>' +
+      '<p>New Game+ combines the arsenal with harder pressure, full warnings and openings to retaliate. Your earned weapon and upgrades stay with you.</p>' +
+      '<p class="practice-record-note">Fresh Campaign runs use the new arsenal. Existing saved runs and archived Daily challenges retain their original encounter rules.</p>' +
+      '<p>Try: <a href="?test=arsenal&amp;form=chassis&amp;v=1">Chassis ↗</a> · <a href="?test=arsenal&amp;form=siege&amp;v=1">Siege ↗</a> · <a href="?test=arsenal&amp;form=rupture&amp;v=1">Rupture ↗</a> · <a href="?test=arsenal&amp;form=rupture&amp;fight=overtime&amp;v=1">New Game+ ↗</a> · <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.28.0.md" target="_blank" rel="noopener noreferrer">Release details ↗</a></p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {

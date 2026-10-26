@@ -392,3 +392,48 @@ test('unlock and frame updates cannot manufacture a shot or bypass unavailable a
   }
   assert.equal(f.c.sources.length, 0);
 });
+
+test('Reclaimer Arsenal cues retain warning priority, finite tails, and immediate mute cancellation', (t) => {
+  t.mock.method(Math, 'random', () => 0.5);
+  const { sound, c } = fixture(t);
+  const warnings = [
+    'arsenal-dash-warn',
+    'arsenal-plane',
+    'arsenal-core-warn',
+    'arsenal-collapse-warn',
+  ];
+  const impacts = [
+    'arsenal-dash',
+    'arsenal-bomb',
+    'arsenal-armor-break',
+    'arsenal-armor-close',
+    'arsenal-core-fire',
+    'arsenal-collapse',
+  ];
+  for (const kind of [...warnings, ...impacts]) {
+    const before = c.sources.length;
+    sound.play(kind, { x: 1900, y: 400, source: 'arsenal:1' });
+    const emitted = c.sources.slice(before);
+    assert(emitted.length > 0, kind + ' must synthesize its actual cue');
+    assert(
+      emitted.every((s) => Number.isFinite(s.startTime) && Number.isFinite(s.stopTime)),
+      kind + ' must finish without an unbounded loop',
+    );
+    if (warnings.includes(kind))
+      assert(
+        emitted.every((s) => !reaches(s, sound.effects) && reaches(s, sound.effectsOutput)),
+        kind + ' must retain warning priority through dense friendly fire',
+      );
+    c.advance(5);
+    assert.equal(sound.voices, 0, kind + ' must release its voice budget');
+  }
+  const first = c.sources.length;
+  sound.play('arsenal-core-warn', { x: 900, y: 400, source: 'arsenal:2' });
+  sound.enabled = false;
+  const cancelled = c.sources.slice(first);
+  assert(cancelled.length > 0);
+  assert(cancelled.every((s) => s.disconnected || s.stopTime <= c.currentTime));
+  const count = c.sources.length;
+  for (const kind of [...warnings, ...impacts]) sound.play(kind);
+  assert.equal(c.sources.length, count, 'mute cannot enqueue hidden arsenal cues');
+});

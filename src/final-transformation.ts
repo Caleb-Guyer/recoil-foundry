@@ -137,7 +137,10 @@ export class FinalTransformation {
   }
   limitDamage(e: Enemy, amount: number) {
     if (!this.owns(e)) return amount;
-    if (this.cinema) return this.cinema.combat ? Math.max(0, Math.min(amount, e.hp)) : 0;
+    if (this.cinema)
+      return this.cinema.combat
+        ? Math.max(0, Math.min(this.cinema.arsenal.damage(amount), e.hp))
+        : 0;
     if (this.presenting || e.phase < this.phaseFor(e)) return 0;
     return Math.max(0, Math.min(amount, e.hp - e.maxHp * FINAL_THRESHOLDS[e.phase]));
   }
@@ -160,6 +163,7 @@ export class FinalTransformation {
   }
   quiet() {
     const g = this.game;
+    this.cinema?.arsenal.reset();
     if (this.enemy) clearArsenal(g, this.enemy);
     g.shots = [];
     this.strike = null;
@@ -350,6 +354,10 @@ export class FinalTransformation {
   update(dt: number) {
     this.cinema?.update(dt);
     if (this.cinema && !this.cinema.combat) return;
+    if (this.cinema?.arsenal.enabled) {
+      this.cinema.arsenal.update(dt);
+      return;
+    }
     if (this.state !== 'combat' || !this.enemy || this.enemy.hp <= 0 || this.phase === 0) return;
     const g = this.game;
     if (this.strike) {

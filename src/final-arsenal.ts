@@ -170,7 +170,7 @@ type Preview = {
 };
 export function finalePreview(seed: string): Preview | null {
   const match =
-    /^RF-C(?:9[567]|107)-F-([CO])-([123])-([ASRL])-([012])-([01])(?:-([ABICEX]))?$/.exec(seed);
+    /^RF-C(?:9[567]|10[78])-F-([CO])-([123])-([ASRL])-([012])-([01])(?:-([ABICEX]))?$/.exec(seed);
   if (!match || (match[6] && !cinematicFinale(seed))) return null;
   return {
     overtime: match[1] === 'O',

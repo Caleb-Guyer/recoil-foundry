@@ -69,6 +69,10 @@ const ATTACK_WARNINGS = new Set([
   'finale-field-lock',
   'finale-aim-lock',
   'finale-arena-warn',
+  'arsenal-dash-warn',
+  'arsenal-plane',
+  'arsenal-core-warn',
+  'arsenal-collapse-warn',
   'loader',
   'press',
   'scrapper-lock',
@@ -111,6 +115,10 @@ const WARNING_HOLD: Record<string, number> = {
   'finale-field-lock': 1.4,
   'finale-aim-lock': 0.92,
   'finale-arena-warn': 1.65,
+  'arsenal-dash-warn': 1.1,
+  'arsenal-plane': 2.2,
+  'arsenal-core-warn': 1.8,
+  'arsenal-collapse-warn': 2.5,
   'crane-wind': 0.42,
   'kiln-wind': 0.4,
   machine: 0.45,
@@ -1052,6 +1060,45 @@ export class Sound {
     } else if (kind === 'cargo-impact') {
       this.tone(75, 28, 0.23, 0.19);
       this.crack(0.16, 0.16, 700);
+    } else if (kind === 'arsenal-dash-warn') {
+      // A two-stage mechanical ratchet precedes the committed lane.
+      this.tone(170, 280, 0.32, 0.065, 'sawtooth');
+      this.tone(480, 640, 0.12, 0.045, 'triangle', 0.28);
+      this.crack(0.1, 0.045, 2100);
+    } else if (kind === 'arsenal-dash') {
+      this.tone(150, 38, 0.32, 0.1, 'sawtooth');
+      this.crack(0.28, 0.095, 1250, true);
+    } else if (kind === 'arsenal-plane') {
+      // The combat flyover has a shorter, directional version of the airlift roar.
+      this.tone(38, 86, 1.65, 0.065, 'sawtooth');
+      this.tone(77, 112, 1.4, 0.035, 'triangle', 0.15);
+      this.crack(1.6, 0.06, 580, true);
+    } else if (kind === 'arsenal-bomb') {
+      this.tone(96, 27, 0.42, 0.12, 'sine');
+      this.crack(0.28, 0.11, 900, true);
+      this.tone(240, 75, 0.12, 0.035, 'triangle');
+    } else if (kind === 'arsenal-armor-break') {
+      this.crack(0.19, 0.095, 2300);
+      this.tone(260, 86, 0.28, 0.065, 'triangle');
+      this.tone(620, 830, 0.23, 0.035, 'sine', 0.12);
+    } else if (kind === 'arsenal-armor-close') {
+      this.crack(0.1, 0.055, 1300);
+      this.tone(175, 70, 0.18, 0.055, 'triangle');
+    } else if (kind === 'arsenal-core-warn') {
+      for (let i = 0; i < 3; i++)
+        this.tone(240 + i * 110, 310 + i * 110, 0.2, 0.045, 'triangle', i * 0.33);
+      this.tone(60, 125, 1.05, 0.045, 'sawtooth');
+    } else if (kind === 'arsenal-core-fire') {
+      this.tone(110, 220, 0.55, 0.075, 'sawtooth');
+      this.tone(440, 210, 0.33, 0.03, 'sine');
+      this.crack(0.14, 0.055, 1800);
+    } else if (kind === 'arsenal-collapse-warn') {
+      this.tone(120, 220, 0.5, 0.055, 'triangle');
+      this.crack(0.12, 0.04, 1400);
+      this.tone(340, 190, 0.12, 0.035, 'triangle', 0.45);
+    } else if (kind === 'arsenal-collapse') {
+      this.tone(94, 26, 0.48, 0.095, 'sine');
+      this.crack(0.45, 0.09, 750, true);
     } else if (kind === 'finale-arrival') {
       this.tone(66, 110, 1, 0.075, 'triangle');
       this.tone(330, 220, 0.3, 0.04, 'triangle', 0.55);

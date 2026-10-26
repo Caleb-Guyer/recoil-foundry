@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**The Reclaimer’s Arsenal — version 5.28.0.** The Chassis commits to counter-dashes, Siege calls traveling bombing runs and exposes its core when armor breaks, and Rupture sweeps rotating core beams across collapsing platforms. New Game+ combines the mechanics with stronger sequences. [Release notes and direct tests for all three forms and New Game+](docs/releases/5.28.0.md).
+
 **Reclaimer pursuit — version 5.27.1.** All three final forms reposition around real cover, use stronger attack sequences and retain warned arena pressure after sabotage. Repairs current 5.27.0 Continue saves. [Release notes and isolated phase, shelter and New Game+ tests](docs/releases/5.27.1.md).
 
 **Factory Unbound — version 5.27.0.** Ten upgrades, four weapon morphs and six fusions preserve earned firing patterns while changing how you fight. Five alternate districts add low gravity, indexed platforms, real mirrors, optional airlock pressure and a return through your actual damage. Later service junctions offer prototype leases, power routing and earned experiment evolutions. [Release notes and isolated tests for all 28 concepts](docs/releases/5.27.0.md).

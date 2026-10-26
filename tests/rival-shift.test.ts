@@ -59,7 +59,7 @@ function nativeSeed(prefix: string, boss: RivalShiftBoss, ng = false) {
 
 test('C104 Campaign and earned New Game+ keep the new identity while earlier seed hashes remain exact', () => {
   const current = newCampaignSeed(undefined, () => 12345);
-  assert(current.startsWith('RF-C107-'));
+  assert(current.startsWith('RF-C108-'));
   assert(overtimeSeed(current).startsWith('RF-C105-OT-'));
   assert.equal(overtimeSeed('RF-C103-HISTORY'), 'RF-C103-OT-eeyyd0');
   assert.equal(overtimeSeed('RF-C102-HISTORY'), 'RF-C99-OT-1q4q92p');

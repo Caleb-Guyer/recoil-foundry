@@ -571,6 +571,22 @@ function reactor(
  * Canonical acting poses for the airlift. The same curve drives the aircraft,
  * pilot, wreck, cable and camera, including defeats beside either roof edge.
  */
+/** The combat gunship is the same transport that delivered the Siege frame. */
+export function drawFinaleTransport(
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  time: number,
+  reduced: boolean,
+  direction: number,
+) {
+  c.save();
+  c.translate(x, y);
+  c.scale(direction > 0 ? -1 : 1, 1);
+  transport(c, 0, 0, time, reduced, 0.62);
+  c.restore();
+}
+
 export function finaleAirliftStaging(wreck: Vec, time: number) {
   const t = Math.max(0, time);
   const falling = clamp(t / 1.2, 0, 1);

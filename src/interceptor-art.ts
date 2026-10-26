@@ -134,7 +134,10 @@ export function drawInterceptorThreats(
 ) {
   const rig = e.interceptor!,
     p = e.body.position;
-  const warning = e.spawn <= 0 && (e.state === 'windup' || e.state === 'followup');
+  const warning =
+    e.spawn <= 0 &&
+    (e.state === 'windup' || e.state === 'followup') &&
+    !(g.finale.owns(e) && g.finale.cinema?.arsenal.ownsGun);
   const locked = e.timer <= interceptorLock(e);
   c.save();
   drawRivalEffects(c, g, e);

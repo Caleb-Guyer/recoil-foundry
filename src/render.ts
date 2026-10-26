@@ -1049,7 +1049,7 @@ export class Renderer {
         (!g.finale.cinema?.active || ['duel', 'siege', 'rupture'].includes(g.finale.cinema.state))
       )
         drawInterceptorThreats(c, g, e, this.reduced);
-    drawFinalThreat(c, g);
+    drawFinalThreat(c, g, this.reduced);
     drawFinalApproachThreat(c, g, this.reduced);
     // Mortar shells and committed machine warnings share the threat layer.
     // Dense friendly beams/volleys must never paint over shootable shells or

@@ -8,6 +8,7 @@ import { finalePreview } from './final-arsenal.ts';
 import { clamp } from './rules.ts';
 import { reclaimerPressureSeed } from './boss-progression.ts';
 import { FinalePursuit } from './finale-pursuit.ts';
+import { ReclaimerArsenal } from './reclaimer-arsenal.ts';
 
 export type FinaleScene =
   | 'off'
@@ -70,11 +71,13 @@ export class FinaleDirector {
   collisionMask: number;
   cues = new Set<string>();
   pursuit = new FinalePursuit();
+  arsenal: ReclaimerArsenal;
   get relentless() {
     return reclaimerPressureSeed(this.game.seed);
   }
   constructor(game: Game, finale: FinalTransformation, enemy: Enemy) {
     this.game = game;
+    this.arsenal = new ReclaimerArsenal(game);
     this.finale = finale;
     this.firstClear = game.finaleFirstClear;
     this.baseHp = enemy.maxHp;
@@ -214,6 +217,7 @@ export class FinaleDirector {
     e.hunt = undefined;
     const previous = this.state;
     this.change((['duel', 'siege', 'rupture'] as const)[phase]);
+    this.arsenal.startForm(phase);
     f.nextStrike = g.overtime ? 1.8 : 2.5;
     g.feedback(phase ? 7 : 3);
     if (!((phase === 0 && previous === 'boarding') || (phase === 1 && previous === 'airlift')))
@@ -304,6 +308,7 @@ export class FinaleDirector {
   beforeEnemy(e: Enemy, dt = 1 / 60) {
     if (!this.finale.owns(e)) return false;
     if (!this.combat) return true;
+    if (this.arsenal.beforeEnemy(e, dt)) return true;
     if (this.relentless && this.pursuit.update(this.game, e, this.phase, dt)) return true;
     if (this.anchored && !this.relentless) {
       // Stabilize the giant chassis through Matter, without teleporting an

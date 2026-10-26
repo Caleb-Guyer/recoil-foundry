@@ -2,6 +2,7 @@ import type { Game, Enemy } from './game.ts';
 import { clamp } from './rules.ts';
 import { FINAL_FORMS, FINAL_WARNING } from './final-transformation.ts';
 import { drawFinaleCinemaHud } from './finale-cinema-art.ts';
+import { drawReclaimerArsenal } from './reclaimer-arsenal-art.ts';
 
 const COLORS = ['#d1b28b', '#f2b26e', '#a6e9e1'];
 export function drawFinalHull(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
@@ -199,9 +200,10 @@ export function drawFinalArena(c: CanvasRenderingContext2D, g: Game, reduced: bo
   c.restore();
 }
 
-export function drawFinalThreat(c: CanvasRenderingContext2D, g: Game) {
+export function drawFinalThreat(c: CanvasRenderingContext2D, g: Game, reduced = false) {
   if (g.finale.cinema?.active && !['duel', 'siege', 'rupture'].includes(g.finale.cinema.state))
     return;
+  drawReclaimerArsenal(c, g, reduced);
   const f = g.finale,
     strike = f.strike;
   if (!strike || f.state !== 'combat') return;

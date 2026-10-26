@@ -17,3 +17,8 @@ export const finalApproachSeed = (seed: string) => Number(/^RF-C(\d+)-/.exec(see
 // Campaigns through C106 and every pinned Daily keep their encounter rules.
 export const reclaimerPressureSeed = (seed: string) =>
   Number(/^RF-C(\d+)-/.exec(seed)?.[1] ?? 0) >= 107;
+
+// Revision 108 adds committed counter-dashes, physical bombing runs and the
+// rotating city core. Continue and old test links retain their recorded rules.
+export const reclaimerArsenalSeed = (seed: string) =>
+  Number(/^RF-C(\d+)-/.exec(seed)?.[1] ?? 0) >= 108;

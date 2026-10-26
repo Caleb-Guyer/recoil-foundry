@@ -43,11 +43,11 @@ export interface FinaleCampOptions {
   overtime?: boolean;
   outcome?: UprisingFinale;
   reportedBuild?: boolean;
-  revision?: 97 | 107;
+  revision?: 97 | 107 | 108;
 }
 export function finaleCampRoom(options: FinaleCampOptions) {
   const { phase, mirror = false, overtime = false, outcome = 'isolated' } = options;
-  if ((options.revision ?? 107) === 107) {
+  if ((options.revision ?? 107) >= 107) {
     const fixture = reclaimerPressureTestFromUrl(
       new URL(
         `https://test.invalid/?test=reclaimer&v=1&phase=${phase + 1}&mirror=${Number(mirror)}` +
@@ -56,6 +56,8 @@ export function finaleCampRoom(options: FinaleCampOptions) {
       ),
     );
     if (!fixture) throw new Error('Invalid current Reclaimer fixture');
+    if (options.revision === 108)
+      fixture.checkpoint.seed = fixture.checkpoint.seed.replace('RF-C107-', 'RF-C108-');
     const g = new Game();
     g.startTest(fixture.checkpoint);
     if (!prepareReclaimerPressureTest(g, fixture))
@@ -222,6 +224,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const results: ReturnType<typeof runFinaleCamp>[] = [];
   const wide = process.argv.includes('--wide');
   const baseline = process.argv.includes('--baseline');
+  const arsenal = process.argv.includes('--arsenal');
   const started = performance.now();
   for (const overtime of [false, true])
     for (const phase of [0, 1, 2] as const)
@@ -232,7 +235,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
             mirror,
             overtime,
             outcome,
-            revision: baseline ? 97 : 107,
+            revision: baseline ? 97 : arsenal ? 108 : 107,
           } as const;
           const fixture = finaleCampRoom(options);
           const spots = finaleCampSpots(fixture.g);
