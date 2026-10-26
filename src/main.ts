@@ -1,5 +1,9 @@
 import { shiftRunSummary } from './shift-run-summary.ts';
 import { factoryUnboundTestFromUrl } from './factory-unbound-test.ts';
+import {
+  reclaimerPressureTestFromUrl,
+  prepareReclaimerPressureTest,
+} from './reclaimer-pressure-test.ts';
 import type { ShiftOfficeMenu } from './shift-office-menu.ts';
 import { toolsOfTradeTestFromUrl } from './tools-of-trade-test.ts';
 import type { ToolTrialView } from './tool-trial-view.ts';
@@ -828,9 +832,11 @@ const linkedRivalShiftTest = rivalShiftTestFromUrl(entryUrl);
 const linkedUprisingRemasterTest = uprisingRemasterTestFromUrl(entryUrl);
 const linkedToolsTest = toolsOfTradeTestFromUrl(entryUrl);
 const linkedFactoryUnbound = factoryUnboundTestFromUrl(entryUrl);
+const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedReclaimerPressure?.checkpoint ??
   linkedFactoryUnbound?.checkpoint ??
   linkedToolsTest?.checkpoint ??
   linkedUprisingRemasterTest?.checkpoint ??
@@ -1502,6 +1508,11 @@ function updateTitle() {
     $('play').textContent = 'Test ' + linkedFactoryUnbound.title + ' ↗';
     $('title-hint').textContent =
       linkedFactoryUnbound.hint + ' ' + bindingLabel(bindings, 'retry') + ' to retry.';
+  }
+  if (linkedReclaimerPressure && linkedRunTest?.seed === linkedReclaimerPressure.checkpoint.seed) {
+    $('play').textContent = 'Test ' + linkedReclaimerPressure.title + ' ↗';
+    $('title-hint').textContent =
+      linkedReclaimerPressure.hint + ' ' + bindingLabel(bindings, 'retry') + ' to retry.';
   }
   updateNextGoal();
 }
@@ -2499,6 +2510,7 @@ function startRunTest(save: Checkpoint) {
   else if (!focusCameraPreview) renderer.cameraMode = linkedCombatFocusTest!.camera;
   focusCameraPreview = !!focus;
   game.startTest(save);
+  prepareReclaimerPressureTest(game, linkedReclaimerPressure);
   prepareFinaleServiceTest(game, entryUrl);
   if (
     linkedFinalePracticePreview &&
@@ -3591,8 +3603,9 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.27.0 · FACTORY UNBOUND</p><h2 id="dialog-title">Build a different shift.</h2>' +
+      '<p class="eyebrow">5.27.1 · FACTORY UNBOUND</p><h2 id="dialog-title">Build a different shift.</h2>' +
       '<p class="update-tagline">New fittings. New machinery. Another way through.</p>' +
+      '<p><strong>Reclaimer pursuit.</strong> All three forms reposition between attacks. Sabotage still disables city machinery, while his own warned attacks keep the pressure on. <a href="?test=reclaimer&amp;phase=3&amp;build=reported&amp;route=isolated&amp;spot=right&amp;v=1">Test the reported safe angle</a> or <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.27.1.md" target="_blank" rel="noopener noreferrer">read the patch details</a>.</p>' +
       '<dl class="update-notes"><div><dt>Twenty new fittings.</dt><dd>Ten upgrades, four weapon morphs and six fusions keep your earned firing patterns while changing how you move, shoot and use the factory.</dd></div>' +
       '<div><dt>Five alternate districts.</dt><dd>Cross the Vacuum Docks, rotate Turntable Works, bank through Prism Glassworks, push the Express Airlocks or revisit your real damage in the Rework Loop.</dd></div>' +
       '<div><dt>Make the shift yours.</dt><dd>Later service junctions offer prototype loans, three power circuits and field experiments with two earned evolutions each. Walk past to keep your route.</dd></div></dl>' +

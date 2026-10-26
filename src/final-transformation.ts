@@ -5,7 +5,7 @@ import { clamp, distance, type Vec } from './rules.ts';
 import { clearArsenal } from './interceptor-weapons.ts';
 import { finalePreview } from './final-arsenal.ts';
 
-import { transformedFinale, cinematicFinale } from './boss-progression.ts';
+import { transformedFinale, cinematicFinale, reclaimerPressureSeed } from './boss-progression.ts';
 import { FinaleDirector, cinemaSolids } from './finale-director.ts';
 export { transformedFinale };
 export const FINAL_FORMS = ['Mimic', 'Siege frame', 'Rupture core'] as const;
@@ -298,6 +298,32 @@ export class FinalTransformation {
       i = this.cycle++,
       plus = !!g.overtime;
     let kind: ArenaStrike['kind'], rects: Solid[];
+    if (reclaimerPressureSeed(g.seed)) {
+      // City-core pressure is the Reclaimer's own attack. Cutting the factory
+      // network removes the paired machinery and slows this single locked mark,
+      // rather than leaving a permanent safe shelf for a stationary beam.
+      const isolated = g.uprising.finale === 'isolated';
+      const target = g.level.mirrored ? 2000 - g.player.position.x : g.player.position.x;
+      if (isolated || i % 2 === 0) {
+        kind = 'column';
+        const width = plus ? 140 : 110;
+        rects = [box(clamp(target - width / 2, 24, 1976 - width), 12, width, 728)];
+        if (!isolated && this.phase === 2)
+          rects.push(box(target < 1000 ? 1510 : 350, 12, plus ? 140 : 110, 728));
+      } else if (this.phase === 1) {
+        kind = 'floor';
+        const width = plus ? 390 : 330;
+        rects = [box(clamp(target - width / 2, 24, 1976 - width), 662, width, 78)];
+        if (plus) rects.push(box(target < 1000 ? 1430 : 250, 662, 260, 78));
+      } else {
+        kind = 'crosscut';
+        const y = i % 4 === 1 ? 560 : 345;
+        const gap = plus ? 320 : 440;
+        rects = [box(24, y, 976 - gap / 2, 44), box(1000 + gap / 2, y, 976 - gap / 2, 44)];
+      }
+      if (g.level.mirrored) rects = rects.map((s) => ({ ...s, x: 2000 - s.x - s.w }));
+      return { kind, rects, left: FINAL_WARNING * (isolated ? 1.2 : 1), fired: false };
+    }
     if (this.phase === 1) {
       kind = 'floor';
       const x = [260, 820, 1380][i % 3];
@@ -338,28 +364,38 @@ export class FinalTransformation {
             (s) => b.max.x > s.x && b.min.x < s.x + s.w && b.max.y > s.y && b.min.y < s.y + s.h,
           )
         )
-          g.damagePlayer(g.overtime ? 24 : 20, undefined, {
-            type: 'induction',
-            enemy: 'interceptor',
-          });
+          g.damagePlayer(
+            reclaimerPressureSeed(g.seed) ? (g.overtime ? 26 : 22) : g.overtime ? 24 : 20,
+            undefined,
+            {
+              type: 'induction',
+              enemy: 'interceptor',
+            },
+          );
         g.onSound('finale-arena-fire');
       } else {
         this.strike = null;
-        this.nextStrike = this.cinema
-          ? g.overtime
-            ? 1.3
-            : this.phase === 2
-              ? 1.8
-              : 2.2
-          : g.overtime
-            ? 2.1
-            : this.phase === 2
-              ? 3
-              : 4;
+        this.nextStrike = reclaimerPressureSeed(g.seed)
+          ? (g.overtime ? (this.phase === 2 ? 1.4 : 1.9) : this.phase === 2 ? 1.9 : 2.5) *
+            (g.uprising.finale === 'isolated' ? 1.45 : 1)
+          : this.cinema
+            ? g.overtime
+              ? 1.3
+              : this.phase === 2
+                ? 1.8
+                : 2.2
+            : g.overtime
+              ? 2.1
+              : this.phase === 2
+                ? 3
+                : 4;
       }
     } else {
       this.nextStrike -= dt;
-      if (this.nextStrike <= 0 && g.uprising.finale !== 'isolated') {
+      if (
+        this.nextStrike <= 0 &&
+        (reclaimerPressureSeed(g.seed) || g.uprising.finale !== 'isolated')
+      ) {
         this.strike = this.planStrike();
         g.onSound('finale-arena-warn');
       }

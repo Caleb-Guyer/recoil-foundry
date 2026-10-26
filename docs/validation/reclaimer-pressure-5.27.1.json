@@ -1,0 +1,20 @@
+{
+  "note": "Native deterministic camping simulations, not observed human playtests. Setup selects a form and starting position. During combat only ordinary inputs hold the horizontal position, compensate recoil and optionally fire. Original health, physics, attack damage and warnings remain active.",
+  "cases": 420,
+  "untouched": 0,
+  "safeKills": 0,
+  "slowestFirstHit": 10.966666666666791,
+  "version": "5.27.1",
+  "issue": "https://github.com/Caleb-Guyer/recoil-foundry/issues/10",
+  "compatibility": "C107+ Campaign including existing Continue and New Game+; C106 and earlier and pinned Daily rules retained",
+  "movingPlayerAudit": {
+    "fixtures": 24,
+    "standardFormsDepleted": 12,
+    "standardPlayerDeaths": 0,
+    "reportedFormsDepleted": 6,
+    "reportedPlayerDeaths": 6,
+    "timeouts": 0,
+    "minimumCompletedAttacks": 6,
+    "note": "Ordinary deterministic inputs and native health; not human playtest results."
+  }
+}

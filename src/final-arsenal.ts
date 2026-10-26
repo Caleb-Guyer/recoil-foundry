@@ -1,4 +1,4 @@
-import { transformedFinale, cinematicFinale } from './boss-progression.ts';
+import { transformedFinale, cinematicFinale, reclaimerPressureSeed } from './boss-progression.ts';
 import type { FinaleScene } from './finale-director.ts';
 import type { Game, Enemy } from './game.ts';
 import type { Level } from './levels.ts';
@@ -66,7 +66,9 @@ export function finaleMove(g: Game, e: Enemy): InterceptorMove {
     (move) =>
       (!cinematicFinale(g.seed) || e.phase === 0 || !['fold', 'shockwave'].includes(move)) &&
       (g.uprising.finale !== 'isolated' ||
-        !['ringburst', 'lockdown', 'shockwave', 'afterimage'].includes(move)),
+        (reclaimerPressureSeed(g.seed)
+          ? !['ringburst', 'afterimage'].includes(move)
+          : !['ringburst', 'lockdown', 'shockwave', 'afterimage'].includes(move))),
   );
   let choices = pool.filter((m) => !rig.used.includes(m) && m !== rig.last);
   if (!choices.length) {
@@ -82,6 +84,13 @@ export function finaleMove(g: Game, e: Enemy): InterceptorMove {
 export function finaleFollowups(g: Game, e: Enemy) {
   if (g.uprising.finale === 'mutiny') return 0;
   const move = e.interceptor!.move;
+  if (reclaimerPressureSeed(g.seed)) {
+    if (move === 'sweep') return g.overtime ? 3 : 2;
+    if (move === 'ringburst') return g.overtime || e.phase === 2 ? 2 : 1;
+    if (move === 'aimed') return g.overtime || e.phase > 0 ? 3 : 2;
+    if (move === 'heavy' || move === 'scatter') return g.overtime || e.phase > 0 ? 2 : 1;
+    if (move === 'crossfire') return g.overtime || e.phase === 2 ? 2 : 1;
+  }
   if (move === 'sweep') return g.overtime ? 3 : 2;
   if (move === 'ringburst') return g.overtime ? 2 : 1;
   if (move === 'aimed') return g.overtime || e.phase > 0 ? 2 : 1;
@@ -97,7 +106,9 @@ export function finaleRecovery(g: Game, e: Enemy, ordinary: number) {
   rig.used = [...new Set(rig.used)];
   rig.last = e.interceptor!.move;
   const revised = transformedFinale(g.seed);
-  const chain = (g.overtime || e.phase >= (revised ? 1 : 2)) && g.uprising.finale !== 'mutiny';
+  const pressure = reclaimerPressureSeed(g.seed);
+  const chain =
+    (pressure || g.overtime || e.phase >= (revised ? 1 : 2)) && g.uprising.finale !== 'mutiny';
   rig.chain = chain ? (rig.chain + 1) % (revised && e.phase === 2 ? 3 : 2) : 0;
   // A short break separates linked attacks; every second attack exposes a
   // proper punish window. Attack warnings themselves never run faster.
@@ -107,7 +118,9 @@ export function finaleRecovery(g: Game, e: Enemy, ordinary: number) {
       : revised
         ? 0.68
         : 0.8
-    : Math.max(g.overtime ? 1.15 : 1.4, ordinary);
+    : pressure
+      ? Math.max(g.overtime ? 1.05 : 1.2, ordinary * 0.84)
+      : Math.max(g.overtime ? 1.15 : 1.4, ordinary);
 }
 export function finalePending(e: Enemy) {
   const rig = e.interceptor!;
@@ -156,7 +169,8 @@ type Preview = {
   scene?: FinaleScene;
 };
 export function finalePreview(seed: string): Preview | null {
-  const match = /^RF-C9[567]-F-([CO])-([123])-([ASRL])-([012])-([01])(?:-([ABICEX]))?$/.exec(seed);
+  const match =
+    /^RF-C(?:9[567]|107)-F-([CO])-([123])-([ASRL])-([012])-([01])(?:-([ABICEX]))?$/.exec(seed);
   if (!match || (match[6] && !cinematicFinale(seed))) return null;
   return {
     overtime: match[1] === 'O',

@@ -10,6 +10,7 @@ import type { Vec } from './rules.ts';
 import { clamp, direction, distance } from './rules.ts';
 import { bossPhase } from './enemies.ts';
 import { bossHasLane, bossHuntTarget } from './boss-hunt.ts';
+import { finaleFiringLane } from './finale-pursuit.ts';
 import {
   lateInterceptorRemix,
   lateInterceptorMove,
@@ -206,7 +207,7 @@ function recover(g: Game, e: Enemy) {
   g.soundAt('interceptor-open', e.body.position, `enemy:${e.id}`);
 }
 export function updateInterceptor(g: Game, e: Enemy, dt: number) {
-  if (g.finale.cinema?.beforeEnemy(e)) return;
+  if (g.finale.cinema?.beforeEnemy(e, dt)) return;
   const rig = e.interceptor!;
   rig.muzzle = Math.max(0, rig.muzzle - dt);
   if (rig.gate?.flash) {
@@ -383,9 +384,12 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
     return;
   }
   if (e.timer > 0) return;
-  const hasLane = bossHasLane(g, e);
+  const hasLane = g.finale.cinema?.relentless
+    ? distance(e.body.position, g.player.position) < 760 && finaleFiringLane(g, e.body.position)
+    : bossHasLane(g, e);
   const overhead = g.player.position.y < e.body.position.y - 140;
   if (
+    !g.finale.cinema?.relentless &&
     !g.finale.cinema?.anchored &&
     (rig.relocate || !hasLane || overhead || distance(e.body.position, g.player.position) < 180)
   ) {
@@ -405,7 +409,7 @@ export function updateInterceptor(g: Game, e: Enemy, dt: number) {
       return;
     }
   }
-  if (!hasLane && !g.finale.cinema?.anchored) return;
+  if (!hasLane && (!g.finale.cinema?.anchored || g.finale.cinema?.relentless)) return;
   beginInterceptorAttack(
     g,
     e,

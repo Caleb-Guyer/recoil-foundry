@@ -6,6 +6,8 @@ import type { FinalTransformation } from './final-transformation.ts';
 import type { Solid } from './levels.ts';
 import { finalePreview } from './final-arsenal.ts';
 import { clamp } from './rules.ts';
+import { reclaimerPressureSeed } from './boss-progression.ts';
+import { FinalePursuit } from './finale-pursuit.ts';
 
 export type FinaleScene =
   | 'off'
@@ -67,6 +69,10 @@ export class FinaleDirector {
   baseHp: number;
   collisionMask: number;
   cues = new Set<string>();
+  pursuit = new FinalePursuit();
+  get relentless() {
+    return reclaimerPressureSeed(this.game.seed);
+  }
   constructor(game: Game, finale: FinalTransformation, enemy: Enemy) {
     this.game = game;
     this.finale = finale;
@@ -147,6 +153,7 @@ export class FinaleDirector {
     }
   }
   change(state: FinaleScene) {
+    this.pursuit.reset();
     this.state = state;
     this.clock = 0;
     this.cues.clear();
@@ -194,7 +201,10 @@ export class FinaleDirector {
     };
     Matter.Body.setPosition(e.body, p);
     Matter.Body.setVelocity(e.body, { x: 0, y: 0 });
-    e.hp = e.maxHp = finaleFormHealth(this.baseHp, phase, !!g.overtime);
+    e.hp = e.maxHp = Math.round(
+      finaleFormHealth(this.baseHp, phase, !!g.overtime) *
+        (this.relentless ? [1.12, 1.2, 1.28][phase] : 1),
+    );
     e.state = 'idle';
     e.timer = 1.15;
     e.attack = 'aimed';
@@ -291,10 +301,11 @@ export class FinaleDirector {
       }
     }
   }
-  beforeEnemy(e: Enemy) {
+  beforeEnemy(e: Enemy, dt = 1 / 60) {
     if (!this.finale.owns(e)) return false;
     if (!this.combat) return true;
-    if (this.anchored) {
+    if (this.relentless && this.pursuit.update(this.game, e, this.phase, dt)) return true;
+    if (this.anchored && !this.relentless) {
       // Stabilize the giant chassis through Matter, without teleporting an
       // active muzzle after its warning locks. The floor and shelves still
       // intercept its real hull and all projectiles.

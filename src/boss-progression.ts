@@ -12,3 +12,8 @@ export const cinematicFinale = (seed: string) => Number(/^RF-C(\d+)-/.exec(seed)
 
 // Revision 98 adds the final approach rooms and one service choice per shift.
 export const finalApproachSeed = (seed: string) => Number(/^RF-C(\d+)-/.exec(seed)?.[1] ?? 0) >= 98;
+
+// Repair current Factory Unbound Campaign checkpoints in place. Archived
+// Campaigns through C106 and every pinned Daily keep their encounter rules.
+export const reclaimerPressureSeed = (seed: string) =>
+  Number(/^RF-C(\d+)-/.exec(seed)?.[1] ?? 0) >= 107;

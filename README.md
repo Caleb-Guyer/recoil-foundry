@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Reclaimer pursuit — version 5.27.1.** All three final forms reposition around real cover, use stronger attack sequences and retain warned arena pressure after sabotage. Repairs current 5.27.0 Continue saves. [Release notes and isolated phase, shelter and New Game+ tests](docs/releases/5.27.1.md).
+
 **Factory Unbound — version 5.27.0.** Ten upgrades, four weapon morphs and six fusions preserve earned firing patterns while changing how you fight. Five alternate districts add low gravity, indexed platforms, real mirrors, optional airlock pressure and a return through your actual damage. Later service junctions offer prototype leases, power routing and earned experiment evolutions. [Release notes and isolated tests for all 28 concepts](docs/releases/5.27.0.md).
 
 **Uprising Remaster — version 5.25.0.** Eleven optional jobs gain moving convoys, research interlocks, sequential crew defenses, lowered bridges and authored counterattacks. Success offers a repair, free reroll credit or legal refit before the ordinary upgrade. Compact route summaries explain lasting consequences, and Core sabotage keeps Turbine fans disabled through every phase. [Release notes and isolated job/reward tests](docs/releases/5.25.0.md).
