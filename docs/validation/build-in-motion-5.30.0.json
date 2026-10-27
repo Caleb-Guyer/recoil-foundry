@@ -1,0 +1,41 @@
+{
+  "version": "5.30.0",
+  "baselineCommit": "c1d08b0544097d10a3c662b180085bbac8096b0f",
+  "regularTestsPassed": 4285,
+  "finalFocusedTestsPassed": 65,
+  "productionBuild": "passed",
+  "diffCheck": "passed",
+  "campaignBalanceRulesChanged": false,
+  "dailyIdentityChanged": false,
+  "nativeCoverage": [
+    "All20newmechanism activation IDs",
+    "Whole-discharge/pellet/beam/parked-round deduplication",
+    "Oldreport missingdata vs measuredzero andpartial Continue",
+    "Checkpoint/history/backup detachedcopies",
+    "Controller-derived readiness without resourceconsumption",
+    "Single cuepriority, modehiding andbothworldedge clamps",
+    "All24scene/tool fixture combinations",
+    "Privatepractice allsixguns,parentworld/checkpoint/callback isolation,reset,lease/evolution copying",
+    "Keyboard/controller/portal/reset/disposal lifecycle"
+  ],
+  "mutedBrowserQA": {
+    "sound": false,
+    "music": false,
+    "steps": [
+      "Open Yourbuildnow abovePause settings andinspect actualequipment",
+      "Launch PistonLancepractice fromownedfitting,Begin,fire,Reset,Back",
+      "Returnpreserves expandedcard andshortcut focus",
+      "Highlightsfixture displays2nativepiston discharges,1remotevolley,1bankedjump",
+      "Heldnativeinput producesactualgroundedJumpreserve cue and matchingReadyPause state",
+      "Paint/release Seeker againstactualIncomingfiretargets",
+      "Browser warning/error logempty"
+    ],
+    "provenance": "Agent-controlled checks, not human play sessions"
+  },
+  "testLinks": [
+    "https://caleb-guyer.github.io/recoil-foundry/?test=build-motion&scene=explanations&v=1",
+    "https://caleb-guyer.github.io/recoil-foundry/?test=build-motion&scene=readiness&v=1",
+    "https://caleb-guyer.github.io/recoil-foundry/?test=build-motion&scene=highlights&v=1",
+    "https://caleb-guyer.github.io/recoil-foundry/?test=build-motion&scene=practice&v=1"
+  ]
+}

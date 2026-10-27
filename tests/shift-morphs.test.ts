@@ -163,6 +163,11 @@ for (const gun of STARTING_GUN_IDS)
     }
     assert.equal(emitted, g.gun.burstCount);
     assert.equal(
+      g.combatReport.snapshot().activations?.['seeker-rack'],
+      1,
+      'one painted salvo, not pellets or burst rounds',
+    );
+    assert.equal(
       g.shots.filter((s) => s.friendly && !s.fragment).length,
       g.gun.pellets * g.gun.lanes * g.gun.burstCount,
     );
@@ -230,6 +235,7 @@ test('foam grows as real collision geometry, supports a native falling body, blo
   const original = g.terrain.length;
   g.shiftMorphs.terrainHit(s, shelf, { x: 0, y: -1 });
   assert.equal(g.shiftMorphs.foams.length, 1);
+  assert.equal(g.combatReport.snapshot().activations?.foamcaster, 1);
   const foam = g.shiftMorphs.foams[0];
   assert(g.terrain.includes(foam.body));
   for (let i = 0; i < 40; i++) {

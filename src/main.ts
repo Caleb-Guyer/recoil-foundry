@@ -1,4 +1,12 @@
 import { buildBenchTestFromUrl } from './build-bench-test.ts';
+import { buildMotionTestFromUrl, prepareBuildMotionTest } from './build-motion-test.ts';
+import { buildMotionMarkup } from './build-motion-menu.ts';
+import {
+  buildMotionPracticeConfig,
+  type BuildMotionPracticeConfig,
+} from './build-motion-practice.ts';
+import type { BuildMotionPracticeView } from './build-motion-practice-view.ts';
+import './build-motion-menu.css';
 import { WORKSHOP_SCENARIOS, isWorkshopScenario, type WorkshopScenario } from './workshop.ts';
 import {
   reclaimerArsenalTestFromUrl,
@@ -605,7 +613,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Build Bench</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Build in Motion</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -644,6 +652,11 @@ let replayView: ReplayView | null = null;
 let upgradePreview: UpgradePreviewView | null = null;
 let supportDrill: SupportDrillView | null = null;
 let toolTrialView: ToolTrialView | null = null;
+let motionPracticeView: BuildMotionPracticeView | null = null;
+let selectedMotionPractice: BuildMotionPracticeConfig | null = null;
+let motionBuildOpen = false;
+let motionReturnScroll = { modal: 0, panel: 0 };
+let motionFixtureActive = false;
 let selectedToolTrial: StartingGun = 'pistol';
 let toolTrialScene: 'range' | 'converted' = 'range';
 let toolTrialParent: 'starting-gun' | 'goal-campaign' = 'starting-gun';
@@ -663,6 +676,7 @@ const optional = {
   finaleService: new LazyResource(() => import('./finale-service-menu.ts')),
   drill: new LazyResource(() => import('./support-drill-view.ts')),
   toolTrial: new LazyResource(() => import('./tool-trial-view.ts')),
+  motionPractice: new LazyResource(() => import('./build-motion-practice-view.ts')),
   upgrade: new LazyResource(() => import('./upgrade-preview-view.ts')),
   routePreview: new LazyResource(() => import('./route-preview-view.ts')),
 };
@@ -848,6 +862,7 @@ const linkedFactoryUnbound = factoryUnboundTestFromUrl(entryUrl);
 const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
 const linkedBuildBench = buildBenchTestFromUrl(entryUrl);
+const linkedBuildMotion = buildMotionTestFromUrl(entryUrl);
 let benchPreviewOpen = false;
 let benchDraft = [...(linkedBuildBench?.mods ?? [])];
 let benchGun = linkedBuildBench?.gun ?? 'pistol';
@@ -1552,6 +1567,10 @@ function updateTitle() {
     $('play').textContent = 'Test Build Bench / ' + linkedBuildBench.title + ' ↗';
     $('title-hint').textContent = linkedBuildBench.hint;
   }
+  if (linkedBuildMotion) {
+    $('play').textContent = 'Test Build in Motion / ' + linkedBuildMotion.title + ' ↗';
+    $('title-hint').textContent = linkedBuildMotion.hint;
+  }
   updateNextGoal();
 }
 function currentGoalProgress(): GoalProgress {
@@ -1808,6 +1827,8 @@ function closeDialog() {
   supportDrill = null;
   toolTrialView?.dispose();
   toolTrialView = null;
+  motionPracticeView?.dispose();
+  motionPracticeView = null;
   upgradePreview?.dispose();
   upgradePreview = null;
   buildMenu?.dispose?.();
@@ -1948,6 +1969,7 @@ function updateFirstSession() {
   $('dismiss-tip').hidden = firstSession.warmup;
   warmupTools.hidden = !firstSession.warmup || game.mode !== 'playing';
   workshopTools.hidden = !game.workshop.active || firstSession.warmup;
+  $('workshop-edit').hidden = motionFixtureActive;
   if (firstSession.warmup) $('stage').textContent = 'WARM-UP';
 }
 function openControls() {
@@ -1964,7 +1986,11 @@ function backFromControls() {
 }
 function updateMusic(active = pageActive && document.hasFocus() && !document.hidden) {
   const soundingGame =
-    toolTrialView?.game ?? roomRematchView?.session.game ?? supportDrill?.game ?? game;
+    motionPracticeView?.game ??
+    toolTrialView?.game ??
+    roomRematchView?.session.game ??
+    supportDrill?.game ??
+    game;
   sound.setListener(soundingGame.player.position);
   sound.updateMusic(musicScene(soundingGame), active);
   sound.updateWorld(factoryAudioScene(soundingGame), active);
@@ -2055,6 +2081,8 @@ function start(
   focusCameraPreview = false;
   linkedWorkshop = false;
   benchPreviewOpen = false;
+  motionFixtureActive = false;
+  motionBuildOpen = false;
   previewCommendations = false;
   commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   equippedCosmetics = loadCosmetics(equippedCosmetics, commendations);
@@ -2648,6 +2676,10 @@ function startWorkshop(
   warmup = false,
   startingGun: StartingGun = workshopStartingGun,
 ) {
+  if (motionFixtureActive && !warmup) {
+    startLinkedBuildMotion();
+    return;
+  }
   if (benchPreviewOpen && linkedBuildBench && !warmup) {
     startBuildBenchRange(mods, startingGun);
     return;
@@ -2701,6 +2733,68 @@ function startBuildBenchRange(mods: readonly string[] = benchDraft, gun: Startin
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
   canvas.focus();
+}
+function startLinkedBuildMotion() {
+  if (!linkedBuildMotion) return;
+  motionFixtureActive = true;
+  motionBuildOpen = true;
+  resetRunGoal();
+  firstSession.stop();
+  finishedRun = null;
+  closeDialog();
+  activeDaily = null;
+  dailyResult = null;
+  sound.unlock();
+  sound.resetMusic();
+  game.startWorkshop(
+    linkedBuildMotion.mods,
+    linkedBuildMotion.mods,
+    linkedBuildMotion.gun,
+    linkedBuildMotion.range,
+  );
+  prepareBuildMotionTest(game, linkedBuildMotion);
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.55;
+  pointer.y = canvas.clientHeight * 0.6;
+  if (linkedBuildMotion.scene === 'highlights') showDialog('motion-highlights');
+  else if (linkedBuildMotion.scene !== 'readiness') showDialog('pause');
+  else canvas.focus();
+}
+function openMotionPractice(id: string) {
+  if (game.mode !== 'paused') return;
+  const config = buildMotionPracticeConfig(game, id);
+  if (!config) return;
+  selectedMotionPractice = config;
+  motionReturnScroll = {
+    modal: modal.scrollTop,
+    panel: $('dialog-content').querySelector<HTMLElement>('.settings-scroll')?.scrollTop ?? 0,
+  };
+  motionBuildOpen = true;
+  sound.unlock();
+  showDialog('motion-practice');
+}
+function backFromMotionPractice() {
+  const id = selectedMotionPractice?.id;
+  motionBuildOpen = true;
+  showDialog('pause');
+  modal.scrollTop = motionReturnScroll.modal;
+  const panel = $('dialog-content').querySelector<HTMLElement>('.settings-scroll');
+  if (panel) panel.scrollTop = motionReturnScroll.panel;
+  if (id)
+    $('dialog-content')
+      .querySelector<HTMLButtonElement>('[data-motion-practice="' + CSS.escape(id) + '"]')
+      ?.focus({ preventScroll: true });
+}
+function bindMotionShortcuts(root: HTMLElement) {
+  const details = root.querySelector<HTMLDetailsElement>('#motion-build');
+  if (details)
+    details.ontoggle = () => {
+      motionBuildOpen = details.open;
+    };
+  for (const button of Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-motion-practice]'),
+  ))
+    button.onclick = () => openMotionPractice(button.dataset.motionPractice!);
 }
 function startLinkedBuildBench() {
   if (!linkedBuildBench) return;
@@ -3216,6 +3310,7 @@ game.onChange = () => {
     else workshopRange = game.workshop.scenario;
   }
   workshopTools.hidden = !game.workshop.active;
+  $('workshop-edit').hidden = motionFixtureActive;
   $('title-screen').hidden = game.mode !== 'title';
   $('stage').textContent = game.workshop.active
     ? 'WORKSHOP'
@@ -3331,6 +3426,8 @@ function showDialog(kind: string) {
   supportDrill = null;
   toolTrialView?.dispose();
   toolTrialView = null;
+  motionPracticeView?.dispose();
+  motionPracticeView = null;
   upgradePreview?.dispose();
   upgradePreview = null;
   if (kind === 'upgrade' && game.uprising.choices.length) kind = 'uprising';
@@ -3383,6 +3480,7 @@ function showDialog(kind: string) {
   modal.classList.toggle('logbook-dialog', kind === 'logbook');
   modal.classList.toggle('goal-dialog', kind === 'next-goal');
   modal.classList.toggle('drill-dialog', kind === 'support-drill' || kind === 'tool-trial');
+  modal.classList.toggle('motion-practice-dialog', kind === 'motion-practice');
   modal.classList.toggle(
     'ending-dialog',
     kind === 'result' &&
@@ -3399,23 +3497,25 @@ function showDialog(kind: string) {
   const content = $('dialog-content');
   const resource = kind.startsWith('shift-')
     ? optional.shiftOffice
-    : kind === 'tool-trial'
-      ? optional.toolTrial
-      : kind === 'job-payment'
-        ? optional.jobPayment
-        : kind === 'finale-service'
-          ? optional.finaleService
-          : kind === 'workshop' || kind === 'practice-build'
-            ? optional.workshop
-            : kind === 'logbook'
-              ? optional.logbook
-              : kind === 'room-rematch'
-                ? optional.rematch
-                : kind === 'support-drill'
-                  ? optional.drill
-                  : kind === 'replay'
-                    ? optional.replay
-                    : null;
+    : kind === 'motion-practice'
+      ? optional.motionPractice
+      : kind === 'tool-trial'
+        ? optional.toolTrial
+        : kind === 'job-payment'
+          ? optional.jobPayment
+          : kind === 'finale-service'
+            ? optional.finaleService
+            : kind === 'workshop' || kind === 'practice-build'
+              ? optional.workshop
+              : kind === 'logbook'
+                ? optional.logbook
+                : kind === 'room-rematch'
+                  ? optional.rematch
+                  : kind === 'support-drill'
+                    ? optional.drill
+                    : kind === 'replay'
+                      ? optional.replay
+                      : null;
   if (resource && !resource.value) {
     const current = dialogLifetime.ticket();
     content.innerHTML =
@@ -3427,6 +3527,7 @@ function showDialog(kind: string) {
         closeDialog();
         canvas.focus();
       } else if (kind === 'shift-lease' || kind === 'shift-evolution') return;
+      else if (kind === 'motion-practice') backFromMotionPractice();
       else if (kind === 'tool-trial') backFromToolTrial();
       else if (kind === 'job-payment') {
         game.save();
@@ -3567,6 +3668,44 @@ function showDialog(kind: string) {
           }
         : undefined,
     );
+  } else if (kind === 'motion-practice') {
+    if (!selectedMotionPractice) {
+      showDialog('pause');
+      return;
+    }
+    motionPracticeView = new optional.motionPractice.value!.BuildMotionPracticeView(
+      content,
+      selectedMotionPractice,
+      {
+        bindings,
+        back: backFromMotionPractice,
+        sound: (kind, origin) => sound.play(kind, origin),
+        unlockAudio: () => sound.unlock(),
+        stopAudio: () => sound.resetMusic(),
+      },
+    );
+  } else if (kind === 'motion-highlights') {
+    const report: ReportGun = {
+      mods: [...game.mods],
+      seed: game.seed,
+      startingGun: game.startingGun,
+      appearance: { ...game.cosmetics },
+      combatResults: game.combatReport.snapshot(),
+      kills: game.kills,
+      elapsed: game.elapsed,
+    };
+    content.innerHTML =
+      '<p class="eyebrow">BUILD IN MOTION · PRIVATE DEMONSTRATION</p><h2 id="dialog-title">Your build at work.</h2>' +
+      '<p>Recorded from a short native-input demonstration. These are test results, not a completed player run. Your saved progress stays untouched.</p>' +
+      combatReportMenu(report) +
+      '<div class="actions"><button id="motion-highlight-build" class="primary">Inspect this build</button><button id="motion-highlight-range" class="quiet">Try the range</button><button id="back" class="quiet">Back</button></div>';
+    drawCombatReportImages(content, [report]);
+    $('motion-highlight-build').onclick = () => {
+      motionBuildOpen = true;
+      showDialog('pause');
+    };
+    $('motion-highlight-range').onclick = resume;
+    $('back').onclick = menu;
   } else if (kind === 'support-drill') {
     supportDrill = new optional.drill.value!.SupportDrillView(
       content,
@@ -3690,14 +3829,14 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.29.0 · BUILD BENCH</p><h2 id="dialog-title">Find your next combination.</h2>' +
-      '<p class="update-tagline">Understand the fittings. Test the whole gun.</p>' +
-      '<dl class="update-notes"><div><dt>Browse by mechanic.</dt><dd>Search names and descriptions, filter collected upgrades by mechanic, and find legal follow-ups for your build.</dd></div>' +
-      '<div><dt>Know what changes.</dt><dd>Inspect prerequisites, fusion paths and conflicts before fitting an upgrade. See every dependent removal before confirming it.</dd></div>' +
-      '<div><dt>Compare your real gun.</dt><dd>Preview the complete before-and-after firing pattern inside Workshop, then fit it or keep experimenting.</dd></div>' +
-      '<div><dt>Choose the test.</dt><dd>Grouped targets, warned incoming shots, breakable cover and a recoil course exercise your collected build. Reset or change range without losing fittings.</dd></div></dl>' +
-      '<p class="practice-record-note">Workshop uses collected upgrades and unlocked weapons. Private test links supply a temporary collection and leave your Continue, discoveries and saved builds untouched.</p>' +
-      '<p>Try: <a href="?test=build-bench&amp;scene=browse&amp;v=1">Browse fittings ↗</a> · <a href="?test=build-bench&amp;scene=comparison&amp;v=1">Gun comparison ↗</a> · <a href="?test=build-bench&amp;scene=incoming&amp;v=1">Incoming fire ↗</a> · <a href="https://github.com/Caleb-Guyer/recoil-foundry/blob/main/docs/releases/5.29.0.md" target="_blank" rel="noopener noreferrer">All tests ↗</a></p>' +
+      '<p class="eyebrow">5.30.0 · BUILD IN MOTION</p><h2 id="dialog-title">Know your gun in the fight.</h2>' +
+      '<p class="update-tagline">Understand the trigger. Recognize the opening. Practice your build.</p>' +
+      '<dl class="update-notes"><div><dt>Your build now.</dt><dd>One expandable Pause card explains equipped morphs, fusions and special fittings using their current native states.</dd></div>' +
+      '<div><dt>Ready when it matters.</dt><dd>Small cues near your character identify a usable stored action. Existing attack warnings retain priority.</dd></div>' +
+      '<div><dt>Measured highlights.</dt><dd>Run reports include actual new fitting and fusion activations. Older saves identify missing earlier activity.</dd></div>' +
+      '<div><dt>Practice the trigger.</dt><dd>Open a suitable private range from an equipped fitting’s Pause details. Keep your full gun while your run stays paused; return without changing progress.</dd></div></dl>' +
+      '<p>Try: <a href="?test=build-motion&amp;scene=explanations&amp;v=1">Build explanations ↗</a> · <a href="?test=build-motion&amp;scene=readiness&amp;v=1">Readiness cues ↗</a> · <a href="?test=build-motion&amp;scene=highlights&amp;v=1">Measured highlights ↗</a> · <a href="?test=build-motion&amp;scene=practice&amp;v=1">Practice shortcuts ↗</a></p>' +
+      '<p class="practice-record-note">These isolated tests preserve Continue, discoveries, weapon unlocks and saved builds. Existing Campaign and Daily combat rules remain unchanged.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4952,6 +5091,7 @@ function showDialog(kind: string) {
       (paused ? 'Paused.' : 'Settings.') +
       '</h2><div class="settings-scroll">' +
       (paused ? goalRunMarkup(runGoalSummary()) : '') +
+      (paused ? buildMotionMarkup(game, motionBuildOpen) : '') +
       '<div class="settings-list"><label>Sound<span class="setting-value"><span id="sound-state"></span><input id="sound" type="checkbox" ' +
       (sound.enabled ? 'checked' : '') +
       ' /></span></label>' +
@@ -5015,17 +5155,6 @@ function showDialog(kind: string) {
                           ? 'After clearing, the upper door offers an optional challenge.'
                           : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
-      (paused
-        ? '<details class="build"><summary>Your gun · ' +
-          STARTING_GUNS[game.startingGun].name +
-          (activeDaily && !unlockedStartingGuns(weaponUnlocks()).includes(game.startingGun)
-            ? ' · Daily loaner'
-            : '') +
-          (buildPath(game.mods) ? ' · ' + PATH_NAMES[buildPath(game.mods)!] : '') +
-          '</summary><ul>' +
-          game.mods.map((id) => '<li>' + MODS.find((m) => m.id === id)!.name + '</li>').join('') +
-          '</ul></details>'
-        : '') +
       (paused ? shiftRunSummary(game) : '') +
       (paused && game.level.bossRemix
         ? '<p class="practice-note">Arena · ' +
@@ -5042,7 +5171,10 @@ function showDialog(kind: string) {
       (paused && game.workshop.active
         ? firstSession.warmup
           ? '<button id="workshop-pause-reset" class="quiet">Reset warm-up</button>'
-          : '<button id="workshop-pause-build" class="quiet">Build</button><button id="workshop-pause-reset" class="quiet">Reset room</button>'
+          : (motionFixtureActive
+              ? ''
+              : '<button id="workshop-pause-build" class="quiet">Build</button>') +
+            '<button id="workshop-pause-reset" class="quiet">Reset room</button>'
         : paused && game.gauntlet.state
           ? '<button id="retry" class="quiet">Restart Gauntlet</button>'
           : paused && game.practice
@@ -5142,7 +5274,9 @@ function showDialog(kind: string) {
       const edit = document.getElementById('workshop-pause-build');
       if (edit) edit.onclick = () => showDialog('workshop');
       $('workshop-pause-reset').onclick = () =>
-        startWorkshop(game.mods, firstSession.warmup, game.startingGun);
+        motionFixtureActive
+          ? startLinkedBuildMotion()
+          : startWorkshop(game.mods, firstSession.warmup, game.startingGun);
     }
     if (paused && (game.practice || game.testRun)) {
       $('retry').onclick = () => start(undefined, true);
@@ -5152,6 +5286,7 @@ function showDialog(kind: string) {
       if (edit) edit.onclick = () => openPracticeBuild(game.practice!, 'pause');
     }
     if (paused) {
+      bindMotionShortcuts(content);
       $('menu').onclick = menu;
       $('pause-logbook').onclick = () => showDialog('logbook');
       const map = document.getElementById('factory-map');
@@ -5396,6 +5531,7 @@ function pollController(now: number) {
   if (sample.disconnected && inputDevice === 'controller') {
     useInputDevice('pointer');
     if (toolTrialView?.isPlaying) toolTrialView.toggle();
+    if (motionPracticeView?.isPlaying) motionPracticeView.toggle();
     if (supportDrill?.isPlaying) supportDrill.toggle();
     if (roomRematchView?.isPlaying) roomRematchView.toggle();
     if (game.mode === 'playing') showDialog('pause');
@@ -5404,6 +5540,16 @@ function pollController(now: number) {
   }
   if (sample.activity) useInputDevice('controller');
   if (inputDevice !== 'controller') return null;
+  if (motionPracticeView) {
+    if (sample.back) backFromMotionPractice();
+    else if (sample.pause) motionPracticeView.toggle();
+    else if (motionPracticeView.isPlaying) return sample;
+    else {
+      if (sample.navigation) navigateControllerMenu(modal, sample.navigation);
+      if (sample.confirm) confirmControllerMenu(modal);
+    }
+    return null;
+  }
   if (toolTrialView) {
     if (sample.back) backFromToolTrial();
     else if (sample.pause) toolTrialView.toggle();
@@ -5472,49 +5618,55 @@ function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
 $('play').onclick = () =>
-  linkedBuildBench
-    ? startLinkedBuildBench()
-    : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-      ? startLinkedToolsTest()
-      : linkedGoalPreview || linkedTrackingPreview
-        ? location.assign(new URL('./', location.href).href)
-        : linkedFirstRunPreview === 'warmup'
-          ? startWorkshop([], true)
-          : linkedDrill
-            ? startLinkedSupportDrill(linkedDrill)
-            : linkedGauntletPreview
-              ? startGauntlet(linkedGauntletPreview, true)
-              : linkedRemixGauntletPreview
-                ? linkedRemixGauntletPreview.setup
-                  ? (() => {
-                      gauntletSetupPreview = true;
-                      gauntletSetupMode = 'remix';
-                      showDialog('gauntlet-setup');
-                    })()
-                  : startGauntlet(linkedRemixGauntletPreview.gun, true, linkedRemixGauntletPreview)
-                : linkedGauntletChallenge || invalidGauntletLink
-                  ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
-                  : linkedRecoilChallenge || invalidRecoilLink
-                    ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-                    : linkedTrial?.preview
-                      ? startTrial(linkedTrial.route, true)
-                      : linkedTrial || invalidTrialLink
-                        ? openTrials('title', linkedTrial?.challenge)
-                        : linkedWorkshop
-                          ? showDialog('workshop')
-                          : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                              entryUrl.searchParams.get('test') !== 'arc'
-                            ? showDialog('layout-test')
-                            : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                                linkedRunTest?.seed.startsWith('FUSIONS-')
-                              ? showDialog('upgrade-test')
-                              : linkedRunTest
-                                ? startRunTest(linkedRunTest)
-                                : linkedTest
-                                  ? startPractice(linkedTest, null, { test: true })
-                                  : linkedDaily
-                                    ? start()
-                                    : startFreshCampaign();
+  linkedBuildMotion
+    ? startLinkedBuildMotion()
+    : linkedBuildBench
+      ? startLinkedBuildBench()
+      : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+        ? startLinkedToolsTest()
+        : linkedGoalPreview || linkedTrackingPreview
+          ? location.assign(new URL('./', location.href).href)
+          : linkedFirstRunPreview === 'warmup'
+            ? startWorkshop([], true)
+            : linkedDrill
+              ? startLinkedSupportDrill(linkedDrill)
+              : linkedGauntletPreview
+                ? startGauntlet(linkedGauntletPreview, true)
+                : linkedRemixGauntletPreview
+                  ? linkedRemixGauntletPreview.setup
+                    ? (() => {
+                        gauntletSetupPreview = true;
+                        gauntletSetupMode = 'remix';
+                        showDialog('gauntlet-setup');
+                      })()
+                    : startGauntlet(
+                        linkedRemixGauntletPreview.gun,
+                        true,
+                        linkedRemixGauntletPreview,
+                      )
+                  : linkedGauntletChallenge || invalidGauntletLink
+                    ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
+                    : linkedRecoilChallenge || invalidRecoilLink
+                      ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+                      : linkedTrial?.preview
+                        ? startTrial(linkedTrial.route, true)
+                        : linkedTrial || invalidTrialLink
+                          ? openTrials('title', linkedTrial?.challenge)
+                          : linkedWorkshop
+                            ? showDialog('workshop')
+                            : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                                entryUrl.searchParams.get('test') !== 'arc'
+                              ? showDialog('layout-test')
+                              : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                                  linkedRunTest?.seed.startsWith('FUSIONS-')
+                                ? showDialog('upgrade-test')
+                                : linkedRunTest
+                                  ? startRunTest(linkedRunTest)
+                                  : linkedTest
+                                    ? startPractice(linkedTest, null, { test: true })
+                                    : linkedDaily
+                                      ? start()
+                                      : startFreshCampaign();
 $('daily').onclick = () => {
   if (
     linkedDaily ||
@@ -5601,6 +5753,14 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'motion-practice') {
+    backFromMotionPractice();
+    return;
+  }
+  if (dialogKind === 'motion-highlights') {
+    menu();
+    return;
+  }
   if (dialogKind.startsWith('shift-')) {
     if (shiftOfficeMenu) shiftOfficeMenu.back();
     else if (dialogKind === 'shift-office') {
@@ -5715,6 +5875,11 @@ function cancelDialog() {
   resume();
 }
 window.addEventListener('keydown', (e) => {
+  if (motionPracticeView) {
+    useInputDevice('pointer');
+    motionPracticeView.keyDown(e);
+    return;
+  }
   if (toolTrialView) {
     useInputDevice('pointer');
     toolTrialView.keyDown(e);
@@ -5876,6 +6041,7 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
   keys.delete(e.code);
   toolTrialView?.keyUp(e);
+  motionPracticeView?.keyUp(e);
   supportDrill?.keyUp(e);
   roomRematchView?.keyUp(e);
 });
@@ -5996,6 +6162,13 @@ function frame(now: number) {
     modal.open && pageActive && document.hasFocus() && !document.hidden,
   );
   roomRematchView?.frame(
+    dt,
+    now,
+    renderer.reduced,
+    modal.open && pageActive && document.hasFocus() && !document.hidden,
+    pad,
+  );
+  motionPracticeView?.frame(
     dt,
     now,
     renderer.reduced,

@@ -1,0 +1,162 @@
+.motion-build {
+  border-top: 1px solid var(--line, #354440);
+  border-bottom: 1px solid var(--line, #354440);
+  margin: 18px 0;
+  padding: 14px 0;
+}
+.motion-build > summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.motion-build > summary > span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  margin: 5px 0 0 16px;
+}
+.motion-build-note,
+.motion-owned {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.motion-fitting {
+  padding: 14px 0;
+  border-top: 1px solid #30403d;
+}
+.motion-fitting-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.motion-fitting h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.motion-fitting p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.motion-fitting .motion-trigger {
+  color: var(--ink, #e7e9dd);
+}
+.motion-state {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.motion-state[data-state='ready'],
+.motion-state[data-state='active'] {
+  color: var(--accent);
+}
+.motion-fitting progress {
+  accent-color: var(--accent);
+  display: block;
+  width: min(180px, 100%);
+  height: 5px;
+  margin: 10px 0;
+}
+.motion-practice-shortcut {
+  margin-top: 5px;
+  font-size: 12px;
+  text-align: left;
+}
+.motion-practice-shortcut span {
+  color: var(--muted);
+}
+dialog.motion-practice-dialog {
+  width: min(1020px, calc(100% - 32px));
+}
+.motion-practice-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.motion-practice-header h2 {
+  font-size: clamp(25px, 4vw, 34px);
+  margin: 0 0 10px;
+}
+.motion-practice-header .eyebrow {
+  margin-top: 0;
+}
+.motion-practice-scope,
+.motion-practice-controls {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.motion-practice-instruction {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.motion-practice-canvas {
+  display: block;
+  width: 100%;
+  height: clamp(240px, 34vw, 390px);
+  background: #101817;
+  border: 1px solid #354440;
+  touch-action: none;
+}
+.motion-practice-canvas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.motion-practice-state {
+  min-height: 1.5em;
+  margin: 8px 0;
+  font-size: 12px;
+  color: var(--accent);
+}
+.motion-practice-touch {
+  display: none;
+  gap: 12px;
+  margin: 10px 0;
+}
+.motion-practice-touch button {
+  min-width: 52px;
+  min-height: 44px;
+  touch-action: none;
+}
+.motion-practice-touch button:last-child {
+  margin-left: auto;
+}
+.motion-practice-health {
+  width: 120px;
+  accent-color: var(--accent);
+}
+@media (pointer: coarse) {
+  .motion-practice-touch {
+    display: flex;
+  }
+}
+@media (max-width: 600px) {
+  .motion-practice-header {
+    flex-wrap: wrap;
+  }
+  .motion-practice-shortcut span {
+    display: block;
+  }
+}
+
+.motion-connections {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0;
+}
+.motion-connections li {
+  margin: 10px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.motion-connections strong,
+.motion-connections span {
+  display: block;
+}
+.motion-connections span {
+  color: var(--muted);
+}

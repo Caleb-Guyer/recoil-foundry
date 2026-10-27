@@ -1,3 +1,4 @@
+import { drawBuildMotion } from './build-motion-art.ts';
 import { drawShiftRun } from './shift-run-art.ts';
 import { drawShiftMorphs } from './shift-morph-art.ts';
 import { drawShiftUpgrades } from './shift-upgrades-art.ts';
@@ -650,7 +651,13 @@ export class Renderer {
   // Archive photographs use the identical world renderer with a fixed camera.
   draw(
     now = performance.now(),
-    framing?: { camera: Vec; scale: number; player?: boolean; navigation?: boolean },
+    framing?: {
+      camera: Vec;
+      scale: number;
+      player?: boolean;
+      navigation?: boolean;
+      buildMotion?: boolean;
+    },
   ) {
     if (framing) this.scale = framing.scale;
     const c = this.ctx,
@@ -1030,6 +1037,8 @@ export class Renderer {
     // Keep the actual outfit above friendly rays, arcs, blasts and trails. The
     // hostile projectile and committed warning layers remain above the player.
     if (!framing || framing.player) this.drawPlayer(clarity.pressure);
+    if ((!framing || framing.buildMotion) && (!framing || framing.player))
+      drawBuildMotion(c, g, this.reduced, this.scale);
     if (showDamageFeedback(g, !!framing))
       drawDamageFeedback(
         c,

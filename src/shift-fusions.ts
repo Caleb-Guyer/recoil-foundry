@@ -172,6 +172,7 @@ export class ShiftFusions {
     copy.damage = Math.min(24, copy.damage);
     this.captured.push({ shot: copy, until: g.time + SHIFT_FUSIONS.catchLife });
     shot.life = 0;
+    g.combatReport.activation('catch-chamber', shot.id);
     g.burst(shot.pos, 5, '#b5d9ee', 2);
     return true;
   }
@@ -305,6 +306,7 @@ export class ShiftFusions {
   beamSample(segments: TorchSegment[], damage: number, pulse: number) {
     const g = this.game;
     if (!this.active || !(damage > 0) || !Number.isFinite(damage)) return 1;
+    if (segments.some((s) => s.muzzle)) g.shiftMorphs.recordDischarge(g.shotCount);
     if (this.has('ghost-shift')) {
       if (this.beamSeen !== pulse) {
         this.beamSeen = pulse;
@@ -369,6 +371,7 @@ export class ShiftFusions {
     if (this.hot?.link !== link) this.hot = { link, energy: 0, until: g.time + 0.28 };
     this.hot!.energy = Math.min(200, this.hot!.energy + energy);
     this.hot!.until = g.time + 0.28;
+    g.combatReport.activation('hot-wire', pulse);
     return 0.75;
   }
   catchSaw(saw: GrindSaw) {
@@ -403,6 +406,7 @@ export class ShiftFusions {
       trail: [{ ...saw.pos }],
     });
     saw.life = 0;
+    g.combatReport.activation('windmill');
     g.onSound('grind');
     return true;
   }
@@ -459,6 +463,7 @@ export class ShiftFusions {
     for (const p of candidates) {
       if (c.props.size >= SHIFT_FUSIONS.cometProps) break;
       c.props.add(p);
+      g.combatReport.activation('scrap-comet', s.id);
       s.vel.x *= 0.8;
       s.vel.y *= 0.8;
       s.bounces = Math.max(0, s.bounces - 1);
@@ -531,6 +536,7 @@ export class ShiftFusions {
         x: p.x * Math.cos(angle) - p.y * Math.sin(angle),
         y: p.x * Math.sin(angle) + p.y * Math.cos(angle),
       });
+    let emitted = false;
     for (const template of v.shots) {
       if (g.shots.length >= 180) break;
       const s = structuredClone(template),
@@ -551,6 +557,7 @@ export class ShiftFusions {
       s.hits.clear();
       if (s.trace) s.trace.points = [{ ...s.pos }];
       g.shots.push(s);
+      emitted = true;
     }
     for (const ray of v.rays.values()) {
       const dir = rotate(ray.dir),
@@ -570,6 +577,7 @@ export class ShiftFusions {
             radius: ray.radius,
           },
         );
+      emitted ||= segments.length > 0;
       const seen = new Set<Enemy>();
       for (const s of segments) {
         if (this.ghostEffects.length < 216)
@@ -587,6 +595,7 @@ export class ShiftFusions {
         } else if (s.prop) g.props.hit(s.prop, ray.damage * s.gain, s.dir, undefined, false, false);
       }
     }
+    if (emitted) g.combatReport.activation('ghost-shift');
     g.burst(from, 3, '#8dcdf1', 2);
     g.onSound('echo-shot');
   }
@@ -617,6 +626,7 @@ export class ShiftFusions {
             const hit = wireCrossing(s.a, s.b, e.body, this.starts.get(e.body) ?? e.body.position);
             if (!hit) continue;
             this.gate = null;
+            g.combatReport.activation('gate-snare');
             g.demolition.detonate(
               {
                 pos: hit.point,

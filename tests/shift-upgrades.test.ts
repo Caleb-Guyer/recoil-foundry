@@ -117,6 +117,7 @@ test('Ricochet Harness reflects a fresh real terrain collision once per discharg
   s.beforeIntegrate(DT);
   s.afterStep(DT, idle);
   assert(g.player.velocity.x < -8);
+  assert.equal(g.combatReport.snapshot().activations?.['ricochet-harness'], 1);
   const rebound = { ...g.player.velocity };
   s.beforeIntegrate(DT);
   s.afterStep(DT, idle);
@@ -147,6 +148,7 @@ test('Spring Rivets follow native supports, place once per airtime and launch fr
   s.afterGround({ ...idle, jump: true, jumpHeld: true }, true);
   assert(g.player.velocity.y <= -SHIFT.rivetLaunch);
   assert.equal(s.rivets.length, 0);
+  assert.equal(g.combatReport.snapshot().activations?.['spring-rivets'], 1);
   assert.equal(g.grounded, false);
   s.afterGround({ ...idle, jump: true }, false);
   assert(g.player.velocity.y <= -SHIFT.rivetLaunch);
@@ -176,6 +178,7 @@ test('Slip Gauge earns one charge from a genuine small-round near miss and augme
   assert(g.player.velocity.y <= vertical && vertical < -10);
   assert(g.player.velocity.x >= 8);
   assert.equal(s.slipReady, false);
+  assert.equal(g.combatReport.snapshot().activations?.['slip-gauge'], 1);
   s.beforeIntegrate(DT);
   s.afterStep(DT, idle);
   assert.equal(s.slipReady, false, 'the same lingering bullet never pays twice');
@@ -208,6 +211,7 @@ test('Wake Wire is drawn by real recoil travel, damages a crossing target once a
   const { g, s } = setup(['wake-wire']);
   drawTrail(g, s);
   assert(s.wire && s.wire.points.length <= SHIFT.wirePoints);
+  assert.equal(g.combatReport.snapshot().activations?.['wake-wire'], 1);
   const e = target(g, 270, 300),
     hp = e.hp;
   s.beforeIntegrate(DT);
@@ -244,6 +248,7 @@ test('False Silhouette creates one real acquisition target per airtime while com
   s.beforeIntegrate(DT);
   s.afterStep(DT, idle);
   assert(s.silhouette);
+  assert.equal(g.combatReport.snapshot().activations?.['false-silhouette'], 1);
   const e = target(g, 600, 300);
   e.workshopTarget = undefined;
   e.state = 'idle';
@@ -291,6 +296,7 @@ test('Momentum Exchange transfers bounded real velocity once per volley and neve
   s.primaryHit(e, shot);
   s.beforeIntegrate(DT);
   assert(g.player.velocity.x < 3 && e.body.velocity.x > 4);
+  assert.equal(g.combatReport.snapshot().activations?.['momentum-exchange'], 1);
   const pv = { ...g.player.velocity },
     ev = { ...e.body.velocity };
   s.primaryHit(e, primary(g, s, 1));

@@ -158,6 +158,9 @@ export class ShiftUpgrades {
   get slipReady() {
     return this.has('slip-gauge') && this.slipCharges > 0;
   }
+  get holdingFire() {
+    return this.held;
+  }
   get trail() {
     return this.liveTrail;
   }
@@ -267,6 +270,7 @@ export class ShiftUpgrades {
           damage: clamp(g.gun.damage * g.gun.pellets * g.gun.lanes * 0.42, 12, 80),
           hit: new Set(),
         };
+        g.combatReport.activation('wake-wire');
         this.effect(g.player.position);
       }
       this.liveTrail = [];
@@ -286,8 +290,10 @@ export class ShiftUpgrades {
     const power = Number.isFinite(impulse) ? Math.max(0, impulse) : 0;
     let delta = { x: -d.x * power, y: -d.y * power };
     if (!this.active) return delta;
-    if (this.has('gimbal-mount') && this.input && Math.abs(moveInput(this.input)) > 0.15)
+    if (this.has('gimbal-mount') && this.input && Math.abs(moveInput(this.input)) > 0.15) {
       delta = { x: Math.sign(moveInput(this.input)) * power, y: 0 };
+      if (power > 0) g.combatReport.activation('gimbal-mount', g.shotCount);
+    }
     if (this.has('momentum-battery') && g.grounded)
       this.battery = Math.min(SHIFT.batteryCap, this.battery + Math.hypot(delta.x, delta.y) * 0.38);
     this.recoilAt = g.time;
@@ -318,6 +324,7 @@ export class ShiftUpgrades {
       Body.setVelocity(p, { x: p.velocity.x, y: Math.max(-21, p.velocity.y - this.battery) });
       this.effect(p.position);
       this.battery = 0;
+      g.combatReport.activation('momentum-battery');
       g.jumpCut = false;
     }
     if (!input.jump) return;
@@ -351,6 +358,7 @@ export class ShiftUpgrades {
         g.jumpCut = false;
         this.rivets = this.rivets.filter((r) => r !== pad);
         this.progress('pad');
+        g.combatReport.activation('spring-rivets');
         this.effect(mountPoint(pad));
       }
     }
@@ -367,6 +375,7 @@ export class ShiftUpgrades {
         this.slipUntil > g.time && this.extraSlipUntil > g.time ? this.extraSlipUntil : -1;
       this.extraSlipUntil = -1;
       this.progress('slip');
+      g.combatReport.activation('slip-gauge');
       if (this.evolved('counterstep')) this.counterstep(lateral);
       g.jumpBuffer = 0;
       g.jumpCut = false;
@@ -392,6 +401,7 @@ export class ShiftUpgrades {
         pole: m.event % 2 ? 1 : -1,
         until: g.time + SHIFT.polarityTime,
       });
+      g.combatReport.activation('polarity-rounds', m.event);
       if (this.polarity.size > SHIFT.polarityCap)
         this.polarity.delete(this.polarity.keys().next().value!);
     }
@@ -420,6 +430,8 @@ export class ShiftUpgrades {
           y: clamp((pv.y - ev.y) * 0.6, -10, 10),
         });
       }
+      if (!enemy.body.isStatic && distance(pv, ev) > 1e-6)
+        g.combatReport.activation('momentum-exchange', m.event);
       this.effect(enemy.body.position);
     }
   }
@@ -480,6 +492,7 @@ export class ShiftUpgrades {
       this.nozzle = null;
       return copy(base);
     }
+    g.combatReport.activation('offset-nozzle', g.shotCount);
     return from;
   }
   decoyTarget(enemy: Enemy): Vec | null {
@@ -566,6 +579,7 @@ export class ShiftUpgrades {
     if (dot > -4) return;
     this.rebounds++;
     this.progress('rebound');
+    g.combatReport.activation('ricochet-harness');
     Body.setVelocity(g.player, {
       x: clamp((v.x - 2 * dot * hit.normal.x) * 0.84, -23, 23),
       y: clamp((v.y - 2 * dot * hit.normal.y) * 0.84, -21, 20),
@@ -656,6 +670,7 @@ export class ShiftUpgrades {
           until: g.time + SHIFT.silhouetteTime,
           facing: Math.sign(old.x) || 1,
         };
+        g.combatReport.activation('false-silhouette');
       }
     }
   }

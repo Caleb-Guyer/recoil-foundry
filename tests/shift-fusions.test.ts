@@ -92,6 +92,7 @@ test('Catch Chamber uses the real shared Countershot recharge, stores sanitized 
   assert(g.ballistics.reflectRound(hostile, { ...hostile.pos }));
   assert.equal(hostile.life, 0);
   assert.equal(g.shiftFusions.captured.length, 1);
+  assert.equal(g.combatReport.snapshot().activations?.['catch-chamber'], 1);
   assert(!g.ballistics.counterReady);
   const caught = g.shiftFusions.captured[0].shot;
   assert.equal(caught.damage, 24);
@@ -167,6 +168,7 @@ test('Gate Snare creates two real collision segments through portals and never d
   g.shiftFusions.afterStep(dt);
   assert(!g.shiftFusions.gate);
   assert(e.hp < before);
+  assert.equal(g.combatReport.snapshot().activations?.['gate-snare'], 1);
   clean(g);
 });
 
@@ -213,6 +215,7 @@ test('Hot Wire diverts actual beam energy into a moving cable and splits its bou
   g.shiftFusions.beforeStep(dt);
   assert.equal(g.shiftFusions.beamSample(segments, 40, 1), 0.75);
   assert.equal(g.shiftFusions.hot!.energy, 10);
+  assert.equal(g.combatReport.snapshot().activations?.['hot-wire'], 1);
   g.shiftFusions.afterStep(dt);
   assert.equal(ha - a.hp, 5);
   assert.equal(hb - b.hp, 5);
@@ -268,6 +271,7 @@ for (const gun of STARTING_GUN_IDS)
     g.shiftFusions.afterStep(dt);
     assert.equal(g.shiftFusions.ghosts.length, 0);
     assert.equal(g.shots.length, templates);
+    assert.equal(g.combatReport.snapshot().activations?.['ghost-shift'], 1);
     assert(g.shots.every((s) => s.echo && s.allied && s.counter === 0 && !s.stasis && !s.tripwire));
     assert(g.shots.every((s) => Math.abs(s.pos.y - ally.body.position.y) < 50));
     assert(g.shots.every((s) => s.vel.x > 0));
@@ -313,6 +317,7 @@ function millFixture() {
   g.salvage.gusts = [{ a: { x: 450, y: 570 }, b: { x: 600, y: 589 }, id: 1, at: g.time }];
   g.grind.update(dt);
   assert.equal(g.shiftFusions.mills.length, 1);
+  assert.equal(g.combatReport.snapshot().activations?.windmill, 1);
   return g;
 }
 test('Windmill turns an actual spent surface saw into an airborne swept blade with single-hit damage and a finite life', () => {
@@ -363,6 +368,9 @@ test('Scrap Comet attracts only real loose expendable debris, slows and spends b
   g.massDriver.update(dt);
   const comet = g.shiftFusions.comets.get(s.id)!;
   assert(comet.props.has(p));
+  assert.equal(g.combatReport.snapshot().activations?.['scrap-comet'], 1);
+  g.massDriver.update(dt);
+  assert.equal(g.combatReport.snapshot().activations?.['scrap-comet'], 1);
   assert(!comet.props.has(objective));
   assert(!comet.props.has(pinned));
   assert(s.bounces < 3);

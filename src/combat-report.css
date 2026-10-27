@@ -116,3 +116,25 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
+
+.report-highlights {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.report-highlights li {
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.report-highlights strong {
+  color: #d9c29b;
+  font-weight: 600;
+}
+.report-highlights span {
+  color: #b8c7c0;
+}

@@ -4,6 +4,8 @@ import { STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 import { GUN_FINISHES, OUTFITS, type Cosmetics } from './cosmetics.ts';
 import type { CombatResults } from './combat-report.ts';
 import { SUPPORT_MASTERIES } from './support-mastery.ts';
+import { buildMotionConnections } from './build-motion.ts';
+import type { BuildActivationId } from './combat-report.ts';
 
 export interface ReportGun {
   mods: readonly string[];
@@ -33,7 +35,7 @@ export function buildConnections(
   const mods = run.mods,
     has = (id: string) => mods.includes(id);
   const gun = getGun([...mods], run.startingGun ?? 'pistol');
-  const connections: BuildConnection[] = [];
+  const connections: BuildConnection[] = buildMotionConnections(mods).slice(0, 2);
   const pair = (ids: string[], detail: string, title?: string) => {
     if (ids.every(has)) connections.push({ title: title ?? ids.map(modName).join(' + '), detail });
   };
@@ -101,11 +103,113 @@ export function buildConnections(
   return connections.slice(0, 3);
 }
 
+export const BUILD_ACTIVATION_UNITS: Readonly<Record<BuildActivationId, string>> = {
+  'polarity-rounds': 'charged volleys',
+  'ricochet-harness': 'recoil rebounds',
+  'spring-rivets': 'spring launches',
+  'slip-gauge': 'air bursts used',
+  'wake-wire': 'ribbons armed',
+  'false-silhouette': 'decoys created',
+  'gimbal-mount': 'steered discharges',
+  'momentum-exchange': 'velocity exchanges',
+  'offset-nozzle': 'remote volleys fired',
+  'momentum-battery': 'banked jumps released',
+  'piston-lance': 'piston discharges',
+  'cable-saw': 'saw discharges',
+  'seeker-rack': 'painted salvos released',
+  foamcaster: 'foam supports fitted',
+  'catch-chamber': 'enemy rounds caught',
+  'gate-snare': 'portal traps triggered',
+  'hot-wire': 'energizing pulses',
+  'ghost-shift': 'ally volleys repeated',
+  windmill: 'cutting traps formed',
+  'scrap-comet': 'debris clusters formed',
+};
+const singleActivationUnits: Readonly<Record<BuildActivationId, string>> = {
+  'polarity-rounds': 'charged volley',
+  'ricochet-harness': 'recoil rebound',
+  'spring-rivets': 'spring launch',
+  'slip-gauge': 'air burst used',
+  'wake-wire': 'ribbon armed',
+  'false-silhouette': 'decoy created',
+  'gimbal-mount': 'steered discharge',
+  'momentum-exchange': 'velocity exchange',
+  'offset-nozzle': 'remote volley fired',
+  'momentum-battery': 'banked jump released',
+  'piston-lance': 'piston discharge',
+  'cable-saw': 'saw discharge',
+  'seeker-rack': 'painted salvo released',
+  foamcaster: 'foam support fitted',
+  'catch-chamber': 'enemy round caught',
+  'gate-snare': 'portal trap triggered',
+  'hot-wire': 'energizing pulse',
+  'ghost-shift': 'ally volley repeated',
+  windmill: 'cutting trap formed',
+  'scrap-comet': 'debris cluster formed',
+};
+const activationUnit = (id: BuildActivationId, value: number) =>
+  value === 1 ? singleActivationUnits[id] : BUILD_ACTIVATION_UNITS[id];
+export interface BuildHighlight {
+  id: string;
+  label: string;
+  value: number;
+  unit: string;
+}
+/** At most three distinct, measured effects; never a guessed damage attribution. */
+export function measuredBuildHighlights(run: Pick<ReportGun, 'combatResults'>): BuildHighlight[] {
+  const r = run.combatResults;
+  if (!r) return [];
+  const activity = Object.keys(BUILD_ACTIVATION_UNITS) as BuildActivationId[];
+  const fields: BuildHighlight[] = activity
+    .filter((id) => Number.isSafeInteger(r.activations?.[id]) && r.activations![id]! > 0)
+    .map((id) => ({
+      id,
+      label: modName(id),
+      value: r.activations![id]!,
+      unit: activationUnit(id, r.activations![id]!),
+    }));
+  // Authored order surfaces distinct actions instead of ranking unlike counts as damage.
+  const priority: BuildActivationId[] = [
+    'catch-chamber',
+    'gate-snare',
+    'hot-wire',
+    'ghost-shift',
+    'windmill',
+    'scrap-comet',
+    'offset-nozzle',
+    'momentum-battery',
+    'ricochet-harness',
+    'spring-rivets',
+    'slip-gauge',
+  ];
+  fields.sort((a, b) => {
+    const ai = priority.indexOf(a.id as BuildActivationId),
+      bi = priority.indexOf(b.id as BuildActivationId);
+    return (ai < 0 ? priority.length : ai) - (bi < 0 ? priority.length : bi);
+  });
+  for (const [id, label, value, unit] of [
+    ['heat-relay', 'Heat transfers', r.heatTransfers, 'completed'],
+    ['overkill-bank', 'Overkill charges', r.bankCharges, 'used'],
+    ['scrap-armor', 'Scrap Armor', r.armorBlocks, 'bullets blocked'],
+    ['leech', 'Bloodwork', r.bloodworkHealing, 'health restored'],
+  ] as const)
+    if (value > 0) fields.push({ id, label, value, unit });
+  return fields.slice(0, 3);
+}
+
 export function combatReportMenu(run: ReportGun, index = 0) {
   const name = STARTING_GUNS[run.startingGun ?? 'pistol'].name;
   const results = run.combatResults;
   const fields: [string, number, string][] = [];
   if (results) {
+    if (results.activations)
+      for (const id of Object.keys(BUILD_ACTIVATION_UNITS) as BuildActivationId[])
+        if (run.mods.includes(id) || (results.activations[id] ?? 0) > 0)
+          fields.push([
+            modName(id),
+            results.activations[id] ?? 0,
+            activationUnit(id, results.activations[id] ?? 0),
+          ]);
     if (run.mods.includes('heat-relay') || results.heatTransfers)
       fields.push(['Heat transfers', results.heatTransfers, 'completed']);
     if (run.mods.includes('overkill-bank') || results.bankCharges)
@@ -119,10 +223,9 @@ export function combatReportMenu(run: ReportGun, index = 0) {
     if (run.mods.includes('leech') || results.bloodworkHealing)
       fields.push(['Bloodwork', results.bloodworkHealing, 'health restored']);
   }
-  const highlights = fields
-    .filter(([, value]) => value > 0)
-    .slice(0, 2)
-    .map(([label, value, unit]) => `${label}: ${amount(value)} ${unit}`)
+  const measured = measuredBuildHighlights(run);
+  const highlights = measured
+    .map(({ label, value, unit }) => `${label}: ${amount(value)} ${unit}`)
     .join(' · ');
   return (
     '<section class="combat-report" aria-label="Run combat report"><h3>What carried your run?</h3>' +
@@ -146,6 +249,22 @@ export function combatReportMenu(run: ReportGun, index = 0) {
       )
       .join('') +
     '</ul>' +
+    (measured.length
+      ? '<ul class="report-highlights" aria-label="Measured build highlights">' +
+        measured
+          .map(
+            ({ label, value, unit }) =>
+              '<li><strong>' +
+              escape(label) +
+              '</strong><span>' +
+              amount(value) +
+              ' ' +
+              escape(unit) +
+              '</span></li>',
+          )
+          .join('') +
+        '</ul>'
+      : '') +
     '<details class="report-results"><summary>Recorded results' +
     (highlights ? '<span>' + escape(highlights) + '</span>' : '') +
     '</summary>' +
@@ -184,6 +303,15 @@ export function combatReportMenu(run: ReportGun, index = 0) {
           .join('') +
         '</ul>'
       : '') +
+    (results &&
+    !results.activations &&
+    run.mods.some((id) => Object.hasOwn(BUILD_ACTIVATION_UNITS, id))
+      ? '<p>New fitting activations weren’t recorded for this run.</p>'
+      : results?.activationPartial
+        ? '<p>New fitting activations were recorded from room ' +
+          ((results.activationFromStage ?? results.fromStage) + 1) +
+          '. Earlier activity is unavailable.</p>'
+        : '') +
     (!results
       ? '<p>Upgrade results weren’t recorded for this run.</p>'
       : results.partial

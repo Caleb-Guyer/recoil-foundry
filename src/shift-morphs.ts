@@ -53,6 +53,8 @@ export class ShiftMorphs {
   private salvoTargets: Enemy[] = [];
   private shotOrder = 0;
   private foamAt = -100;
+  private reportSalvo = 0;
+  private reportedShots = new WeakSet<Shot>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -85,6 +87,7 @@ export class ShiftMorphs {
     this.shotOrder = 0;
     this.triggerHeld = this.wasHeld = false;
     this.foamAt = -100;
+    this.reportedShots = new WeakSet();
   }
   pause() {
     this.cast = null;
@@ -143,6 +146,7 @@ export class ShiftMorphs {
         .map((p) => p.enemy);
       this.locks = [];
       if (targets.length) {
+        this.reportSalvo++;
         this.salvoTargets = targets;
         this.shotOrder = 0;
         this.cast = { targets, until: null, started: false };
@@ -173,9 +177,33 @@ export class ShiftMorphs {
     if (!fire) this.cast = null;
     return { ...input, fire, firePressed: first, aim: { ...target.body.position } };
   }
+  /** Count the actual primary morph discharge; pellets, rear lanes and lit frames share it. */
+  recordDischarge(event: number) {
+    const id = this.equipped;
+    if (!this.active || !id || id === 'foamcaster') return;
+    if (id === 'seeker-rack' && !this.cast?.started) return;
+    this.game.combatReport.activation(
+      id,
+      id === 'seeker-rack' ? `salvo:${this.reportSalvo}` : event,
+    );
+  }
   prepare(s: Shot) {
     const kind = this.equipped,
       g = this.game;
+    if (
+      kind &&
+      this.active &&
+      s.friendly &&
+      !s.fragment &&
+      !s.reflected &&
+      !s.allied &&
+      !s.echo &&
+      !this.reportedShots.has(s)
+    ) {
+      // Parked rounds keep the discharge that paid for them; release cannot recount a later volley.
+      this.reportedShots.add(s);
+      this.recordDischarge(s.feedGeneration ?? s.discharge ?? g.shotCount);
+    }
     if (!kind || !s.friendly || s.fragment || s.reflected || dormant(s) || this.flights.has(s))
       return;
     let anchor = g.player;
@@ -409,6 +437,7 @@ export class ShiftMorphs {
       pos,
     });
     this.foamAt = g.time + 0.35;
+    g.combatReport.activation('foamcaster');
     g.burst(pos, 5, '#a5cdb4', 2);
     g.onSound('prop');
   }
