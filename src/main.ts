@@ -1,3 +1,8 @@
+import {
+  livingFoundryTestFromUrl,
+  livingFoundryTestRoom,
+  prepareLivingFoundryTest,
+} from './living-foundry-test.ts';
 import './quick-shift-menu.css';
 import { quickShiftTestFromUrl } from './quick-shift-test.ts';
 import {
@@ -642,7 +647,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Quick Shift</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Living Foundry</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -892,6 +897,9 @@ const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
 const linkedBuildBench = buildBenchTestFromUrl(entryUrl);
 const linkedBuildMotion = buildMotionTestFromUrl(entryUrl);
+const linkedLivingFoundry = livingFoundryTestFromUrl(entryUrl);
+const invalidLivingFoundry =
+  entryUrl.searchParams.get('test') === 'living-foundry' && !linkedLivingFoundry;
 let benchPreviewOpen = false;
 let benchDraft = [...(linkedBuildBench?.mods ?? [])];
 let benchGun = linkedBuildBench?.gun ?? 'pistol';
@@ -908,6 +916,7 @@ const benchBlueprintStore: BlueprintStore = {
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedLivingFoundry?.checkpoint ??
   linkedReclaimerArsenal?.checkpoint ??
   linkedReclaimerPressure?.checkpoint ??
   linkedFactoryUnbound?.checkpoint ??
@@ -1611,6 +1620,15 @@ function updateTitle() {
   }
   updateNextGoal();
   updateQuickTitle();
+  if (linkedLivingFoundry || invalidLivingFoundry) {
+    $('play').textContent = linkedLivingFoundry
+      ? 'Explore ' + AREAS[linkedLivingFoundry.zone].name + ' ↗'
+      : 'Unsupported scenery test ↗';
+    $('title-hint').textContent = linkedLivingFoundry
+      ? 'Walk into the view. R to restart this private test.'
+      : 'Choose a supported zone test.';
+    $('security').hidden = true;
+  }
 }
 function currentGoalProgress(): GoalProgress {
   if (
@@ -2624,7 +2642,15 @@ function startRunTest(save: Checkpoint) {
   if (!focus) renderer.cameraMode = preferredCameraMode;
   else if (!focusCameraPreview) renderer.cameraMode = linkedCombatFocusTest!.camera;
   focusCameraPreview = !!focus;
-  game.startTest(save);
+  const living =
+    linkedLivingFoundry && save.seed === linkedLivingFoundry.checkpoint.seed
+      ? linkedLivingFoundry
+      : null;
+  game.startTest(save, living ? livingFoundryTestRoom(living) : undefined);
+  if (living) {
+    prepareLivingFoundryTest(game, living);
+    renderer.sceneryStaticPreview = living.reduced;
+  }
   prepareReclaimerPressureTest(game, linkedReclaimerPressure);
   prepareReclaimerArsenalTest(game, linkedReclaimerArsenal);
   prepareFinaleServiceTest(game, entryUrl);
@@ -3812,7 +3838,11 @@ function showDialog(kind: string) {
           SUPPORT_MASTERIES.map((m) => m.id),
         )
       : commendations;
-  if (kind === 'play-mode') {
+  if (kind === 'living-invalid') {
+    content.innerHTML =
+      '<p class="eyebrow">LIVING FOUNDRY</p><h2 id="dialog-title">Unsupported scenery test.</h2><p>This link contains an unsupported zone, scene, state or mixed game modes.</p><div class="actions"><button id="living-return" class="primary">Return to Play</button></div>';
+    $('living-return').onclick = () => location.assign(new URL('./', location.href).href);
+  } else if (kind === 'play-mode') {
     buildMenu = quickShiftPlayMenu(content, {
       campaign: startFreshCampaign,
       quickShift: () => openQuickShiftSetup(false),
@@ -4247,14 +4277,14 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.31.0 · QUICK SHIFT</p><h2 id="dialog-title">A whole build in five rooms.</h2>' +
-      '<p class="update-tagline">Draft a gun. Choose a route. Finish your shift.</p>' +
-      '<dl class="update-notes"><div><dt>Five rooms.</dt><dd>A patrol, two tactical encounters, an optional job and a remastered boss. Find Quick Shift inside Play.</dd></div>' +
-      '<div><dt>Faster drafts.</dt><dd>Choose three opening fittings, then two after each of the first four rooms. Your weapon keeps its upgrades and prerequisites still matter.</dd></div>' +
-      '<div><dt>Repeat the challenge.</dt><dd>Copy a versioned seed and starting tool to repeat the layouts and offers. Route and job decisions have separate personal bests.</dd></div>' +
-      '<div><dt>Keep both runs.</dt><dd>Quick Shift has its own Continue slot and records. It does not clear your Campaign or grant Campaign, Security or Overtime unlocks.</dd></div></dl>' +
-      '<p>Try: <a href="?test=quick-shift&amp;scene=run&amp;v=1">Five-room run ↗</a> · <a href="?test=quick-shift&amp;scene=drafts&amp;v=1">Accelerated drafts ↗</a> · <a href="?test=quick-shift&amp;scene=seeds&amp;v=1">Replayable seeds ↗</a></p>' +
-      '<p class="practice-record-note">These isolated tests preserve all saved progress. A regular Quick Shift can save its own room-entry checkpoint and results.</p>' +
+      '<p class="eyebrow">5.32.0 · LIVING FOUNDRY</p><h2 id="dialog-title">A factory that works.</h2>' +
+      '<p class="update-tagline">Look beyond the firing line.</p>' +
+      '<dl class="update-notes"><div><dt>Five places.</dt><dd>New authored scenery gives the docks, furnace halls, Cooling Works, Reclamation Works and rooftops their own landmarks and machinery.</dd></div>' +
+      '<div><dt>Working machinery.</dt><dd>Gantry drives, casting lines, circulation pumps and salvage works follow active simulation time. Pause stops them. Real outages and disabled services change the scene.</dd></div>' +
+      '<div><dt>Walk into the view.</dt><dd>Entry architecture opens onto the next zone as you explore. Keep moving, aiming and firing throughout; there are no zone captions or camera takeovers.</dd></div>' +
+      '<div><dt>Quiet depth.</dt><dd>Scenery stays behind collision silhouettes and attack warnings. Reduced Effects keeps the architecture and circuit states with static machinery.</dd></div></dl>' +
+      '<p>Explore: <a href="?test=living-foundry&amp;zone=docks&amp;v=1">Docks ↗</a> · <a href="?test=living-foundry&amp;zone=furnace&amp;v=1">Furnace ↗</a> · <a href="?test=living-foundry&amp;zone=cooling&amp;v=1">Cooling ↗</a> · <a href="?test=living-foundry&amp;zone=reclamation&amp;v=1">Reclamation ↗</a> · <a href="?test=living-foundry&amp;zone=rooftops&amp;v=1">Rooftops ↗</a></p>' +
+      '<p class="practice-record-note">These authored inspection tests use native movement and preserve saved progress. Gameplay rules, routes and rewards are unchanged.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -6050,57 +6080,63 @@ function formatTime(n: number) {
 }
 updateQuickTitle();
 $('play').onclick = () =>
-  linkedQuick || linkedQuickFixture || invalidQuickLink
-    ? openQuickShiftSetup(!!linkedQuickFixture)
-    : linkedBuildMotion
-      ? startLinkedBuildMotion()
-      : linkedBuildBench
-        ? startLinkedBuildBench()
-        : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-          ? startLinkedToolsTest()
-          : linkedGoalPreview || linkedTrackingPreview
-            ? location.assign(new URL('./', location.href).href)
-            : linkedFirstRunPreview === 'warmup'
-              ? startWorkshop([], true)
-              : linkedDrill
-                ? startLinkedSupportDrill(linkedDrill)
-                : linkedGauntletPreview
-                  ? startGauntlet(linkedGauntletPreview, true)
-                  : linkedRemixGauntletPreview
-                    ? linkedRemixGauntletPreview.setup
-                      ? (() => {
-                          gauntletSetupPreview = true;
-                          gauntletSetupMode = 'remix';
-                          showDialog('gauntlet-setup');
-                        })()
-                      : startGauntlet(
-                          linkedRemixGauntletPreview.gun,
-                          true,
-                          linkedRemixGauntletPreview,
-                        )
-                    : linkedGauntletChallenge || invalidGauntletLink
-                      ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
-                      : linkedRecoilChallenge || invalidRecoilLink
-                        ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-                        : linkedTrial?.preview
-                          ? startTrial(linkedTrial.route, true)
-                          : linkedTrial || invalidTrialLink
-                            ? openTrials('title', linkedTrial?.challenge)
-                            : linkedWorkshop
-                              ? showDialog('workshop')
-                              : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                                  entryUrl.searchParams.get('test') !== 'arc'
-                                ? showDialog('layout-test')
-                                : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                                    linkedRunTest?.seed.startsWith('FUSIONS-')
-                                  ? showDialog('upgrade-test')
-                                  : linkedRunTest
-                                    ? startRunTest(linkedRunTest)
-                                    : linkedTest
-                                      ? startPractice(linkedTest, null, { test: true })
-                                      : linkedDaily
-                                        ? start()
-                                        : showDialog('play-mode');
+  invalidLivingFoundry
+    ? showDialog('living-invalid')
+    : linkedQuick || linkedQuickFixture || invalidQuickLink
+      ? openQuickShiftSetup(!!linkedQuickFixture)
+      : linkedBuildMotion
+        ? startLinkedBuildMotion()
+        : linkedBuildBench
+          ? startLinkedBuildBench()
+          : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+            ? startLinkedToolsTest()
+            : linkedGoalPreview || linkedTrackingPreview
+              ? location.assign(new URL('./', location.href).href)
+              : linkedFirstRunPreview === 'warmup'
+                ? startWorkshop([], true)
+                : linkedDrill
+                  ? startLinkedSupportDrill(linkedDrill)
+                  : linkedGauntletPreview
+                    ? startGauntlet(linkedGauntletPreview, true)
+                    : linkedRemixGauntletPreview
+                      ? linkedRemixGauntletPreview.setup
+                        ? (() => {
+                            gauntletSetupPreview = true;
+                            gauntletSetupMode = 'remix';
+                            showDialog('gauntlet-setup');
+                          })()
+                        : startGauntlet(
+                            linkedRemixGauntletPreview.gun,
+                            true,
+                            linkedRemixGauntletPreview,
+                          )
+                      : linkedGauntletChallenge || invalidGauntletLink
+                        ? openGauntletChallenge(
+                            linkedGauntletChallenge ?? undefined,
+                            false,
+                            'title',
+                          )
+                        : linkedRecoilChallenge || invalidRecoilLink
+                          ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+                          : linkedTrial?.preview
+                            ? startTrial(linkedTrial.route, true)
+                            : linkedTrial || invalidTrialLink
+                              ? openTrials('title', linkedTrial?.challenge)
+                              : linkedWorkshop
+                                ? showDialog('workshop')
+                                : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                                    entryUrl.searchParams.get('test') !== 'arc'
+                                  ? showDialog('layout-test')
+                                  : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                                      linkedRunTest?.seed.startsWith('FUSIONS-')
+                                    ? showDialog('upgrade-test')
+                                    : linkedRunTest
+                                      ? startRunTest(linkedRunTest)
+                                      : linkedTest
+                                        ? startPractice(linkedTest, null, { test: true })
+                                        : linkedDaily
+                                          ? start()
+                                          : showDialog('play-mode');
 $('daily').onclick = () => {
   linkedQuick = null;
   linkedQuickFixture = null;

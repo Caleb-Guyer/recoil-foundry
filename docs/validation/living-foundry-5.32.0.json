@@ -1,0 +1,51 @@
+{
+  "version": "5.32.0",
+  "update": "Living Foundry",
+  "checkedUtc": "2026-10-27T22:32:12.375919+00:00",
+  "zones": ["docks", "furnace", "cooling", "reclamation", "rooftops"],
+  "compositionsPerZone": 3,
+  "regularTestsPassed": 4384,
+  "finalFocusedTestsPassed": 40,
+  "productionBuild": "passed",
+  "formatting": "passed",
+  "sceneryRasterLimit": {
+    "width": 960,
+    "height": 600,
+    "scope": "Background only; foreground collision silhouettes and attack warnings keep normal resolution."
+  },
+  "nativeCanvasAudit": {
+    "cases": 60,
+    "samplesPerCase": 40,
+    "maxNewP95Ms": 20.235899999999674,
+    "maxOldP95Ms": 9.80659999999989,
+    "limitations": "Agent-controlled native Canvas CPU raster audit; not browser GPU frame rate or a human play session."
+  },
+  "browser": {
+    "sound": "off",
+    "music": "off",
+    "checked": [
+      "all five districts loaded with real native scene and clean browser console",
+      "large rooftop hangar closed/open states",
+      "working docks hoist and native walk through entry",
+      "actual native blackout and power cabinet",
+      "completed Core-sabotage cooling scene with lighting retained",
+      "mirrored reclamation entry and static scenery preview",
+      "Pause with both channels muted"
+    ],
+    "scope": "Agent-controlled tests; not observed human play sessions."
+  },
+  "invariants": [
+    "No camera takeover, captions or input filtering in zone reveals",
+    "No physics, attack timing, run RNG, reward or save changes",
+    "Native blackout, room disconnect and Core-sabotage service scope preserved",
+    "Specific finale and specialist room staging retains existing ownership",
+    "Static test preview does not write accessibility preferences"
+  ],
+  "testLinks": {
+    "docks": "https://caleb-guyer.github.io/recoil-foundry/?test=living-foundry&zone=docks&v=1",
+    "furnace": "https://caleb-guyer.github.io/recoil-foundry/?test=living-foundry&zone=furnace&v=1",
+    "cooling": "https://caleb-guyer.github.io/recoil-foundry/?test=living-foundry&zone=cooling&v=1",
+    "reclamation": "https://caleb-guyer.github.io/recoil-foundry/?test=living-foundry&zone=reclamation&v=1",
+    "rooftops": "https://caleb-guyer.github.io/recoil-foundry/?test=living-foundry&zone=rooftops&v=1"
+  }
+}

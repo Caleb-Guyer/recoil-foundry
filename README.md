@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Living Foundry — version 5.32.0.** Explore fifteen authored scenery compositions across all five zones. Working machinery follows real service states, and architectural entry reveals open through movement without captions or camera takeovers. [Release notes and five isolated zone tests](docs/releases/5.32.0.md).
+
 **Quick Shift — version 5.31.0.** Build a gun through five native rooms with three opening picks, paired room-clear drafts, route and optional-job choices, and a remastered boss. Replay versioned seeds with separate records and Continue. [Release notes and three isolated tests](docs/releases/5.31.0.md).
 
 **Build Bench — version 5.29.0.** Search collected fittings by effect or mechanic, inspect legal upgrade paths and dependency removals, compare the actual complete gun, and choose grouped targets, incoming fire, cover or recoil ranges. [Release notes and seven isolated Workshop tests](docs/releases/5.29.0.md).

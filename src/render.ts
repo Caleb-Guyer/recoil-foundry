@@ -1,3 +1,5 @@
+import { LivingFoundryScenery } from './living-foundry.ts';
+import { LivingFoundryBackdrop } from './living-foundry-art.ts';
 import { drawBuildMotion } from './build-motion-art.ts';
 import { drawShiftRun } from './shift-run-art.ts';
 import { drawShiftMorphs } from './shift-morph-art.ts';
@@ -150,12 +152,15 @@ export class Renderer {
   scale = 1;
   camera: Vec = { x: 0, y: 0 };
   reduced = false;
+  sceneryStaticPreview = false;
   cameraMode: CameraMode = 'follow';
   portalAim: Vec | null | undefined;
   goalCue: GoalCue | null = null;
   last = 0;
   clock = 0;
   portalRevision = 0;
+  private livingFoundry = new LivingFoundryScenery();
+  private livingBackdrop = new LivingFoundryBackdrop();
   private worldTransform = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   toCanvas(point: Vec): Vec {
     const m = this.worldTransform;
@@ -691,6 +696,9 @@ export class Renderer {
       drawClockOut(c, g, this.width, this.height, this.reduced);
       return;
     }
+    const sceneryReduced =
+      this.reduced || (this.sceneryStaticPreview && !!g.testRun?.seed.startsWith('RF-C108-LF-'));
+    const living = this.livingFoundry.update(g, sceneryReduced);
     const viewW = this.width / this.scale,
       viewH = this.height / this.scale;
     const lead = clamp((g.aim.x - g.player.position.x) * 0.1, -95, 125) + g.player.velocity.x * 5;
@@ -756,6 +764,7 @@ export class Renderer {
       (g.level.uprising === 'railworks' || g.level.uprising === 'core')
     )
       drawUprisingScenery(c, g.level.uprising, this.camera, viewW, viewH);
+    else if (living) this.livingBackdrop.draw(c, living, this.camera, viewW, viewH, sceneryReduced);
     else drawScenery(c, g.level.area, this.camera, viewW, viewH);
     c.restore();
     c.save();
