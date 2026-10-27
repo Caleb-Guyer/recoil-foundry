@@ -1,3 +1,25 @@
+import './quick-shift-menu.css';
+import { quickShiftTestFromUrl } from './quick-shift-test.ts';
+import {
+  QUICK_SHIFT_RECORDS_KEY,
+  quickShiftFromSeed,
+  quickShiftFromUrl,
+  quickShiftLink,
+  recordQuickShift,
+  planQuickShift,
+  type QuickShiftChallenge,
+} from './quick-shift-rules.ts';
+import {
+  QUICK_SHIFT_CONTINUE_KEY,
+  QUICK_SHIFT_JOB_SECONDS,
+  loadQuickShiftContinue,
+} from './quick-shift.ts';
+import {
+  quickShiftPlayMenu,
+  quickShiftSetup,
+  quickShiftChoice,
+  quickShiftResult,
+} from './quick-shift-menu.ts';
 import { buildBenchTestFromUrl } from './build-bench-test.ts';
 import { buildMotionTestFromUrl, prepareBuildMotionTest } from './build-motion-test.ts';
 import { buildMotionMarkup } from './build-motion-menu.ts';
@@ -321,7 +343,7 @@ import {
 } from './tracked-goal.ts';
 import { trackingPreviewFromUrl, trackingPreviewProgress } from './tracked-goal-preview.ts';
 import { progressMenu } from './progress-menu.ts';
-import { newCampaignSeed, retrySeed } from './run-seed.ts';
+import { newCampaignSeed, retrySeed, newSeed } from './run-seed.ts';
 import {
   FirstSessionGuide,
   FIRST_SESSION_KEY,
@@ -496,6 +518,13 @@ const storedCheckpoint = loadCheckpoint(
 );
 let unavailableDailySave = !!storedCheckpoint && isUnsupportedDailySeed(storedCheckpoint.seed);
 let checkpoint = unavailableDailySave ? null : storedCheckpoint;
+let quickCheckpoint = loadQuickShiftContinue(read(QUICK_SHIFT_CONTINUE_KEY));
+let quickSetupSeed = 'RF-Q1-' + newSeed();
+let quickSetupGun: StartingGun = 'pistol';
+let quickFixtureActive = false;
+let quickCaptured = false;
+let quickSavedSnapshot = '';
+let quickOutcome: ReturnType<typeof recordQuickShift> | null = null;
 const encounters = loadEncounters(read(VICTORIES_KEY));
 let discovered = discoverBuild(
   loadDiscoveries(read(DISCOVERIES_KEY)),
@@ -613,7 +642,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Build in Motion</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Quick Shift</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -973,6 +1002,15 @@ let linkedRunTest =
   squadsTestFromUrl(entryUrl) ??
   cargoTestFromUrl(entryUrl) ??
   expandedTestFromUrl(entryUrl);
+let linkedQuick = quickShiftFromUrl(entryUrl);
+let linkedQuickFixture = quickShiftTestFromUrl(entryUrl);
+let invalidQuickLink =
+  (entryUrl.searchParams.has('quick') && !linkedQuick) ||
+  (entryUrl.searchParams.get('test') === 'quick-shift' && !linkedQuickFixture);
+if (linkedQuick || linkedQuickFixture) {
+  quickSetupSeed = (linkedQuick?.challenge ?? linkedQuickFixture!.challenge).seed;
+  quickSetupGun = linkedQuick?.gun ?? linkedQuickFixture!.gun;
+}
 let linkedDaily = dailyFromUrl(entryUrl);
 let linkedWorkshop = workshopLink(entryUrl);
 let invalidDailyLink = entryUrl.searchParams.has('daily') && !linkedDaily;
@@ -1572,6 +1610,7 @@ function updateTitle() {
     $('title-hint').textContent = linkedBuildMotion.hint;
   }
   updateNextGoal();
+  updateQuickTitle();
 }
 function currentGoalProgress(): GoalProgress {
   if (
@@ -2033,6 +2072,14 @@ function start(
   progress.checkExternal();
   if (progress.state === 'conflict') {
     openProgress();
+    return;
+  }
+  if (retry && game.quickShift.state) {
+    startQuickShift(
+      game.quickShift.state.challenge,
+      game.quickShift.state.gun,
+      game.quickShift.state.preview,
+    );
     return;
   }
   if (retry && game.workshop.active) {
@@ -2665,7 +2712,171 @@ function startLinkedToolsTest() {
   if (linkedToolsTest.scene === 'picker') showDialog('starting-gun');
   else openToolTrial(linkedToolsTest.gun, 'starting-gun', linkedToolsTest.scene);
 }
+function updateQuickTitle() {
+  if (linkedQuick || linkedQuickFixture || invalidQuickLink) {
+    $('play').textContent = linkedQuickFixture ? 'Test Quick Shift ↗' : 'Play Quick Shift ↗';
+    $('security').hidden = true;
+  }
+}
+function openQuickShiftSetup(preview = false) {
+  quickFixtureActive = preview;
+  quickCheckpoint = loadQuickShiftContinue(read(QUICK_SHIFT_CONTINUE_KEY));
+  showDialog(invalidQuickLink && !preview ? 'quick-invalid' : 'quick-setup');
+}
+function startQuickShift(challenge: QuickShiftChallenge, gun: StartingGun, preview = false) {
+  if (!preview) progress.checkExternal();
+  if (progress.restoring || (!preview && progress.blocked)) {
+    openProgress();
+    return;
+  }
+  if (
+    !quickShiftFromSeed(challenge.seed) ||
+    (!preview && !unlockedStartingGuns(weaponUnlocks()).includes(gun))
+  )
+    return;
+  resetRunGoal();
+  firstSession.stop();
+  clearInput();
+  finishedRun = null;
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
+  runCommendations = [];
+  activeDaily = null;
+  dailyResult = null;
+  quickCaptured = false;
+  quickSavedSnapshot = '';
+  quickOutcome = null;
+  quickSetupSeed = challenge.seed;
+  quickSetupGun = gun;
+  quickFixtureActive = preview;
+  renderer.cameraMode = preferredCameraMode;
+  focusCameraPreview = false;
+  game.cosmetics = { ...equippedCosmetics };
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  if (!preview) {
+    linkedQuick = { challenge, gun };
+    history.replaceState(null, '', quickShiftLink(challenge, location.href, gun));
+  }
+  if (!game.quickShift.begin(challenge, gun, preview)) {
+    showDialog('quick-setup');
+    return;
+  }
+  renderer.reset();
+  pointer.x = canvas.clientWidth * 0.6;
+  pointer.y = canvas.clientHeight * 0.6;
+  if (game.mode === 'playing') canvas.focus();
+}
+function continueQuickShift() {
+  progress.checkExternal();
+  if (progress.restoring || progress.blocked) {
+    openProgress();
+    return;
+  }
+  const saved = loadQuickShiftContinue(read(QUICK_SHIFT_CONTINUE_KEY));
+  if (!saved || !unlockedStartingGuns(weaponUnlocks()).includes(saved.state.gun)) return;
+  resetRunGoal();
+  firstSession.stop();
+  clearInput();
+  activeDaily = null;
+  dailyResult = null;
+  finishedRun = null;
+  runCommendations = [];
+  pendingNgPlusNotice = false;
+  ngPlusNoticeRecorded = false;
+  quickFixtureActive = false;
+  quickSetupSeed = saved.state.challenge.seed;
+  quickSetupGun = saved.state.gun;
+  linkedQuick = { challenge: saved.state.challenge, gun: saved.state.gun };
+  history.replaceState(
+    null,
+    '',
+    quickShiftLink(saved.state.challenge, location.href, saved.state.gun),
+  );
+  quickCaptured = false;
+  quickOutcome = null;
+  quickSavedSnapshot = '';
+  sound.unlock();
+  sound.resetMusic();
+  closeDialog();
+  game.cosmetics = { ...equippedCosmetics };
+  if (!game.quickShift.resume(saved)) {
+    openQuickShiftSetup();
+    return;
+  }
+  renderer.reset();
+  if (game.mode === 'playing') canvas.focus();
+}
+function updateQuickJobCue() {
+  const q = game.quickShift.state;
+  if (!q) return;
+  const show =
+    q.phase === 'fight' && q.round === 3 && q.job === 'accepted' && game.mode === 'playing';
+  $('factory-condition').hidden = !show;
+  if (!show) return;
+  const clean = planQuickShift(q.challenge).job === 'clean';
+  const jobTimeMs = q.roomTimeMs + (game.clear ? game.clearAt : game.time) * 1000;
+  const remaining = Math.max(0, Math.ceil(QUICK_SHIFT_JOB_SECONDS - jobTimeMs / 1000));
+  $('factory-name').textContent = clean
+    ? 'Optional job · no hits'
+    : 'Optional job · ' + remaining + 's';
+  $('factory-hint').hidden = false;
+  $('factory-hint').textContent = (
+    clean ? q.roomHits === 0 : jobTimeMs <= QUICK_SHIFT_JOB_SECONDS * 1000
+  )
+    ? game.clear
+      ? 'Job complete. Take the exit for your repair.'
+      : 'Clear this room for up to 15 health.'
+    : 'Job missed. Clear the room to continue.';
+}
+function persistQuickShift() {
+  const q = game.quickShift;
+  if (!q.state || q.state.preview || q.loading || progress.restoring || progress.blocked) return;
+  if (q.result && !quickCaptured) {
+    quickCaptured = true;
+    quickOutcome = recordQuickShift(read(QUICK_SHIFT_RECORDS_KEY), q.result);
+    write(QUICK_SHIFT_RECORDS_KEY, quickOutcome.records);
+    write(QUICK_SHIFT_CONTINUE_KEY, null);
+    quickCheckpoint = null;
+    quickSavedSnapshot = '';
+  } else if (!q.result) {
+    const snapshot = q.snapshot();
+    const serialized = JSON.stringify(snapshot);
+    if (snapshot && serialized !== quickSavedSnapshot) {
+      quickSavedSnapshot = serialized;
+      quickCheckpoint = snapshot;
+      write(QUICK_SHIFT_CONTINUE_KEY, snapshot);
+    }
+  }
+}
+function contentForQuickShortcut(index: number) {
+  $('dialog-content')
+    .querySelectorAll<HTMLButtonElement>('[data-quick-mod], [data-quick-shift-choice]')
+    [index]?.click();
+}
+function chooseQuickMod(id: string) {
+  if (!game.quickShift.state?.offers.includes(id)) return;
+  sound.unlock();
+  closeDialog();
+  if (!game.quickShift.chooseMod(id)) return;
+  if (game.mode === 'playing') {
+    renderer.reset();
+    canvas.focus();
+  } else if (modal.open) {
+    $('dialog-title').tabIndex = -1;
+    $('dialog-title').focus({ preventScroll: true });
+  }
+}
+function leaveQuickShiftForPlay() {
+  menu();
+  showDialog('play-mode');
+}
 function startFreshCampaign() {
+  linkedQuickFixture = null;
+  quickFixtureActive = false;
+  linkedQuick = null;
+  invalidQuickLink = false;
   toolPickerPreview = false;
   toolPickerSelection = null;
   if (weaponUnlocks().started) showDialog('starting-gun');
@@ -2806,6 +3017,7 @@ function startLinkedBuildBench() {
   else startBuildBenchRange();
 }
 function menu() {
+  persistQuickShift();
   firstSession.stop();
   closeDialog();
   game.setMode('title');
@@ -3042,7 +3254,13 @@ function currentMasteryAttempt(): SupportMasteryAttempt | undefined {
   if (game.mode !== 'title' && !game.practice && !game.workshop.active)
     return {
       results: game.combatReport.snapshot(),
-      label: game.testRun ? 'Preset test results · Progress stays untouched' : 'This attempt',
+      label: game.quickShift.state
+        ? game.quickShift.state.preview
+          ? 'Quick Shift test measurements'
+          : 'Quick Shift measurements'
+        : game.testRun
+          ? 'Preset test results · Progress stays untouched'
+          : 'This attempt',
     };
   if (game.mode === 'title' && checkpoint?.combatResults)
     return { results: checkpoint.combatResults, label: 'Continue attempt' };
@@ -3253,6 +3471,8 @@ function updateFinalePresentation() {
   );
 }
 game.onChange = () => {
+  if (game.quickShift.loading) return;
+  persistQuickShift();
   updateFinalePresentation();
   if (game.mode === 'playing' && currentRematchEntry?.source !== game.level) {
     currentRematchEntry = rematchEntry(game);
@@ -3350,6 +3570,14 @@ game.onChange = () => {
         : 'Complete the job, then clear the patrol or reach evacuation.'
       : factoryHint(game.factory, game.stage);
   }
+  if (game.quickShift.state) {
+    $('stage').textContent =
+      (game.quickShift.state.preview ? 'TEST · ' : '') +
+      'QUICK · ' +
+      (game.quickShift.state.round + 1) +
+      ' / 5';
+    $('stage').title = game.level.name + ' · ' + game.quickShift.state.challenge.seed;
+  }
   if (game.maintenance.trial)
     $('stage').textContent =
       (game.maintenance.trial.preview ? 'TEST · ' : '') + 'MAINTENANCE TRIAL';
@@ -3367,8 +3595,10 @@ game.onChange = () => {
     $('stage').title = 'Transmission Annex · One-room prototype';
   }
   updateTitle();
+  updateQuickTitle();
   updateFirstSession();
-  if (game.mode === 'upgrade') showDialog('upgrade');
+  if (game.mode === 'upgrade')
+    showDialog(game.quickShift.state ? 'quick-' + game.quickShift.state.phase : 'upgrade');
   if (game.mode === 'shift-office') showDialog('shift-office');
   if (game.mode === 'reforge') showDialog('reforge');
   if (game.mode === 'finale-service') showDialog('finale-service');
@@ -3452,6 +3682,7 @@ function showDialog(kind: string) {
   modal.classList.toggle(
     'upgrade-dialog',
     kind === 'upgrade' ||
+      kind === 'quick-draft' ||
       kind === 'reforge' ||
       kind === 'finale-service' ||
       kind === 'job-payment' ||
@@ -3482,12 +3713,19 @@ function showDialog(kind: string) {
   modal.classList.toggle('drill-dialog', kind === 'support-drill' || kind === 'tool-trial');
   modal.classList.toggle('motion-practice-dialog', kind === 'motion-practice');
   modal.classList.toggle(
+    'quick-shift-dialog',
+    kind.startsWith('quick-') ||
+      kind === 'play-mode' ||
+      (kind === 'result' && !!game.quickShift.state),
+  );
+  modal.classList.toggle(
     'ending-dialog',
     kind === 'result' &&
       game.mode === 'won' &&
       !game.practice &&
       !game.maintenance.trial &&
-      !game.recoil.practice,
+      !game.recoil.practice &&
+      !game.quickShift.state,
   );
   modal.classList.toggle('controls-dialog', kind === 'controls');
   modal.classList.toggle('progress-dialog', kind === 'progress');
@@ -3574,7 +3812,186 @@ function showDialog(kind: string) {
           SUPPORT_MASTERIES.map((m) => m.id),
         )
       : commendations;
-  if (kind === 'job-payment') {
+  if (kind === 'play-mode') {
+    buildMenu = quickShiftPlayMenu(content, {
+      campaign: startFreshCampaign,
+      quickShift: () => openQuickShiftSetup(false),
+      back: closeDialog,
+    });
+  } else if (kind === 'quick-invalid') {
+    content.innerHTML =
+      '<p class="eyebrow">QUICK SHIFT</p><h2 id="dialog-title">Unsupported challenge.</h2><p>This link has an invalid seed, unsupported rules or mixed game modes. Choose a new Quick Shift or return to Play.</p><div class="actions"><button id="quick-new-valid" class="primary">New Quick Shift</button><button id="quick-invalid-back" class="quiet">Back</button></div>';
+    $('quick-new-valid').onclick = () => {
+      invalidQuickLink = false;
+      linkedQuick = null;
+      quickSetupSeed = 'RF-Q1-' + newSeed();
+      openQuickShiftSetup(false);
+    };
+    $('quick-invalid-back').onclick = () => showDialog('play-mode');
+  } else if (kind === 'quick-setup') {
+    const fixture = quickFixtureActive && !!linkedQuickFixture;
+    buildMenu = quickShiftSetup(content, {
+      seed: quickSetupSeed,
+      selectedGun: quickSetupGun,
+      unlockedGuns: fixture ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
+      showWeapons: fixture || weaponUnlocks().started,
+      records: fixture ? [] : read(QUICK_SHIFT_RECORDS_KEY),
+      preview: fixture,
+      ...(quickCheckpoint && !fixture ? { continue: continueQuickShift } : {}),
+      newSeed: () => (quickSetupSeed = 'RF-Q1-' + newSeed()),
+      start: (seed, gun) => {
+        const challenge = quickShiftFromSeed(seed);
+        if (challenge) startQuickShift(challenge, gun, fixture);
+      },
+      back: () => showDialog('play-mode'),
+    });
+    if (fixture && linkedQuickFixture?.scene === 'seeds')
+      content.querySelector<HTMLDetailsElement>('.quick-shift-seed-details')!.open = true;
+    if (!fixture && linkedQuick && !unlockedStartingGuns(weaponUnlocks()).includes(linkedQuick.gun))
+      content.querySelector<HTMLElement>('#quick-shift-status')!.textContent =
+        'The requested starting tool is not unlocked. The selected tool will have its own separate record.';
+  } else if (kind === 'quick-draft' && game.quickShift.state) {
+    const q = game.quickShift.state;
+    const offers = q.offers.flatMap((id) => {
+      const mod = MODS.find((m) => m.id === id);
+      return mod ? [mod] : [];
+    });
+    content.innerHTML =
+      '<p class="eyebrow">' +
+      (q.preview ? 'ISOLATED TEST · ' : '') +
+      'QUICK SHIFT · ' +
+      (q.cleared === 0 ? 'OPENING DRAFT' : 'ROOM ' + q.cleared + ' CLEAR') +
+      '</p><h2 id="dialog-title">Build your next move.</h2><p class="quick-shift-note">Choose one fitting. ' +
+      q.draftRemaining +
+      ' pick' +
+      (q.draftRemaining === 1 ? '' : 's') +
+      ' remaining before the next room.</p><div class="choices">' +
+      offers
+        .map(
+          (mod, index) =>
+            '<button class="mod" data-quick-mod="' +
+            mod.id +
+            '"><span class="mod-top">' +
+            modMark(mod) +
+            '<kbd>' +
+            (index + 1) +
+            '</kbd></span><strong>' +
+            mod.name +
+            '</strong><span class="mod-copy">' +
+            modDescription(mod, game.mods, game.startingGun, game.seed) +
+            '</span>' +
+            (modPathLabel(mod.id)
+              ? '<span class="mod-path">' + modPathLabel(mod.id) + '</span>'
+              : '') +
+            '</button>',
+        )
+        .join('') +
+      '</div>' +
+      upgradePreviewMarkup() +
+      '<div class="actions"><button id="quick-save-exit" class="quiet">' +
+      (q.preview ? 'Back to Play' : 'Save & leave') +
+      '</button></div>';
+    loadUpgradeComparison(
+      content.querySelector('.upgrade-preview')!,
+      new Map(
+        Array.from(content.querySelectorAll<HTMLButtonElement>('[data-quick-mod]')).map(
+          (button) => [
+            button,
+            inspectUpgrade(
+              game.mods,
+              offers.find((mod) => mod.id === button.dataset.quickMod)!,
+              game.startingGun,
+              game.hp,
+              undefined,
+              game.seed,
+            ),
+          ],
+        ),
+      ),
+    );
+    content
+      .querySelectorAll<HTMLButtonElement>('[data-quick-mod]')
+      .forEach((button) => (button.onclick = () => chooseQuickMod(button.dataset.quickMod!)));
+    $('quick-save-exit').onclick = leaveQuickShiftForPlay;
+  } else if ((kind === 'quick-route' || kind === 'quick-job') && game.quickShift.state) {
+    const q = game.quickShift.state,
+      route = kind === 'quick-route';
+    const plan = planQuickShift(q.challenge);
+    buildMenu = quickShiftChoice(content, {
+      kind: route ? 'route' : 'job',
+      title: route
+        ? 'Choose the crossing.'
+        : plan.job === 'clean'
+          ? 'Keep it clean?'
+          : 'Beat the clock?',
+      hint: route
+        ? 'Your choice changes the terrain through the next encounters. Both paths rejoin for the final fight.'
+        : plan.job === 'clean'
+          ? 'An optional job for the next room: clear it without taking a hit.'
+          : 'An optional job for the next room: clear it within 45 seconds of active room time.',
+      room: route ? 2 : 4,
+      choices: route
+        ? [
+            {
+              id: 'low',
+              name: 'Low route',
+              detail: 'Grounded cover and a supported lower lane.',
+              consequence: 'The same seed keeps this route’s encounters.',
+            },
+            {
+              id: 'high',
+              name: 'High route',
+              detail: 'Alternate patrol angles with upper decks and cover to work around.',
+              consequence: 'A separate route record.',
+            },
+          ]
+        : [
+            {
+              id: 'accept',
+              name: 'Accept the job',
+              detail:
+                plan.job === 'clean'
+                  ? 'No hits during the next room.'
+                  : 'Finish the next room within 45 seconds of active room time.',
+              consequence: 'Success repairs up to 15 health. Failure has no extra penalty.',
+            },
+            {
+              id: 'skip',
+              name: 'Pass through',
+              detail: 'Clear the room at your own pace.',
+              consequence: 'No bonus repair. A separate job-choice record.',
+            },
+          ],
+      choose: (id) => {
+        sound.unlock();
+        closeDialog();
+        if (route && (id === 'low' || id === 'high')) game.quickShift.chooseRoute(id);
+        else if (!route && (id === 'accept' || id === 'skip')) game.quickShift.chooseJob(id);
+        if (game.mode === 'playing') {
+          renderer.reset();
+          canvas.focus();
+        }
+      },
+      back: leaveQuickShiftForPlay,
+    });
+  } else if (kind === 'result' && game.quickShift.state && game.quickShift.result) {
+    const q = game.quickShift.state,
+      record = game.quickShift.result;
+    buildMenu = quickShiftResult(content, {
+      record,
+      best: q.preview ? null : quickOutcome?.best,
+      newBest: !q.preview && quickOutcome?.newBest,
+      preview: q.preview,
+      shareLink: quickShiftLink(q.challenge, location.href, q.gun),
+      replay: () => startQuickShift(q.challenge, q.gun, q.preview),
+      newShift: () => {
+        quickSetupSeed = 'RF-Q1-' + newSeed();
+        menu();
+        openQuickShiftSetup(q.preview);
+      },
+      back: leaveQuickShiftForPlay,
+    });
+  } else if (kind === 'job-payment') {
     const reward = game.uprising.pendingPayment,
       route = game.uprising.mission;
     if (!reward || !route) {
@@ -3612,7 +4029,8 @@ function showDialog(kind: string) {
       content,
       game,
       () => {
-        if (game.mode === 'upgrade') showDialog('upgrade');
+        if (game.mode === 'upgrade')
+          showDialog(game.quickShift.state ? 'quick-' + game.quickShift.state.phase : 'upgrade');
         else {
           closeDialog();
           canvas.focus();
@@ -3829,14 +4247,14 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.30.0 · BUILD IN MOTION</p><h2 id="dialog-title">Know your gun in the fight.</h2>' +
-      '<p class="update-tagline">Understand the trigger. Recognize the opening. Practice your build.</p>' +
-      '<dl class="update-notes"><div><dt>Your build now.</dt><dd>One expandable Pause card explains equipped morphs, fusions and special fittings using their current native states.</dd></div>' +
-      '<div><dt>Ready when it matters.</dt><dd>Small cues near your character identify a usable stored action. Existing attack warnings retain priority.</dd></div>' +
-      '<div><dt>Measured highlights.</dt><dd>Run reports include actual new fitting and fusion activations. Older saves identify missing earlier activity.</dd></div>' +
-      '<div><dt>Practice the trigger.</dt><dd>Open a suitable private range from an equipped fitting’s Pause details. Keep your full gun while your run stays paused; return without changing progress.</dd></div></dl>' +
-      '<p>Try: <a href="?test=build-motion&amp;scene=explanations&amp;v=1">Build explanations ↗</a> · <a href="?test=build-motion&amp;scene=readiness&amp;v=1">Readiness cues ↗</a> · <a href="?test=build-motion&amp;scene=highlights&amp;v=1">Measured highlights ↗</a> · <a href="?test=build-motion&amp;scene=practice&amp;v=1">Practice shortcuts ↗</a></p>' +
-      '<p class="practice-record-note">These isolated tests preserve Continue, discoveries, weapon unlocks and saved builds. Existing Campaign and Daily combat rules remain unchanged.</p>' +
+      '<p class="eyebrow">5.31.0 · QUICK SHIFT</p><h2 id="dialog-title">A whole build in five rooms.</h2>' +
+      '<p class="update-tagline">Draft a gun. Choose a route. Finish your shift.</p>' +
+      '<dl class="update-notes"><div><dt>Five rooms.</dt><dd>A patrol, two tactical encounters, an optional job and a remastered boss. Find Quick Shift inside Play.</dd></div>' +
+      '<div><dt>Faster drafts.</dt><dd>Choose three opening fittings, then two after each of the first four rooms. Your weapon keeps its upgrades and prerequisites still matter.</dd></div>' +
+      '<div><dt>Repeat the challenge.</dt><dd>Copy a versioned seed and starting tool to repeat the layouts and offers. Route and job decisions have separate personal bests.</dd></div>' +
+      '<div><dt>Keep both runs.</dt><dd>Quick Shift has its own Continue slot and records. It does not clear your Campaign or grant Campaign, Security or Overtime unlocks.</dd></div></dl>' +
+      '<p>Try: <a href="?test=quick-shift&amp;scene=run&amp;v=1">Five-room run ↗</a> · <a href="?test=quick-shift&amp;scene=drafts&amp;v=1">Accelerated drafts ↗</a> · <a href="?test=quick-shift&amp;scene=seeds&amp;v=1">Replayable seeds ↗</a></p>' +
+      '<p class="practice-record-note">These isolated tests preserve all saved progress. A regular Quick Shift can save its own room-entry checkpoint and results.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -5135,25 +5553,31 @@ function showDialog(kind: string) {
                 (game.recoil.practice
                   ? 'Retry repeats this course.'
                   : 'Leave trial skips the bonus and rejoins the campaign.')
-              : game.practice
-                ? 'Defeat the boss. Retry starts over.'
-                : game.testRun
-                  ? game.testRun.annex
-                    ? 'Clear the Annex, then leave through the right door. Restart test starts over.'
-                    : 'Preset test. Restart test starts over.'
-                  : game.escape
-                    ? game.canOvertime
-                      ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
-                      : 'Reach the Exit lift to finish your run.'
-                    : game.detour
-                      ? game.maintenance.active
-                        ? 'Reach the top for an extra upgrade, without a health refill.'
-                        : 'Survive for an extra upgrade, without a health refill.'
-                      : game.overtime
-                        ? 'Second lap. Clear all twenty rooms, then extract.'
-                        : game.canDetour
-                          ? 'After clearing, the upper door offers an optional challenge.'
-                          : 'Clear the room, then leave through the right door.') +
+              : game.quickShift.state
+                ? game.quickShift.state.preview
+                  ? 'Isolated Quick Shift test. Records and Continue stay untouched.'
+                  : 'Quick Shift · room ' +
+                    (game.quickShift.state.round + 1) +
+                    ' / 5. Menu saves this room’s entry; active time, shots and job-hit penalties remain counted.'
+                : game.practice
+                  ? 'Defeat the boss. Retry starts over.'
+                  : game.testRun
+                    ? game.testRun.annex
+                      ? 'Clear the Annex, then leave through the right door. Restart test starts over.'
+                      : 'Preset test. Restart test starts over.'
+                    : game.escape
+                      ? game.canOvertime
+                        ? 'Climb to the New Game+ elevator to keep your gun and continue. The lower Exit lift finishes your run.'
+                        : 'Reach the Exit lift to finish your run.'
+                      : game.detour
+                        ? game.maintenance.active
+                          ? 'Reach the top for an extra upgrade, without a health refill.'
+                          : 'Survive for an extra upgrade, without a health refill.'
+                        : game.overtime
+                          ? 'Second lap. Clear all twenty rooms, then extract.'
+                          : game.canDetour
+                            ? 'After clearing, the upper door offers an optional challenge.'
+                            : 'Clear the room, then leave through the right door.') +
       '</p></div>' +
       (paused ? shiftRunSummary(game) : '') +
       (paused && game.level.bossRemix
@@ -5189,9 +5613,11 @@ function showDialog(kind: string) {
               ? '<button id="retry" class="quiet">Retry course</button>'
               : paused && game.maintenance.trial
                 ? '<button id="retry" class="quiet">Retry trial</button>'
-                : paused && game.testRun
-                  ? '<button id="retry" class="quiet">Restart test</button>'
-                  : '') +
+                : paused && game.quickShift.state
+                  ? '<button id="retry" class="quiet">Restart Quick Shift</button>'
+                  : paused && game.testRun
+                    ? '<button id="retry" class="quiet">Restart test</button>'
+                    : '') +
       (paused
         ? '<button id="pause-logbook" class="quiet">Logbook</button>' +
           ((game.uprising.run && !game.overtime) || game.routeHistory.length
@@ -5368,6 +5794,11 @@ function showDialog(kind: string) {
   if (kind === 'practice-build') $('workshop-apply').focus({ preventScroll: true });
   if (kind === 'uprising' || kind === 'uprising-map') {
     content.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+    modal.scrollTop = 0;
+  }
+  if (kind.startsWith('quick-')) {
+    $('dialog-title').tabIndex = -1;
+    $('dialog-title').focus({ preventScroll: true });
     modal.scrollTop = 0;
   }
   if (kind === 'history') content.querySelector<HTMLElement>('summary, #back')?.focus();
@@ -5617,57 +6048,64 @@ function pause() {
 function formatTime(n: number) {
   return Math.floor(n / 60) + ':' + String(Math.floor(n % 60)).padStart(2, '0');
 }
+updateQuickTitle();
 $('play').onclick = () =>
-  linkedBuildMotion
-    ? startLinkedBuildMotion()
-    : linkedBuildBench
-      ? startLinkedBuildBench()
-      : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-        ? startLinkedToolsTest()
-        : linkedGoalPreview || linkedTrackingPreview
-          ? location.assign(new URL('./', location.href).href)
-          : linkedFirstRunPreview === 'warmup'
-            ? startWorkshop([], true)
-            : linkedDrill
-              ? startLinkedSupportDrill(linkedDrill)
-              : linkedGauntletPreview
-                ? startGauntlet(linkedGauntletPreview, true)
-                : linkedRemixGauntletPreview
-                  ? linkedRemixGauntletPreview.setup
-                    ? (() => {
-                        gauntletSetupPreview = true;
-                        gauntletSetupMode = 'remix';
-                        showDialog('gauntlet-setup');
-                      })()
-                    : startGauntlet(
-                        linkedRemixGauntletPreview.gun,
-                        true,
-                        linkedRemixGauntletPreview,
-                      )
-                  : linkedGauntletChallenge || invalidGauntletLink
-                    ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
-                    : linkedRecoilChallenge || invalidRecoilLink
-                      ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-                      : linkedTrial?.preview
-                        ? startTrial(linkedTrial.route, true)
-                        : linkedTrial || invalidTrialLink
-                          ? openTrials('title', linkedTrial?.challenge)
-                          : linkedWorkshop
-                            ? showDialog('workshop')
-                            : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                                entryUrl.searchParams.get('test') !== 'arc'
-                              ? showDialog('layout-test')
-                              : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                                  linkedRunTest?.seed.startsWith('FUSIONS-')
-                                ? showDialog('upgrade-test')
-                                : linkedRunTest
-                                  ? startRunTest(linkedRunTest)
-                                  : linkedTest
-                                    ? startPractice(linkedTest, null, { test: true })
-                                    : linkedDaily
-                                      ? start()
-                                      : startFreshCampaign();
+  linkedQuick || linkedQuickFixture || invalidQuickLink
+    ? openQuickShiftSetup(!!linkedQuickFixture)
+    : linkedBuildMotion
+      ? startLinkedBuildMotion()
+      : linkedBuildBench
+        ? startLinkedBuildBench()
+        : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+          ? startLinkedToolsTest()
+          : linkedGoalPreview || linkedTrackingPreview
+            ? location.assign(new URL('./', location.href).href)
+            : linkedFirstRunPreview === 'warmup'
+              ? startWorkshop([], true)
+              : linkedDrill
+                ? startLinkedSupportDrill(linkedDrill)
+                : linkedGauntletPreview
+                  ? startGauntlet(linkedGauntletPreview, true)
+                  : linkedRemixGauntletPreview
+                    ? linkedRemixGauntletPreview.setup
+                      ? (() => {
+                          gauntletSetupPreview = true;
+                          gauntletSetupMode = 'remix';
+                          showDialog('gauntlet-setup');
+                        })()
+                      : startGauntlet(
+                          linkedRemixGauntletPreview.gun,
+                          true,
+                          linkedRemixGauntletPreview,
+                        )
+                    : linkedGauntletChallenge || invalidGauntletLink
+                      ? openGauntletChallenge(linkedGauntletChallenge ?? undefined, false, 'title')
+                      : linkedRecoilChallenge || invalidRecoilLink
+                        ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+                        : linkedTrial?.preview
+                          ? startTrial(linkedTrial.route, true)
+                          : linkedTrial || invalidTrialLink
+                            ? openTrials('title', linkedTrial?.challenge)
+                            : linkedWorkshop
+                              ? showDialog('workshop')
+                              : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                                  entryUrl.searchParams.get('test') !== 'arc'
+                                ? showDialog('layout-test')
+                                : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                                    linkedRunTest?.seed.startsWith('FUSIONS-')
+                                  ? showDialog('upgrade-test')
+                                  : linkedRunTest
+                                    ? startRunTest(linkedRunTest)
+                                    : linkedTest
+                                      ? startPractice(linkedTest, null, { test: true })
+                                      : linkedDaily
+                                        ? start()
+                                        : showDialog('play-mode');
 $('daily').onclick = () => {
+  linkedQuick = null;
+  linkedQuickFixture = null;
+  invalidQuickLink = false;
+  quickFixtureActive = false;
   if (
     linkedDaily ||
     linkedTrial ||
@@ -5753,6 +6191,19 @@ installDialogDismissal(
   },
 );
 function cancelDialog() {
+  if (dialogKind === 'play-mode') {
+    closeDialog();
+    $('play').focus();
+    return;
+  }
+  if (dialogKind === 'quick-setup') {
+    showDialog('play-mode');
+    return;
+  }
+  if (dialogKind.startsWith('quick-')) {
+    menu();
+    return;
+  }
   if (dialogKind === 'motion-practice') {
     backFromMotionPractice();
     return;
@@ -5987,6 +6438,12 @@ window.addEventListener('keydown', (e) => {
   }
   if (game.mode === 'upgrade') {
     const i = Number(e.key) - 1;
+    if (game.quickShift.state) {
+      if (Number.isInteger(i) && i >= 0 && i < 3) {
+        contentForQuickShortcut(i);
+      }
+      return;
+    }
     if (dialogKind === 'job-payment') {
       jobPaymentMenu?.activate(i);
       return;
@@ -6283,6 +6740,7 @@ function frame(now: number) {
   if (now - hudAt > 80) {
     hudAt = now;
     updateFirstSession();
+    updateQuickJobCue();
     const notice = $('commendation-notice');
     if (
       commendationNotice &&

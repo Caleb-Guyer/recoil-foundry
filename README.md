@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Build in Motion — version 5.30.0.** Inspect your equipped mechanics and actual readiness in Pause, watch restrained action cues, review measured morph/fusion highlights, and open private fitting practice with your current gun. [Release notes and four isolated tests](docs/releases/5.30.0.md).
+**Quick Shift — version 5.31.0.** Build a gun through five native rooms with three opening picks, paired room-clear drafts, route and optional-job choices, and a remastered boss. Replay versioned seeds with separate records and Continue. [Release notes and three isolated tests](docs/releases/5.31.0.md).
 
 **Build Bench — version 5.29.0.** Search collected fittings by effect or mechanic, inspect legal upgrade paths and dependency removals, compare the actual complete gun, and choose grouped targets, incoming fire, cover or recoil ranges. [Release notes and seven isolated Workshop tests](docs/releases/5.29.0.md).
 

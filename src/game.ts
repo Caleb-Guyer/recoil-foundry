@@ -16,6 +16,7 @@ import {
 } from './final-transformation.ts';
 import { MeltThroughSystem, type MeltTransit } from './melt-through.ts';
 import { BossGauntlet } from './gauntlet.ts';
+import { QuickShift } from './quick-shift.ts';
 import { bossRemixLevel } from './boss-remix-layout.ts';
 import { BossRemasterSystem } from './boss-remaster.ts';
 import { bossRemasterLevel } from './boss-remaster-layout.ts';
@@ -537,6 +538,7 @@ export class Game {
   auditorReward = false;
   practice: PracticeSession | null = null;
   gauntlet = new BossGauntlet(this);
+  quickShift = new QuickShift(this);
   teamwork = new TeamworkSystem(this);
   bossRemixes = false;
   hunts = new Hunts(this);
@@ -852,11 +854,15 @@ export class Game {
   }
   setMode(mode: Mode) {
     if (mode === 'dead' || mode === 'title') this.bossRemaster.clear();
-    if (mode === 'dead') this.gauntlet.died();
+    if (mode === 'dead') {
+      this.gauntlet.died();
+      this.quickShift.died();
+    }
     if (mode === 'won') this.recordCampaignClear();
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.securityCombat.reset();
     if (mode === 'title') {
       this.gauntlet.reset();
+      this.quickShift.reset();
       this.clockOut = new ClockOut();
       this.recoil.race.reset();
     }
@@ -1006,6 +1012,7 @@ export class Game {
   ) {
     this.workshop.active = workshop;
     this.gauntlet.reset();
+    if (!this.quickShift.loading) this.quickShift.reset();
     this.maintenance.trial = null;
     this.recoil.practice = null;
     this.practice = practice;
@@ -1164,6 +1171,8 @@ export class Game {
       !save.detour;
     this.shiftRoutes.start(save ?? testRun ?? undefined);
     this.shiftRun.start(save ?? testRun ?? undefined);
+    // Quick Shift owns its draft and optional job; Campaign offices stay private.
+    if (this.quickShift.loading) this.shiftRun.state = null;
     this.finaleService.start(save);
     this.loadRoom(
       save?.escape === true,
@@ -2171,7 +2180,7 @@ export class Game {
         !this.reportedEncounters.has(e.id)
       ) {
         this.reportedEncounters.add(e.id);
-        this.onEnemyEncountered(e);
+        if (!this.quickShift.state) this.onEnemyEncountered(e);
       }
       if (slow < 1 && !e.body.isStatic && e.spawn <= 0)
         Body.setVelocity(e.body, {
@@ -2326,6 +2335,10 @@ export class Game {
       this.onSound('clear');
       this.reforge.arrive();
       this.onChange();
+    }
+    if (this.quickShift.state) {
+      this.quickShift.update();
+      return;
     }
     if (this.finale.cleared && this.testRun && !this.practice && this.clear) {
       this.setMode('won');
@@ -4151,8 +4164,10 @@ export class Game {
     this.courier.killed(e);
     if (e.kind === 'loader') this.loaderArena.stop();
     if (credited && e.eventRole !== 'relay') this.salvageEvolutions.killed(e, killEffects);
-    if (this.mode === 'playing' && this.hp > 0 && e.spawn <= 0)
+    if (this.mode === 'playing' && this.hp > 0 && e.spawn <= 0) {
       this.gauntlet.defeated(e.kind, credited && source !== 'cleanup' && !e.allied);
+      this.quickShift.defeated(e.kind, credited && source !== 'cleanup' && !e.allied);
+    }
     if (
       isBoss(e.kind) &&
       !this.practice &&
@@ -4218,6 +4233,7 @@ export class Game {
     const hpBefore = this.hp;
     this.hp = Math.max(0, this.hp - amount);
     if (this.practice && amount > 0) this.practiceHits++;
+    if (amount > 0) this.quickShift.damaged();
     if (amount > 0) this.maintenance.damaged();
     if (amount > 0) this.recoil.damaged();
     if (amount > 0) this.commendations.damaged();
@@ -4596,6 +4612,10 @@ export class Game {
     this.shootAt = this.time;
   }
   chooseMod(id: string) {
+    if (this.quickShift.state) {
+      this.quickShift.chooseMod(id);
+      return;
+    }
     if (this.shiftRun.leaseDue || this.shiftRun.evolutionDue) return;
     if (this.hunts.rewarding) return;
     if (this.uprising.choices.length || this.uprising.pendingPayment) return;

@@ -40,6 +40,8 @@ export function progressMenu(
     (summary.recoilTrials
       ? ` · ${summary.recoilTrials} Recoil Trials · ${summary.recoilRecords} course records · ${summary.recoilGhosts} ghosts`
       : '') +
+    (summary.quickRun ? ` · Quick Shift room ${summary.quickRun} / 5 saved` : '') +
+    (summary.quickRecords ? ` · ${summary.quickRecords} Quick Shift clear records` : '') +
     (summary.gauntletRecords ? ` · ${summary.gauntletRecords} Gauntlet records` : '') +
     (summary.bossRemixes ? ` · ${summary.bossRemixes} boss remixes` : '') +
     (summary.security ? ` · Security ${summary.security} unlocked` : '');
@@ -111,6 +113,8 @@ export function progressMenu(
           ? ` · ${imported.recoilTrials} Recoil Trials · ${imported.recoilRecords} course records · ${imported.recoilGhosts} ghosts`
           : '') +
         (imported.gauntletRecords ? ` · ${imported.gauntletRecords} Gauntlet records` : '') +
+        (imported.quickRun ? ` · Quick Shift room ${imported.quickRun} / 5 saved` : '') +
+        (imported.quickRecords ? ` · ${imported.quickRecords} Quick Shift clear records` : '') +
         (imported.bossRemixes ? ` · ${imported.bossRemixes} boss remixes` : '') +
         (imported.security ? ` · Security ${imported.security} unlocked` : '');
       panel.hidden = false;

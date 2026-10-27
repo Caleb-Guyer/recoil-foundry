@@ -1,4 +1,14 @@
 import {
+  QUICK_SHIFT_RECORDS_KEY,
+  loadQuickShiftRecords,
+  validQuickShiftRecords,
+} from './quick-shift-rules.ts';
+import {
+  QUICK_SHIFT_CONTINUE_KEY,
+  loadQuickShiftContinue,
+  validQuickShiftContinue,
+} from './quick-shift.ts';
+import {
   WEAPON_UNLOCKS_KEY,
   loadWeaponUnlocks,
   migrateWeaponUnlocks,
@@ -66,6 +76,8 @@ export const PROGRESS_KEY = 'rf-progress-v1';
 export const CHECKPOINT_KEY = 'rf-checkpoint-v5';
 export const BACKUP_LIMIT = 1024 * 1024;
 export const PROGRESS_KEYS = [
+  QUICK_SHIFT_CONTINUE_KEY,
+  QUICK_SHIFT_RECORDS_KEY,
   FINALE_PROGRESS_KEY,
   BOSS_REMIXES_KEY,
   WEAPON_UNLOCKS_KEY,
@@ -156,6 +168,8 @@ function normalize(read: (key: string) => unknown): ProgressValues {
   const history = loadRunHistory(read(RUN_HISTORY_KEY));
   const book = migrateLogbook(read(LOGBOOK_KEY), checkpoint, history, victories);
   const values: ProgressValues = {
+    [QUICK_SHIFT_CONTINUE_KEY]: loadQuickShiftContinue(read(QUICK_SHIFT_CONTINUE_KEY)),
+    [QUICK_SHIFT_RECORDS_KEY]: loadQuickShiftRecords(read(QUICK_SHIFT_RECORDS_KEY)),
     [FINALE_PROGRESS_KEY]: loadFinaleProgress(read(FINALE_PROGRESS_KEY)),
     [WEAPON_UNLOCKS_KEY]: migrateWeaponUnlocks(
       read(WEAPON_UNLOCKS_KEY),
@@ -234,6 +248,8 @@ export function validateProgress(raw: unknown): ProgressValues | null {
       !keysOnly(raw, PROGRESS_KEYS) ||
       !PROGRESS_KEYS.every(
         (k) =>
+          k === QUICK_SHIFT_CONTINUE_KEY ||
+          k === QUICK_SHIFT_RECORDS_KEY ||
           k === FINALE_PROGRESS_KEY ||
           k === BOSS_REMIXES_KEY ||
           k === WEAPON_UNLOCKS_KEY ||
@@ -265,6 +281,17 @@ export function validateProgress(raw: unknown): ProgressValues | null {
     if (Object.hasOwn(raw, RUN_REWARDS_KEY) && !validRunRewards(raw[RUN_REWARDS_KEY])) return null;
     if (Object.hasOwn(raw, GOAL_RUN_KEY) && !validGoalRun(raw[GOAL_RUN_KEY])) return null;
     if (Object.hasOwn(raw, TRACKED_GOAL_KEY) && !validTrackedGoal(raw[TRACKED_GOAL_KEY]))
+      return null;
+    if (
+      Object.hasOwn(raw, QUICK_SHIFT_CONTINUE_KEY) &&
+      raw[QUICK_SHIFT_CONTINUE_KEY] !== null &&
+      !validQuickShiftContinue(raw[QUICK_SHIFT_CONTINUE_KEY])
+    )
+      return null;
+    if (
+      Object.hasOwn(raw, QUICK_SHIFT_RECORDS_KEY) &&
+      !validQuickShiftRecords(raw[QUICK_SHIFT_RECORDS_KEY])
+    )
       return null;
     const checkpoint = raw[CHECKPOINT_KEY];
     if (
@@ -409,6 +436,7 @@ export function parseProgressBackup(text: string): ProgressBackup {
 export function progressSummary(values: ProgressValues) {
   const save = loadCheckpoint(values[CHECKPOINT_KEY]);
   const recoil = loadRecoilProfile(values[RECOIL_TRIALS_KEY]);
+  const quick = loadQuickShiftContinue(values[QUICK_SHIFT_CONTINUE_KEY]);
   return {
     run: save
       ? `Room ${save.stage + 1}${save.security ? ' · Security ' + save.security.level : ''}${save.overtime ? ' · Overtime' : ''}${save.reward ? ' · upgrade waiting' : ''}`
@@ -423,6 +451,10 @@ export function progressSummary(values: ProgressValues) {
     recoilTrials: recoil.clears.length,
     recoilRecords: recoil.records.length,
     recoilGhosts: loadRecoilGhosts(values[RECOIL_GHOSTS_KEY]).length,
+    quickRun: quick ? quick.state.round + 1 : null,
+    quickRecords: loadQuickShiftRecords(values[QUICK_SHIFT_RECORDS_KEY]).filter(
+      (r) => r.outcome === 'won',
+    ).length,
     gauntletRecords: loadGauntletRecords(values[GAUNTLET_KEY]).length,
     bossRemixes: loadBossRemixes(values[BOSS_REMIXES_KEY]).seen.length,
     security: loadSecurityProfile(values[SECURITY_KEY]).unlocked,

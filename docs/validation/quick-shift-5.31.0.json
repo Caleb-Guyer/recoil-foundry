@@ -1,0 +1,67 @@
+{
+  "version": "5.31.0",
+  "update": "Quick Shift",
+  "checkedUtc": "2026-10-27T20:44:22.610494+00:00",
+  "implementation": {
+    "rooms": 5,
+    "openingPicks": 3,
+    "roomClearPicks": 2,
+    "totalFittings": 11,
+    "bosses": ["loader", "crane", "press", "kiln"],
+    "seedRules": 1,
+    "seedNamespace": "RF-Q1-",
+    "separateContinue": true,
+    "fixedStandardPool": true
+  },
+  "validation": {
+    "regularSuite": {
+      "passed": 4342,
+      "failed": 0,
+      "note": "Full regular suite before the final clean-job exit-walk and 102-seed route regression additions; final targeted suite covers both additions."
+    },
+    "finalTargetedSuite": {
+      "passed": 78,
+      "failed": 0,
+      "quickShiftTests": 59,
+      "existingProgressTests": 19
+    },
+    "typescriptAndProductionBuild": "passed",
+    "browser": {
+      "origin": "http://127.0.0.1:4186/",
+      "sound": "off",
+      "music": "off",
+      "checks": [
+        "native patrol movement and firing",
+        "same seeded opening choices reproduced",
+        "ordinary Quick Shift exact draft choices restored by Continue",
+        "existing Continue daily preserved",
+        "earned-only regular starting gun and all-tools private fixture labels",
+        "invalid seed submission rejected with aria-invalid",
+        "malformed mixed-mode link rejected",
+        "draft heading/focus and scroll reset",
+        "no browser warnings/errors observed"
+      ]
+    },
+    "nativeCoverage": [
+      "all five room progression",
+      "all four remastered bosses retain phases and machinery",
+      "clean/rush jobs at combat clear",
+      "post-clear clean-hit lock with total hit counting",
+      "102 seeds with physically distinct routes",
+      "real credited combat activation counters survive Continue and room changes",
+      "strict seeded acquisition and safe Continue validation",
+      "atomic progress import/undo and older-profile migration",
+      "isolated fixtures do not save or award Campaign progress"
+    ],
+    "limitations": [
+      "No measured human completion time or human playtest claim.",
+      "Quick Shift seed rules are pinned separately from Campaign revisions."
+    ]
+  },
+  "testLinks": {
+    "run": "https://caleb-guyer.github.io/recoil-foundry/?test=quick-shift&scene=run&v=1",
+    "drafts": "https://caleb-guyer.github.io/recoil-foundry/?test=quick-shift&scene=drafts&v=1",
+    "seeds": "https://caleb-guyer.github.io/recoil-foundry/?test=quick-shift&scene=seeds&v=1",
+    "regular": "https://caleb-guyer.github.io/recoil-foundry/?quick=QUICK531&qv=1&gun=pistol"
+  }
+}
