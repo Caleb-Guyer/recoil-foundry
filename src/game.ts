@@ -1,3 +1,4 @@
+import { OperatorSurface } from './operator-surface.ts';
 import { factoryUnboundRoom, prepareFactoryUnbound } from './factory-unbound-room.ts';
 import { shiftOfferAllowed } from './shift-catalog.ts';
 import { ShiftMorphs } from './shift-morphs.ts';
@@ -527,6 +528,7 @@ export class Game {
   shots: Shot[] = [];
   particles: Particle[] = [];
   combatFeel = new CombatFeel();
+  operatorSurface = new OperatorSurface(this);
   trail: Vec[] = [];
   mode: Mode = 'title';
   cosmetics: Cosmetics = { gun: 'standard', outfit: 'standard' };
@@ -870,6 +872,7 @@ export class Game {
     if (mode === 'paused' && this.auditor.enemy) this.save();
     if (mode === 'paused' && this.recoil.active) this.save();
     if (mode !== 'playing') {
+      this.operatorSurface.pause(mode === 'paused');
       this.stasis.held = false;
       this.mobility.pause();
       this.shiftUpgrades.pause();
@@ -1327,6 +1330,7 @@ export class Game {
     };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.operatorSurface.reset();
     this.bossRemaster.clear();
     this.routePreviewCache.clear();
     this.routePreviewContext = '';
@@ -2241,6 +2245,7 @@ export class Game {
     this.shiftUpgrades.afterStep(dt, input);
     this.shiftRoutes.afterStep(dt);
     this.containPlayer();
+    this.operatorSurface.update(dt, input);
     this.harpoons.afterStep(dt);
     if (this.mode !== 'playing') return;
     this.ballistics.update();

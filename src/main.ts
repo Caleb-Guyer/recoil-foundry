@@ -1,4 +1,10 @@
 import {
+  operatorTestFromUrl,
+  operatorTestRoom,
+  prepareOperatorTest,
+  OPERATOR_TEST_COPY,
+} from './operator-test.ts';
+import {
   livingFoundryTestFromUrl,
   livingFoundryTestRoom,
   prepareLivingFoundryTest,
@@ -647,7 +653,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Living Foundry</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>The Operator</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -897,6 +903,8 @@ const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
 const linkedBuildBench = buildBenchTestFromUrl(entryUrl);
 const linkedBuildMotion = buildMotionTestFromUrl(entryUrl);
+const linkedOperator = operatorTestFromUrl(entryUrl);
+const invalidOperator = entryUrl.searchParams.get('test') === 'operator' && !linkedOperator;
 const linkedLivingFoundry = livingFoundryTestFromUrl(entryUrl);
 const invalidLivingFoundry =
   entryUrl.searchParams.get('test') === 'living-foundry' && !linkedLivingFoundry;
@@ -916,6 +924,7 @@ const benchBlueprintStore: BlueprintStore = {
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedOperator?.checkpoint ??
   linkedLivingFoundry?.checkpoint ??
   linkedReclaimerArsenal?.checkpoint ??
   linkedReclaimerPressure?.checkpoint ??
@@ -1627,6 +1636,15 @@ function updateTitle() {
     $('title-hint').textContent = linkedLivingFoundry
       ? 'Walk into the view. R to restart this private test.'
       : 'Choose a supported zone test.';
+    $('security').hidden = true;
+  }
+  if (linkedOperator || invalidOperator) {
+    $('play').textContent = linkedOperator
+      ? 'Test The Operator / ' + OPERATOR_TEST_COPY[linkedOperator.scene].title + ' ↗'
+      : 'Unsupported Operator test ↗';
+    $('title-hint').textContent = linkedOperator
+      ? OPERATOR_TEST_COPY[linkedOperator.scene].hint
+      : 'Choose a supported Operator inspection.';
     $('security').hidden = true;
   }
 }
@@ -2646,7 +2664,16 @@ function startRunTest(save: Checkpoint) {
     linkedLivingFoundry && save.seed === linkedLivingFoundry.checkpoint.seed
       ? linkedLivingFoundry
       : null;
-  game.startTest(save, living ? livingFoundryTestRoom(living) : undefined);
+  const operator =
+    linkedOperator && save.seed === linkedOperator.checkpoint.seed ? linkedOperator : null;
+  game.startTest(
+    save,
+    operator ? operatorTestRoom(operator) : living ? livingFoundryTestRoom(living) : undefined,
+  );
+  if (operator) {
+    prepareOperatorTest(game, operator);
+    previewCommendations = operator.scene === 'outfits';
+  }
   if (living) {
     prepareLivingFoundryTest(game, living);
     renderer.sceneryStaticPreview = living.reduced;
@@ -2677,7 +2704,10 @@ function startRunTest(save: Checkpoint) {
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
-  if (game.mode === 'playing') canvas.focus();
+  if (operator?.scene === 'outfits') {
+    appearanceRequested = true;
+    showDialog('workshop');
+  } else if (game.mode === 'playing') canvas.focus();
 }
 function weaponUnlocks() {
   return loadWeaponUnlocks(read(WEAPON_UNLOCKS_KEY));
@@ -3830,15 +3860,23 @@ function showDialog(kind: string) {
   if (kind === 'logbook' || kind === 'workshop')
     commendations = mergeCommendations(commendations, read(COMMENDATIONS_KEY));
   const masteryRewardPreview = game.testRun?.seed === 'PRESENTATION-MASTERY';
-  const visibleCommendations = previewCommendations
-    ? COMMENDATIONS.map((c) => c.id)
-    : masteryRewardPreview
-      ? mergeCommendations(
-          commendations,
-          SUPPORT_MASTERIES.map((m) => m.id),
-        )
-      : commendations;
-  if (kind === 'living-invalid') {
+  const operatorOutfits =
+    linkedOperator?.scene === 'outfits' &&
+    (game.testRun?.seed === linkedOperator.checkpoint.seed || previewCommendations);
+  const visibleCommendations =
+    previewCommendations || operatorOutfits
+      ? COMMENDATIONS.map((c) => c.id)
+      : masteryRewardPreview
+        ? mergeCommendations(
+            commendations,
+            SUPPORT_MASTERIES.map((m) => m.id),
+          )
+        : commendations;
+  if (kind === 'operator-invalid') {
+    content.innerHTML =
+      '<p class="eyebrow">THE OPERATOR</p><h2 id="dialog-title">Unsupported Operator test.</h2><p>This link contains an unsupported scene, tool, morph or mixed game modes.</p><div class="actions"><button id="operator-return" class="primary">Return to Play</button></div>';
+    $('operator-return').onclick = () => location.assign(new URL('./', location.href).href);
+  } else if (kind === 'living-invalid') {
     content.innerHTML =
       '<p class="eyebrow">LIVING FOUNDRY</p><h2 id="dialog-title">Unsupported scenery test.</h2><p>This link contains an unsupported zone, scene, state or mixed game modes.</p><div class="actions"><button id="living-return" class="primary">Return to Play</button></div>';
     $('living-return').onclick = () => location.assign(new URL('./', location.href).href);
@@ -4277,14 +4315,14 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.32.0 · LIVING FOUNDRY</p><h2 id="dialog-title">A factory that works.</h2>' +
-      '<p class="update-tagline">Look beyond the firing line.</p>' +
-      '<dl class="update-notes"><div><dt>Five places.</dt><dd>New authored scenery gives the docks, furnace halls, Cooling Works, Reclamation Works and rooftops their own landmarks and machinery.</dd></div>' +
-      '<div><dt>Working machinery.</dt><dd>Gantry drives, casting lines, circulation pumps and salvage works follow active simulation time. Pause stops them. Real outages and disabled services change the scene.</dd></div>' +
-      '<div><dt>Walk into the view.</dt><dd>Entry architecture opens onto the next zone as you explore. Keep moving, aiming and firing throughout; there are no zone captions or camera takeovers.</dd></div>' +
-      '<div><dt>Quiet depth.</dt><dd>Scenery stays behind collision silhouettes and attack warnings. Reduced Effects keeps the architecture and circuit states with static machinery.</dd></div></dl>' +
-      '<p>Explore: <a href="?test=living-foundry&amp;zone=docks&amp;v=1">Docks ↗</a> · <a href="?test=living-foundry&amp;zone=furnace&amp;v=1">Furnace ↗</a> · <a href="?test=living-foundry&amp;zone=cooling&amp;v=1">Cooling ↗</a> · <a href="?test=living-foundry&amp;zone=reclamation&amp;v=1">Reclamation ↗</a> · <a href="?test=living-foundry&amp;zone=rooftops&amp;v=1">Rooftops ↗</a></p>' +
-      '<p class="practice-record-note">These authored inspection tests use native movement and preserve saved progress. Gameplay rules, routes and rewards are unchanged.</p>' +
+      '<p class="eyebrow">5.33.0 · THE OPERATOR</p><h2 id="dialog-title">Built to move.</h2>' +
+      '<p class="update-tagline">Feel the worker behind the weapon.</p>' +
+      '<dl class="update-notes"><div><dt>Articulated motion.</dt><dd>Running, braking, recoil launches, airborne balance and landing poses follow your actual movement.</dd></div>' +
+      '<div><dt>A grip for every tool.</dt><dd>Shoulders, elbows and gloved hands brace the real weapon through aim and recoil, including converted tools.</dd></div>' +
+      '<div><dt>Contact with the factory.</dt><dd>Footsteps and scrapes distinguish solid metal, thin grating and real coolant. The ground beneath your feet drives the sound.</dd></div>' +
+      '<div><dt>Try the look.</dt><dd>Inspect outfits in motion inside Workshop → Appearance. Reduced Effects keeps a steady pose; audio follows your Sound settings.</dd></div></dl>' +
+      '<p>Try: <a href="?test=operator&amp;scene=animations&amp;v=1">Animations ↗</a> · <a href="?test=operator&amp;scene=grips&amp;v=1">Weapon grips ↗</a> · <a href="?test=operator&amp;scene=surfaces&amp;v=1">Surface sounds ↗</a> · <a href="?test=operator&amp;scene=outfits&amp;v=1">Outfit previews ↗</a></p>' +
+      '<p class="practice-record-note">These private tests preserve saved progress. Movement, muzzle positions, hitboxes, damage and unlock requirements stay the same.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -4494,7 +4532,7 @@ function showDialog(kind: string) {
             defeated: logbookProgress.enemies,
             discovered,
             revealed: displayedArchive().encountered,
-            preview: previewCommendations || masteryRewardPreview,
+            preview: previewCommendations || masteryRewardPreview || operatorOutfits,
             unseen:
               previewCommendations || game.testRun
                 ? []
@@ -4529,14 +4567,16 @@ function showDialog(kind: string) {
       {
         title: bench ? 'Build Bench test' : undefined,
         note: bench ? bench.hint : undefined,
-        blueprints: bench ? benchBlueprintStore : blueprintStore,
+        blueprints:
+          bench || previewCommendations || operatorOutfits ? benchBlueprintStore : blueprintStore,
         startingGun: bench
           ? benchGun
           : game.workshop.active
             ? game.startingGun
             : workshopStartingGun,
-        unlockedGuns: bench ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
-        showStartingGuns: !!bench || weaponUnlocks().started,
+        unlockedGuns:
+          bench || operatorOutfits ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
+        showStartingGuns: !!bench || operatorOutfits || weaponUnlocks().started,
         initialBrowse: bench?.initialBrowse,
         initialInspect: bench?.initialInspect,
         range: {
@@ -6080,63 +6120,65 @@ function formatTime(n: number) {
 }
 updateQuickTitle();
 $('play').onclick = () =>
-  invalidLivingFoundry
-    ? showDialog('living-invalid')
-    : linkedQuick || linkedQuickFixture || invalidQuickLink
-      ? openQuickShiftSetup(!!linkedQuickFixture)
-      : linkedBuildMotion
-        ? startLinkedBuildMotion()
-        : linkedBuildBench
-          ? startLinkedBuildBench()
-          : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-            ? startLinkedToolsTest()
-            : linkedGoalPreview || linkedTrackingPreview
-              ? location.assign(new URL('./', location.href).href)
-              : linkedFirstRunPreview === 'warmup'
-                ? startWorkshop([], true)
-                : linkedDrill
-                  ? startLinkedSupportDrill(linkedDrill)
-                  : linkedGauntletPreview
-                    ? startGauntlet(linkedGauntletPreview, true)
-                    : linkedRemixGauntletPreview
-                      ? linkedRemixGauntletPreview.setup
-                        ? (() => {
-                            gauntletSetupPreview = true;
-                            gauntletSetupMode = 'remix';
-                            showDialog('gauntlet-setup');
-                          })()
-                        : startGauntlet(
-                            linkedRemixGauntletPreview.gun,
-                            true,
-                            linkedRemixGauntletPreview,
-                          )
-                      : linkedGauntletChallenge || invalidGauntletLink
-                        ? openGauntletChallenge(
-                            linkedGauntletChallenge ?? undefined,
-                            false,
-                            'title',
-                          )
-                        : linkedRecoilChallenge || invalidRecoilLink
-                          ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-                          : linkedTrial?.preview
-                            ? startTrial(linkedTrial.route, true)
-                            : linkedTrial || invalidTrialLink
-                              ? openTrials('title', linkedTrial?.challenge)
-                              : linkedWorkshop
-                                ? showDialog('workshop')
-                                : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                                    entryUrl.searchParams.get('test') !== 'arc'
-                                  ? showDialog('layout-test')
-                                  : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                                      linkedRunTest?.seed.startsWith('FUSIONS-')
-                                    ? showDialog('upgrade-test')
-                                    : linkedRunTest
-                                      ? startRunTest(linkedRunTest)
-                                      : linkedTest
-                                        ? startPractice(linkedTest, null, { test: true })
-                                        : linkedDaily
-                                          ? start()
-                                          : showDialog('play-mode');
+  invalidOperator
+    ? showDialog('operator-invalid')
+    : invalidLivingFoundry
+      ? showDialog('living-invalid')
+      : linkedQuick || linkedQuickFixture || invalidQuickLink
+        ? openQuickShiftSetup(!!linkedQuickFixture)
+        : linkedBuildMotion
+          ? startLinkedBuildMotion()
+          : linkedBuildBench
+            ? startLinkedBuildBench()
+            : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+              ? startLinkedToolsTest()
+              : linkedGoalPreview || linkedTrackingPreview
+                ? location.assign(new URL('./', location.href).href)
+                : linkedFirstRunPreview === 'warmup'
+                  ? startWorkshop([], true)
+                  : linkedDrill
+                    ? startLinkedSupportDrill(linkedDrill)
+                    : linkedGauntletPreview
+                      ? startGauntlet(linkedGauntletPreview, true)
+                      : linkedRemixGauntletPreview
+                        ? linkedRemixGauntletPreview.setup
+                          ? (() => {
+                              gauntletSetupPreview = true;
+                              gauntletSetupMode = 'remix';
+                              showDialog('gauntlet-setup');
+                            })()
+                          : startGauntlet(
+                              linkedRemixGauntletPreview.gun,
+                              true,
+                              linkedRemixGauntletPreview,
+                            )
+                        : linkedGauntletChallenge || invalidGauntletLink
+                          ? openGauntletChallenge(
+                              linkedGauntletChallenge ?? undefined,
+                              false,
+                              'title',
+                            )
+                          : linkedRecoilChallenge || invalidRecoilLink
+                            ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
+                            : linkedTrial?.preview
+                              ? startTrial(linkedTrial.route, true)
+                              : linkedTrial || invalidTrialLink
+                                ? openTrials('title', linkedTrial?.challenge)
+                                : linkedWorkshop
+                                  ? showDialog('workshop')
+                                  : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                                      entryUrl.searchParams.get('test') !== 'arc'
+                                    ? showDialog('layout-test')
+                                    : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                                        linkedRunTest?.seed.startsWith('FUSIONS-')
+                                      ? showDialog('upgrade-test')
+                                      : linkedRunTest
+                                        ? startRunTest(linkedRunTest)
+                                        : linkedTest
+                                          ? startPractice(linkedTest, null, { test: true })
+                                          : linkedDaily
+                                            ? start()
+                                            : showDialog('play-mode');
 $('daily').onclick = () => {
   linkedQuick = null;
   linkedQuickFixture = null;

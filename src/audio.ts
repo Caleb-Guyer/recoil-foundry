@@ -1,3 +1,4 @@
+import { operatorSurfaceAudio } from './operator-surface-audio.ts';
 import { Music } from './music.ts';
 import { RainAmbience } from './rain-audio.ts';
 import type { MusicScene } from './music-score.ts';
@@ -546,6 +547,7 @@ export class Sound {
     volume: number,
     type: OscillatorType = 'triangle',
     delay = 0,
+    exact = false,
   ) {
     const c = this.context;
     if (
@@ -563,7 +565,7 @@ export class Sound {
     const now = c.currentTime + delay,
       osc = c.createOscillator(),
       gain = c.createGain();
-    const detune = 0.97 + Math.random() * 0.06;
+    const detune = exact ? 1 : 0.97 + Math.random() * 0.06;
     osc.type = type;
     osc.frequency.setValueAtTime(start * detune, now);
     osc.frequency.exponentialRampToValueAtTime(end, now + length);
@@ -637,11 +639,13 @@ export class Sound {
     const key = soundCooldownKey(kind, origin);
     const previous = this.played.get(key) ?? -10;
     const warning = ATTACK_WARNINGS.has(kind);
-    const cooldown = warning
-      ? 0.12
-      : ['hit', 'armor', 'kill', 'nail-impact'].includes(kind)
-        ? 0.055
-        : 0.015;
+    const cooldown = operatorSurfaceAudio(kind)
+      ? 0.14
+      : warning
+        ? 0.12
+        : ['hit', 'armor', 'kill', 'nail-impact'].includes(kind)
+          ? 0.055
+          : 0.015;
     if (c.currentTime - previous < cooldown) return;
     this.played.delete(key);
     this.played.set(key, c.currentTime);
@@ -684,6 +688,14 @@ export class Sound {
       cinematic ||
       warning ||
       ['hurt', 'win', 'dead', 'shutdown-stop', 'finale-shutdown', 'finale-release'].includes(kind);
+    const surface = operatorSurfaceAudio(kind);
+    if (surface) {
+      // Contact foley never competes with the reserved attack-warning voices.
+      if (this.voices + surface.tones.length + Number(!!surface.noise) > 16) return;
+      for (const tone of surface.tones) this.tone(...tone, true);
+      if (surface.noise) this.crack(...surface.noise);
+      return;
+    }
     if (cinematic) {
       this.cinematicCue = true;
       this.music?.duck(kind === 'cinema-explosion' ? 4 : kind === 'cinema-plane' ? 2.5 : 1.25);

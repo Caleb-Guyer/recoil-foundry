@@ -1,13 +1,17 @@
 import type { Game } from './game.ts';
 import { COMMENDATIONS, commendationVisible, type CommendationId } from './commendations.ts';
-import { GUN_FINISHES, OUTFITS, drawOutfit, loadCosmetics, type Cosmetics } from './cosmetics.ts';
-import { drawWeapon } from './weapon-art.ts';
+import { GUN_FINISHES, OUTFITS, loadCosmetics, type Cosmetics } from './cosmetics.ts';
+import { OperatorPreviewView, operatorPreviewMarkup } from './operator-preview.ts';
+import type { StartingGun } from './starting-guns.ts';
 import type { AppearanceItemId } from './appearance-notices.ts';
 
 export interface AppearanceOptions {
   game: Game;
   earned: readonly CommendationId[];
   preview: boolean;
+  previewGun?: StartingGun;
+  unlockedGuns?: readonly StartingGun[];
+  showTools?: boolean;
   defeated?: readonly string[];
   discovered?: readonly string[];
   revealed?: readonly string[];
@@ -19,12 +23,23 @@ export interface AppearanceOptions {
 export function appearanceMenu(content: HTMLElement, options: AppearanceOptions) {
   const { game, earned } = options;
   const unseen = new Set(options.unseen);
+  let preview: OperatorPreviewView | null = null;
+  let disposed = false;
+  let previewGun = options.previewGun ?? 'pistol';
+  const previewOptions = () => ({
+    selection: loadCosmetics(game.cosmetics, earned),
+    earned,
+    gun: previewGun,
+    unlockedGuns: options.unlockedGuns,
+    showTools: options.showTools,
+  });
   function acknowledge(id: AppearanceItemId) {
     if (!options.preview && unseen.delete(id)) options.viewed?.(id);
   }
   content.innerHTML =
-    '<div class="appearance-layout"><figure class="appearance-preview"><canvas width="720" height="380" role="img" aria-label="Equipped outfit and gun"></canvas>' +
-    '<figcaption></figcaption></figure><div class="appearance-options"></div></div>' +
+    '<div class="appearance-layout"><figure class="appearance-preview operator-preview">' +
+    operatorPreviewMarkup(previewOptions()) +
+    '</figure><div class="appearance-options"></div></div>' +
     '<div class="appearance-footer"><p role="status">' +
     (options.preview
       ? 'Sample rewards · selections are temporary.'
@@ -32,6 +47,7 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
     '</p><button id="appearance-logbook" class="quiet">Commendations ↗</button></div>';
   const list = content.querySelector<HTMLElement>('.appearance-options')!;
   function render() {
+    if (disposed) return;
     const selection = loadCosmetics(game.cosmetics, earned);
     list.innerHTML = (['gun', 'outfit'] as const)
       .map((slot) => {
@@ -81,29 +97,12 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
         );
       })
       .join('');
-    const canvas = content.querySelector('canvas')!;
-    const c = canvas.getContext('2d')!;
-    c.clearRect(0, 0, canvas.width, canvas.height);
-    c.save();
-    c.scale(2, 2);
-    c.strokeStyle = '#344443';
-    c.lineWidth = 1;
-    c.beginPath();
-    c.moveTo(28, 155);
-    c.lineTo(332, 155);
-    c.stroke();
-    c.translate(132, 99);
-    c.scale(3, 3);
-    drawOutfit(c, selection.outfit, 1, 0);
-    c.translate(0, -3);
-    c.rotate(-0.12);
-    drawWeapon(c, game, true);
-    c.restore();
     const caption = OUTFITS[selection.outfit].name + ' / ' + GUN_FINISHES[selection.gun].name;
     content.querySelector('figcaption')!.textContent = caption;
-    canvas.setAttribute('aria-label', caption + ' equipped preview');
+    preview?.update(selection);
     list.querySelectorAll<HTMLButtonElement>('[data-style]').forEach((button) => {
       button.onclick = () => {
+        if (button.disabled) return;
         const next = loadCosmetics(
           { ...selection, [button.dataset.slot!]: button.dataset.style },
           earned,
@@ -119,12 +118,31 @@ export function appearanceMenu(content: HTMLElement, options: AppearanceOptions)
     });
   }
   function viewSelection() {
+    if (disposed) return;
     const selection = loadCosmetics(game.cosmetics, earned);
     acknowledge(`gun:${selection.gun}`);
     acknowledge(`outfit:${selection.outfit}`);
     render();
+    if (!preview)
+      preview = new OperatorPreviewView(
+        content.querySelector<HTMLElement>('.appearance-preview')!,
+        previewOptions(),
+      );
   }
   content.querySelector<HTMLButtonElement>('#appearance-logbook')!.onclick = options.logbook;
   render();
-  return viewSelection;
+  return Object.assign(viewSelection, {
+    frame: (dt: number, now: number, reduced: boolean, active: boolean) =>
+      preview?.frame(dt, now, reduced, active),
+    tool: (gun: StartingGun) => {
+      if (disposed) return;
+      previewGun = gun;
+      preview?.tool(gun);
+    },
+    dispose: () => {
+      disposed = true;
+      preview?.dispose();
+      preview = null;
+    },
+  });
 }

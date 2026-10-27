@@ -22,6 +22,7 @@ import { inspectBuildChange } from './upgrade-inspection.ts';
 import { upgradePreviewMarkup } from './upgrade-preview-markup.ts';
 import type { UpgradePreviewView } from './upgrade-preview-view.ts';
 import './build-bench.css';
+import './operator-preview.css';
 
 export interface BuildOptions {
   title?: string;
@@ -73,6 +74,7 @@ export function workshopMenu(
   let clearPending = false;
   let lastEdit: { id: string; before: string[]; after: string[]; gun: StartingGun } | null = null;
   let preview: UpgradePreviewView | null = null;
+  let appearanceView: ReturnType<typeof appearanceMenu> | null = null;
   let generation = 0;
   let stopped = false;
   const discovered = MODS.filter((mod) => known.includes(mod.id));
@@ -517,10 +519,13 @@ export function workshopMenu(
     const appearanceTab = content.querySelector<HTMLButtonElement>(
       '[data-workshop-tab="appearance"]',
     )!;
-    const viewAppearance = appearanceMenu(
+    const viewAppearance = (appearanceView = appearanceMenu(
       content.querySelector<HTMLElement>('#workshop-appearance')!,
       {
         ...appearance,
+        previewGun: draftGun,
+        unlockedGuns,
+        showTools: showGunSelector,
         viewed: (id) => {
           appearance.unseen = appearance.unseen?.filter((item) => item !== id);
           appearance.viewed?.(id);
@@ -530,7 +535,7 @@ export function workshopMenu(
           }
         },
       },
-    );
+    ));
     content.querySelectorAll<HTMLButtonElement>('[data-workshop-tab]').forEach((button) => {
       button.onclick = () => {
         const buildVisible = button.dataset.workshopTab === 'build';
@@ -538,6 +543,7 @@ export function workshopMenu(
         content.querySelector<HTMLElement>('#workshop-appearance')!.hidden = buildVisible;
         if (!buildVisible) {
           stopPreview();
+          viewAppearance.tool(draftGun);
           viewAppearance();
         } else renderInspector();
         for (const id of ['workshop-status', 'workshop-clear', 'workshop-blueprints']) {
@@ -560,11 +566,15 @@ export function workshopMenu(
       }
       return false;
     },
-    frame: (dt, now, reduced, active) =>
-      preview?.frame(dt, now, reduced, active && !build.hidden && !library),
+    frame: (dt, now, reduced, active) => {
+      preview?.frame(dt, now, reduced, active && !build.hidden && !library);
+      appearanceView?.frame(dt, now, reduced, active && build.hidden && !library);
+    },
     dispose: () => {
       stopped = true;
       stopPreview();
+      appearanceView?.dispose();
+      appearanceView = null;
     },
   };
 }

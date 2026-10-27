@@ -265,13 +265,69 @@ export function drawOutfit(
   id: Cosmetics['outfit'],
   facing: number,
   stride: number,
+  detail?: { articulated: boolean; cloth: number; brace: number },
 ) {
   const p = OUTFITS[id];
+  c.save();
+  if (detail?.articulated) {
+    c.beginPath();
+    c.rect(-15, -20, 30, 29);
+    c.clip();
+  }
   c.fillStyle = p.body;
   c.beginPath();
-  c.roundRect(-13, -18, 26, 31, 4);
+  c.roundRect(-13, -18, 26, detail?.articulated ? 27 : 31, 4);
   c.fill();
-  if (id === 'patchwork') {
+  if (id === 'circuitrunner') {
+    c.fillStyle = '#29494c';
+    c.fillRect(-10, -1, 20, 13);
+    c.fillStyle = p.trim;
+    for (const x of [-8, 5]) {
+      c.fillRect(x, -2, 3, 10);
+      c.fillRect(x - 2, 5, 7, 2);
+    }
+    c.fillStyle = '#a4ddd0';
+    c.fillRect(-3, 0, 6, 3);
+  } else if (id === 'highrise') {
+    c.fillStyle = '#30495d';
+    c.fillRect(-11, -1, 22, 13);
+    c.strokeStyle = p.trim;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-9, -1);
+    c.lineTo(2, 8);
+    c.lineTo(9, -1);
+    c.stroke();
+    c.fillStyle = '#738fa3';
+    c.fillRect(-3, 5, 6, 4);
+    c.fillStyle = p.trim;
+    c.fillRect(-1, 6, 2, 2);
+  } else if (id === 'signalkeeper') {
+    c.fillStyle = '#493741';
+    c.fillRect(-10, 0, 20, 12);
+    c.fillStyle = p.trim;
+    c.fillRect(-11, -1, 22, 2);
+    c.fillRect(-9, 2, 6, 7);
+    c.fillStyle = '#80555d';
+    c.fillRect(-8, 3, 4, 4);
+    c.strokeStyle = '#364449';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(-9, 1);
+    c.lineTo(-11, -5);
+    c.stroke();
+    c.fillStyle = '#d9dcb7';
+    c.fillRect(4, 3, 5, 2);
+  } else if (id === 'sentinel') {
+    c.fillStyle = '#2c4641';
+    c.fillRect(-11, -1, 22, 13);
+    c.fillStyle = '#829d7a';
+    c.fillRect(-9, 0, 8, 6);
+    c.fillRect(2, 0, 8, 6);
+    c.fillStyle = p.trim;
+    c.fillRect(-10, -1, 20, 2);
+    c.fillRect(-6, 7, 12, 2);
+  } else if (id === 'patchwork') {
     c.fillStyle = '#3f596b';
     c.fillRect(-11, -1, 10, 12);
     c.fillRect(5, 4, 7, 8);
@@ -363,13 +419,44 @@ export function drawOutfit(
     c.fillRect(-10, 0, 3, 4);
     c.fillRect(-5, 0, 3, 4);
   }
+  if (id === 'standard') {
+    c.fillStyle = '#506d65';
+    c.fillRect(-11, -1, 22, 13);
+    c.fillStyle = p.body;
+    c.fillRect(-8, 0, 7, 6);
+    c.fillRect(3, 0, 6, 5);
+    c.fillStyle = p.trim;
+    c.fillRect(-10, -1, 20, 2);
+    c.fillRect(-10, 7, 20, 2);
+  }
+  // A collar, service seam and recessed visor tie every suit to one operator.
+  c.fillStyle = '#2d4241';
+  c.fillRect(-9, -2, 18, 2);
   c.fillStyle = '#172125';
   c.fillRect(-8, -10, 16, 7);
   c.fillStyle = p.trim;
   c.fillRect(facing > 0 ? 3 : -6, -9, 3, 5);
-  c.fillStyle = p.boots;
-  c.fillRect(-10, 10, 7, 8 + stride);
-  c.fillRect(3, 10, 7, 8 - stride);
+  c.restore();
+  if (!detail?.articulated) {
+    c.fillStyle = p.boots;
+    c.fillRect(-10, 10, 7, 8 + stride);
+    c.fillRect(3, 10, 7, 8 - stride);
+  } else {
+    // Small loose ends give workwear material weight without changing its
+    // recognizable outline or covering active weapon/readiness indicators.
+    const cloth = Math.max(-1, Math.min(1, Number.isFinite(detail.cloth) ? detail.cloth : 0));
+    const side = facing > 0 ? -1 : 1;
+    c.save();
+    c.strokeStyle = id === 'night' ? '#6976a0' : p.boots;
+    c.lineWidth = id === 'rigger' || id === 'highrise' ? 2 : 1.4;
+    c.beginPath();
+    c.moveTo(side * 9, 5);
+    c.quadraticCurveTo(side * 11 + cloth * 1.8, 8, side * 9 + cloth * 2, 12);
+    c.stroke();
+    c.fillStyle = p.trim;
+    c.fillRect(side * 9 - 1 + cloth * 2, 11, 2, 1.5);
+    c.restore();
+  }
 }
 export function drawFinishMark(c: CanvasRenderingContext2D, id: Cosmetics['gun'], heat = 0) {
   if (id === 'standard') return;

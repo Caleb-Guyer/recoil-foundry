@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Living Foundry — version 5.32.0.** Explore fifteen authored scenery compositions across all five zones. Working machinery follows real service states, and architectural entry reveals open through movement without captions or camera takeovers. [Release notes and five isolated zone tests](docs/releases/5.32.0.md).
+**The Operator — version 5.33.0.** Articulated player movement, weapon-specific grips, contact-driven surface sounds and animated outfit previews. [Release notes and four private tests](docs/releases/5.33.0.md).
 
 **Quick Shift — version 5.31.0.** Build a gun through five native rooms with three opening picks, paired room-clear drafts, route and optional-job choices, and a remastered boss. Replay versioned seeds with separate records and Continue. [Release notes and three isolated tests](docs/releases/5.31.0.md).
 

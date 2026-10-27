@@ -1,0 +1,73 @@
+.operator-preview-controls {
+  padding: 0 12px 10px;
+}
+.operator-preview-poses {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.operator-preview-poses button {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 11px;
+  border: 1px solid transparent;
+}
+.operator-preview-poses button[aria-pressed='true'] {
+  border-color: #7d9e91;
+  background: #293a35;
+  color: #edf0e5;
+}
+.operator-preview-poses button:focus-visible,
+.operator-preview-actions :focus-visible {
+  outline: 2px solid #a5c9b7;
+  outline-offset: 2px;
+}
+.operator-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  justify-content: center;
+  margin-top: 12px;
+}
+.operator-preview-actions label {
+  display: grid;
+  gap: 5px;
+  color: #b1beb6;
+  font-size: 11px;
+}
+.operator-preview-actions select {
+  max-width: 100%;
+  padding: 7px 8px;
+  color: #e2e7db;
+  background: #172326;
+  border: 1px solid #43564e;
+  font: inherit;
+  border-radius: 2px;
+  min-height: 34px;
+}
+.operator-preview-actions button {
+  font-size: 11px;
+  min-height: 34px;
+  padding: 6px 9px;
+}
+.operator-preview-actions button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.operator-preview-motion {
+  color: #acbab0;
+  font-size: 11px;
+  text-align: center;
+  margin: 10px 0 0;
+}
+.operator-preview-motion:empty {
+  display: none;
+}
+@media (max-width: 600px) {
+  .operator-preview-poses button {
+    min-height: 40px;
+    padding: 7px 10px;
+  }
+}

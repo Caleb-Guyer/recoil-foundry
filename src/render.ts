@@ -1,3 +1,5 @@
+import { drawOperator } from './operator-art.ts';
+import { drawOperatorSurface } from './operator-surface-art.ts';
 import { LivingFoundryScenery } from './living-foundry.ts';
 import { LivingFoundryBackdrop } from './living-foundry-art.ts';
 import { drawBuildMotion } from './build-motion-art.ts';
@@ -34,7 +36,7 @@ import {
 import { drawHuntEnemy, drawHuntProps, drawHunts } from './hunt-art.ts';
 import { commandRemixAngles } from './late-boss-patterns.ts';
 import { drawMelt } from './melt-through.ts';
-import { drawCombatImpacts, drawNail, enemyPose, playerPose, roundFeel } from './combat-feel.ts';
+import { drawCombatImpacts, drawNail, enemyPose, roundFeel } from './combat-feel.ts';
 import { drawRemasteredBody, drawRemasterTell } from './enemy-remaster-art.ts';
 import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
 import { drawWelder, drawWelds } from './welder-art.ts';
@@ -131,8 +133,6 @@ import { drawSquadTell } from './squad-art.ts';
 import { squadLineEnd } from './squads.ts';
 import { LIFT_PERIOD, CRUSHER_TELL, CRUMBLE_TELL, CRUMBLE_RESET } from './hazards.ts';
 import { EXTRACTION, OVERTIME_LIFT, OVERTIME_STEPS } from './escape-layout.ts';
-import { drawWeapon } from './weapon-art.ts';
-import { drawOutfit } from './cosmetics.ts';
 import { drawMassRound } from './mass-driver-art.ts';
 import { drawBallistics } from './ballistics-art.ts';
 import { drawFusions } from './fusions-art.ts';
@@ -1045,7 +1045,10 @@ export class Renderer {
     drawMutationTells(c, g);
     // Keep the actual outfit above friendly rays, arcs, blasts and trails. The
     // hostile projectile and committed warning layers remain above the player.
-    if (!framing || framing.player) this.drawPlayer(clarity.pressure);
+    if (!framing || framing.player) {
+      drawOperatorSurface(c, g, this.reduced);
+      this.drawPlayer(clarity.pressure);
+    }
     if ((!framing || framing.buildMotion) && (!framing || framing.player))
       drawBuildMotion(c, g, this.reduced, this.scale);
     if (showDamageFeedback(g, !!framing))
@@ -1880,10 +1883,7 @@ export class Renderer {
   drawPlayer(pressure = 0) {
     const g = this.game,
       c = this.ctx,
-      p = g.player.position,
-      d = direction(p, g.aim),
-      a = Math.atan2(d.y, d.x),
-      pose = playerPose(g, this.reduced);
+      p = g.player.position;
     c.save();
     c.translate(p.x, p.y);
     if (g.support.plate || g.time < g.support.plateFlashUntil) {
@@ -1926,22 +1926,7 @@ export class Renderer {
       c.lineTo(4, 21);
       c.stroke();
     }
-    c.save();
-    c.translate(pose.x, pose.y);
-    c.rotate(pose.angle);
-    c.scale(pose.scaleX, pose.scaleY);
-    if (pressure > 0) {
-      c.beginPath();
-      c.roundRect(-13, -18, 26, 31, 4);
-      c.strokeStyle = '#081216';
-      c.lineWidth = 2 + pressure * 3;
-      c.stroke();
-    }
-    drawOutfit(c, g.cosmetics.outfit, d.x, pose.stride);
-    c.restore();
-    c.translate(0, -3);
-    c.rotate(a);
-    drawWeapon(c, g, this.reduced);
+    drawOperator(c, g, this.reduced, pressure);
     c.restore();
   }
   drawExit() {
