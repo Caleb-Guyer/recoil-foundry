@@ -18,5 +18,14 @@
     "temporary blueprint navigation without draft loss",
     "range selector and real incoming health feedback"
   ],
-  "scope": "Native automated and agent-controlled checks; no human win-rate or playtest claim."
+  "scope": "Native automated and agent-controlled checks; no human win-rate or playtest claim.",
+  "postOptimizationFocusedTests": 215,
+  "postOptimizationFailures": 0,
+  "cascadeEquivalence": {
+    "denseMaximalBuilds": 6,
+    "upgradePaths": 5,
+    "fittingPrerequisiteChains": 161,
+    "guns": 6
+  },
+  "filteringMeasurements": "build-bench-filtering-5.29.0.json"
 }

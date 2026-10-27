@@ -357,7 +357,7 @@ export function workshopMenu(
     if (trigger && (edited || proposal.canApply))
       void loadPreview(edited?.before ?? draft, edited?.after ?? proposal.after, id, trigger);
   }
-  function render() {
+  function render(refreshInspector = true) {
     if (stopped) return;
     const rows = benchRows(known, draft, draftGun, {
       query: search.value,
@@ -368,38 +368,40 @@ export function workshopMenu(
     list.innerHTML = benchListMarkup(rows, inspected);
     content.querySelector<HTMLElement>('#bench-results')!.textContent =
       rows.length + ' of ' + discovered.length + ' collected upgrades';
-    content.querySelector<HTMLElement>('#bench-selected-label')!.textContent =
-      'Fitted build · ' + draft.length + ' upgrade' + (draft.length === 1 ? '' : 's');
-    content.querySelector<HTMLElement>('#bench-selected-list')!.innerHTML = draft.length
-      ? benchLinksMarkup(draft, known, draft)
-      : '<p class="practice-note">No fittings yet. Your starting gun remains equipped.</p>';
-    content
-      .querySelectorAll<HTMLButtonElement>('#bench-selected-list [data-bench-link]')
-      .forEach((button) => (button.onclick = () => reveal(button.dataset.benchLink!)));
-    status.textContent =
-      options.limit === undefined
-        ? draft.length
-          ? draft.length + ' fitted'
-          : STARTING_GUNS[draftGun].name
-        : draft.length +
-          ' / ' +
-          limit +
-          ' fitted' +
-          (draft.length > limit
-            ? ' · Remove ' + (draft.length - limit) + ' to start'
-            : draft.length === limit
-              ? ' · Build full'
-              : '');
-    applyButton.disabled = draft.length > limit;
-    clear.disabled = draft.length === 0;
+    if (refreshInspector) {
+      content.querySelector<HTMLElement>('#bench-selected-label')!.textContent =
+        'Fitted build · ' + draft.length + ' upgrade' + (draft.length === 1 ? '' : 's');
+      content.querySelector<HTMLElement>('#bench-selected-list')!.innerHTML = draft.length
+        ? benchLinksMarkup(draft, known, draft)
+        : '<p class="practice-note">No fittings yet. Your starting gun remains equipped.</p>';
+      content
+        .querySelectorAll<HTMLButtonElement>('#bench-selected-list [data-bench-link]')
+        .forEach((button) => (button.onclick = () => reveal(button.dataset.benchLink!)));
+      status.textContent =
+        options.limit === undefined
+          ? draft.length
+            ? draft.length + ' fitted'
+            : STARTING_GUNS[draftGun].name
+          : draft.length +
+            ' / ' +
+            limit +
+            ' fitted' +
+            (draft.length > limit
+              ? ' · Remove ' + (draft.length - limit) + ' to start'
+              : draft.length === limit
+                ? ' · Build full'
+                : '');
+      applyButton.disabled = draft.length > limit;
+      clear.disabled = draft.length === 0;
+    }
     list
       .querySelectorAll<HTMLButtonElement>('[data-workshop-mod]')
       .forEach((button) => (button.onclick = () => reveal(button.dataset.workshopMod!)));
-    renderInspector();
+    if (refreshInspector) renderInspector();
   }
   function changedFilter() {
-    // A filter changes the catalog view, never the selected build.
-    render();
+    // Keep the reviewed edit and native comparison running while browsing.
+    render(false);
   }
   search.oninput = changedFilter;
   category.onchange = changedFilter;
@@ -407,7 +409,7 @@ export function workshopMenu(
   content.querySelector<HTMLButtonElement>('#bench-reset-filters')!.onclick = () => {
     search.value = '';
     category.value = facet.value = 'all';
-    render();
+    render(false);
     search.focus();
   };
   if (gunSelect) {

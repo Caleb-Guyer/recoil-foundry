@@ -1,0 +1,53 @@
+{
+  "workload": "Eight alternating unfiltered/compatible recoil-search calls; 161 collected fittings, 93 legally fitted, Service pistol. Native model only; excludes DOM/rendering.",
+  "baselineCommit": "ca8e078c30737cbfbc2900e612e6fe4e9e0fad3d",
+  "before": {
+    "samplesMs": [886.1811, 883.7215, 886.3477, 913.5428, 855.3089, 883.114, 892.8738, 887.318],
+    "meanMs": 886.050975,
+    "maxMs": 913.5428
+  },
+  "after": {
+    "note": "Native model computation, excluding DOM layout and rendering; measured on this host, not a universal responsiveness guarantee.",
+    "runtime": "v24.16.0",
+    "platform": "win32",
+    "collection": 161,
+    "fitted": 93,
+    "samples": [
+      {
+        "milliseconds": 16.19999999999999,
+        "matches": 161
+      },
+      {
+        "milliseconds": 14.00460000000001,
+        "matches": 17
+      },
+      {
+        "milliseconds": 13.365499999999969,
+        "matches": 161
+      },
+      {
+        "milliseconds": 12.8793,
+        "matches": 17
+      },
+      {
+        "milliseconds": 12.96629999999999,
+        "matches": 161
+      },
+      {
+        "milliseconds": 12.44930000000005,
+        "matches": 17
+      },
+      {
+        "milliseconds": 12.395100000000014,
+        "matches": 161
+      },
+      {
+        "milliseconds": 11.92610000000002,
+        "matches": 17
+      }
+    ],
+    "meanMs": 13.273275000000005,
+    "maxMs": 16.19999999999999
+  },
+  "note": "Measurements from this Windows host; correctness uses native equivalence tests, not a wall-clock CI threshold."
+}

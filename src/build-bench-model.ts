@@ -66,8 +66,29 @@ const name = (id: string) => byId.get(id)?.name ?? 'Unknown fitting';
 const unique = (ids: readonly (string | undefined)[]) => [
   ...new Set(ids.filter((id): id is string => !!id)),
 ];
-const requirementsFor = (id: string) =>
-  unique([MOD_REQUIRES[id], ...(BRANCH_PARENTS[id] ?? []), ...(FUSION_REQUIRES[id] ?? [])]);
+// These bounded catalog indexes contain no player, discovery, draft, or gun state.
+// Return copies at the public boundary so callers cannot alter future inspections.
+const prerequisites = new Map<string, readonly string[]>(
+  MODS.map((mod) => [
+    mod.id,
+    Object.freeze(
+      unique([
+        MOD_REQUIRES[mod.id],
+        ...(BRANCH_PARENTS[mod.id] ?? []),
+        ...(FUSION_REQUIRES[mod.id] ?? []),
+      ]),
+    ),
+  ]),
+);
+const requirementsFor = (id: string): readonly string[] => prerequisites.get(id) ?? [];
+const children = new Map<string, readonly string[]>(
+  MODS.map((mod) => [
+    mod.id,
+    Object.freeze(
+      MODS.filter((child) => requirementsFor(child.id).includes(mod.id)).map((child) => child.id),
+    ),
+  ]),
+);
 const boundedLimit = (limit: number) =>
   Number.isFinite(limit) ? Math.max(0, Math.min(MODS.length, Math.floor(limit))) : MODS.length;
 
@@ -222,7 +243,7 @@ const familyCategory = {
   cadence: 'firing',
 } as const;
 const tagOrder = BENCH_CATEGORIES.filter((c) => c.id !== 'all').map((c) => c.id);
-export function benchModTags(id: string): Exclude<BenchCategory, 'all'>[] {
+function catalogTags(id: string): Exclude<BenchCategory, 'all'>[] {
   if (!byId.has(id)) return [];
   const tags = new Set<Exclude<BenchCategory, 'all'>>();
   const visited = new Set<string>();
@@ -242,8 +263,18 @@ export function benchModTags(id: string): Exclude<BenchCategory, 'all'>[] {
   return tagOrder.filter((tag) => tags.has(tag));
 }
 
+const mechanicTags = new Map<string, readonly Exclude<BenchCategory, 'all'>[]>(
+  MODS.map((mod) => [mod.id, Object.freeze(catalogTags(mod.id))]),
+);
+export function benchModTags(id: string): Exclude<BenchCategory, 'all'>[] {
+  return [...(mechanicTags.get(id) ?? [])];
+}
+
 interface BenchContext {
-  known: readonly string[];
+  known: ReadonlySet<string>;
+  selected: ReadonlySet<string>;
+  chosenPath: ReturnType<typeof buildPath>;
+  fusion: string | undefined;
   draft: string[];
   gun: StartingGun;
   limit: number;
@@ -257,26 +288,42 @@ function context(
 ): BenchContext {
   const clean = workshopBuild(draft, known);
   return {
-    known,
+    known: new Set(known),
+    selected: new Set(clean),
+    chosenPath: buildPath(clean),
+    fusion: clean.find(isFusion),
     draft: clean,
     gun,
     limit: boundedLimit(limit),
     eligible: new Set(availableMods(clean, true).map((m) => m.id)),
   };
 }
+/**
+ * Context has already been canonicalized by workshopBuild. For a subset of that
+ * legal acquisition order, removal cannot introduce path, branch, morph, weapon,
+ * or fusion conflicts. Only a lost prerequisite can invalidate a later fitting.
+ * Carry that loss forward once instead of rebuilding the catalog for each row.
+ * benchEdit still asks workshopBuild to authorize the actual proposed change.
+ */
+function removalFor(id: string, c: BenchContext): string[] {
+  const removed = new Set<string>([id]);
+  for (const fitted of c.draft)
+    if (requirementsFor(fitted).some((parent) => removed.has(parent))) removed.add(fitted);
+  return c.draft.filter((fitted) => removed.has(fitted));
+}
 function inspect(id: string, c: BenchContext): BenchRow | null {
   const mod = byId.get(id);
-  if (!mod || !c.known.includes(id)) return null;
-  const selected = c.draft.includes(id);
-  const requirements = requirementsFor(id);
-  const missing = requirements.filter((parent) => !c.draft.includes(parent));
+  if (!mod || !c.known.has(id)) return null;
+  const selected = c.selected.has(id);
+  const requirements = [...requirementsFor(id)];
+  const missing = requirements.filter((parent) => !c.selected.has(parent));
   const compatible = selected || c.eligible.has(id);
   const full = c.draft.length >= c.limit;
   const conflicts: string[] = [];
   if (!selected) {
     const pair = c.draft.filter((owned) => !compatibleMod([owned], id));
     if (pair.length) conflicts.push('Conflicts with ' + pair.map(name).join(' + ') + '.');
-    const chosen = buildPath(c.draft),
+    const chosen = c.chosenPath,
       path = MOD_PATHS[id]?.path;
     if (chosen && path && chosen !== path)
       conflicts.push(
@@ -286,17 +333,11 @@ function inspect(id: string, c: BenchContext): BenchRow | null {
           PATH_NAMES[path] +
           '.',
       );
-    const fusion = c.draft.find(isFusion);
+    const fusion = c.fusion;
     if (isFusion(id) && fusion)
       conflicts.push('One fusion per build. ' + name(fusion) + ' is already fitted.');
   }
-  const afterRemoval = selected
-    ? workshopBuild(
-        c.draft.filter((m) => m !== id),
-        c.known,
-      )
-    : c.draft;
-  const removal = selected ? c.draft.filter((m) => !afterRemoval.includes(m)) : [];
+  const removal = selected ? removalFor(id, c) : [];
   let reason = '';
   if (selected)
     reason =
@@ -305,7 +346,7 @@ function inspect(id: string, c: BenchContext): BenchRow | null {
         : 'Fitted. Remove this fitting to change the build.';
   else if (conflicts.length) reason = conflicts.join(' ');
   else if (missing.length) {
-    const collected = missing.filter((m) => c.known.includes(m));
+    const collected = missing.filter((m) => c.known.has(m));
     const hidden = missing.length - collected.length;
     const terms = [
       ...collected.map(name),
@@ -326,9 +367,7 @@ function inspect(id: string, c: BenchContext): BenchRow | null {
     canRemove: selected,
     requirements,
     missing,
-    followups: MODS.filter((m) => c.known.includes(m.id) && requirementsFor(m.id).includes(id)).map(
-      (m) => m.id,
-    ),
+    followups: (children.get(id) ?? []).filter((child) => c.known.has(child)),
     conflicts,
     reason,
     description: modDescription(mod, c.draft, c.gun),

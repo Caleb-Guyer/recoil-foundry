@@ -8,7 +8,8 @@ import {
   benchEdit,
 } from '../src/build-bench-model.ts';
 import { MODS, availableMods, getGun, validBuild } from '../src/rules.ts';
-import { withParents } from '../src/branch-builds.ts';
+import { completeBuild, withParents } from '../src/branch-builds.ts';
+import { workshopBuild } from '../src/workshop-build.ts';
 import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
 
 const all = MODS.map((mod) => mod.id);
@@ -207,4 +208,98 @@ test('authored weapon morph classification is searchable without revealing uncol
     ['piston-lance'],
   );
   assert.deepEqual(benchRows(['light'], [], 'pistol', { query: 'morph' }), []);
+});
+
+test('fast removal previews exactly match native canonicalization throughout maximal builds and every parent chain', () => {
+  const wanted = [[], ['resonator'], ['flywheel'], ['storm-cell'], ['cold-front'], ['convoy']];
+  const maximal = wanted.map((ids) => {
+    const start = withParents([], ids);
+    assert(start, ids.join('+'));
+    const build = completeBuild(start, 'RF-C108-BENCH-SPEED');
+    assert(build && validBuild(build), ids.join('+'));
+    assert(
+      ids.every((id) => build.includes(id)),
+      ids.join('+'),
+    );
+    assert(
+      build.length >= 70,
+      'Exercise dense builds across all five paths, transformations and fusions',
+    );
+    return build;
+  });
+  assert.equal(maximal[0].length, 93, 'Retain the reported filter-lag reproduction');
+  const parentChains = MODS.map((mod) => {
+    const build = withParents([], [mod.id]);
+    assert(build, mod.id);
+    return build;
+  });
+  for (const build of [...maximal, ...parentChains]) {
+    // Compute independent native results once, then check every gun's row model.
+    const expected = new Map(
+      build.map((id) => {
+        const after = workshopBuild(
+          build.filter((fitted) => fitted !== id),
+          all,
+        );
+        assert(validBuild(after), id);
+        return [id, build.filter((fitted) => !after.includes(fitted))];
+      }),
+    );
+    for (const gun of STARTING_GUN_IDS) {
+      const rows = benchRows(all, Object.freeze([...build]), gun, { facet: 'selected' });
+      assert.equal(rows.length, build.length, gun);
+      for (const row of rows) {
+        assert.deepEqual(row.removal, expected.get(row.mod.id), row.mod.id + '/' + gun);
+        assert(row.canRemove && !row.canAdd && row.compatible);
+      }
+    }
+  }
+});
+
+test('bounded catalog indexes never retain caller mutations or draft, discovery and gun state', () => {
+  const build = withParents([], ['pulse-chamber'])!;
+  const before = benchInspect('cutting-torch', all, build)!;
+  const tags = [...before.tags],
+    followups = [...before.followups],
+    removal = [...before.removal];
+  before.tags.length = 0;
+  before.followups.push('not-a-fitting');
+  before.removal.length = 0;
+  const pulse = benchInspect('pulse-chamber', all, build)!;
+  const requirements = [...pulse.requirements];
+  pulse.requirements.push('not-a-fitting');
+  assert.deepEqual(benchModTags('cutting-torch'), tags);
+  assert.deepEqual(benchInspect('cutting-torch', all, build)!.followups, followups);
+  assert.deepEqual(benchInspect('cutting-torch', all, build)!.removal, removal);
+  assert.deepEqual(benchInspect('pulse-chamber', all, build)!.requirements, requirements);
+  assert.deepEqual(benchRows([], build), []);
+  assert.deepEqual(benchInspect('cutting-torch', ['cutting-torch'], build)!.followups, []);
+  assert.deepEqual(benchInspect('cutting-torch', all, [])!.removal, []);
+  assert.match(benchInspect('burst', all, [], 'nailgun')!.description, /burst recovery/);
+  assert.notEqual(
+    benchInspect('burst', all, [], 'pistol')!.description,
+    benchInspect('burst', all, [], 'nailgun')!.description,
+  );
+  const known = ['crossfire', 'afterimage', 'parallax', 'rapid'];
+  const dirty = [
+    'not-a-fitting',
+    'parallax',
+    'crossfire',
+    'afterimage',
+    'parallax',
+    'light',
+    'rapid',
+  ];
+  const clean = workshopBuild(dirty, known);
+  assert.deepEqual(clean, ['crossfire', 'afterimage', 'parallax', 'rapid']);
+  for (const row of benchRows(known, dirty, 'pistol', { facet: 'selected' })) {
+    const after = workshopBuild(
+      clean.filter((id) => id !== row.mod.id),
+      known,
+    );
+    assert.deepEqual(
+      row.removal,
+      clean.filter((id) => !after.includes(id)),
+    );
+  }
 });
