@@ -37,7 +37,13 @@ import { drawHuntEnemy, drawHuntProps, drawHunts } from './hunt-art.ts';
 import { commandRemixAngles } from './late-boss-patterns.ts';
 import { drawMelt } from './melt-through.ts';
 import { drawCombatImpacts, drawNail, enemyPose, roundFeel } from './combat-feel.ts';
-import { drawRemasteredBody, drawRemasterTell } from './enemy-remaster-art.ts';
+import { drawRemasterTell } from './enemy-remaster-art.ts';
+import {
+  drawMachineBody,
+  drawMachineContacts,
+  drawMachineBarrelDetails,
+} from './machine-breakdown-art.ts';
+import { drawMachineWrecks } from './machine-breakdown-wreck-art.ts';
 import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
 import { drawWelder, drawWelds } from './welder-art.ts';
 import { drawClockOut } from './clock-out-art.ts';
@@ -347,183 +353,191 @@ export class Renderer {
                 : '#ee7965';
       const pose = enemyPose(e, this.reduced);
       c.save();
-      c.translate(0, pose.crouch);
-      c.rotate(pose.angle);
-      if (e.kind === 'loader') {
-        c.save();
-        c.scale(e.aim.x < 0 ? -1 : 1, 1);
-        c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : '#393237';
-        c.fillRect(-56, -23, 112, 57);
-        c.fillRect(-31, -34, 58, 18);
-        c.fillStyle = '#171f25';
-        c.fillRect(-26, -29, 34, 15);
-        c.fillRect(-49, 17, 88, 13);
-        c.fillStyle = '#697072';
-        for (let i = 0; i < 7; i++) c.fillRect(-45 + i * 12, 20, 7, 6);
-        c.fillStyle = color;
-        c.fillRect(-54, -17, 8, 26);
-        c.fillRect(40, -22, 16, 56);
-        this.line({ x: 24, y: -7 }, { x: 42, y: 11 }, '#b79a87', 5);
-        c.fillStyle = e.state === 'recover' ? '#ffe2a0' : '#b26855';
-        for (let i = 0; i < 3; i++) c.fillRect(-32 + i * 13, -5, 7, 11);
-        if (e.state === 'windup' && e.attack !== 'flak' && !g.bossRemaster.owns(e)) {
-          c.fillStyle = '#ffd19a';
-          c.fillRect(44, -20, 8, 50 * clamp(1 - e.timer / LOADER_TELL, 0, 1));
-        }
-        if (e.state === 'rush' && !this.reduced) {
-          this.line({ x: -62, y: 18 }, { x: -104, y: 18 }, '#a46b55', 3);
-          this.line({ x: -62, y: 28 }, { x: -88, y: 28 }, '#a46b55', 2);
-        }
-        c.restore();
-      } else if (e.kind === 'press') {
-        c.fillStyle = '#564a43';
-        c.fillRect(-41, -65, 10, 36);
-        c.fillRect(31, -65, 10, 36);
-        c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : '#352b2b';
-        c.fillRect(-60, -31, 120, 62);
-        c.fillStyle = color;
-        c.fillRect(-60, -31, 120, 6);
-        c.fillRect(-60, 19, 120, 12);
-        c.fillStyle = '#1e2023';
-        c.fillRect(-49, -18, 98, 28);
-        c.fillStyle = g.pressure.opening(e)
-          ? '#b3f4de'
-          : e.state === 'recover'
-            ? '#ffe0a0'
-            : '#c38966';
-        for (let i = 0; i < 4; i++) c.fillRect(-37 + i * 22, -11, 9, 14);
-        for (const side of [-1, 1])
-          this.line({ x: side * 52, y: -19 }, { x: side * 52, y: 12 }, '#948373', 3);
-        if (e.state === 'rush' && !this.reduced) {
-          this.line({ x: -48, y: -41 }, { x: -48, y: -80 }, '#ad8562', 2);
-          this.line({ x: 48, y: -41 }, { x: 48, y: -80 }, '#ad8562', 2);
-        }
-      } else if (e.kind === 'charger') {
-        c.save();
-        c.scale(e.aim.x < 0 ? -1 : 1, 1);
-        const brace = e.state === 'windup' ? (1 - e.timer / CHARGE_TELL) * 5 : 0;
-        c.translate(-brace, 0);
-        c.fillStyle = '#392c29';
-        c.beginPath();
-        c.moveTo(-15, -16);
-        c.lineTo(9, -16);
-        c.lineTo(18, 0);
-        c.lineTo(9, 16);
-        c.lineTo(-15, 16);
-        c.closePath();
-        c.fill();
-        this.line({ x: 8, y: -15 }, { x: 17, y: 0 }, color, 4);
-        this.line({ x: 17, y: 0 }, { x: 8, y: 15 }, color, 4);
-        c.fillStyle = e.state === 'recover' ? '#ffdfa2' : '#a65343';
-        for (let i = 0; i < 3; i++) c.fillRect(-12 + i * 6, -9, 3, 18);
-        if (e.state === 'rush' && !this.reduced) {
-          this.line({ x: -20, y: -8 }, { x: -53, y: -8 }, '#a35948', 2);
-          this.line({ x: -20, y: 8 }, { x: -41, y: 8 }, '#a35948', 2);
-        }
-        c.restore();
-      } else if (e.kind === 'hopper') {
-        const crouch = e.state === 'windup' ? 1 - e.timer / HOP_TELL : 0;
-        c.save();
-        c.translate(0, crouch * 5);
-        c.scale(1 + crouch * 0.12, 1 - crouch * 0.28);
-        c.fillStyle = '#392b2b';
-        c.beginPath();
-        c.moveTo(0, -17);
-        c.lineTo(15, -4);
-        c.lineTo(10, 12);
-        c.lineTo(-10, 12);
-        c.lineTo(-15, -4);
-        c.closePath();
-        c.fill();
-        this.line({ x: -14, y: -4 }, { x: 0, y: -17 }, color, 2.5);
-        this.line({ x: 0, y: -17 }, { x: 14, y: -4 }, color, 2.5);
-        const spread = e.state === 'airborne' ? 8 : 0;
-        for (const side of [-1, 1]) {
-          this.line({ x: side * 9, y: 4 }, { x: side * (20 + spread), y: 9 - spread }, color, 3);
-          this.line({ x: side * (20 + spread), y: 9 - spread }, { x: side * 16, y: 17 }, color, 3);
-        }
-        c.restore();
-      } else if (e.kind === 'sniper') {
-        c.fillStyle = '#392d29';
-        c.fillRect(-15, -12, 30, 25);
-        this.line({ x: -18, y: 16 }, { x: -10, y: -15 }, color, 3);
-        this.line({ x: 18, y: 16 }, { x: 10, y: -15 }, color, 3);
-        this.line({ x: -10, y: -15 }, { x: 10, y: -15 }, color, 2);
-        if (e.elite === 'twin') {
-          for (const [i, x] of [-6, 3].entries()) {
-            c.fillStyle =
-              (e.state === 'windup' && i === 0) || (e.state === 'followup' && i === 1)
-                ? '#ffe1aa'
-                : '#8c6750';
-            c.fillRect(x, -23, 4, 6);
+      const machineBody = drawMachineBody(c, g, e, this.reduced);
+      if (!machineBody) {
+        c.translate(0, pose.crouch);
+        c.rotate(pose.angle);
+        if (e.kind === 'loader') {
+          c.save();
+          c.scale(e.aim.x < 0 ? -1 : 1, 1);
+          c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : '#393237';
+          c.fillRect(-56, -23, 112, 57);
+          c.fillRect(-31, -34, 58, 18);
+          c.fillStyle = '#171f25';
+          c.fillRect(-26, -29, 34, 15);
+          c.fillRect(-49, 17, 88, 13);
+          c.fillStyle = '#697072';
+          for (let i = 0; i < 7; i++) c.fillRect(-45 + i * 12, 20, 7, 6);
+          c.fillStyle = color;
+          c.fillRect(-54, -17, 8, 26);
+          c.fillRect(40, -22, 16, 56);
+          this.line({ x: 24, y: -7 }, { x: 42, y: 11 }, '#b79a87', 5);
+          c.fillStyle = e.state === 'recover' ? '#ffe2a0' : '#b26855';
+          for (let i = 0; i < 3; i++) c.fillRect(-32 + i * 13, -5, 7, 11);
+          if (e.state === 'windup' && e.attack !== 'flak' && !g.bossRemaster.owns(e)) {
+            c.fillStyle = '#ffd19a';
+            c.fillRect(44, -20, 8, 50 * clamp(1 - e.timer / LOADER_TELL, 0, 1));
           }
-        }
-      } else if (e.kind === 'flyer') {
-        if (e.elite === 'volatile') {
-          c.fillStyle = '#392a2a';
-          c.strokeStyle = color;
-          c.lineWidth = 2;
+          if (e.state === 'rush' && !this.reduced) {
+            this.line({ x: -62, y: 18 }, { x: -104, y: 18 }, '#a46b55', 3);
+            this.line({ x: -62, y: 28 }, { x: -88, y: 28 }, '#a46b55', 2);
+          }
+          c.restore();
+        } else if (e.kind === 'press') {
+          c.fillStyle = '#564a43';
+          c.fillRect(-41, -65, 10, 36);
+          c.fillRect(31, -65, 10, 36);
+          c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : '#352b2b';
+          c.fillRect(-60, -31, 120, 62);
+          c.fillStyle = color;
+          c.fillRect(-60, -31, 120, 6);
+          c.fillRect(-60, 19, 120, 12);
+          c.fillStyle = '#1e2023';
+          c.fillRect(-49, -18, 98, 28);
+          c.fillStyle = g.pressure.opening(e)
+            ? '#b3f4de'
+            : e.state === 'recover'
+              ? '#ffe0a0'
+              : '#c38966';
+          for (let i = 0; i < 4; i++) c.fillRect(-37 + i * 22, -11, 9, 14);
+          for (const side of [-1, 1])
+            this.line({ x: side * 52, y: -19 }, { x: side * 52, y: 12 }, '#948373', 3);
+          if (e.state === 'rush' && !this.reduced) {
+            this.line({ x: -48, y: -41 }, { x: -48, y: -80 }, '#ad8562', 2);
+            this.line({ x: 48, y: -41 }, { x: 48, y: -80 }, '#ad8562', 2);
+          }
+        } else if (e.kind === 'charger') {
+          c.save();
+          c.scale(e.aim.x < 0 ? -1 : 1, 1);
+          const brace = e.state === 'windup' ? (1 - e.timer / CHARGE_TELL) * 5 : 0;
+          c.translate(-brace, 0);
+          c.fillStyle = '#392c29';
           c.beginPath();
-          for (let i = 0; i < 16; i++) {
-            const a = (i * Math.PI) / 8,
-              r = i % 2 ? 16 : 25;
-            if (i === 0) c.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-            else c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-          }
+          c.moveTo(-15, -16);
+          c.lineTo(9, -16);
+          c.lineTo(18, 0);
+          c.lineTo(9, 16);
+          c.lineTo(-15, 16);
           c.closePath();
           c.fill();
-          c.stroke();
-          this.circle({ x: 0, y: 0 }, 10, '#e7aa74', false, 2);
-          if (e.state === 'windup')
-            this.circle(
-              { x: 0, y: 0 },
-              4 + clamp(1 - e.timer / VOLATILE_TELL, 0, 1) * 5,
-              '#ffe1a6',
-            );
-        } else {
-          this.circle({ x: 0, y: 0 }, 18, e.allied ? '#18344b' : '#392a2a');
-          this.circle({ x: 0, y: 0 }, 18, color, false, 2.5);
-          const rotor = this.reduced ? 0 : Math.sin(g.time * 32 + e.id) * 2;
-          this.line({ x: -26, y: -5 + rotor }, { x: -18, y: 2 }, color, 3);
-          this.line({ x: 18, y: 2 }, { x: 26, y: -5 - rotor }, color, 3);
-        }
-      } else {
-        c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : e.allied ? '#18344b' : '#33282a';
-        c.fillRect(-size / 2, -(e.kind === 'boss' ? 38 : 16), size, e.kind === 'boss' ? 76 : 32);
-        c.fillStyle = color;
-        if (e.kind === 'runner') {
-          c.fillRect(-size / 2, -16, 5, 32);
-          c.fillRect(size / 2 - 5, -16, 5, 32);
-        } else {
-          c.fillRect(-size / 2, -(e.kind === 'boss' ? 38 : 16), size, 4);
-          c.fillRect(-size / 2, e.kind === 'boss' ? 34 : 12, size, 4);
-        }
-        if (e.kind === 'boss') {
-          c.fillStyle = '#211c20';
-          c.fillRect(-35, -24, 70, 48);
-          this.circle({ x: 0, y: 0 }, 21, color, false, 3);
-          for (let i = 0; i < 3; i++) {
-            c.fillStyle = i <= e.phase ? '#ffd3a0' : '#683f37';
-            c.fillRect(-15 + i * 12, -33, 6, 5);
+          this.line({ x: 8, y: -15 }, { x: 17, y: 0 }, color, 4);
+          this.line({ x: 17, y: 0 }, { x: 8, y: 15 }, color, 4);
+          c.fillStyle = e.state === 'recover' ? '#ffdfa2' : '#a65343';
+          for (let i = 0; i < 3; i++) c.fillRect(-12 + i * 6, -9, 3, 18);
+          if (e.state === 'rush' && !this.reduced) {
+            this.line({ x: -20, y: -8 }, { x: -53, y: -8 }, '#a35948', 2);
+            this.line({ x: -20, y: 8 }, { x: -41, y: 8 }, '#a35948', 2);
           }
-          if (e.phase > 0) {
-            this.line({ x: -45, y: -20 }, { x: -54, y: -30 }, color, 3);
-            this.line({ x: 45, y: -20 }, { x: 54, y: -30 }, color, 3);
-          }
-        }
-        if (e.kind === 'runner' || e.kind === 'shooter') {
-          c.fillStyle = '#172125';
-          c.fillRect(-size / 2 + 4, 10, size - 8, 6);
+          c.restore();
+        } else if (e.kind === 'hopper') {
+          const crouch = e.state === 'windup' ? 1 - e.timer / HOP_TELL : 0;
+          c.save();
+          c.translate(0, crouch * 5);
+          c.scale(1 + crouch * 0.12, 1 - crouch * 0.28);
+          c.fillStyle = '#392b2b';
+          c.beginPath();
+          c.moveTo(0, -17);
+          c.lineTo(15, -4);
+          c.lineTo(10, 12);
+          c.lineTo(-10, 12);
+          c.lineTo(-15, -4);
+          c.closePath();
+          c.fill();
+          this.line({ x: -14, y: -4 }, { x: 0, y: -17 }, color, 2.5);
+          this.line({ x: 0, y: -17 }, { x: 14, y: -4 }, color, 2.5);
+          const spread = e.state === 'airborne' ? 8 : 0;
           for (const side of [-1, 1]) {
-            const lift = Math.max(0, side * pose.stride);
+            this.line({ x: side * 9, y: 4 }, { x: side * (20 + spread), y: 9 - spread }, color, 3);
             this.line(
-              { x: side * 7, y: 9 },
-              { x: side * (9 + pose.stride * 0.3), y: 15 - lift },
+              { x: side * (20 + spread), y: 9 - spread },
+              { x: side * 16, y: 17 },
               color,
               3,
             );
-            c.fillStyle = '#9b7b70';
-            c.fillRect(side * 9 - 3, 14 - lift, 6, 2);
+          }
+          c.restore();
+        } else if (e.kind === 'sniper') {
+          c.fillStyle = '#392d29';
+          c.fillRect(-15, -12, 30, 25);
+          this.line({ x: -18, y: 16 }, { x: -10, y: -15 }, color, 3);
+          this.line({ x: 18, y: 16 }, { x: 10, y: -15 }, color, 3);
+          this.line({ x: -10, y: -15 }, { x: 10, y: -15 }, color, 2);
+          if (e.elite === 'twin') {
+            for (const [i, x] of [-6, 3].entries()) {
+              c.fillStyle =
+                (e.state === 'windup' && i === 0) || (e.state === 'followup' && i === 1)
+                  ? '#ffe1aa'
+                  : '#8c6750';
+              c.fillRect(x, -23, 4, 6);
+            }
+          }
+        } else if (e.kind === 'flyer') {
+          if (e.elite === 'volatile') {
+            c.fillStyle = '#392a2a';
+            c.strokeStyle = color;
+            c.lineWidth = 2;
+            c.beginPath();
+            for (let i = 0; i < 16; i++) {
+              const a = (i * Math.PI) / 8,
+                r = i % 2 ? 16 : 25;
+              if (i === 0) c.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+              else c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            c.closePath();
+            c.fill();
+            c.stroke();
+            this.circle({ x: 0, y: 0 }, 10, '#e7aa74', false, 2);
+            if (e.state === 'windup')
+              this.circle(
+                { x: 0, y: 0 },
+                4 + clamp(1 - e.timer / VOLATILE_TELL, 0, 1) * 5,
+                '#ffe1a6',
+              );
+          } else {
+            this.circle({ x: 0, y: 0 }, 18, e.allied ? '#18344b' : '#392a2a');
+            this.circle({ x: 0, y: 0 }, 18, color, false, 2.5);
+            const rotor = this.reduced ? 0 : Math.sin(g.time * 32 + e.id) * 2;
+            this.line({ x: -26, y: -5 + rotor }, { x: -18, y: 2 }, color, 3);
+            this.line({ x: 18, y: 2 }, { x: 26, y: -5 - rotor }, color, 3);
+          }
+        } else {
+          c.fillStyle = e.flash > 0 && !this.reduced ? '#fff5df' : e.allied ? '#18344b' : '#33282a';
+          c.fillRect(-size / 2, -(e.kind === 'boss' ? 38 : 16), size, e.kind === 'boss' ? 76 : 32);
+          c.fillStyle = color;
+          if (e.kind === 'runner') {
+            c.fillRect(-size / 2, -16, 5, 32);
+            c.fillRect(size / 2 - 5, -16, 5, 32);
+          } else {
+            c.fillRect(-size / 2, -(e.kind === 'boss' ? 38 : 16), size, 4);
+            c.fillRect(-size / 2, e.kind === 'boss' ? 34 : 12, size, 4);
+          }
+          if (e.kind === 'boss') {
+            c.fillStyle = '#211c20';
+            c.fillRect(-35, -24, 70, 48);
+            this.circle({ x: 0, y: 0 }, 21, color, false, 3);
+            for (let i = 0; i < 3; i++) {
+              c.fillStyle = i <= e.phase ? '#ffd3a0' : '#683f37';
+              c.fillRect(-15 + i * 12, -33, 6, 5);
+            }
+            if (e.phase > 0) {
+              this.line({ x: -45, y: -20 }, { x: -54, y: -30 }, color, 3);
+              this.line({ x: 45, y: -20 }, { x: 54, y: -30 }, color, 3);
+            }
+          }
+          if (e.kind === 'runner' || e.kind === 'shooter') {
+            c.fillStyle = '#172125';
+            c.fillRect(-size / 2 + 4, 10, size - 8, 6);
+            for (const side of [-1, 1]) {
+              const lift = Math.max(0, side * pose.stride);
+              this.line(
+                { x: side * 7, y: 9 },
+                { x: side * (9 + pose.stride * 0.3), y: 15 - lift },
+                color,
+                3,
+              );
+              c.fillStyle = '#9b7b70';
+              c.fillRect(side * 9 - 3, 14 - lift, 6, 2);
+            }
           }
         }
       }
@@ -594,8 +608,9 @@ export class Renderer {
       }
       if (e.kind !== 'loader' && e.kind !== 'press' && e.elite !== 'volatile')
         this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
-      drawRemasteredBody(c, g, e, this.reduced);
+      drawMachineBarrelDetails(c, e, this.reduced);
       drawMutationBody(c, e);
+      drawMachineContacts(c, g, e, this.reduced);
       if (e.squad?.connected) {
         c.fillStyle =
           e.squad.kind === 'shield' ? '#c9b38a' : e.squad.kind === 'flank' ? '#b3c3ba' : '#d4a087';
@@ -903,6 +918,7 @@ export class Renderer {
     c.globalAlpha = 1;
     drawCourierWorld(c, g);
     drawAuditDoor(c, g, this.reduced);
+    drawMachineWrecks(c, g, this.reduced);
     this.drawEnemies();
     const remasteredBoss = g.bossRemaster.visual;
     if (remasteredBoss) drawBossRemaster(c, remasteredBoss, this.reduced);

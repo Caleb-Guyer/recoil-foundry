@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**The Operator — version 5.33.0.** Articulated player movement, weapon-specific grips, contact-driven surface sounds and animated outfit previews. [Release notes and four private tests](docs/releases/5.33.0.md).
+**Machine Breakdown — version 5.34.0.** Articulated patrol chassis, native damage reactions, family-specific shutdowns and brief nonblocking wreckage, including elite and marked variants. [Release notes and five private tests](docs/releases/5.34.0.md).
 
 **Quick Shift — version 5.31.0.** Build a gun through five native rooms with three opening picks, paired room-clear drafts, route and optional-job choices, and a remastered boss. Replay versioned seeds with separate records and Continue. [Release notes and three isolated tests](docs/releases/5.31.0.md).
 

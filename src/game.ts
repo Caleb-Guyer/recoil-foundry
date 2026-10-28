@@ -1,3 +1,4 @@
+import { MachineBreakdown } from './machine-breakdown.ts';
 import { OperatorSurface } from './operator-surface.ts';
 import { factoryUnboundRoom, prepareFactoryUnbound } from './factory-unbound-room.ts';
 import { shiftOfferAllowed } from './shift-catalog.ts';
@@ -528,6 +529,7 @@ export class Game {
   shots: Shot[] = [];
   particles: Particle[] = [];
   combatFeel = new CombatFeel();
+  machineBreakdown = new MachineBreakdown(this);
   operatorSurface = new OperatorSurface(this);
   trail: Vec[] = [];
   mode: Mode = 'title';
@@ -863,6 +865,7 @@ export class Game {
     if (mode === 'won') this.recordCampaignClear();
     if (mode === 'dead' || mode === 'won' || mode === 'title') this.securityCombat.reset();
     if (mode === 'title') {
+      this.machineBreakdown.reset();
       this.gauntlet.reset();
       this.quickShift.reset();
       this.clockOut = new ClockOut();
@@ -1331,6 +1334,7 @@ export class Game {
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
     this.operatorSurface.reset();
+    this.machineBreakdown.reset();
     this.bossRemaster.clear();
     this.routePreviewCache.clear();
     this.routePreviewContext = '';
@@ -2246,6 +2250,7 @@ export class Game {
     this.shiftRoutes.afterStep(dt);
     this.containPlayer();
     this.operatorSurface.update(dt, input);
+    this.machineBreakdown.update();
     this.harpoons.afterStep(dt);
     if (this.mode !== 'playing') return;
     this.ballistics.update();
@@ -3762,8 +3767,22 @@ export class Game {
         } else if (nearest.enemy) {
           const e = nearest.enemy;
           if (!s.friendly) {
-            if (e.allied) this.areaEvents.hitAlly(e, s.damage);
-            else
+            if (e.allied) {
+              const hpBefore = e.hp;
+              const machineDeath = this.machineBreakdown.beforeHit(e, s.damage);
+              this.areaEvents.hitAlly(e, s.damage);
+              if (e.hp < hpBefore) {
+                this.machineBreakdown.hit(
+                  e,
+                  s.damage,
+                  hpBefore - e.hp,
+                  Math.min(hpBefore, hpBefore - e.hp),
+                  false,
+                  { x: e.body.position.x - s.vel.x, y: e.body.position.y - s.vel.y },
+                );
+                this.machineBreakdown.defeated(e, machineDeath);
+              }
+            } else
               this.hitEnemy(
                 e,
                 this.spoof.alliedDamage(e, s.damage, !!s.rebooted),
@@ -4073,7 +4092,9 @@ export class Game {
         e.state === 'transition' ? 0.35 : e.state === 'windup' || e.state === 'followup' ? 0.3 : 1;
     damage = this.finale.limitDamage(e, damage);
     const healthLost = Math.min(e.hp, Math.max(0, damage));
+    const machineDeath = this.machineBreakdown.beforeHit(e, damage, source);
     e.hp -= damage;
+    this.machineBreakdown.hit(e, incomingDamage, damage, healthLost, blocked, from, source);
     if (credited && source !== 'cleanup') this.commendations.weapons.hit(e, healthLost, trace);
     if (credited && from && damage > 0 && source !== 'cleanup' && typeof source !== 'object')
       this.commendations.mastery.hit(e);
@@ -4107,6 +4128,7 @@ export class Game {
     }
     if (e.hp > 0) return blocked;
     if (this.finale.cinema?.breakForm(e)) return blocked;
+    this.machineBreakdown.defeated(e, machineDeath, source);
     this.finale.defeated(e);
     this.bossRemaster.defeated(e);
     this.auditor.killed(e, credited && source !== 'cleanup');
