@@ -1,15 +1,26 @@
 import type { Enemy, Game } from './game.ts';
 import { clamp } from './rules.ts';
+import { machineBodySnapshot } from './machine-breakdown-pose.ts';
+import { drawSupportChassis } from './support-machine-art.ts';
+import { drawMachineContacts } from './machine-breakdown-art.ts';
 
-export function drawSupport(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
+export function drawSupport(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced = false,
+  portrait = false,
+) {
+  const snapshot = machineBodySnapshot(e, g.time, g);
+  if (!snapshot) return;
   const rig = e.support!,
     p = e.body.position,
     repair = e.kind === 'repairer';
   const color = repair ? '#a8d9c3' : '#efc477';
-  const partner = g.teamwork.partner(e);
+  const partner = snapshot.supportMachine?.support?.partner;
   c.save();
-  if (partner && e.spawn <= 0) {
-    const q = partner.body.position,
+  if (partner && e.spawn <= 0 && !portrait) {
+    const q = partner.position,
       charging = rig.phase === 'windup';
     c.strokeStyle = '#152729';
     c.lineWidth = 5;
@@ -44,50 +55,11 @@ export function drawSupport(c: CanvasRenderingContext2D, g: Game, e: Enemy, redu
   }
   c.globalAlpha = clamp(1 - e.spawn / 0.65, 0.15, 1);
   c.translate(p.x, p.y);
-  c.fillStyle = e.flash > 0 ? '#fff1d2' : '#263c40';
-  c.strokeStyle = color;
-  c.lineWidth = 2;
-  c.beginPath();
-  c.roundRect(-14, -13, 28, 26, repair ? 10 : 3);
-  c.fill();
-  c.stroke();
-  c.fillStyle = rig.phase === 'spent' ? '#667775' : color;
-  if (repair) {
-    c.fillRect(-7, -2, 14, 4);
-    c.fillRect(-2, -7, 4, 14);
-  } else {
-    c.beginPath();
-    c.moveTo(3, -9);
-    c.lineTo(-5, 1);
-    c.lineTo(1, 1);
-    c.lineTo(-3, 9);
-    c.lineTo(6, -2);
-    c.lineTo(0, -2);
-    c.closePath();
-    c.fill();
-  }
-  c.strokeStyle = '#8fa4a1';
-  for (const side of [-1, 1]) {
-    c.beginPath();
-    c.moveTo(side * 12, 7);
-    c.lineTo(side * 20, 10);
-    c.lineTo(side * 25, 4);
-    c.stroke();
-    c.fillStyle = '#425f62';
-    c.fillRect(side * 22 - 5, -17, 10, 4);
-    c.strokeStyle = color;
-    c.beginPath();
-    c.moveTo(side * 22 - 7, -19);
-    c.lineTo(side * 22 + 7, -19);
-    c.stroke();
-  }
-  if (!reduced && rig.phase !== 'spent') {
-    c.fillStyle = color;
-    c.globalAlpha *= 0.4 + Math.sin(g.time * 4) * 0.1;
-    c.fillRect(-6, 15, 12, 3);
-  }
+  if (snapshot.scale !== 1) c.scale(snapshot.scale, snapshot.scale);
+  drawSupportChassis(c, snapshot, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
   c.restore();
-  if (e.hp < e.maxHp) {
+  if (!portrait && e.hp < e.maxHp) {
     c.fillStyle = '#384447';
     c.fillRect(p.x - 16, p.y - 28, 32, 3);
     c.fillStyle = color;

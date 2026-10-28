@@ -4,6 +4,7 @@ import type { Vec } from './rules.ts';
 import { drawMachineChassis } from './machine-breakdown-art.ts';
 import { drawSpecialistMachineWreck } from './specialist-machine-wreck-art.ts';
 import { drawHeavyMachineWreck } from './heavy-machine-wreck-art.ts';
+import { drawSupportMachineWreck } from './support-machine-wreck-art.ts';
 import {
   machinePose,
   type MachineBodySnapshot,
@@ -314,6 +315,12 @@ export function drawMachineWreck(
   c.scale(s.scale, s.scale);
   c.globalAlpha *= projection.alpha;
   if (wreck.landing) supportClip(c, wreck.landing, projection.position, s.scale);
+  const support = drawSupportMachineWreck(c, wreck, projection, reduced);
+  if (support) {
+    inertIdentity(c, s, support, projection.fold);
+    c.restore();
+    return true;
+  }
   const heavy = drawHeavyMachineWreck(c, wreck, projection, reduced);
   if (heavy) {
     inertIdentity(c, s, heavy, projection.fold);

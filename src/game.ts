@@ -4184,7 +4184,7 @@ export class Game {
     )
       this.onEnemyDefeated(e.kind);
     this.hunts.defeated(e, credited && source !== 'cleanup');
-    this.fabricators.killed(e);
+    this.fabricators.killed(e, source === 'cleanup' ? 'cleanup' : 'owner-lost');
     this.teamwork.disrupt(e);
     this.patrolMachines.remove(e);
     this.mutations.killed(e);

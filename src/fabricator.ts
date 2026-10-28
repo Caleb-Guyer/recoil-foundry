@@ -28,12 +28,17 @@ export class FabricatorSystem {
     this.game = game;
   }
   clear() {
-    for (const e of [...this.game.enemies]) if (e.sentry) this.remove(e);
+    for (const e of [...this.game.enemies]) if (e.sentry) this.remove(e, 'cleanup');
     for (const e of this.game.enemies) if (e.fabricator) e.fabricator.frame = undefined;
     this.game.shots = this.game.shots.filter((s) => !s.sentryOwner || s.friendly);
   }
-  private remove(e: Enemy) {
+  private remove(
+    e: Enemy,
+    reason: 'owner-lost' | 'interrupted' | 'cleanup' = 'cleanup',
+    owner?: Enemy,
+  ) {
     const g = this.game;
+    g.machineBreakdown.removed(e, reason, owner);
     e.hp = 0;
     g.tethers.disrupt(e.body);
     g.harpoons.disrupt(e.body);
@@ -47,7 +52,7 @@ export class FabricatorSystem {
     const frame = this.game.enemies.find((other) => other.id === rig.frame);
     rig.frame = undefined;
     rig.origin = undefined;
-    if (frame) this.remove(frame);
+    if (frame) this.remove(frame, 'interrupted', e);
     e.state = 'recover';
     e.timer = 1.3;
     this.game.soundAt('fabricator-break', e.body.position, `enemy:${e.id}`);
@@ -66,10 +71,11 @@ export class FabricatorSystem {
       }
     }
   }
-  killed(e: Enemy) {
+  killed(e: Enemy, reason: 'owner-lost' | 'cleanup' = 'owner-lost') {
     const g = this.game;
     if (e.fabricator) {
-      for (const child of [...g.enemies]) if (child.sentry?.owner === e.id) this.remove(child);
+      for (const child of [...g.enemies])
+        if (child.sentry?.owner === e.id) this.remove(child, reason, e);
       g.shots = g.shots.filter((s) => s.sentryOwner !== e.id || s.friendly);
       e.fabricator.frame = undefined;
       g.soundAt('fabricator-down', e.body.position, `enemy:${e.id}`);
@@ -219,7 +225,7 @@ export class FabricatorSystem {
     const g = this.game,
       rig = e.sentry;
     if (!rig || !g.enemies.some((other) => other.id === rig.owner && other.hp > 0)) {
-      this.remove(e);
+      this.remove(e, rig ? 'owner-lost' : 'cleanup');
       return;
     }
     Body.setVelocity(e.body, { x: e.body.velocity.x * 0.85, y: e.body.velocity.y });

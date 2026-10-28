@@ -21,9 +21,11 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Current update: 5.36.0 — Heavy Industry.** Shutter Guard armor, Strider legs and braces, and Mortar Cart loading and recoil now follow their actual combat states, with damage reactions, distinct shutdowns and settling wreckage. [Details and private tests](docs/releases/5.36.0.md).
+**Current update: 5.37.0 — Support Systems.** Repairer tools and supplies, Relay charge cells, Fabricator assembly arms and Sentry deployment and recoil follow their actual support cycles, with local damage reactions, distinct shutdowns and power-loss wreckage. [Details and private tests](docs/releases/5.37.0.md).
 
-**Recent update: 5.35.0 — Specialist Machines.** Charger drives and rams, Hopper springs and supported landings, and Sniper tracking, lock and breech motion now share the damage and shutdown presentation. [Details and private tests](docs/releases/5.35.0.md).
+**Recent update: 5.36.0 — Heavy Industry.** Shutter Guard armor, Strider legs and braces, and Mortar Cart loading and recoil now follow their actual combat states, with damage reactions, distinct shutdowns and settling wreckage. [Details and private tests](docs/releases/5.36.0.md).
+
+**Specialist Machines — version 5.35.0.** Charger drives and rams, Hopper springs and supported landings, and Sniper tracking, lock and breech motion now share the damage and shutdown presentation. [Details and private tests](docs/releases/5.35.0.md).
 
 **Quick Shift — version 5.31.0.** Build a gun through five native rooms with three opening picks, paired room-clear drafts, route and optional-job choices, and a remastered boss. Replay versioned seeds with separate records and Continue. [Release notes and three isolated tests](docs/releases/5.31.0.md).
 

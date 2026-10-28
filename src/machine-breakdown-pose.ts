@@ -1,6 +1,6 @@
 import type { Enemy, Game } from './game.ts';
-import { type EnemyState, type EliteKind, ENEMY_STATS, VOLATILE_TELL } from './enemies.ts';
-import { clamp, type Vec } from './rules.ts';
+import { type EnemyState, type EliteKind, ENEMY_STATS, VOLATILE_TELL, isBoss } from './enemies.ts';
+import { clamp, distance, type Vec } from './rules.ts';
 import { attackBrace } from './combat-readability.ts';
 import { SPLIT_SCALE, type MutationRig } from './mutations.ts';
 import type { SquadTag } from './squads.ts';
@@ -10,6 +10,10 @@ import { enemyShielded, type Attack } from './enemies.ts';
 import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
 import { machineAngles, machineTell, type MortarArc } from './patrol-machine-system.ts';
 import { isHeavyMachineKind, heavyMachinePose } from './heavy-machine-pose.ts';
+import { isSupport, SUPPORT, type SupportRig } from './teamwork.ts';
+import { FABRICATOR_BUILD, sentryMuzzle } from './fabricator.ts';
+import type { EnemyKind } from './levels.ts';
+import { isSupportMachineKind, supportMachinePose } from './support-machine-pose.ts';
 
 export type MachineKind =
   | 'runner'
@@ -20,7 +24,11 @@ export type MachineKind =
   | 'sniper'
   | 'shutter'
   | 'strider'
-  | 'mortar';
+  | 'mortar'
+  | 'repairer'
+  | 'relay'
+  | 'fabricator'
+  | 'sentry';
 export const isMachineKind = (kind: string): kind is MachineKind =>
   [
     'runner',
@@ -32,6 +40,10 @@ export const isMachineKind = (kind: string): kind is MachineKind =>
     'shutter',
     'strider',
     'mortar',
+    'repairer',
+    'relay',
+    'fabricator',
+    'sentry',
   ].includes(kind);
 export interface MachinePatrolShellSnapshot {
   arc: MortarArc;
@@ -60,6 +72,110 @@ export interface MachinePatrolSnapshot {
   releaseArcs: MortarArc[];
   /** Real currently flying owned shells, never a cosmetic launch prediction. */
   shells: MachinePatrolShellSnapshot[];
+}
+export interface MachineSupportTarget {
+  id: number;
+  kind: EnemyKind;
+  position: Vec;
+  hp: number;
+  maxHp: number;
+}
+export interface MachineSupportPulse {
+  at: number;
+  amount: number;
+  target: MachineSupportTarget | null;
+}
+export interface SupportMachineSnapshot {
+  grounded: boolean;
+  supportY: number | null;
+  support?: {
+    phase: SupportRig['phase'];
+    timer: number;
+    remaining: number;
+    partner: MachineSupportTarget | null;
+    pulse: MachineSupportPulse | null;
+  };
+  fabricator?: {
+    built: number;
+    frame: (MachineSupportTarget & { ready: boolean; buildProgress: number }) | null;
+    origin: Vec | null;
+    searchAt: number;
+    interruptedAt: number | null;
+  };
+  sentry?: {
+    ownerId: number;
+    owner: MachineSupportTarget | null;
+    ready: boolean;
+    origin: Vec;
+    buildProgress: number;
+    muzzle: Vec;
+    dischargeAt: number | null;
+  };
+}
+export const machineSupportTarget = (e: Enemy): MachineSupportTarget => ({
+  id: e.id,
+  kind: e.kind,
+  position: { ...e.body.position },
+  hp: e.hp,
+  maxHp: e.maxHp,
+});
+/** Teamwork eligibility projected without calling its physics-applying frozen/pinned helpers. */
+function supportLive(g: Game, e: Enemy): boolean {
+  const pin = g.ballistics.pins.get(e.id),
+    pinned =
+      !!pin &&
+      g.time < pin.until &&
+      distance(e.body.position, pin.pos) <= 9 &&
+      distance(pin.surface.position, pin.surfacePos) <= 3 &&
+      g.solidBodies.includes(pin.surface);
+  return (
+    e.hp > 0 &&
+    e.spawn <= 0 &&
+    !e.allied &&
+    !e.rebootUntil &&
+    !e.eventRole &&
+    !e.courier &&
+    !e.workshopTarget &&
+    g.enemies.includes(e) &&
+    (isBoss(e.kind) || (g.cryogenic.states.get(e.id)?.frozen ?? 0) <= g.time) &&
+    !pinned &&
+    !g.salvageEvolutions.carried(e) &&
+    !g.tethers.staggered(e) &&
+    !g.pressure.staggered(e) &&
+    !g.massDriver.staggered(e)
+  );
+}
+export function machineSupportPartner(g: Game, e: Enemy): MachineSupportTarget | null {
+  if (!isSupport(e.kind) || !e.support || e.support.target === undefined || !supportLive(g, e))
+    return null;
+  const target = g.enemies.find((other) => other.id === e.support!.target);
+  if (
+    !target ||
+    !supportLive(g, target) ||
+    isBoss(target.kind) ||
+    isSupport(target.kind) ||
+    target.elite ||
+    target.mutation ||
+    target.squad ||
+    target.sentry ||
+    (e.kind === 'repairer'
+      ? target.hp >= target.maxHp
+      : !['shooter', 'sniper', 'flyer', 'sifter', 'skimmer'].includes(target.kind)) ||
+    distance(e.body.position, target.body.position) > SUPPORT.range ||
+    firstSolid(e.body.position, target.body.position, { x: 2, y: 2 }, g.solidBodies)
+  )
+    return null;
+  return machineSupportTarget(target);
+}
+export function machineSentryProgress(e: Enemy, g?: Game, actualOwner?: Enemy): number {
+  if (e.sentry?.ready) return 1;
+  const owner =
+    actualOwner?.id === e.sentry?.owner
+      ? actualOwner
+      : g?.enemies.find((other) => other.id === e.sentry?.owner);
+  return owner?.fabricator
+    ? clamp(1 - owner.timer / FABRICATOR_BUILD, 0, 1)
+    : (g?.machineBreakdown.getSupportMachine(e)?.buildProgress ?? 0);
 }
 export interface MachineBodySnapshot {
   kind: MachineKind;
@@ -92,6 +208,7 @@ export interface MachineBodySnapshot {
   attacks?: number;
   target?: Vec;
   patrol?: MachinePatrolSnapshot;
+  supportMachine?: SupportMachineSnapshot;
   specialist?: {
     grounded: boolean;
     supportY: number | null;
@@ -125,7 +242,12 @@ const cloneMortarArc = (arc: MortarArc): MortarArc => ({
   radius: arc.radius,
   damage: arc.damage,
 });
-export function machineBodySnapshot(e: Enemy, time: number, g?: Game): MachineBodySnapshot | null {
+export function machineBodySnapshot(
+  e: Enemy,
+  time: number,
+  g?: Game,
+  actualOwner?: Enemy,
+): MachineBodySnapshot | null {
   if (!isMachineKind(e.kind)) return null;
   const angle = e.body.angle,
     cos = Math.cos(angle),
@@ -136,17 +258,29 @@ export function machineBodySnapshot(e: Enemy, time: number, g?: Game): MachineBo
     }));
   const specialist = isSpecialistMachineKind(e.kind),
     patrol = isPatrolMachine(e.kind) && e.patrol,
+    supportMachine = ['repairer', 'relay', 'fabricator', 'sentry'].includes(e.kind),
     start = { x: e.body.position.x, y: e.body.bounds.max.y - 2 },
     end = { x: start.x, y: e.body.bounds.max.y + 5 },
     // Same native 20px support probe without Query.ray's temporary Matter body allocation.
     support =
-      (specialist || patrol) && g && e.body.velocity.y >= -1
+      (specialist || patrol || supportMachine) && g && e.body.velocity.y >= -1
         ? firstSolid(start, end, { x: 10, y: 0 }, g.solidBodies)
         : undefined,
     grounded = !!support,
     supportY = support && support.normal.y < -0.45 ? start.y + (end.y - start.y) * support.t : null,
     observed = specialist ? g?.machineBreakdown.getSpecialist(e) : null,
-    observedPatrol = patrol ? g?.machineBreakdown.getPatrol(e) : null;
+    observedPatrol = patrol ? g?.machineBreakdown.getPatrol(e) : null,
+    observedSupport = supportMachine ? g?.machineBreakdown.getSupportMachine(e) : null,
+    frame =
+      e.fabricator?.frame === undefined
+        ? undefined
+        : g?.enemies.find((other) => other.id === e.fabricator!.frame),
+    owner =
+      actualOwner?.id === e.sentry?.owner
+        ? actualOwner
+        : e.sentry
+          ? g?.enemies.find((other) => other.id === e.sentry!.owner)
+          : undefined;
   return {
     kind: e.kind,
     id: e.id,
@@ -221,6 +355,55 @@ export function machineBodySnapshot(e: Enemy, time: number, g?: Game): MachineBo
           },
         }
       : {}),
+    ...(supportMachine
+      ? {
+          supportMachine: {
+            grounded,
+            supportY,
+            ...(e.support
+              ? {
+                  support: {
+                    phase: e.support.phase,
+                    timer: e.support.timer,
+                    remaining: e.support.remaining,
+                    partner: g ? machineSupportPartner(g, e) : null,
+                    pulse: observedSupport?.pulse ?? null,
+                  },
+                }
+              : {}),
+            ...(e.fabricator
+              ? {
+                  fabricator: {
+                    built: e.fabricator.built,
+                    frame: frame
+                      ? {
+                          ...machineSupportTarget(frame),
+                          ready: !!frame.sentry?.ready,
+                          buildProgress: machineSentryProgress(frame, g, e),
+                        }
+                      : null,
+                    origin: e.fabricator.origin ? { ...e.fabricator.origin } : null,
+                    searchAt: e.fabricator.searchAt,
+                    interruptedAt: observedSupport?.interruptedAt ?? null,
+                  },
+                }
+              : {}),
+            ...(e.sentry
+              ? {
+                  sentry: {
+                    ownerId: e.sentry.owner,
+                    owner: owner ? machineSupportTarget(owner) : null,
+                    ready: e.sentry.ready,
+                    origin: { ...e.sentry.origin },
+                    buildProgress: machineSentryProgress(e, g, owner),
+                    muzzle: sentryMuzzle(e),
+                    dischargeAt: observedSupport?.dischargeAt ?? null,
+                  },
+                }
+              : {}),
+          },
+        }
+      : {}),
     splitChild: !!e.splitChild,
     ...(e.mutation
       ? {
@@ -256,6 +439,7 @@ function leg(hip: Vec, foot: Vec, bend: number, planted: boolean): MachineLeg {
 }
 // A pure projection of native state. It never advances a clock, changes AI, or moves a hull.
 export function machinePose(s: MachineBodySnapshot, reduced = false): MachinePose {
+  if (isSupportMachineKind(s.kind)) return supportMachinePose(s, reduced);
   if (isHeavyMachineKind(s.kind)) return heavyMachinePose(s, reduced);
   if (isSpecialistMachineKind(s.kind)) return specialistMachinePose(s, reduced);
   const time = finite(s.time),

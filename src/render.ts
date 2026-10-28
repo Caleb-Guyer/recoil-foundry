@@ -283,7 +283,7 @@ export class Renderer {
         continue;
       }
       if (e.support) {
-        drawSupport(c, g, e, this.reduced);
+        drawSupport(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'wallcrawler') {
@@ -295,7 +295,7 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'fabricator' || e.kind === 'sentry') {
-        drawFabricator(c, g, e, this.reduced);
+        drawFabricator(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'harpooner') {

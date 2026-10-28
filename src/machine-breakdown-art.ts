@@ -14,6 +14,8 @@ import { isSpecialistMachineKind, type SpecialistMachinePose } from './specialis
 import { drawSpecialistChassis } from './specialist-machine-art.ts';
 import { isHeavyMachineKind, type HeavyMachinePose } from './heavy-machine-pose.ts';
 import { drawHeavyChassis } from './heavy-machine-art.ts';
+import { isSupportMachineKind, type SupportMachinePose } from './support-machine-pose.ts';
+import { drawSupportChassis } from './support-machine-art.ts';
 
 function line(c: CanvasRenderingContext2D, a: Vec, b: Vec, color: string, width: number) {
   c.strokeStyle = color;
@@ -70,6 +72,8 @@ export function drawMachineChassis(
   reduced = false,
   p: MachinePose = machinePose(s, reduced),
 ) {
+  if (isSupportMachineKind(s.kind))
+    return drawSupportChassis(c, s, reduced, p as SupportMachinePose);
   if (isHeavyMachineKind(s.kind)) return drawHeavyChassis(c, s, reduced, p as HeavyMachinePose);
   if (isSpecialistMachineKind(s.kind))
     return drawSpecialistChassis(c, s, reduced, p as SpecialistMachinePose);
