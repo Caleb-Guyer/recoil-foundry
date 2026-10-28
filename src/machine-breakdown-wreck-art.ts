@@ -2,6 +2,7 @@ import type { Game } from './game.ts';
 import { ENEMY_STATS } from './enemies.ts';
 import type { Vec } from './rules.ts';
 import { drawMachineChassis } from './machine-breakdown-art.ts';
+import { drawSpecialistMachineWreck } from './specialist-machine-wreck-art.ts';
 import {
   machinePose,
   type MachineBodySnapshot,
@@ -306,8 +307,19 @@ export function drawMachineWreck(
 ): boolean {
   const projection = projectMachineWreck(wreck, time, reduced);
   if (!projection || projection.alpha <= 0) return false;
-  const s = wreck.visual,
-    pose = machineShutdownPose(s, projection.age, reduced, wreck.shutdown);
+  const s = wreck.visual;
+  c.save();
+  c.translate(projection.position.x, projection.position.y);
+  c.scale(s.scale, s.scale);
+  c.globalAlpha *= projection.alpha;
+  if (wreck.landing) supportClip(c, wreck.landing, projection.position, s.scale);
+  const specialist = drawSpecialistMachineWreck(c, wreck, projection, reduced);
+  if (specialist) {
+    inertIdentity(c, s, specialist, projection.fold);
+    c.restore();
+    return true;
+  }
+  const pose = machineShutdownPose(s, projection.age, reduced, wreck.shutdown);
   const inactive: MachineBodySnapshot = {
     ...s,
     hp: 0,
@@ -317,11 +329,6 @@ export function drawMachineWreck(
     state: 'recover',
     velocity: { x: 0, y: 0 },
   };
-  c.save();
-  c.translate(projection.position.x, projection.position.y);
-  c.scale(s.scale, s.scale);
-  c.globalAlpha *= projection.alpha;
-  if (wreck.landing) supportClip(c, wreck.landing, projection.position, s.scale);
   drawMachineChassis(c, inactive, reduced, pose);
   if (s.kind === 'shooter') droppedBarrel(c, s, pose, projection.fold);
   else if (s.kind === 'flyer') failedRotor(c, s, pose, projection.fold);

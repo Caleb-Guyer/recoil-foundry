@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Machine Breakdown — version 5.34.0.** Articulated patrol chassis, native damage reactions, family-specific shutdowns and brief nonblocking wreckage, including elite and marked variants. [Release notes and five private tests](docs/releases/5.34.0.md).
+**Current update: 5.35.0 — Specialist Machines.** Charger drives and rams, Hopper springs and supported landings, and Sniper tracking, lock and breech motion now share the damage and shutdown presentation. [Details and private tests](docs/releases/5.35.0.md).
 
 **Quick Shift — version 5.31.0.** Build a gun through five native rooms with three opening picks, paired room-clear drafts, route and optional-job choices, and a remastered boss. Replay versioned seeds with separate records and Continue. [Release notes and three isolated tests](docs/releases/5.31.0.md).
 

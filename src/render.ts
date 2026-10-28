@@ -44,6 +44,7 @@ import {
   drawMachineBarrelDetails,
 } from './machine-breakdown-art.ts';
 import { drawMachineWrecks } from './machine-breakdown-wreck-art.ts';
+import { drawSpecialistBarrelDetails } from './specialist-machine-art.ts';
 import { drawUprising, drawUprisingScenery, UPRISING_PALETTES } from './uprising-art.ts';
 import { drawWelder, drawWelds } from './welder-art.ts';
 import { drawClockOut } from './clock-out-art.ts';
@@ -609,6 +610,7 @@ export class Renderer {
       if (e.kind !== 'loader' && e.kind !== 'press' && e.elite !== 'volatile')
         this.circle({ x: aim.x * 5, y: aim.y * 5 }, e.kind === 'boss' ? 8 : 4, color);
       drawMachineBarrelDetails(c, e, this.reduced);
+      drawSpecialistBarrelDetails(c, e, this.reduced);
       drawMutationBody(c, e);
       drawMachineContacts(c, g, e, this.reduced);
       if (e.squad?.connected) {

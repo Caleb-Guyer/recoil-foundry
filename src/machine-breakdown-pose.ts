@@ -1,11 +1,16 @@
-import type { Enemy } from './game.ts';
+import type { Enemy, Game } from './game.ts';
 import { type EnemyState, type EliteKind, ENEMY_STATS, VOLATILE_TELL } from './enemies.ts';
 import { clamp, type Vec } from './rules.ts';
 import { attackBrace } from './combat-readability.ts';
 import { SPLIT_SCALE, type MutationRig } from './mutations.ts';
 import type { SquadTag } from './squads.ts';
+import { firstSolid } from './collisions.ts';
+import { isSpecialistMachineKind, specialistMachinePose } from './specialist-machine-pose.ts';
+import type { Attack } from './enemies.ts';
 
-export type MachineKind = 'runner' | 'shooter' | 'flyer';
+export type MachineKind = 'runner' | 'shooter' | 'flyer' | 'charger' | 'hopper' | 'sniper';
+export const isMachineKind = (kind: string): kind is MachineKind =>
+  ['runner', 'shooter', 'flyer', 'charger', 'hopper', 'sniper'].includes(kind);
 export interface MachineBodySnapshot {
   kind: MachineKind;
   id: number;
@@ -32,6 +37,16 @@ export interface MachineBodySnapshot {
   splitChild: boolean;
   mutation?: Pick<MutationRig, 'kind' | 'phase' | 'timer' | 'count'>;
   squad?: SquadTag & { connected: boolean };
+  attack?: Attack;
+  phase?: number;
+  attacks?: number;
+  target?: Vec;
+  specialist?: {
+    grounded: boolean;
+    supportY: number | null;
+    recovery: 'crash' | 'spent' | 'landing' | 'breech' | null;
+    enteredAt: number | null;
+  };
 }
 export interface MachineLeg {
   hip: Vec;
@@ -51,8 +66,8 @@ export interface MachinePose {
   rotor: number;
   legs: MachineLeg[];
 }
-export function machineBodySnapshot(e: Enemy, time: number): MachineBodySnapshot | null {
-  if (e.kind !== 'runner' && e.kind !== 'shooter' && e.kind !== 'flyer') return null;
+export function machineBodySnapshot(e: Enemy, time: number, g?: Game): MachineBodySnapshot | null {
+  if (!isMachineKind(e.kind)) return null;
   const angle = e.body.angle,
     cos = Math.cos(angle),
     sin = Math.sin(angle),
@@ -60,6 +75,17 @@ export function machineBodySnapshot(e: Enemy, time: number): MachineBodySnapshot
       x: (v.x - e.body.position.x) * cos + (v.y - e.body.position.y) * sin,
       y: -(v.x - e.body.position.x) * sin + (v.y - e.body.position.y) * cos,
     }));
+  const specialist = isSpecialistMachineKind(e.kind),
+    start = { x: e.body.position.x, y: e.body.bounds.max.y - 2 },
+    end = { x: start.x, y: e.body.bounds.max.y + 5 },
+    // Same native 20px support probe without Query.ray's temporary Matter body allocation.
+    support =
+      specialist && g && e.body.velocity.y >= -1
+        ? firstSolid(start, end, { x: 10, y: 0 }, g.solidBodies)
+        : undefined,
+    grounded = !!support,
+    supportY = support && support.normal.y < -0.45 ? start.y + (end.y - start.y) * support.t : null,
+    observed = specialist ? g?.machineBreakdown.getSpecialist(e) : null;
   return {
     kind: e.kind,
     id: e.id,
@@ -89,6 +115,20 @@ export function machineBodySnapshot(e: Enemy, time: number): MachineBodySnapshot
       y: Math.max(...local.map((v) => v.y)) - Math.min(...local.map((v) => v.y)),
     },
     facing: e.facing,
+    attack: e.attack,
+    phase: e.phase,
+    attacks: e.attacks,
+    target: { ...e.target },
+    ...(specialist
+      ? {
+          specialist: {
+            grounded,
+            supportY,
+            recovery: observed?.recovery ?? null,
+            enteredAt: observed?.enteredAt ?? null,
+          },
+        }
+      : {}),
     splitChild: !!e.splitChild,
     ...(e.mutation
       ? {
@@ -124,6 +164,7 @@ function leg(hip: Vec, foot: Vec, bend: number, planted: boolean): MachineLeg {
 }
 // A pure projection of native state. It never advances a clock, changes AI, or moves a hull.
 export function machinePose(s: MachineBodySnapshot, reduced = false): MachinePose {
+  if (isSpecialistMachineKind(s.kind)) return specialistMachinePose(s, reduced);
   const time = finite(s.time),
     vx = finite(s.velocity.x),
     vy = finite(s.velocity.y),

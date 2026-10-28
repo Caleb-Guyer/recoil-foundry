@@ -4,11 +4,14 @@ import { clamp } from './rules.ts';
 import { SPLIT_SCALE } from './mutations.ts';
 import { attackBrace } from './combat-readability.ts';
 import {
+  isMachineKind,
   machineBodySnapshot,
   machinePose,
   type MachineBodySnapshot,
   type MachinePose,
 } from './machine-breakdown-pose.ts';
+import { isSpecialistMachineKind, type SpecialistMachinePose } from './specialist-machine-pose.ts';
+import { drawSpecialistChassis } from './specialist-machine-art.ts';
 
 function line(c: CanvasRenderingContext2D, a: Vec, b: Vec, color: string, width: number) {
   c.strokeStyle = color;
@@ -65,6 +68,8 @@ export function drawMachineChassis(
   reduced = false,
   p: MachinePose = machinePose(s, reduced),
 ) {
+  if (isSpecialistMachineKind(s.kind))
+    return drawSpecialistChassis(c, s, reduced, p as SpecialistMachinePose);
   const dead = s.hp <= 0,
     flash = s.flash > 0 && !reduced && !dead,
     accent = flash ? '#fff5df' : s.allied ? '#79b9e0' : '#df846e',
@@ -273,7 +278,7 @@ export function drawMachineChassis(
 
 /** Does not translate, rotate the firing rig, or apply the outer native split-child scale. */
 export function drawMachineBody(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
-  const snapshot = machineBodySnapshot(e, g.time);
+  const snapshot = machineBodySnapshot(e, g.time, g);
   if (!snapshot) return false;
   drawMachineChassis(c, snapshot, reduced);
   return true;
@@ -286,7 +291,7 @@ export function drawMachineContacts(
   e: Enemy,
   reduced: boolean,
 ) {
-  if (e.kind !== 'runner' && e.kind !== 'shooter' && e.kind !== 'flyer') return;
+  if (!isMachineKind(e.kind)) return;
   const scale = e.splitChild ? SPLIT_SCALE : 1,
     angle = e.body.angle,
     cos = Math.cos(angle),
