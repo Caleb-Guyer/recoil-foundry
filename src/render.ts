@@ -241,7 +241,7 @@ export class Renderer {
     for (const e of [...g.enemies, ...g.areaEvents.allies]) {
       if (!portrait && g.finale.cinema?.active && g.finale.owns(e)) continue;
       if (e.patrol) {
-        drawPatrolMachine(c, g, e, portrait);
+        drawPatrolMachine(c, g, e, portrait, this.reduced);
         continue;
       }
       if (drawHuntEnemy(c, e, portrait)) continue;

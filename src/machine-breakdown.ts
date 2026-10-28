@@ -8,6 +8,8 @@ import {
   type MachineKind,
 } from './machine-breakdown-pose.ts';
 import type { Vec } from './rules.ts';
+import { isPatrolMachine } from './patrol-machines.ts';
+import type { MortarArc } from './patrol-machine-system.ts';
 
 export const MACHINE_HIT_LIFETIME = 0.24;
 export const MACHINE_MAX_HITS_PER_ENEMY = 3;
@@ -18,6 +20,11 @@ export const MACHINE_MAX_WRECKS = 12;
 export interface MachineSpecialistState {
   recovery: 'crash' | 'spent' | 'landing' | 'breech' | null;
   enteredAt: number | null;
+}
+export interface MachinePatrolState {
+  recoveryEnteredAt: number | null;
+  dischargeAt: number | null;
+  releaseArcs: MortarArc[];
 }
 const specialistKind = (kind: string) =>
   kind === 'charger' || kind === 'hopper' || kind === 'sniper';
@@ -152,6 +159,7 @@ export class MachineBreakdown {
   private hitsByEnemy = new Map<number, MachineHit[]>();
   private next = 0;
   private specialists = new Map<number, MachineSpecialistState & { state: Enemy['state'] }>();
+  private patrols = new Map<number, MachinePatrolState & { state: Enemy['state'] }>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -166,6 +174,7 @@ export class MachineBreakdown {
     this.wrecks = [];
     this.next = 0;
     this.specialists.clear();
+    this.patrols.clear();
   }
   /** Only observed native transition timers establish a recovery identity. */
   private observeSpecialist(e: Enemy) {
@@ -191,6 +200,51 @@ export class MachineBreakdown {
     if (!specialistKind(e.kind)) return null;
     const current = this.specialists.get(e.id);
     return current ? { recovery: current.recovery, enteredAt: current.enteredAt } : null;
+  }
+  /** Observes the real patrol cycle; never infers a launch from a drawing or late timer. */
+  private observePatrol(e: Enemy) {
+    if (!isPatrolMachine(e.kind) || !e.patrol || !finite(this.game.time, e.timer)) return;
+    const old = this.patrols.get(e.id);
+    let recoveryEnteredAt: number | null = null,
+      dischargeAt =
+        e.state === 'followup' || e.state === 'recover' ? (old?.dischargeAt ?? null) : null,
+      releaseArcs: MortarArc[] = [];
+    if (e.state === 'recover' && old?.state === 'recover') {
+      recoveryEnteredAt = old.recoveryEnteredAt;
+      releaseArcs = old.releaseArcs;
+    } else if (e.state === 'recover' && old && old.state !== 'recover') {
+      const duration = e.kind === 'mortar' ? 2.7 : e.patrol.variant === 'shutter-burst' ? 1.6 : 1.3;
+      if (Math.abs(e.timer - duration) < 1e-7) {
+        recoveryEnteredAt = this.game.time;
+        if (e.kind === 'mortar')
+          releaseArcs = this.game.patrolMachines.shells
+            .filter((s) => s.owner === e.id)
+            .slice(0, 2)
+            .map((s) => structuredClone(s.arc));
+        if (e.kind !== 'mortar' || releaseArcs.length > 0) dischargeAt = this.game.time;
+      }
+    }
+    if (
+      e.patrol.variant === 'shutter-burst' &&
+      e.state === 'followup' &&
+      old?.state === 'windup' &&
+      Math.abs(e.timer - 0.95) < 1e-7
+    )
+      dischargeAt = this.game.time;
+    this.patrols.set(e.id, { state: e.state, recoveryEnteredAt, dischargeAt, releaseArcs });
+    while (this.patrols.size > MACHINE_MAX_HITS)
+      this.patrols.delete(this.patrols.keys().next().value!);
+  }
+  getPatrol(e: Enemy): MachinePatrolState | null {
+    if (!isPatrolMachine(e.kind)) return null;
+    const current = this.patrols.get(e.id);
+    return current
+      ? {
+          recoveryEnteredAt: current.recoveryEnteredAt,
+          dischargeAt: current.dischargeAt,
+          releaseArcs: structuredClone(current.releaseArcs),
+        }
+      : null;
   }
   private eligible(e: Enemy, source?: KillSource) {
     const g = this.game;
@@ -228,6 +282,7 @@ export class MachineBreakdown {
     )
       return null;
     this.observeSpecialist(e);
+    this.observePatrol(e);
     return machineBodySnapshot(e, this.game.time, this.game);
   }
   hit(
@@ -248,6 +303,7 @@ export class MachineBreakdown {
     )
       return;
     this.observeSpecialist(e);
+    this.observePatrol(e);
     const hit: MachineHit = {
       id: ++this.next,
       enemyId: e.id,
@@ -306,6 +362,7 @@ export class MachineBreakdown {
       this.wrecks.splice(0, this.wrecks.length - MACHINE_MAX_WRECKS);
     this.hitsByEnemy.delete(e.id);
     this.specialists.delete(e.id);
+    this.patrols.delete(e.id);
   }
   update() {
     const g = this.game;
@@ -317,8 +374,13 @@ export class MachineBreakdown {
     const alive = new Set(
       [...g.enemies, ...g.factions.allies].filter((e) => e.hp > 0).map((e) => e.id),
     );
-    for (const e of [...g.enemies, ...g.factions.allies]) if (e.hp > 0) this.observeSpecialist(e);
+    for (const e of [...g.enemies, ...g.factions.allies])
+      if (e.hp > 0) {
+        this.observeSpecialist(e);
+        this.observePatrol(e);
+      }
     for (const id of this.specialists.keys()) if (!alive.has(id)) this.specialists.delete(id);
+    for (const id of this.patrols.keys()) if (!alive.has(id)) this.patrols.delete(id);
     for (const [id, hits] of this.hitsByEnemy) {
       const kept = hits.filter((h) => g.time - h.at >= 0 && g.time - h.at < MACHINE_HIT_LIFETIME);
       if (!alive.has(id) || !kept.length) this.hitsByEnemy.delete(id);

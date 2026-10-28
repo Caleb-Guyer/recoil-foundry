@@ -6,11 +6,61 @@ import { SPLIT_SCALE, type MutationRig } from './mutations.ts';
 import type { SquadTag } from './squads.ts';
 import { firstSolid } from './collisions.ts';
 import { isSpecialistMachineKind, specialistMachinePose } from './specialist-machine-pose.ts';
-import type { Attack } from './enemies.ts';
+import { enemyShielded, type Attack } from './enemies.ts';
+import { isPatrolMachine, type MachineVariant } from './patrol-machines.ts';
+import { machineAngles, machineTell, type MortarArc } from './patrol-machine-system.ts';
+import { isHeavyMachineKind, heavyMachinePose } from './heavy-machine-pose.ts';
 
-export type MachineKind = 'runner' | 'shooter' | 'flyer' | 'charger' | 'hopper' | 'sniper';
+export type MachineKind =
+  | 'runner'
+  | 'shooter'
+  | 'flyer'
+  | 'charger'
+  | 'hopper'
+  | 'sniper'
+  | 'shutter'
+  | 'strider'
+  | 'mortar';
 export const isMachineKind = (kind: string): kind is MachineKind =>
-  ['runner', 'shooter', 'flyer', 'charger', 'hopper', 'sniper'].includes(kind);
+  [
+    'runner',
+    'shooter',
+    'flyer',
+    'charger',
+    'hopper',
+    'sniper',
+    'shutter',
+    'strider',
+    'mortar',
+  ].includes(kind);
+export interface MachinePatrolShellSnapshot {
+  arc: MortarArc;
+  age: number;
+  pos: Vec;
+  previous: Vec;
+}
+export interface MachinePatrolSnapshot {
+  variant?: MachineVariant;
+  home: Vec;
+  walk: number;
+  turnAt: number;
+  arcs: MortarArc[];
+  angles: number[];
+  tell: number;
+  /** Native armor gate, distinct from the earlier aim-lock threshold. */
+  closed: boolean;
+  shieldFlash: number;
+  grounded: boolean;
+  supportY: number | null;
+  /** Unknown if the native transition was not actually observed. */
+  recoveryEnteredAt: number | null;
+  /** Observed native discharge, including the first Cycle Shutter shot. */
+  dischargeAt: number | null;
+  /** Actual released arcs retained only for the observed native recovery. */
+  releaseArcs: MortarArc[];
+  /** Real currently flying owned shells, never a cosmetic launch prediction. */
+  shells: MachinePatrolShellSnapshot[];
+}
 export interface MachineBodySnapshot {
   kind: MachineKind;
   id: number;
@@ -41,6 +91,7 @@ export interface MachineBodySnapshot {
   phase?: number;
   attacks?: number;
   target?: Vec;
+  patrol?: MachinePatrolSnapshot;
   specialist?: {
     grounded: boolean;
     supportY: number | null;
@@ -66,6 +117,14 @@ export interface MachinePose {
   rotor: number;
   legs: MachineLeg[];
 }
+const cloneMortarArc = (arc: MortarArc): MortarArc => ({
+  from: { ...arc.from },
+  to: { ...arc.to },
+  height: arc.height,
+  duration: arc.duration,
+  radius: arc.radius,
+  damage: arc.damage,
+});
 export function machineBodySnapshot(e: Enemy, time: number, g?: Game): MachineBodySnapshot | null {
   if (!isMachineKind(e.kind)) return null;
   const angle = e.body.angle,
@@ -76,16 +135,18 @@ export function machineBodySnapshot(e: Enemy, time: number, g?: Game): MachineBo
       y: -(v.x - e.body.position.x) * sin + (v.y - e.body.position.y) * cos,
     }));
   const specialist = isSpecialistMachineKind(e.kind),
+    patrol = isPatrolMachine(e.kind) && e.patrol,
     start = { x: e.body.position.x, y: e.body.bounds.max.y - 2 },
     end = { x: start.x, y: e.body.bounds.max.y + 5 },
     // Same native 20px support probe without Query.ray's temporary Matter body allocation.
     support =
-      specialist && g && e.body.velocity.y >= -1
+      (specialist || patrol) && g && e.body.velocity.y >= -1
         ? firstSolid(start, end, { x: 10, y: 0 }, g.solidBodies)
         : undefined,
     grounded = !!support,
     supportY = support && support.normal.y < -0.45 ? start.y + (end.y - start.y) * support.t : null,
-    observed = specialist ? g?.machineBreakdown.getSpecialist(e) : null;
+    observed = specialist ? g?.machineBreakdown.getSpecialist(e) : null,
+    observedPatrol = patrol ? g?.machineBreakdown.getPatrol(e) : null;
   return {
     kind: e.kind,
     id: e.id,
@@ -129,6 +190,37 @@ export function machineBodySnapshot(e: Enemy, time: number, g?: Game): MachineBo
           },
         }
       : {}),
+    ...(patrol
+      ? {
+          patrol: {
+            variant: patrol.variant,
+            home: { ...patrol.home },
+            walk: patrol.walk,
+            turnAt: patrol.turnAt,
+            arcs: patrol.arcs.slice(0, 2).map(cloneMortarArc),
+            angles: machineAngles(e),
+            tell: machineTell(e),
+            closed: enemyShielded(e, { x: -e.facing, y: 0 }),
+            shieldFlash: e.shieldFlash,
+            grounded,
+            supportY,
+            recoveryEnteredAt: observedPatrol?.recoveryEnteredAt ?? null,
+            dischargeAt: observedPatrol?.dischargeAt ?? null,
+            releaseArcs: observedPatrol?.releaseArcs ?? [],
+            shells: g
+              ? g.patrolMachines.shells
+                  .filter((s) => s.owner === e.id)
+                  .slice(0, 12)
+                  .map((s) => ({
+                    arc: cloneMortarArc(s.arc),
+                    age: s.age,
+                    pos: { ...s.pos },
+                    previous: { ...s.previous },
+                  }))
+              : [],
+          },
+        }
+      : {}),
     splitChild: !!e.splitChild,
     ...(e.mutation
       ? {
@@ -164,6 +256,7 @@ function leg(hip: Vec, foot: Vec, bend: number, planted: boolean): MachineLeg {
 }
 // A pure projection of native state. It never advances a clock, changes AI, or moves a hull.
 export function machinePose(s: MachineBodySnapshot, reduced = false): MachinePose {
+  if (isHeavyMachineKind(s.kind)) return heavyMachinePose(s, reduced);
   if (isSpecialistMachineKind(s.kind)) return specialistMachinePose(s, reduced);
   const time = finite(s.time),
     vx = finite(s.velocity.x),

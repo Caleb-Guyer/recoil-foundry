@@ -1,6 +1,8 @@
 import type { Enemy, Game } from './game.ts';
 import { clamp, type Vec } from './rules.ts';
-import { enemyShielded } from './enemies.ts';
+import { machineBodySnapshot } from './machine-breakdown-pose.ts';
+import { drawMachineContacts } from './machine-breakdown-art.ts';
+import { drawHeavyChassis } from './heavy-machine-art.ts';
 import {
   machineAngles,
   machineTell,
@@ -76,102 +78,30 @@ export function drawPatrolMachine(
   g: Game,
   e: Enemy,
   portrait = false,
+  reduced = false,
 ) {
+  const snapshot = machineBodySnapshot(e, g.time, g);
+  if (!snapshot) return;
   const p = e.body.position,
-    v = e.patrol?.variant;
-  const metal = e.flash > 0 ? '#fff3d0' : '#4b5555';
-  const color = e.kind === 'shutter' ? '#d79f7b' : e.kind === 'strider' ? '#d3ba82' : '#b3c8a6';
+    color = e.allied
+      ? '#79b9e0'
+      : e.kind === 'shutter'
+        ? '#d79f7b'
+        : e.kind === 'strider'
+          ? '#d3ba82'
+          : '#b3c8a6';
   c.save();
   c.globalAlpha = clamp(1 - e.spawn / 0.65, 0.15, 1);
   c.translate(p.x, p.y);
-  c.scale(e.facing, 1);
-  c.fillStyle = '#18272c';
-  c.strokeStyle = '#84908c';
-  c.lineWidth = 2;
-  if (e.kind === 'shutter') {
-    c.fillRect(-17, -19, 33, 33);
-    c.strokeRect(-17, -19, 33, 33);
-    c.fillStyle = metal;
-    c.fillRect(-18, 14, 13, 6);
-    c.fillRect(4, 14, 14, 6);
-    c.fillStyle = color;
-    c.fillRect(-8, -11, 15, 18);
-    c.fillStyle = '#e4dfb9';
-    c.fillRect(-4, -8, 8, 4);
-    const closed = enemyShielded(e, { x: -e.facing, y: 0 });
-    c.fillStyle = e.shieldFlash > 0 ? '#fff0b5' : '#707e7b';
-    if (closed) {
-      c.fillRect(10, -20, 8, 35);
-      c.strokeStyle = color;
-      for (let y = -16; y < 14; y += 7) line(c, { x: 12, y }, { x: 17, y: y + 3 });
-    } else {
-      c.fillRect(10, -22, 8, 7);
-      c.fillRect(10, 11, 8, 5);
-    }
-    c.fillStyle = metal;
-    const tubes = v === 'shutter-fan' ? 3 : v === 'shutter-burst' ? 2 : 1;
-    for (let i = 0; i < tubes; i++) c.fillRect(8, -6 + i * 5 - (tubes - 1) * 2.5, 15, 3);
-  } else if (e.kind === 'strider') {
-    c.fillStyle = metal;
-    c.fillRect(-13, -18, 27, 24);
-    c.strokeRect(-13, -18, 27, 24);
-    c.fillStyle = color;
-    c.fillRect(-8, -13, 15, 4);
-    c.fillStyle = '#18272c';
-    c.fillRect(-8, -4, 16, 6);
-    c.strokeStyle = '#a4aaa0';
-    c.lineWidth = 4;
-    const braced = e.state !== 'idle';
-    for (const side of [-1, 1]) {
-      const step = braced ? 0 : Math.sin(g.time * 7 + ((side + 1) * Math.PI) / 2) * 3;
-      line(c, { x: side * 7, y: 5 }, { x: side * (braced ? 15 : 12), y: 15 + step });
-      line(
-        c,
-        { x: side * (braced ? 15 : 12) - 4, y: 17 },
-        { x: side * (braced ? 15 : 12) + 4, y: 17 },
-      );
-    }
-    c.fillStyle = metal;
-    const tubes = v === 'strider-volley' ? 3 : v === 'strider-survey' ? 1 : 2;
-    for (let i = 0; i < tubes; i++) c.fillRect(8, -6 + i * 4, v === 'strider-survey' ? 24 : 15, 3);
-    if (v === 'strider-survey') {
-      c.fillStyle = color;
-      c.fillRect(8, -13, 13, 3);
-    }
-  } else {
-    c.fillStyle = metal;
-    c.fillRect(-20, -6, 40, 17);
-    c.strokeRect(-20, -6, 40, 17);
-    c.fillStyle = '#18272c';
-    c.strokeStyle = '#869a8b';
-    for (const x of [-13, 13]) {
-      c.beginPath();
-      c.arc(x, 12, 6, 0, Math.PI * 2);
-      c.fill();
-      c.stroke();
-    }
-    c.fillStyle = color;
-    c.fillRect(-8, 0, 16, 4);
-    c.save();
-    c.rotate(-0.85);
-    c.fillStyle = metal;
-    const tubes = v === 'mortar-twin' ? 2 : 1;
-    for (let i = 0; i < tubes; i++) {
-      c.fillRect(-4, -10 + i * 8, v === 'mortar-slow' ? 31 : 25, 7);
-      c.fillStyle = color;
-      c.fillRect(17, -9 + i * 8, 3, 5);
-      c.fillStyle = metal;
-    }
-    c.restore();
-  }
+  if (snapshot.scale !== 1) c.scale(snapshot.scale, snapshot.scale);
+  drawHeavyChassis(c, snapshot, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
   c.restore();
-  if (!portrait) {
-    if (e.hp < e.maxHp) {
-      c.fillStyle = '#3a3934';
-      c.fillRect(p.x - 17, p.y - 28, 34, 3);
-      c.fillStyle = color;
-      c.fillRect(p.x - 17, p.y - 28, 34 * Math.max(0, e.hp / e.maxHp), 3);
-    }
+  if (!portrait && e.hp < e.maxHp) {
+    c.fillStyle = '#3a3934';
+    c.fillRect(p.x - 17, p.y - 28, 34, 3);
+    c.fillStyle = color;
+    c.fillRect(p.x - 17, p.y - 28, 34 * Math.max(0, e.hp / e.maxHp), 3);
   }
 }
 export function drawPatrolShells(c: CanvasRenderingContext2D, g: Game) {
