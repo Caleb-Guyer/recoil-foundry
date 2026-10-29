@@ -7,6 +7,7 @@ import { drawHeavyMachineWreck } from './heavy-machine-wreck-art.ts';
 import { drawSupportMachineWreck } from './support-machine-wreck-art.ts';
 import { drawHazardMachineWreck } from './hazard-machine-wreck-art.ts';
 import { drawDistrictMachineWreck } from './district-machine-wreck-art.ts';
+import { drawSurfaceMachineWreck } from './surface-machine-wreck-art.ts';
 import {
   machinePose,
   type MachineBodySnapshot,
@@ -317,6 +318,12 @@ export function drawMachineWreck(
   c.scale(s.scale, s.scale);
   c.globalAlpha *= projection.alpha;
   if (wreck.landing) supportClip(c, wreck.landing, projection.position, s.scale);
+  const surface = drawSurfaceMachineWreck(c, wreck, projection, reduced);
+  if (surface) {
+    inertIdentity(c, s, surface, projection.fold);
+    c.restore();
+    return true;
+  }
   const district = drawDistrictMachineWreck(c, wreck, projection, reduced);
   if (district) {
     inertIdentity(c, s, district, projection.fold);

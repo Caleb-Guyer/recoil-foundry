@@ -1,4 +1,5 @@
 import type { Enemy, Game } from './game.ts';
+import { isSurfaceMachineKind, type SurfaceMachineEventState } from './surface-machine-pose.ts';
 import { isDistrictMachineKind, type DistrictMachineEventState } from './district-machine-pose.ts';
 import type { KillSource } from './commendations.ts';
 import { firstSolid, sweepBox } from './collisions.ts';
@@ -64,6 +65,11 @@ interface DistrictRelease {
   attack: number;
   angles: number[];
   muzzles: Vec[];
+}
+interface SurfaceObservation extends SurfaceMachineEventState {
+  attached: boolean;
+  exposed: number;
+  vulnerable: number;
 }
 export type MachineRemovalReason = 'owner-lost' | 'interrupted' | 'cleanup';
 export interface MachineHit {
@@ -204,6 +210,7 @@ export class MachineBreakdown {
   private hazardMachines = new Map<number, HazardObservation>();
   private districtMachines = new Map<number, DistrictObservation>();
   private districtReleases = new Map<number, DistrictRelease>();
+  private surfaceMachines = new Map<number, SurfaceObservation>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -223,6 +230,7 @@ export class MachineBreakdown {
     this.hazardMachines.clear();
     this.districtMachines.clear();
     this.districtReleases.clear();
+    this.surfaceMachines.clear();
   }
   /** Only observed native transition timers establish a recovery identity. */
   private observeSpecialist(e: Enemy) {
@@ -516,6 +524,61 @@ export class MachineBreakdown {
         }
       : null;
   }
+  /** The native projectile-admission/impact path is the only source of recoil events. */
+  surfaceDischarge(e: Enemy, angle: number, origin: Vec, muzzle: Vec, index = 0) {
+    if (
+      !isSurfaceMachineKind(e.kind) ||
+      !this.eligible(e) ||
+      !finite(angle, origin.x, origin.y, muzzle.x, muzzle.y, index)
+    )
+      return;
+    this.observeSurfaceMachine(e);
+    const current = this.surfaceMachines.get(e.id)!;
+    current.discharges.push({
+      at: this.game.time,
+      angle,
+      muzzle: { ...muzzle },
+      origin: { ...origin },
+      index: clamp(Math.trunc(index), 0, 2),
+    });
+    if (current.discharges.length > 3) current.discharges.splice(0, current.discharges.length - 3);
+  }
+  private observeSurfaceMachine(e: Enemy) {
+    if (!isSurfaceMachineKind(e.kind) || !finite(this.game.time)) return;
+    const old = this.surfaceMachines.get(e.id),
+      attached = !!e.crawler?.support,
+      exposed = e.angler?.exposed ?? 0,
+      vulnerable = e.crawler?.vulnerable ?? 0;
+    const drop =
+        !!e.crawler && ((old?.attached && !attached) || vulnerable > (old?.vulnerable ?? 0) + 1e-7),
+      interrupted = !!e.angler && exposed > (old?.exposed ?? 0) + 1e-7;
+    this.surfaceMachines.set(e.id, {
+      attached,
+      exposed,
+      vulnerable,
+      discharges: (old?.discharges ?? [])
+        .filter((d) => this.game.time - d.at >= 0 && this.game.time - d.at < 0.65)
+        .map((d) => ({ ...d, muzzle: { ...d.muzzle }, origin: { ...d.origin } })),
+      dropAt: drop ? this.game.time : attached ? null : (old?.dropAt ?? null),
+      interruptedAt: interrupted ? this.game.time : (old?.interruptedAt ?? null),
+    });
+    while (this.surfaceMachines.size > MACHINE_MAX_HITS)
+      this.surfaceMachines.delete(this.surfaceMachines.keys().next().value!);
+  }
+  getSurfaceMachine(e: Enemy): SurfaceMachineEventState | null {
+    const current = this.surfaceMachines.get(e.id);
+    return current
+      ? {
+          discharges: current.discharges.map((d) => ({
+            ...d,
+            muzzle: { ...d.muzzle },
+            origin: { ...d.origin },
+          })),
+          dropAt: current.dropAt,
+          interruptedAt: current.interruptedAt,
+        }
+      : null;
+  }
   /** Native noncombat removals remain non-scoring; only their detached presentation is recorded. */
   removed(e: Enemy, reason: MachineRemovalReason, actualOwner?: Enemy) {
     if (
@@ -584,6 +647,7 @@ export class MachineBreakdown {
     this.observeSupportMachine(e);
     this.observeHazardMachine(e);
     this.observeDistrictMachine(e);
+    this.observeSurfaceMachine(e);
     return machineBodySnapshot(e, this.game.time, this.game);
   }
   hit(
@@ -608,6 +672,7 @@ export class MachineBreakdown {
     this.observeSupportMachine(e);
     this.observeHazardMachine(e);
     this.observeDistrictMachine(e);
+    this.observeSurfaceMachine(e);
     const hit: MachineHit = {
       id: ++this.next,
       enemyId: e.id,
@@ -672,6 +737,7 @@ export class MachineBreakdown {
     this.hazardMachines.delete(e.id);
     this.districtMachines.delete(e.id);
     this.districtReleases.delete(e.id);
+    this.surfaceMachines.delete(e.id);
   }
   update() {
     const g = this.game;
@@ -690,6 +756,7 @@ export class MachineBreakdown {
         this.observeSupportMachine(e);
         this.observeHazardMachine(e);
         this.observeDistrictMachine(e);
+        this.observeSurfaceMachine(e);
       }
     for (const id of this.specialists.keys()) if (!alive.has(id)) this.specialists.delete(id);
     for (const id of this.patrols.keys()) if (!alive.has(id)) this.patrols.delete(id);
@@ -698,6 +765,8 @@ export class MachineBreakdown {
     for (const id of this.hazardMachines.keys()) if (!alive.has(id)) this.hazardMachines.delete(id);
     for (const id of this.districtMachines.keys())
       if (!alive.has(id)) this.districtMachines.delete(id);
+    for (const id of this.surfaceMachines.keys())
+      if (!alive.has(id)) this.surfaceMachines.delete(id);
     for (const [id, release] of this.districtReleases)
       if (!alive.has(id) || release.at < g.time) this.districtReleases.delete(id);
     for (const [id, hits] of this.hitsByEnemy) {

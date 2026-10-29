@@ -21,7 +21,9 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Current update: 5.39.0 — District Machines.** Borer tracks and receivers, Sifter hover fans and Skimmer impellers follow actual movement, aiming and volleys, with local damage reactions, distinct shutdowns and nonblocking wreckage. [Details and private tests](docs/releases/5.39.0.md).
+**Current update: 5.40.0 — Surface Machines.** Angler bank-shot hardware and Wallcrawler gripping legs follow real terrain, aiming and individual shots, with local damage reactions, distinct shutdowns and nonblocking wreckage. [Details and private tests](docs/releases/5.40.0.md).
+
+**District Machines — 5.39.0.** Borer tracks and receivers, Sifter hover fans and Skimmer impellers follow actual movement, aiming and volleys, with local damage reactions, distinct shutdowns and nonblocking wreckage. [Details and private tests](docs/releases/5.39.0.md).
 
 **Hazard Crew — 5.38.0.** Scrapper clamps, Harpooner winches and Sapper loading mechanisms follow actual grabs, launches and interruptions, with local damage reactions, distinct shutdowns and nonblocking wreckage. [Details and private tests](docs/releases/5.38.0.md).
 

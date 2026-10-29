@@ -279,7 +279,7 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'angler') {
-        drawAngler(c, g, e, this.reduced);
+        drawAngler(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.support) {
@@ -287,7 +287,7 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'wallcrawler') {
-        drawWallcrawler(c, g, e, this.reduced);
+        drawWallcrawler(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'scrapper') {

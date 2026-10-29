@@ -20,6 +20,8 @@ import { isHazardMachineKind, type HazardMachinePose } from './hazard-machine-po
 import { drawHazardChassis } from './hazard-machine-art.ts';
 import { isDistrictMachineKind, type DistrictMachinePose } from './district-machine-pose.ts';
 import { drawDistrictChassis } from './district-machine-art.ts';
+import { isSurfaceMachineKind, type SurfaceMachinePose } from './surface-machine-pose.ts';
+import { drawSurfaceChassis } from './surface-machine-art.ts';
 
 function line(c: CanvasRenderingContext2D, a: Vec, b: Vec, color: string, width: number) {
   c.strokeStyle = color;
@@ -76,6 +78,8 @@ export function drawMachineChassis(
   reduced = false,
   p: MachinePose = machinePose(s, reduced),
 ) {
+  if (isSurfaceMachineKind(s.kind))
+    return drawSurfaceChassis(c, s, reduced, p as SurfaceMachinePose);
   if (isDistrictMachineKind(s.kind))
     return drawDistrictChassis(c, s, reduced, p as DistrictMachinePose);
   if (isHazardMachineKind(s.kind)) return drawHazardChassis(c, s, reduced, p as HazardMachinePose);

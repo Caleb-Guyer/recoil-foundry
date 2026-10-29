@@ -145,7 +145,7 @@ test('hazard snapshots extend the thirteen existing families without replacing t
     plain(s);
     finite(hazardMachinePose(s));
   }
-  assert.equal(isMachineKind('angler'), false);
+  assert.equal(isHazardMachineKind('angler'), false);
   assert.equal(isHazardMachineKind('boss'), false);
 });
 

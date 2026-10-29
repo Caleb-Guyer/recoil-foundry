@@ -2786,6 +2786,19 @@ export class Game {
     this.stasis.prepare(shot);
     this.shiftMorphs.prepare(shot);
     this.shots.push(shot);
+    if (shot.angler && !shot.friendly && !shot.reflected && !shot.angler.banked) {
+      const owner = [...this.enemies, ...this.factions.allies].find(
+        (e) => e.id === shot.angler!.owner,
+      );
+      if (owner)
+        this.machineBreakdown.surfaceDischarge(
+          owner,
+          Math.atan2(shot.vel.y, shot.vel.x),
+          shot.angler.plan.origin,
+          shot.angler.plan.start,
+          0,
+        );
+    }
     return shot;
   }
   updateEnemy(e: Enemy, dt: number) {
@@ -3432,6 +3445,8 @@ export class Game {
     if (distance(end, muzzle) > 0.01 && !portalMuzzle) {
       if (e.allied) return;
       this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
+      if (e.crawler)
+        this.machineBreakdown.surfaceDischarge(e, a, origin, muzzle, e.crawler.fired - 1);
       this.burst(end, 3, '#ef7264', 1.5);
       const prop = this.props.items.find((p) => {
         const hit = traceProp(p, origin, muzzle, padding);
@@ -3463,7 +3478,11 @@ export class Game {
       fragment: false,
       split: true,
     });
-    if (admittedShot) this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
+    if (admittedShot) {
+      this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
+      if (e.crawler)
+        this.machineBreakdown.surfaceDischarge(e, a, origin, muzzle, e.crawler.fired - 1);
+    }
   }
   updateShots(dt: number) {
     const workshopRevision = this.workshop.revision;
