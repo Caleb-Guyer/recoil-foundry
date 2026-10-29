@@ -1,4 +1,5 @@
 import type { Enemy, Game } from './game.ts';
+import { isDistrictMachineKind, type DistrictMachineEventState } from './district-machine-pose.ts';
 import type { KillSource } from './commendations.ts';
 import { firstSolid, sweepBox } from './collisions.ts';
 import {
@@ -53,6 +54,16 @@ interface HazardObservation extends HazardMachineEventState {
   heldId: number | null;
   harpoonPhase: string | null;
   spoolAngle: number;
+}
+interface DistrictObservation extends DistrictMachineEventState {
+  attacks: number;
+  state: Enemy['state'];
+}
+interface DistrictRelease {
+  at: number;
+  attack: number;
+  angles: number[];
+  muzzles: Vec[];
 }
 export type MachineRemovalReason = 'owner-lost' | 'interrupted' | 'cleanup';
 export interface MachineHit {
@@ -191,6 +202,8 @@ export class MachineBreakdown {
   private patrols = new Map<number, MachinePatrolState & { state: Enemy['state'] }>();
   private supportMachines = new Map<number, SupportObservation>();
   private hazardMachines = new Map<number, HazardObservation>();
+  private districtMachines = new Map<number, DistrictObservation>();
+  private districtReleases = new Map<number, DistrictRelease>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -208,6 +221,8 @@ export class MachineBreakdown {
     this.patrols.clear();
     this.supportMachines.clear();
     this.hazardMachines.clear();
+    this.districtMachines.clear();
+    this.districtReleases.clear();
   }
   /** Only observed native transition timers establish a recovery identity. */
   private observeSpecialist(e: Enemy) {
@@ -413,6 +428,94 @@ export class MachineBreakdown {
         }
       : null;
   }
+  /** Called only for an admitted native projectile or its real close-cover impact. */
+  districtDischarge(e: Enemy, angle: number, origin: Vec, muzzle: Vec) {
+    if (
+      !isDistrictMachineKind(e.kind) ||
+      !this.eligible(e) ||
+      !finite(angle, origin.x, origin.y, muzzle.x, muzzle.y, e.attacks)
+    )
+      return;
+    if (!this.districtMachines.has(e.id))
+      this.districtMachines.set(e.id, {
+        attacks: e.attacks,
+        state: e.state,
+        dischargeAt: null,
+        dischargeAngles: [],
+        dischargeMuzzles: [],
+        recoveryEnteredAt: null,
+      });
+    let release = this.districtReleases.get(e.id);
+    if (!release || release.attack !== e.attacks || release.at !== this.game.time) {
+      release = { attack: e.attacks, at: this.game.time, angles: [], muzzles: [] };
+      this.districtReleases.set(e.id, release);
+    }
+    if (release.angles.length < 16) {
+      release.angles.push(angle);
+      release.muzzles.push({ ...muzzle });
+    }
+    while (this.districtReleases.size > MACHINE_MAX_HITS)
+      this.districtReleases.delete(this.districtReleases.keys().next().value!);
+    while (this.districtMachines.size > MACHINE_MAX_HITS)
+      this.districtMachines.delete(this.districtMachines.keys().next().value!);
+  }
+  private observeDistrictMachine(e: Enemy) {
+    if (!isDistrictMachineKind(e.kind) || !finite(this.game.time, e.attacks)) return;
+    const old = this.districtMachines.get(e.id),
+      release = this.districtReleases.get(e.id),
+      fired =
+        !!old &&
+        e.attacks > old.attacks &&
+        !!release &&
+        release.attack < e.attacks &&
+        release.at === this.game.time,
+      attempted = !!old && e.attacks > old.attacks,
+      recovering = e.state === 'recover';
+    const dischargeAt = fired
+        ? release!.at
+        : attempted || !recovering
+          ? null
+          : (old?.dischargeAt ?? null),
+      dischargeAngles = fired
+        ? [...release!.angles]
+        : dischargeAt !== null
+          ? [...(old?.dischargeAngles ?? [])]
+          : [],
+      dischargeMuzzles = fired
+        ? release!.muzzles.map((v) => ({ ...v }))
+        : dischargeAt !== null
+          ? (old?.dischargeMuzzles ?? []).map((v) => ({ ...v }))
+          : [],
+      recoveryEnteredAt = recovering
+        ? old?.state === 'recover'
+          ? old.recoveryEnteredAt
+          : fired
+            ? this.game.time
+            : null
+        : null;
+    this.districtMachines.set(e.id, {
+      attacks: e.attacks,
+      state: e.state,
+      dischargeAt,
+      dischargeAngles,
+      dischargeMuzzles,
+      recoveryEnteredAt,
+    });
+    if (release && (fired || release.at < this.game.time)) this.districtReleases.delete(e.id);
+    while (this.districtMachines.size > MACHINE_MAX_HITS)
+      this.districtMachines.delete(this.districtMachines.keys().next().value!);
+  }
+  getDistrictMachine(e: Enemy): DistrictMachineEventState | null {
+    const current = this.districtMachines.get(e.id);
+    return current
+      ? {
+          dischargeAt: current.dischargeAt,
+          dischargeAngles: [...current.dischargeAngles],
+          dischargeMuzzles: current.dischargeMuzzles.map((v) => ({ ...v })),
+          recoveryEnteredAt: current.recoveryEnteredAt,
+        }
+      : null;
+  }
   /** Native noncombat removals remain non-scoring; only their detached presentation is recorded. */
   removed(e: Enemy, reason: MachineRemovalReason, actualOwner?: Enemy) {
     if (
@@ -480,6 +583,7 @@ export class MachineBreakdown {
     this.observePatrol(e);
     this.observeSupportMachine(e);
     this.observeHazardMachine(e);
+    this.observeDistrictMachine(e);
     return machineBodySnapshot(e, this.game.time, this.game);
   }
   hit(
@@ -503,6 +607,7 @@ export class MachineBreakdown {
     this.observePatrol(e);
     this.observeSupportMachine(e);
     this.observeHazardMachine(e);
+    this.observeDistrictMachine(e);
     const hit: MachineHit = {
       id: ++this.next,
       enemyId: e.id,
@@ -565,6 +670,8 @@ export class MachineBreakdown {
     this.patrols.delete(e.id);
     this.supportMachines.delete(e.id);
     this.hazardMachines.delete(e.id);
+    this.districtMachines.delete(e.id);
+    this.districtReleases.delete(e.id);
   }
   update() {
     const g = this.game;
@@ -582,12 +689,17 @@ export class MachineBreakdown {
         this.observePatrol(e);
         this.observeSupportMachine(e);
         this.observeHazardMachine(e);
+        this.observeDistrictMachine(e);
       }
     for (const id of this.specialists.keys()) if (!alive.has(id)) this.specialists.delete(id);
     for (const id of this.patrols.keys()) if (!alive.has(id)) this.patrols.delete(id);
     for (const id of this.supportMachines.keys())
       if (!alive.has(id)) this.supportMachines.delete(id);
     for (const id of this.hazardMachines.keys()) if (!alive.has(id)) this.hazardMachines.delete(id);
+    for (const id of this.districtMachines.keys())
+      if (!alive.has(id)) this.districtMachines.delete(id);
+    for (const [id, release] of this.districtReleases)
+      if (!alive.has(id) || release.at < g.time) this.districtReleases.delete(id);
     for (const [id, hits] of this.hitsByEnemy) {
       const kept = hits.filter((h) => g.time - h.at >= 0 && g.time - h.at < MACHINE_HIT_LIFETIME);
       if (!alive.has(id) || !kept.length) this.hitsByEnemy.delete(id);

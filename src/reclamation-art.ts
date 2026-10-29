@@ -2,6 +2,8 @@ import type { Game, Enemy } from './game.ts';
 import { clamp } from './rules.ts';
 import { MAGNET_PERIOD } from './magnets.ts';
 import { SORTER_LOCK, SORTER_WIDTH, sorterFan } from './reclamation.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
+import { SPLIT_SCALE } from './mutations.ts';
 
 export function drawMagnets(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
   for (const m of g.magnets.items) {
@@ -67,12 +69,55 @@ export function drawMagnets(c: CanvasRenderingContext2D, g: Game, reduced: boole
   }
 }
 
+/** Ordinary district crew use the shared local-hit rig; the Sorter branch below stays native. */
+function drawReclamationMachine(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait: boolean,
+) {
+  const p = e.body.position,
+    flying = e.kind === 'sifter';
+  c.save();
+  if (!portrait && e.state === 'windup') {
+    const angle = Math.atan2(e.aim.y, e.aim.x);
+    c.strokeStyle = e.timer <= 0.5 ? '#e5b182' : '#94735e';
+    c.lineWidth = 1;
+    for (const offset of flying ? [-0.22, 0, 0.22] : [0]) {
+      const end = g.lineEnd(p, {
+        x: p.x + Math.cos(angle + offset) * 480,
+        y: p.y + Math.sin(angle + offset) * 480,
+      });
+      c.beginPath();
+      c.moveTo(p.x, p.y);
+      c.lineTo(end.x, end.y);
+      c.stroke();
+    }
+  }
+  c.translate(p.x, p.y);
+  c.globalAlpha = e.spawn > 0 ? clamp(1 - e.spawn / 0.65, 0.15, 1) : 1;
+  if (e.splitChild) c.scale(SPLIT_SCALE, SPLIT_SCALE);
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
+  if (!portrait && e.hp < e.maxHp) {
+    c.fillStyle = '#27382e';
+    c.fillRect(-17, -28, 34, 3);
+    c.fillStyle = e.state === 'recover' ? '#f0bf84' : '#ce866b';
+    c.fillRect(-17, -28, 34 * clamp(e.hp / e.maxHp, 0, 1), 3);
+  }
+  c.restore();
+}
+
 export function drawReclamationEnemy(
   c: CanvasRenderingContext2D,
   g: Game,
   e: Enemy,
   reduced: boolean,
+  portrait = false,
 ) {
+  if (['borer', 'sifter'].includes(e.kind))
+    return drawReclamationMachine(c, g, e, reduced, portrait);
   const p = e.body.position,
     boss = e.kind === 'sorter',
     flying = e.kind === 'sifter',

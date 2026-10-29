@@ -4,6 +4,8 @@ import { bossHasLane, huntBoss } from './boss-hunt.ts';
 import { bossPhase } from './enemies.ts';
 import type { BossRemixId } from './boss-remix-rules.ts';
 import { clamp, direction } from './rules.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
+import { SPLIT_SCALE } from './mutations.ts';
 
 export const SKIMMER_TELL = 0.82;
 export const COOLING_LOCK = 0.34;
@@ -135,7 +137,58 @@ export function drawCoolant(c: CanvasRenderingContext2D, g: Game, reduced: boole
   }
 }
 
-export function drawCoolingEnemy(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
+/** The ordinary Skimmer shares accepted-hit hardware; Condenser drawing remains below unchanged. */
+function drawSkimmerMachine(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait: boolean,
+) {
+  const p = e.body.position,
+    warning = e.state === 'windup' || e.state === 'followup';
+  c.save();
+  c.translate(p.x, p.y);
+  c.globalAlpha = clamp(1 - e.spawn / 0.65, 0.15, 1);
+  if (e.splitChild) c.scale(SPLIT_SCALE, SPLIT_SCALE);
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
+  if (!portrait && e.hp < e.maxHp) {
+    c.fillStyle = '#493c35';
+    c.fillRect(-14, -28, 28, 3);
+    c.fillStyle = '#e5a985';
+    c.fillRect(-14, -28, 28 * clamp(e.hp / e.maxHp, 0, 1), 3);
+  }
+  c.restore();
+  if (!portrait && warning && e.spawn <= 0) {
+    c.save();
+    c.strokeStyle = '#ebc28c';
+    c.lineWidth = e.timer <= COOLING_LOCK ? 1.8 : 1;
+    c.globalAlpha = e.timer <= COOLING_LOCK ? 0.65 : 0.28;
+    c.setLineDash(e.timer <= COOLING_LOCK ? [] : [6, 10]);
+    for (const angle of coolingAngles(e, g.level.bossRemix)) {
+      const end = g.lineEnd(p, {
+        x: p.x + Math.cos(angle) * (e.attack === 'ring' ? 330 : 800),
+        y: p.y + Math.sin(angle) * (e.attack === 'ring' ? 330 : 800),
+      });
+      if (Math.hypot(end.x - p.x, end.y - p.y) < 26) continue;
+      c.beginPath();
+      c.moveTo(p.x + Math.cos(angle) * 26, p.y + Math.sin(angle) * 26);
+      c.lineTo(end.x, end.y);
+      c.stroke();
+    }
+    c.restore();
+  }
+}
+
+export function drawCoolingEnemy(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
+  if (e.kind === 'skimmer') return drawSkimmerMachine(c, g, e, reduced, portrait);
   const boss = e.kind === 'condenser',
     r = boss ? 33 : 14,
     p = e.body.position;

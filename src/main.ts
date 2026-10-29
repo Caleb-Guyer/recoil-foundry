@@ -1,4 +1,12 @@
 import {
+  districtMachinesTestFromUrl,
+  districtMachinesTestRoom,
+  prepareDistrictMachinesTest,
+  districtMachinesTestHint,
+  DISTRICT_NAMES,
+  DISTRICT_SCENE_NAMES,
+} from './district-machines-test.ts';
+import {
   hazardCrewTestFromUrl,
   hazardCrewTestRoom,
   prepareHazardCrewTest,
@@ -691,7 +699,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Hazard Crew</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>District Machines</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -941,6 +949,9 @@ const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
 const linkedBuildBench = buildBenchTestFromUrl(entryUrl);
 const linkedBuildMotion = buildMotionTestFromUrl(entryUrl);
+const linkedDistrict = districtMachinesTestFromUrl(entryUrl);
+const invalidDistrict =
+  entryUrl.searchParams.get('test') === 'district-machines' && !linkedDistrict;
 const linkedHazardCrew = hazardCrewTestFromUrl(entryUrl);
 const invalidHazardCrew = entryUrl.searchParams.get('test') === 'hazard-crew' && !linkedHazardCrew;
 const linkedSupportSystems = supportSystemsTestFromUrl(entryUrl);
@@ -974,6 +985,7 @@ const benchBlueprintStore: BlueprintStore = {
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedDistrict?.checkpoint ??
   linkedHazardCrew?.checkpoint ??
   linkedSupportSystems?.checkpoint ??
   linkedHeavy?.checkpoint ??
@@ -1709,6 +1721,22 @@ function updateTitle() {
     $('title-hint').textContent = linkedBreakdown
       ? BREAKDOWN_TEST_COPY[linkedBreakdown.scene].hint
       : 'Choose a supported machine inspection.';
+    $('security').hidden = true;
+  }
+  if (
+    (linkedDistrict && linkedRunTest?.seed === linkedDistrict.checkpoint.seed) ||
+    invalidDistrict
+  ) {
+    $('play').textContent = linkedDistrict
+      ? 'Test District Machines / ' +
+        DISTRICT_NAMES[linkedDistrict.unit] +
+        ' / ' +
+        DISTRICT_SCENE_NAMES[linkedDistrict.scene] +
+        ' ↗'
+      : 'Unsupported district machine test ↗';
+    $('title-hint').textContent = linkedDistrict
+      ? districtMachinesTestHint(linkedDistrict)
+      : 'Choose a supported District Machines inspection.';
     $('security').hidden = true;
   }
   if (
@@ -2787,6 +2815,8 @@ function startRunTest(save: Checkpoint) {
     linkedOperator && save.seed === linkedOperator.checkpoint.seed ? linkedOperator : null;
   const breakdown =
     linkedBreakdown && save.seed === linkedBreakdown.checkpoint.seed ? linkedBreakdown : null;
+  const district =
+    linkedDistrict && save.seed === linkedDistrict.checkpoint.seed ? linkedDistrict : null;
   const hazardCrew =
     linkedHazardCrew && save.seed === linkedHazardCrew.checkpoint.seed ? linkedHazardCrew : null;
   const supportSystems =
@@ -2798,22 +2828,25 @@ function startRunTest(save: Checkpoint) {
     linkedSpecialist && save.seed === linkedSpecialist.checkpoint.seed ? linkedSpecialist : null;
   game.startTest(
     save,
-    hazardCrew
-      ? hazardCrewTestRoom(hazardCrew)
-      : supportSystems
-        ? supportSystemsTestRoom(supportSystems)
-        : heavy
-          ? heavyIndustryTestRoom(heavy)
-          : specialist
-            ? specialistMachineTestRoom(specialist)
-            : breakdown
-              ? machineBreakdownTestRoom(breakdown)
-              : operator
-                ? operatorTestRoom(operator)
-                : living
-                  ? livingFoundryTestRoom(living)
-                  : undefined,
+    district
+      ? districtMachinesTestRoom(district)
+      : hazardCrew
+        ? hazardCrewTestRoom(hazardCrew)
+        : supportSystems
+          ? supportSystemsTestRoom(supportSystems)
+          : heavy
+            ? heavyIndustryTestRoom(heavy)
+            : specialist
+              ? specialistMachineTestRoom(specialist)
+              : breakdown
+                ? machineBreakdownTestRoom(breakdown)
+                : operator
+                  ? operatorTestRoom(operator)
+                  : living
+                    ? livingFoundryTestRoom(living)
+                    : undefined,
   );
+  if (district) prepareDistrictMachinesTest(game, district);
   if (hazardCrew) prepareHazardCrewTest(game, hazardCrew);
   if (supportSystems) prepareSupportSystemsTest(game, supportSystems);
   if (heavy) prepareHeavyIndustryTest(game, heavy);
@@ -4021,7 +4054,11 @@ function showDialog(kind: string) {
             SUPPORT_MASTERIES.map((m) => m.id),
           )
         : commendations;
-  if (kind === 'hazard-crew-invalid') {
+  if (kind === 'district-machines-invalid') {
+    content.innerHTML =
+      '<p class="eyebrow">DISTRICT MACHINES</p><h2 id="dialog-title">Unsupported district-machine test.</h2><p>Choose Borer, Sifter or Skimmer and a supported inspection.</p><div class="actions"><button id="district-return" class="primary">Return to Play</button></div>';
+    $('district-return').onclick = () => location.assign(new URL('./', location.href).href);
+  } else if (kind === 'hazard-crew-invalid') {
     content.innerHTML =
       '<p class="eyebrow">HAZARD CREW</p><h2 id="dialog-title">Unsupported hazard-machine test.</h2><p>Choose Scrapper, Harpooner or Sapper and a supported inspection.</p><div class="actions"><button id="hazard-crew-return" class="primary">Return to Play</button></div>';
     $('hazard-crew-return').onclick = () => location.assign(new URL('./', location.href).href);
@@ -4484,13 +4521,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.38.0 · HAZARD CREW</p><h2 id="dialog-title">Read the dangerous work.</h2>' +
-      '<p class="update-tagline">The clamp. The winch. The live charge.</p>' +
-      '<dl class="update-notes"><div><dt>Scrapper.</dt><dd>An articulated clamp grips, lifts, aims and releases the actual crate. Break its grip to interrupt the throw.</dd></div>' +
-      '<div><dt>Harpooner.</dt><dd>A working winch follows launch, cable tension and reeling. Break its anchor and watch the mechanism recover.</dd></div>' +
-      '<div><dt>Sapper.</dt><dd>The launcher loads, ejects and recoils on actual charge launches. Planted charges keep their real fuses and can be knocked loose.</dd></div>' +
-      '<div><dt>Machine failures.</dt><dd>Local hit reactions, worn casings, distinct shutdowns and brief nonblocking wreckage follow real damage.</dd></div></dl>' +
-      '<p>Inspect: <a href="?test=hazard-crew&amp;unit=scrapper&amp;scene=animations&amp;v=1">Scrapper ↗</a> · <a href="?test=hazard-crew&amp;unit=harpooner&amp;scene=animations&amp;v=1">Harpooner ↗</a> · <a href="?test=hazard-crew&amp;unit=sapper&amp;scene=animations&amp;v=1">Sapper ↗</a></p>' +
+      '<p class="eyebrow">5.39.0 · DISTRICT MACHINES</p><h2 id="dialog-title">Read the district machinery.</h2>' +
+      '<p class="update-tagline">The drive. The fan. The impeller.</p>' +
+      '<dl class="update-notes"><div><dt>Borer.</dt><dd>Working tracks, cover bracing and a compact receiver follow actual movement and volleys.</dd></div>' +
+      '<div><dt>Sifter.</dt><dd>A banking hover rig works its fans and opens firing ports around the real wide volley.</dd></div>' +
+      '<div><dt>Skimmer.</dt><dd>The impeller, louvers and receiver follow tracking, committed aim and actual discharge.</dd></div>' +
+      '<div><dt>District breakdowns.</dt><dd>Local hit reactions, worn casings, distinct shutdowns and brief nonblocking wreckage follow real damage.</dd></div></dl>' +
+      '<p>Inspect: <a href="?test=district-machines&amp;unit=borer&amp;scene=animations&amp;v=1">Borer ↗</a> · <a href="?test=district-machines&amp;unit=sifter&amp;scene=animations&amp;v=1">Sifter ↗</a> · <a href="?test=district-machines&amp;unit=skimmer&amp;scene=animations&amp;v=1">Skimmer ↗</a></p>' +
       '<p class="practice-record-note">Private tests preserve saved progress. Press R to restart. Pause and Reduced Effects are supported.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
@@ -6289,80 +6326,82 @@ function formatTime(n: number) {
 }
 updateQuickTitle();
 $('play').onclick = () =>
-  invalidHazardCrew
-    ? showDialog('hazard-crew-invalid')
-    : invalidSupportSystems
-      ? showDialog('support-systems-invalid')
-      : invalidHeavy
-        ? showDialog('heavy-invalid')
-        : invalidSpecialist
-          ? showDialog('specialist-invalid')
-          : invalidBreakdown
-            ? showDialog('breakdown-invalid')
-            : invalidOperator
-              ? showDialog('operator-invalid')
-              : invalidLivingFoundry
-                ? showDialog('living-invalid')
-                : linkedQuick || linkedQuickFixture || invalidQuickLink
-                  ? openQuickShiftSetup(!!linkedQuickFixture)
-                  : linkedBuildMotion
-                    ? startLinkedBuildMotion()
-                    : linkedBuildBench
-                      ? startLinkedBuildBench()
-                      : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-                        ? startLinkedToolsTest()
-                        : linkedGoalPreview || linkedTrackingPreview
-                          ? location.assign(new URL('./', location.href).href)
-                          : linkedFirstRunPreview === 'warmup'
-                            ? startWorkshop([], true)
-                            : linkedDrill
-                              ? startLinkedSupportDrill(linkedDrill)
-                              : linkedGauntletPreview
-                                ? startGauntlet(linkedGauntletPreview, true)
-                                : linkedRemixGauntletPreview
-                                  ? linkedRemixGauntletPreview.setup
-                                    ? (() => {
-                                        gauntletSetupPreview = true;
-                                        gauntletSetupMode = 'remix';
-                                        showDialog('gauntlet-setup');
-                                      })()
-                                    : startGauntlet(
-                                        linkedRemixGauntletPreview.gun,
-                                        true,
-                                        linkedRemixGauntletPreview,
-                                      )
-                                  : linkedGauntletChallenge || invalidGauntletLink
-                                    ? openGauntletChallenge(
-                                        linkedGauntletChallenge ?? undefined,
-                                        false,
-                                        'title',
-                                      )
-                                    : linkedRecoilChallenge || invalidRecoilLink
-                                      ? openRecoilTrials(
-                                          'title',
-                                          linkedRecoilChallenge ?? undefined,
+  invalidDistrict
+    ? showDialog('district-machines-invalid')
+    : invalidHazardCrew
+      ? showDialog('hazard-crew-invalid')
+      : invalidSupportSystems
+        ? showDialog('support-systems-invalid')
+        : invalidHeavy
+          ? showDialog('heavy-invalid')
+          : invalidSpecialist
+            ? showDialog('specialist-invalid')
+            : invalidBreakdown
+              ? showDialog('breakdown-invalid')
+              : invalidOperator
+                ? showDialog('operator-invalid')
+                : invalidLivingFoundry
+                  ? showDialog('living-invalid')
+                  : linkedQuick || linkedQuickFixture || invalidQuickLink
+                    ? openQuickShiftSetup(!!linkedQuickFixture)
+                    : linkedBuildMotion
+                      ? startLinkedBuildMotion()
+                      : linkedBuildBench
+                        ? startLinkedBuildBench()
+                        : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+                          ? startLinkedToolsTest()
+                          : linkedGoalPreview || linkedTrackingPreview
+                            ? location.assign(new URL('./', location.href).href)
+                            : linkedFirstRunPreview === 'warmup'
+                              ? startWorkshop([], true)
+                              : linkedDrill
+                                ? startLinkedSupportDrill(linkedDrill)
+                                : linkedGauntletPreview
+                                  ? startGauntlet(linkedGauntletPreview, true)
+                                  : linkedRemixGauntletPreview
+                                    ? linkedRemixGauntletPreview.setup
+                                      ? (() => {
+                                          gauntletSetupPreview = true;
+                                          gauntletSetupMode = 'remix';
+                                          showDialog('gauntlet-setup');
+                                        })()
+                                      : startGauntlet(
+                                          linkedRemixGauntletPreview.gun,
+                                          true,
+                                          linkedRemixGauntletPreview,
                                         )
-                                      : linkedTrial?.preview
-                                        ? startTrial(linkedTrial.route, true)
-                                        : linkedTrial || invalidTrialLink
-                                          ? openTrials('title', linkedTrial?.challenge)
-                                          : linkedWorkshop
-                                            ? showDialog('workshop')
-                                            : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                                                entryUrl.searchParams.get('test') !== 'arc'
-                                              ? showDialog('layout-test')
-                                              : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                                                  linkedRunTest?.seed.startsWith('FUSIONS-')
-                                                ? showDialog('upgrade-test')
-                                                : linkedRunTest
-                                                  ? startRunTest(linkedRunTest)
-                                                  : linkedTest
-                                                    ? startPractice(linkedTest, null, {
-                                                        test: true,
-                                                      })
-                                                    : linkedDaily
-                                                      ? start()
-                                                      : showDialog('play-mode');
+                                    : linkedGauntletChallenge || invalidGauntletLink
+                                      ? openGauntletChallenge(
+                                          linkedGauntletChallenge ?? undefined,
+                                          false,
+                                          'title',
+                                        )
+                                      : linkedRecoilChallenge || invalidRecoilLink
+                                        ? openRecoilTrials(
+                                            'title',
+                                            linkedRecoilChallenge ?? undefined,
+                                          )
+                                        : linkedTrial?.preview
+                                          ? startTrial(linkedTrial.route, true)
+                                          : linkedTrial || invalidTrialLink
+                                            ? openTrials('title', linkedTrial?.challenge)
+                                            : linkedWorkshop
+                                              ? showDialog('workshop')
+                                              : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                                                  entryUrl.searchParams.get('test') !== 'arc'
+                                                ? showDialog('layout-test')
+                                                : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                                                    linkedRunTest?.seed.startsWith('FUSIONS-')
+                                                  ? showDialog('upgrade-test')
+                                                  : linkedRunTest
+                                                    ? startRunTest(linkedRunTest)
+                                                    : linkedTest
+                                                      ? startPractice(linkedTest, null, {
+                                                          test: true,
+                                                        })
+                                                      : linkedDaily
+                                                        ? start()
+                                                        : showDialog('play-mode');
 $('daily').onclick = () => {
   linkedQuick = null;
   linkedQuickFixture = null;

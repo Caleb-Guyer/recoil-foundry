@@ -3431,6 +3431,7 @@ export class Game {
     });
     if (distance(end, muzzle) > 0.01 && !portalMuzzle) {
       if (e.allied) return;
+      this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
       this.burst(end, 3, '#ef7264', 1.5);
       const prop = this.props.items.find((p) => {
         const hit = traceProp(p, origin, muzzle, padding);
@@ -3442,7 +3443,7 @@ export class Game {
       return;
     }
     const supportCharged = this.teamwork.takeCharge(e);
-    this.addShot({
+    const admittedShot = this.addShot({
       pos: portalMuzzle ? { ...origin } : muzzle,
       vel: { x: d.x * speed, y: d.y * speed },
       damage: damage * (e.rebootDamage ?? 1) * (supportCharged ? SUPPORT.boost : 1),
@@ -3462,6 +3463,7 @@ export class Game {
       fragment: false,
       split: true,
     });
+    if (admittedShot) this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
   }
   updateShots(dt: number) {
     const workshopRevision = this.workshop.revision;

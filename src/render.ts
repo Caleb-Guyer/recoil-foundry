@@ -275,7 +275,7 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'borer' || e.kind === 'sifter' || e.kind === 'sorter') {
-        drawReclamationEnemy(c, g, e, this.reduced);
+        drawReclamationEnemy(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'angler') {
@@ -316,7 +316,7 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'skimmer' || e.kind === 'condenser') {
-        drawCoolingEnemy(c, g, e, this.reduced);
+        drawCoolingEnemy(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'crane') {

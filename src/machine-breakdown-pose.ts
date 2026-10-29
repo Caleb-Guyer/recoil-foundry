@@ -1,4 +1,10 @@
 import type { Enemy, Game } from './game.ts';
+import {
+  isDistrictMachineKind,
+  districtMachineSnapshot,
+  districtMachinePose,
+  type DistrictMachineSnapshot,
+} from './district-machine-pose.ts';
 import { type EnemyState, type EliteKind, ENEMY_STATS, VOLATILE_TELL, isBoss } from './enemies.ts';
 import { clamp, distance, type Vec } from './rules.ts';
 import { attackBrace } from './combat-readability.ts';
@@ -37,7 +43,10 @@ export type MachineKind =
   | 'sentry'
   | 'scrapper'
   | 'harpooner'
-  | 'sapper';
+  | 'sapper'
+  | 'borer'
+  | 'sifter'
+  | 'skimmer';
 export const isMachineKind = (kind: string): kind is MachineKind =>
   [
     'runner',
@@ -56,6 +65,9 @@ export const isMachineKind = (kind: string): kind is MachineKind =>
     'scrapper',
     'harpooner',
     'sapper',
+    'borer',
+    'sifter',
+    'skimmer',
   ].includes(kind);
 export interface MachinePatrolShellSnapshot {
   arc: MortarArc;
@@ -222,6 +234,7 @@ export interface MachineBodySnapshot {
   patrol?: MachinePatrolSnapshot;
   supportMachine?: SupportMachineSnapshot;
   hazardMachine?: HazardMachineSnapshot;
+  districtMachine?: DistrictMachineSnapshot;
   specialist?: {
     grounded: boolean;
     supportY: number | null;
@@ -273,11 +286,14 @@ export function machineBodySnapshot(
     patrol = isPatrolMachine(e.kind) && e.patrol,
     supportMachine = ['repairer', 'relay', 'fabricator', 'sentry'].includes(e.kind),
     hazardMachine = isHazardMachineKind(e.kind),
+    districtMachine = isDistrictMachineKind(e.kind),
     start = { x: e.body.position.x, y: e.body.bounds.max.y - 2 },
     end = { x: start.x, y: e.body.bounds.max.y + 5 },
     // Same native 20px support probe without Query.ray's temporary Matter body allocation.
     support =
-      (specialist || patrol || supportMachine || hazardMachine) && g && e.body.velocity.y >= -1
+      (specialist || patrol || supportMachine || hazardMachine || districtMachine) &&
+      g &&
+      e.body.velocity.y >= -1
         ? firstSolid(start, end, { x: 10, y: 0 }, g.solidBodies)
         : undefined,
     grounded = !!support,
@@ -419,6 +435,9 @@ export function machineBodySnapshot(
         }
       : {}),
     ...(hazardMachine ? { hazardMachine: hazardMachineSnapshot(e, g, grounded, supportY) } : {}),
+    ...(districtMachine
+      ? { districtMachine: districtMachineSnapshot(e, g, grounded, supportY) }
+      : {}),
     splitChild: !!e.splitChild,
     ...(e.mutation
       ? {
@@ -454,6 +473,7 @@ function leg(hip: Vec, foot: Vec, bend: number, planted: boolean): MachineLeg {
 }
 // A pure projection of native state. It never advances a clock, changes AI, or moves a hull.
 export function machinePose(s: MachineBodySnapshot, reduced = false): MachinePose {
+  if (isDistrictMachineKind(s.kind)) return districtMachinePose(s, reduced);
   if (isHazardMachineKind(s.kind)) return hazardMachinePose(s, reduced);
   if (isSupportMachineKind(s.kind)) return supportMachinePose(s, reduced);
   if (isHeavyMachineKind(s.kind)) return heavyMachinePose(s, reduced);
