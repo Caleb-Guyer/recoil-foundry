@@ -256,7 +256,7 @@ test('bounded warning state and reduced effects retain readable shapes without t
   ) as CanvasRenderingContext2D;
   until(g, e, 'locked');
   drawCallerWarnings(c, g);
-  drawCaller(c, e, true);
+  drawCaller(c, g, e, true);
   assert(strokes >= 7 && labels === 0);
   for (let i = 0; i < 3600; i++) {
     step(g, e, 1 / 60);

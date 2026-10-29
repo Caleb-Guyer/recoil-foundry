@@ -6,7 +6,7 @@ import type { Level } from '../src/levels.ts';
 import { ANGLER, findAnglerPlan, beginAnglerAttack, updateAngler } from '../src/angler.ts';
 import { CRAWLER, beginCrawlerAttack, updateWallcrawler } from '../src/wallcrawler.ts';
 import { machineBodySnapshot, machinePose, isMachineKind } from '../src/machine-breakdown-pose.ts';
-import { surfaceMachinePose } from '../src/surface-machine-pose.ts';
+import { surfaceMachinePose, isSurfaceMachineKind } from '../src/surface-machine-pose.ts';
 import { MACHINE_MAX_HITS, MACHINE_MAX_WRECKS } from '../src/machine-breakdown.ts';
 const { Bodies, Body, Composite } = Matter;
 const DT = 1 / 60;
@@ -143,7 +143,7 @@ function finite(value: unknown) {
 }
 const near = (a: number, b: number) => assert(Math.abs(a - b) < 1e-7, `${a} != ${b}`);
 
-test('surface eligibility preserves all nineteen previous machine families and excludes unconverted signal units and bosses', () => {
+test('surface eligibility preserves all nineteen previous machine families and keeps signal units outside the surface family', () => {
   for (const kind of [
     'runner',
     'shooter',
@@ -180,8 +180,8 @@ test('surface eligibility preserves all nineteen previous machine families and e
     plain(s);
     finite(surfaceMachinePose(s));
   }
-  for (const kind of ['caller', 'switchman', 'sorter', 'condenser', 'boss'])
-    assert(!isMachineKind(kind));
+  for (const kind of ['caller', 'switchman']) assert(!isSurfaceMachineKind(kind));
+  for (const kind of ['sorter', 'condenser', 'boss']) assert(!isMachineKind(kind));
 });
 
 test('Angler copies the real bank plan and records only the admitted shot at its exact locked origin and tip', () => {

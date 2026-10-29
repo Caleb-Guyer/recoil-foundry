@@ -3445,6 +3445,7 @@ export class Game {
     if (distance(end, muzzle) > 0.01 && !portalMuzzle) {
       if (e.allied) return;
       this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
+      this.machineBreakdown.signalDischarge(e, a, origin, muzzle);
       if (e.crawler)
         this.machineBreakdown.surfaceDischarge(e, a, origin, muzzle, e.crawler.fired - 1);
       this.burst(end, 3, '#ef7264', 1.5);
@@ -3480,6 +3481,7 @@ export class Game {
     });
     if (admittedShot) {
       this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
+      this.machineBreakdown.signalDischarge(e, a, origin, muzzle);
       if (e.crawler)
         this.machineBreakdown.surfaceDischarge(e, a, origin, muzzle, e.crawler.fired - 1);
     }
@@ -3789,19 +3791,26 @@ export class Game {
           const e = nearest.enemy;
           if (!s.friendly) {
             if (e.allied) {
-              const hpBefore = e.hp;
-              const machineDeath = this.machineBreakdown.beforeHit(e, s.damage);
-              this.areaEvents.hitAlly(e, s.damage);
-              if (e.hp < hpBefore) {
-                this.machineBreakdown.hit(
-                  e,
-                  s.damage,
-                  hpBefore - e.hp,
-                  Math.min(hpBefore, hpBefore - e.hp),
-                  false,
-                  { x: e.body.position.x - s.vel.x, y: e.body.position.y - s.vel.y },
-                );
-                this.machineBreakdown.defeated(e, machineDeath);
+              if (e.kind === 'caller' || e.kind === 'switchman')
+                this.factions.hitAlly(e, s.damage, {
+                  x: e.body.position.x - s.vel.x,
+                  y: e.body.position.y - s.vel.y,
+                });
+              else {
+                const hpBefore = e.hp;
+                const machineDeath = this.machineBreakdown.beforeHit(e, s.damage);
+                this.areaEvents.hitAlly(e, s.damage);
+                if (e.hp < hpBefore) {
+                  this.machineBreakdown.hit(
+                    e,
+                    s.damage,
+                    hpBefore - e.hp,
+                    Math.min(hpBefore, hpBefore - e.hp),
+                    false,
+                    { x: e.body.position.x - s.vel.x, y: e.body.position.y - s.vel.y },
+                  );
+                  this.machineBreakdown.defeated(e, machineDeath);
+                }
               }
             } else
               this.hitEnemy(

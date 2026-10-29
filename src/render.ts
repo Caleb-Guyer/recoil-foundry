@@ -250,11 +250,11 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'caller') {
-        drawCaller(c, e, this.reduced);
+        drawCaller(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'switchman') {
-        drawSwitchman(c, g, e, this.reduced);
+        drawSwitchman(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'welder') {

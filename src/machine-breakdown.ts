@@ -1,4 +1,6 @@
 import type { Enemy, Game } from './game.ts';
+import { isSignalMachineKind, type SignalMachineEventState } from './signal-machine-pose.ts';
+import { distance } from './rules.ts';
 import { isSurfaceMachineKind, type SurfaceMachineEventState } from './surface-machine-pose.ts';
 import { isDistrictMachineKind, type DistrictMachineEventState } from './district-machine-pose.ts';
 import type { KillSource } from './commendations.ts';
@@ -70,6 +72,13 @@ interface SurfaceObservation extends SurfaceMachineEventState {
   attached: boolean;
   exposed: number;
   vulnerable: number;
+}
+interface SignalObservation extends SignalMachineEventState {
+  phase: string;
+  next: number;
+  attacks: number;
+  allied: boolean;
+  origin: Vec | null;
 }
 export type MachineRemovalReason = 'owner-lost' | 'interrupted' | 'cleanup';
 export interface MachineHit {
@@ -211,6 +220,7 @@ export class MachineBreakdown {
   private districtMachines = new Map<number, DistrictObservation>();
   private districtReleases = new Map<number, DistrictRelease>();
   private surfaceMachines = new Map<number, SurfaceObservation>();
+  private signalMachines = new Map<number, SignalObservation>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -231,6 +241,7 @@ export class MachineBreakdown {
     this.districtMachines.clear();
     this.districtReleases.clear();
     this.surfaceMachines.clear();
+    this.signalMachines.clear();
   }
   /** Only observed native transition timers establish a recovery identity. */
   private observeSpecialist(e: Enemy) {
@@ -579,6 +590,104 @@ export class MachineBreakdown {
         }
       : null;
   }
+  /** Only the native admitted projectile or actual muzzle impact records a discharge. */
+  signalDischarge(e: Enemy, angle: number, origin: Vec, muzzle: Vec) {
+    if (
+      !isSignalMachineKind(e.kind) ||
+      !this.eligible(e) ||
+      !finite(angle, origin.x, origin.y, muzzle.x, muzzle.y)
+    )
+      return;
+    this.observeSignalMachine(e);
+    const port = this.game.annex.port,
+      t = this.game.annex.transmission,
+      remote =
+        e.kind === 'switchman' &&
+        t?.owner === e &&
+        origin !== e.body.position &&
+        distance(origin, port) < 1e-7,
+      current = this.signalMachines.get(e.id)!;
+    const angle0 = t ? Math.atan2(t.aim.y, t.aim.x) : angle,
+      index = remote
+        ? Math.round((angle - angle0) / 0.12) + 1
+        : e.kind === 'caller'
+          ? (e.caller?.next ?? 0)
+          : 0;
+    current.discharges.push({
+      at: this.game.time,
+      source: remote ? 'port' : 'body',
+      angle,
+      origin: { ...origin },
+      muzzle: { ...muzzle },
+      index: clamp(index, 0, 2),
+    });
+    if (current.discharges.length > 6) current.discharges.splice(0, current.discharges.length - 6);
+  }
+  private observeSignalMachine(e: Enemy, healthLost?: number) {
+    if (!isSignalMachineKind(e.kind) || !finite(this.game.time)) return;
+    const g = this.game,
+      old = this.signalMachines.get(e.id),
+      r = e.caller,
+      phase = r?.phase ?? 'ready',
+      next = r?.next ?? 0,
+      complete = !!old && old.next === 2 && e.attacks > old.attacks,
+      cancelled = !!old && old.phase !== 'ready' && phase === 'ready' && !complete,
+      t = g.annex.transmission,
+      actualFeedback =
+        e.kind === 'switchman' &&
+        t?.owner === e &&
+        t.interrupted &&
+        g.annex.interruptedAt === g.time &&
+        healthLost !== undefined,
+      feedback =
+        actualFeedback && old?.feedback?.at !== g.annex.interruptedAt
+          ? {
+              at: g.annex.interruptedAt,
+              healthLost: Math.max(0, healthLost!),
+              from: { ...g.annex.junction },
+            }
+          : (old?.feedback ?? null);
+    this.signalMachines.set(e.id, {
+      phase,
+      next,
+      attacks: e.attacks,
+      allied: !!e.allied,
+      origin: r?.origin ? { ...r.origin } : null,
+      discharges: (old?.discharges ?? [])
+        .filter((d) => g.time - d.at >= 0 && g.time - d.at < 0.7)
+        .map((d) => ({ ...d, origin: { ...d.origin }, muzzle: { ...d.muzzle } })),
+      cancellation: cancelled
+        ? {
+            at: g.time,
+            reason:
+              old!.allied !== !!e.allied
+                ? 'faction-changed'
+                : old!.origin && distance(old!.origin, e.body.position) > 40
+                  ? 'displaced'
+                  : 'target-lost',
+          }
+        : (old?.cancellation ?? null),
+      feedback,
+    });
+    while (this.signalMachines.size > MACHINE_MAX_HITS)
+      this.signalMachines.delete(this.signalMachines.keys().next().value!);
+  }
+  getSignalMachine(e: Enemy): SignalMachineEventState | null {
+    const current = this.signalMachines.get(e.id);
+    return current
+      ? {
+          discharges: current.discharges.map((d) => ({
+            ...d,
+            origin: { ...d.origin },
+            muzzle: { ...d.muzzle },
+          })),
+          cancellation: current.cancellation ? { ...current.cancellation } : null,
+          feedback: current.feedback
+            ? { ...current.feedback, from: { ...current.feedback.from } }
+            : null,
+        }
+      : null;
+  }
   /** Native noncombat removals remain non-scoring; only their detached presentation is recorded. */
   removed(e: Enemy, reason: MachineRemovalReason, actualOwner?: Enemy) {
     if (
@@ -648,6 +757,7 @@ export class MachineBreakdown {
     this.observeHazardMachine(e);
     this.observeDistrictMachine(e);
     this.observeSurfaceMachine(e);
+    this.observeSignalMachine(e, Math.min(e.hp, applied));
     return machineBodySnapshot(e, this.game.time, this.game);
   }
   hit(
@@ -673,6 +783,7 @@ export class MachineBreakdown {
     this.observeHazardMachine(e);
     this.observeDistrictMachine(e);
     this.observeSurfaceMachine(e);
+    this.observeSignalMachine(e, healthLost);
     const hit: MachineHit = {
       id: ++this.next,
       enemyId: e.id,
@@ -738,6 +849,7 @@ export class MachineBreakdown {
     this.districtMachines.delete(e.id);
     this.districtReleases.delete(e.id);
     this.surfaceMachines.delete(e.id);
+    this.signalMachines.delete(e.id);
   }
   update() {
     const g = this.game;
@@ -757,6 +869,7 @@ export class MachineBreakdown {
         this.observeHazardMachine(e);
         this.observeDistrictMachine(e);
         this.observeSurfaceMachine(e);
+        this.observeSignalMachine(e);
       }
     for (const id of this.specialists.keys()) if (!alive.has(id)) this.specialists.delete(id);
     for (const id of this.patrols.keys()) if (!alive.has(id)) this.patrols.delete(id);
@@ -765,6 +878,7 @@ export class MachineBreakdown {
     for (const id of this.hazardMachines.keys()) if (!alive.has(id)) this.hazardMachines.delete(id);
     for (const id of this.districtMachines.keys())
       if (!alive.has(id)) this.districtMachines.delete(id);
+    for (const id of this.signalMachines.keys()) if (!alive.has(id)) this.signalMachines.delete(id);
     for (const id of this.surfaceMachines.keys())
       if (!alive.has(id)) this.surfaceMachines.delete(id);
     for (const [id, release] of this.districtReleases)

@@ -1,6 +1,8 @@
 import type { Enemy, Game } from './game.ts';
 import { CALLER } from './caller.ts';
 import { clamp, direction } from './rules.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
+import { SPLIT_SCALE } from './mutations.ts';
 
 const red = '#ed735d',
   blue = '#79bdff';
@@ -44,41 +46,21 @@ export function drawCallerWarnings(c: CanvasRenderingContext2D, g: Game) {
     c.restore();
   }
 }
-export function drawCaller(c: CanvasRenderingContext2D, e: Enemy, reduced: boolean) {
-  const r = e.caller,
-    color = e.allied ? blue : red;
+export function drawCaller(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
+  const color = e.allied ? blue : red;
   c.save();
   c.translate(e.body.position.x, e.body.position.y);
   c.globalAlpha = e.spawn > 0 ? clamp(1 - e.spawn / 0.65, 0.2, 1) : 1;
-  c.fillStyle = '#1b1821';
-  c.strokeStyle = e.flash > 0 && !reduced ? '#fff1da' : color;
-  c.lineWidth = 2;
-  // A horn and narrow pedestal distinguish the Caller from the Switchman's radio box.
-  c.fillRect(-8, 1, 16, 16);
-  c.strokeRect(-8, 1, 16, 16);
-  c.fillStyle = color;
-  c.fillRect(-16, 15, 32, 3);
-  c.save();
-  c.rotate(Math.atan2(e.aim.y, e.aim.x));
-  c.fillStyle = '#1b1821';
-  c.beginPath();
-  c.moveTo(-12, -7);
-  c.lineTo(14, -15);
-  c.lineTo(14, 15);
-  c.lineTo(-12, 7);
-  c.closePath();
-  c.fill();
-  c.stroke();
-  c.beginPath();
-  c.moveTo(8, -11);
-  c.lineTo(8, 11);
-  c.stroke();
-  c.restore();
-  for (let i = 0; i < 3; i++) {
-    c.fillStyle = r && i >= r.next && i < r.marks.length ? color : '#55434e';
-    c.fillRect(-10 + i * 8, -24, 4, 4);
-  }
-  if (e.hp < e.maxHp) {
+  if (e.splitChild) c.scale(SPLIT_SCALE, SPLIT_SCALE);
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
+  if (!portrait && e.hp < e.maxHp) {
     c.fillStyle = '#4a353b';
     c.fillRect(-17, -32, 34, 2);
     c.fillStyle = color;

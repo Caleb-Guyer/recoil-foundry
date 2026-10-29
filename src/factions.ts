@@ -1,5 +1,6 @@
 import Matter from 'matter-js';
 import { clearCaller } from './caller.ts';
+import { isSignalMachineKind } from './signal-machine-pose.ts';
 import type { Enemy, Game } from './game.ts';
 import type { EnemyKind } from './levels.ts';
 import { distance, type Vec } from './rules.ts';
@@ -72,7 +73,7 @@ export class FactionSystem {
     );
     if (!other) return;
     this.contactAt.set(e.id, g.time + 0.65);
-    if (other.allied) this.hitAlly(other, e.splitChild ? 9 : 15);
+    if (other.allied) this.hitAlly(other, e.splitChild ? 9 : 15, e.body.position);
     else
       g.hitEnemy(
         other,
@@ -135,9 +136,23 @@ export class FactionSystem {
     this.allies = this.allies.filter((a) => a !== e);
     this.contactAt.delete(e.id);
   }
-  hitAlly(e: Enemy, damage: number) {
+  hitAlly(e: Enemy, damage: number, from?: Vec) {
     if (!this.allies.includes(e) || e.spawn > 0 || this.departingAt !== null) return;
+    const signal = isSignalMachineKind(e.kind),
+      before = e.hp,
+      death = signal ? this.game.machineBreakdown.beforeHit(e, damage) : null;
     e.hp -= damage;
+    if (signal) {
+      this.game.machineBreakdown.hit(
+        e,
+        damage,
+        damage,
+        Math.min(before, Math.max(0, damage)),
+        false,
+        from,
+      );
+      this.game.machineBreakdown.defeated(e, death);
+    }
     e.flash = 0.08;
     if (e.hp <= 0) {
       this.game.burst(e.body.position, 12, '#7cbfff', 3);

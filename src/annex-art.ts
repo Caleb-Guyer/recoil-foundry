@@ -1,6 +1,8 @@
 import type { Enemy, Game } from './game.ts';
 import { clamp, type Vec } from './rules.ts';
 import { TRANSMISSION } from './annex.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
+import { SPLIT_SCALE } from './mutations.ts';
 
 export const ANNEX_PALETTE = {
   body: '#35323f',
@@ -164,12 +166,18 @@ export function drawAnnex(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   c.restore();
 }
 
-export function drawSwitchman(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
+export function drawSwitchman(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
   const p = e.body.position,
     color = e.allied ? blue : red;
   c.save();
   c.globalAlpha = e.spawn > 0 ? clamp(1 - e.spawn / 0.65, 0.2, 1) : 1;
-  if (e.timer <= 0.55 && e.spawn <= 0) {
+  if (!portrait && e.timer <= 0.55 && e.spawn <= 0) {
     const end = g.lineEnd(p, { x: p.x + e.aim.x * 1100, y: p.y + e.aim.y * 1100 });
     c.strokeStyle = color;
     c.lineWidth = 1;
@@ -178,34 +186,10 @@ export function drawSwitchman(c: CanvasRenderingContext2D, g: Game, e: Enemy, re
     c.setLineDash([]);
   }
   c.translate(p.x, p.y);
-  c.fillStyle = '#1b1821';
-  c.strokeStyle = e.flash > 0 && !reduced ? '#fff1da' : color;
-  c.lineWidth = 2;
-  c.fillRect(-16, -15, 32, 30);
-  c.strokeRect(-16, -15, 32, 30);
-  c.fillStyle = color;
-  c.fillRect(-11, -9, 10, 4);
-  c.fillStyle = '#766170';
-  c.fillRect(3, -9, 8, 4);
-  c.fillRect(-11, 1, 22, 2);
-  c.fillRect(-11, 6, 22, 2);
-  c.fillStyle = color;
-  c.fillRect(-13, 15, 8, 3);
-  c.fillRect(5, 15, 8, 3);
-  c.lineWidth = 2;
-  line(c, [
-    { x: -7, y: -16 },
-    { x: -7, y: -29 },
-    { x: 6, y: -29 },
-  ]);
-  circle(c, { x: 6, y: -29 }, 3);
-  c.stroke();
-  c.lineWidth = 5;
-  line(c, [
-    { x: 0, y: 0 },
-    { x: e.aim.x * 27, y: e.aim.y * 27 },
-  ]);
-  if (e.hp < e.maxHp) {
+  if (e.splitChild) c.scale(SPLIT_SCALE, SPLIT_SCALE);
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
+  if (!portrait && e.hp < e.maxHp) {
     c.fillStyle = '#4a353b';
     c.fillRect(-16, -38, 32, 2);
     c.fillStyle = color;
