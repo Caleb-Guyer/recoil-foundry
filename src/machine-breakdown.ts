@@ -15,6 +15,7 @@ import type { Vec } from './rules.ts';
 import { isPatrolMachine } from './patrol-machines.ts';
 import type { MortarArc } from './patrol-machine-system.ts';
 import { FABRICATOR_BUILD } from './fabricator.ts';
+import { isHazardMachineKind, type HazardMachineEventState } from './hazard-machine-pose.ts';
 
 export const MACHINE_HIT_LIFETIME = 0.24;
 export const MACHINE_MAX_HITS_PER_ENEMY = 3;
@@ -46,6 +47,12 @@ interface SupportObservation extends MachineSupportState {
   built?: number;
   state: Enemy['state'];
   attacks: number;
+}
+interface HazardObservation extends HazardMachineEventState {
+  attacks: number;
+  heldId: number | null;
+  harpoonPhase: string | null;
+  spoolAngle: number;
 }
 export type MachineRemovalReason = 'owner-lost' | 'interrupted' | 'cleanup';
 export interface MachineHit {
@@ -183,6 +190,7 @@ export class MachineBreakdown {
   private specialists = new Map<number, MachineSpecialistState & { state: Enemy['state'] }>();
   private patrols = new Map<number, MachinePatrolState & { state: Enemy['state'] }>();
   private supportMachines = new Map<number, SupportObservation>();
+  private hazardMachines = new Map<number, HazardObservation>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -199,6 +207,7 @@ export class MachineBreakdown {
     this.specialists.clear();
     this.patrols.clear();
     this.supportMachines.clear();
+    this.hazardMachines.clear();
   }
   /** Only observed native transition timers establish a recovery identity. */
   private observeSpecialist(e: Enemy) {
@@ -356,6 +365,54 @@ export class MachineBreakdown {
         }
       : null;
   }
+  /** Native counters distinguish successful throws from cancelled/failed windups. */
+  private observeHazardMachine(e: Enemy) {
+    if (!isHazardMachineKind(e.kind) || !finite(this.game.time, e.attacks)) return;
+    const old = this.hazardMachines.get(e.id),
+      heldId = e.scrapper?.held?.body.id ?? null,
+      harpoonPhase = e.harpoon?.phase ?? null;
+    let releaseAt = old?.releaseAt ?? null,
+      interruptedAt = old?.interruptedAt ?? null,
+      breakSpoolAngle = old?.breakSpoolAngle ?? null;
+    if (old && e.attacks > old.attacks) {
+      releaseAt = this.game.time;
+      interruptedAt = null;
+      breakSpoolAngle = null;
+    } else if (
+      old &&
+      ((old.heldId !== null && heldId === null) ||
+        (old.harpoonPhase !== null && old.harpoonPhase !== 'ready' && harpoonPhase === 'ready'))
+    ) {
+      interruptedAt = this.game.time;
+      if (e.harpoon) breakSpoolAngle = old.spoolAngle;
+    }
+    this.hazardMachines.set(e.id, {
+      releaseAt,
+      interruptedAt,
+      attacks: e.attacks,
+      heldId,
+      harpoonPhase,
+      spoolAngle:
+        e.harpoon?.phase === 'flight'
+          ? e.harpoon.travel * 0.08
+          : e.harpoon?.phase === 'latched'
+            ? e.harpoon.length * -0.08
+            : (old?.spoolAngle ?? 0),
+      breakSpoolAngle,
+    });
+    while (this.hazardMachines.size > MACHINE_MAX_HITS)
+      this.hazardMachines.delete(this.hazardMachines.keys().next().value!);
+  }
+  getHazardMachine(e: Enemy): HazardMachineEventState | null {
+    const current = this.hazardMachines.get(e.id);
+    return current
+      ? {
+          releaseAt: current.releaseAt,
+          interruptedAt: current.interruptedAt,
+          breakSpoolAngle: current.breakSpoolAngle,
+        }
+      : null;
+  }
   /** Native noncombat removals remain non-scoring; only their detached presentation is recorded. */
   removed(e: Enemy, reason: MachineRemovalReason, actualOwner?: Enemy) {
     if (
@@ -422,6 +479,7 @@ export class MachineBreakdown {
     this.observeSpecialist(e);
     this.observePatrol(e);
     this.observeSupportMachine(e);
+    this.observeHazardMachine(e);
     return machineBodySnapshot(e, this.game.time, this.game);
   }
   hit(
@@ -444,6 +502,7 @@ export class MachineBreakdown {
     this.observeSpecialist(e);
     this.observePatrol(e);
     this.observeSupportMachine(e);
+    this.observeHazardMachine(e);
     const hit: MachineHit = {
       id: ++this.next,
       enemyId: e.id,
@@ -505,6 +564,7 @@ export class MachineBreakdown {
     this.specialists.delete(e.id);
     this.patrols.delete(e.id);
     this.supportMachines.delete(e.id);
+    this.hazardMachines.delete(e.id);
   }
   update() {
     const g = this.game;
@@ -521,11 +581,13 @@ export class MachineBreakdown {
         this.observeSpecialist(e);
         this.observePatrol(e);
         this.observeSupportMachine(e);
+        this.observeHazardMachine(e);
       }
     for (const id of this.specialists.keys()) if (!alive.has(id)) this.specialists.delete(id);
     for (const id of this.patrols.keys()) if (!alive.has(id)) this.patrols.delete(id);
     for (const id of this.supportMachines.keys())
       if (!alive.has(id)) this.supportMachines.delete(id);
+    for (const id of this.hazardMachines.keys()) if (!alive.has(id)) this.hazardMachines.delete(id);
     for (const [id, hits] of this.hitsByEnemy) {
       const kept = hits.filter((h) => g.time - h.at >= 0 && g.time - h.at < MACHINE_HIT_LIFETIME);
       if (!alive.has(id) || !kept.length) this.hitsByEnemy.delete(id);

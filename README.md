@@ -21,7 +21,9 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Current update: 5.37.0 — Support Systems.** Repairer tools and supplies, Relay charge cells, Fabricator assembly arms and Sentry deployment and recoil follow their actual support cycles, with local damage reactions, distinct shutdowns and power-loss wreckage. [Details and private tests](docs/releases/5.37.0.md).
+**Current update: 5.38.0 — Hazard Crew.** Scrapper clamps, Harpooner winches and Sapper loading mechanisms follow actual grabs, launches and interruptions, with local damage reactions, distinct shutdowns and nonblocking wreckage. [Details and private tests](docs/releases/5.38.0.md).
+
+**Support Systems — 5.37.0.** Repairer tools and supplies, Relay charge cells, Fabricator assembly arms and Sentry deployment and recoil follow their actual support cycles, with local damage reactions, distinct shutdowns and power-loss wreckage. [Details and private tests](docs/releases/5.37.0.md).
 
 **Recent update: 5.36.0 — Heavy Industry.** Shutter Guard armor, Strider legs and braces, and Mortar Cart loading and recoil now follow their actual combat states, with damage reactions, distinct shutdowns and settling wreckage. [Details and private tests](docs/releases/5.36.0.md).
 

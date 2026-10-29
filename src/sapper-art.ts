@@ -1,15 +1,22 @@
 import type { Enemy, Game } from './game.ts';
 import type { Prop } from './props.ts';
 import { clamp } from './rules.ts';
-import { CHARGE_FUSE, CHARGE_RADIUS, SAPPER_LOCK, sapperMuzzle } from './sapper.ts';
+import { CHARGE_FUSE, CHARGE_RADIUS, SAPPER_LOCK } from './sapper.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
+import { SPLIT_SCALE } from './mutations.ts';
 
-export function drawSapper(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
+export function drawSapper(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
   const rig = e.sapper!,
-    p = e.body.position,
-    muzzle = sapperMuzzle(e);
+    p = e.body.position;
   c.save();
   c.globalAlpha = e.spawn > 0 ? clamp(1 - e.spawn / 0.65, 0.15, 1) : 1;
-  if (e.state === 'windup' && rig.arc.length) {
+  if (!portrait && e.state === 'windup' && rig.arc.length) {
     const locked = e.timer <= SAPPER_LOCK;
     c.strokeStyle = locked ? '#efbf7b' : '#a88c6a';
     c.lineWidth = locked ? 1.4 : 1;
@@ -24,36 +31,10 @@ export function drawSapper(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduc
     c.stroke();
   }
   c.translate(p.x, p.y);
-  c.fillStyle = '#303333';
-  c.fillRect(-17, 9, 34, 7);
-  c.fillStyle = e.flash > 0 ? '#fff0d4' : '#ae8055';
-  c.beginPath();
-  c.moveTo(-15, 8);
-  c.lineTo(-15, -9);
-  c.lineTo(-8, -16);
-  c.lineTo(12, -16);
-  c.lineTo(15, 8);
-  c.closePath();
-  c.fill();
-  c.fillStyle = '#493b31';
-  c.fillRect(-10, -8, 20, 12);
-  c.fillStyle = '#dfbd7f';
-  for (const x of [-7, 1, 9]) c.fillRect(x - 2, -5, 4, 7);
-  c.fillStyle = '#272f31';
-  c.fillRect(e.facing > 0 ? 6 : -14, -14, 8, 4);
-  c.strokeStyle = e.state === 'recover' ? '#8d7c62' : '#dfb981';
-  c.lineWidth = 4;
-  c.beginPath();
-  c.moveTo(e.facing * 6, -10);
-  c.lineTo(muzzle.x - p.x, muzzle.y - p.y);
-  c.stroke();
-  c.lineWidth = 1.5;
-  c.strokeRect(muzzle.x - p.x - 6, muzzle.y - p.y - 5, 12, 10);
-  if (e.state === 'windup') {
-    c.fillStyle = reduced || Math.sin(g.time * 14) > 0 ? '#f1d28e' : '#bb804d';
-    c.fillRect(muzzle.x - p.x - 3, muzzle.y - p.y - 3, 6, 6);
-  }
-  if (e.hp < e.maxHp) {
+  if (e.splitChild) c.scale(SPLIT_SCALE, SPLIT_SCALE);
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
+  if (!portrait && e.hp < e.maxHp) {
     c.fillStyle = '#352f27';
     c.fillRect(-17, 22, 34, 2);
     c.fillStyle = '#d9b075';

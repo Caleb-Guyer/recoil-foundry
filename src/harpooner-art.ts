@@ -1,8 +1,16 @@
 import type { Enemy, Game } from './game.ts';
 import { clamp, distance } from './rules.ts';
 import { HARPOON_TELL, HARPOON_LOCK, HARPOON_RANGE, harpoonMuzzle } from './harpooner.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
+import { SPLIT_SCALE } from './mutations.ts';
 
-export function drawHarpooner(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
+export function drawHarpooner(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
   const rig = e.harpoon!,
     p = e.body.position,
     muzzle = harpoonMuzzle(e);
@@ -11,7 +19,7 @@ export function drawHarpooner(c: CanvasRenderingContext2D, g: Game, e: Enemy, re
   const angle = Math.atan2(e.aim.y, e.aim.x);
   c.save();
   c.globalAlpha = e.spawn > 0 ? clamp(1 - e.spawn / 0.65, 0.15, 1) : 1;
-  if (aiming) {
+  if (!portrait && aiming) {
     const locked = e.timer <= HARPOON_LOCK;
     const end = g.lineEnd(
       muzzle,
@@ -27,7 +35,7 @@ export function drawHarpooner(c: CanvasRenderingContext2D, g: Game, e: Enemy, re
     c.stroke();
     c.setLineDash([]);
   }
-  if (latched || rig.phase === 'flight') {
+  if (!portrait && (latched || rig.phase === 'flight')) {
     const slack = latched
       ? Math.min(18, Math.max(0, rig.length - distance(muzzle, rig.head)) * 0.12)
       : 0;
@@ -56,51 +64,13 @@ export function drawHarpooner(c: CanvasRenderingContext2D, g: Game, e: Enemy, re
     c.stroke();
     c.restore();
   }
-  // A squat winch chassis and a long forked barrel distinguish it from shooters.
   c.save();
   c.translate(p.x, p.y);
-  c.fillStyle = '#272b2c';
-  c.fillRect(-17, 8, 34, 8);
-  c.strokeStyle = '#9a7560';
-  c.lineWidth = 1.5;
-  c.strokeRect(-15, 9, 30, 6);
-  const tread = reduced ? 0 : ((p.x % 8) + 8) % 8;
-  c.fillStyle = '#927451';
-  for (let x = -12 + tread; x < 14; x += 8) c.fillRect(x, 11, 3, 2);
-  c.fillStyle = e.flash > 0 ? '#fff0db' : '#aa6655';
-  c.beginPath();
-  c.moveTo(-15, 7);
-  c.lineTo(-12, -12);
-  c.lineTo(0, -18);
-  c.lineTo(14, -10);
-  c.lineTo(15, 7);
-  c.closePath();
-  c.fill();
-  c.fillStyle = '#413b37';
-  c.fillRect(-8, -10, 15, 14);
-  c.strokeStyle = '#c5a277';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.arc(0, -4, 7, 0, Math.PI * 2);
-  c.stroke();
-  c.fillStyle = '#efbd83';
-  c.fillRect(e.facing > 0 ? 9 : -12, -10, 3, 4);
-  c.translate(0, -5);
-  c.rotate(angle);
-  c.fillStyle = '#4d443b';
-  c.fillRect(0, -4, 29, 8);
-  c.strokeStyle = e.state === 'recover' ? '#887561' : '#d1b48c';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.moveTo(10, -5);
-  c.lineTo(30, -5);
-  c.lineTo(34, -9);
-  c.moveTo(10, 5);
-  c.lineTo(30, 5);
-  c.lineTo(34, 9);
-  c.stroke();
+  if (e.splitChild) c.scale(SPLIT_SCALE, SPLIT_SCALE);
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) drawMachineContacts(c, g, e, reduced);
   c.restore();
-  if (latched || aiming) {
+  if (!portrait && (latched || aiming)) {
     c.fillStyle = latched ? '#f6dfac' : '#403b34';
     c.strokeStyle = '#edc48c';
     c.lineWidth = 1.5;
@@ -126,7 +96,7 @@ export function drawHarpooner(c: CanvasRenderingContext2D, g: Game, e: Enemy, re
       }
     }
   }
-  if (e.hp < e.maxHp) {
+  if (!portrait && e.hp < e.maxHp) {
     c.fillStyle = '#342c29';
     c.fillRect(p.x - 17, p.y + 23, 34, 2);
     c.fillStyle = '#d48769';

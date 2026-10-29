@@ -291,7 +291,7 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'scrapper') {
-        drawScrapper(c, g, e, this.reduced);
+        drawScrapper(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'fabricator' || e.kind === 'sentry') {
@@ -299,11 +299,11 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'harpooner') {
-        drawHarpooner(c, g, e, this.reduced);
+        drawHarpooner(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'sapper') {
-        drawSapper(c, g, e, this.reduced);
+        drawSapper(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'interceptor') {

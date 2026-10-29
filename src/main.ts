@@ -1,4 +1,12 @@
 import {
+  hazardCrewTestFromUrl,
+  hazardCrewTestRoom,
+  prepareHazardCrewTest,
+  hazardCrewTestHint,
+  HAZARD_NAMES,
+  HAZARD_SCENE_NAMES,
+} from './hazard-crew-test.ts';
+import {
   supportSystemsTestFromUrl,
   supportSystemsTestRoom,
   prepareSupportSystemsTest,
@@ -683,7 +691,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Support Systems</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Hazard Crew</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -933,6 +941,8 @@ const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
 const linkedBuildBench = buildBenchTestFromUrl(entryUrl);
 const linkedBuildMotion = buildMotionTestFromUrl(entryUrl);
+const linkedHazardCrew = hazardCrewTestFromUrl(entryUrl);
+const invalidHazardCrew = entryUrl.searchParams.get('test') === 'hazard-crew' && !linkedHazardCrew;
 const linkedSupportSystems = supportSystemsTestFromUrl(entryUrl);
 const invalidSupportSystems =
   entryUrl.searchParams.get('test') === 'support-systems' && !linkedSupportSystems;
@@ -964,6 +974,7 @@ const benchBlueprintStore: BlueprintStore = {
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedHazardCrew?.checkpoint ??
   linkedSupportSystems?.checkpoint ??
   linkedHeavy?.checkpoint ??
   linkedSpecialist?.checkpoint ??
@@ -1698,6 +1709,22 @@ function updateTitle() {
     $('title-hint').textContent = linkedBreakdown
       ? BREAKDOWN_TEST_COPY[linkedBreakdown.scene].hint
       : 'Choose a supported machine inspection.';
+    $('security').hidden = true;
+  }
+  if (
+    (linkedHazardCrew && linkedRunTest?.seed === linkedHazardCrew.checkpoint.seed) ||
+    invalidHazardCrew
+  ) {
+    $('play').textContent = linkedHazardCrew
+      ? 'Test Hazard Crew / ' +
+        HAZARD_NAMES[linkedHazardCrew.unit] +
+        ' / ' +
+        HAZARD_SCENE_NAMES[linkedHazardCrew.scene] +
+        ' ↗'
+      : 'Unsupported hazard crew test ↗';
+    $('title-hint').textContent = linkedHazardCrew
+      ? hazardCrewTestHint(linkedHazardCrew)
+      : 'Choose a supported Hazard Crew inspection.';
     $('security').hidden = true;
   }
   if (linkedSupportSystems || invalidSupportSystems) {
@@ -2760,6 +2787,8 @@ function startRunTest(save: Checkpoint) {
     linkedOperator && save.seed === linkedOperator.checkpoint.seed ? linkedOperator : null;
   const breakdown =
     linkedBreakdown && save.seed === linkedBreakdown.checkpoint.seed ? linkedBreakdown : null;
+  const hazardCrew =
+    linkedHazardCrew && save.seed === linkedHazardCrew.checkpoint.seed ? linkedHazardCrew : null;
   const supportSystems =
     linkedSupportSystems && save.seed === linkedSupportSystems.checkpoint.seed
       ? linkedSupportSystems
@@ -2769,20 +2798,23 @@ function startRunTest(save: Checkpoint) {
     linkedSpecialist && save.seed === linkedSpecialist.checkpoint.seed ? linkedSpecialist : null;
   game.startTest(
     save,
-    supportSystems
-      ? supportSystemsTestRoom(supportSystems)
-      : heavy
-        ? heavyIndustryTestRoom(heavy)
-        : specialist
-          ? specialistMachineTestRoom(specialist)
-          : breakdown
-            ? machineBreakdownTestRoom(breakdown)
-            : operator
-              ? operatorTestRoom(operator)
-              : living
-                ? livingFoundryTestRoom(living)
-                : undefined,
+    hazardCrew
+      ? hazardCrewTestRoom(hazardCrew)
+      : supportSystems
+        ? supportSystemsTestRoom(supportSystems)
+        : heavy
+          ? heavyIndustryTestRoom(heavy)
+          : specialist
+            ? specialistMachineTestRoom(specialist)
+            : breakdown
+              ? machineBreakdownTestRoom(breakdown)
+              : operator
+                ? operatorTestRoom(operator)
+                : living
+                  ? livingFoundryTestRoom(living)
+                  : undefined,
   );
+  if (hazardCrew) prepareHazardCrewTest(game, hazardCrew);
   if (supportSystems) prepareSupportSystemsTest(game, supportSystems);
   if (heavy) prepareHeavyIndustryTest(game, heavy);
   if (specialist) prepareSpecialistMachineTest(game, specialist);
@@ -3989,7 +4021,11 @@ function showDialog(kind: string) {
             SUPPORT_MASTERIES.map((m) => m.id),
           )
         : commendations;
-  if (kind === 'support-systems-invalid') {
+  if (kind === 'hazard-crew-invalid') {
+    content.innerHTML =
+      '<p class="eyebrow">HAZARD CREW</p><h2 id="dialog-title">Unsupported hazard-machine test.</h2><p>Choose Scrapper, Harpooner or Sapper and a supported inspection.</p><div class="actions"><button id="hazard-crew-return" class="primary">Return to Play</button></div>';
+    $('hazard-crew-return').onclick = () => location.assign(new URL('./', location.href).href);
+  } else if (kind === 'support-systems-invalid') {
     content.innerHTML =
       '<p class="eyebrow">SUPPORT SYSTEMS</p><h2 id="dialog-title">Unsupported support-machine test.</h2><p>Choose Repairer, Relay, Fabricator or Sentry and a supported inspection. Construction and power-loss comparisons use Fabricator or Sentry.</p><div class="actions"><button id="support-systems-return" class="primary">Return to Play</button></div>';
     $('support-systems-return').onclick = () => location.assign(new URL('./', location.href).href);
@@ -4448,13 +4484,13 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.37.0 · SUPPORT SYSTEMS</p><h2 id="dialog-title">Read the support crew.</h2>' +
-      '<p class="update-tagline">The pump. The charge. The assembly line.</p>' +
-      '<dl class="update-notes"><div><dt>Repairer.</dt><dd>Working tools and a visible reservoir follow actual repair pulses and remaining supply.</dd></div>' +
-      '<div><dt>Relay.</dt><dd>Coils and three charge cells show winding, ready, real discharge and spent states.</dd></div>' +
-      '<div><dt>Fabricator & Sentry.</dt><dd>Assembly arms work toward the actual frame. Turret supports, aiming and recoil follow construction and firing.</dd></div>' +
-      '<div><dt>Cut the power.</dt><dd>Real hits, interrupted assembly and power loss have distinct shutdowns and brief nonblocking wreckage.</dd></div></dl>' +
-      '<p>Inspect: <a href="?test=support-systems&amp;unit=repairer&amp;scene=animations&amp;v=1">Repairer ↗</a> · <a href="?test=support-systems&amp;unit=relay&amp;scene=animations&amp;v=1">Relay ↗</a> · <a href="?test=support-systems&amp;unit=fabricator&amp;scene=animations&amp;v=1">Fabricator ↗</a> · <a href="?test=support-systems&amp;unit=sentry&amp;scene=animations&amp;v=1">Sentry ↗</a></p>' +
+      '<p class="eyebrow">5.38.0 · HAZARD CREW</p><h2 id="dialog-title">Read the dangerous work.</h2>' +
+      '<p class="update-tagline">The clamp. The winch. The live charge.</p>' +
+      '<dl class="update-notes"><div><dt>Scrapper.</dt><dd>An articulated clamp grips, lifts, aims and releases the actual crate. Break its grip to interrupt the throw.</dd></div>' +
+      '<div><dt>Harpooner.</dt><dd>A working winch follows launch, cable tension and reeling. Break its anchor and watch the mechanism recover.</dd></div>' +
+      '<div><dt>Sapper.</dt><dd>The launcher loads, ejects and recoils on actual charge launches. Planted charges keep their real fuses and can be knocked loose.</dd></div>' +
+      '<div><dt>Machine failures.</dt><dd>Local hit reactions, worn casings, distinct shutdowns and brief nonblocking wreckage follow real damage.</dd></div></dl>' +
+      '<p>Inspect: <a href="?test=hazard-crew&amp;unit=scrapper&amp;scene=animations&amp;v=1">Scrapper ↗</a> · <a href="?test=hazard-crew&amp;unit=harpooner&amp;scene=animations&amp;v=1">Harpooner ↗</a> · <a href="?test=hazard-crew&amp;unit=sapper&amp;scene=animations&amp;v=1">Sapper ↗</a></p>' +
       '<p class="practice-record-note">Private tests preserve saved progress. Press R to restart. Pause and Reduced Effects are supported.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
@@ -6253,73 +6289,80 @@ function formatTime(n: number) {
 }
 updateQuickTitle();
 $('play').onclick = () =>
-  invalidSupportSystems
-    ? showDialog('support-systems-invalid')
-    : invalidHeavy
-      ? showDialog('heavy-invalid')
-      : invalidSpecialist
-        ? showDialog('specialist-invalid')
-        : invalidBreakdown
-          ? showDialog('breakdown-invalid')
-          : invalidOperator
-            ? showDialog('operator-invalid')
-            : invalidLivingFoundry
-              ? showDialog('living-invalid')
-              : linkedQuick || linkedQuickFixture || invalidQuickLink
-                ? openQuickShiftSetup(!!linkedQuickFixture)
-                : linkedBuildMotion
-                  ? startLinkedBuildMotion()
-                  : linkedBuildBench
-                    ? startLinkedBuildBench()
-                    : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-                      ? startLinkedToolsTest()
-                      : linkedGoalPreview || linkedTrackingPreview
-                        ? location.assign(new URL('./', location.href).href)
-                        : linkedFirstRunPreview === 'warmup'
-                          ? startWorkshop([], true)
-                          : linkedDrill
-                            ? startLinkedSupportDrill(linkedDrill)
-                            : linkedGauntletPreview
-                              ? startGauntlet(linkedGauntletPreview, true)
-                              : linkedRemixGauntletPreview
-                                ? linkedRemixGauntletPreview.setup
-                                  ? (() => {
-                                      gauntletSetupPreview = true;
-                                      gauntletSetupMode = 'remix';
-                                      showDialog('gauntlet-setup');
-                                    })()
-                                  : startGauntlet(
-                                      linkedRemixGauntletPreview.gun,
-                                      true,
-                                      linkedRemixGauntletPreview,
-                                    )
-                                : linkedGauntletChallenge || invalidGauntletLink
-                                  ? openGauntletChallenge(
-                                      linkedGauntletChallenge ?? undefined,
-                                      false,
-                                      'title',
-                                    )
-                                  : linkedRecoilChallenge || invalidRecoilLink
-                                    ? openRecoilTrials('title', linkedRecoilChallenge ?? undefined)
-                                    : linkedTrial?.preview
-                                      ? startTrial(linkedTrial.route, true)
-                                      : linkedTrial || invalidTrialLink
-                                        ? openTrials('title', linkedTrial?.challenge)
-                                        : linkedWorkshop
-                                          ? showDialog('workshop')
-                                          : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                                              entryUrl.searchParams.get('test') !== 'arc'
-                                            ? showDialog('layout-test')
-                                            : linkedRunTest?.seed.startsWith('UPGRADES-') ||
-                                                linkedRunTest?.seed.startsWith('FUSIONS-')
-                                              ? showDialog('upgrade-test')
-                                              : linkedRunTest
-                                                ? startRunTest(linkedRunTest)
-                                                : linkedTest
-                                                  ? startPractice(linkedTest, null, { test: true })
-                                                  : linkedDaily
-                                                    ? start()
-                                                    : showDialog('play-mode');
+  invalidHazardCrew
+    ? showDialog('hazard-crew-invalid')
+    : invalidSupportSystems
+      ? showDialog('support-systems-invalid')
+      : invalidHeavy
+        ? showDialog('heavy-invalid')
+        : invalidSpecialist
+          ? showDialog('specialist-invalid')
+          : invalidBreakdown
+            ? showDialog('breakdown-invalid')
+            : invalidOperator
+              ? showDialog('operator-invalid')
+              : invalidLivingFoundry
+                ? showDialog('living-invalid')
+                : linkedQuick || linkedQuickFixture || invalidQuickLink
+                  ? openQuickShiftSetup(!!linkedQuickFixture)
+                  : linkedBuildMotion
+                    ? startLinkedBuildMotion()
+                    : linkedBuildBench
+                      ? startLinkedBuildBench()
+                      : linkedToolsTest && linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+                        ? startLinkedToolsTest()
+                        : linkedGoalPreview || linkedTrackingPreview
+                          ? location.assign(new URL('./', location.href).href)
+                          : linkedFirstRunPreview === 'warmup'
+                            ? startWorkshop([], true)
+                            : linkedDrill
+                              ? startLinkedSupportDrill(linkedDrill)
+                              : linkedGauntletPreview
+                                ? startGauntlet(linkedGauntletPreview, true)
+                                : linkedRemixGauntletPreview
+                                  ? linkedRemixGauntletPreview.setup
+                                    ? (() => {
+                                        gauntletSetupPreview = true;
+                                        gauntletSetupMode = 'remix';
+                                        showDialog('gauntlet-setup');
+                                      })()
+                                    : startGauntlet(
+                                        linkedRemixGauntletPreview.gun,
+                                        true,
+                                        linkedRemixGauntletPreview,
+                                      )
+                                  : linkedGauntletChallenge || invalidGauntletLink
+                                    ? openGauntletChallenge(
+                                        linkedGauntletChallenge ?? undefined,
+                                        false,
+                                        'title',
+                                      )
+                                    : linkedRecoilChallenge || invalidRecoilLink
+                                      ? openRecoilTrials(
+                                          'title',
+                                          linkedRecoilChallenge ?? undefined,
+                                        )
+                                      : linkedTrial?.preview
+                                        ? startTrial(linkedTrial.route, true)
+                                        : linkedTrial || invalidTrialLink
+                                          ? openTrials('title', linkedTrial?.challenge)
+                                          : linkedWorkshop
+                                            ? showDialog('workshop')
+                                            : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                                                entryUrl.searchParams.get('test') !== 'arc'
+                                              ? showDialog('layout-test')
+                                              : linkedRunTest?.seed.startsWith('UPGRADES-') ||
+                                                  linkedRunTest?.seed.startsWith('FUSIONS-')
+                                                ? showDialog('upgrade-test')
+                                                : linkedRunTest
+                                                  ? startRunTest(linkedRunTest)
+                                                  : linkedTest
+                                                    ? startPractice(linkedTest, null, {
+                                                        test: true,
+                                                      })
+                                                    : linkedDaily
+                                                      ? start()
+                                                      : showDialog('play-mode');
 $('daily').onclick = () => {
   linkedQuick = null;
   linkedQuickFixture = null;

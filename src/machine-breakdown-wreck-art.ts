@@ -5,6 +5,7 @@ import { drawMachineChassis } from './machine-breakdown-art.ts';
 import { drawSpecialistMachineWreck } from './specialist-machine-wreck-art.ts';
 import { drawHeavyMachineWreck } from './heavy-machine-wreck-art.ts';
 import { drawSupportMachineWreck } from './support-machine-wreck-art.ts';
+import { drawHazardMachineWreck } from './hazard-machine-wreck-art.ts';
 import {
   machinePose,
   type MachineBodySnapshot,
@@ -315,6 +316,12 @@ export function drawMachineWreck(
   c.scale(s.scale, s.scale);
   c.globalAlpha *= projection.alpha;
   if (wreck.landing) supportClip(c, wreck.landing, projection.position, s.scale);
+  const hazard = drawHazardMachineWreck(c, wreck, projection, reduced);
+  if (hazard) {
+    inertIdentity(c, s, hazard, projection.fold);
+    c.restore();
+    return true;
+  }
   const support = drawSupportMachineWreck(c, wreck, projection, reduced);
   if (support) {
     inertIdentity(c, s, support, projection.fold);
