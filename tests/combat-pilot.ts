@@ -6,6 +6,7 @@ import type { Enemy, Game, Input } from '../src/game.ts';
 import { attackAngles, bossMuzzle, flakAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
 import { turbineRelease } from '../src/turbine.ts';
+import { TurbineRemaster } from '../src/turbine-remaster.ts';
 import { interceptorAngles, interceptorSpeed, interceptorOrigin } from '../src/interceptor.ts';
 import { weaponAngles } from '../src/interceptor-weapons.ts';
 import { kilnMuzzle, kilnPoint } from '../src/kiln-ai.ts';
@@ -21,6 +22,44 @@ export interface CombatPilotOptions {
   // Opt in only for the cinematic audit. Ordinary pilots retain their exact
   // old decisions; this reads the same locked arena shapes the player sees.
   arenaAware?: boolean;
+}
+
+interface PilotBolt {
+  p: Vec;
+  v: Vec;
+  delay: number;
+  radius: number;
+  life: number;
+}
+
+/** Locked rotor lanes are visible even while a nearer support is the firing target. */
+export function rotorCueBolts(g: Game): PilotBolt[] {
+  const rotor = g.bossRemaster.enemy;
+  if (!(g.bossRemaster.rig instanceof TurbineRemaster) || rotor?.kind !== 'turbine') return [];
+  return (g.bossRemaster.visual?.warnings ?? []).flatMap((cue) => {
+    if (
+      cue.kind !== 'segment' ||
+      !cue.locked ||
+      cue.active ||
+      cue.fireIn === undefined ||
+      !Number.isFinite(cue.fireIn) ||
+      cue.fireIn < 0 ||
+      distance(cue.from, cue.to) <= 62
+    )
+      return [];
+    const dir = direction(cue.from, cue.to),
+      speed = 9.6 + rotor.phase * 0.5,
+      start = { x: cue.from.x + dir.x * 62, y: cue.from.y + dir.y * 62 };
+    return [
+      {
+        p: start,
+        v: { x: dir.x * speed, y: dir.y * speed },
+        radius: cue.width / 2,
+        delay: cue.fireIn * 60,
+        life: Math.min(240, distance(start, cue.to) / speed),
+      },
+    ];
+  });
 }
 
 // Test-only player: compare short movement trajectories with visible bolts and
@@ -58,6 +97,7 @@ export function dodgePilot(
         ) / Math.hypot(s.vel.x, s.vel.y),
       ),
     }));
+  bolts.push(...rotorCueBolts(g));
   // Multiple enemies can commit together. Read all ordinary locked warnings,
   // including the Loader's marked anti-air fan, before choosing a trajectory.
   for (const s of g.shots) {
