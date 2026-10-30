@@ -286,6 +286,8 @@ test('an earned hunt approach keeps its gate and can start and finish the real b
   r.hitEnemy(boss, 99999);
   r.hitStop = 0;
   r.tick(1 / 60, idle);
+  for (let n = 0; n < 120 && r.mode === 'playing' && r.machineBreakdown.contractShutdownActive; n++)
+    r.tick(1 / 60, idle);
   assert.equal(r.mode, 'won');
   assert.equal(g.hunts.state?.phase, 'approach');
   rematch.reset();

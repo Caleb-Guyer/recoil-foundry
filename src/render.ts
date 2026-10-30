@@ -244,7 +244,7 @@ export class Renderer {
         drawPatrolMachine(c, g, e, portrait, this.reduced);
         continue;
       }
-      if (drawHuntEnemy(c, e, portrait)) continue;
+      if (drawHuntEnemy(c, g, e, this.reduced, portrait)) continue;
       if (e.kind === 'switchboard') {
         drawSwitchboard(c, e, this.reduced);
         continue;

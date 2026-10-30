@@ -59,7 +59,8 @@ const challenge = (): PracticeChallenge => challengeFromRecord(recordPracticeWin
 function finish(g: Game) {
   g.enemies[0].spawn = 0;
   g.hitEnemy(g.enemies[0], 999999);
-  for (let i = 0; i < 40 && g.mode === 'playing'; i++) g.tick(1 / 60, idle);
+  // Allow the visible hunt shutdown to settle before asserting its normal result.
+  for (let i = 0; i < 120 && g.mode === 'playing'; i++) g.tick(1 / 60, idle);
   assert.equal(g.mode, 'won');
 }
 

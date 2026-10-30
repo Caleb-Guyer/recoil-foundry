@@ -103,6 +103,8 @@ function kill(g: Game, credited = true) {
   g.hitEnemy(e, 100000, undefined, false, false, credited, credited ? undefined : 'cleanup');
   g.hitStop = 0;
   g.tick(1 / 60, idle);
+  for (let n = 0; n < 120 && g.mode === 'playing' && g.machineBreakdown.contractShutdownActive; n++)
+    g.tick(1 / 60, idle);
 }
 test('rare hunt RNG yields at most one deterministic machine from zone two onward', () => {
   const seen = new Set<HuntKind>(),
@@ -373,6 +375,12 @@ for (const kind of HUNT_KINDS) {
       g.startTest(preview(kind, gun));
       const result = playRoom(g, 100);
       assert(result.clear && result.hp > 0, JSON.stringify({ kind, gun, ...result }));
+      for (
+        let n = 0;
+        n < 120 && g.mode === 'playing' && g.machineBreakdown.contractShutdownActive;
+        n++
+      )
+        g.tick(1 / 60, idle);
       assert.equal(g.mode, 'won');
       assert.equal(writes, 0);
       assert.equal(awards, 0);

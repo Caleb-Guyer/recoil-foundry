@@ -1,3 +1,9 @@
+import {
+  isContractMachineKind,
+  contractMachineSnapshot,
+  contractMachinePose,
+  type ContractMachineSnapshot,
+} from './contract-machine-pose.ts';
 import type { Enemy, Game } from './game.ts';
 import {
   isSignalMachineKind,
@@ -62,7 +68,10 @@ export type MachineKind =
   | 'angler'
   | 'wallcrawler'
   | 'caller'
-  | 'switchman';
+  | 'switchman'
+  | 'cableweaver'
+  | 'bulwark'
+  | 'demolisher';
 export const isMachineKind = (kind: string): kind is MachineKind =>
   [
     'runner',
@@ -88,6 +97,9 @@ export const isMachineKind = (kind: string): kind is MachineKind =>
     'wallcrawler',
     'caller',
     'switchman',
+    'cableweaver',
+    'bulwark',
+    'demolisher',
   ].includes(kind);
 export interface MachinePatrolShellSnapshot {
   arc: MortarArc;
@@ -257,6 +269,7 @@ export interface MachineBodySnapshot {
   districtMachine?: DistrictMachineSnapshot;
   surfaceMachine?: SurfaceMachineSnapshot;
   signalMachine?: SignalMachineSnapshot;
+  contractMachine?: ContractMachineSnapshot;
   specialist?: {
     grounded: boolean;
     supportY: number | null;
@@ -311,6 +324,7 @@ export function machineBodySnapshot(
     districtMachine = isDistrictMachineKind(e.kind),
     surfaceMachine = isSurfaceMachineKind(e.kind),
     signalMachine = isSignalMachineKind(e.kind),
+    contractMachine = isContractMachineKind(e.kind),
     start = { x: e.body.position.x, y: e.body.bounds.max.y - 2 },
     end = { x: start.x, y: e.body.bounds.max.y + 5 },
     // Same native 20px support probe without Query.ray's temporary Matter body allocation.
@@ -321,7 +335,8 @@ export function machineBodySnapshot(
         hazardMachine ||
         districtMachine ||
         surfaceMachine ||
-        signalMachine) &&
+        signalMachine ||
+        contractMachine) &&
       g &&
       e.body.velocity.y >= -1
         ? firstSolid(start, end, { x: 10, y: 0 }, g.solidBodies)
@@ -470,6 +485,9 @@ export function machineBodySnapshot(
       : {}),
     ...(surfaceMachine ? { surfaceMachine: surfaceMachineSnapshot(e, g, grounded, supportY) } : {}),
     ...(signalMachine ? { signalMachine: signalMachineSnapshot(e, g, grounded, supportY) } : {}),
+    ...(contractMachine
+      ? { contractMachine: contractMachineSnapshot(e, g, grounded, supportY) }
+      : {}),
     splitChild: !!e.splitChild,
     ...(e.mutation
       ? {
@@ -505,6 +523,7 @@ function leg(hip: Vec, foot: Vec, bend: number, planted: boolean): MachineLeg {
 }
 // A pure projection of native state. It never advances a clock, changes AI, or moves a hull.
 export function machinePose(s: MachineBodySnapshot, reduced = false): MachinePose {
+  if (isContractMachineKind(s.kind)) return contractMachinePose(s, reduced);
   if (isSignalMachineKind(s.kind)) return signalMachinePose(s, reduced);
   if (isSurfaceMachineKind(s.kind)) return surfaceMachinePose(s, reduced);
   if (isDistrictMachineKind(s.kind)) return districtMachinePose(s, reduced);

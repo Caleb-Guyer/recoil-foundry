@@ -2,66 +2,23 @@ import type { Enemy, Game } from './game.ts';
 import { HUNTS, HUNT_THRESHOLD, isHunt } from './hunt-rules.ts';
 import { clamp } from './rules.ts';
 import { huntMuzzle } from './hunts.ts';
-export function drawHuntEnemy(c: CanvasRenderingContext2D, e: Enemy, portrait: boolean) {
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
+export function drawHuntEnemy(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
   if (!isHunt(e.kind)) return false;
   const { x, y } = e.body.position,
     color = e.kind === 'cableweaver' ? '#85d5d0' : e.kind === 'bulwark' ? '#a9bfaa' : '#e5ae73';
   c.save();
   c.translate(x, y);
   c.globalAlpha = e.spawn > 0 ? 0.6 : 1;
-  c.fillStyle = '#26363c';
-  c.strokeStyle = color;
-  c.lineWidth = 2;
-  c.fillRect(-32, -28, 64, 54);
-  c.strokeRect(-30, -26, 60, 50);
-  c.fillStyle = '#607476';
-  c.fillRect(-28, 22, 20, 8);
-  c.fillRect(8, 22, 20, 8);
-  c.fillStyle = e.flash > 0 ? '#fff8dc' : color;
-  c.fillRect(-14, -13, 28, 9);
-  c.fillRect(e.facing * 27 - 8, -23, 16, 12);
-  c.strokeStyle = '#17282e';
-  c.lineWidth = 2;
-  if (e.kind === 'cableweaver') {
-    for (const side of [-1, 1]) {
-      c.beginPath();
-      c.arc(side * 29, 4, 16, 0, Math.PI * 2);
-      c.fillStyle = '#406f72';
-      c.fill();
-      c.strokeStyle = color;
-      c.stroke();
-      c.beginPath();
-      c.arc(side * 29, 4, 9, 0, Math.PI * 2);
-      c.stroke();
-    }
-    c.fillStyle = color;
-    c.fillRect(-3, -40, 6, 14);
-  } else if (e.kind === 'bulwark') {
-    c.fillStyle = '#668278';
-    c.fillRect(-6, -91, 12, 61);
-    c.fillStyle = color;
-    c.fillRect(-14, -101, 28, 12);
-    c.fillStyle = '#668278';
-    c.fillRect(-39, -30, 14, 42);
-    c.fillRect(25, -30, 14, 42);
-    c.strokeStyle = color;
-    c.strokeRect(-39, -30, 14, 42);
-    c.strokeRect(25, -30, 14, 42);
-    c.fillStyle = '#ebd28c';
-    c.fillRect(-5, 2, 10, 14);
-  } else {
-    for (const side of [-1, 1]) {
-      c.fillStyle = '#a17b56';
-      c.fillRect(side * 24 - 6, -34, 12, 20);
-      c.fillStyle = '#f0cb91';
-      c.fillRect(side * 24 - 3, -32, 6, 7);
-    }
-    c.fillStyle = color;
-    c.fillRect(-17, 4, 34, 9);
-    c.fillStyle = '#27343b';
-    c.fillRect(-11, 6, 22, 5);
-  }
+  drawMachineBody(c, g, e, reduced || portrait);
   if (!portrait) {
+    drawMachineContacts(c, g, e, reduced);
     c.fillStyle = '#1b272c';
     c.fillRect(-45, -58, 90, 5);
     c.fillStyle = color;

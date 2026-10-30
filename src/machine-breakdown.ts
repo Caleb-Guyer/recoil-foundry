@@ -1,3 +1,9 @@
+import {
+  isContractMachineKind,
+  type ContractMachineEventState,
+  type ContractDeployment,
+  type ContractInterruption,
+} from './contract-machine-pose.ts';
 import type { Enemy, Game } from './game.ts';
 import { isSignalMachineKind, type SignalMachineEventState } from './signal-machine-pose.ts';
 import { distance } from './rules.ts';
@@ -27,6 +33,8 @@ export const MACHINE_MAX_HITS = 96;
 export const MACHINE_SHUTDOWN = 0.38;
 export const MACHINE_WRECK_LIFETIME = 2.4;
 export const MACHINE_MAX_WRECKS = 12;
+/** A short playable settling beat before the native hunt result/reward route. */
+export const CONTRACT_SHUTDOWN_VIEW = 1;
 export interface MachineSpecialistState {
   recovery: 'crash' | 'spent' | 'landing' | 'breech' | null;
   enteredAt: number | null;
@@ -221,8 +229,21 @@ export class MachineBreakdown {
   private districtReleases = new Map<number, DistrictRelease>();
   private surfaceMachines = new Map<number, SurfaceObservation>();
   private signalMachines = new Map<number, SignalObservation>();
+  private contractMachines = new Map<number, ContractMachineEventState>();
   constructor(game: Game) {
     this.game = game;
+  }
+  get contractShutdownActive() {
+    return (
+      this.game.hp > 0 &&
+      this.wrecks.some(
+        (w) =>
+          w.reason === 'combat' &&
+          isContractMachineKind(w.visual.kind) &&
+          this.game.time - w.at >= 0 &&
+          this.game.time - w.at < CONTRACT_SHUTDOWN_VIEW,
+      )
+    );
   }
   get diagnostics() {
     return {
@@ -242,6 +263,7 @@ export class MachineBreakdown {
     this.districtReleases.clear();
     this.surfaceMachines.clear();
     this.signalMachines.clear();
+    this.contractMachines.clear();
   }
   /** Only observed native transition timers establish a recovery identity. */
   private observeSpecialist(e: Enemy) {
@@ -688,6 +710,78 @@ export class MachineBreakdown {
         }
       : null;
   }
+  private observeContractMachine(e: Enemy) {
+    if (!isContractMachineKind(e.kind) || !finite(this.game.time)) return;
+    const old = this.contractMachines.get(e.id);
+    this.contractMachines.set(e.id, {
+      discharges: (old?.discharges ?? []).filter(
+        (d) => this.game.time - d.at >= 0 && this.game.time - d.at < 0.75,
+      ),
+      deployment:
+        old?.deployment &&
+        this.game.time - old.deployment.at >= 0 &&
+        this.game.time - old.deployment.at < 0.75
+          ? old.deployment
+          : null,
+      interruption:
+        old?.interruption &&
+        this.game.time - old.interruption.at >= 0 &&
+        this.game.time - old.interruption.at < 0.75
+          ? old.interruption
+          : null,
+    });
+    while (this.contractMachines.size > MACHINE_MAX_HITS)
+      this.contractMachines.delete(this.contractMachines.keys().next().value!);
+  }
+  /** Only admitted native shots and real close-muzzle impacts may cycle a hunt receiver. */
+  contractDischarge(e: Enemy, angle: number, origin: Vec, muzzle: Vec) {
+    if (
+      !isContractMachineKind(e.kind) ||
+      !this.eligible(e) ||
+      !finite(angle, origin.x, origin.y, muzzle.x, muzzle.y)
+    )
+      return;
+    this.observeContractMachine(e);
+    const current = this.contractMachines.get(e.id)!;
+    current.discharges.push({
+      at: this.game.time,
+      angle,
+      origin: { ...origin },
+      muzzle: { ...muzzle },
+    });
+    if (current.discharges.length > 6) current.discharges.splice(0, current.discharges.length - 6);
+  }
+  /** Actual successful native prop placement; no animation-side prediction or spawn. */
+  contractDeployment(e: Enemy, kind: ContractDeployment['kind'], points: readonly Vec[]) {
+    if (
+      !isContractMachineKind(e.kind) ||
+      !this.eligible(e) ||
+      !points.length ||
+      !points.every((p) => finite(p.x, p.y))
+    )
+      return;
+    this.observeContractMachine(e);
+    this.contractMachines.get(e.id)!.deployment = {
+      at: this.game.time,
+      kind,
+      points: points.slice(0, 2).map((p) => ({ ...p })),
+    };
+  }
+  /** A player actually destroyed a native hunt anchor, plate or mine. */
+  contractInterruption(e: Enemy, kind: ContractInterruption['kind'], position: Vec) {
+    if (!isContractMachineKind(e.kind) || !this.eligible(e) || !finite(position.x, position.y))
+      return;
+    this.observeContractMachine(e);
+    this.contractMachines.get(e.id)!.interruption = {
+      at: this.game.time,
+      kind,
+      position: { ...position },
+    };
+  }
+  getContractMachine(e: Enemy): ContractMachineEventState | null {
+    const current = this.contractMachines.get(e.id);
+    return current ? structuredClone(current) : null;
+  }
   /** Native noncombat removals remain non-scoring; only their detached presentation is recorded. */
   removed(e: Enemy, reason: MachineRemovalReason, actualOwner?: Enemy) {
     if (
@@ -758,6 +852,7 @@ export class MachineBreakdown {
     this.observeDistrictMachine(e);
     this.observeSurfaceMachine(e);
     this.observeSignalMachine(e, Math.min(e.hp, applied));
+    this.observeContractMachine(e);
     return machineBodySnapshot(e, this.game.time, this.game);
   }
   hit(
@@ -784,6 +879,7 @@ export class MachineBreakdown {
     this.observeDistrictMachine(e);
     this.observeSurfaceMachine(e);
     this.observeSignalMachine(e, healthLost);
+    this.observeContractMachine(e);
     const hit: MachineHit = {
       id: ++this.next,
       enemyId: e.id,
@@ -850,6 +946,7 @@ export class MachineBreakdown {
     this.districtReleases.delete(e.id);
     this.surfaceMachines.delete(e.id);
     this.signalMachines.delete(e.id);
+    this.contractMachines.delete(e.id);
   }
   update() {
     const g = this.game;
@@ -870,6 +967,7 @@ export class MachineBreakdown {
         this.observeDistrictMachine(e);
         this.observeSurfaceMachine(e);
         this.observeSignalMachine(e);
+        this.observeContractMachine(e);
       }
     for (const id of this.specialists.keys()) if (!alive.has(id)) this.specialists.delete(id);
     for (const id of this.patrols.keys()) if (!alive.has(id)) this.patrols.delete(id);
@@ -879,6 +977,8 @@ export class MachineBreakdown {
     for (const id of this.districtMachines.keys())
       if (!alive.has(id)) this.districtMachines.delete(id);
     for (const id of this.signalMachines.keys()) if (!alive.has(id)) this.signalMachines.delete(id);
+    for (const id of this.contractMachines.keys())
+      if (!alive.has(id)) this.contractMachines.delete(id);
     for (const id of this.surfaceMachines.keys())
       if (!alive.has(id)) this.surfaceMachines.delete(id);
     for (const [id, release] of this.districtReleases)

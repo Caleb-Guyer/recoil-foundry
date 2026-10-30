@@ -65,6 +65,8 @@ function win(g: Game) {
   g.hitEnemy(e, 100000);
   g.hitStop = 0;
   g.tick(1 / 60, idle);
+  for (let n = 0; n < 120 && g.mode === 'playing' && g.machineBreakdown.contractShutdownActive; n++)
+    g.tick(1 / 60, idle);
   assert.equal(g.mode, 'upgrade');
 }
 test('every new Campaign plans two distinct hunts in zones three and five, favoring unbeaten machines', () => {
@@ -280,6 +282,12 @@ test('approach previews use ordinary inputs and cannot write Campaign progress',
     g.hitEnemy(g.enemies[0], 100000);
     g.hitStop = 0;
     g.tick(1 / 60, idle);
+    for (
+      let n = 0;
+      n < 120 && g.mode === 'playing' && g.machineBreakdown.contractShutdownActive;
+      n++
+    )
+      g.tick(1 / 60, idle);
     assert.equal(g.mode, 'won');
     assert.equal(writes, 0);
     assert.equal(awards, 0);

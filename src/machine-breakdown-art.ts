@@ -24,6 +24,8 @@ import { isSurfaceMachineKind, type SurfaceMachinePose } from './surface-machine
 import { drawSurfaceChassis } from './surface-machine-art.ts';
 import { isSignalMachineKind, type SignalMachinePose } from './signal-machine-pose.ts';
 import { drawSignalChassis } from './signal-machine-art.ts';
+import { isContractMachineKind, type ContractMachinePose } from './contract-machine-pose.ts';
+import { drawContractChassis } from './contract-machine-art.ts';
 
 function line(c: CanvasRenderingContext2D, a: Vec, b: Vec, color: string, width: number) {
   c.strokeStyle = color;
@@ -80,6 +82,8 @@ export function drawMachineChassis(
   reduced = false,
   p: MachinePose = machinePose(s, reduced),
 ) {
+  if (isContractMachineKind(s.kind))
+    return drawContractChassis(c, s, reduced, p as ContractMachinePose);
   if (isSignalMachineKind(s.kind)) return drawSignalChassis(c, s, reduced, p as SignalMachinePose);
   if (isSurfaceMachineKind(s.kind))
     return drawSurfaceChassis(c, s, reduced, p as SurfaceMachinePose);

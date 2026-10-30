@@ -324,10 +324,21 @@ export class Hunts {
     const x = clamp(e.body.position.x, 420, 1620);
     this.plates = [this.ownedProp('plate', x - 90, 85), this.ownedProp('plate', x + 90, 85)];
     this.supplies++;
+    this.game.machineBreakdown.contractDeployment(
+      e,
+      'plates',
+      this.plates.map((p) => p.body.position),
+    );
   }
   hitProp(p: Prop, damage: number, velocity: Vec, playerDamage: boolean) {
     if (!p.hunt || !this.game.props.items.includes(p)) return;
     if (!playerDamage || damage <= 0 || this.game.mode !== 'playing') return;
+    const tracked =
+      p.hunt === 'plate'
+        ? this.plates.includes(p)
+        : p.hunt === 'mine'
+          ? this.mines.some((m) => m.prop === p)
+          : this.cables.some((c) => c.anchors.includes(p));
     p.hp -= damage;
     p.flash = 0.1;
     if (p.hunt === 'plate') {
@@ -348,6 +359,17 @@ export class Hunts {
     }
     this.mines = this.mines.filter((m) => m.prop !== p);
     this.plates = this.plates.filter((a) => a !== p);
+    const owner = this.game.enemies.find(
+      (e) =>
+        e.kind ===
+        (p.hunt === 'plate' ? 'bulwark' : p.hunt === 'mine' ? 'demolisher' : 'cableweaver'),
+    );
+    if (owner && tracked)
+      this.game.machineBreakdown.contractInterruption(
+        owner,
+        cable ? 'cable-cut' : p.hunt === 'plate' ? 'plate-break' : 'mine-disarm',
+        p.body.position,
+      );
     if (cable || (p.hunt === 'plate' && !this.plates.length)) {
       const e = this.game.enemies.find((e) => isHunt(e.kind));
       if (e) {
@@ -434,6 +456,11 @@ export class Hunts {
           ];
           this.cables.push({ anchors, liveAt: g.time + 1.2, endsAt: g.time + 3.8 });
           this.supplies++;
+          g.machineBreakdown.contractDeployment(
+            e,
+            'anchors',
+            anchors.map((p) => p.body.position),
+          );
         }
       } else if (
         e.attack === 'mortar' &&
@@ -444,6 +471,7 @@ export class Hunts {
       ) {
         this.mines.push({ prop: this.ownedProp('mine', e.target.x, 12), explodesAt: g.time + 2.8 });
         this.supplies++;
+        g.machineBreakdown.contractDeployment(e, 'mine', [this.mines.at(-1)!.prop.body.position]);
       } else {
         if (e.kind === 'bulwark' && !this.plates.length && this.supplies < 2) this.makePlates();
         const angle = Math.atan2(e.aim.y, e.aim.x);
