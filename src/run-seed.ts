@@ -15,5 +15,10 @@ export function retrySeed(previous: string, random?: () => number) {
 }
 // Reward revisions live in the seed, so Continue and replay need no migration.
 export function newCampaignSeed(previous?: string, random?: () => number) {
-  return 'RF-C108-' + newSeed(previous?.replace(/^RF-C\d+-/, ''), random);
+  return 'RF-C111-' + newSeed(previous?.replace(/^RF-C\d+-/, ''), random);
+}
+
+/** New shifts use Seed Lock; complete older seeds keep their saved rules. */
+export function newQuickShiftSeed(previous?: string, random?: () => number) {
+  return 'RF-Q2-' + newSeed(previous?.replace(/^RF-Q[12]-/, ''), random);
 }

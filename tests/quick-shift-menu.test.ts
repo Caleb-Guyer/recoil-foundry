@@ -190,7 +190,7 @@ test('earned weapon menu refuses a locked tool injected into the select', () => 
   assert.deepEqual(starts.at(-1), ['RF-Q1-TEST', 'shotgun']);
 });
 
-test('typed seed normalizes and invalid or old-rule input cannot begin a shift', () => {
+test('typed full seeds preserve their rules and unsupported input cannot begin a shift', () => {
   const root = new MenuRoot();
   const starts: unknown[] = [];
   setup(root, {
@@ -199,7 +199,7 @@ test('typed seed normalizes and invalid or old-rule input cannot begin a shift',
     },
   });
   const field = root.node('quick-shift-seed');
-  field.value = 'RF-Q2-TEST';
+  field.value = 'RF-Q3-TEST';
   root.node('quick-shift-start').onclick!();
   assert.deepEqual(starts, []);
   assert.equal(field.attributes.get('aria-invalid'), 'true');
@@ -209,7 +209,7 @@ test('typed seed normalizes and invalid or old-rule input cannot begin a shift',
   field.value = '  rf-q1-abc123  ';
   field.oninput!();
   field.onblur!();
-  assert.equal(field.value, 'ABC123');
+  assert.equal(field.value, 'RF-Q1-ABC123');
   assert.equal(field.attributes.has('aria-invalid'), false);
   root.node('quick-shift-start').onclick!();
   assert.deepEqual(starts, [['RF-Q1-ABC123', 'pistol']]);
@@ -234,7 +234,7 @@ test('Continue and New seed do not begin or replace an attempt until their expli
   });
   assert.deepEqual(called, []);
   root.node('quick-shift-new-seed').onclick!();
-  assert.equal(root.node('quick-shift-seed').value, 'NEXT');
+  assert.equal(root.node('quick-shift-seed').value, 'RF-Q1-NEXT');
   assert.deepEqual(called, []);
   root.node('quick-shift-continue').onclick!();
   assert.deepEqual(called, ['continue']);
@@ -276,7 +276,7 @@ test('setup parser treats first-run visibility and unlock ownership as independe
   );
   assert.equal(
     quickShiftSetupSelection('test', 'pistol', ['pistol'], true).challenge!.seed,
-    'RF-Q1-TEST',
+    'RF-Q2-TEST',
   );
   assert.equal(quickShiftSetupSelection('bad seed', 'pistol', ['pistol'], true).challenge, null);
 });
@@ -382,4 +382,33 @@ test('clipboard failure exposes and selects the exact seed or challenge link for
   await Promise.resolve();
   assert.equal(field.value, 'https://example.test/?quick=TEST&qv=1&gun=pistol');
   assert.match(root.node('quick-shift-copy-status').textContent, /Ctrl\+C/);
+});
+
+test('setup preserves full archived seeds while a newly typed short code chooses Seed Lock', () => {
+  const root = new MenuRoot();
+  const starts: string[] = [];
+  setup(root, {
+    seed: 'RF-Q2-TEST',
+    start(seed) {
+      starts.push(seed);
+    },
+  });
+  const field = root.node('quick-shift-seed');
+  assert.equal(field.value, 'RF-Q2-TEST');
+  field.value = ' rf-q1-test ';
+  field.onblur!();
+  assert.equal(field.value, 'RF-Q1-TEST');
+  root.node('quick-shift-start').onclick!();
+  field.value = 'test';
+  field.onblur!();
+  assert.equal(field.value, 'RF-Q2-TEST');
+  root.node('quick-shift-start').onclick!();
+  assert.deepEqual(starts, ['RF-Q1-TEST', 'RF-Q2-TEST']);
+  for (const rules of [1, 2] as const) {
+    const r = record({ rules, seed: `RF-Q${rules}-TEST` });
+    assert.match(
+      quickShiftResultMarkup({ record: r, ...actions() }),
+      new RegExp('RF-Q' + rules + '-TEST'),
+    );
+  }
 });

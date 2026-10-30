@@ -1,3 +1,4 @@
+import { seedLockedCombat } from './seed-lock.ts';
 import { MachineBreakdown } from './machine-breakdown.ts';
 import { OperatorSurface } from './operator-surface.ts';
 import { factoryUnboundRoom, prepareFactoryUnbound } from './factory-unbound-room.ts';
@@ -810,6 +811,11 @@ export class Game {
   blast = { pos: { x: 0, y: 0 }, dir: { x: -1, y: 0 }, life: 0 };
   offers: Mod[] = [];
   rng = seeded('run');
+  private cosmeticRng = seeded('run:cosmetic:seed-lock-1');
+  /** Visual noise never advances a Seed Lock run's native combat stream. */
+  cosmeticRandom() {
+    return seedLockedCombat(this.seed) ? this.cosmeticRng() : Math.random();
+  }
   rewardTaken = false;
   courierReward = false;
   rewardRerolled = false;
@@ -1448,6 +1454,7 @@ export class Game {
     this.blast.life = 0;
     this.shootAt = this.time;
     this.rng = seeded(this.roomSeed + ':' + this.stage);
+    this.cosmeticRng = seeded(this.roomSeed + ':' + this.stage + ':cosmetic:seed-lock-1');
     const wall = (x: number, y: number, w: number, h: number) => {
       const b = Bodies.rectangle(x, y, w, h, { isStatic: true, friction: 0, label: 'terrain' });
       this.terrain.push(b);
@@ -2559,7 +2566,10 @@ export class Game {
     if (this.particles.length < 220)
       this.particles.push({
         pos: { ...this.player.position },
-        vel: { x: -d.x * 2 + (this.rng() - 0.5), y: -2.8 },
+        vel: {
+          x: -d.x * 2 + ((seedLockedCombat(this.seed) ? this.cosmeticRandom() : this.rng()) - 0.5),
+          y: -2.8,
+        },
         life: 0.6,
         max: 0.6,
         size: 2,
@@ -4363,16 +4373,16 @@ export class Game {
   burst(pos: Vec, count: number, color: string, speed: number, dir?: Vec) {
     for (let i = 0; i < count && this.particles.length < 220; i++) {
       const angle = dir
-        ? Math.atan2(dir.y, dir.x) + (Math.random() - 0.5) * 1.4
-        : Math.random() * Math.PI * 2;
-      const v = speed * (0.4 + Math.random()),
-        life = 0.12 + Math.random() * 0.22;
+        ? Math.atan2(dir.y, dir.x) + (this.cosmeticRandom() - 0.5) * 1.4
+        : this.cosmeticRandom() * Math.PI * 2;
+      const v = speed * (0.4 + this.cosmeticRandom()),
+        life = 0.12 + this.cosmeticRandom() * 0.22;
       this.particles.push({
         pos: { ...pos },
         vel: { x: Math.cos(angle) * v, y: Math.sin(angle) * v },
         life,
         max: life,
-        size: 1 + Math.random() * 2,
+        size: 1 + this.cosmeticRandom() * 2,
         color,
         kind: 'spark',
       });

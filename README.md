@@ -21,7 +21,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Current update: 5.43.0 — Factory Overseers.** Welder torch assemblies, Switchboard signal channels and Auditor braces follow real attacks, with local damage reactions, casing wear, mechanical shutdowns and brief inert wreckage. The Auditor has a distinct living recall sequence. [Details and private tests](docs/releases/5.43.0.md).
+**Current update: 5.44.0 — Seed Lock.** New Campaign, Daily and Quick Shift identities separate cosmetic randomness from combat. Measured private comparisons cover heavy effects, Reduced Effects, Pause, older saves and archived Dailies. Older run identities and records keep their rules. [Details and comparisons](docs/releases/5.44.0.md).
 
 **Previous update: 5.41.0 — Signal Machines.** Caller recording horns and Switchman radio hardware follow real marks, shots and junction feedback, with local damage reactions, health-based wear, distinct shutdowns and brief nonblocking wreckage. [Details and private tests](docs/releases/5.41.0.md).
 

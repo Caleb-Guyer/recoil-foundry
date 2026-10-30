@@ -6,7 +6,6 @@ import { FIRST_SHIFT_ARENAS } from './first-shift-layout.ts';
 import { loadCheckpoint, type Checkpoint } from './rules.ts';
 import { isStartingGun, type StartingGun } from './starting-guns.ts';
 import {
-  QUICK_SHIFT_RULES,
   QUICK_SHIFT_DRAFT_STAGES,
   quickShiftOffers,
   quickShiftRuntimeSeed,
@@ -17,6 +16,7 @@ import {
   type QuickShiftChallenge,
   type QuickShiftRecord,
   type QuickShiftRoute,
+  type QuickShiftRules,
 } from './quick-shift-rules.ts';
 
 export const QUICK_SHIFT_CONTINUE_KEY = 'rf-quick-shift-continue-v1';
@@ -45,7 +45,7 @@ export interface QuickShiftState {
 }
 export interface QuickShiftContinue {
   version: 1;
-  rules: 1;
+  rules: QuickShiftRules;
   state: Omit<QuickShiftState, 'offers' | 'preview'>;
   /** Combat resumes at this room's entry; no arbitrary world/room is serialized. */
   checkpoint: Checkpoint;
@@ -78,7 +78,7 @@ export function validQuickShiftContinue(value: unknown): value is QuickShiftCont
     !plain(value) ||
     !keys(value, ['version', 'rules', 'state', 'checkpoint']) ||
     value.version !== 1 ||
-    value.rules !== QUICK_SHIFT_RULES ||
+    (value.rules !== 1 && value.rules !== 2) ||
     !plain(value.state)
   )
     return false;
@@ -103,6 +103,7 @@ export function validQuickShiftContinue(value: unknown): value is QuickShiftCont
       'roomHits',
     ]) ||
     !validQuickShiftChallenge(s.challenge) ||
+    value.rules !== s.challenge.rules ||
     !isStartingGun(s.gun) ||
     !['draft', 'route', 'job', 'fight'].includes(String(s.phase)) ||
     !integer(s.round, 0, 4) ||
@@ -453,7 +454,7 @@ export class QuickShift {
     const s = this.state!;
     const record: QuickShiftRecord = {
       version: 1,
-      rules: QUICK_SHIFT_RULES,
+      rules: s.challenge.rules,
       seed: s.challenge.seed,
       gun: s.gun,
       route: s.selectedRoute ?? 'low',
@@ -500,7 +501,7 @@ export class QuickShift {
     };
     const wrapper: QuickShiftContinue = {
       version: 1,
-      rules: QUICK_SHIFT_RULES,
+      rules: s.challenge.rules,
       state,
       checkpoint: cp,
     };

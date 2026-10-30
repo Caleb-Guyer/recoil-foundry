@@ -24,7 +24,7 @@ const clean = (g: Game) => {
 
 test('new Campaign and Overtime identities preserve the Combat Flow revision without changing earlier seeds', () => {
   const seed = newCampaignSeed(undefined, () => 101);
-  assert.match(seed, /^RF-C108-/);
+  assert.match(seed, /^RF-C111-/);
   assert(combatFlowSeed(seed));
   assert.match(overtimeSeed(seed), /^RF-C105-OT-/);
   assert.match(overtimeSeed('RF-C98-HISTORICAL'), /^RF-C98-OT-/);

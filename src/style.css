@@ -2804,3 +2804,75 @@ body[data-workshop='true'][data-workshop-scenario='incoming'] .health-meter {
     font-size: 11px;
   }
 }
+
+/* Private fixed-input comparisons keep the two actual range views together. */
+.seed-lock-dialog {
+  width: min(1050px, 95vw);
+  max-width: 1050px;
+}
+.seed-lock-canvases {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.seed-lock-figure {
+  margin: 0;
+  min-width: 0;
+}
+.seed-lock-figure figcaption {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.seed-lock-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #42565b;
+}
+.seed-lock-intro {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.seed-lock-pair {
+  border-top: 1px solid #42565b;
+  margin-top: 20px;
+  padding-top: 10px;
+}
+.seed-lock-pair h3 {
+  margin-bottom: 8px;
+}
+.seed-lock-measurements {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(0, 2fr);
+  gap: 7px 16px;
+  font-size: 14px;
+}
+.seed-lock-measurements dt,
+.seed-lock-measurements dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.seed-lock-measurements dt {
+  color: var(--muted);
+}
+.seed-lock-status {
+  border-left: 3px solid #eabf81;
+  padding-left: 12px;
+}
+.seed-lock-status[data-passed='true'] {
+  border-color: #a9d3bc;
+  color: #bde4ce;
+}
+@media (max-width: 620px) {
+  .seed-lock-canvases {
+    grid-template-columns: 1fr;
+  }
+  .seed-lock-measurements {
+    grid-template-columns: minmax(100px, 1fr) minmax(0, 1.5fr);
+    font-size: 13px;
+  }
+}

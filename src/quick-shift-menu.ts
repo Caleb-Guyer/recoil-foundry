@@ -8,12 +8,7 @@ import { MODS } from './rules.ts';
 import { escapeLogbook as escape } from './html.ts';
 import { practiceTime } from './practice-records.ts';
 import type { MenuBack } from './blueprint-menu.ts';
-import {
-  quickShiftCode,
-  quickShiftFromSeed,
-  quickShiftBest,
-  type QuickShiftRecord,
-} from './quick-shift-rules.ts';
+import { quickShiftInput, quickShiftBest, type QuickShiftRecord } from './quick-shift-rules.ts';
 
 export interface QuickShiftPlayOptions {
   campaign(): void;
@@ -58,8 +53,7 @@ export function quickShiftSetupSelection(
   unlocked: readonly StartingGun[],
   showWeapons: boolean,
 ) {
-  const code = quickShiftCode(value);
-  const challenge = code ? quickShiftFromSeed('RF-Q1-' + code) : null;
+  const challenge = quickShiftInput(value);
   const gun =
     showWeapons && isStartingGun(requested) && unlocked.includes(requested) ? requested : 'pistol';
   return { challenge, gun };
@@ -70,7 +64,7 @@ export function quickShiftSetup(root: HTMLElement, options: QuickShiftSetupOptio
   );
   const showWeapons = options.showWeapons === true;
   let gun = quickShiftSetupSelection(options.seed, options.selectedGun, guns, showWeapons).gun;
-  const initialCode = quickShiftCode(options.seed);
+  const initialChallenge = quickShiftInput(options.seed);
   root.innerHTML =
     '<p class="eyebrow">' +
     (options.preview ? 'ISOLATED TEST · ' : '') +
@@ -102,7 +96,7 @@ export function quickShiftSetup(root: HTMLElement, options: QuickShiftSetupOptio
         '</p>'
       : '') +
     '<details class="quick-shift-seed-details"><summary>Replay a seed</summary><label class="quick-shift-label" for="quick-shift-seed">Seed or Quick Shift code<input id="quick-shift-seed" type="text" maxlength="40" spellcheck="false" autocapitalize="characters" autocomplete="off" aria-describedby="quick-shift-seed-note quick-shift-status"></label>' +
-    '<p id="quick-shift-seed-note" class="quick-shift-note">Use the same seed and starting tool to repeat the layout and upgrade offers. Your choices still shape the build.</p>' +
+    '<p id="quick-shift-seed-note" class="quick-shift-note">Use the same full seed and starting tool to repeat the layout and upgrade offers. Full seeds keep their original challenge rules; short codes start the current rules. Your choices still shape the build.</p>' +
     (options.newSeed ? '<button class="quiet" id="quick-shift-new-seed">New seed</button>' : '') +
     '<div id="quick-shift-bests"></div></details>' +
     '<p class="quick-shift-scope">' +
@@ -122,7 +116,7 @@ export function quickShiftSetup(root: HTMLElement, options: QuickShiftSetupOptio
     '">Start Quick Shift</button><button id="quick-shift-back" class="quiet">Back</button></div>';
   const input = root.querySelector<HTMLInputElement>('#quick-shift-seed')!;
   const status = root.querySelector<HTMLElement>('#quick-shift-status')!;
-  input.value = initialCode ?? options.seed;
+  input.value = initialChallenge?.seed ?? options.seed;
   const bests = () => {
     const selection = quickShiftSetupSelection(input.value, gun, guns, showWeapons);
     const rows = selection.challenge
@@ -170,18 +164,18 @@ export function quickShiftSetup(root: HTMLElement, options: QuickShiftSetupOptio
     bests();
   };
   input.onblur = () => {
-    const code = quickShiftCode(input.value);
-    if (code) input.value = code;
+    const challenge = quickShiftInput(input.value);
+    if (challenge) input.value = challenge.seed;
   };
   const newSeed = root.querySelector<HTMLButtonElement>('#quick-shift-new-seed');
   if (newSeed)
     newSeed.onclick = () => {
-      const code = quickShiftCode(options.newSeed!());
-      if (!code) {
+      const challenge = quickShiftInput(options.newSeed!());
+      if (!challenge) {
         status.textContent = 'A new seed could not be prepared. Try again.';
         return;
       }
-      input.value = code;
+      input.value = challenge.seed;
       status.textContent = '';
       input.removeAttribute('aria-invalid');
       bests();
@@ -191,7 +185,7 @@ export function quickShiftSetup(root: HTMLElement, options: QuickShiftSetupOptio
     if (!selected.challenge) {
       input.setAttribute('aria-invalid', 'true');
       input.closest('details')!.open = true;
-      status.textContent = 'Use up to 12 letters or numbers, or a current RF-Q1 code.';
+      status.textContent = 'Use up to 12 letters or numbers, or a full RF-Q1 / RF-Q2 seed.';
       input.focus();
       return;
     }
@@ -298,7 +292,7 @@ export function quickShiftResultMarkup(options: QuickShiftResultOptions) {
     options.best.job === r.job
       ? options.best
       : null;
-  const code = quickShiftCode(r.seed) ?? r.seed;
+  const code = r.seed;
   return (
     '<p class="eyebrow">' +
     (options.preview ? 'ISOLATED TEST · ' : '') +

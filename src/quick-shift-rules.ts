@@ -5,7 +5,9 @@ import type { CombatFlowRoom } from './combat-flow-rooms.ts';
 
 // Bump the rules and seed prefix when room selection, draft gates or the
 // standard pool changes. A shared seed must never silently become a new shift.
-export const QUICK_SHIFT_RULES = 1 as const;
+export const QUICK_SHIFT_RULES = 2 as const;
+export const SUPPORTED_QUICK_SHIFT_RULES = [1, 2] as const;
+export type QuickShiftRules = (typeof SUPPORTED_QUICK_SHIFT_RULES)[number];
 export const QUICK_SHIFT_POOL = 'standard-v1' as const;
 export const QUICK_SHIFT_RECORDS_KEY = 'rf-quick-shift-records-v1';
 export const QUICK_SHIFT_RECORD_LIMIT = 40;
@@ -15,7 +17,7 @@ export const QUICK_SHIFT_DRAFT_STAGES = [0, 4, 6, 8, 11] as const;
 export type QuickShiftRoute = 'low' | 'high';
 export type QuickShiftJobChoice = 'accept' | 'skip';
 export interface QuickShiftChallenge {
-  rules: 1;
+  rules: QuickShiftRules;
   code: string;
   seed: string;
 }
@@ -29,7 +31,7 @@ export interface QuickShiftPlan {
 }
 export interface QuickShiftRecord {
   version: 1;
-  rules: 1;
+  rules: QuickShiftRules;
   seed: string;
   gun: StartingGun;
   route: QuickShiftRoute;
@@ -47,20 +49,25 @@ export interface QuickShiftRecord {
 const integer = (value: unknown, min: number, max: number): value is number =>
   Number.isSafeInteger(value) && (value as number) >= min && (value as number) <= max;
 
-/** Friendly input accepts either a short code or this ruleset's complete seed. */
-export function quickShiftCode(value: string): string | null {
+/** Full seeds preserve their rules; an editable short code starts the current revision. */
+export function quickShiftInput(value: string): QuickShiftChallenge | null {
   if (typeof value !== 'string' || value.length > 64) return null;
-  const input = value.trim();
-  if (!/^(?:RF-Q1-)?[A-Z0-9]{1,12}$/i.test(input)) return null;
-  const code = input.toUpperCase().replace(/^RF-Q1-/, '');
-  return /^[A-Z0-9]{1,12}$/.test(code) ? code : null;
+  const raw = value.trim();
+  if (!/^[A-Za-z0-9-]+$/.test(raw)) return null;
+  const input = raw.toUpperCase();
+  const match = /^(?:RF-Q([12])-)?([A-Z0-9]{1,12})$/.exec(input);
+  if (!match) return null;
+  return quickShiftFromSeed(`RF-Q${match[1] ?? QUICK_SHIFT_RULES}-${match[2]}`);
+}
+export function quickShiftCode(value: string): string | null {
+  return quickShiftInput(value)?.code ?? null;
 }
 
 /** Stored identities and links are canonical, unlike the editable seed field. */
 export function quickShiftFromSeed(value: string): QuickShiftChallenge | null {
   if (typeof value !== 'string') return null;
-  const match = /^RF-Q1-([A-Z0-9]{1,12})$/.exec(value);
-  return match ? { rules: QUICK_SHIFT_RULES, code: match[1], seed: value } : null;
+  const match = /^RF-Q([12])-([A-Z0-9]{1,12})$/.exec(value);
+  return match ? { rules: Number(match[1]) as QuickShiftRules, code: match[2], seed: value } : null;
 }
 export function validQuickShiftChallenge(value: unknown): value is QuickShiftChallenge {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -69,8 +76,8 @@ export function validQuickShiftChallenge(value: unknown): value is QuickShiftCha
   return (
     Object.keys(value).length === 3 &&
     Object.keys(value).every((key) => ['rules', 'code', 'seed'].includes(key)) &&
-    challenge.rules === QUICK_SHIFT_RULES &&
     !!parsed &&
+    challenge.rules === parsed.rules &&
     parsed.code === challenge.code
   );
 }
@@ -88,13 +95,13 @@ export function quickShiftFromUrl(
   const gun = params.get('gun') ?? 'pistol';
   if (
     !valid ||
-    params.get('qv') !== String(QUICK_SHIFT_RULES) ||
+    !SUPPORTED_QUICK_SHIFT_RULES.some((v) => String(v) === params.get('qv')) ||
     code === null ||
     !/^[A-Z0-9]{1,12}$/.test(code) ||
     !isStartingGun(gun)
   )
     return null;
-  const challenge = quickShiftFromSeed('RF-Q1-' + code);
+  const challenge = quickShiftFromSeed('RF-Q' + params.get('qv') + '-' + code);
   return challenge ? { challenge, gun } : null;
 }
 export function quickShiftLink(
@@ -108,15 +115,15 @@ export function quickShiftLink(
   url.search = '';
   url.hash = '';
   url.searchParams.set('quick', challenge.code);
-  url.searchParams.set('qv', String(QUICK_SHIFT_RULES));
+  url.searchParams.set('qv', String(challenge.rules));
   url.searchParams.set('gun', gun);
   return url.href;
 }
 
-/** Native C108 gates, isolated from the Campaign random stream and save key. */
+/** Q1 retains native C108; Q2 owns the Seed Lock combat revision. */
 export function quickShiftRuntimeSeed(challenge: QuickShiftChallenge): string {
   if (!validQuickShiftChallenge(challenge)) throw new Error('Unsupported Quick Shift seed.');
-  return 'RF-C108-Q' + challenge.code;
+  return (challenge.rules === 1 ? 'RF-C108-Q' : 'RF-C111-Q') + challenge.code;
 }
 const tacticalRooms: readonly CombatFlowRoom[] = [
   'warm-exchange',
@@ -246,7 +253,13 @@ export function validQuickShiftBuild(value: unknown): value is string[] {
 export function quickShiftRecordKey(
   record: Pick<QuickShiftRecord, 'seed' | 'gun' | 'route' | 'job'>,
 ): string {
-  return JSON.stringify([QUICK_SHIFT_RULES, record.seed, record.gun, record.route, record.job]);
+  return JSON.stringify([
+    quickShiftFromSeed(record.seed)?.rules ?? QUICK_SHIFT_RULES,
+    record.seed,
+    record.gun,
+    record.route,
+    record.job,
+  ]);
 }
 export function validQuickShiftRecord(value: unknown): value is QuickShiftRecord {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -271,8 +284,8 @@ export function validQuickShiftRecord(value: unknown): value is QuickShiftRecord
     Object.keys(value).length === keys.length &&
     Object.keys(value).every((key) => keys.includes(key)) &&
     record.version === 1 &&
-    record.rules === QUICK_SHIFT_RULES &&
     !!quickShiftFromSeed(record.seed) &&
+    record.rules === quickShiftFromSeed(record.seed)?.rules &&
     isStartingGun(record.gun) &&
     isQuickShiftRoute(record.route) &&
     isQuickShiftJobChoice(record.job) &&
