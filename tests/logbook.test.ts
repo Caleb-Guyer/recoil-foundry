@@ -1,3 +1,4 @@
+import { COURIER_LORE } from '../src/courier-record.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game.ts';
@@ -29,6 +30,7 @@ test('every upgrade, enemy and area has a complete, distinct authored record', (
   assert.deepEqual(Object.keys(PLACE_LORE).sort(), Object.keys(AREAS).sort());
   const lore = [
     TOOL_LORE,
+    COURIER_LORE,
     ...Object.values(UPGRADE_LORE),
     ...Object.values(MACHINE_LORE),
     ...Object.values(PLACE_LORE),

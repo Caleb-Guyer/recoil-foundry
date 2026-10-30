@@ -2876,3 +2876,32 @@ body[data-workshop='true'][data-workshop-scenario='incoming'] .health-meter {
     font-size: 13px;
   }
 }
+
+.courier-reward-cue {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #796449;
+  background: #211e19;
+  color: #edc486;
+}
+.courier-reward-cue svg {
+  flex: 0 0 3rem;
+  width: 3rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.courier-reward-cue strong,
+.courier-reward-cue span {
+  display: block;
+}
+.courier-reward-cue span {
+  margin-top: 0.35rem;
+  color: #d0c7b8;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}

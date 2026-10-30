@@ -266,7 +266,7 @@ export class Renderer {
         continue;
       }
       if (e.courier) {
-        drawCourier(c, g, e, this.reduced);
+        drawCourier(c, g, e, this.reduced, portrait);
         continue;
       }
       if (drawEventEnemy(c, e)) continue;
@@ -918,7 +918,7 @@ export class Renderer {
         );
     }
     c.globalAlpha = 1;
-    drawCourierWorld(c, g);
+    drawCourierWorld(c, g, this.reduced);
     drawAuditDoor(c, g, this.reduced);
     drawMachineWrecks(c, g, this.reduced);
     this.drawEnemies();

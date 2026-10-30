@@ -2190,7 +2190,6 @@ export class Game {
         e.spawn <= 0 &&
         e.hp > 0 &&
         !e.allied &&
-        !e.courier &&
         e.eventRole !== 'relay' &&
         e.recoilTarget === undefined &&
         !this.reportedEncounters.has(e.id)
@@ -4141,8 +4140,10 @@ export class Game {
     damage = this.finale.limitDamage(e, damage);
     const healthLost = Math.min(e.hp, Math.max(0, damage));
     const machineDeath = this.machineBreakdown.beforeHit(e, damage, source);
+    this.courier.presentation.beforeHit(e, damage, source);
     e.hp -= damage;
     this.machineBreakdown.hit(e, incomingDamage, damage, healthLost, blocked, from, source);
+    this.courier.presentation.acceptedHit(e, healthLost, from, source);
     if (credited && source !== 'cleanup') this.commendations.weapons.hit(e, healthLost, trace);
     if (credited && from && damage > 0 && source !== 'cleanup' && typeof source !== 'object')
       this.commendations.mastery.hit(e);

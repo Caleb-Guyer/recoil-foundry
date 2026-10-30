@@ -4,12 +4,14 @@ import type { Vec, Checkpoint } from './rules.ts';
 import { clamp, distance } from './rules.ts';
 import { courierLevel, courierEligible, planCourier, type CourierSave } from './courier-layout.ts';
 import type { Level } from './levels.ts';
+import { CourierPresentation } from './courier-pose.ts';
 
 const { Bodies, Body, Composite, Query } = Matter;
 export const COURIER_DOOR = { x: 1760, y: 740 };
 export const COURIER_DOOR_TIME = 3;
 export class CourierSystem {
   game: Game;
+  readonly presentation: CourierPresentation;
   state: CourierSave | null = null;
   enemy: Enemy | null = null;
   cargo: Matter.Body | null = null;
@@ -24,6 +26,7 @@ export class CourierSystem {
   lastSafe: Vec = { x: 390, y: 720 };
   constructor(game: Game) {
     this.game = game;
+    this.presentation = new CourierPresentation(game);
   }
   start(save?: Checkpoint) {
     this.state = save?.courier
@@ -36,8 +39,10 @@ export class CourierSystem {
             this.game.reservedEncounterStages,
           );
   }
-  clear() {
+  clear(preservePresentation = false) {
     const g = this.game;
+    if (preservePresentation) this.presentation.detach();
+    else this.presentation.reset();
     if (this.enemy) {
       g.tethers.disrupt(this.enemy.body);
       g.harpoons.disrupt(this.enemy.body);
@@ -87,6 +92,7 @@ export class CourierSystem {
     this.enemy = e;
     this.lastSafe = { ...e.body.position };
     this.jumpAt = this.boostAt = g.time + 0.85;
+    this.presentation.observe(e);
   }
   updateEnemy(e: Enemy, dt: number) {
     if (!e.courier) return false;
@@ -180,6 +186,7 @@ export class CourierSystem {
         distance(g.player.position, this.cargo.position) < 40 &&
         distance(g.lineEnd(g.player.position, this.cargo.position), this.cargo.position) < 1
       ) {
+        this.presentation.event('pickup', this.cargo.position);
         Composite.remove(g.engine.world, this.cargo);
         this.cargo = null;
         if (this.state) this.state.status = 'collected';
@@ -187,6 +194,7 @@ export class CourierSystem {
         g.burst(g.player.position, 10, '#edc486', 2);
       }
     }
+    this.presentation.update();
   }
   killed(e: Enemy) {
     if (!e.courier || e !== this.enemy) return;
@@ -210,13 +218,17 @@ export class CourierSystem {
     Composite.add(g.engine.world, this.cargo);
     Body.setVelocity(this.cargo, { x: clamp(e.body.velocity.x * 0.2, -2, 2), y: -2 });
     this.opening = 0;
+    this.presentation.defeated(e);
+    this.presentation.event('drop', this.cargo.position);
     g.onSound('courier-drop');
   }
   escape() {
     if (!this.enemy) return;
     const g = this.game;
     const p = { ...this.enemy.body.position };
-    this.clear();
+    const visual = this.presentation.snapshot(this.enemy);
+    this.clear(true);
+    this.presentation.event('escape', p, visual);
     if (this.state) this.state.status = 'lost';
     g.burst(p, 8, '#847260', 2);
     g.onSound('courier-exit');

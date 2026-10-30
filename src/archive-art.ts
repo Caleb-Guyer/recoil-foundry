@@ -1,3 +1,4 @@
+import { COURIER_ARCHIVE_ID } from './courier-record-id.ts';
 import type { EnemyKind } from './levels.ts';
 import { PATROL_MACHINES } from './patrol-machines.ts';
 
@@ -60,7 +61,8 @@ export const ENEMY_GUIDES: Record<EnemyKind, string> = {
 
 // Images are filled by archive-images using the production renderer.
 export function archiveMark(id: string) {
-  return /^(enemy|elite|mutation|machine|area|region|room|trial|remix):/.test(id)
+  return id === COURIER_ARCHIVE_ID ||
+    /^(enemy|elite|mutation|machine|area|region|room|trial|remix):/.test(id)
     ? '<canvas class="archive-image" width="640" height="320" data-archive-image="' +
         id +
         '" aria-hidden="true"></canvas>'

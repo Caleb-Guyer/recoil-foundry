@@ -21,7 +21,9 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Current update: 5.44.0 — Seed Lock.** New Campaign, Daily and Quick Shift identities separate cosmetic randomness from combat. Measured private comparisons cover heavy effects, Reduced Effects, Pause, older saves and archived Dailies. Older run identities and records keep their rules. [Details and comparisons](docs/releases/5.44.0.md).
+**Current update: 5.45.0 — Special Delivery.** The Scrap Courier gains working suspension and cargo machinery, local damage reactions, a shutdown and inert wreck, clearer escape and recovery cues, bonus reward explanations and its own pictured Logbook guide. [Details and eight private tests](docs/releases/5.45.0.md).
+
+**Seed Lock — 5.44.0.** New Campaign, Daily and Quick Shift identities separate cosmetic randomness from combat. Measured private comparisons cover heavy effects, Reduced Effects, Pause, older saves and archived Dailies. Older run identities and records keep their rules. [Details and comparisons](docs/releases/5.44.0.md).
 
 **Previous update: 5.41.0 — Signal Machines.** Caller recording horns and Switchman radio hardware follow real marks, shots and junction feedback, with local damage reactions, health-based wear, distinct shutdowns and brief nonblocking wreckage. [Details and private tests](docs/releases/5.41.0.md).
 

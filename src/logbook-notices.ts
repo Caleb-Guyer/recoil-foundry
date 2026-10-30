@@ -1,3 +1,4 @@
+import { COURIER_ARCHIVE_ID } from './courier-record-id.ts';
 import { COMMENDATIONS, commendationVisible, type CommendationId } from './commendations.ts';
 import { RECORD_RULES } from './record-index.ts';
 import type { LogbookProgress } from './logbook-progress.ts';
@@ -15,6 +16,7 @@ export function recoveredLogbookTokens(
   return [
     'tool',
     ...MODS.filter((mod) => known.includes(mod.id)).map((mod) => 'mod:' + mod.id),
+    ...(revealed.includes(COURIER_ARCHIVE_ID) ? [COURIER_ARCHIVE_ID] : []),
     ...book.enemies.map((id) => 'enemy:' + id),
     ...book.areas.map((id) => 'area:' + id),
     ...(book.annex ? ['region:annex'] : []),

@@ -1,3 +1,4 @@
+import { COURIER_ARCHIVE_ID } from './courier-record-id.ts';
 import { STARTING_GUNS } from './starting-guns.ts';
 import { RECOIL_TRIALS, loadRecoilProfile, type RecoilTrialKind } from './recoil-trial-rules.ts';
 import { practiceTime } from './practice-records.ts';
@@ -254,6 +255,17 @@ export function logbookCatalog(
           : (MOD_PATHS[mod.id]?.path ?? 'general'),
       };
     }),
+    recovered.has(COURIER_ARCHIVE_ID)
+      ? { ...recovered.get(COURIER_ARCHIVE_ID)!, state: 'known' as const }
+      : {
+          id: COURIER_ARCHIVE_ID,
+          name: 'Unseen cargo encounter',
+          section: 'machines' as const,
+          label: 'Not yet encountered',
+          description: '',
+          lore: EMPTY_LORE,
+          state: 'unseen' as const,
+        },
     ...Object.entries(ENEMY_NAMES).map(([id, name], index) => {
       const entry = recovered.get('enemy:' + id);
       return entry

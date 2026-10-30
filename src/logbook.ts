@@ -1,3 +1,5 @@
+import { COURIER_ARCHIVE_ID } from './courier-record-id.ts';
+import { courierLogbookEntry } from './courier-record.ts';
 import { MODS, modPathLabel } from './rules.ts';
 import { AREAS, type AreaId } from './areas.ts';
 import { ENEMY_NAMES } from './damage-cause.ts';
@@ -41,6 +43,7 @@ export function logbookEntries(
       lore: UPGRADE_LORE[mod.id],
       mod,
     })),
+    ...(revealed.includes(COURIER_ARCHIVE_ID) ? [courierLogbookEntry()] : []),
     ...safe.enemies.map((id) => ({
       id: 'enemy:' + id,
       name: ENEMY_NAMES[id],
@@ -109,7 +112,7 @@ export function logbookEntries(
 }
 export const LOGBOOK_TOTALS: Record<LogbookSection, number> = {
   equipment: MODS.length + 1,
-  machines: enemyIds.length,
+  machines: enemyIds.length + 1,
   places: areaIds.length,
   records: RECORDS.length,
   commendations: COMMENDATIONS.length,
@@ -128,10 +131,15 @@ export function logbookMatches(
 }
 // Curated, early-game documents only. This view never enters the discovery store.
 export function logbookPreviewEntries() {
-  return logbookEntries(['magnum', 'kick', 'ricochet', 'fold', 'cutting-torch'], {
-    version: 1,
-    enemies: ['runner', 'shooter', 'charger'],
-    areas: ['docks'],
-    escaped: false,
-  });
+  return logbookEntries(
+    ['magnum', 'kick', 'ricochet', 'fold', 'cutting-torch'],
+    {
+      version: 1,
+      enemies: ['runner', 'shooter', 'charger'],
+      areas: ['docks'],
+      escaped: false,
+    },
+    [],
+    [COURIER_ARCHIVE_ID],
+  );
 }

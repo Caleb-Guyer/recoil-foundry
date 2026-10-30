@@ -1,3 +1,4 @@
+import { COURIER_ARCHIVE_ID } from '../src/courier-record-id.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LazyResource, ViewLifetime } from '../src/lazy-resource.ts';
@@ -5,7 +6,12 @@ import { BoundedCache } from '../src/bounded-cache.ts';
 import { recoveredLogbookTokens, unreadCatalogCount } from '../src/logbook-notices.ts';
 import { logbookEntries, loadLogbook } from '../src/logbook.ts';
 import { logbookCatalog } from '../src/logbook-catalog.ts';
-import { archiveToken, loadArchive } from '../src/archive.ts';
+import {
+  archiveToken,
+  loadArchive,
+  encounterArchive,
+  acknowledgeArchiveEntry,
+} from '../src/archive.ts';
 import { MODS, seeded } from '../src/rules.ts';
 import { COMMENDATIONS } from '../src/commendations.ts';
 import { unlockGoals } from '../src/longevity.ts';
@@ -96,4 +102,50 @@ test('lightweight discovery tokens and title badges match full catalogs through 
       'Badge parity sample ' + i,
     );
   }
+});
+
+test('Courier discovery and reading preserve lightweight title badge parity without inventing Runner victories', () => {
+  const book = loadLogbook({ version: 1, enemies: ['runner'], areas: ['docks'], escaped: false });
+  const weapons = loadWeaponUnlocks(null);
+  let archive = loadArchive({
+    version: 1,
+    encountered: ['tool', 'enemy:runner'],
+    read: ['tool', 'enemy:runner'],
+  });
+  const check = (courierKnown: boolean, courierUnread: boolean) => {
+    const catalog = logbookCatalog([], book, [], archive, [], null, weapons);
+    const courier = catalog.find((entry) => entry.id === COURIER_ARCHIVE_ID)!;
+    assert.equal(courier.state === 'known', courierKnown);
+    assert.equal(courier.unread, courierUnread);
+    const lightweight = recoveredLogbookTokens([], book, [], archive.encountered);
+    assert.deepEqual(
+      lightweight,
+      logbookEntries([], book, [], archive.encountered).map(archiveToken),
+    );
+    assert.equal(
+      lightweight.filter((token) => token === COURIER_ARCHIVE_ID).length,
+      Number(courierKnown),
+    );
+    assert.equal(
+      unreadCatalogCount([], [], archive, [], weapons),
+      catalog.filter((entry) => entry.unread).length,
+    );
+    assert(archive.read.includes('enemy:runner'));
+    return courier;
+  };
+  check(false, false);
+  archive = encounterArchive(archive, [COURIER_ARCHIVE_ID, COURIER_ARCHIVE_ID]);
+  const discovered = check(true, true);
+  assert.equal(unreadCatalogCount([], [], archive, [], weapons), 1);
+  archive = acknowledgeArchiveEntry(archive, discovered);
+  check(true, false);
+  assert.equal(unreadCatalogCount([], [], archive, [], weapons), 0);
+  archive = encounterArchive(archive, ['mod:fold']);
+  check(true, false);
+  assert.equal(
+    unreadCatalogCount([], [], archive, [], weapons),
+    1,
+    'Reading the Courier must not suppress a later fitting discovery.',
+  );
+  assert.deepEqual(loadArchive(JSON.parse(JSON.stringify(archive))), archive);
 });

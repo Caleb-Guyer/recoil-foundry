@@ -1,3 +1,4 @@
+import { COURIER_ARCHIVE_ID } from './courier-record-id.ts';
 import { MODS } from './rules.ts';
 import { ENEMY_NAMES } from './damage-cause.ts';
 import { AREAS } from './areas.ts';
@@ -25,6 +26,7 @@ export const VARIANT_IDS = [
 ] as const;
 const ids = [
   'tool',
+  COURIER_ARCHIVE_ID,
   ...STARTING_GUN_IDS.filter((id) => id !== 'pistol').map((id) => 'gun:' + id),
   'trial:launch',
   'trial:cargo',
@@ -119,14 +121,9 @@ export function migrateArchive(
   return loadArchive({ version: 1, encountered: recovered, read: recovered });
 }
 export function enemyArchiveIds(enemy: Enemy) {
-  if (
-    enemy.hp <= 0 ||
-    enemy.spawn > 0 ||
-    enemy.allied ||
-    enemy.courier ||
-    enemy.eventRole === 'relay'
-  )
-    return [];
+  if (enemy.hp <= 0 || enemy.spawn > 0 || enemy.allied || enemy.eventRole === 'relay') return [];
+  // Its physics carrier is a runner, but that is not the encounter's identity.
+  if (enemy.courier) return [COURIER_ARCHIVE_ID];
   return [
     'enemy:' + enemy.kind,
     ...(enemy.elite ? ['elite:' + enemy.elite] : []),

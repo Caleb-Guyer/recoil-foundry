@@ -1,3 +1,6 @@
+import { COURIER_ARCHIVE_ID } from './courier-record-id.ts';
+import { courierTestFromUrl } from './courier-layout.ts';
+import { drawCourierPortrait } from './courier-art.ts';
 import Matter from 'matter-js';
 import { BoundedCache } from './bounded-cache.ts';
 import { isHunt, huntSeed } from './hunt-rules.ts';
@@ -29,6 +32,8 @@ export const ARCHIVE_STAGES: Record<string, number> = {
   'region:core': 9,
 };
 export function archiveCheckpoint(id: string): Checkpoint {
+  if (id === COURIER_ARCHIVE_ID)
+    return courierTestFromUrl(new URL('https://test/?test=courier&build=starter&v=1'))!;
   if (id.startsWith('room:') && isToolroomRoom(id.slice(5)))
     return { ...testCheckpoint('RF-C89-EXP-ROOM-' + id.slice(5), 18), version: 6, mods: [] };
   if (id.startsWith('hunt:') && isHunt(id.slice(5))) {
@@ -63,6 +68,13 @@ export function archiveCheckpoint(id: string): Checkpoint {
   return save;
 }
 export function prepareArchiveEnemy(g: Game, id: string) {
+  if (id === COURIER_ARCHIVE_ID) {
+    const courier = g.courier.enemy;
+    if (!courier || !courier.courier)
+      throw new Error('The Courier photograph needs its native cargo encounter.');
+    courier.spawn = 0;
+    return courier;
+  }
   const [family, key] = id.split(':');
   const kind = (
     family === 'enemy'
@@ -92,6 +104,19 @@ export function prepareArchiveEnemy(g: Game, id: string) {
   if (kind === 'auditor') enemy.auditor = createAuditorRig();
   return enemy;
 }
+/** Draw the native Courier at source resolution before the common alpha-bounds fit. */
+export function drawArchiveCourierSource(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  enemy: import('./game.ts').Enemy,
+) {
+  c.save();
+  c.translate(256, 256);
+  c.scale(4, 4);
+  c.translate(-enemy.body.position.x, -enemy.body.position.y);
+  drawCourierPortrait(c, g, enemy, true);
+  c.restore();
+}
 function photograph(id: string): HTMLCanvasElement {
   const cached = images.get(id);
   if (cached) return cached;
@@ -107,7 +132,7 @@ function photograph(id: string): HTMLCanvasElement {
     renderer.width = 640;
     renderer.height = 320;
     renderer.reduced = true;
-    if (/^(enemy|elite|mutation|machine):/.test(id)) {
+    if (id === COURIER_ARCHIVE_ID || /^(enemy|elite|mutation|machine):/.test(id)) {
       const enemy = prepareArchiveEnemy(g, id);
       // Photograph the real rendered pixels, then fit their bounds. Attachments,
       // overhead health bars and the Crane hook extend past physics body bounds.
@@ -115,8 +140,11 @@ function photograph(id: string): HTMLCanvasElement {
       source.width = source.height = 512;
       const c = source.getContext('2d')!;
       renderer.ctx = c;
-      c.translate(256 - enemy.body.position.x, 180 - enemy.body.position.y);
-      renderer.drawEnemies(true);
+      if (id === COURIER_ARCHIVE_ID) drawArchiveCourierSource(c, g, enemy);
+      else {
+        c.translate(256 - enemy.body.position.x, 180 - enemy.body.position.y);
+        renderer.drawEnemies(true);
+      }
       const pixels = c.getImageData(0, 0, 512, 512).data;
       let left = 512,
         top = 512,
