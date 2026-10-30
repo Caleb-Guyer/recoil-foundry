@@ -44,6 +44,19 @@ const idle: Input = {
 function tick(g: Game, n = 1) {
   for (let i = 0; i < n; i++) g.tick(1 / 60, idle);
 }
+// The combat pilot intentionally stops at room clear. Let an actual machine
+// shutdown finish through ordinary ticks before checking the result/service UI.
+function settleShutdown(g: Game) {
+  const elapsed = g.elapsed;
+  for (
+    let i = 0;
+    i < 120 && g.mode === 'playing' && g.clear && g.machineBreakdown.shutdownActive;
+    i++
+  )
+    tick(g);
+  assert.equal(g.elapsed, elapsed, 'post-clear cosmetic ticks do not count toward the Gauntlet');
+  assert(!g.machineBreakdown.shutdownActive);
+}
 function begin(gun: StartingGun = 'pistol', preview = false) {
   const g = new Game();
   assert(g.gauntlet.begin(gun, access, preview));
@@ -58,6 +71,7 @@ function resolve(g: Game, hp = g.hp) {
     g.hitEnemy(e, 100000);
   }
   tick(g, 12);
+  settleShutdown(g);
   assert.equal(g.mode, 'won');
 }
 function finish(mask = 0, gun: StartingGun = 'pistol', preview = false) {
@@ -163,6 +177,7 @@ for (const gun of ['pistol', 'shotgun', 'nailgun'] as const)
           assert.equal(g.startingGun, gun);
           const result = playRoom(g, 180);
           assert(result.clear && g.hp > 0);
+          settleShutdown(g);
           assert.equal(g.gauntlet.state!.phase, i === 4 ? 'complete' : 'service');
           assert(g.gauntlet.state!.timeMs > previousTime);
           previousTime = g.gauntlet.state!.timeMs;
@@ -245,6 +260,54 @@ test('pause freezes combat time; stops freeze the total and starting another fig
   assert.equal(g.shots.length, 0);
   assert.equal(g.practiceHits, 0);
   assert(!Matter.Composite.allBodies(g.engine.world).some((b) => old.includes(b)));
+});
+
+test('the final Welder settles through normal ticks before one valid Gauntlet result, with Pause and cosmetic time excluded', () => {
+  const g = begin();
+  for (let round = 0; round < 4; round++) {
+    assert(g.gauntlet.chooseBoss(GAUNTLET_ROUNDS[round][0]));
+    resolve(g, 90);
+    assert(g.gauntlet.service(g.gauntlet.state!.offers[0]));
+  }
+  assert(g.gauntlet.chooseBoss('welder'));
+  tick(g, 60);
+  const boss = g.enemies.find((e) => e.kind === 'welder')!;
+  boss.spawn = 0;
+  g.hitEnemy(boss, 100000);
+  tick(g, 12);
+  assert(g.clear);
+  assert.equal(g.mode, 'playing');
+  assert.equal(g.gauntlet.state!.phase, 'fight');
+  assert.equal(g.gauntlet.state!.cleared, 4);
+  assert.equal(g.gauntlet.result, null);
+  assert(!g.gauntlet.service('repair'));
+  assert(g.machineBreakdown.overseerShutdownActive);
+  assert.equal(g.combatEnemyCount, 0);
+  assert(!g.shots.some((shot) => !shot.friendly));
+  assert(g.machineBreakdown.wrecks.some((w) => w.reason === 'combat' && w.visual.id === boss.id));
+  const elapsed = g.elapsed,
+    worldTime = g.time,
+    wrecks = structuredClone(g.machineBreakdown.wrecks);
+  g.setMode('paused');
+  tick(g, 120);
+  assert.equal(g.time, worldTime);
+  assert.equal(g.elapsed, elapsed);
+  assert.deepEqual(g.machineBreakdown.wrecks, wrecks);
+  assert.equal(g.gauntlet.state!.phase, 'fight');
+  g.setMode('playing');
+  settleShutdown(g);
+  assert(g.time > worldTime + 0.7);
+  assert.equal(g.mode, 'won');
+  assert.equal(g.elapsed, elapsed);
+  assert.equal(g.gauntlet.state!.phase, 'complete');
+  assert.equal(g.gauntlet.state!.cleared, 5);
+  assert(validGauntletRecord(g.gauntlet.result));
+  assert.equal(g.gauntlet.result!.timeMs, Math.round(elapsed * 1000));
+  const result = structuredClone(g.gauntlet.result);
+  tick(g, 180);
+  assert.deepEqual(g.gauntlet.result, result);
+  assert.equal(g.gauntlet.state!.cleared, 5);
+  assert(!g.gauntlet.completeFight());
 });
 
 test('death, menu, ordinary starts and forged or cleanup-only clears cannot finish or pay the Gauntlet', () => {

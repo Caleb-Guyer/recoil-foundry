@@ -1,4 +1,12 @@
 import {
+  overseersTestFromUrl,
+  overseersTestRoom,
+  prepareOverseersTest,
+  overseersTestHint,
+  OVERSEER_NAMES,
+  OVERSEER_SCENE_NAMES,
+} from './overseers-test.ts';
+import {
   contractMachinesTestFromUrl,
   contractMachinesTestRoom,
   prepareContractMachinesTest,
@@ -723,7 +731,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Contract Machines</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Factory Overseers</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -973,6 +981,8 @@ const linkedReclaimerPressure = reclaimerPressureTestFromUrl(entryUrl);
 const linkedReclaimerArsenal = reclaimerArsenalTestFromUrl(entryUrl);
 const linkedBuildBench = buildBenchTestFromUrl(entryUrl);
 const linkedBuildMotion = buildMotionTestFromUrl(entryUrl);
+const linkedOverseer = overseersTestFromUrl(entryUrl);
+const invalidOverseer = entryUrl.searchParams.get('test') === 'overseers' && !linkedOverseer;
 const linkedContract = contractMachinesTestFromUrl(entryUrl);
 const invalidContract =
   entryUrl.searchParams.get('test') === 'contract-machines' && !linkedContract;
@@ -1016,6 +1026,7 @@ const benchBlueprintStore: BlueprintStore = {
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedOverseer?.checkpoint ??
   linkedContract?.checkpoint ??
   linkedSignal?.checkpoint ??
   linkedSurface?.checkpoint ??
@@ -1755,6 +1766,22 @@ function updateTitle() {
     $('title-hint').textContent = linkedBreakdown
       ? BREAKDOWN_TEST_COPY[linkedBreakdown.scene].hint
       : 'Choose a supported machine inspection.';
+    $('security').hidden = true;
+  }
+  if (
+    (linkedOverseer && linkedRunTest?.seed === linkedOverseer.checkpoint.seed) ||
+    invalidOverseer
+  ) {
+    $('play').textContent = linkedOverseer
+      ? 'Test Factory Overseers / ' +
+        OVERSEER_NAMES[linkedOverseer.unit] +
+        ' / ' +
+        OVERSEER_SCENE_NAMES[linkedOverseer.scene] +
+        ' ↗'
+      : 'Unsupported Factory Overseers test ↗';
+    $('title-hint').textContent = linkedOverseer
+      ? overseersTestHint(linkedOverseer)
+      : 'Choose a supported Factory Overseers inspection.';
     $('security').hidden = true;
   }
   if (
@@ -2891,6 +2918,8 @@ function startRunTest(save: Checkpoint) {
     linkedOperator && save.seed === linkedOperator.checkpoint.seed ? linkedOperator : null;
   const breakdown =
     linkedBreakdown && save.seed === linkedBreakdown.checkpoint.seed ? linkedBreakdown : null;
+  const overseer =
+    linkedOverseer && save.seed === linkedOverseer.checkpoint.seed ? linkedOverseer : null;
   const contract =
     linkedContract && save.seed === linkedContract.checkpoint.seed ? linkedContract : null;
   const signal = linkedSignal && save.seed === linkedSignal.checkpoint.seed ? linkedSignal : null;
@@ -2909,30 +2938,33 @@ function startRunTest(save: Checkpoint) {
     linkedSpecialist && save.seed === linkedSpecialist.checkpoint.seed ? linkedSpecialist : null;
   game.startTest(
     save,
-    contract
-      ? contractMachinesTestRoom(contract)
-      : signal
-        ? signalMachinesTestRoom(signal)
-        : surface
-          ? surfaceMachinesTestRoom(surface)
-          : district
-            ? districtMachinesTestRoom(district)
-            : hazardCrew
-              ? hazardCrewTestRoom(hazardCrew)
-              : supportSystems
-                ? supportSystemsTestRoom(supportSystems)
-                : heavy
-                  ? heavyIndustryTestRoom(heavy)
-                  : specialist
-                    ? specialistMachineTestRoom(specialist)
-                    : breakdown
-                      ? machineBreakdownTestRoom(breakdown)
-                      : operator
-                        ? operatorTestRoom(operator)
-                        : living
-                          ? livingFoundryTestRoom(living)
-                          : undefined,
+    overseer
+      ? overseersTestRoom(overseer)
+      : contract
+        ? contractMachinesTestRoom(contract)
+        : signal
+          ? signalMachinesTestRoom(signal)
+          : surface
+            ? surfaceMachinesTestRoom(surface)
+            : district
+              ? districtMachinesTestRoom(district)
+              : hazardCrew
+                ? hazardCrewTestRoom(hazardCrew)
+                : supportSystems
+                  ? supportSystemsTestRoom(supportSystems)
+                  : heavy
+                    ? heavyIndustryTestRoom(heavy)
+                    : specialist
+                      ? specialistMachineTestRoom(specialist)
+                      : breakdown
+                        ? machineBreakdownTestRoom(breakdown)
+                        : operator
+                          ? operatorTestRoom(operator)
+                          : living
+                            ? livingFoundryTestRoom(living)
+                            : undefined,
   );
+  if (overseer) prepareOverseersTest(game, overseer);
   if (contract) prepareContractMachinesTest(game, contract);
   if (signal) prepareSignalMachinesTest(game, signal);
   if (surface) prepareSurfaceMachinesTest(game, surface);
@@ -4144,7 +4176,11 @@ function showDialog(kind: string) {
             SUPPORT_MASTERIES.map((m) => m.id),
           )
         : commendations;
-  if (kind === 'contract-machines-invalid') {
+  if (kind === 'overseers-invalid') {
+    content.innerHTML =
+      '<p class="eyebrow">FACTORY OVERSEERS</p><h2 id="dialog-title">Unsupported Factory Overseers test.</h2><p>Choose Welder, Switchboard or Auditor and a supported inspection. Recall is available for the Auditor.</p><div class="actions"><button id="overseer-return" class="primary">Return to Play</button></div>';
+    $('overseer-return').onclick = () => location.assign(new URL('./', location.href).href);
+  } else if (kind === 'contract-machines-invalid') {
     content.innerHTML =
       '<p class="eyebrow">CONTRACT MACHINES</p><h2 id="dialog-title">Unsupported contract-machine test.</h2><p>Choose Cableweaver, Bulwark or Demolisher and a supported inspection.</p><div class="actions"><button id="contract-return" class="primary">Return to Play</button></div>';
     $('contract-return').onclick = () => location.assign(new URL('./', location.href).href);
@@ -4623,12 +4659,12 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.42.0 · CONTRACT MACHINES</p><h2 id="dialog-title">Break the contract.</h2>' +
-      '<p class="update-tagline">Cut. Crack. Disarm.</p>' +
-      '<dl class="update-notes"><div><dt>Cableweaver.</dt><dd>Working cable drums and an anchor launcher follow real deployments, cable tension and cut circuits.</dd></div>' +
-      '<div><dt>Bulwark.</dt><dd>Hydraulic bracing and shield machinery follow the actual plates, their break reactions and the exposed core.</dd></div>' +
-      '<div><dt>Demolisher.</dt><dd>A charge loader and arming rack follow actual placements and disarms. Damage wear, local hit reactions and distinct inert wrecks finish all three hunts.</dd></div></dl>' +
-      '<p>Inspect: <a href="?test=contract-machines&amp;unit=cableweaver&amp;scene=animations&amp;v=1">Cableweaver ↗</a> · <a href="?test=contract-machines&amp;unit=bulwark&amp;scene=animations&amp;v=1">Bulwark ↗</a> · <a href="?test=contract-machines&amp;unit=demolisher&amp;scene=animations&amp;v=1">Demolisher ↗</a></p>' +
+      '<p class="eyebrow">5.43.0 · FACTORY OVERSEERS</p><h2 id="dialog-title">Under supervision.</h2>' +
+      '<p class="update-tagline">Torch. Signal. Recall.</p>' +
+      '<dl class="update-notes"><div><dt>Welder.</dt><dd>Working tracks, an articulated torch and cooling shutters follow its actual attacks and exposed recovery.</dd></div>' +
+      '<div><dt>Switchboard.</dt><dd>Three physical signal channels distinguish recording, lock, transmission and interrupted junctions.</dd></div>' +
+      '<div><dt>Auditor.</dt><dd>Braced shots, committed charges and a distinct mechanical recall. Real defeats leave local damage wear, shutdowns and brief inert wreckage.</dd></div></dl>' +
+      '<p>Inspect: <a href="?test=overseers&amp;unit=welder&amp;scene=animations&amp;v=1">Welder ↗</a> · <a href="?test=overseers&amp;unit=switchboard&amp;scene=animations&amp;v=1">Switchboard ↗</a> · <a href="?test=overseers&amp;unit=auditor&amp;scene=animations&amp;v=1">Auditor ↗</a></p>' +
       '<p class="practice-record-note">Private tests preserve saved progress. Press R to restart. Native combat rules, Pause and Reduced Effects are supported.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
@@ -6427,91 +6463,96 @@ function formatTime(n: number) {
 }
 updateQuickTitle();
 $('play').onclick = () =>
-  invalidContract
-    ? showDialog('contract-machines-invalid')
-    : invalidSignal
-      ? showDialog('signal-machines-invalid')
-      : invalidSurface
-        ? showDialog('surface-machines-invalid')
-        : invalidDistrict
-          ? showDialog('district-machines-invalid')
-          : invalidHazardCrew
-            ? showDialog('hazard-crew-invalid')
-            : invalidSupportSystems
-              ? showDialog('support-systems-invalid')
-              : invalidHeavy
-                ? showDialog('heavy-invalid')
-                : invalidSpecialist
-                  ? showDialog('specialist-invalid')
-                  : invalidBreakdown
-                    ? showDialog('breakdown-invalid')
-                    : invalidOperator
-                      ? showDialog('operator-invalid')
-                      : invalidLivingFoundry
-                        ? showDialog('living-invalid')
-                        : linkedQuick || linkedQuickFixture || invalidQuickLink
-                          ? openQuickShiftSetup(!!linkedQuickFixture)
-                          : linkedBuildMotion
-                            ? startLinkedBuildMotion()
-                            : linkedBuildBench
-                              ? startLinkedBuildBench()
-                              : linkedToolsTest &&
-                                  linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-                                ? startLinkedToolsTest()
-                                : linkedGoalPreview || linkedTrackingPreview
-                                  ? location.assign(new URL('./', location.href).href)
-                                  : linkedFirstRunPreview === 'warmup'
-                                    ? startWorkshop([], true)
-                                    : linkedDrill
-                                      ? startLinkedSupportDrill(linkedDrill)
-                                      : linkedGauntletPreview
-                                        ? startGauntlet(linkedGauntletPreview, true)
-                                        : linkedRemixGauntletPreview
-                                          ? linkedRemixGauntletPreview.setup
-                                            ? (() => {
-                                                gauntletSetupPreview = true;
-                                                gauntletSetupMode = 'remix';
-                                                showDialog('gauntlet-setup');
-                                              })()
-                                            : startGauntlet(
-                                                linkedRemixGauntletPreview.gun,
-                                                true,
-                                                linkedRemixGauntletPreview,
-                                              )
-                                          : linkedGauntletChallenge || invalidGauntletLink
-                                            ? openGauntletChallenge(
-                                                linkedGauntletChallenge ?? undefined,
-                                                false,
-                                                'title',
-                                              )
-                                            : linkedRecoilChallenge || invalidRecoilLink
-                                              ? openRecoilTrials(
-                                                  'title',
-                                                  linkedRecoilChallenge ?? undefined,
+  invalidOverseer
+    ? showDialog('overseers-invalid')
+    : invalidContract
+      ? showDialog('contract-machines-invalid')
+      : invalidSignal
+        ? showDialog('signal-machines-invalid')
+        : invalidSurface
+          ? showDialog('surface-machines-invalid')
+          : invalidDistrict
+            ? showDialog('district-machines-invalid')
+            : invalidHazardCrew
+              ? showDialog('hazard-crew-invalid')
+              : invalidSupportSystems
+                ? showDialog('support-systems-invalid')
+                : invalidHeavy
+                  ? showDialog('heavy-invalid')
+                  : invalidSpecialist
+                    ? showDialog('specialist-invalid')
+                    : invalidBreakdown
+                      ? showDialog('breakdown-invalid')
+                      : invalidOperator
+                        ? showDialog('operator-invalid')
+                        : invalidLivingFoundry
+                          ? showDialog('living-invalid')
+                          : linkedQuick || linkedQuickFixture || invalidQuickLink
+                            ? openQuickShiftSetup(!!linkedQuickFixture)
+                            : linkedBuildMotion
+                              ? startLinkedBuildMotion()
+                              : linkedBuildBench
+                                ? startLinkedBuildBench()
+                                : linkedToolsTest &&
+                                    linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
+                                  ? startLinkedToolsTest()
+                                  : linkedGoalPreview || linkedTrackingPreview
+                                    ? location.assign(new URL('./', location.href).href)
+                                    : linkedFirstRunPreview === 'warmup'
+                                      ? startWorkshop([], true)
+                                      : linkedDrill
+                                        ? startLinkedSupportDrill(linkedDrill)
+                                        : linkedGauntletPreview
+                                          ? startGauntlet(linkedGauntletPreview, true)
+                                          : linkedRemixGauntletPreview
+                                            ? linkedRemixGauntletPreview.setup
+                                              ? (() => {
+                                                  gauntletSetupPreview = true;
+                                                  gauntletSetupMode = 'remix';
+                                                  showDialog('gauntlet-setup');
+                                                })()
+                                              : startGauntlet(
+                                                  linkedRemixGauntletPreview.gun,
+                                                  true,
+                                                  linkedRemixGauntletPreview,
                                                 )
-                                              : linkedTrial?.preview
-                                                ? startTrial(linkedTrial.route, true)
-                                                : linkedTrial || invalidTrialLink
-                                                  ? openTrials('title', linkedTrial?.challenge)
-                                                  : linkedWorkshop
-                                                    ? showDialog('workshop')
-                                                    : linkedRunTest?.seed.startsWith('ROOM47-') &&
-                                                        entryUrl.searchParams.get('test') !== 'arc'
-                                                      ? showDialog('layout-test')
-                                                      : linkedRunTest?.seed.startsWith(
-                                                            'UPGRADES-',
-                                                          ) ||
-                                                          linkedRunTest?.seed.startsWith('FUSIONS-')
-                                                        ? showDialog('upgrade-test')
-                                                        : linkedRunTest
-                                                          ? startRunTest(linkedRunTest)
-                                                          : linkedTest
-                                                            ? startPractice(linkedTest, null, {
-                                                                test: true,
-                                                              })
-                                                            : linkedDaily
-                                                              ? start()
-                                                              : showDialog('play-mode');
+                                            : linkedGauntletChallenge || invalidGauntletLink
+                                              ? openGauntletChallenge(
+                                                  linkedGauntletChallenge ?? undefined,
+                                                  false,
+                                                  'title',
+                                                )
+                                              : linkedRecoilChallenge || invalidRecoilLink
+                                                ? openRecoilTrials(
+                                                    'title',
+                                                    linkedRecoilChallenge ?? undefined,
+                                                  )
+                                                : linkedTrial?.preview
+                                                  ? startTrial(linkedTrial.route, true)
+                                                  : linkedTrial || invalidTrialLink
+                                                    ? openTrials('title', linkedTrial?.challenge)
+                                                    : linkedWorkshop
+                                                      ? showDialog('workshop')
+                                                      : linkedRunTest?.seed.startsWith('ROOM47-') &&
+                                                          entryUrl.searchParams.get('test') !==
+                                                            'arc'
+                                                        ? showDialog('layout-test')
+                                                        : linkedRunTest?.seed.startsWith(
+                                                              'UPGRADES-',
+                                                            ) ||
+                                                            linkedRunTest?.seed.startsWith(
+                                                              'FUSIONS-',
+                                                            )
+                                                          ? showDialog('upgrade-test')
+                                                          : linkedRunTest
+                                                            ? startRunTest(linkedRunTest)
+                                                            : linkedTest
+                                                              ? startPractice(linkedTest, null, {
+                                                                  test: true,
+                                                                })
+                                                              : linkedDaily
+                                                                ? start()
+                                                                : showDialog('play-mode');
 $('daily').onclick = () => {
   linkedQuick = null;
   linkedQuickFixture = null;

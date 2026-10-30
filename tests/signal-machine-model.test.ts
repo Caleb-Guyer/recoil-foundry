@@ -183,7 +183,8 @@ test('signal kinds complete ordinary eligibility while preserving all twenty-one
     plain(s);
     finite(signalMachinePose(s));
   }
-  for (const boss of ['switchboard', 'auditor', 'boss', 'sorter']) assert(!isMachineKind(boss));
+  for (const kind of ['switchboard', 'auditor', 'welder']) assert(!isSignalMachineKind(kind));
+  for (const boss of ['boss', 'sorter']) assert(!isMachineKind(boss));
 });
 
 test('Caller snapshots follow actual sampled marks, three queue slots and locked playback without retargeting the saved marks', () => {

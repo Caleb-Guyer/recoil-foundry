@@ -121,18 +121,7 @@ test('only the three native hunt bosses join machine presentation; all other bos
     'switchboard',
   ])
     assert.equal(isContractMachineKind(kind), false);
-  for (const kind of [
-    'loader',
-    'crane',
-    'sorter',
-    'condenser',
-    'boss',
-    'turbine',
-    'interceptor',
-    'auditor',
-    'welder',
-    'switchboard',
-  ])
+  for (const kind of ['loader', 'crane', 'sorter', 'condenser', 'boss', 'turbine', 'interceptor'])
     assert.equal(isMachineKind(kind), false);
 });
 

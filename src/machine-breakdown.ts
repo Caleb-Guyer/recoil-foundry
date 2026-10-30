@@ -1,4 +1,10 @@
 import {
+  isOverseerMachineKind,
+  type OverseerMachineEventState,
+  type OverseerDeployment,
+  type OverseerInterruption,
+} from './overseer-machine-pose.ts';
+import {
   isContractMachineKind,
   type ContractMachineEventState,
   type ContractDeployment,
@@ -230,6 +236,7 @@ export class MachineBreakdown {
   private surfaceMachines = new Map<number, SurfaceObservation>();
   private signalMachines = new Map<number, SignalObservation>();
   private contractMachines = new Map<number, ContractMachineEventState>();
+  private overseerMachines = new Map<number, OverseerMachineEventState>();
   constructor(game: Game) {
     this.game = game;
   }
@@ -244,6 +251,21 @@ export class MachineBreakdown {
           this.game.time - w.at < CONTRACT_SHUTDOWN_VIEW,
       )
     );
+  }
+  get overseerShutdownActive() {
+    return (
+      this.game.hp > 0 &&
+      this.wrecks.some(
+        (w) =>
+          w.reason === 'combat' &&
+          isOverseerMachineKind(w.visual.kind) &&
+          this.game.time - w.at >= 0 &&
+          this.game.time - w.at < CONTRACT_SHUTDOWN_VIEW,
+      )
+    );
+  }
+  get shutdownActive() {
+    return this.contractShutdownActive || this.overseerShutdownActive;
   }
   get diagnostics() {
     return {
@@ -264,6 +286,7 @@ export class MachineBreakdown {
     this.surfaceMachines.clear();
     this.signalMachines.clear();
     this.contractMachines.clear();
+    this.overseerMachines.clear();
   }
   /** Only observed native transition timers establish a recovery identity. */
   private observeSpecialist(e: Enemy) {
@@ -782,6 +805,95 @@ export class MachineBreakdown {
     const current = this.contractMachines.get(e.id);
     return current ? structuredClone(current) : null;
   }
+  private observeOverseerMachine(e: Enemy, healthLost?: number) {
+    if (!isOverseerMachineKind(e.kind) || !finite(this.game.time)) return;
+    const old = this.overseerMachines.get(e.id),
+      current: OverseerMachineEventState = {
+        discharges: (old?.discharges ?? []).filter(
+          (d) => this.game.time - d.at >= 0 && this.game.time - d.at < 0.8,
+        ),
+        deployments: (old?.deployments ?? []).filter(
+          (d) => this.game.time - d.at >= 0 && this.game.time - d.at < 0.8,
+        ),
+        interruptions: (old?.interruptions ?? []).filter(
+          (d) => this.game.time - d.at >= 0 && this.game.time - d.at < 0.8,
+        ),
+      };
+    const cut = current.interruptions.at(-1);
+    if (
+      e.kind === 'switchboard' &&
+      cut?.kind === 'junction-cut' &&
+      cut.at === this.game.time &&
+      cut.healthLost === undefined &&
+      healthLost !== undefined
+    )
+      cut.healthLost = Math.max(0, healthLost);
+    this.overseerMachines.set(e.id, current);
+    while (this.overseerMachines.size > MACHINE_MAX_HITS)
+      this.overseerMachines.delete(this.overseerMachines.keys().next().value!);
+  }
+  /** Actual admitted native rounds or native close-muzzle impacts, never attempt counters. */
+  overseerDischarge(e: Enemy, angle: number, origin: Vec, muzzle: Vec) {
+    if (
+      !isOverseerMachineKind(e.kind) ||
+      !this.eligible(e) ||
+      !finite(angle, origin.x, origin.y, muzzle.x, muzzle.y)
+    )
+      return;
+    this.observeOverseerMachine(e);
+    const plan = e.switchboard?.plans.find(
+        (p) =>
+          !p.cut &&
+          !p.done &&
+          distance(p.origin, origin) < 1e-6 &&
+          Math.abs((p.angles[p.sent] ?? Infinity) - angle) < 1e-6,
+      ),
+      current = this.overseerMachines.get(e.id)!;
+    current.discharges.push({
+      at: this.game.time,
+      source: plan && !plan.mobile ? 'port' : 'body',
+      slot: plan?.slot ?? null,
+      index: plan?.sent ?? e.auditor?.fired ?? 0,
+      angle,
+      origin: { ...origin },
+      muzzle: { ...muzzle },
+    });
+    if (current.discharges.length > 12)
+      current.discharges.splice(0, current.discharges.length - 12);
+  }
+  /** Native accepted seam/cover placement or actual ignition. */
+  overseerDeployment(e: Enemy, kind: OverseerDeployment['kind'], points: readonly Vec[]) {
+    if (
+      !isOverseerMachineKind(e.kind) ||
+      !this.eligible(e) ||
+      !points.length ||
+      !points.every((p) => finite(p.x, p.y))
+    )
+      return;
+    this.observeOverseerMachine(e);
+    const list = this.overseerMachines.get(e.id)!.deployments;
+    list.push({ at: this.game.time, kind, points: points.slice(0, 6).map((p) => ({ ...p })) });
+    if (list.length > 6) list.splice(0, list.length - 6);
+  }
+  /** Native broken cover or an actually accepted junction interrupt. */
+  overseerInterruption(e: Enemy, kind: OverseerInterruption['kind'], position: Vec) {
+    if (!isOverseerMachineKind(e.kind) || !this.eligible(e) || !finite(position.x, position.y))
+      return;
+    this.observeOverseerMachine(e);
+    const list = this.overseerMachines.get(e.id)!.interruptions;
+    list.push({ at: this.game.time, kind, position: { ...position } });
+    if (list.length > 6) list.splice(0, list.length - 6);
+  }
+  getOverseerMachine(e: Enemy): OverseerMachineEventState | null {
+    const current = this.overseerMachines.get(e.id);
+    return current ? structuredClone(current) : null;
+  }
+  /** Recall is a native noncombat departure, never a death, corpse or completion hold. */
+  overseerRecalled(e: Enemy) {
+    if (e.kind !== 'auditor') return;
+    this.overseerMachines.delete(e.id);
+    this.hitsByEnemy.delete(e.id);
+  }
   /** Native noncombat removals remain non-scoring; only their detached presentation is recorded. */
   removed(e: Enemy, reason: MachineRemovalReason, actualOwner?: Enemy) {
     if (
@@ -853,6 +965,7 @@ export class MachineBreakdown {
     this.observeSurfaceMachine(e);
     this.observeSignalMachine(e, Math.min(e.hp, applied));
     this.observeContractMachine(e);
+    this.observeOverseerMachine(e, Math.min(e.hp, applied));
     return machineBodySnapshot(e, this.game.time, this.game);
   }
   hit(
@@ -880,6 +993,7 @@ export class MachineBreakdown {
     this.observeSurfaceMachine(e);
     this.observeSignalMachine(e, healthLost);
     this.observeContractMachine(e);
+    this.observeOverseerMachine(e, healthLost);
     const hit: MachineHit = {
       id: ++this.next,
       enemyId: e.id,
@@ -947,6 +1061,7 @@ export class MachineBreakdown {
     this.surfaceMachines.delete(e.id);
     this.signalMachines.delete(e.id);
     this.contractMachines.delete(e.id);
+    this.overseerMachines.delete(e.id);
   }
   update() {
     const g = this.game;
@@ -968,6 +1083,7 @@ export class MachineBreakdown {
         this.observeSurfaceMachine(e);
         this.observeSignalMachine(e);
         this.observeContractMachine(e);
+        this.observeOverseerMachine(e);
       }
     for (const id of this.specialists.keys()) if (!alive.has(id)) this.specialists.delete(id);
     for (const id of this.patrols.keys()) if (!alive.has(id)) this.patrols.delete(id);
@@ -979,6 +1095,8 @@ export class MachineBreakdown {
     for (const id of this.signalMachines.keys()) if (!alive.has(id)) this.signalMachines.delete(id);
     for (const id of this.contractMachines.keys())
       if (!alive.has(id)) this.contractMachines.delete(id);
+    for (const id of this.overseerMachines.keys())
+      if (!alive.has(id)) this.overseerMachines.delete(id);
     for (const id of this.surfaceMachines.keys())
       if (!alive.has(id)) this.surfaceMachines.delete(id);
     for (const [id, release] of this.districtReleases)

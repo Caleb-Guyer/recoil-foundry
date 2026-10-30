@@ -267,6 +267,7 @@ export class AuditorSystem {
     if (!e || !this.state || this.state.status !== 'hunting') return;
     this.state.hp = e.hp;
     this.state.retreated = true;
+    g.machineBreakdown.overseerRecalled(e);
     g.tethers.disrupt(e.body);
     g.harpoons.disrupt(e.body);
     Composite.remove(g.engine.world, e.body);
@@ -405,7 +406,7 @@ export class AuditorSystem {
           for (const offset of angles) {
             const d = { x: Math.cos(aim + offset), y: Math.sin(aim + offset) };
             const origin = g.lineEnd(p, { x: p.x + d.x * 35, y: p.y + d.y * 35 }, 4);
-            g.addShot({
+            const admitted = g.addShot({
               pos: origin,
               vel: { x: d.x * 12, y: d.y * 12 },
               damage: 12,
@@ -420,6 +421,7 @@ export class AuditorSystem {
               damageCause: { type: 'shot', enemy: 'auditor' },
               auditorOwner: e.id,
             });
+            if (admitted) g.machineBreakdown.overseerDischarge(e, aim + offset, p, origin);
           }
           rig.fired++;
           rig.nextShot = g.time + 0.14;

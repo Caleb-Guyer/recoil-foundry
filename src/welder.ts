@@ -72,6 +72,12 @@ export class WelderSystem {
       this.game.save();
     }
   }
+  /** Read-only ownership view for the captured mechanical presentation. */
+  presentationWalls(e: Enemy) {
+    return this.deployment?.owner === e
+      ? [...this.deployment.walls].filter((p) => this.game.props.items.includes(p))
+      : [];
+  }
   brokenBarrier(prop: Prop) {
     const d = this.deployment;
     if (
@@ -82,10 +88,11 @@ export class WelderSystem {
       d.owner.hp <= 0 ||
       d.owner.spawn > 0 ||
       d.owner.allied ||
-      !this.game.enemies.includes(d.owner) ||
-      !this.game.commendations.eligible
+      !this.game.enemies.includes(d.owner)
     )
       return;
+    this.game.machineBreakdown.overseerInterruption(d.owner, 'barrier-break', prop.body.position);
+    if (!this.game.commendations.eligible) return;
     d.broken.add(prop);
     // Only two actually spawned walls in the same deployment qualify. A
     // cancelled warning, expiry, replacement or cleanup never enters this set.
@@ -145,6 +152,12 @@ export class WelderSystem {
         age: 0,
         ignited: false,
       });
+    if (this.seams.length)
+      this.game.machineBreakdown.overseerDeployment(
+        e,
+        'seam-trace',
+        this.seams.flatMap((s) => [s.a, s.b]),
+      );
   }
   barrierFree(b: WeldBarrier) {
     const g = this.game;
@@ -260,6 +273,8 @@ export class WelderSystem {
       if (s.age < WELD_TELL || s.age >= WELD_TELL + WELD_LIFE) continue;
       if (!s.ignited) {
         s.ignited = true;
+        const owner = g.enemies.find((e) => e.kind === 'welder' && e.hp > 0);
+        if (owner) g.machineBreakdown.overseerDeployment(owner, 'seam-ignite', [s.a, s.b]);
         g.soundAt(
           'weld-fire',
           { x: (s.a.x + s.b.x) / 2, y: (s.a.y + s.b.y) / 2 },
@@ -292,6 +307,8 @@ export class WelderSystem {
       p.expires = g.time + 6;
       p.hp = p.maxHp = 110;
       this.deployment?.walls.add(p);
+      if (this.deployment)
+        g.machineBreakdown.overseerDeployment(this.deployment.owner, 'barrier', [p.body.position]);
     }
     // An occupied warning cancels instead of becoming a delayed, invisible trap.
     this.barriers = this.barriers.filter((b) => b.age < WELD_TELL);

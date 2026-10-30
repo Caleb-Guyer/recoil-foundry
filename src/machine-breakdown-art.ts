@@ -1,3 +1,5 @@
+import { isOverseerMachineKind, type OverseerMachinePose } from './overseer-machine-pose.ts';
+import { drawOverseerChassis } from './overseer-machine-art.ts';
 import type { Enemy, Game } from './game.ts';
 import type { Vec } from './rules.ts';
 import { clamp } from './rules.ts';
@@ -82,6 +84,8 @@ export function drawMachineChassis(
   reduced = false,
   p: MachinePose = machinePose(s, reduced),
 ) {
+  if (isOverseerMachineKind(s.kind))
+    return drawOverseerChassis(c, s, reduced, p as OverseerMachinePose);
   if (isContractMachineKind(s.kind))
     return drawContractChassis(c, s, reduced, p as ContractMachinePose);
   if (isSignalMachineKind(s.kind)) return drawSignalChassis(c, s, reduced, p as SignalMachinePose);

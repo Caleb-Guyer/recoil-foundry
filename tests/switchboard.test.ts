@@ -86,6 +86,12 @@ test('strict boss presets use legal builds, both mirrors, and isolated progressi
       g.hitEnemy(e, 1e9);
       g.hitStop = 0;
       g.tick(1 / 60, idle);
+      for (
+        let n = 0;
+        n < 120 && g.mode === 'playing' && g.machineBreakdown.overseerShutdownActive;
+        n++
+      )
+        g.tick(1 / 60, idle);
       assert.equal(g.mode, 'won');
       assert.equal(writes, 0);
       g.startTest(s);
@@ -329,7 +335,7 @@ test('reduced effects retains warning shapes, with bounded state and no combat l
     },
   ) as CanvasRenderingContext2D;
   drawSwitchboardArena(c, g);
-  drawSwitchboard(c, e, true);
+  drawSwitchboard(c, g, e, true);
   assert(strokes > 10 && labels === 0);
   for (let i = 0; i < 3600; i++) {
     step(f, 1 / 60);

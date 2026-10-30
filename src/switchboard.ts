@@ -328,6 +328,7 @@ export class SwitchboardSystem {
     r.opening = SIGNAL.opening;
     r.interruptions++;
     const at = signalPoint(this.game, slot, 'junction');
+    this.game.machineBreakdown.overseerInterruption(e, 'junction-cut', at);
     this.game.hitEnemy(e, 70, at, true, false);
     this.game.burst(at, 12, '#e8bb76', 3);
     this.game.soundAt('signal-cut', at, `signal:${e.id}:${slot}`, 'power');

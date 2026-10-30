@@ -246,7 +246,7 @@ export class Renderer {
       }
       if (drawHuntEnemy(c, g, e, this.reduced, portrait)) continue;
       if (e.kind === 'switchboard') {
-        drawSwitchboard(c, e, this.reduced);
+        drawSwitchboard(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'caller') {
@@ -258,11 +258,11 @@ export class Renderer {
         continue;
       }
       if (e.kind === 'welder') {
-        drawWelder(c, g, e, this.reduced);
+        drawWelder(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.kind === 'auditor') {
-        drawAuditor(c, g, e, this.reduced);
+        drawAuditor(c, g, e, this.reduced, portrait);
         continue;
       }
       if (e.courier) {

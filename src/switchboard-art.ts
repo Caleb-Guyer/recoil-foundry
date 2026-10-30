@@ -2,6 +2,7 @@ import type { Enemy, Game } from './game.ts';
 import { clamp, type Vec } from './rules.ts';
 import { SIGNAL, signalPoint, signalFireAt } from './switchboard.ts';
 import { SIGNAL_PORTS } from './switchboard-layout.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
 
 const amber = '#e8bb76',
   red = '#ed735d';
@@ -115,49 +116,25 @@ export function drawSwitchboardArena(c: CanvasRenderingContext2D, g: Game) {
   }
   c.restore();
 }
-export function drawSwitchboard(c: CanvasRenderingContext2D, e: Enemy, reduced: boolean) {
+export function drawSwitchboard(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
   const r = e.switchboard,
     open = e.state === 'recover' || (r?.opening ?? 0) > 0;
   c.save();
   c.translate(e.body.position.x, e.body.position.y);
   c.globalAlpha = e.spawn > 0 ? clamp(1 - e.spawn / 0.65, 0.15, 1) : 1;
-  c.fillStyle = '#201b29';
-  c.strokeStyle = e.flash > 0 && !reduced ? '#fff1da' : red;
-  c.lineWidth = 3;
-  c.beginPath();
-  c.moveTo(-42, -23);
-  c.lineTo(-27, -35);
-  c.lineTo(27, -35);
-  c.lineTo(42, -23);
-  c.lineTo(42, 23);
-  c.lineTo(27, 35);
-  c.lineTo(-27, 35);
-  c.lineTo(-42, 23);
-  c.closePath();
-  c.fill();
-  c.stroke();
-  c.fillStyle = '#3f324a';
-  c.fillRect(-31, -24, 62, 48);
-  c.fillStyle = open ? amber : '#8b515a';
-  for (let i = 0; i < 3; i++) c.fillRect(-22 + i * 18, -17, 9, open ? 34 : 8);
-  c.strokeStyle = e.phase ? amber : red;
-  c.lineWidth = 2;
-  line(c, [
-    { x: -29, y: -29 },
-    { x: -29, y: -48 },
-    { x: -11, y: -48 },
-  ]);
-  line(c, [
-    { x: 29, y: -29 },
-    { x: 29, y: -48 },
-    { x: 11, y: -48 },
-  ]);
-  c.fillStyle = red;
-  c.fillRect(-35, 36, 13, 4);
-  c.fillRect(22, 36, 13, 4);
-  c.fillStyle = '#453241';
-  c.fillRect(-45, -61, 90, 4);
-  c.fillStyle = open ? amber : red;
-  c.fillRect(-45, -61, 90 * clamp(e.hp / e.maxHp, 0, 1), 4);
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) {
+    drawMachineContacts(c, g, e, reduced);
+    c.fillStyle = '#453241';
+    c.fillRect(-45, -61, 90, 4);
+    c.fillStyle = open ? amber : red;
+    c.fillRect(-45, -61, 90 * clamp(e.hp / e.maxHp, 0, 1), 4);
+  }
   c.restore();
 }

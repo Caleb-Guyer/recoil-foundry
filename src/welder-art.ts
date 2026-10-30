@@ -1,5 +1,6 @@
 import type { Enemy, Game } from './game.ts';
 import { WELD_LIFE, WELD_TELL } from './welder.ts';
+import { drawMachineBody, drawMachineContacts } from './machine-breakdown-art.ts';
 
 export function drawWelds(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
   c.save();
@@ -59,11 +60,17 @@ export function drawWelds(c: CanvasRenderingContext2D, g: Game, reduced: boolean
   c.restore();
 }
 
-export function drawWelder(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduced: boolean) {
+export function drawWelder(
+  c: CanvasRenderingContext2D,
+  g: Game,
+  e: Enemy,
+  reduced: boolean,
+  portrait = false,
+) {
   const p = e.body.position,
     open = e.state === 'recover',
     tell = e.state === 'windup';
-  if (tell && e.welder?.attack === 'arc') {
+  if (!portrait && tell && e.welder?.attack === 'arc') {
     c.save();
     c.strokeStyle = '#eeaa75';
     c.lineWidth = 1.5;
@@ -84,78 +91,14 @@ export function drawWelder(c: CanvasRenderingContext2D, g: Game, e: Enemy, reduc
   }
   c.save();
   c.translate(p.x, p.y);
-  c.scale(e.facing || 1, 1);
   c.globalAlpha = e.spawn > 0 ? 0.6 : 1;
-  c.fillStyle = '#262c2d';
-  c.strokeStyle = '#947a64';
-  c.lineWidth = 2;
-  // Twin bottles, low tracked chassis, forward helmet and articulated torch.
-  for (const x of [-29, -17]) {
-    c.fillRect(x, -34, 9, 47);
-    c.strokeRect(x, -34, 9, 47);
-  }
-  c.fillStyle = '#3b3c36';
-  c.fillRect(-29, 17, 58, 13);
-  c.strokeRect(-29, 17, 58, 13);
-  c.strokeStyle = '#a68e71';
-  for (let x = -23; x < 27; x += 10) {
-    c.beginPath();
-    c.moveTo(x, 20);
-    c.lineTo(x - 3, 28);
-    c.stroke();
-  }
-  c.fillStyle = e.flash > 0 ? '#fff0d5' : '#554b3b';
-  c.fillRect(-15, -22, 37, 38);
-  c.strokeRect(-15, -22, 37, 38);
-  c.fillStyle = '#151e21';
-  c.fillRect(-9, -29, 35, 23);
-  c.strokeRect(-9, -29, 35, 23);
-  c.fillStyle = tell ? '#fff0c0' : '#e7a05b';
-  c.fillRect(6, -23, 16, 4);
-  c.fillStyle = open ? '#ffc589' : '#292e2d';
-  c.fillRect(-10, -1, 24, 13);
-  c.strokeStyle = open ? '#ffcf8b' : '#bc9268';
-  c.lineWidth = 4;
-  c.beginPath();
-  c.moveTo(15, -3);
-  c.lineTo(31, 1);
-  c.lineTo(39, -12);
-  c.stroke();
-  c.strokeStyle = '#728482';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.moveTo(-25, -15);
-  c.quadraticCurveTo(-40, 24, 30, 12);
-  c.lineTo(38, -8);
-  c.stroke();
-  if (tell) {
-    c.fillStyle = '#d9f8ef';
-    c.fillRect(36, -17, 6, 7);
-    if (!reduced) {
-      c.strokeStyle = '#fce5a7';
-      c.lineWidth = 1;
-      for (let i = 0; i < 4; i++) {
-        const a = g.time * 5 + i * 1.7;
-        c.beginPath();
-        c.moveTo(39, -17);
-        c.lineTo(39 + Math.cos(a) * 12, -17 + Math.sin(a) * 12);
-        c.stroke();
-      }
-    }
-  }
-  if (open) {
-    c.strokeStyle = '#ffc589';
-    c.lineWidth = 2;
-    for (const x of [-8, 1, 10]) {
-      c.beginPath();
-      c.moveTo(x, -1);
-      c.lineTo(x, -8);
-      c.stroke();
-    }
+  drawMachineBody(c, g, e, reduced || portrait);
+  if (!portrait) {
+    drawMachineContacts(c, g, e, reduced);
+    c.fillStyle = '#483b32';
+    c.fillRect(-34, -46, 68, 4);
+    c.fillStyle = open ? '#ffd49a' : '#d79863';
+    c.fillRect(-34, -46, 68 * Math.max(0, e.hp / e.maxHp), 4);
   }
   c.restore();
-  c.fillStyle = '#483b32';
-  c.fillRect(p.x - 34, p.y - 46, 68, 4);
-  c.fillStyle = open ? '#ffd49a' : '#d79863';
-  c.fillRect(p.x - 34, p.y - 46, 68 * Math.max(0, e.hp / e.maxHp), 4);
 }

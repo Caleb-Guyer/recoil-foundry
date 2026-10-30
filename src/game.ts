@@ -2037,9 +2037,9 @@ export class Game {
     if (this.hunts.enter(input.jump)) return;
     this.massDriver.beforeStep(dt);
     this.commendations.weapons.sampleGround();
-    const contractSettling = this.clear && this.machineBreakdown.contractShutdownActive;
+    const machineSettling = this.clear && this.machineBreakdown.shutdownActive;
     this.time += dt;
-    if (!contractSettling) this.elapsed += dt;
+    if (!machineSettling) this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };
     this.shiftUpgrades.beforeStep(dt, input);
@@ -2348,8 +2348,8 @@ export class Game {
       this.onChange();
     }
     // Native clear/gear/projectile cleanup has already completed. Keep the new
-    // hunt chassis shutdown visible while movement remains available, then route normally.
-    if (this.clear && this.machineBreakdown.contractShutdownActive) return;
+    // machine chassis shutdown visible while movement remains available, then route normally.
+    if (this.clear && this.machineBreakdown.shutdownActive) return;
     if (this.quickShift.state) {
       this.quickShift.update();
       return;
@@ -3451,6 +3451,7 @@ export class Game {
       this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
       this.machineBreakdown.signalDischarge(e, a, origin, muzzle);
       this.machineBreakdown.contractDischarge(e, a, origin, muzzle);
+      this.machineBreakdown.overseerDischarge(e, a, origin, muzzle);
       if (e.crawler)
         this.machineBreakdown.surfaceDischarge(e, a, origin, muzzle, e.crawler.fired - 1);
       this.burst(end, 3, '#ef7264', 1.5);
@@ -3488,6 +3489,7 @@ export class Game {
       this.machineBreakdown.districtDischarge(e, a, origin, muzzle);
       this.machineBreakdown.signalDischarge(e, a, origin, muzzle);
       this.machineBreakdown.contractDischarge(e, a, origin, muzzle);
+      this.machineBreakdown.overseerDischarge(e, a, origin, muzzle);
       if (e.crawler)
         this.machineBreakdown.surfaceDischarge(e, a, origin, muzzle, e.crawler.fired - 1);
     }
