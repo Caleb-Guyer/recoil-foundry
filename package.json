@@ -1,6 +1,6 @@
 {
   "name": "recoil-foundry",
-  "version": "5.45.0",
+  "version": "5.46.0",
   "private": true,
   "type": "module",
   "description": "Six earned tools. Twenty stages. A physics roguelike with 161 upgrades, morphs, alternate districts and recoil movement.",

@@ -201,6 +201,7 @@ export class PropSystem {
     return this.items.filter((p) => !p.charge?.host).map((p) => p.body);
   }
   reset(level: Level) {
+    this.game.materialResponse.reset('prop');
     for (const prop of this.items) Composite.remove(this.game.engine.world, prop.body);
     this.items = [];
     this.impacts = [];
@@ -257,6 +258,7 @@ export class PropSystem {
     return prop;
   }
   remove(prop: Prop) {
+    this.game.materialResponse.forget(prop.body.id);
     this.game.sappers.disrupt(prop.body);
     this.game.harpoons.disrupt(prop.body);
     this.game.magnets.release(prop.body);
@@ -299,6 +301,7 @@ export class PropSystem {
     const g = this.game,
       d = direction({ x: 0, y: 0 }, velocity);
     prop.hp -= damage;
+    g.materialResponse.propHit(prop, damage, velocity, source);
     if (prop.kind === 'canister' && damage > 0 && playerDamage) prop.playerArmed = true;
     prop.flash = 0.08;
     g.burst(prop.body.position, 4, prop.kind === 'canister' ? '#e4bb6e' : '#9dacaf', 2.3);
@@ -346,6 +349,7 @@ export class PropSystem {
       if (prop.hp <= 0 && this.game.auditor.openCase()) this.remove(prop);
       return;
     }
+    this.game.materialResponse.propBreak(prop, 'fracture');
     if (prop.welded && playerDamage) this.game.welder.brokenBarrier(prop);
     this.remove(prop);
     if (!prop.welded && (prop.kind === 'crate' || prop.kind === 'cover'))
@@ -470,6 +474,7 @@ export class PropSystem {
     if (this.game.mode !== 'playing' || !this.items.includes(prop)) return;
     const g = this.game,
       p = { ...prop.body.position };
+    g.materialResponse.propBreak(prop, 'explosion');
     this.remove(prop);
     // Determine occlusion before damaging cover so one blast cannot pass through it.
     const visible = (target: Vec, ignored?: Prop) =>

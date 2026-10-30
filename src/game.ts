@@ -105,6 +105,7 @@ import { SalvageEvolutionSystem } from './salvage-evolutions.ts';
 import { BossSalvageSystem } from './boss-salvage.ts';
 import { ArcCoilSystem } from './arc-coil.ts';
 import { DestructionSystem } from './destruction.ts';
+import { MaterialResponse } from './material-response.ts';
 import {
   createAngler,
   updateAngler,
@@ -451,6 +452,7 @@ export class Game {
   story = new StorySystem(this);
   shutdown = new ShutdownSystem(this);
   fabricators = new FabricatorSystem(this);
+  materialResponse = new MaterialResponse(this);
   props = new PropSystem(this);
   cargo = new CargoSystem(this);
   loaderArena = new LoaderArenaSystem(this);
@@ -891,6 +893,7 @@ export class Game {
       if (this.mods.includes('charge-lens')) this.torch.stop();
     }
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
+      this.materialResponse.reset();
       this.combatFeel.reset();
       this.commendations.weapons.reset();
       this.welder.clear();
@@ -1339,6 +1342,7 @@ export class Game {
     };
   }
   loadRoom(escapeRoom = false, clearedRoom = false) {
+    this.materialResponse.reset();
     this.operatorSurface.reset();
     this.machineBreakdown.reset();
     this.bossRemaster.clear();
@@ -2046,6 +2050,7 @@ export class Game {
     this.commendations.weapons.sampleGround();
     const machineSettling = this.clear && this.machineBreakdown.shutdownActive;
     this.time += dt;
+    this.materialResponse.update();
     if (!machineSettling) this.elapsed += dt;
     this.blast.life = Math.max(0, this.blast.life - dt);
     this.aim = { ...input.aim };

@@ -92,7 +92,9 @@ import { drawMaintenanceDetails, drawMaintenanceScenery } from './maintenance-ar
 import { drawRecoilTrial } from './recoil-trial-art.ts';
 import { drawRecoilRace } from './recoil-race-art.ts';
 import { drawRouteExits, drawRegionExits } from './route-art.ts';
-import { drawCracks } from './destruction-art.ts';
+import { drawMaterialTerrain } from './destruction-art.ts';
+import { drawMaterialProp } from './material-prop-art.ts';
+import { drawMaterialBreaks } from './material-break-art.ts';
 import { drawCrane } from './crane-art.ts';
 import { drawKiln } from './kiln-art.ts';
 import { drawBossSignal } from './boss-signals.ts';
@@ -812,6 +814,7 @@ export class Renderer {
           (g.level.uprising === 'railworks' || g.level.uprising === 'core')
         ? UPRISING_PALETTES[g.level.uprising]
         : AREAS[g.level.area];
+    drawMaterialBreaks(c, g, this.reduced);
     for (const b of g.terrain) {
       if (g.shiftRoutes.owns(b)) continue;
       if (b.bounds.max.x <= 0 || b.bounds.min.x >= g.worldWidth || b.bounds.min.y < g.worldTop)
@@ -832,7 +835,7 @@ export class Renderer {
       }
       if (!g.annex.active) drawSurfaceDetails(c, g.level.area, x, y, w, h);
       const weak = g.destruction.pieces.find((piece) => piece.body === b);
-      if (weak) drawCracks(c, weak, this.reduced);
+      if (weak) drawMaterialTerrain(c, g, weak, this.reduced);
     }
     drawLoaderSupports(c, g, this.reduced);
     if (g.escape?.phase === 'route') this.drawEscapeDirections();
@@ -1390,7 +1393,7 @@ export class Renderer {
     c.textAlign = 'center';
     c.fillStyle = accent;
     c.font = 'bold 20px monospace';
-    c.fillText(overtime ? 'NEW GAME+' : 'EXIT', x, restY - 134);
+    c.fillText('NEW GAME+ ↑', 6664, 661);
     c.font = '10px monospace';
     c.fillText(overtime ? 'KEEP YOUR GUN · HARDER RUN' : 'FINISH RUN', x, restY - 117);
     if (g.escape.phase === 'route') {
@@ -1705,6 +1708,7 @@ export class Renderer {
         drawCharge(c, g, prop, this.reduced);
         continue;
       }
+      if (drawMaterialProp(c, g, prop, this.reduced)) continue;
       const { w, h } = PROP_STATS[prop.kind];
       c.save();
       if (prop.expires !== undefined) c.globalAlpha = clamp((prop.expires - g.time) / 0.6, 0, 1);

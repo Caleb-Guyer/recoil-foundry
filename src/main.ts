@@ -1,3 +1,10 @@
+import {
+  materialTestFromUrl,
+  materialTestRoom,
+  prepareMaterialTest,
+  materialTestHint,
+  MATERIAL_COPY,
+} from './material-test.ts';
 import { courierRewardCue } from './courier-reward-view.ts';
 import {
   specialDeliveryFromUrl,
@@ -740,7 +747,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Special Delivery</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Material Response</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -994,6 +1001,9 @@ const linkedBuildMotion = buildMotionTestFromUrl(entryUrl);
 const linkedSeedLock = seedLockTestFromUrl(entryUrl);
 const invalidSeedLock =
   entryUrl.searchParams.getAll('test').includes('seed-lock') && !linkedSeedLock;
+const linkedMaterial = materialTestFromUrl(entryUrl);
+const invalidMaterial =
+  entryUrl.searchParams.getAll('test').includes('material-response') && !linkedMaterial;
 const linkedDelivery = specialDeliveryFromUrl(entryUrl);
 const invalidDelivery =
   entryUrl.searchParams.getAll('test').includes('special-delivery') && !linkedDelivery;
@@ -1042,6 +1052,7 @@ const benchBlueprintStore: BlueprintStore = {
 let focusCameraPreview = !!linkedCombatFocusTest;
 if (linkedCombatFocusTest) renderer.cameraMode = linkedCombatFocusTest.camera;
 let linkedRunTest =
+  linkedMaterial?.checkpoint ??
   (linkedDelivery && linkedDelivery.scene !== 'logbook' ? linkedDelivery.checkpoint : undefined) ??
   linkedOverseer?.checkpoint ??
   linkedContract?.checkpoint ??
@@ -1785,6 +1796,15 @@ function updateTitle() {
       : 'Choose a supported machine inspection.';
     $('security').hidden = true;
   }
+  if (linkedMaterial || invalidMaterial) {
+    $('play').textContent = linkedMaterial
+      ? 'Test Material Response / ' + MATERIAL_COPY[linkedMaterial.scene].title + ' ↗'
+      : 'Unsupported Material Response test ↗';
+    $('title-hint').textContent = linkedMaterial
+      ? materialTestHint(linkedMaterial)
+      : 'Choose a supported material inspection.';
+    $('security').hidden = true;
+  }
   if (linkedDelivery || invalidDelivery) {
     $('play').textContent = linkedDelivery
       ? 'Test Special Delivery / ' + DELIVERY_COPY[linkedDelivery.scene].title + ' ↗'
@@ -2111,6 +2131,8 @@ function updateNextGoal() {
     !linkedGoalPreview &&
     !linkedTrackingPreview &&
     !!(
+      linkedMaterial ||
+      invalidMaterial ||
       linkedDelivery ||
       invalidDelivery ||
       linkedSeedLock ||
@@ -2958,6 +2980,8 @@ function startRunTest(save: Checkpoint) {
     linkedOperator && save.seed === linkedOperator.checkpoint.seed ? linkedOperator : null;
   const breakdown =
     linkedBreakdown && save.seed === linkedBreakdown.checkpoint.seed ? linkedBreakdown : null;
+  const material =
+    linkedMaterial && save.seed === linkedMaterial.checkpoint.seed ? linkedMaterial : null;
   const delivery =
     linkedDelivery && save.seed === linkedDelivery.checkpoint.seed ? linkedDelivery : null;
   const overseer =
@@ -2980,32 +3004,35 @@ function startRunTest(save: Checkpoint) {
     linkedSpecialist && save.seed === linkedSpecialist.checkpoint.seed ? linkedSpecialist : null;
   game.startTest(
     save,
-    overseer
-      ? overseersTestRoom(overseer)
-      : contract
-        ? contractMachinesTestRoom(contract)
-        : signal
-          ? signalMachinesTestRoom(signal)
-          : surface
-            ? surfaceMachinesTestRoom(surface)
-            : district
-              ? districtMachinesTestRoom(district)
-              : hazardCrew
-                ? hazardCrewTestRoom(hazardCrew)
-                : supportSystems
-                  ? supportSystemsTestRoom(supportSystems)
-                  : heavy
-                    ? heavyIndustryTestRoom(heavy)
-                    : specialist
-                      ? specialistMachineTestRoom(specialist)
-                      : breakdown
-                        ? machineBreakdownTestRoom(breakdown)
-                        : operator
-                          ? operatorTestRoom(operator)
-                          : living
-                            ? livingFoundryTestRoom(living)
-                            : undefined,
+    material
+      ? materialTestRoom(material)
+      : overseer
+        ? overseersTestRoom(overseer)
+        : contract
+          ? contractMachinesTestRoom(contract)
+          : signal
+            ? signalMachinesTestRoom(signal)
+            : surface
+              ? surfaceMachinesTestRoom(surface)
+              : district
+                ? districtMachinesTestRoom(district)
+                : hazardCrew
+                  ? hazardCrewTestRoom(hazardCrew)
+                  : supportSystems
+                    ? supportSystemsTestRoom(supportSystems)
+                    : heavy
+                      ? heavyIndustryTestRoom(heavy)
+                      : specialist
+                        ? specialistMachineTestRoom(specialist)
+                        : breakdown
+                          ? machineBreakdownTestRoom(breakdown)
+                          : operator
+                            ? operatorTestRoom(operator)
+                            : living
+                              ? livingFoundryTestRoom(living)
+                              : undefined,
   );
+  if (material) prepareMaterialTest(game, material);
   if (delivery) prepareSpecialDelivery(game, delivery);
   if (overseer) prepareOverseersTest(game, overseer);
   if (contract) prepareContractMachinesTest(game, contract);
@@ -4232,6 +4259,10 @@ function showDialog(kind: string) {
     content.innerHTML =
       '<p class="eyebrow">SEED LOCK</p><h2 id="dialog-title">Unsupported Seed Lock test.</h2><p>Choose heavy effects, Reduced Effects, Pause, older saves or Daily challenges from the current update.</p><div class="actions"><button id="seed-lock-return" class="primary">Return to Play</button></div>';
     $('seed-lock-return').onclick = () => location.assign(new URL('./', location.href).href);
+  } else if (kind === 'material-invalid') {
+    content.innerHTML =
+      '<p class="eyebrow">MATERIAL RESPONSE</p><h2 id="dialog-title">Unsupported material test.</h2><p>Choose prop designs, reactions, breakage, canisters, terrain or mixed combat from the current update.</p><div class="actions"><button id="material-return" class="primary">Return to Play</button></div>';
+    $('material-return').onclick = () => location.assign(new URL('./', location.href).href);
   } else if (kind === 'delivery-invalid') {
     content.innerHTML =
       '<p class="eyebrow">SPECIAL DELIVERY</p><h2 id="dialog-title">Unsupported Scrap Courier test.</h2><p>Choose animations, reactions, shutdown, wreckage, escape, cargo, rewards or Logbook from the current update.</p><div class="actions"><button id="delivery-return" class="primary">Return to Play</button></div>';
@@ -4719,16 +4750,16 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.45.0 · SPECIAL DELIVERY</p><h2 id="dialog-title">Catch the delivery.</h2>' +
-      '<p class="update-tagline">A working rig. A physical case. One extra choice.</p>' +
-      '<dl class="update-notes"><div><dt>Built to move.</dt><dd>The Scrap Courier works its wheels, suspension and cargo clamps through real boosts, jumps and landings.</dd></div>' +
-      '<div><dt>Hit, drop, recover.</dt><dd>Actual hits react locally and wear the casing. A mechanical shutdown leaves brief inert wreckage while its real case drops separately.</dd></div>' +
-      '<div><dt>Read the delivery.</dt><dd>Hatch, escape, case recovery and reward cues follow the actual encounter. Find its portrait and chase guide in the Logbook.</dd></div></dl>' +
+      '<p class="eyebrow">5.46.0 · MATERIAL RESPONSE</p><h2 id="dialog-title">Make an impact.</h2>' +
+      '<p class="update-tagline">Built material. Local damage. Physical consequences.</p>' +
+      '<dl class="update-notes"><div><dt>Factory construction.</dt><dd>Crates, movable cover, canisters and suspended cargo gain distinct fitted hardware and local damage wear.</dd></div>' +
+      '<div><dt>Material breakage.</dt><dd>Actual destruction releases restrained material fragments. Harmless fragments remain separate from real solid rubble.</dd></div>' +
+      '<div><dt>Read the weak point.</dt><dd>Canister cues follow actual arming and impacts. Registered weak walls and shelves gain clearer seams and damage progression; structural platforms keep their role.</dd></div></dl>' +
       '<p>Test: ' +
-      Object.entries(DELIVERY_COPY)
+      Object.entries(MATERIAL_COPY)
         .map(
           ([scene, copy]) =>
-            '<a href="?test=special-delivery&amp;scene=' +
+            '<a href="?test=material-response&amp;scene=' +
             scene +
             '&amp;v=1">' +
             copy.title +
@@ -4736,7 +4767,7 @@ function showDialog(kind: string) {
         )
         .join(' · ') +
       '</p>' +
-      '<p class="practice-record-note">R restarts each private course. Pause and Reduced Effects are supported. Tests and the Logbook preview preserve saved progress.</p>' +
+      '<p class="practice-record-note">R restarts each private range. Pause and Reduced Effects are supported. Saved progress stays untouched.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -6535,119 +6566,123 @@ function formatTime(n: number) {
 }
 updateQuickTitle();
 $('play').onclick = () =>
-  invalidDelivery
-    ? showDialog('delivery-invalid')
-    : linkedDelivery?.scene === 'logbook'
-      ? (() => {
-          previewLogbook = true;
-          logbookView.section = 'machines';
-          logbookView.selected = 'encounter:courier';
-          showDialog('logbook');
-        })()
-      : linkedSeedLock
-        ? showDialog('seed-lock')
-        : invalidSeedLock
-          ? showDialog('seed-lock-invalid')
-          : invalidOverseer
-            ? showDialog('overseers-invalid')
-            : invalidContract
-              ? showDialog('contract-machines-invalid')
-              : invalidSignal
-                ? showDialog('signal-machines-invalid')
-                : invalidSurface
-                  ? showDialog('surface-machines-invalid')
-                  : invalidDistrict
-                    ? showDialog('district-machines-invalid')
-                    : invalidHazardCrew
-                      ? showDialog('hazard-crew-invalid')
-                      : invalidSupportSystems
-                        ? showDialog('support-systems-invalid')
-                        : invalidHeavy
-                          ? showDialog('heavy-invalid')
-                          : invalidSpecialist
-                            ? showDialog('specialist-invalid')
-                            : invalidBreakdown
-                              ? showDialog('breakdown-invalid')
-                              : invalidOperator
-                                ? showDialog('operator-invalid')
-                                : invalidLivingFoundry
-                                  ? showDialog('living-invalid')
-                                  : linkedQuick || linkedQuickFixture || invalidQuickLink
-                                    ? openQuickShiftSetup(!!linkedQuickFixture)
-                                    : linkedBuildMotion
-                                      ? startLinkedBuildMotion()
-                                      : linkedBuildBench
-                                        ? startLinkedBuildBench()
-                                        : linkedToolsTest &&
-                                            linkedRunTest?.seed === linkedToolsTest.checkpoint.seed
-                                          ? startLinkedToolsTest()
-                                          : linkedGoalPreview || linkedTrackingPreview
-                                            ? location.assign(new URL('./', location.href).href)
-                                            : linkedFirstRunPreview === 'warmup'
-                                              ? startWorkshop([], true)
-                                              : linkedDrill
-                                                ? startLinkedSupportDrill(linkedDrill)
-                                                : linkedGauntletPreview
-                                                  ? startGauntlet(linkedGauntletPreview, true)
-                                                  : linkedRemixGauntletPreview
-                                                    ? linkedRemixGauntletPreview.setup
-                                                      ? (() => {
-                                                          gauntletSetupPreview = true;
-                                                          gauntletSetupMode = 'remix';
-                                                          showDialog('gauntlet-setup');
-                                                        })()
-                                                      : startGauntlet(
-                                                          linkedRemixGauntletPreview.gun,
-                                                          true,
-                                                          linkedRemixGauntletPreview,
-                                                        )
-                                                    : linkedGauntletChallenge || invalidGauntletLink
-                                                      ? openGauntletChallenge(
-                                                          linkedGauntletChallenge ?? undefined,
-                                                          false,
-                                                          'title',
-                                                        )
-                                                      : linkedRecoilChallenge || invalidRecoilLink
-                                                        ? openRecoilTrials(
-                                                            'title',
-                                                            linkedRecoilChallenge ?? undefined,
+  invalidMaterial
+    ? showDialog('material-invalid')
+    : invalidDelivery
+      ? showDialog('delivery-invalid')
+      : linkedDelivery?.scene === 'logbook'
+        ? (() => {
+            previewLogbook = true;
+            logbookView.section = 'machines';
+            logbookView.selected = 'encounter:courier';
+            showDialog('logbook');
+          })()
+        : linkedSeedLock
+          ? showDialog('seed-lock')
+          : invalidSeedLock
+            ? showDialog('seed-lock-invalid')
+            : invalidOverseer
+              ? showDialog('overseers-invalid')
+              : invalidContract
+                ? showDialog('contract-machines-invalid')
+                : invalidSignal
+                  ? showDialog('signal-machines-invalid')
+                  : invalidSurface
+                    ? showDialog('surface-machines-invalid')
+                    : invalidDistrict
+                      ? showDialog('district-machines-invalid')
+                      : invalidHazardCrew
+                        ? showDialog('hazard-crew-invalid')
+                        : invalidSupportSystems
+                          ? showDialog('support-systems-invalid')
+                          : invalidHeavy
+                            ? showDialog('heavy-invalid')
+                            : invalidSpecialist
+                              ? showDialog('specialist-invalid')
+                              : invalidBreakdown
+                                ? showDialog('breakdown-invalid')
+                                : invalidOperator
+                                  ? showDialog('operator-invalid')
+                                  : invalidLivingFoundry
+                                    ? showDialog('living-invalid')
+                                    : linkedQuick || linkedQuickFixture || invalidQuickLink
+                                      ? openQuickShiftSetup(!!linkedQuickFixture)
+                                      : linkedBuildMotion
+                                        ? startLinkedBuildMotion()
+                                        : linkedBuildBench
+                                          ? startLinkedBuildBench()
+                                          : linkedToolsTest &&
+                                              linkedRunTest?.seed ===
+                                                linkedToolsTest.checkpoint.seed
+                                            ? startLinkedToolsTest()
+                                            : linkedGoalPreview || linkedTrackingPreview
+                                              ? location.assign(new URL('./', location.href).href)
+                                              : linkedFirstRunPreview === 'warmup'
+                                                ? startWorkshop([], true)
+                                                : linkedDrill
+                                                  ? startLinkedSupportDrill(linkedDrill)
+                                                  : linkedGauntletPreview
+                                                    ? startGauntlet(linkedGauntletPreview, true)
+                                                    : linkedRemixGauntletPreview
+                                                      ? linkedRemixGauntletPreview.setup
+                                                        ? (() => {
+                                                            gauntletSetupPreview = true;
+                                                            gauntletSetupMode = 'remix';
+                                                            showDialog('gauntlet-setup');
+                                                          })()
+                                                        : startGauntlet(
+                                                            linkedRemixGauntletPreview.gun,
+                                                            true,
+                                                            linkedRemixGauntletPreview,
                                                           )
-                                                        : linkedTrial?.preview
-                                                          ? startTrial(linkedTrial.route, true)
-                                                          : linkedTrial || invalidTrialLink
-                                                            ? openTrials(
-                                                                'title',
-                                                                linkedTrial?.challenge,
-                                                              )
-                                                            : linkedWorkshop
-                                                              ? showDialog('workshop')
-                                                              : linkedRunTest?.seed.startsWith(
-                                                                    'ROOM47-',
-                                                                  ) &&
-                                                                  entryUrl.searchParams.get(
-                                                                    'test',
-                                                                  ) !== 'arc'
-                                                                ? showDialog('layout-test')
+                                                      : linkedGauntletChallenge ||
+                                                          invalidGauntletLink
+                                                        ? openGauntletChallenge(
+                                                            linkedGauntletChallenge ?? undefined,
+                                                            false,
+                                                            'title',
+                                                          )
+                                                        : linkedRecoilChallenge || invalidRecoilLink
+                                                          ? openRecoilTrials(
+                                                              'title',
+                                                              linkedRecoilChallenge ?? undefined,
+                                                            )
+                                                          : linkedTrial?.preview
+                                                            ? startTrial(linkedTrial.route, true)
+                                                            : linkedTrial || invalidTrialLink
+                                                              ? openTrials(
+                                                                  'title',
+                                                                  linkedTrial?.challenge,
+                                                                )
+                                                              : linkedWorkshop
+                                                                ? showDialog('workshop')
                                                                 : linkedRunTest?.seed.startsWith(
-                                                                      'UPGRADES-',
-                                                                    ) ||
-                                                                    linkedRunTest?.seed.startsWith(
-                                                                      'FUSIONS-',
-                                                                    )
-                                                                  ? showDialog('upgrade-test')
-                                                                  : linkedRunTest
-                                                                    ? startRunTest(linkedRunTest)
-                                                                    : linkedTest
-                                                                      ? startPractice(
-                                                                          linkedTest,
-                                                                          null,
-                                                                          {
-                                                                            test: true,
-                                                                          },
-                                                                        )
-                                                                      : linkedDaily
-                                                                        ? start()
-                                                                        : showDialog('play-mode');
+                                                                      'ROOM47-',
+                                                                    ) &&
+                                                                    entryUrl.searchParams.get(
+                                                                      'test',
+                                                                    ) !== 'arc'
+                                                                  ? showDialog('layout-test')
+                                                                  : linkedRunTest?.seed.startsWith(
+                                                                        'UPGRADES-',
+                                                                      ) ||
+                                                                      linkedRunTest?.seed.startsWith(
+                                                                        'FUSIONS-',
+                                                                      )
+                                                                    ? showDialog('upgrade-test')
+                                                                    : linkedRunTest
+                                                                      ? startRunTest(linkedRunTest)
+                                                                      : linkedTest
+                                                                        ? startPractice(
+                                                                            linkedTest,
+                                                                            null,
+                                                                            {
+                                                                              test: true,
+                                                                            },
+                                                                          )
+                                                                        : linkedDaily
+                                                                          ? start()
+                                                                          : showDialog('play-mode');
 $('daily').onclick = () => {
   linkedQuick = null;
   linkedQuickFixture = null;
@@ -6960,9 +6995,10 @@ window.addEventListener('keydown', (e) => {
     game.mode !== 'title' &&
     (!modal.open ||
       dialogKind === 'pause' ||
-      (linkedDelivery?.scene === 'rewards' &&
-        game.testRun?.seed === linkedDelivery.checkpoint.seed &&
-        dialogKind === 'upgrade'))
+      (dialogKind === 'upgrade' &&
+        ((linkedDelivery?.scene === 'rewards' &&
+          game.testRun?.seed === linkedDelivery.checkpoint.seed) ||
+          (linkedMaterial && game.testRun?.seed === linkedMaterial.checkpoint.seed))))
   ) {
     e.preventDefault();
     start(undefined, true);

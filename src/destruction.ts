@@ -42,6 +42,7 @@ export class DestructionSystem {
     });
   }
   clear() {
+    this.game.materialResponse.reset('terrain');
     this.pieces = [];
     this.broken = [];
     this.contacts = [];
@@ -95,6 +96,7 @@ export class DestructionSystem {
     const piece = this.pieces.find((p) => p.body === body);
     if (!piece || this.game.mode !== 'playing' || !Number.isFinite(damage) || damage <= 0) return;
     piece.hp -= damage;
+    this.game.materialResponse.terrainHit(piece, damage, velocity, source);
     piece.flash = 0.07;
     this.game.soundAt('prop', piece.body.position, `terrain:${piece.body.id}`, 'terrain');
     if (piece.hp <= 0) this.break(piece, velocity, source);
@@ -127,6 +129,7 @@ export class DestructionSystem {
   break(piece: Breakable, velocity: Vec, source?: Shot) {
     const g = this.game;
     if (g.mode !== 'playing' || !this.pieces.includes(piece)) return;
+    g.materialResponse.terrainBreak(piece);
     g.scrap.collect(source);
     g.support.collectPlate(source);
     const rect = piece.rect;
