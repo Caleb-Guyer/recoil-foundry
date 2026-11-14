@@ -21,6 +21,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Patch 5.46.1 - Feedback drafts.** Resuming the same attempt keeps your feedback text, category and reviewed details. New attempts and retries start fresh. [Patch details](docs/releases/5.46.1.md).
+
 **Current update: 5.46.0 — Material Response.** Crates, movable cover, canisters and suspended cargo gain fitted construction, local damage reactions and health-based wear. Actual breakage releases brief material fragments, while registered weak walls and shelves show clearer seams and native support collapse. [Details and six private tests](docs/releases/5.46.0.md).
 
 **Previous update: 5.45.0 — Special Delivery.** The Scrap Courier gains working suspension and cargo machinery, local damage reactions, a shutdown and inert wreck, clearer escape and recovery cues, bonus reward explanations and its own pictured Logbook guide. [Details and eight private tests](docs/releases/5.45.0.md).

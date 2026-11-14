@@ -720,6 +720,7 @@ let pendingNgPlusNotice = false;
 let ngPlusNoticeRecorded = false;
 let creditsParent = 'settings';
 let reportParent = 'settings';
+// One draft per attempt: Resume and room changes retain it; accepted starts reset it.
 let reportDraft: ReportDraft | undefined;
 function openReport() {
   reportParent = dialogKind;
@@ -2624,6 +2625,7 @@ function start(
       ? game.finaleFirstClear
       : !weaponUnlocks().cleared,
   );
+  reportDraft = undefined;
   if (needsGuidance && !save && !activeDaily) firstSession.start(game);
   updateFirstSession();
   renderer.reset();
@@ -2670,6 +2672,7 @@ function startPractice(
   renderer.cameraMode = preferredCameraMode;
   focusCameraPreview = false;
   game.startPractice(encounter, mods, discovered);
+  reportDraft = undefined;
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -2708,6 +2711,7 @@ function startTrial(route: TrialRoute, preview = false, challenge?: TrialChallen
   sound.resetMusic();
   closeDialog();
   if (!game.maintenance.startTrial(route, profile, preview)) return;
+  reportDraft = undefined;
   renderer.cameraMode = preferredCameraMode;
   focusCameraPreview = false;
   renderer.reset();
@@ -2780,6 +2784,7 @@ function startRecoilPractice(kind: RecoilTrialKind, gun: StartingGun, challenge?
     challenge ?? null,
     recoilGhostEnabled,
   );
+  reportDraft = undefined;
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -2822,6 +2827,7 @@ function startGauntlet(
   closeDialog();
   game.setMode('title');
   if (!game.gauntlet.begin(gun, access, preview, { ...options, seen })) return;
+  reportDraft = undefined;
   renderer.cameraMode = preferredCameraMode;
   focusCameraPreview = false;
   finishedRun = null;
@@ -3032,6 +3038,7 @@ function startRunTest(save: Checkpoint) {
                               ? livingFoundryTestRoom(living)
                               : undefined,
   );
+  reportDraft = undefined;
   if (material) prepareMaterialTest(game, material);
   if (delivery) prepareSpecialDelivery(game, delivery);
   if (overseer) prepareOverseersTest(game, overseer);
@@ -3193,6 +3200,7 @@ function startQuickShift(challenge: QuickShiftChallenge, gun: StartingGun, previ
     showDialog('quick-setup');
     return;
   }
+  reportDraft = undefined;
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.6;
   pointer.y = canvas.clientHeight * 0.6;
@@ -3235,6 +3243,7 @@ function continueQuickShift() {
     openQuickShiftSetup();
     return;
   }
+  reportDraft = undefined;
   renderer.reset();
   if (game.mode === 'playing') canvas.focus();
 }
@@ -3349,6 +3358,7 @@ function startWorkshop(
     warmup ? 'pistol' : startingGun,
     warmup ? 'standard' : workshopRange,
   );
+  reportDraft = undefined;
   if (warmup) firstSession.start(game, true);
   updateFirstSession();
   renderer.reset();
@@ -3370,6 +3380,7 @@ function startBuildBenchRange(mods: readonly string[] = benchDraft, gun: Startin
   activeDaily = null;
   dailyResult = null;
   game.startWorkshop(linkedBuildBench.known, benchDraft, benchGun, benchRange);
+  reportDraft = undefined;
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
   pointer.y = canvas.clientHeight * 0.6;
@@ -3393,6 +3404,7 @@ function startLinkedBuildMotion() {
     linkedBuildMotion.gun,
     linkedBuildMotion.range,
   );
+  reportDraft = undefined;
   prepareBuildMotionTest(game, linkedBuildMotion);
   renderer.reset();
   pointer.x = canvas.clientWidth * 0.55;
@@ -3914,7 +3926,7 @@ game.onChange = () => {
     recoilOutcome = null;
     recoilGhostSaved = false;
   }
-  if (game.mode === 'playing' || game.mode === 'title') reportDraft = undefined;
+  if (game.mode === 'title') reportDraft = undefined;
   updateLogbook();
   if (replayRoom !== game.level || game.mode === 'title' || game.mode === 'won') {
     replayRoom = game.level;
@@ -6759,6 +6771,7 @@ $('workshop-range').onchange = () => {
   if (benchPreviewOpen) benchRange = id;
   else workshopRange = id;
   game.setWorkshopScenario(id);
+  reportDraft = undefined;
   renderer.reset();
   canvas.focus();
 };
