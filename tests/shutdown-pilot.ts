@@ -1,6 +1,73 @@
-import type { Game } from '../src/game.ts';
+import type { Game, Input } from '../src/game.ts';
 import Matter from 'matter-js';
-import { distance } from '../src/rules.ts';
+import { distance, type Vec } from '../src/rules.ts';
+import { playRoom } from './room-pilot.ts';
+
+/** Keep one edge decision while dropping to a covered enemy below a shelf.
+ * Re-selecting left/right at the room midpoint can oscillate over the same
+ * cover forever, while downward recoil prevents the ordinary fall. */
+export function createShutdownDropInput() {
+  let exit: { shelf: Matter.Body; x: number } | null = null;
+  return (g: Game, input: Input, target?: Vec): Input => {
+    const p = g.player.position;
+    if (!g.shutdown.state?.chamber || g.clear || !target || target.y < p.y + 80) {
+      exit = null;
+      return input;
+    }
+    if (exit && (!g.terrain.includes(exit.shelf) || p.y - 18 > exit.shelf.bounds.max.y))
+      exit = null;
+    const blocked = distance(g.lineEnd(p, target), target) > 1;
+    if (exit && Math.abs(p.x - exit.x) < 12 && !blocked) exit = null;
+    if (!exit && blocked) {
+      const shelf = g.terrain
+        .filter(
+          (body) =>
+            body.bounds.min.y > p.y + 8 &&
+            body.bounds.max.y < target.y &&
+            p.x > body.bounds.min.x - 22 &&
+            p.x < body.bounds.max.x + 22 &&
+            Matter.Query.ray([body], p, target).length > 0,
+        )
+        .sort((a, b) => a.bounds.min.y - b.bounds.min.y)[0];
+      if (shelf) {
+        const left = shelf.bounds.min.x - 45,
+          right = shelf.bounds.max.x + 45;
+        exit = { shelf, x: Math.abs(p.x - left) <= Math.abs(p.x - right) ? left : right };
+      }
+    }
+    if (!exit) return input;
+    return {
+      ...input,
+      left: p.x > exit.x + 8,
+      right: p.x < exit.x - 8,
+      jump: false,
+      fire: false,
+      firePressed: false,
+    };
+  };
+}
+
+/** Reuse the ordinary dodger, with a chamber-specific route out of occluding
+ * shelves. The wrapper changes only movement/fire inputs, never game state. */
+export function playShutdownWave(g: Game, seconds: number) {
+  const tick = g.tick,
+    dropInput = createShutdownDropInput();
+  g.tick = (dt, input) => {
+    const target = g.enemies
+      .filter((enemy) => enemy.hp > 0 && enemy.spawn <= 0)
+      .sort(
+        (a, b) =>
+          distance(a.body.position, g.player.position) -
+          distance(b.body.position, g.player.position),
+      )[0];
+    tick.call(g, dt, dropInput(g, input, target?.body.position));
+  };
+  try {
+    return playRoom(g, seconds);
+  } finally {
+    g.tick = tick;
+  }
+}
 
 // Reach the exposed control with normal jumps and fire. Never move a body,
 // clear enemies, heal, or invoke the objective directly between combat waves.

@@ -14,7 +14,7 @@ import { logbookEntries, loadLogbook, mergeLogbook, recordLogbook } from '../src
 import { snapshotRun, loadRunHistory } from '../src/run-history.ts';
 import { dailyForDate } from '../src/daily.ts';
 import { withParents } from '../src/branch-builds.ts';
-import { playRoom } from './room-pilot.ts';
+import { createShutdownDropInput, playShutdownWave } from './shutdown-pilot.ts';
 const { Body, Bodies, Composite, Query } = Matter;
 const preset = (scene = 'relay') =>
   shutdownTestFromUrl(new URL('https://test/?test=shutdown&scene=' + scene))!;
@@ -343,8 +343,10 @@ test('isolated tests cannot write saves, recaps or permanent route lore; partial
 });
 test('a normal gun can finish all three combat waves with actual movement, damage and enemy AI', () => {
   const g = fixture('finale');
+  const tick = g.tick;
   for (let cycle = 0; cycle < 3; cycle++) {
-    const result = playRoom(g, 110);
+    const result = playShutdownWave(g, 110);
+    assert.equal(g.tick, tick, 'the input wrapper restores the native tick method');
     assert(g.clear && g.hp > 0, JSON.stringify({ cycle, ...result }));
     near(g);
     assert(g.shutdown.trigger());
@@ -352,6 +354,42 @@ test('a normal gun can finish all three combat waves with actual movement, damag
   g.hitStop = 0;
   step(g, 300);
   assert.equal(g.mode, 'won');
+});
+
+test('shutdown shelf escape holds one visible edge and stops downward fire across the room midpoint', () => {
+  const g = fixture('finale');
+  const steer = createShutdownDropInput();
+  const target = { x: 1005.8796994736485, y: 693.3211391867164 };
+  const input: Input = {
+    left: false,
+    right: true,
+    jump: true,
+    jumpHeld: true,
+    fire: true,
+    firePressed: true,
+    aim: target,
+  };
+  const hp = g.hp,
+    enemies = g.enemies.map((enemy) => enemy.id);
+  Body.setPosition(g.player, { x: 978.7357635732234, y: 282.25688424720556 });
+  assert(distance(g.lineEnd(g.player.position, target), target) > 1);
+  const first = steer(g, input, target);
+  assert(first.left && !first.right);
+  assert(!first.fire && !first.firePressed && !first.jump);
+  Body.setPosition(g.player, { x: 1002, y: 282.25688424720556 });
+  const crossed = steer(g, { ...input, left: true, right: false }, target);
+  assert(crossed.left && !crossed.right, 'crossing x=1000 must not reverse the latched shelf exit');
+  assert(!crossed.fire && !crossed.firePressed && !crossed.jump);
+  assert.equal(g.hp, hp);
+  assert.deepEqual(
+    g.enemies.map((enemy) => enemy.id),
+    enemies,
+  );
+  assert.equal(
+    steer(g, input, { x: 1002, y: 200 }),
+    input,
+    'normal dodging resumes for an exposed target above',
+  );
 });
 
 test('all control platforms are reachable with ordinary jumps, independent of weapon upgrades', () => {
