@@ -47,7 +47,7 @@ function advanceShots(g: Game) {
     g.updateShots(1 / 60);
   }
 }
-test('fifteen contract inspections reconstruct90 legal deterministic private tool checkpoints', () => {
+test('fifteen contract inspections reconstruct all legal deterministic private tool checkpoints', () => {
   const seeds = new Set<string>();
   for (const unit of CONTRACT_UNITS)
     for (const scene of CONTRACT_SCENES)
@@ -62,7 +62,7 @@ test('fifteen contract inspections reconstruct90 legal deterministic private too
         assert.equal(f.checkpoint.huntTest, undefined);
         seeds.add(f.checkpoint.seed);
       }
-  assert.equal(seeds.size, 90);
+  assert.equal(seeds.size, 15 * STARTING_GUN_IDS.length);
 });
 test('all fifteen inspections retain authored hunt arenas, live native gear and the real floor', () => {
   for (const unit of CONTRACT_UNITS)

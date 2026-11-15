@@ -29,7 +29,7 @@ function cleanup(g: Game) {
   Matter.Engine.clear(g.engine);
 }
 
-test('all six tools and every public scene have strict independent legal isolated fixtures', () => {
+test('all nine tools and every public scene have strict independent legal isolated fixtures', () => {
   for (const gun of STARTING_GUN_IDS)
     for (const scene of TOOLS_OF_TRADE_SCENES) {
       const url = new URL(`https://test/?test=tools-of-trade&gun=${gun}&scene=${scene}&v=1`);
@@ -219,6 +219,7 @@ class FakeButton {
 }
 class MenuRoot {
   html = '';
+  lockedTrials: FakeButton[] = [];
   buttons = STARTING_GUN_IDS.map((id) => {
     const button = new FakeButton();
     button.dataset.startingGun = id;
@@ -232,9 +233,14 @@ class MenuRoot {
   );
   set innerHTML(html: string) {
     this.html = html;
+    this.lockedTrials = [...html.matchAll(/data-try-locked-gun="([^"]+)"/g)].map((match) => {
+      const button = new FakeButton();
+      button.dataset.tryLockedGun = match[1];
+      return button;
+    });
   }
-  querySelectorAll() {
-    return this.buttons;
+  querySelectorAll(selector: string) {
+    return selector === '[data-try-locked-gun]' ? this.lockedTrials : this.buttons;
   }
   querySelector(selector: string) {
     if (selector === '#try-tool' && !this.html.includes('id="try-tool"')) return null;
@@ -277,6 +283,16 @@ test('one Try tool action follows the selected unlocked weapon and reports selec
   root.nodes.get('starting-gun-back')!.onclick!();
   assert.equal(backs, 1);
   assert.equal((root.html.match(/id="try-tool"/g) ?? []).length, 1);
+  for (const gun of ['bellows', 'debt-collector', 'switchjack']) {
+    root.lockedTrials.find((button) => button.dataset.tryLockedGun === gun)!.onclick!();
+    assert.equal(tried.at(-1), gun);
+  }
+  root.nodes.get('start-with-gun')!.onclick!();
+  assert.deepEqual(
+    played,
+    ['twinbore', 'twinbore'],
+    'Trying a locked gun never selects or unlocks it',
+  );
   const ordinary = new MenuRoot();
   startingGunMenu(
     ordinary as unknown as HTMLElement,

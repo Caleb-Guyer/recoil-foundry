@@ -37,7 +37,7 @@ function dispose(g: Game) {
   Matter.Engine.clear(g.engine);
 }
 
-test('surface inspection links reconstruct 120 legal deterministic tool, face and scene checkpoints', () => {
+test('surface inspection links reconstruct legal deterministic checkpoints for every tool, face and scene', () => {
   let count = 0;
   for (const unit of SURFACE_UNITS)
     for (const scene of SURFACE_SCENES)
@@ -53,7 +53,7 @@ test('surface inspection links reconstruct 120 legal deterministic tool, face an
           assert.deepEqual(surfaceMachinesTestRoom(f), surfaceMachinesTestRoom(f));
           count++;
         }
-  assert.equal(count, 120);
+  assert.equal(count, 20 * STARTING_GUN_IDS.length);
 });
 test('surface courses use actual breakable terrain, mounted sources and a distant guard', () => {
   for (const unit of SURFACE_UNITS)

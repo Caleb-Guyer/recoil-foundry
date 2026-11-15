@@ -9,7 +9,12 @@ import {
   seeded,
   type Checkpoint,
 } from '../src/rules.ts';
-import { STARTING_GUN_IDS, dailyStartingGun, isStartingGun } from '../src/starting-guns.ts';
+import {
+  STARTING_GUN_IDS,
+  ORIGINAL_GUN_IDS,
+  dailyStartingGun,
+  isStartingGun,
+} from '../src/starting-guns.ts';
 import { dailyForDate, SUPPORTED_DAILY_RULESETS } from '../src/daily.ts';
 import {
   blueprintCode,
@@ -91,19 +96,22 @@ test('Scattershot and Burst improve native mechanisms and conversion description
 });
 
 for (const gun of STARTING_GUN_IDS) {
-  test(`${gun} emits its real projectiles and applies recoil once per discharge`, () => {
-    const g = fixture([]);
-    g.startingGun = gun;
-    g.gun = getGun([], gun);
-    g.fire();
-    assert.equal(g.shots.length, gun === 'shotgun' ? 5 : gun === 'twinbore' ? 2 : 1);
-    assert.equal(g.shotCount, 1);
-    assert(Math.abs(g.player.velocity.x + g.gun.recoil) < 1e-8);
-    assert.equal(g.burstRemaining, gun === 'nailgun' ? 2 : 0);
-    for (let frame = 0; frame < 12; frame++) g.tick(1 / 60, input);
-    assert.equal(g.shotCount, gun === 'nailgun' ? 3 : 1);
-    assert.equal(g.burstRemaining, 0);
-  });
+  // The three experimental tools have deliberate hold/release, deferred-recoil
+  // and two-press behavior, covered by experimental-weapons.test.ts.
+  if (ORIGINAL_GUN_IDS.includes(gun))
+    test(`${gun} emits its real projectiles and applies recoil once per discharge`, () => {
+      const g = fixture([]);
+      g.startingGun = gun;
+      g.gun = getGun([], gun);
+      g.fire();
+      assert.equal(g.shots.length, gun === 'shotgun' ? 5 : gun === 'twinbore' ? 2 : 1);
+      assert.equal(g.shotCount, 1);
+      assert(Math.abs(g.player.velocity.x + g.gun.recoil) < 1e-8);
+      assert.equal(g.burstRemaining, gun === 'nailgun' ? 2 : 0);
+      for (let frame = 0; frame < 12; frame++) g.tick(1 / 60, input);
+      assert.equal(g.shotCount, gun === 'nailgun' ? 3 : 1);
+      assert.equal(g.burstRemaining, 0);
+    });
   test(`${gun} survives reward Continue, upgrades and fresh retries`, () => {
     const g = start(gun);
     g.openReward();

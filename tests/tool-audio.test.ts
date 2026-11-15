@@ -175,6 +175,69 @@ const frequencies = (sources: Source[]) =>
     .filter((s) => s.kind === 'oscillator')
     .map((s) => s.frequency.events.find((e) => e.kind === 'set')!.value!);
 
+test('experimental weapon reports and mechanism cues are distinct, finite and leave no audio loop', (t) => {
+  const { sound, c } = fixture(t);
+  const signatures = new Set<string>();
+  for (const kind of [
+    'bellows-inhale',
+    'bellows-ready',
+    'bellows-shot',
+    'debt-shot',
+    'debt-vent',
+    'debt-warning',
+    'switchjack-shot',
+    'switchjack-jump',
+    'switchjack-blocked',
+  ]) {
+    const before = c.sources.length;
+    sound.play(kind);
+    const emitted = c.sources.slice(before);
+    assert(emitted.length >= 2, kind);
+    assert(
+      emitted.every(
+        (source) =>
+          !source.loop &&
+          Number.isFinite(source.stopTime) &&
+          source.stopTime <= c.currentTime + 0.3,
+      ),
+      kind,
+    );
+    signatures.add(JSON.stringify(frequencies(emitted)));
+    c.advance(0.7);
+    assert.equal(sound.voices, 0, kind);
+  }
+  assert.equal(signatures.size, 9);
+});
+
+test('pressure readiness and recoil warning remain short and quieter than their discharge', (t) => {
+  const { sound, c } = fixture(t);
+  for (const [notice, discharge] of [
+    ['bellows-ready', 'bellows-shot'],
+    ['debt-warning', 'debt-vent'],
+  ]) {
+    const start = c.sources.length;
+    sound.play(notice);
+    const cues = c.sources.slice(start);
+    const peak = (sources: Source[]) =>
+      Math.max(
+        ...sources.flatMap((source) =>
+          source.connections[0].gain.events
+            .filter((event) => event.kind === 'linear')
+            .map((event) => event.value ?? 0),
+        ),
+      );
+    assert(cues.every((source) => !source.loop && source.stopTime! <= c.currentTime + 0.15));
+    const cuePeak = peak(cues);
+    assert(cuePeak > 0 && cuePeak <= 0.03, notice);
+    c.advance(0.7);
+    assert.equal(sound.voices, 0, notice);
+    const next = c.sources.length;
+    sound.play(discharge);
+    assert(cuePeak < peak(c.sources.slice(next)), notice);
+    c.advance(0.7);
+  }
+});
+
 test('coil and paired-bores have distinct finite reports and quiet mechanical recovery cues', (t) => {
   t.mock.method(Math, 'random', () => 0.5);
   const { sound, c } = fixture(t);

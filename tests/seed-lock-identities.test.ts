@@ -61,7 +61,7 @@ function result(rules: 1 | 2): QuickShiftRecord {
   };
 }
 
-test('new runs own C111, Q2 and Daily 92 while retrying an archived Daily keeps its identity', () => {
+test('new runs own C111, Q2 and Daily 93 while retrying an archived Daily keeps its identity', () => {
   const values = [35, 36];
   assert.equal(
     newCampaignSeed('RF-C108-Z', () => values.shift()!),
@@ -72,8 +72,8 @@ test('new runs own C111, Q2 and Daily 92 while retrying an archived Daily keeps 
     newQuickShiftSeed('RF-Q1-Z', () => quickValues.shift()!),
     'RF-Q2-10',
   );
-  assert.equal(DAILY_RULESET, 92);
-  assert.equal(dailyForDate('2026-10-30')!.seed, 'RF-D92-2026-10-30');
+  assert.equal(DAILY_RULESET, 93);
+  assert.equal(dailyForDate('2026-10-30')!.seed, 'RF-D93-2026-10-30');
   assert.equal(
     retrySeed('RF-D91-2026-10-29', () => {
       throw new Error('An archived Daily must not be rerolled');
@@ -85,7 +85,7 @@ test('new runs own C111, Q2 and Daily 92 while retrying an archived Daily keeps 
 test('all archived Daily links and version-six checkpoints keep their original seed and best', () => {
   assert.deepEqual(
     SUPPORTED_DAILY_RULESETS,
-    Array.from({ length: 15 }, (_, i) => 78 + i),
+    Array.from({ length: 16 }, (_, i) => 78 + i),
   );
   for (const revision of SUPPORTED_DAILY_RULESETS) {
     const challenge = dailyForDate('2026-10-29', revision)!;
@@ -112,7 +112,7 @@ test('all archived Daily links and version-six checkpoints keep their original s
     assert.equal(bests.bests[seed], 9000);
   }
   const old = dailyForDate('2026-10-29', 91)!;
-  const current = dailyForDate('2026-10-29', 92)!;
+  const current = dailyForDate('2026-10-29', 93)!;
   const update = recordDailyWin({ [old.seed]: 9000 }, current, 80)!;
   assert.deepEqual(loadDailyBests(update.bests), { [old.seed]: 9000, [current.seed]: 8000 });
 });

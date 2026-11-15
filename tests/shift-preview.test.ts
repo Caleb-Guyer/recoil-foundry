@@ -110,14 +110,7 @@ for (const mod of SHIFT_MODS)
 
 test('all rendered new-upgrade names and inspection strings are free of replacement or mojibake glyphs', () => {
   for (const mod of SHIFT_MODS)
-    for (const gun of [
-      'pistol',
-      'shotgun',
-      'nailgun',
-      'twinbore',
-      'carbine',
-      'repeater',
-    ] as const) {
+    for (const gun of STARTING_GUN_IDS) {
       const owned = withParents([], [mod.id])!.filter((id) => id !== mod.id),
         inspection = inspectUpgrade(
           owned,

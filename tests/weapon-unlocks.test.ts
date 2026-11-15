@@ -36,23 +36,30 @@ test('fresh players have no gun picker milestone and only the pistol; the two co
   assert.deepEqual(unlockedStartingGuns(loadWeaponUnlocks({ version: 1, cleared: true })), [
     'pistol',
     'shotgun',
+    'debt-collector',
   ]);
   assert.deepEqual(unlockedStartingGuns(loadWeaponUnlocks({ version: 1, overtime: true })), [
     'pistol',
     'shotgun',
     'nailgun',
+    'debt-collector',
   ]);
 });
 
 test('existing victories migrate without granting the nailgun for merely entering Overtime', () => {
   const save = { ...testCheckpoint('LEGACY', 0), overtime: { baseMods: 0, repairs: 0 } };
   const entered = migrateWeaponUnlocks(null, save, [], loadLogbook(null), []);
-  assert.deepEqual(unlockedStartingGuns(entered), ['pistol', 'shotgun']);
+  assert.deepEqual(unlockedStartingGuns(entered), ['pistol', 'shotgun', 'debt-collector']);
   const completed = migrateWeaponUnlocks(null, null, [], loadLogbook(null), ['after-hours']);
-  assert.deepEqual(unlockedStartingGuns(completed), ['pistol', 'shotgun', 'nailgun']);
+  assert.deepEqual(unlockedStartingGuns(completed), [
+    'pistol',
+    'shotgun',
+    'nailgun',
+    'debt-collector',
+  ]);
   assert.deepEqual(
     unlockedStartingGuns(migrateWeaponUnlocks(null, null, [], loadLogbook(null), [], true)),
-    ['pistol', 'shotgun'],
+    ['pistol', 'shotgun', 'debt-collector'],
   );
   assert.equal(
     validWeaponUnlocks({ version: 1, started: false, cleared: false, overtime: 'true' }),
@@ -174,7 +181,7 @@ test('the Logbook keeps extra tools hidden until the first attempt, then shows t
   ).filter((e) => e.weapon);
   assert.deepEqual(
     locked.map((e) => e.state),
-    ['locked', 'locked', 'locked', 'locked', 'locked'],
+    Array(8).fill('locked'),
   );
   const won = logbookCatalog(
     [],
@@ -187,6 +194,6 @@ test('the Logbook keeps extra tools hidden until the first attempt, then shows t
   ).filter((e) => e.weapon);
   assert.deepEqual(
     won.map((e) => e.state),
-    ['known', 'locked', 'locked', 'locked', 'locked'],
+    ['known', 'locked', 'locked', 'locked', 'locked', 'locked', 'known', 'locked'],
   );
 });

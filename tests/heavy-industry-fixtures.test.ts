@@ -31,7 +31,7 @@ function course(query: string) {
   assert(prepareHeavyIndustryTest(g, f));
   return { g, f };
 }
-test('all twelve Heavy courses, six variants and six tools reconstruct 216 legal isolated checkpoints', () => {
+test('all twelve Heavy courses, six variants and all native tools reconstruct legal isolated checkpoints', () => {
   let count = 0;
   for (const unit of HEAVY_UNITS)
     for (const scene of HEAVY_SCENES)
@@ -58,7 +58,7 @@ test('all twelve Heavy courses, six variants and six tools reconstruct 216 legal
           assert.deepEqual(heavyIndustryTestRoom(f), room);
           count++;
         }
-  assert.equal(count, 216);
+  assert.equal(count, 36 * STARTING_GUN_IDS.length);
 });
 test('courses retain actual patrol hulls, support, native variants and a distant live guard', () => {
   for (const unit of HEAVY_UNITS)

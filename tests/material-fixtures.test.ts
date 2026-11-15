@@ -36,7 +36,7 @@ function dispose(g: Game) {
 function tick(g: Game, n = 1) {
   for (let i = 0; i < n; i++) g.tick(1 / 60, idle);
 }
-test('six material ranges and both arrangements reconstruct 72 legal six-tool private checkpoints', () => {
+test('six material ranges and both arrangements reconstruct legal checkpoints for every native tool', () => {
   const seeds = new Set<string>();
   for (const scene of MATERIAL_SCENES)
     for (const gun of STARTING_GUN_IDS)
@@ -57,7 +57,7 @@ test('six material ranges and both arrangements reconstruct 72 legal six-tool pr
         assert.deepEqual(g.level.solids, materialTestRoom(f).solids);
         dispose(g);
       }
-  assert.equal(seeds.size, 72);
+  assert.equal(seeds.size, 12 * STARTING_GUN_IDS.length);
 });
 test('ordinary material bays use real crate, cover, canister and suspended cargo bodies without an automatic result', () => {
   for (const scene of ['props', 'reactions', 'breakage'])

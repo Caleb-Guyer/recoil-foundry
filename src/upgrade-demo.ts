@@ -69,6 +69,28 @@ export function createUpgradeDemo(
   Body.setPosition(g.player, { x: 180, y: 721 });
   g.waves.clear();
   if (isShiftMod(scenario)) setupShiftDemo(g, scenario);
+  // Place short/slow native tools within their real reach. The targets still
+  // take ordinary projectile collisions; the preview never extends a weapon.
+  if (['polarity-rounds', 'ghost-shift'].includes(scenario)) {
+    if (startingGun === 'bellows') Body.setPosition(g.player, { x: 430, y: 721 });
+    if (startingGun === 'switchjack') Body.setPosition(g.player, { x: 330, y: 721 });
+  }
+  if (startingGun === 'bellows' && scenario === 'gate-snare')
+    Body.setPosition(g.player, { x: 550, y: 721 });
+  if (startingGun === 'switchjack' && scenario === 'gate-snare')
+    Body.setPosition(g.player, { x: 550, y: 721 });
+  if (['bellows', 'switchjack'].includes(startingGun) && scenario === 'gate-snare') {
+    // The two short-range surface anchors are the subject of this scene;
+    // target dummies would intercept the single beacon before it reaches one.
+    for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
+    g.enemies = [];
+  }
+  if (startingGun === 'bellows' && scenario === 'scrap-comet')
+    Body.setPosition(g.player, { x: 450, y: 721 });
+  if (!isShiftMod(scenario) && startingGun === 'bellows' && !g.torch.equipped)
+    Body.setPosition(g.player, { x: 410, y: 721 });
+  if (!isShiftMod(scenario) && startingGun === 'switchjack' && !g.torch.equipped)
+    Body.setPosition(g.player, { x: 330, y: 721 });
   return g;
 }
 
@@ -170,8 +192,10 @@ function shiftDemoInput(g: Game, step: number, id: string): Input {
         (t >= 4 && t < 4.4),
     };
   if (id === 'gate-snare') {
-    const fire = [20, 48, 110, 138, 210, 238].includes(step),
-      near = Math.floor(step / 28) % 2 === 0;
+    const slow = g.startingGun === 'switchjack',
+      schedule = slow ? [20, 70, 130, 180, 240, 290] : [20, 48, 110, 138, 210, 238],
+      fire = schedule.includes(step),
+      near = slow ? schedule.indexOf(step) % 2 === 0 : Math.floor(step / 28) % 2 === 0;
     return {
       ...base,
       fire,
@@ -201,7 +225,10 @@ function shiftDemoInput(g: Game, step: number, id: string): Input {
   if (id === 'polarity-rounds')
     return {
       ...base,
-      fire: (t >= 0.1 && t < 1.3) || (t >= 3 && t < 4.2),
+      fire:
+        g.startingGun === 'bellows'
+          ? t >= 0.1 && t < 4.2
+          : (t >= 0.1 && t < 1.3) || (t >= 3 && t < 4.2),
       aim: { ...(targets[g.shotCount % Math.max(1, targets.length)]?.body.position ?? aim) },
     };
   if (id === 'ricochet-harness')
@@ -293,9 +320,10 @@ function shiftDemoInput(g: Game, step: number, id: string): Input {
   return base;
 }
 
-export function upgradeDemoInput(g: Game, step: number): Input {
+function ordinaryDemoInput(g: Game, step: number): Input {
   const t = step / 60,
-    p = g.player.position;
+    p = g.player.position,
+    shortNative = g.experimentalWeapons.kind === 'bellows';
   const scenario = scenarios.get(g);
   if (scenario && isShiftMod(scenario)) return shiftDemoInput(g, step, scenario);
   if (
@@ -328,8 +356,8 @@ export function upgradeDemoInput(g: Game, step: number): Input {
         split: false,
       });
     return {
-      left: p.x > 220,
-      right: p.x < 165,
+      left: p.x > (shortNative ? 430 : 220),
+      right: p.x < (shortNative ? 390 : 165),
       jump: false,
       jumpHeld: false,
       fire: scenario !== 'field-patch' && t > 0.15 && t < 4.6,
@@ -350,8 +378,8 @@ export function upgradeDemoInput(g: Game, step: number): Input {
   const aim =
     t >= 4.7 ? { x: 870, y: 610 } : t >= 3.2 && t < 3.6 ? { x: p.x, y: 800 } : { x: 670, y: 720 };
   return {
-    left: p.x > 390,
-    right: p.x < 165,
+    left: p.x > (shortNative ? 430 : 390),
+    right: p.x < (shortNative ? 390 : 165),
     jump,
     jumpHeld: jump,
     fire,
@@ -360,6 +388,43 @@ export function upgradeDemoInput(g: Game, step: number): Input {
     ...(g.portals.equipped && step === 5 ? { portal: { x: 858, y: 610 } } : {}),
     ...(g.portals.equipped && step === 7 ? { portal: { x: 400, y: 740 } } : {}),
   };
+}
+
+/** Demonstrate a native trigger with the same press/release controls a player
+ * uses. A live Switchjack bolt is allowed to hit; a second press would spend
+ * that damage on relocation. Beam/lock-on conversions own their own trigger. */
+export function upgradeDemoInput(g: Game, step: number): Input {
+  const input = ordinaryDemoInput(g, step),
+    kind = g.experimentalWeapons.kind,
+    scenario = scenarios.get(g);
+  // A Debt shot has not reversed flight yet. Pay its kick while descent is
+  // still slow enough for the paid vent to make the reversal visible.
+  if (
+    kind === 'debt-collector' &&
+    scenario === 'false-silhouette' &&
+    g.experimentalWeapons.debt > 0
+  )
+    return { ...input, fire: false, firePressed: false };
+  if (!input.fire || !kind) return input;
+  if (kind === 'bellows') {
+    const pressure =
+      scenario === 'polarity-rounds' ? 0.95 : scenario === 'false-silhouette' ? 0.17 : 0.45;
+    return {
+      ...input,
+      fire: g.time < g.shootAt || g.experimentalWeapons.pressure < pressure,
+      firePressed: false,
+    };
+  }
+  if (kind === 'switchjack')
+    return {
+      ...input,
+      fire:
+        g.experimentalWeapons.bolt || g.time < g.shootAt
+          ? g.experimentalWeapons.holding
+          : !g.experimentalWeapons.holding,
+      firePressed: false,
+    };
+  return input;
 }
 export function destroyUpgradeDemo(g: Game) {
   g.setMode('title');

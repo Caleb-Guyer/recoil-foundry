@@ -12,8 +12,11 @@ export const WEAPON_REQUIREMENTS: Record<StartingGun, string> = {
   twinbore: 'Defeat the Press or Kiln in Campaign or Daily.',
   carbine: 'Win two different Campaign miniboss hunts.',
   repeater: 'Complete the Boss Gauntlet.',
+  bellows: 'Defeat the Press or Kiln in Campaign or Daily.',
+  'debt-collector': 'Beat the Campaign to unlock.',
+  switchjack: 'Win two different Campaign miniboss hunts.',
 };
-export const TOOL_LICENSES = ['twinbore', 'carbine', 'repeater'] as const;
+export const TOOL_LICENSES = ['twinbore', 'carbine', 'repeater', 'bellows', 'switchjack'] as const;
 export type ToolLicense = (typeof TOOL_LICENSES)[number];
 export interface WeaponUnlocks {
   version: 1;
@@ -79,8 +82,9 @@ export function migrateWeaponUnlocks(
   const licenses = TOOL_LICENSES.filter(
     (id) =>
       p.licenses?.includes(id) ||
-      (id === 'twinbore' && victories.some((kind) => kind === 'press' || kind === 'kiln')) ||
-      (id === 'carbine' &&
+      ((id === 'twinbore' || id === 'bellows') &&
+        victories.some((kind) => kind === 'press' || kind === 'kiln')) ||
+      ((id === 'carbine' || id === 'switchjack') &&
         ['cable-cut', 'plate-breaker', 'fuse-pulled'].filter((goal) =>
           earned.includes(goal as CommendationId),
         ).length >= 2) ||
@@ -105,6 +109,7 @@ export function unlockedStartingGuns(p: WeaponUnlocks): StartingGun[] {
     (id) =>
       id === 'pistol' ||
       (id === 'shotgun' && p.cleared) ||
+      (id === 'debt-collector' && p.cleared) ||
       (id === 'nailgun' && p.overtime) ||
       p.licenses?.includes(id as ToolLicense),
   );

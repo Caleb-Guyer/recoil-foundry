@@ -29,7 +29,7 @@ function course(q: string) {
   assert(prepareSupportSystemsTest(g, f));
   return { g, f };
 }
-test('twenty support courses and six tools reconstruct 120 legal isolated checkpoints', () => {
+test('twenty support courses and all native tools reconstruct legal isolated checkpoints', () => {
   let count = 0;
   for (const unit of SUPPORT_UNITS)
     for (const scene of SUPPORT_SCENES)
@@ -49,7 +49,7 @@ test('twenty support courses and six tools reconstruct 120 legal isolated checkp
         assert.deepEqual(supportSystemsTestRoom(f), supportSystemsTestRoom(f));
         count++;
       }
-  assert.equal(count, 120);
+  assert.equal(count, 20 * STARTING_GUN_IDS.length);
 });
 test('all support inspection floors retain native sources, actual owned Sentries, support and distant guard', () => {
   for (const unit of SUPPORT_UNITS)

@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { weaponPilotInput } from './weapon-pilot.ts';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
@@ -219,7 +220,7 @@ function snapshot(g: Game) {
   });
 }
 
-test('current expansion maximal builds remain native, finite and bounded across six tools, paths, all beam forms, morphs and fusions', () => {
+test('current expansion maximal builds remain native, finite and bounded across nine tools, paths, all beam forms, morphs and fusions', () => {
   const combos = combinations();
   assert(combos.length >= 100 && combos.length <= 200, `deduplicated matrix size ${combos.length}`);
   const seen = new Set(combos.flatMap((c) => c.mods));
@@ -287,7 +288,7 @@ test('current expansion maximal builds remain native, finite and bounded across 
             fire,
             aim,
           };
-          g.tick(DT, input);
+          g.tick(DT, weaponPilotInput(g, input));
           painted ||= g.shiftMorphs.locks.some((lock) => lock.progress === 1);
           beamSeen ||= g.torch.active;
           bounded(g, code + '@' + frame);

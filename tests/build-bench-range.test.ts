@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { weaponPilotInput } from './weapon-pilot.ts';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
@@ -15,7 +16,7 @@ const idle: Input = {
   aim: { x: 560, y: 723 },
 };
 function step(g: Game, frames = 1, input: Partial<Input> = {}) {
-  for (let i = 0; i < frames; i++) g.tick(1 / 60, { ...idle, ...input });
+  for (let i = 0; i < frames; i++) g.tick(1 / 60, weaponPilotInput(g, { ...idle, ...input }));
 }
 function room(
   scenario: 'standard' | 'groups' | 'incoming' | 'cover' | 'recoil',
@@ -62,7 +63,11 @@ for (const gun of STARTING_GUN_IDS)
     const hit = new Set<number>();
     step(g, 30);
     for (let n = 0; n < 180; n++) {
-      step(g, 1, { fire: true, aim: { x: 700, y: 723 } });
+      step(g, 1, {
+        fire: true,
+        right: (gun === 'bellows' || gun === 'switchjack') && g.player.position.x < 440,
+        aim: { x: 700, y: 723 },
+      });
       for (const e of targets) if (e.hp < e.maxHp) hit.add(e.id);
     }
     assert(hit.size >= 2, gun + ': actual penetration/group damage never reached the next target');

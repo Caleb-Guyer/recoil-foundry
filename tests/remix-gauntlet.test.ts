@@ -49,7 +49,7 @@ const access = {
   started: true,
   cleared: true,
   overtime: true,
-  licenses: ['twinbore', 'carbine', 'repeater'],
+  licenses: ['twinbore', 'carbine', 'repeater', 'bellows', 'switchjack'],
 };
 const idle: Input = {
   left: false,
@@ -177,8 +177,30 @@ for (const tier of ['standard', 'overclocked'] as const)
           assert(result.clear && g.hp > 0, JSON.stringify({ tier, gun, id, result }));
           if (i < 4) {
             const s = g.gauntlet.state!;
-            const fitting =
-              s.hp < 75
+            const experimental = ['bellows', 'debt-collector', 'switchjack'].includes(gun);
+            const nativeFit = [
+              'rapid',
+              'leech',
+              'pierce',
+              'collimator',
+              'countershot',
+              'airshot',
+              'crossfire',
+              'deadeye',
+              'scatter',
+              'magnum',
+              'execute',
+            ].find((id) => s.offers.includes(id));
+            // The close pressure gun and finite-flight bolt reward different
+            // service choices from an automatic gun. Spend only earned offers,
+            // and take the normal repair instead of gambling damaged health.
+            const fitting = experimental
+              ? gun === 'bellows' && s.hp >= 50 && s.offers.includes('countershot')
+                ? 'countershot'
+                : s.hp < 95 || (!nativeFit && s.hp < 100)
+                  ? 'repair'
+                  : (nativeFit ?? s.offers[0])
+              : s.hp < 75
                 ? 'repair'
                 : (s.offers.find((id) =>
                     [

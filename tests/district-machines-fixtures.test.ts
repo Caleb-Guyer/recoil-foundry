@@ -29,7 +29,7 @@ function course(q: string) {
   assert(prepareDistrictMachinesTest(g, f));
   return { g, f };
 }
-test('fifteen district inspections and six tools reconstruct ninety legal isolated checkpoints', () => {
+test('fifteen district inspections and all native tools reconstruct their legal isolated checkpoints', () => {
   let count = 0;
   for (const unit of DISTRICT_UNITS)
     for (const scene of DISTRICT_SCENES)
@@ -42,7 +42,7 @@ test('fifteen district inspections and six tools reconstruct ninety legal isolat
         assert.deepEqual(districtMachinesTestRoom(f), districtMachinesTestRoom(f));
         count++;
       }
-  assert.equal(count, 90);
+  assert.equal(count, 15 * STARTING_GUN_IDS.length);
 });
 test('district courses contain actual sources, authored cover, raised support and a distant guard', () => {
   for (const unit of DISTRICT_UNITS)

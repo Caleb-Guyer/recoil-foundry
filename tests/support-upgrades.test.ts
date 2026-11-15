@@ -356,7 +356,7 @@ test('support comparison scenarios demonstrate focus, heat transfer, stored exce
 });
 
 test('new support upgrades obey prerequisites and are absent from every archived Daily pool', () => {
-  assert.equal(DAILY_RULESET, 92);
+  assert.equal(DAILY_RULESET, 93);
   assert(!validBuild(['heat-relay']));
   assert(validBuild(['cutting-torch', 'thermal-runaway', 'heat-relay']));
   for (const rules of SUPPORTED_DAILY_RULESETS) {

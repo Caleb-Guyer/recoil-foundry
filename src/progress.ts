@@ -74,7 +74,9 @@ import {
 
 export const PROGRESS_KEY = 'rf-progress-v1';
 export const CHECKPOINT_KEY = 'rf-checkpoint-v5';
-export const BACKUP_LIMIT = 1024 * 1024;
+// Nine tools across three courses can retain 27 full-resolution race ghosts.
+// Keep their original frame budget while leaving a strict import-size bound.
+export const BACKUP_LIMIT = 2 * 1024 * 1024;
 export const PROGRESS_KEYS = [
   QUICK_SHIFT_CONTINUE_KEY,
   QUICK_SHIFT_RECORDS_KEY,
@@ -405,7 +407,7 @@ export function validateProgress(raw: unknown): ProgressValues | null {
   }
 }
 export function parseProgressBackup(text: string): ProgressBackup {
-  if (text.length > BACKUP_LIMIT) throw new Error('This backup is too large (maximum 1 MB).');
+  if (text.length > BACKUP_LIMIT) throw new Error('This backup is too large (maximum 2 MB).');
   let raw: unknown;
   try {
     raw = JSON.parse(text);
