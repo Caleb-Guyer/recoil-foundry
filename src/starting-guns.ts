@@ -34,9 +34,41 @@ export const STARTING_GUNS = {
     description:
       'A steady stream of light rounds. Small, frequent kicks make fine flight corrections.',
   },
+  bellows: {
+    name: 'Bellows Cannon',
+    trait: 'Hold to inhale · Release to blast',
+    description:
+      'Hold fire to inhale and drift forward. Release a short shrapnel blast and kick backward. Scrap boosts damage; none is required. Heavy enemies resist suction. Beam, Seeker Rack and Suspension replace this trigger.',
+  },
+  'debt-collector': {
+    name: 'Debt Collector',
+    trait: 'Fire now · Pay recoil on release',
+    description:
+      'Fire rounds immediately while banking recoil, even in midair. Release to vent one kick opposite your current aim. A full chamber vents automatically.',
+  },
+  switchjack: {
+    name: 'Switchjack',
+    trait: 'Launch a bolt · Press again to relocate',
+    description:
+      'Fire a slow bolt. Press fire again while it is live to relocate to it, consuming it. The route must fit your whole body; blocked attempts leave the bolt flying. Beam, Seeker Rack and Suspension replace this trigger.',
+  },
 } as const;
 export type StartingGun = keyof typeof STARTING_GUNS;
 export const STARTING_GUN_IDS = Object.keys(STARTING_GUNS) as StartingGun[];
+// Freeze old Daily rotations even when later releases extend the tool catalog.
+export const ORIGINAL_GUN_IDS: readonly StartingGun[] = [
+  'pistol',
+  'shotgun',
+  'nailgun',
+  'twinbore',
+  'carbine',
+  'repeater',
+];
+export const EXPERIMENTAL_GUN_IDS = ['bellows', 'debt-collector', 'switchjack'] as const;
+export type ExperimentalGun = (typeof EXPERIMENTAL_GUN_IDS)[number];
+export function isExperimentalGun(value: unknown): value is ExperimentalGun {
+  return typeof value === 'string' && (EXPERIMENTAL_GUN_IDS as readonly string[]).includes(value);
+}
 export function isStartingGun(value: unknown): value is StartingGun {
   return typeof value === 'string' && Object.hasOwn(STARTING_GUNS, value);
 }
@@ -76,6 +108,23 @@ export function applyStartingGun(gun: Gun, id: StartingGun, mods: readonly strin
     gun.interval *= 0.55;
     gun.recoil *= 0.62;
     gun.projectileSpeed *= 1.12;
+  } else if (id === 'bellows') {
+    const pellets = gun.pellets;
+    gun.pellets += 4;
+    gun.damage *= (pellets / gun.pellets) * 2.8;
+    gun.interval *= 2.8;
+    gun.recoil *= 2.4;
+    gun.spread = Math.max(gun.spread, mods.includes('deadeye') ? 0.055 : 0.11);
+    gun.projectileSpeed *= 0.8;
+  } else if (id === 'debt-collector') {
+    gun.damage *= 0.9;
+    gun.interval *= 0.9;
+    gun.projectileSpeed *= 1.08;
+  } else if (id === 'switchjack') {
+    gun.damage *= 2.7;
+    gun.interval *= 2.7;
+    gun.recoil *= 1.4;
+    gun.projectileSpeed *= 0.28;
   }
   return gun;
 }
@@ -91,7 +140,13 @@ export function dailyStartingGun(seed: string): StartingGun | undefined {
     return undefined;
   if (Number(match[1]) < 86) return 'pistol';
   const day = Math.floor(date.getTime() / 86400000);
-  const rotation = Number(match[1]) >= 89 ? STARTING_GUN_IDS : STARTING_GUN_IDS.slice(0, 3);
+  const version = Number(match[1]);
+  const rotation =
+    version >= 93
+      ? STARTING_GUN_IDS
+      : version >= 89
+        ? ORIGINAL_GUN_IDS
+        : ORIGINAL_GUN_IDS.slice(0, 3);
   return rotation[((day % rotation.length) + rotation.length) % rotation.length];
 }
 

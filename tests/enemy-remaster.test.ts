@@ -24,6 +24,7 @@ import { snapshotRun } from '../src/run-history.ts';
 import { roomRematchSnapshot, RoomRematch } from '../src/room-rematch.ts';
 import { rematchEntry } from '../src/room-rematch.ts';
 import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
+import { weaponPilotInput } from './weapon-pilot.ts';
 
 const { Body, Bodies, Composite } = Matter;
 const idle = {
@@ -510,15 +511,18 @@ test('the gunner deck is reachable with every unmodified starting tool from eith
           move = dx > 8 ? 1 : dx < -8 ? -1 : 0;
         const blocked =
           move && Matter.Query.ray(g.solidBodies, p, { x: p.x + move * 65, y: p.y }, 24).length > 0;
-        g.tick(1 / 60, {
-          ...idle,
-          left: move < 0,
-          right: move > 0,
-          jump: g.grounded && (phase === 'rise' || !!blocked),
-          jumpHeld: true,
-          fire: phase === 'rise',
-          aim: { x: p.x, y: p.y + 500 },
-        });
+        g.tick(
+          1 / 60,
+          weaponPilotInput(g, {
+            ...idle,
+            left: move < 0,
+            right: move > 0,
+            jump: g.grounded && (phase === 'rise' || !!blocked),
+            jumpHeld: true,
+            fire: phase === 'rise',
+            aim: { x: p.x, y: p.y + 500 },
+          }),
+        );
         if (
           phase === 'land' &&
           g.grounded &&

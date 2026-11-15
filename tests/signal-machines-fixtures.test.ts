@@ -42,7 +42,7 @@ function until(g: Game, check: () => boolean, max = 600) {
   assert(check(), 'Expected native signal state');
 }
 
-test('twelve signal inspections reconstruct72 legal deterministic isolated tool checkpoints', () => {
+test('twelve signal inspections reconstruct all legal deterministic isolated tool checkpoints', () => {
   let count = 0;
   for (const unit of SIGNAL_UNITS)
     for (const scene of SIGNAL_SCENES)
@@ -55,7 +55,7 @@ test('twelve signal inspections reconstruct72 legal deterministic isolated tool 
         assert.deepEqual(signalMachinesTestRoom(f), signalMachinesTestRoom(f));
         count++;
       }
-  assert.equal(count, 72);
+  assert.equal(count, 12 * STARTING_GUN_IDS.length);
 });
 test('signal courses use actual Annex stations, native actors, supported decks and a distant guard', () => {
   for (const unit of SIGNAL_UNITS)

@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { weaponPilotInput } from './weapon-pilot.ts';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
@@ -63,7 +64,8 @@ for (const gun of STARTING_GUN_IDS)
     assert.equal(p.seed, g.seed);
     assert.equal(p.workshop.scenario, 'groups');
     assert.equal(p.hp, 100);
-    for (let i = 0; i < 130; i++) practice.tick(1 / 60, { ...idle, fire: i > 30 });
+    for (let i = 0; i < 130; i++)
+      practice.tick(1 / 60, weaponPilotInput(p, { ...idle, fire: i > 30 }));
     assert(p.shotCount > 0);
     assert((p.combatReport.snapshot().activations?.['piston-lance'] ?? 0) > 0);
     assert.equal(g.mode, 'paused');

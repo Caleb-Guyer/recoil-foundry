@@ -6,6 +6,7 @@ import { drawBuildMotion } from './build-motion-art.ts';
 import { drawShiftRun } from './shift-run-art.ts';
 import { drawShiftMorphs } from './shift-morph-art.ts';
 import { drawShiftUpgrades } from './shift-upgrades-art.ts';
+import { drawExperimentalWeapons, drawExperimentalWeaponHud } from './experimental-weapons-art.ts';
 import { drawShiftFusions } from './shift-fusions-art.ts';
 import { drawShiftRoute } from './shift-route-art.ts';
 import { drawBossRemaster, drawBossRemasterWarnings } from './boss-remaster-art.ts';
@@ -1049,6 +1050,7 @@ export class Renderer {
         c.restore();
       }
     }
+    drawExperimentalWeapons(c, g, this.reduced);
     drawAreaEvent(c, g);
     drawInteractionCues(c, g);
     if (this.goalCue && g.mode === 'playing' && !g.finale.cinema?.active) {
@@ -1242,6 +1244,7 @@ export class Renderer {
       }
       c.restore();
     }
+    if (!framing || framing.player) drawExperimentalWeaponHud(c, g, this.width, this.height);
     drawFinalHud(c, g, this.width, this.height);
     if (g.escape?.phase === 'extracting' && g.mode !== 'title') {
       const fade = clamp((g.escape.depart / EXTRACTION_DURATION - 0.82) / 0.18, 0, 1);

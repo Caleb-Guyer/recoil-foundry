@@ -1,9 +1,9 @@
 {
   "name": "recoil-foundry",
-  "version": "5.46.1",
+  "version": "5.48.0",
   "private": true,
   "type": "module",
-  "description": "Six earned tools. Twenty stages. A physics roguelike with 161 upgrades, morphs, alternate districts and recoil movement.",
+  "description": "Nine earned tools. Twenty stages. A physics roguelike with 161 upgrades, morphs, alternate districts and recoil movement.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",

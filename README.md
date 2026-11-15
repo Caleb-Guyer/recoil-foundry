@@ -13,7 +13,7 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 **First time playing?** [Join the playtest discussion](https://itch.io/t/7174290/recoil-foundry-free-browser-does-recoil-movement-make-sense-in-the-first-ten-minutes). Play normally, then share what was fun, what got in your way and whether you actually restarted. Short sessions and returning players are welcome too.
 
 - **161 upgrades**, including 20 Factory Unbound fittings and 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
-- **Six starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine and Pressure repeater through different accomplishments.
+- **Nine starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine, Pressure repeater, Bellows Cannon, Debt Collector and Switchjack. Every tool has a private trial before unlocking.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
@@ -21,9 +21,11 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
+**Current update: 5.48.0 — Unconventional Arsenal.** Bellows Cannon pulls before blasting, Debt Collector stores recoil for a deliberate vent, and Switchjack trades a live bolt for a clear-path jump. All nine tools have private trials; old Daily rotations stay intact. [Mechanics, unlocks and private ranges](docs/releases/5.48.0.md).
+
 **Patch 5.46.1 - Feedback drafts.** Resuming the same attempt keeps your feedback text, category and reviewed details. New attempts and retries start fresh. [Patch details](docs/releases/5.46.1.md).
 
-**Current update: 5.46.0 — Material Response.** Crates, movable cover, canisters and suspended cargo gain fitted construction, local damage reactions and health-based wear. Actual breakage releases brief material fragments, while registered weak walls and shelves show clearer seams and native support collapse. [Details and six private tests](docs/releases/5.46.0.md).
+**Previous update: 5.46.0 — Material Response.** Crates, movable cover, canisters and suspended cargo gain fitted construction, local damage reactions and health-based wear. Actual breakage releases brief material fragments, while registered weak walls and shelves show clearer seams and native support collapse. [Details and six private tests](docs/releases/5.46.0.md).
 
 **Previous update: 5.45.0 — Special Delivery.** The Scrap Courier gains working suspension and cargo machinery, local damage reactions, a shutdown and inert wreck, clearer escape and recovery cues, bonus reward explanations and its own pictured Logbook guide. [Details and eight private tests](docs/releases/5.45.0.md).
 

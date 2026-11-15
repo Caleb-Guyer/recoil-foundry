@@ -125,9 +125,53 @@ test('real previews use the same firearm rules and native shot pattern', () => {
     g.fire();
     assert.equal(g.shots.length, g.gun.pellets * g.gun.lanes);
     assert(g.shots.every((s) => s.friendly && s.damage === g.gun.damage));
+    if (gun === 'debt-collector') {
+      assert.equal(g.player.velocity.x, 0, 'the real Debt Collector banks its kick');
+      assert(g.experimentalWeapons.debt > 0);
+      g.experimentalWeapons.input(1 / 60, {
+        left: false,
+        right: false,
+        jump: false,
+        fire: false,
+        aim: g.aim,
+      });
+    }
     assert(g.player.velocity.x < 0, 'The real shot applies recoil');
     destroyUpgradeDemo(g);
     assert.equal(Matter.Composite.allBodies(g.engine.world).length, 0);
+  }
+});
+
+test('automatic previews pump, vent and launch the three native experimental tools through real inputs', () => {
+  for (const gun of ['bellows', 'debt-collector', 'switchjack'] as const) {
+    const g = createUpgradeDemo([], gun),
+      sounds: string[] = [];
+    g.onSound = (sound) => sounds.push(sound);
+    let pressure = 0,
+      debt = 0,
+      beacon = false,
+      damaged = false,
+      writes = 0;
+    g.onCheckpoint = () => writes++;
+    g.onCommendation = () => writes++;
+    for (let step = 0; step < 420 && g.mode === 'playing'; step++) {
+      g.tick(1 / 60, upgradeDemoInput(g, step));
+      pressure = Math.max(pressure, g.experimentalWeapons.pressure);
+      debt = Math.max(debt, g.experimentalWeapons.debt);
+      beacon ||= !!g.experimentalWeapons.bolt;
+      damaged ||= g.kills > 0 || g.enemies.some((e) => e.hp < e.maxHp);
+    }
+    assert(g.shotCount >= 2, `${gun}: the native control loop must repeat`);
+    assert(damaged, `${gun}: real emitted ammunition must reach a target`);
+    if (gun === 'bellows') assert(pressure >= 0.4 && sounds.includes('bellows-shot'));
+    if (gun === 'debt-collector') assert(debt > 0 && sounds.includes('debt-vent'));
+    if (gun === 'switchjack') {
+      assert(beacon, 'a real emitted shot becomes the live beacon');
+      assert(!sounds.includes('switchjack-jump'), 'the damage preview must not sacrifice its bolt');
+    }
+    assert.equal(writes, 0);
+    assert.deepEqual(g.mods, []);
+    destroyUpgradeDemo(g);
   }
 });
 

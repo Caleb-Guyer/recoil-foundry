@@ -1,4 +1,5 @@
 import { seedLockedCombat } from './seed-lock.ts';
+import { ExperimentalWeapons } from './experimental-weapons.ts';
 import { MachineBreakdown } from './machine-breakdown.ts';
 import { OperatorSurface } from './operator-surface.ts';
 import { factoryUnboundRoom, prepareFactoryUnbound } from './factory-unbound-room.ts';
@@ -532,6 +533,7 @@ export class Game {
   shots: Shot[] = [];
   particles: Particle[] = [];
   combatFeel = new CombatFeel();
+  experimentalWeapons = new ExperimentalWeapons(this);
   machineBreakdown = new MachineBreakdown(this);
   operatorSurface = new OperatorSurface(this);
   trail: Vec[] = [];
@@ -883,6 +885,7 @@ export class Game {
     if (mode === 'paused' && this.auditor.enemy) this.save();
     if (mode === 'paused' && this.recoil.active) this.save();
     if (mode !== 'playing') {
+      this.experimentalWeapons.pause();
       this.operatorSurface.pause(mode === 'paused');
       this.stasis.held = false;
       this.mobility.pause();
@@ -895,6 +898,7 @@ export class Game {
     if (mode === 'dead' || mode === 'won' || mode === 'title') {
       this.materialResponse.reset();
       this.combatFeel.reset();
+      this.experimentalWeapons.reset();
       this.commendations.weapons.reset();
       this.welder.clear();
       this.switchboard.clear();
@@ -1429,6 +1433,7 @@ export class Game {
     this.shots = [];
     this.particles = [];
     this.combatFeel.reset();
+    this.experimentalWeapons.reset();
     this.trail = [];
     this.clear = false;
     this.coyote = 0;
@@ -1850,6 +1855,7 @@ export class Game {
     this.trail = [];
     this.particles = [];
     this.combatFeel.reset();
+    this.experimentalWeapons.reset();
     this.burstRemaining = 0;
     this.fireBuffer = this.jumpBuffer = 0;
     this.blast.life = this.muzzle = this.hitStop = 0;
@@ -2036,6 +2042,7 @@ export class Game {
     this.kick.y *= 0.72;
     this.muzzle = Math.max(0, this.muzzle - dt);
     this.land = Math.max(0, this.land - dt);
+    const rawWeaponFire = input.fire;
     input = this.shiftMorphs.input(dt, input);
     // Keep jump taps through the tiny impact pause.
     if (input.jump) this.jumpBuffer = this.areaEvents.input(true) ? 0 : 0.12;
@@ -2164,7 +2171,9 @@ export class Game {
     }
     this.mobility.update(input);
     this.shiftUpgrades.afterGround(input, wasGrounded);
-    if (this.torch.equipped) {
+    if (this.experimentalWeapons.input(dt, input, rawWeaponFire)) {
+      this.fireBuffer = 0;
+    } else if (this.torch.equipped) {
       this.torch.beforeStep(
         dt,
         input.fire || (!this.mods.includes('charge-lens') && this.fireBuffer > 0),
@@ -2242,6 +2251,7 @@ export class Game {
     this.shiftMorphs.tick(dt);
     this.shiftRun.tick(dt, input);
     this.shiftUpgrades.beforeIntegrate(dt);
+    this.experimentalWeapons.beforePhysics();
     Engine.update(this.engine, 1000 / 60);
     this.commendations.weapons.sampleGround();
     this.counterweights.afterStep();
@@ -2268,6 +2278,7 @@ export class Game {
     this.ballistics.update();
     if (this.mode !== 'playing') return;
     this.updateShots(dt);
+    this.experimentalWeapons.update();
     this.torch.afterStep(dt);
     if (this.finale.cinema?.waiting && !this.finale.cinema.combat) {
       // A finishing hit may have switched scenes inside a weapon callback.
@@ -2482,13 +2493,15 @@ export class Game {
       (charged ? 1.25 : 1) *
       (rail ? RAIL_RECOIL : 1);
     const beforeRecoil = this.player.velocity.y;
-    const shiftDelta = this.shiftUpgrades.recoilDelta(d, impulse);
-    Body.setVelocity(this.player, {
-      x: clamp(this.player.velocity.x + shiftDelta.x, -23, 23),
-      y: clamp(this.player.velocity.y + shiftDelta.y, -21, 20),
-    });
-    this.commendations.mastery.recoiled(beforeRecoil - this.player.velocity.y);
-    this.salvage.launch(d, impulse);
+    if (!this.experimentalWeapons.captureRecoil(d, impulse)) {
+      const shiftDelta = this.shiftUpgrades.recoilDelta(d, impulse);
+      Body.setVelocity(this.player, {
+        x: clamp(this.player.velocity.x + shiftDelta.x, -23, 23),
+        y: clamp(this.player.velocity.y + shiftDelta.y, -21, 20),
+      });
+      this.commendations.mastery.recoiled(beforeRecoil - this.player.velocity.y);
+      this.salvage.launch(d, impulse);
+    }
     this.onHaptic('shot', Math.min(1, 0.3 + impulse / 12));
     this.feedback(
       (this.grounded ? 2.2 : 3.8) *
@@ -2503,21 +2516,27 @@ export class Game {
           ? 'charged'
           : this.gun.shellshock
             ? 'shell-shot'
-            : this.mods.includes('magnum')
-              ? 'heavy'
-              : this.startingGun === 'shotgun'
-                ? 'shotgun-shot'
-                : this.startingGun === 'nailgun'
-                  ? 'nail-shot'
-                  : this.startingGun === 'carbine'
-                    ? 'carbine-shot'
-                    : this.startingGun === 'twinbore'
-                      ? 'twinbore-shot'
-                      : this.startingGun === 'repeater'
-                        ? 'repeater-shot'
-                        : this.mods.includes('scatter')
-                          ? 'scatter'
-                          : 'shot',
+            : this.experimentalWeapons.kind === 'bellows'
+              ? 'bellows-shot'
+              : this.experimentalWeapons.kind === 'debt-collector'
+                ? 'debt-shot'
+                : this.experimentalWeapons.kind === 'switchjack'
+                  ? 'switchjack-shot'
+                  : this.mods.includes('magnum')
+                    ? 'heavy'
+                    : this.startingGun === 'shotgun'
+                      ? 'shotgun-shot'
+                      : this.startingGun === 'nailgun'
+                        ? 'nail-shot'
+                        : this.startingGun === 'carbine'
+                          ? 'carbine-shot'
+                          : this.startingGun === 'twinbore'
+                            ? 'twinbore-shot'
+                            : this.startingGun === 'repeater'
+                              ? 'repeater-shot'
+                              : this.mods.includes('scatter')
+                                ? 'scatter'
+                                : 'shot',
     );
     this.combatFeel.pumpAt = null;
     this.combatFeel.pumpStartedAt = -100;
@@ -2561,6 +2580,7 @@ export class Game {
         this.toolroom.tag(s);
         if (bank > 1) s.overkillSpent = true;
       }
+    this.experimentalWeapons.afterDischarge(beforeVolley);
     this.ballistics.record(beforeVolley, origin, d);
     if (!this.stasis.held && !this.mods.includes('tripline'))
       this.stasis.release(this.shots.filter((s) => s.id > beforeVolley));

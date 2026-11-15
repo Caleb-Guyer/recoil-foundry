@@ -11,7 +11,7 @@ import {
   BOSS_TEMPLATES,
   recordAction,
 } from '../scripts/trailer-scenes.ts';
-import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
+import { ORIGINAL_GUN_IDS } from '../src/starting-guns.ts';
 import { validBuild } from '../src/rules.ts';
 
 const { Body, Bodies, Composite } = Matter;
@@ -102,7 +102,7 @@ test('scout rejects stationary combat even when it has damage and a high action 
   assert.equal(usableAction(takeQuality(frames), frames.length), false);
 });
 
-test('current promotional fixtures preserve all six starting tools and use legal room budgets', () => {
+test('the published six-tool promotional fixtures retain their original tools and legal room budgets', () => {
   const captured = new Set<string>();
   for (const template of PROMO_TEMPLATES) {
     assert(validBuild(template.mods));
@@ -119,5 +119,5 @@ test('current promotional fixtures preserve all six starting tools and use legal
     assert.equal(g.hp, 100);
     captured.add(g.startingGun);
   }
-  assert.deepEqual([...captured].sort(), [...STARTING_GUN_IDS].sort());
+  assert.deepEqual([...captured].sort(), [...ORIGINAL_GUN_IDS].sort());
 });

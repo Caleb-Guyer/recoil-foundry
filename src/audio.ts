@@ -681,6 +681,9 @@ export class Sound {
         'twinbore-shot',
         'shotgun-shot',
         'nail-shot',
+        'bellows-shot',
+        'debt-shot',
+        'switchjack-shot',
       ].includes(kind)
     )
       this.resetToolCadence();
@@ -905,6 +908,40 @@ export class Sound {
     } else if (kind === 'mass-impact') {
       this.tone(420, 180, 0.085, 0.045, 'triangle');
       this.crack(0.035, 0.035, 1100);
+    } else if (kind === 'bellows-inhale') {
+      this.crack(0.18, 0.026, 420);
+      this.tone(110, 230, 0.18, 0.024, 'triangle');
+    } else if (kind === 'bellows-ready') {
+      // A small pressure latch, distinct from the much louder released blast.
+      this.tone(440, 660, 0.065, 0.026, 'sine');
+      this.tone(660, 660, 0.07, 0.018, 'triangle', 0.055);
+    } else if (kind === 'bellows-shot') {
+      this.crack(0.19, 0.16, 540);
+      this.tone(95, 26, 0.22, 0.18, 'triangle');
+      this.tone(380, 95, 0.09, 0.032, 'sine');
+    } else if (kind === 'debt-shot') {
+      this.crack(0.035, 0.09, 2200);
+      this.tone(330, 130, 0.055, 0.065, 'triangle');
+      this.tone(920, 450, 0.025, 0.022, 'square', 0.04);
+    } else if (kind === 'debt-vent') {
+      this.crack(0.16, 0.09, 750);
+      this.tone(160, 38, 0.17, 0.11, 'triangle');
+      this.tone(610, 160, 0.07, 0.026, 'sine');
+    } else if (kind === 'debt-warning') {
+      // One restrained double knock before the automatic vent, never a loop.
+      this.tone(310, 240, 0.045, 0.028, 'triangle');
+      this.tone(310, 240, 0.045, 0.022, 'triangle', 0.065);
+    } else if (kind === 'switchjack-shot') {
+      this.tone(240, 850, 0.085, 0.07, 'sine');
+      this.tone(470, 160, 0.12, 0.055, 'triangle');
+      this.crack(0.035, 0.065, 2800);
+    } else if (kind === 'switchjack-jump') {
+      this.tone(190, 1240, 0.1, 0.065, 'sine');
+      this.tone(1240, 240, 0.11, 0.045, 'sine', 0.07);
+      this.crack(0.08, 0.045, 1900);
+    } else if (kind === 'switchjack-blocked') {
+      this.tone(155, 95, 0.08, 0.042, 'triangle');
+      this.tone(155, 95, 0.06, 0.025, 'triangle', 0.09);
     } else if (kind === 'carbine-shot') {
       // A short coil snap, solid report, then the bolt returning to battery.
       this.tone(920, 210, 0.055, 0.07, 'sine');

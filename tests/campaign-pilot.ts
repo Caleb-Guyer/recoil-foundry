@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { weaponPilotInput } from './weapon-pilot.ts';
 import Matter from 'matter-js';
 import type { Game, Input } from '../src/game.ts';
 import { distance } from '../src/rules.ts';
@@ -14,15 +15,18 @@ import { floodgateInput } from './floodgate-pilot.ts';
 const { Query } = Matter;
 const tick = (g: Game, n = 1, p: Partial<Input> = {}) => {
   for (let i = 0; i < n; i++)
-    g.tick(1 / 60, {
-      left: false,
-      right: false,
-      jump: false,
-      jumpHeld: true,
-      fire: false,
-      aim: { x: 1000, y: 680 },
-      ...p,
-    });
+    g.tick(
+      1 / 60,
+      weaponPilotInput(g, {
+        left: false,
+        right: false,
+        jump: false,
+        jumpHeld: true,
+        fire: false,
+        aim: { x: 1000, y: 680 },
+        ...p,
+      }),
+    );
 };
 export interface CampaignPilotOptions {
   pathMods: string[];
@@ -124,17 +128,17 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
           : fusion === 'implosion' && g.mods.includes(fusion) && g.ballistics.shells.length > 0;
     const custom = options.beforeInput?.(g);
     if (custom) {
-      g.tick(1 / 60, custom);
+      g.tick(1 / 60, weaponPilotInput(g, custom));
       continue;
     }
     const blackout = blackoutInput(g);
     if (blackout) {
-      g.tick(1 / 60, blackout);
+      g.tick(1 / 60, weaponPilotInput(g, blackout));
       continue;
     }
     const flood = floodgateInput(g);
     if (flood) {
-      g.tick(1 / 60, flood);
+      g.tick(1 / 60, weaponPilotInput(g, flood));
       continue;
     }
     if (g.mode === 'reforge') {
@@ -146,7 +150,7 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
       continue;
     }
     if (g.freight.active && g.mode === 'playing') {
-      g.tick(1 / 60, freightPilot(g));
+      g.tick(1 / 60, weaponPilotInput(g, freightPilot(g)));
       continue;
     }
     if (g.escape && !escapeSeen) {
@@ -199,7 +203,11 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
         g.torch.equipped && !g.torch.legacyPattern && g.gun.pellets > 1
           ? 0
           : Math.min(
-              pathMods[0] === 'shellshock' ? 15 : Infinity,
+              g.experimentalWeapons.kind === 'bellows'
+                ? 14
+                : pathMods[0] === 'shellshock'
+                  ? 15
+                  : Infinity,
               distance(p, ep) / g.gun.projectileSpeed,
             ),
       dx = ep.x - p.x,
@@ -210,6 +218,7 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     };
     stuck = Math.abs(p.x - previousX) < 0.5 ? stuck + 1 : 0;
     previousX = p.x;
+    const spacing = g.experimentalWeapons.kind === 'bellows' ? 165 : 240;
     let move =
       g.clear || terminal
         ? p.x < exitX - (g.escape ? 10 : 0)
@@ -217,9 +226,9 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
           : p.x > exitX + (g.escape ? 10 : 50)
             ? -1
             : 0
-        : dx > 240
+        : dx > spacing
           ? 1
-          : dx < -240
+          : dx < -spacing
             ? -1
             : Math.abs(dx) < 100
               ? dx < 0
@@ -403,7 +412,8 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
         aim = input.aim ?? aim;
       } else {
         // Slower guns jump across the locked volley and coast before firing again.
-        const spacing = g.gun.pellets === 1 ? 320 : 220;
+        const spacing =
+          g.startingGun === 'bellows' && !g.torch.equipped ? 160 : g.gun.pellets === 1 ? 320 : 220;
         move = dx > spacing ? 1 : dx < -spacing ? -1 : 0;
         if (distance(g.lineEnd(p, ep), ep) > 1) move = Math.sign(dx);
         jump =
@@ -663,6 +673,15 @@ export function playCampaign(g: Game, options: CampaignPilotOptions) {
     }
     if (g.mods.includes('charge-lens')) firing &&= g.torch.chargeProgress < 1;
     if (g.mods.includes('suspension') && !g.mods.includes('tripline')) firing &&= i % 48 < 32;
+    // A pneumatic volley has a short reach. Let gravity return us to a useful
+    // firing lane instead of shooting downward from beyond its range forever.
+    if (
+      g.experimentalWeapons.kind === 'bellows' &&
+      e &&
+      !g.clear &&
+      ep.y - p.y > (g.uprising.kind === 'sabotage' ? 100 : 260)
+    )
+      firing = false;
     // A Lockdown has no target until the player approaches its visible terminal
     // and presses the ordinary interact/jump key. Do not hover toward the exit.
     if (terminal) {

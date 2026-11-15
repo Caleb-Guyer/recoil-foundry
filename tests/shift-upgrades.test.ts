@@ -275,10 +275,16 @@ test('Gimbal Mount changes native recoil direction while preserving each actual 
     const original = structuredClone(g.gun);
     s.beforeStep(DT, { ...idle, right: true, fire: true });
     g.fire();
+    if (gun === 'debt-collector') {
+      assert.equal(g.player.velocity.x, 0, 'the shot banks its native kick');
+      assert(g.experimentalWeapons.debt > 0);
+      s.beforeStep(DT, { ...idle, right: true });
+      g.experimentalWeapons.input(DT, { ...idle, right: true });
+    }
     assert(g.player.velocity.x > 0);
     assert(g.shots.every((shot) => shot.vel.x > 0));
     assert.deepEqual(g.gun, original);
-    assert.equal(g.shots.length, gun === 'shotgun' ? 5 : gun === 'twinbore' ? 2 : 1);
+    assert.equal(g.shots.length, g.gun.pellets * g.gun.lanes);
     assert.deepEqual(s.recoilDelta({ x: 0, y: 1 }, 3), { x: 3, y: 0 });
     s.beforeStep(DT, idle);
     const neutral = s.recoilDelta({ x: 0, y: 1 }, 3);
@@ -411,7 +417,7 @@ test('without steering upgrades native high-recoil vectors remain exact rather t
   clean(g);
 });
 
-test('actual beam pulses keep native gun geometry and Gimbal movement across all six starting tools', () => {
+test('actual beam pulses keep native gun geometry and Gimbal movement across all starting tools', () => {
   for (const gun of STARTING_GUN_IDS) {
     const { g, s } = setup(['gimbal-mount', 'cutting-torch', 'scatter']);
     g.startingGun = gun;
@@ -420,6 +426,12 @@ test('actual beam pulses keep native gun geometry and Gimbal movement across all
     g.ballistics.charge(DT, true);
     g.torch.beforeStep(DT, true);
     g.torch.afterStep(DT);
+    if (gun === 'debt-collector') {
+      assert.equal(g.player.velocity.x, 0, 'beam recoil is banked until its trigger release');
+      assert(g.experimentalWeapons.debt > 0);
+      s.beforeStep(DT, { ...idle, right: true });
+      g.experimentalWeapons.input(DT, { ...idle, right: true });
+    }
     assert(g.player.velocity.x > 0);
     assert.equal(new Set(g.torch.segments.map((seg) => seg.ray ?? 0)).size, g.gun.pellets);
     assert.deepEqual(g.gun, getGun(g.mods, gun));
@@ -655,6 +667,10 @@ test('False Silhouette responds to an actual unmodified native recoil reversal o
     g.gun = getGun(g.mods, gun);
     Body.setVelocity(g.player, { x: g.gun.recoil * 0.5, y: 0 });
     g.tick(DT, { ...idle, fire: true });
+    if (gun === 'bellows' || gun === 'debt-collector') {
+      assert.equal(s.silhouette, null, `${gun}: holding alone has not paid a reversing kick`);
+      g.tick(DT, idle);
+    }
     assert(g.shotCount > 0, `${gun}: native gun fired`);
     assert(g.player.velocity.x < 0, `${gun}: the paid kick reversed flight`);
     assert(s.silhouette, `${gun}: stock recoil can leave a decoy without a Kick prerequisite`);

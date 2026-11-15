@@ -1,6 +1,7 @@
 import type { Game, Input } from '../src/game.ts';
 import { distance } from '../src/rules.ts';
 import Matter from 'matter-js';
+import { dodgePilot } from './combat-pilot.ts';
 
 export function approach(g: Game, target: { x: number; y: number }, interact = false): Input {
   const p = g.player.position,
@@ -50,6 +51,36 @@ export function uprisingInput(g: Game): Input | undefined {
       aim: { x: 1900, y: 700 },
     };
   if (g.mode !== 'playing' || !u.waiting) return undefined;
+  if (g.startingGun === 'switchjack' && u.kind === 'defend') {
+    const node = u.remaster.activeNode ?? u.nodes.find((n) => n.hp > 0);
+    if (node) {
+      // A slow bolt needs time to intercept the patrol approaching the objective.
+      // Defend the active station rather than chasing whichever guard is nearest
+      // the operator; the standard dodge pilot still handles every live warning.
+      const threat = g.enemies
+        .filter((e) => e.hp > 0 && e.spawn <= 0 && !e.allied)
+        .sort((a, b) => {
+          const priority = (e: typeof a) =>
+            distance(e.body.position, node.body.position) +
+            (distance(g.lineEnd(p, e.body.position), e.body.position) > 1 ? 400 : 0);
+          return priority(a) - priority(b);
+        })[0];
+      if (threat) {
+        const t = threat.body.position,
+          lead = Math.min(25, distance(p, t) / g.gun.projectileSpeed),
+          aim = { x: t.x + threat.body.velocity.x * lead, y: t.y + threat.body.velocity.y * lead };
+        return {
+          left: false,
+          right: false,
+          jump: false,
+          jumpHeld: true,
+          fire: true,
+          aim,
+          ...dodgePilot(g, threat, true, { aim }),
+        };
+      }
+    }
+  }
   let target = u.nodes.find((n) => n.hp > 0);
   if (u.kind === 'escape')
     return approach(

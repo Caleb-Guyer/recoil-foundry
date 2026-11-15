@@ -1,4 +1,4 @@
-import { isStartingGun } from './starting-guns.ts';
+import { isStartingGun, isExperimentalGun } from './starting-guns.ts';
 import { testCheckpoint } from './practice.ts';
 import { uprisingTestFromUrl } from './uprising-test.ts';
 import type { Checkpoint } from './rules.ts';
@@ -31,7 +31,11 @@ export function encounterTestFromUrl(url: URL): Checkpoint | null {
     return job
       ? {
           ...job,
-          seed: ['twinbore', 'carbine', 'repeater'].includes(gun) ? 'RF-C89-' + job.seed : job.seed,
+          seed: isExperimentalGun(gun)
+            ? 'RF-C111-' + job.seed
+            : ['twinbore', 'carbine', 'repeater'].includes(gun)
+              ? 'RF-C89-' + job.seed
+              : job.seed,
           startingGun: gun,
           encounters: 1,
         }

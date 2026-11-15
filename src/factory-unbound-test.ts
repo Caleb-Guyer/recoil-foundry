@@ -155,7 +155,7 @@ function seedFor({ scene, gun, form }: FactoryUnboundIdentity) {
   );
 }
 export function factoryUnboundIdentity(seed: string): FactoryUnboundIdentity | null {
-  const m = /^SHIFT-107-([0-9A-Z]{2})-([0-5])-([0-3])$/.exec(seed);
+  const m = /^SHIFT-107-([0-9A-Z]{2})-([0-8])-([0-3])$/.exec(seed);
   if (!m) return null;
   const scene = FACTORY_UNBOUND_SCENES[parseInt(m[1], 36)],
     gun = STARTING_GUN_IDS[Number(m[2])],

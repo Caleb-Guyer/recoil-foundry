@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { weaponPilotInput } from './weapon-pilot.ts';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
@@ -39,7 +40,7 @@ for (const gun of STARTING_GUN_IDS)
         aim: { ...e.body.position },
       };
       for (let n = 0; n < 90 && a.armor.hp === armor && a.armor.plates === 3; n++)
-        g.tick(1 / 60, { ...input, aim: { ...e.body.position } });
+        g.tick(1 / 60, weaponPilotInput(g, { ...input, aim: { ...e.body.position } }));
       assert(e.hp < hp, 'Native emitted weapon damage reaches the actual boss');
       assert(a.armor.hp < armor || a.armor.plates < 3, 'That same hit drains the real armor');
       assert.equal(g.startingGun, gun);

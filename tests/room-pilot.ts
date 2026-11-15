@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { weaponPilotInput } from './weapon-pilot.ts';
 import { type Game, type Input } from '../src/game.ts';
 import { distance } from '../src/rules.ts';
 import { dodgePilot, type CombatPilotOptions } from './combat-pilot.ts';
@@ -24,7 +25,7 @@ export function playRoom(
   ) {
     const blackout = blackoutInput(g);
     if (blackout) {
-      g.tick(1 / 60, blackout);
+      g.tick(1 / 60, weaponPilotInput(g, blackout));
       continue;
     }
     const target = g.enemies
@@ -90,11 +91,14 @@ export function playRoom(
       input.fire = !!input.fire && frame % 48 < 32;
     // Traps and returning rounds have finite reach. Stop thrusting downward
     // from the ceiling and move into range instead of firing forever outside it.
-    const reach = g.mods.includes('tripline')
-      ? 480
-      : g.mods.includes('recall')
-        ? g.gun.projectileSpeed * 60 * (g.mods.includes('vector') ? 0.5 : 0.24) * 0.9
-        : Infinity;
+    const reach =
+      g.startingGun === 'bellows' && !g.torch.equipped
+        ? 230
+        : g.mods.includes('tripline')
+          ? 480
+          : g.mods.includes('recall')
+            ? g.gun.projectileSpeed * 60 * (g.mods.includes('vector') ? 0.5 : 0.24) * 0.9
+            : Infinity;
     if (target && target.body.position.y - g.player.position.y > reach) input.fire = false;
     if (
       target &&
@@ -123,15 +127,18 @@ export function playRoom(
       target.body.position.y > g.player.position.y + 350
     )
       input.fire = false;
-    g.tick(1 / 60, {
-      left: false,
-      right: false,
-      jump: false,
-      jumpHeld: true,
-      fire: false,
-      aim: target?.body.position ?? g.aim,
-      ...input,
-    });
+    g.tick(
+      1 / 60,
+      weaponPilotInput(g, {
+        left: false,
+        right: false,
+        jump: false,
+        jumpHeld: true,
+        fire: false,
+        aim: target?.body.position ?? g.aim,
+        ...input,
+      }),
+    );
     assert([g.hp, g.player.position.x, g.player.position.y].every(Number.isFinite));
   }
   return {

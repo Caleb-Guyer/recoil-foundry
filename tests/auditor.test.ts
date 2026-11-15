@@ -20,6 +20,7 @@ import {
 import { getLevel } from '../src/levels.ts';
 import { dailyForDate } from '../src/daily.ts';
 import { type CommendationId } from '../src/commendations.ts';
+import { weaponPilotInput } from './weapon-pilot.ts';
 
 const { Body, Composite, Engine, Bodies, Query } = Matter;
 const idle: Input = {
@@ -61,7 +62,8 @@ function arrival(g: Game) {
 }
 function shootCase(g: Game) {
   Body.setPosition(g.player, { x: 170, y: 719 });
-  for (let i = 0; i < 180 && g.mode === 'playing'; i++) step(g, 1, { ...idle, fire: true });
+  for (let i = 0; i < 180 && g.mode === 'playing'; i++)
+    step(g, 1, weaponPilotInput(g, { ...idle, fire: true }));
 }
 function campaign(query = '') {
   const g = new Game(),

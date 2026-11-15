@@ -2,6 +2,20 @@ import type { Game, Input } from '../src/game.ts';
 import { distance, segmentBox } from '../src/rules.ts';
 import { approach } from './uprising-pilot.ts';
 const dropping = new WeakMap<Game, { x: number; y: number }>();
+function navigate(g: Game, target: { x: number; y: number }, interact = false): Input {
+  const input = approach(g, target, interact);
+  // A normal jump already clears many station steps. Start the pneumatic
+  // follow-up only near its apex; starting another puff on takeoff turns a
+  // modest ledge approach into an unnecessary trip to the room ceiling.
+  if (
+    g.experimentalWeapons.kind === 'bellows' &&
+    (g.uprising.kind === 'escape' || g.uprising.kind === 'steal') &&
+    input.fire &&
+    (g.grounded || g.player.velocity.y < -2)
+  )
+    input.fire = false;
+  return input;
+}
 function dropTo(g: Game, target: { x: number; y: number }): Input | undefined {
   const p = g.player.position;
   let drop = dropping.get(g);
@@ -95,7 +109,24 @@ export function uprisingRemasterInput(g: Game): Input | undefined {
             ),
         )
       )
-        return approach(g, threat.body.position);
+        return navigate(g, threat.body.position);
+    }
+    if (
+      threat &&
+      g.experimentalWeapons.kind === 'bellows' &&
+      (u.kind === 'escape' || u.kind === 'steal')
+    ) {
+      const p = g.player.position,
+        at = threat.body.position;
+      if (distance(p, at) > 190 || Math.abs(at.y - p.y) > 90) return navigate(g, at);
+      return {
+        left: at.x < p.x - 145,
+        right: at.x > p.x + 145,
+        jump: false,
+        jumpHeld: true,
+        fire: true,
+        aim: { ...at },
+      };
     }
     return undefined;
   }
@@ -103,10 +134,10 @@ export function uprisingRemasterInput(g: Game): Input | undefined {
     return { left: false, right: false, jump: false, jumpHeld: true, fire: false, aim: target };
   const drop = dropTo(g, target);
   if (drop) return drop;
-  if (r.extracting || u.switchTarget) return approach(g, target, !!u.switchTarget);
+  if (r.extracting || u.switchTarget) return navigate(g, target, !!u.switchTarget);
   const node = u.kind === 'sabotage' ? u.nodes.find((n) => n.hp > 0) : r.activeNode;
-  if (!node) return approach(g, target);
-  if (u.kind === 'defend') return approach(g, target, true);
+  if (!node) return navigate(g, target);
+  if (u.kind === 'defend') return navigate(g, target, true);
   const p = g.player.position,
     dx = target.x - p.x;
   if (
@@ -114,7 +145,7 @@ export function uprisingRemasterInput(g: Game): Input | undefined {
     Math.abs(target.y - p.y) > 65 ||
     distance(g.lineEnd(p, target, 0, node), target) > 1
   )
-    return approach(g, target);
+    return navigate(g, target);
   return {
     left: dx < -60,
     right: dx > 60,

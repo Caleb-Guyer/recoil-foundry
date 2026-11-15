@@ -7,6 +7,7 @@ import { attackAngles, bossMuzzle, flakAngles } from '../src/enemies.ts';
 import { coolingAngles } from '../src/cooling.ts';
 import { turbineRelease } from '../src/turbine.ts';
 import { TurbineRemaster } from '../src/turbine-remaster.ts';
+import { ReclamationInterceptorRemaster } from '../src/reclamation-interceptor-remaster.ts';
 import { interceptorAngles, interceptorSpeed, interceptorOrigin } from '../src/interceptor.ts';
 import { weaponAngles } from '../src/interceptor-weapons.ts';
 import { kilnMuzzle, kilnPoint } from '../src/kiln-ai.ts';
@@ -14,6 +15,11 @@ import { sorterFan } from '../src/reclamation.ts';
 import { harpoonMuzzle, HARPOON_LOCK, HARPOON_SPEED } from '../src/harpooner.ts';
 import { areaIndex, clamp, distance, direction, type Vec } from '../src/rules.ts';
 import { beamRecoilForecast } from './beam-pilot.ts';
+import {
+  bellowsRecoilForecast,
+  debtRecoilForecast,
+  switchjackRecoilForecast,
+} from './weapon-pilot.ts';
 
 export interface CombatPilotOptions {
   aim?: Vec;
@@ -98,6 +104,36 @@ export function dodgePilot(
       ),
     }));
   bolts.push(...rotorCueBolts(g));
+  // Bellows fights inside the fork's actual empty center. The remastered
+  // machine replaces the old generic heavy-shot pattern; read its visible,
+  // locked lanes and deadlines instead of dodging a phantom center bullet.
+  const pressureRival =
+    g.experimentalWeapons.kind === 'bellows' &&
+    g.bossRemaster.rig instanceof ReclamationInterceptorRemaster
+      ? g.bossRemaster.rig
+      : null;
+  if (pressureRival) {
+    const speed =
+      pressureRival.move === 'fork' ? 10.2 : pressureRival.move === 'aperture' ? 8.2 : 11.2;
+    for (const cue of g.bossRemaster.visual?.warnings ?? []) {
+      if (
+        cue.kind !== 'segment' ||
+        !cue.locked ||
+        cue.fireIn === undefined ||
+        distance(cue.from, cue.to) <= 55
+      )
+        continue;
+      const d = direction(cue.from, cue.to);
+      const start = { x: cue.from.x + d.x * 55, y: cue.from.y + d.y * 55 };
+      bolts.push({
+        p: start,
+        v: { x: d.x * speed, y: d.y * speed },
+        radius: cue.width / 2,
+        delay: Math.max(0, cue.fireIn) * 60,
+        life: Math.min(240, distance(start, cue.to) / speed),
+      });
+    }
+  }
   // Multiple enemies can commit together. Read all ordinary locked warnings,
   // including the Loader's marked anti-air fan, before choosing a trajectory.
   for (const s of g.shots) {
@@ -138,6 +174,7 @@ export function dodgePilot(
       }
     }
     if (enemy.spawn > 0 || enemy.squad || enemy.elite === 'volatile') continue;
+    if (pressureRival?.enemy === enemy) continue;
     if (enemy.angler && enemy.state === 'windup' && enemy.timer <= ANGLER.lock) {
       const points = anglerWarningPoints(g, enemy),
         speed = anglerSpeed(g);
@@ -453,6 +490,12 @@ export function dodgePilot(
             arena ? Math.min(100, Math.ceil(arena.left * 60) + 6) : 0,
           );
           const beam = options.beamAware && g.torch.equipped ? beamRecoilForecast(g) : undefined;
+          const bellows =
+            g.experimentalWeapons.kind === 'bellows' ? bellowsRecoilForecast(g) : undefined;
+          const debt =
+            g.experimentalWeapons.kind === 'debt-collector' ? debtRecoilForecast(g) : undefined;
+          const switchjack =
+            g.experimentalWeapons.kind === 'switchjack' ? switchjackRecoilForecast(g) : undefined;
           for (let frame = 1; frame <= horizon; frame++) {
             const time = g.time + frame / 60,
               ox = x,
@@ -467,7 +510,27 @@ export function dodgePilot(
               ground = false;
             }
             let shot = false;
-            if (beam) {
+            if (debt) {
+              const emission = debt(1 / 60, fire, ground);
+              const d = direction({ x, y }, aim);
+              if (emission.shot) charged = false;
+              vx = clamp(vx - d.x * emission.impulse, -23, 23);
+              vy = clamp(vy - d.y * emission.impulse, -21, 20);
+            } else if (switchjack) {
+              const emission = switchjack(1 / 60, fire, { x, y }, aim);
+              const d = direction({ x, y }, aim);
+              const force = emission.impulse * (ground ? 0.21 : 1) * (charged ? 1.25 : 1);
+              if (emission.shot) charged = false;
+              vx = clamp(vx - d.x * force, -23, 23);
+              vy = clamp(vy - d.y * force, -21, 20);
+            } else if (bellows) {
+              const emission = bellows(1 / 60, fire, !ground && aim.y > y + 120);
+              const d = direction({ x, y }, aim);
+              const force = emission.impulse * (ground ? 0.21 : 1) * (charged ? 1.25 : 1);
+              if (emission.shot) charged = false;
+              vx = clamp(vx + d.x * emission.tug - d.x * force, -23, 23);
+              vy = clamp(vy + d.y * emission.tug - d.y * force, -21, 20);
+            } else if (beam) {
               const emission = beam(1 / 60, fire, charged);
               const d = direction({ x, y }, aim);
               const force = emission.impulse * (ground ? 0.21 : 1);
@@ -640,7 +703,8 @@ export function dodgePilot(
             score += x < 90 || x > 1910 ? 4 : 0;
           }
           // Prefer a useful firing lane and modest spacing when trajectories are safe.
-          score += Math.abs(distance({ x, y }, target) - 340) * 0.008;
+          const spacing = g.startingGun === 'bellows' && !g.torch.equipped ? 165 : 340;
+          score += Math.abs(distance({ x, y }, target) - spacing) * 0.008;
           if (distance(g.lineEnd({ x, y }, target), target) > 10) score += 9;
           if (fire)
             score += lift

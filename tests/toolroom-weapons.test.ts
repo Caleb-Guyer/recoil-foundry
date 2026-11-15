@@ -76,7 +76,7 @@ test('licenses reward three distinct achievements without granting completion gu
     false,
     ['kiln'],
   );
-  assert.deepEqual(unlockedStartingGuns(all), ['pistol', ...guns]);
+  assert.deepEqual(unlockedStartingGuns(all), ['pistol', ...guns, 'bellows', 'switchjack']);
   assert(all.started && !all.cleared && !all.overtime);
   assert(validWeaponUnlocks(all));
   assert.deepEqual(loadWeaponUnlocks(all), all);
@@ -98,7 +98,7 @@ test('old Daily rotations stay fixed; new dates rotate all six loaned tools', ()
     expanded.add(dailyStartingGun('RF-D89-' + date));
   }
   assert.deepEqual([...old].sort(), STARTING_GUN_IDS.slice(0, 3).sort());
-  assert.deepEqual([...expanded].sort(), [...STARTING_GUN_IDS].sort());
+  assert.deepEqual([...expanded].sort(), STARTING_GUN_IDS.slice(0, 6).sort());
 });
 for (const gun of guns) {
   test(`${gun} fires its native projectiles with actual recoil and bounded output`, () => {

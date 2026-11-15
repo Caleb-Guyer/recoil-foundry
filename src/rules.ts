@@ -567,6 +567,8 @@ export function modDescription(
 ): string {
   if (startingGun === 'nailgun' && mod.id === 'burst')
     return '20% shorter burst recovery. 10% lighter hits and 20% lighter kicks.';
+  if (startingGun === 'debt-collector' && mod.id === 'kick')
+    return '20% more damage. Bank recoil 40% faster; release or fill the chamber to vent it.';
   if (mod.id === 'tether' && mods.includes('grapnel'))
     return 'Airborne wall hits anchor your swing cable. Recoil builds momentum; jump to detach. One anchor per airtime.';
   if (mod.id === 'suspension' && mods.includes('convoy'))
@@ -633,7 +635,7 @@ export function modDescription(
     return 'Charged pellets merge into a piercing rail. Backfire keeps a separate rear rail.';
   if (mods.includes('rail-spike')) {
     if (mod.id === 'scatter')
-      return `${startingGun === 'shotgun' ? 'Nine' : startingGun === 'twinbore' ? 'Six' : 'Five'} pellets merge into a stronger charged rail. Uncharged fire stays a spread.`;
+      return `${startingGun === 'shotgun' || startingGun === 'bellows' ? 'Nine' : startingGun === 'twinbore' ? 'Six' : 'Five'} pellets merge into a stronger charged rail. Uncharged fire stays a spread.`;
     if (mod.id === 'backfire')
       return 'Add a charged rear rail or an uncharged rear volley. 20% longer shot delay.';
     if (mod.id === 'grindshot')
@@ -652,8 +654,8 @@ export function modDescription(
       ? `${pattern} with three concentrated pulses, then recovery. Hold fire to cut.`
       : `${pattern} with steady recoil. Hold fire to cut. Your existing shot upgrades carry through.`;
   if (!beam) {
-    if ((startingGun === 'shotgun' || startingGun === 'twinbore') && mod.id === 'scatter')
-      return `${startingGun === 'shotgun' ? 'Nine' : 'Six'} pellets. 60% more total damage. Wider spread and a longer shot delay.`;
+    if (['shotgun', 'twinbore', 'bellows'].includes(startingGun) && mod.id === 'scatter')
+      return `${startingGun === 'twinbore' ? 'Six' : 'Nine'} pellets. 60% more total damage. Wider spread and a longer shot delay.`;
     return mod.description;
   }
   switch (mod.id) {
@@ -918,6 +920,17 @@ const DRAFT_GUN_FITS: Readonly<Record<StartingGun, readonly string[]>> = {
   twinbore: ['magnum', 'rapid', 'airshot', 'kick', 'collimator', 'pierce', 'capacitor'],
   carbine: ['magnum', 'rapid', 'airshot', 'kick', 'capacitor', 'deadeye', 'overkill-bank'],
   repeater: ['rapid', 'airshot', 'kick', 'arc-coil', 'coolant-rounds', 'pierce', 'countershot'],
+  bellows: ['magnum', 'rapid', 'airshot', 'kick', 'collimator', 'pierce', 'overkill-bank'],
+  'debt-collector': [
+    'rapid',
+    'airshot',
+    'kick',
+    'arc-coil',
+    'coolant-rounds',
+    'pierce',
+    'countershot',
+  ],
+  switchjack: ['magnum', 'rapid', 'airshot', 'kick', 'pierce', 'deadeye', 'capacitor'],
 };
 const DRAFT_TOOL_STRENGTHS: Readonly<Record<StartingGun, readonly string[]>> = {
   pistol: ['pierce', 'burst', 'capacitor'],
@@ -926,6 +939,9 @@ const DRAFT_TOOL_STRENGTHS: Readonly<Record<StartingGun, readonly string[]>> = {
   twinbore: ['collimator', 'pierce', 'capacitor'],
   carbine: ['capacitor', 'deadeye', 'overkill-bank'],
   repeater: ['arc-coil', 'coolant-rounds', 'countershot'],
+  bellows: ['collimator', 'pierce', 'overkill-bank'],
+  'debt-collector': ['arc-coil', 'coolant-rounds', 'countershot'],
+  switchjack: ['pierce', 'deadeye', 'capacitor'],
 };
 export function draftFitReason(
   id: string,
@@ -944,7 +960,8 @@ export function draftFitReason(
     magnum: 'Heavier direct hits',
     rapid: 'Faster follow-up shots',
     airshot: 'Stronger airborne fire',
-    kick: 'More damage and lift',
+    kick:
+      startingGun === 'debt-collector' ? 'More damage and stored recoil' : 'More damage and lift',
     pierce: 'Fire through another target',
     burst: startingGun === 'nailgun' ? 'Faster native bursts' : 'Adds a burst of rounds',
     capacitor: 'Charge between discharges',

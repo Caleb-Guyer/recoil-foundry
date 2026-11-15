@@ -61,27 +61,49 @@ export class ToolTrialView {
     this.scene = scene;
     this.options = options;
     const info = STARTING_GUNS[gun],
-      b = options.bindings;
+      b = options.bindings,
+      special = ['bellows', 'debt-collector', 'switchjack'].includes(gun),
+      fireControl = 'the left mouse button or ' + escapeLogbook(bindingLabel(b, 'fire')),
+      firingHelp =
+        !special || (scene === 'converted' && gun !== 'debt-collector')
+          ? 'Hold ' + fireControl + ' to fire.'
+          : gun === 'bellows'
+            ? 'Hold ' +
+              fireControl +
+              ' to inhale; release to blast. You can start the next inhale while the gun recovers.'
+            : gun === 'debt-collector'
+              ? 'Hold ' +
+                fireControl +
+                ' to fire and bank recoil. Aim, then release to vent in the opposite direction. A full chamber vents automatically.'
+              : 'Press ' +
+                fireControl +
+                ' to launch. Release, then press again while the bolt is live (up to 1.1 seconds) to relocate. If blocked, you stay put and the bolt keeps flying; release before trying again.',
+      convertedHelp =
+        gun === 'bellows'
+          ? 'Scattershot + Cutting Torch. Hold fire for the beam; the beam conversion replaces inhale and release.'
+          : gun === 'switchjack'
+            ? 'Scattershot + Cutting Torch. Hold fire for the beam; this conversion replaces the bolt and relocation.'
+            : gun === 'debt-collector'
+              ? 'Scattershot + Cutting Torch. The beam banks recoil; release to vent, or fill the chamber to vent automatically.'
+              : 'Scattershot + Cutting Torch. The conversion keeps this tool’s native firing pattern.';
     root.innerHTML =
       '<div class="tool-trial-header"><div><p class="eyebrow">TRY TOOL</p><h2 id="dialog-title">' +
       info.name +
       '.</h2></div><button class="quiet" data-tool-trial-back>Back to tools</button></div>' +
       '<div class="tool-trial-summary"><p>' +
-      (scene === 'converted'
-        ? 'Scattershot + Cutting Torch. The conversion keeps this tool’s native firing pattern.'
-        : info.description) +
+      (scene === 'converted' ? convertedHelp : info.description) +
       '</p><canvas class="tool-trial-mechanism" width="420" height="140" aria-label="Live close-up of the actual weapon mechanism"></canvas></div>' +
       '<p class="tool-trial-scope">Private range · no rewards or saved progress. Targets return after you destroy them.</p>' +
       '<canvas class="tool-trial-canvas" tabindex="0" aria-label="' +
       info.name +
       ' practice range" aria-describedby="tool-trial-controls"></canvas>' +
-      '<p id="tool-trial-controls" class="tool-trial-controls">Aim with the mouse; hold click or ' +
-      escapeLogbook(bindingLabel(b, 'fire')) +
-      ' to fire. ' +
+      '<p id="tool-trial-controls" class="tool-trial-controls">Aim with the mouse. ' +
+      firingHelp +
+      ' ' +
       escapeLogbook(bindingLabel(b, 'left') + ' / ' + bindingLabel(b, 'right')) +
       ' move · ' +
       escapeLogbook(bindingLabel(b, 'jump')) +
-      ' jump. Controller: right stick aim, trigger fire. Touch: hold and drag in the range.</p>' +
+      ' jump. Controller: right stick aim, trigger fire. Touch: drag to aim; use the same hold, release or tap rhythm.</p>' +
       '<div class="tool-trial-touch"><button data-tool-trial-touch="left" aria-label="Move left">←</button><button data-tool-trial-touch="right" aria-label="Move right">→</button><button data-tool-trial-touch="jump" aria-label="Jump">↑</button></div>' +
       '<div class="actions"><button class="quiet" data-tool-trial-toggle>Pause range</button><button class="quiet" data-tool-trial-reset>Reset range</button><span class="tool-trial-status" role="status" aria-live="polite">Range ready.</span></div>';
     this.canvas = root.querySelector<HTMLCanvasElement>('.tool-trial-canvas')!;

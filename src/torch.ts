@@ -489,14 +489,16 @@ export class TorchSystem {
       (g.grounded ? 0.21 * g.toolroom.groundScale : 1) *
       this.recoilBoost;
     const beforeRecoil = g.player.velocity.y;
-    const shiftDelta = g.shiftUpgrades.recoilDelta(d, impulse);
-    Matter.Body.setVelocity(g.player, {
-      x: clamp(g.player.velocity.x + shiftDelta.x, -23, 23),
-      y: clamp(g.player.velocity.y + shiftDelta.y, -21, 20),
-    });
-    g.commendations.mastery.recoiled(beforeRecoil - g.player.velocity.y);
-    // Ramjet still requires fast travel; a beam renews its launch, not its hits.
-    g.salvage.launch(d, g.gun.recoil * (g.grounded ? 0.21 : 1));
+    if (!g.experimentalWeapons.captureRecoil(d, impulse)) {
+      const shiftDelta = g.shiftUpgrades.recoilDelta(d, impulse);
+      Matter.Body.setVelocity(g.player, {
+        x: clamp(g.player.velocity.x + shiftDelta.x, -23, 23),
+        y: clamp(g.player.velocity.y + shiftDelta.y, -21, 20),
+      });
+      g.commendations.mastery.recoiled(beforeRecoil - g.player.velocity.y);
+      // Ramjet still requires fast travel; a beam renews its launch, not its hits.
+      g.salvage.launch(d, g.gun.recoil * (g.grounded ? 0.21 : 1));
+    }
     g.feedback(this.stepBurn * (g.grounded ? 2 : 5), d);
   }
   private payload() {

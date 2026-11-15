@@ -54,7 +54,7 @@ test('all twelve specialist courses and native Twin comparison reconstruct legal
           assert.deepEqual(specialistMachineTestRoom(f), room);
           count++;
         }
-  assert.equal(count, 96);
+  assert.equal(count, 16 * STARTING_GUN_IDS.length);
 });
 
 test('authored courses spawn real specialist hulls and native Twin identity on actual supports', () => {

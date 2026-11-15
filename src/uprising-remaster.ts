@@ -7,6 +7,7 @@ import type { UprisingRemasterRoom } from './uprising-remaster-rooms.ts';
 import { ENEMY_STATS } from './enemies.ts';
 import { distance } from './rules.ts';
 import { uprisingRoute } from './uprising-model.ts';
+import { isExperimentalGun } from './starting-guns.ts';
 import {
   UPRISING_REMASTER as R,
   UPRISING_REMASTER_JOBS,
@@ -31,6 +32,7 @@ export class UprisingRemaster {
   extractionStartedAt: number | null = null;
   private groups = new Set<number>();
   private pending: PendingArrival[] = [];
+  private displacedArrivals = new WeakMap<PendingArrival, number>();
   private convoy: Platform | null = null;
   private bridge: Platform | null = null;
   constructor(game: Game) {
@@ -125,6 +127,7 @@ export class UprisingRemaster {
     this.extractionStartedAt = null;
     this.groups.clear();
     this.pending = [];
+    this.displacedArrivals = new WeakMap();
     this.convoy = null;
     this.bridge = null;
   }
@@ -267,15 +270,14 @@ export class UprisingRemaster {
     for (const [i, spawn] of (this.room?.reinforcements?.[index] ?? []).entries())
       this.pending.push({ spawn: { ...spawn }, at: this.game.time + delay + i * 0.28 });
   }
-  private safeArrival(spawn: Spawn) {
+  private arrivalBlockers(spawn: Spawn) {
     const g = this.game,
       { w, h } = ENEMY_STATS[spawn.kind];
-    if (distance(g.player.position, spawn) < R.safeArrival) return false;
     const left = spawn.x - w / 2,
       right = spawn.x + w / 2,
       top = spawn.y - h / 2,
       bottom = spawn.y + h / 2;
-    return ![...g.solidBodies, ...g.enemies.map((e) => e.body)].some(
+    return [...g.solidBodies, ...g.enemies.map((e) => e.body)].filter(
       (body) =>
         left < body.bounds.max.x - 0.1 &&
         right > body.bounds.min.x + 0.1 &&
@@ -283,16 +285,65 @@ export class UprisingRemaster {
         bottom > body.bounds.min.y + 0.1,
     );
   }
+  private safeArrival(spawn: Spawn) {
+    return (
+      distance(this.game.player.position, spawn) >= R.safeArrival &&
+      !this.arrivalBlockers(spawn).length
+    );
+  }
+  private displacedArrival(item: PendingArrival): Spawn | undefined {
+    const g = this.game;
+    if (!isExperimentalGun(g.startingGun)) return;
+    const blockers = this.arrivalBlockers(item.spawn);
+    // New tools can push ordinary cover into a future entrance. Keep the
+    // authored warning/cap and every guard, but do not strand the mission on
+    // that movable obstruction. Player, enemy, static and mission blockers
+    // never authorize a different entrance.
+    if (
+      distance(g.player.position, item.spawn) < R.safeArrival ||
+      !blockers.length ||
+      !blockers.every((body) => {
+        const prop = g.props.items.find((p) => p.body === body);
+        return (
+          prop &&
+          ['crate', 'cover'].includes(prop.kind) &&
+          !body.isStatic &&
+          !body.isSensor &&
+          !prop.uprising &&
+          !prop.hunt &&
+          !prop.welded &&
+          !prop.auditCase &&
+          !prop.cargo &&
+          !prop.charge
+        );
+      })
+    ) {
+      this.displacedArrivals.delete(item);
+      return;
+    }
+    const since = this.displacedArrivals.get(item) ?? g.time;
+    this.displacedArrivals.set(item, since);
+    if (g.time - since < 1) return;
+    const halfWidth = ENEMY_STATS[item.spawn.kind].w / 2;
+    for (const offset of [48, -48, 96, -96, 144, -144]) {
+      const candidate = { ...item.spawn, x: item.spawn.x + offset };
+      if (candidate.x < halfWidth || candidate.x > g.worldWidth - halfWidth) continue;
+      if (this.safeArrival(candidate)) return candidate;
+    }
+  }
   private arrivals() {
     const g = this.game;
     if (g.combatEnemyCount >= R.reinforcementCap) return;
     for (let i = 0; i < this.pending.length; i++) {
       const item = this.pending[i];
-      if (item.at > g.time || !this.safeArrival(item.spawn)) continue;
-      const { kind, x, y, elite } = item.spawn;
+      if (item.at > g.time) continue;
+      const spawn = this.safeArrival(item.spawn) ? item.spawn : this.displacedArrival(item);
+      if (!spawn) continue;
+      const { kind, x, y, elite } = spawn;
       const enemy = g.spawnEnemy(kind, x, y, elite);
       if (!enemy) return;
       this.pending.splice(i, 1);
+      this.displacedArrivals.delete(item);
       g.soundAt('spawn', enemy.body.position, `job-arrival:${enemy.id}`);
       if (g.combatEnemyCount >= R.reinforcementCap) return;
       i--;

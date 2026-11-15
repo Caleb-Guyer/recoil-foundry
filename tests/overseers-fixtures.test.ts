@@ -44,7 +44,7 @@ function arrive(g: Game) {
   step(g, 45);
   return g.auditor.enemy!;
 }
-test('sixteen overseer courses reconstruct 96 legal isolated starting-tool checkpoints', () => {
+test('sixteen overseer courses reconstruct legal isolated checkpoints for every native tool', () => {
   const seeds = new Set<string>();
   for (const unit of OVERSEER_UNITS)
     for (const scene of OVERSEER_SCENES)
@@ -61,7 +61,7 @@ test('sixteen overseer courses reconstruct 96 legal isolated starting-tool check
         seeds.add(f.checkpoint.seed);
         assert.deepEqual(overseersTestRoom(f), overseersTestRoom(f));
       }
-  assert.equal(seeds.size, 96);
+  assert.equal(seeds.size, 16 * STARTING_GUN_IDS.length);
 });
 test('every inspection retains native arena geometry, a private player entry and native boss identity', () => {
   for (const unit of OVERSEER_UNITS)

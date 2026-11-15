@@ -6,6 +6,7 @@ import { clamp } from './rules.ts';
 import { drawCapacitor, drawCountershot } from './ballistics-art.ts';
 import { pumpCycle } from './combat-feel.ts';
 import { toolHandling } from './tool-handling.ts';
+import { drawExperimentalWeapon } from './experimental-weapons-art.ts';
 
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
@@ -38,6 +39,11 @@ export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolea
   }
   if (g.torch.equipped) {
     drawTorchWeapon(c, g, reduced);
+    return;
+  }
+  if (drawExperimentalWeapon(c, g, reduced)) {
+    drawCapacitor(c, g);
+    drawCountershot(c, g, reduced, -13);
     return;
   }
   const handling = toolHandling(g);

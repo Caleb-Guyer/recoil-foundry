@@ -21,7 +21,7 @@ export function startingGunMenu(
     STARTING_GUN_IDS.map((id) => {
       const gun = STARTING_GUNS[id];
       const locked = !unlocked.includes(id);
-      return `<button type="button" class="starting-gun-choice" data-starting-gun="${id}" aria-pressed="${id === selected}" aria-label="${gun.name}. ${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}. ${gun.description}" ${locked ? 'disabled' : ''}><canvas width="640" height="320" aria-hidden="true" data-reward-image="gun:${id}"></canvas><strong>${gun.name}</strong><span>${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}</span></button>`;
+      return `<div class="starting-gun-option"><button type="button" class="starting-gun-choice" data-starting-gun="${id}" aria-pressed="${id === selected}" aria-label="${gun.name}. ${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}. ${gun.description}" ${locked ? 'disabled' : ''}><canvas width="640" height="320" aria-hidden="true" data-reward-image="gun:${id}"></canvas><strong>${gun.name}</strong><span>${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}</span></button>${locked && options.tryTool ? `<button type="button" class="quiet starting-gun-try" data-try-locked-gun="${id}" aria-label="Try ${gun.name} in a private range">Try tool</button>` : ''}</div>`;
     }).join('') +
     '</div><p class="starting-gun-detail" id="starting-gun-detail" aria-live="polite">' +
     STARTING_GUNS[selected].description +
@@ -47,5 +47,11 @@ export function startingGunMenu(
     trial.onclick = () => {
       if (unlocked.includes(selected)) options.tryTool?.(selected);
     };
+  root.querySelectorAll<HTMLButtonElement>('[data-try-locked-gun]').forEach((button) => {
+    button.onclick = () => {
+      const gun = button.dataset.tryLockedGun as StartingGun;
+      if (STARTING_GUN_IDS.includes(gun)) options.tryTool?.(gun);
+    };
+  });
   root.querySelector<HTMLButtonElement>('#starting-gun-back')!.onclick = back;
 }

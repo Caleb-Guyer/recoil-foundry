@@ -318,7 +318,7 @@ test('a shared challenge preserves its starting gun and target across retries wi
   assert.equal(recoilDelta(0), 'Level with target');
 });
 
-test('ghost backups round-trip, old backups migrate, and all eighteen maximum recordings fit within the existing backup bound', async () => {
+test('ghost backups round-trip, old backups migrate, and all twenty-seven maximum recordings fit within the bounded backup', async () => {
   const { g, recording } = recorded();
   const disk = store();
   await disk.write(RECOIL_GHOSTS_KEY, [recording]);
@@ -357,6 +357,7 @@ test('ghost backups round-trip, old backups migrate, and all eighteen maximum re
       };
     }),
   );
+  assert.equal(maximum.length, 27);
   assert(validRecoilGhosts(maximum));
   await disk.write(RECOIL_GHOSTS_KEY, maximum);
   assert(disk.backup('4.7.0').length < BACKUP_LIMIT);

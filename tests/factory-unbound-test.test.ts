@@ -173,7 +173,7 @@ test('strict query and canonical seed parsing reject every unknown, duplicate or
   for (const seed of [
     'SHIFT-107-0-0-0',
     'SHIFT-107-ZZ-0-0',
-    'SHIFT-107-00-6-0',
+    'SHIFT-107-00-9-0',
     'SHIFT-107-00-0-4',
     'SHIFT-107-00-0-0-extra',
     'RF-C107-00-0-0',

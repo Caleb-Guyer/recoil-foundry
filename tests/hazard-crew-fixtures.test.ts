@@ -29,7 +29,7 @@ function course(q: string) {
   assert(prepareHazardCrewTest(g, f));
   return { g, f };
 }
-test('fifteen hazard inspections and six tools reconstruct ninety legal isolated checkpoints', () => {
+test('fifteen hazard inspections and all native tools reconstruct their legal isolated checkpoints', () => {
   let count = 0;
   for (const unit of HAZARD_UNITS)
     for (const scene of HAZARD_SCENES)
@@ -42,7 +42,7 @@ test('fifteen hazard inspections and six tools reconstruct ninety legal isolated
         assert.deepEqual(hazardCrewTestRoom(f), hazardCrewTestRoom(f));
         count++;
       }
-  assert.equal(count, 90);
+  assert.equal(count, 15 * STARTING_GUN_IDS.length);
 });
 test('inspection courses contain actual sources, loose crates, raised support and a distant guard', () => {
   for (const unit of HAZARD_UNITS)
