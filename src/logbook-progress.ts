@@ -143,6 +143,9 @@ export interface LogbookEntry {
   notification?: string;
   unlock?: string;
   goal?: import('./longevity.ts').UnlockGoal;
+  weaponChallenge?: NonNullable<
+    ReturnType<typeof import('./weapon-unlocks.ts').weaponChallengeStatus>
+  >;
   mastery?: import('./support-mastery.ts').SupportMasteryProgress;
 }
 export function logbookLink(url: URL): 'collection' | 'preview' | null {

@@ -187,6 +187,8 @@ import {
   migrateWeaponUnlocks,
   unlockedStartingGuns,
   availableStartingGun,
+  recordWeaponChallenge,
+  WEAPON_REQUIREMENTS,
 } from './weapon-unlocks.ts';
 import {
   RUN_REWARDS_KEY,
@@ -689,7 +691,7 @@ let gauntletChallengeSharing = false;
 let gauntletChallengeParent = 'gauntlet-setup';
 let commendations = loadCommendations(read(COMMENDATIONS_KEY));
 let runCommendations: typeof commendations = [];
-let fittingNotice: { name: string; until: number | null; stage: number } | null = null;
+let fittingNotice: { name: string; until: number | null; stage: number; tool?: true } | null = null;
 let activeGoalRun: GoalRun | null = null;
 let activeGoalScope = 'campaign';
 let goalRunProfile: GoalProgress | null = null;
@@ -748,7 +750,7 @@ document.getElementById('app')!.innerHTML = `
  <canvas id="game" tabindex="0" aria-label="Recoil Foundry. A and D to move. Space to jump. Mouse to aim and fire. Shoot down in the air to climb."></canvas>
  <div class="hud"><div class="health-meter"><span id="health-trail" aria-hidden="true"></span><progress id="health" max="100" value="100" aria-label="Health"></progress></div><div id="factory-condition" class="factory-condition" hidden><strong id="factory-name"></strong><span id="factory-hint"></span></div><div class="run-info"><span id="stage">01 / ${String(STAGES).padStart(2, '0')}</span><button id="pause" class="icon" aria-label="Pause" title="Pause · Esc"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg></button></div></div>
  <section id="title-screen">
-  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Unconventional Arsenal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
+  <div class="title-content"><button id="whats-new" class="update-link" aria-haspopup="dialog"><span>Earn Your Arsenal</span><span>What’s new ↗</span></button><h1><span>RECOIL</span><small>FOUNDRY</small></h1>
    <button id="play" class="primary">Play <span aria-hidden="true">↗</span></button>
    <button id="security" class="quiet security-selector" aria-haspopup="dialog" hidden>Security · Standard</button>
    <div class="title-actions"><button id="daily" class="quiet">Daily run</button><button id="continue" class="quiet" ${checkpoint ? '' : 'hidden'}>Continue</button><button id="practice" class="quiet" hidden>Practice</button><button id="workshop" class="quiet">Workshop <span id="workshop-badge" class="new-badge" aria-hidden="true" hidden>New</span></button><button id="learn" class="quiet" hidden>Learn to play</button></div>
@@ -3734,6 +3736,22 @@ function updateLogbookBadge() {
   else button?.removeAttribute('aria-label');
 }
 game.onEnemyDefeated = updateLogbook;
+game.onWeaponChallengeProgress = (gun, current, complete) => {
+  if (!game.commendations.eligible) return;
+  progress.checkExternal();
+  if (progress.blocked) return;
+  const before = weaponUnlocks();
+  if (unlockedStartingGuns(before).includes(gun)) return;
+  const next = recordWeaponChallenge(before, gun, current, complete);
+  if (JSON.stringify(before) === JSON.stringify(next)) return;
+  write(WEAPON_UNLOCKS_KEY, next);
+  if (unlockedStartingGuns(next).includes(gun)) {
+    earnRunRewards(['gun:' + gun]);
+    fittingNotice = { name: STARTING_GUNS[gun].name, until: null, stage: game.stage, tool: true };
+    updateArchive(['gun:' + gun]);
+    updateTitle();
+  }
+};
 game.onUprisingMission = (route, clean) => {
   if (game.practice || game.testRun || game.workshop.active || game.overtime) return;
   progress.checkExternal();
@@ -4688,6 +4706,7 @@ function showDialog(kind: string) {
       toolPickerPreview ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
       {
         tryTool: (gun) => openToolTrial(gun, kind),
+        profile: weaponUnlocks(),
         onSelect: (gun) => {
           toolPickerSelection = gun;
         },
@@ -4766,11 +4785,18 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.48.0 · UNCONVENTIONAL ARSENAL</p><h2 id="dialog-title">Three ways to break the rules.</h2>' +
-      '<p class="update-tagline">Pull. Bank your recoil. Become the bolt.</p>' +
-      '<dl class="update-notes"><div><dt>Bellows Cannon.</dt><dd>Hold to pull light machines and loose scrap closer. Release a short shrapnel blast that launches you backward. Defeat the Press or Kiln to earn it.</dd></div>' +
-      '<div><dt>Debt Collector.</dt><dd>Rounds fire immediately while recoil builds in the chamber. Release to vent opposite your current aim; a full chamber vents automatically. Earn it with a Campaign clear.</dd></div>' +
-      '<div><dt>Switchjack.</dt><dd>Fire a slow bolt, then press again to take its place and sacrifice its damage. Walls and occupied space block the jump. Win two different miniboss hunts to earn it.</dd></div></dl>' +
+      '<p class="eyebrow">5.49.0 · EARN YOUR ARSENAL</p><h2 id="dialog-title">Three weapons. Three challenges.</h2>' +
+      '<p class="update-tagline">Get close. Hold your nerve. Stay airborne.</p>' +
+      '<dl class="update-notes"><div><dt>Bellows Cannon · Close Quarters.</dt><dd>' +
+      WEAPON_REQUIREMENTS.bellows +
+      '</dd></div>' +
+      '<div><dt>Debt Collector · Hold the Line.</dt><dd>' +
+      WEAPON_REQUIREMENTS['debt-collector'] +
+      '</dd></div>' +
+      '<div><dt>Switchjack · Long Haul.</dt><dd>' +
+      WEAPON_REQUIREMENTS.switchjack +
+      '</dd></div></dl>' +
+      '<p>Use any weapon in Campaign or Daily. The tool picker and Logbook show your best attempt; separate attempts never add together. Already earned tools stay unlocked.</p>' +
       '<p>Try privately: <a href="?test=tools-of-trade&amp;gun=bellows&amp;scene=range&amp;v=1">Bellows Cannon ↗</a> · <a href="?test=tools-of-trade&amp;gun=debt-collector&amp;scene=range&amp;v=1">Debt Collector ↗</a> · <a href="?test=tools-of-trade&amp;gun=switchjack&amp;scene=range&amp;v=1">Switchjack ↗</a></p>' +
       '<p class="practice-record-note">All nine tools can be tried before unlocking. Private ranges grant no rewards and leave saved progress untouched. Older Daily links retain their original weapon rotation.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
@@ -7368,7 +7394,9 @@ function frame(now: number) {
       if (fittingNotice) fittingNotice.until ??= game.time + 5;
       if (commendationNotice) commendationNotice.until ??= game.time + 5;
       const copy = fittingNotice
-        ? 'Fitting unlocked · ' + fittingNotice.name + ' · next Campaign'
+        ? fittingNotice.tool
+          ? 'Starting gun unlocked · ' + fittingNotice.name
+          : 'Fitting unlocked · ' + fittingNotice.name + ' · next Campaign'
         : 'Commendation earned · ' +
           COMMENDATIONS.find((c) => c.id === commendationNotice!.id)!.name;
       if (notice.textContent !== copy) notice.textContent = copy;

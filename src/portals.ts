@@ -290,6 +290,7 @@ export class PortalSystem {
       g.tethers.disrupt(body);
       if (body === g.player) {
         g.commendations.mastery.teleported();
+        g.weaponChallenges.teleported();
         g.grapnel.detach();
         g.stasis.teleported();
       }

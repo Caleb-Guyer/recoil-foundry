@@ -173,7 +173,7 @@ test('unlock popup receipt survives reload and backup without granting duplicate
   const rewards = addRunRewards(null, seed, ['gun:shotgun']);
   await store.write(RUN_REWARDS_KEY, rewards);
   await store.write(WEAPON_UNLOCKS_KEY, {
-    version: 1,
+    version: 2,
     started: true,
     cleared: true,
     overtime: false,

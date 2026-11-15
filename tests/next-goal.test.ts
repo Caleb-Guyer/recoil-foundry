@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nextGoal, type GoalProgress } from '../src/next-goal.ts';
+import { nextGoal, goalById, goalMeasure, type GoalProgress } from '../src/next-goal.ts';
 import {
   GOAL_PREVIEWS,
   goalPreviewFromUrl,
@@ -10,7 +10,8 @@ import { COMMENDATIONS, commendationVisible } from '../src/commendations.ts';
 import { MODS, MOD_REQUIRES, FUSION_REQUIRES } from '../src/rules.ts';
 import { BRANCH_PARENTS } from '../src/upgrade-branches.ts';
 import { loadSecurityProfile } from '../src/security.ts';
-import { loadWeaponUnlocks } from '../src/weapon-unlocks.ts';
+import { loadWeaponUnlocks, recordWeaponChallenge, TOOL_LICENSES } from '../src/weapon-unlocks.ts';
+import { EXPERIMENTAL_GUN_IDS } from '../src/starting-guns.ts';
 import { unlockGoals, draftUnlocked } from '../src/longevity.ts';
 import { newCampaignSeed } from '../src/run-seed.ts';
 
@@ -40,6 +41,59 @@ test('weapon suggestions follow real ownership and skip anything already unlocke
   ] as const;
   for (const [raw, id] of cases)
     assert.equal(nextGoal({ ...p, weapons: loadWeaponUnlocks(raw) }).id, id);
+  assert.equal(nextGoal(p).id, 'complete');
+});
+
+test('unique weapon challenges follow the original tool priorities and keep exact best attempts', () => {
+  const p = finished();
+  p.weapons = loadWeaponUnlocks({
+    version: 2,
+    cleared: true,
+    overtime: true,
+    licenses: ['twinbore', 'carbine', 'repeater'],
+  });
+  for (const gun of EXPERIMENTAL_GUN_IDS) {
+    const partial = gun === 'switchjack' ? 350 : 2;
+    p.weapons = recordWeaponChallenge(p.weapons, gun, partial, false);
+    const goal = nextGoal(p);
+    assert.equal(goal.id, 'weapon:' + gun);
+    assert.equal(goal.kind, 'weapon');
+    assert.equal(goal.progress?.current, partial);
+    assert.match(goal.hint, /separate attempts never add together/);
+    assert.equal(goalMeasure(goal.id, p).complete, false);
+    const target = gun === 'switchjack' ? 500 : 3;
+    p.weapons = recordWeaponChallenge(p.weapons, gun, target, true);
+    assert.equal(goalById(p, goal.id)?.id, goal.id);
+    assert.equal(goalMeasure(goal.id, p).complete, true);
+  }
+  assert.equal(nextGoal(p).id, 'complete');
+  assert.match(nextGoal(p).requirement, /All nine weapons/);
+});
+
+test('a full flight best stays incomplete until its safe landing, while grandfathered licenses are complete', () => {
+  const p = goalPreviewProgress('switchjack');
+  assert.deepEqual(goalMeasure('weapon:switchjack', p), {
+    current: 500,
+    target: 500,
+    unit: 'horizontal flight units',
+    complete: false,
+  });
+  assert.equal(nextGoal(p).id, 'weapon:switchjack');
+  assert.match(nextGoal(p).summary, /best saved.*land safely to finish/);
+  p.weapons = recordWeaponChallenge(p.weapons, 'switchjack', 499, true);
+  assert.equal(goalMeasure('weapon:switchjack', p).complete, false);
+  p.weapons = recordWeaponChallenge(p.weapons, 'switchjack', 500, true);
+  assert.equal(goalMeasure('weapon:switchjack', p).complete, true);
+  assert.equal(nextGoal(p).id, 'complete');
+
+  p.weapons = loadWeaponUnlocks({
+    version: 1,
+    cleared: true,
+    overtime: true,
+    licenses: TOOL_LICENSES,
+  });
+  for (const gun of EXPERIMENTAL_GUN_IDS)
+    assert.equal(goalMeasure('weapon:' + gun, p).complete, true);
   assert.equal(nextGoal(p).id, 'complete');
 });
 
@@ -204,6 +258,9 @@ test('isolated title fixtures cover every milestone stage without touching the i
   const expected = [
     'campaign',
     'weapon:carbine',
+    'weapon:bellows',
+    'weapon:debt-collector',
+    'weapon:switchjack',
     'security:3',
     'commendation:bank-job',
     'discover:heat-relay',

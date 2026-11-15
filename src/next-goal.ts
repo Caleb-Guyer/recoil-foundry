@@ -4,7 +4,13 @@ import { unlockGoals, draftUnlocked, LONGEVITY_IDS, type LongevityId } from './l
 import { MODS, MOD_REQUIRES, FUSION_REQUIRES, SALVAGE_BOSSES, isSalvage } from './rules.ts';
 import { BRANCH_PARENTS } from './upgrade-branches.ts';
 import type { SecurityProfile } from './security.ts';
-import { unlockedStartingGuns, type WeaponUnlocks, type ToolLicense } from './weapon-unlocks.ts';
+import {
+  unlockedStartingGuns,
+  weaponChallengeStatus,
+  type WeaponUnlocks,
+  type ToolLicense,
+} from './weapon-unlocks.ts';
+import { EXPERIMENTAL_GUN_IDS, STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 import { newCampaignSeed } from './run-seed.ts';
 
 export interface GoalProgress {
@@ -51,6 +57,14 @@ export function goalMeasure(id: string, p: GoalProgress) {
   if (id === 'campaign') current = Number(p.weapons.cleared);
   else if (id.startsWith('weapon:')) {
     const gun = id.slice(7);
+    const challenge = weaponChallengeStatus(gun as StartingGun, p.weapons);
+    if (challenge)
+      return {
+        current: challenge.current,
+        target: challenge.target,
+        unit: challenge.unit,
+        complete: challenge.complete,
+      };
     current = Number(unlockedStartingGuns(p.weapons).includes(gun as ToolLicense | 'nailgun'));
     if (gun === 'carbine') {
       target = 2;
@@ -139,6 +153,27 @@ function selectGoal(p: GoalProgress, target?: string): NextGoal {
       hint: 'Overtime continues your winning build. Entering Overtime alone does not unlock the gun.',
       reward: 'Burst nailgun starting gun and the Night Shift outfit.',
     };
+  for (const gun of EXPERIMENTAL_GUN_IDS) {
+    if (!wants('weapon:' + gun, !guns.includes(gun))) continue;
+    const challenge = weaponChallengeStatus(gun, p.weapons)!;
+    return {
+      id: 'weapon:' + gun,
+      kind: 'weapon',
+      title: 'Unlock the ' + STARTING_GUNS[gun].name,
+      summary:
+        gun === 'switchjack' && !challenge.complete && challenge.current >= challenge.target
+          ? 'Long Haul · 500-unit best saved. Complete a qualifying flight and land safely to finish.'
+          : challenge.name + ' · ' + challenge.requirement,
+      requirement: challenge.requirement,
+      hint: challenge.hint + ' Your best attempt is saved; separate attempts never add together.',
+      reward: STARTING_GUNS[gun].name + ' starting gun.',
+      progress: {
+        current: challenge.current,
+        target: challenge.target,
+        unit: challenge.unit,
+      },
+    };
+  }
   for (const level of [1, 2, 3] as const) {
     const cleared =
       p.security.unlocked > level ||
@@ -285,7 +320,7 @@ function selectGoal(p: GoalProgress, target?: string): NextGoal {
     title: 'Core goals complete',
     summary: 'Try a new build or chase a best time.',
     requirement:
-      'All six weapons, three Security clears, fitting licenses and commendations earned. Every upgrade collected.',
+      'All nine weapons, three Security clears, fitting licenses and commendations earned. Every upgrade collected.',
     hint: 'Return for a Daily run, try a different Gauntlet route or improve a Practice best. Factory stories and personal records are still yours to explore.',
   };
 }

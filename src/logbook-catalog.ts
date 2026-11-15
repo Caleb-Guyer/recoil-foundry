@@ -2,7 +2,12 @@ import { COURIER_ARCHIVE_ID } from './courier-record-id.ts';
 import { STARTING_GUNS } from './starting-guns.ts';
 import { RECOIL_TRIALS, loadRecoilProfile, type RecoilTrialKind } from './recoil-trial-rules.ts';
 import { practiceTime } from './practice-records.ts';
-import { unlockedStartingGuns, WEAPON_REQUIREMENTS, type WeaponUnlocks } from './weapon-unlocks.ts';
+import {
+  unlockedStartingGuns,
+  WEAPON_REQUIREMENTS,
+  weaponChallengeStatus,
+  type WeaponUnlocks,
+} from './weapon-unlocks.ts';
 import { MODS, MOD_PATHS, PATH_NAMES } from './rules.ts';
 import { uprisingCatalog } from './uprising-catalog.ts';
 import { AREAS } from './areas.ts';
@@ -195,6 +200,7 @@ export function logbookCatalog(
               ? 'Starting gun · Unlocked'
               : 'Starting gun · Locked',
             description: STARTING_GUNS[gun].description,
+            weaponChallenge: weaponChallengeStatus(gun, weapons) ?? undefined,
             unlock: unlockedStartingGuns(weapons).includes(gun)
               ? undefined
               : WEAPON_REQUIREMENTS[gun],

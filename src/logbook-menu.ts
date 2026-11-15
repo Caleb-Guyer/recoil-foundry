@@ -71,6 +71,43 @@ const goalMark = (entry: LogbookEntry) =>
       escapeLogbook(entry.goal.requirement) +
       '</p></div>'
     : '';
+const weaponChallengeMark = (entry: LogbookEntry) => {
+  const challenge = entry.weaponChallenge;
+  if (!challenge) return '';
+  if (challenge.complete)
+    return (
+      '<div class="logbook-goal logbook-weapon-challenge"><strong>' +
+      escapeLogbook(challenge.name) +
+      ' · Tool unlocked</strong><p>' +
+      escapeLogbook(challenge.requirement) +
+      '</p><p>Available for Campaign and Workshop. Previously earned licenses stay unlocked.</p></div>'
+    );
+  return (
+    '<div class="logbook-goal logbook-weapon-challenge"><strong>' +
+    escapeLogbook(challenge.name) +
+    '</strong><progress max="' +
+    challenge.target +
+    '" value="' +
+    challenge.current +
+    '" aria-label="' +
+    escapeLogbook(entry.name + ' best attempt: ' + challenge.requirement) +
+    '"></progress><span>Best attempt · ' +
+    challenge.current +
+    ' / ' +
+    challenge.target +
+    ' ' +
+    escapeLogbook(challenge.unit) +
+    '</span><p>' +
+    escapeLogbook(challenge.requirement) +
+    '</p><p>' +
+    escapeLogbook(challenge.hint) +
+    ' Best attempt is retained; separate attempts do not add together.' +
+    (!challenge.complete && entry.weapon === 'switchjack' && challenge.current >= challenge.target
+      ? ' Safe landing still required to unlock; reaching 500 alone is not completion.'
+      : '') +
+    '</p></div>'
+  );
+};
 export interface LogbookViewState {
   section: LogbookSection;
   selected: string;
@@ -159,10 +196,11 @@ export function logbookArticle(
     (entry.description
       ? '<p class="logbook-function">' + escapeLogbook(entry.description) + '</p>'
       : '') +
-    (entry.unlock && !entry.goal && entry.unlock !== entry.description
+    (entry.unlock && !entry.goal && !entry.weaponChallenge && entry.unlock !== entry.description
       ? '<p class="logbook-unlock"><strong>Unlock:</strong> ' + escapeLogbook(entry.unlock) + '</p>'
       : '') +
     goalMark(entry) +
+    weaponChallengeMark(entry) +
     logbookTrackMarkup(track) +
     (entry.mastery
       ? '<div class="logbook-goal"><strong>' +

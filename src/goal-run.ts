@@ -11,6 +11,8 @@ import { SUPPORT_MASTERIES } from './support-mastery.ts';
 import type { CombatResults } from './combat-report.ts';
 import type { SecurityLevel } from './security.ts';
 import type { GauntletMode } from './gauntlet-rules.ts';
+import { EXPERIMENTAL_GUN_IDS } from './starting-guns.ts';
+import { WEAPON_CHALLENGES } from './weapon-unlocks.ts';
 const GAUNTLET_GOALS = [
   'weapon:repeater',
   'commendation:gauntlet-cleared',
@@ -37,6 +39,7 @@ const ids = new Set([
   'weapon:carbine',
   'weapon:repeater',
   'weapon:nailgun',
+  ...EXPERIMENTAL_GUN_IDS.map((id) => 'weapon:' + id),
   'security:1',
   'security:2',
   'security:3',
@@ -49,6 +52,7 @@ const ids = new Set([
 export function loadGoalRun(raw: unknown): GoalRun | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const r = raw as GoalRun;
+  const challenge = EXPERIMENTAL_GUN_IDS.find((gun) => r.id === 'weapon:' + gun);
   if (
     r.version !== 1 ||
     typeof r.seed !== 'string' ||
@@ -58,7 +62,7 @@ export function loadGoalRun(raw: unknown): GoalRun | null {
     !ids.has(r.id) ||
     !Number.isSafeInteger(r.before) ||
     r.before < 0 ||
-    r.before > 3 ||
+    r.before > (challenge ? WEAPON_CHALLENGES[challenge].target : 3) ||
     typeof r.resumed !== 'boolean' ||
     !Array.isArray(r.discoveries) ||
     Object.keys(r).some(
@@ -118,6 +122,8 @@ export function goalRunSummary(run: GoalRun, p: GoalProgress, attempt: GoalAttem
   else if (measure.target > 1) {
     status = `${measure.current} / ${measure.target} ${measure.unit}`;
     if (ended && measure.current > run.before) status = `${run.before} → ${status}`;
+    if (run.id === 'weapon:switchjack' && measure.current >= measure.target)
+      status += ' · safe landing still required';
   } else if (
     run.id === 'campaign' ||
     run.id.startsWith('security:') ||
@@ -153,7 +159,9 @@ export function goalRunSummary(run: GoalRun, p: GoalProgress, attempt: GoalAttem
     goal,
     status,
     complete: measure.complete,
-    advanced: measure.current > run.before,
+    advanced:
+      measure.current > run.before ||
+      (measure.complete && EXPERIMENTAL_GUN_IDS.some((gun) => run.id === 'weapon:' + gun)),
     discoveries: p.discovered.filter((id) => !run.discoveries.includes(id)).length,
     resumed: run.resumed,
   };

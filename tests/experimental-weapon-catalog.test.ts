@@ -73,7 +73,15 @@ test('old Daily challenges retain their original exact six-tool rotation and RF-
 test('experimental licenses migrate from earned evidence without granting unearned completion or duplicate hunt credit', () => {
   const fresh = migrateWeaponUnlocks(null, null, [], loadLogbook(null), []);
   for (const gun of EXPERIMENTAL_GUN_IDS) assert.equal(availableStartingGun(gun, fresh), 'pistol');
-  const pressure = migrateWeaponUnlocks(fresh, null, [], loadLogbook(null), [], false, ['press']);
+  const pressure = migrateWeaponUnlocks(
+    { ...fresh, version: 1 },
+    null,
+    [],
+    loadLogbook(null),
+    [],
+    false,
+    ['press'],
+  );
   assert(unlockedStartingGuns(pressure).includes('bellows'));
   assert(!unlockedStartingGuns(pressure).includes('debt-collector'));
   assert(!unlockedStartingGuns(pressure).includes('switchjack'));
@@ -82,7 +90,7 @@ test('experimental licenses migrate from earned evidence without granting unearn
     'cable-cut',
   ]);
   assert(!unlockedStartingGuns(oneHunt).includes('switchjack'));
-  const twoHunts = migrateWeaponUnlocks(oneHunt, null, [], loadLogbook(null), [
+  const twoHunts = migrateWeaponUnlocks({ ...oneHunt, version: 1 }, null, [], loadLogbook(null), [
     'cable-cut',
     'plate-breaker',
   ]);

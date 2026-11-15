@@ -496,6 +496,7 @@ export class TorchSystem {
         y: clamp(g.player.velocity.y + shiftDelta.y, -21, 20),
       });
       g.commendations.mastery.recoiled(beforeRecoil - g.player.velocity.y);
+      g.weaponChallenges.recoiled(beforeRecoil - g.player.velocity.y);
       // Ramjet still requires fast travel; a beam renews its launch, not its hits.
       g.salvage.launch(d, g.gun.recoil * (g.grounded ? 0.21 : 1));
     }

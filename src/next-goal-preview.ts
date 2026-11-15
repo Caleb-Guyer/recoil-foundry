@@ -4,10 +4,12 @@ import { loadLogbook } from './logbook-progress.ts';
 import { loadSecurityProfile } from './security.ts';
 import { loadWeaponUnlocks, TOOL_LICENSES } from './weapon-unlocks.ts';
 import type { GoalProgress } from './next-goal.ts';
+import { EXPERIMENTAL_GUN_IDS } from './starting-guns.ts';
 
 export const GOAL_PREVIEWS = [
   'fresh',
   'tools',
+  ...EXPERIMENTAL_GUN_IDS,
   'security',
   'achievements',
   'discoveries',
@@ -32,7 +34,7 @@ export function goalPreviewFromUrl(url: URL): GoalPreview | null {
 export function goalPreviewProgress(profile: GoalPreview): GoalProgress {
   const p: GoalProgress = {
     weapons: loadWeaponUnlocks({
-      version: 1,
+      version: 2,
       cleared: true,
       overtime: true,
       licenses: TOOL_LICENSES,
@@ -76,9 +78,24 @@ export function goalPreviewProgress(profile: GoalPreview): GoalProgress {
   if (profile === 'tools')
     return {
       ...p,
-      weapons: loadWeaponUnlocks({ version: 1, cleared: true, licenses: ['twinbore'] }),
+      weapons: loadWeaponUnlocks({ version: 2, cleared: true, licenses: ['twinbore'] }),
       earned: ['cable-cut'],
     };
+  if (EXPERIMENTAL_GUN_IDS.some((gun) => gun === profile)) {
+    const challengeIndex = EXPERIMENTAL_GUN_IDS.findIndex((gun) => gun === profile);
+    return {
+      ...p,
+      weapons: loadWeaponUnlocks({
+        version: 2,
+        cleared: true,
+        overtime: true,
+        licenses: TOOL_LICENSES.filter(
+          (gun) => !EXPERIMENTAL_GUN_IDS.slice(challengeIndex).some((id) => id === gun),
+        ),
+        challenges: { [profile]: profile === 'switchjack' ? 500 : 2 },
+      }),
+    };
+  }
   if (profile === 'security')
     return {
       ...p,

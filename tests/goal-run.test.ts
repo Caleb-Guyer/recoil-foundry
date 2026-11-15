@@ -16,7 +16,7 @@ import {
 } from '../src/goal-run.ts';
 import { ProgressStore, parseProgressBackup, validateProgress } from '../src/progress.ts';
 import { MODS, loadCheckpoint } from '../src/rules.ts';
-import { loadWeaponUnlocks } from '../src/weapon-unlocks.ts';
+import { loadWeaponUnlocks, recordWeaponChallenge } from '../src/weapon-unlocks.ts';
 import { Game } from '../src/game.ts';
 import {
   GOAL_RUN_SCENES,
@@ -50,6 +50,47 @@ test('Retry starts a new baseline even with the same seed; foreign Continue data
   assert.equal(beginGoalRun('other', p, run, true)!.resumed, true);
   assert.equal(beginGoalRun('other', p, run, true)!.before, 0);
   assert.equal(beginGoalRun('other', goalPreviewProgress('complete')), null);
+});
+
+test('weapon challenge attempts retain partial bests and completed targets through Continue and Retry', () => {
+  for (const gun of ['bellows', 'debt-collector'] as const) {
+    const p = goalPreviewProgress(gun);
+    const run = beginGoalRun('challenge-' + gun, p)!;
+    assert.equal(run.id, 'weapon:' + gun);
+    assert.equal(run.before, 2);
+    assert.deepEqual(loadGoalRun(run), run);
+    assert.equal(goalRunSummary(run, p, attempt, true)?.complete, false);
+    p.weapons = recordWeaponChallenge(p.weapons, gun, 3, true);
+    assert.deepEqual(beginGoalRun(run.seed, p, run, true), run);
+    const result = goalRunSummary(run, p, attempt, true)!;
+    assert.equal(result.complete, true);
+    assert.equal(result.advanced, true);
+    assert.match(result.status, /Goal complete.*2 → 3 \/ 3/);
+    assert.notEqual(beginGoalRun(run.seed, p, run)!.id, run.id);
+  }
+});
+
+test('a 500-unit baseline remains valid, incomplete and retryable until a safe landing awards Switchjack', () => {
+  const p = goalPreviewProgress('switchjack');
+  const run = beginGoalRun('long-haul', p)!;
+  assert.equal(run.id, 'weapon:switchjack');
+  assert.equal(run.before, 500);
+  assert.deepEqual(loadGoalRun(run), run);
+  assert.equal(loadGoalRun({ ...run, before: 501 }), null);
+  assert.equal(loadGoalRun({ ...run, id: 'weapon:bellows', before: 4 }), null);
+  assert.equal(loadGoalRun({ ...run, id: 'weapon:carbine', before: 500 }), null);
+  let result = goalRunSummary(run, p, attempt, true)!;
+  assert.equal(result.complete, false);
+  assert.equal(result.advanced, false);
+  assert.match(result.status, /500 \/ 500.*safe landing still required/);
+  assert.equal(beginGoalRun(run.seed, p, run)!.before, 500);
+  p.weapons = recordWeaponChallenge(p.weapons, 'switchjack', 500, true);
+  assert.deepEqual(beginGoalRun(run.seed, p, run, true), run);
+  result = goalRunSummary(run, p, attempt, true)!;
+  assert.equal(result.complete, true);
+  assert.equal(result.advanced, true);
+  assert.match(result.status, /^Goal complete/);
+  assert.equal(beginGoalRun(run.seed, p, run), null);
 });
 
 test('saved hunt totals use distinct awards and real ownership', () => {

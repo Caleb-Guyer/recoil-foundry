@@ -76,7 +76,7 @@ test('licenses reward three distinct achievements without granting completion gu
     false,
     ['kiln'],
   );
-  assert.deepEqual(unlockedStartingGuns(all), ['pistol', ...guns, 'bellows', 'switchjack']);
+  assert.deepEqual(unlockedStartingGuns(all), ['pistol', ...guns]);
   assert(all.started && !all.cleared && !all.overtime);
   assert(validWeaponUnlocks(all));
   assert.deepEqual(loadWeaponUnlocks(all), all);

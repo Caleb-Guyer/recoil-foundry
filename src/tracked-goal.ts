@@ -3,6 +3,7 @@ import type { LogbookEntry } from './logbook-progress.ts';
 import { LONGEVITY_IDS, unlockGoals, type LongevityId } from './longevity.ts';
 import { MODS } from './rules.ts';
 import { goalById, goalMeasure, nextGoal, type GoalProgress } from './next-goal.ts';
+import { EXPERIMENTAL_GUN_IDS } from './starting-guns.ts';
 
 export const TRACKED_GOAL_KEY = 'rf-tracked-goal-v1';
 export interface TrackedGoal {
@@ -11,6 +12,7 @@ export interface TrackedGoal {
 }
 const ids = new Set([
   ...['twinbore', 'carbine', 'repeater', 'nailgun'].map((id) => 'weapon:' + id),
+  ...EXPERIMENTAL_GUN_IDS.map((id) => 'weapon:' + id),
   ...LONGEVITY_IDS.map((id) => 'license:' + id),
   ...MODS.map((m) => 'discover:' + m.id),
   ...COMMENDATIONS.map((c) => 'commendation:' + c.id),
@@ -28,11 +30,15 @@ export function validTrackedGoal(raw: unknown) {
   return raw === null || !!loadTrackedGoal(raw);
 }
 
-// A chosen goal must still be revealed, incomplete and available after the first
-// Campaign clear. Importing a preference cannot reveal or grant its reward.
+// Most goals become available after the first Campaign clear. The three visible
+// weapon challenges can be chosen earlier. Tracking never grants their reward.
 export function trackedGoal(p: GoalProgress, raw: unknown) {
   const tracked = loadTrackedGoal(raw);
-  if (!tracked || !p.weapons.cleared) return null;
+  if (
+    !tracked ||
+    (!p.weapons.cleared && !EXPERIMENTAL_GUN_IDS.some((gun) => tracked.id === 'weapon:' + gun))
+  )
+    return null;
   const goal = goalById(p, tracked.id);
   if (!goal || goalMeasure(goal.id, p).complete) return null;
   if (goal.kind === 'discovery') {

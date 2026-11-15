@@ -28,6 +28,19 @@
 .starting-gun-try {
   width: 100%;
 }
+.starting-gun-challenge {
+  margin: 0;
+  padding: 10px;
+}
+.starting-gun-challenge progress,
+.logbook-weapon-challenge progress {
+  width: 100%;
+}
+.starting-gun-challenge span,
+.logbook-weapon-challenge span {
+  display: block;
+  margin: 8px 0 0;
+}
 .starting-gun-choice[aria-pressed='true'] {
   border-color: #e8b56c;
   background: #25312e;

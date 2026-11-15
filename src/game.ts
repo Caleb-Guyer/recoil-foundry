@@ -129,6 +129,7 @@ import { planWelder, welderLevel, welderPracticeLevel } from './welder-layout.ts
 import { AuditorSystem, type AuditorRig } from './auditor.ts';
 import { auditorTestLevel } from './auditor-layout.ts';
 import { CommendationTracker, type CommendationId, type KillSource } from './commendations.ts';
+import { WeaponChallenges } from './weapon-challenges.ts';
 import { markShot, shotTrace, type WeaponTrace } from './weapon-mastery.ts';
 import type { Cosmetics } from './cosmetics.ts';
 import { CryogenicSystem } from './cryogenic.ts';
@@ -540,6 +541,7 @@ export class Game {
   mode: Mode = 'title';
   cosmetics: Cosmetics = { gun: 'standard', outfit: 'standard' };
   commendations = new CommendationTracker(this);
+  weaponChallenges = new WeaponChallenges(this);
   welder = new WelderSystem(this);
   melt = new MeltThroughSystem(this);
   welderReward = false;
@@ -858,6 +860,11 @@ export class Game {
   onEnemyEncountered: (enemy: Enemy) => void = () => {};
   private reportedEncounters = new Set<number>();
   onCommendation: (id: CommendationId) => void = () => {};
+  onWeaponChallengeProgress: (
+    gun: 'bellows' | 'debt-collector' | 'switchjack',
+    current: number,
+    complete: boolean,
+  ) => void = () => {};
   constructor() {
     Matter.Events.on(this.engine, 'beforeSolve', () => {
       this.counterweights.afterIntegrate();
@@ -885,6 +892,7 @@ export class Game {
     if (mode === 'paused' && this.auditor.enemy) this.save();
     if (mode === 'paused' && this.recoil.active) this.save();
     if (mode !== 'playing') {
+      this.weaponChallenges.pause();
       this.experimentalWeapons.pause();
       this.operatorSurface.pause(mode === 'paused');
       this.stasis.held = false;
@@ -1364,6 +1372,7 @@ export class Game {
     this.auditor.clear();
     this.welder.clear();
     this.commendations.resetRoom();
+    this.weaponChallenges.reset();
     this.fabricators.clear();
     this.teamwork.clear();
     this.floodgate.clear();
@@ -2043,6 +2052,7 @@ export class Game {
     this.muzzle = Math.max(0, this.muzzle - dt);
     this.land = Math.max(0, this.land - dt);
     const rawWeaponFire = input.fire;
+    this.weaponChallenges.input(rawWeaponFire);
     input = this.shiftMorphs.input(dt, input);
     // Keep jump taps through the tiny impact pause.
     if (input.jump) this.jumpBuffer = this.areaEvents.input(true) ? 0 : 0.12;
@@ -2335,6 +2345,7 @@ export class Game {
     this.recoil.race.afterStep();
     this.hunts.update();
     this.bossRemaster.afterStep();
+    this.weaponChallenges.afterStep();
     if (
       (!this.combatEnemyCount || this.uprising.escapeReady) &&
       !this.areaEvents.waiting &&
@@ -2500,6 +2511,7 @@ export class Game {
         y: clamp(this.player.velocity.y + shiftDelta.y, -21, 20),
       });
       this.commendations.mastery.recoiled(beforeRecoil - this.player.velocity.y);
+      this.weaponChallenges.recoiled(beforeRecoil - this.player.velocity.y);
       this.salvage.launch(d, impulse);
     }
     this.onHaptic('shot', Math.min(1, 0.3 + impulse / 12));
@@ -4208,6 +4220,7 @@ export class Game {
     this.auditor.killed(e, credited && source !== 'cleanup');
     this.welder.killed(e, credited && source !== 'cleanup');
     if (credited) this.commendations.defeated(e, source, trace);
+    if (credited) this.weaponChallenges.defeated(e, source);
     if (
       credited &&
       source !== 'cleanup' &&
@@ -4338,6 +4351,7 @@ export class Game {
     if (amount > 0) this.maintenance.damaged();
     if (amount > 0) this.recoil.damaged();
     if (amount > 0) this.commendations.damaged();
+    if (amount > 0) this.weaponChallenges.damaged();
     if (amount > 0) this.uprising.damage();
     this.hurtAt = this.time;
     this.feedback(8);

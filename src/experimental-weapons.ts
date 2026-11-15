@@ -415,6 +415,7 @@ export class ExperimentalWeapons {
     this.lastVentDirection =
       Math.hypot(paid.x, paid.y) > 1e-8 ? direction({ x: 0, y: 0 }, paid) : null;
     g.commendations.mastery.recoiled(beforeVelocity.y - g.player.velocity.y);
+    g.weaponChallenges.recoiled(beforeVelocity.y - g.player.velocity.y);
     g.salvage.launch(d, impulse);
     g.feedback(2.4, d);
     g.onHaptic('shot', Math.min(1, impulse / EXPERIMENTAL_WEAPONS.debtCap));
@@ -549,6 +550,7 @@ export class ExperimentalWeapons {
     const velocity = { ...g.player.velocity };
     g.grapnel.detach();
     g.stasis.teleported();
+    g.weaponChallenges.teleported();
     g.harpoons.disrupt(g.player);
     g.tethers.disrupt(g.player);
     g.magnets.release(g.player);

@@ -19,11 +19,16 @@ import { logbookCatalog } from '../src/logbook-catalog.ts';
 import { logbookArticle, logbookTrackMarkup } from '../src/logbook-menu.ts';
 import { loadLogbook, LOGBOOK_KEY } from '../src/logbook.ts';
 import { unlockGoals } from '../src/longevity.ts';
-import { loadWeaponUnlocks, WEAPON_UNLOCKS_KEY } from '../src/weapon-unlocks.ts';
+import {
+  loadWeaponUnlocks,
+  recordWeaponChallenge,
+  WEAPON_UNLOCKS_KEY,
+} from '../src/weapon-unlocks.ts';
 import { ProgressStore, parseProgressBackup, validateProgress } from '../src/progress.ts';
 import { ARCHIVE_KEY } from '../src/archive.ts';
 import { DISCOVERIES_KEY } from '../src/workshop-build.ts';
 import { MODS } from '../src/rules.ts';
+import { EXPERIMENTAL_GUN_IDS } from '../src/starting-guns.ts';
 
 const pin = (id: string) => ({ version: 1 as const, id });
 const catalog = (p: ReturnType<typeof trackingPreviewProgress>) =>
@@ -37,7 +42,7 @@ const catalog = (p: ReturnType<typeof trackingPreviewProgress>) =>
     p.weapons,
   );
 
-test('manual choices cannot replace Beat the Campaign before the first clear', () => {
+test('existing manual choices keep their Campaign gate; visible weapon challenges can be tracked earlier', () => {
   const p = trackingPreviewProgress('fresh');
   p.weapons = loadWeaponUnlocks({ version: 1, started: true, licenses: ['twinbore'] });
   p.revealed = MODS.map((m) => 'mod:' + m.id);
@@ -51,8 +56,65 @@ test('manual choices cannot replace Beat the Campaign before the first clear', (
     assert.equal(trackedGoal(p, pin(id)), null);
     assert.equal(selectedGoal(p, pin(id)).id, 'campaign');
   }
-  for (const entry of catalog(p)) assert.equal(logbookGoal(entry, p), null);
+  for (const gun of EXPERIMENTAL_GUN_IDS) {
+    assert.equal(trackedGoal(p, pin('weapon:' + gun))?.id, 'weapon:' + gun);
+    assert.equal(selectedGoal(p, pin('weapon:' + gun)).id, 'weapon:' + gun);
+  }
+  for (const entry of catalog(p))
+    if (EXPERIMENTAL_GUN_IDS.some((gun) => entry.weapon === gun))
+      assert.equal(logbookGoal(entry, p)?.id, 'weapon:' + entry.weapon);
+    else assert.equal(logbookGoal(entry, p), null);
   assert.equal(JSON.stringify(p), before);
+});
+
+test('Switchjack can stay tracked at its full numeric best until a license is earned', () => {
+  const p = trackingPreviewProgress('fresh');
+  p.weapons = loadWeaponUnlocks({
+    version: 2,
+    started: true,
+    challenges: { switchjack: 500 },
+  });
+  assert.equal(trackedGoal(p, pin('weapon:switchjack'))?.id, 'weapon:switchjack');
+  p.weapons.licenses = ['switchjack'];
+  assert.equal(trackedGoal(p, pin('weapon:switchjack')), null);
+  assert.equal(selectedGoal(p, pin('weapon:switchjack')).id, 'campaign');
+});
+
+test('backup preserves a pre-Campaign challenge choice and a 500-unit attempt baseline', async () => {
+  const data = new Map<string, string>();
+  const disk = {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      data.set(key, value);
+    },
+    removeItem: (key: string) => {
+      data.delete(key);
+    },
+  };
+  const store = new ProgressStore(() => disk);
+  const p = trackingPreviewProgress('fresh');
+  p.weapons = recordWeaponChallenge(p.weapons, 'switchjack', 500, false);
+  const tracked = pin('weapon:switchjack');
+  const run = beginGoalRun('early-long-haul', p, undefined, false, tracked)!;
+  assert.equal(run.before, 500);
+  await store.write(WEAPON_UNLOCKS_KEY, p.weapons);
+  await store.write(TRACKED_GOAL_KEY, tracked);
+  await store.write(GOAL_RUN_KEY, run);
+  const backup = parseProgressBackup(store.backup('5.49.0'));
+  assert.deepEqual(backup.values[TRACKED_GOAL_KEY], tracked);
+  assert.deepEqual(backup.values[GOAL_RUN_KEY], run);
+  const reloaded = new ProgressStore(() => disk);
+  assert.deepEqual(reloaded.read(TRACKED_GOAL_KEY), tracked);
+  assert.deepEqual(reloaded.read(GOAL_RUN_KEY), run);
+  p.weapons = recordWeaponChallenge(p.weapons, 'switchjack', 500, true);
+  await reloaded.write(WEAPON_UNLOCKS_KEY, p.weapons);
+  const completed = parseProgressBackup(reloaded.backup('5.49.0'));
+  assert.equal(completed.values[TRACKED_GOAL_KEY], null);
+  assert.deepEqual(completed.values[GOAL_RUN_KEY], run);
+  assert.equal(
+    goalRunSummary(run, p, { stage: 0, security: 0, overtime: false }, true)?.complete,
+    true,
+  );
 });
 
 test('a selected weapon overrides the automatic order and untracking restores it', () => {
