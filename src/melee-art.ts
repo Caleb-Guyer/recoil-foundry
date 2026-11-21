@@ -3,6 +3,54 @@ import { clamp } from './rules.ts';
 import { GUN_FINISHES } from './cosmetics.ts';
 import { isMeleeWeapon } from './starting-guns.ts';
 
+/** The world renderer supplies player-center coordinates. Read the committed
+ * strike direction so turning the reticle cannot rotate an active hit. */
+export function drawMeleeStrike(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
+  if (!isMeleeWeapon(g.startingGun)) return;
+  const strike = g.melee.activeStrike;
+  if (!strike || strike.until < g.time) return;
+  const p = g.player.position;
+  const heading = Math.atan2(strike.aim.y, strike.aim.x);
+  const tip = (angle: number) => {
+    const end = g.lineEnd(p, {
+      x: p.x + Math.cos(angle) * strike.reach,
+      y: p.y + Math.sin(angle) * strike.reach,
+    });
+    return { x: end.x - p.x, y: end.y - p.y };
+  };
+  c.save();
+  c.strokeStyle = strike.weapon === 'hammer' ? '#e5bc88' : '#b8e7dd';
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  c.globalAlpha = reduced
+    ? 0.65
+    : 0.3 + 0.5 * clamp((strike.until - g.time) / Math.max(0.001, strike.until - g.lastShot), 0, 1);
+  c.lineWidth = strike.weapon === 'hammer' ? 3 : 2;
+  c.beginPath();
+  if (strike.weapon === 'spear') {
+    const end = tip(heading);
+    const length = Math.hypot(end.x, end.y);
+    if (length > 12) {
+      c.moveTo(end.x * 0.3, end.y * 0.3);
+      c.lineTo(end.x, end.y);
+      const d = strike.aim;
+      for (const side of [-1, 1]) {
+        c.moveTo(end.x - d.x * 9 + side * d.y * 3, end.y - d.y * 9 - side * d.x * 3);
+        c.lineTo(end.x, end.y);
+      }
+    }
+  } else {
+    const steps = 10;
+    for (let i = 0; i <= steps; i++) {
+      const end = tip(heading + strike.halfAngle * ((2 * i) / steps - 1));
+      if (i === 0) c.moveTo(end.x, end.y);
+      else c.lineTo(end.x, end.y);
+    }
+  }
+  c.stroke();
+  c.restore();
+}
+
 export function drawMeleeWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolean) {
   const weapon = g.startingGun;
   if (!isMeleeWeapon(weapon)) return false;
@@ -32,6 +80,12 @@ export function drawMeleeWeapon(c: CanvasRenderingContext2D, g: Game, reduced: b
     c.moveTo(19, 0);
     c.quadraticCurveTo(38, -1, 47, -6);
     c.stroke();
+    if (g.melee.riposteReady) {
+      c.fillStyle = '#ffe6a5';
+      c.fillRect(14, -7, 3, 3);
+      c.fillRect(14, 4, 3, 3);
+      c.fillRect(18, -1.5, 10, 1.5);
+    }
   } else if (weapon === 'hammer') {
     c.fillStyle = finish.shell;
     c.roundRect(27, -12, 14, 24, 2);
@@ -63,6 +117,14 @@ export function drawMeleeWeapon(c: CanvasRenderingContext2D, g: Game, reduced: b
     if (g.melee.charge > 0) {
       c.fillStyle = '#e9bc72';
       c.fillRect(18, -6, 14 * g.melee.charge, 2);
+      if (g.melee.charge >= 1) {
+        c.beginPath();
+        c.moveTo(34, -9);
+        c.lineTo(38, -6);
+        c.lineTo(34, -3);
+        c.closePath();
+        c.fill();
+      }
     }
   }
   c.restore();

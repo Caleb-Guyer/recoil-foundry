@@ -2,6 +2,9 @@ import type { Mod } from './rules.ts';
 
 export function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'second-beat': 'M9 40l23-25 10-5-5 10-23 24M6 22l9-9m-5 16 10-10M28 33q10-2 16-13',
+    'rebound-clutch': 'M7 39l16-16m-7-4 9-9 12 12-9 9zM41 15q9 13-2 22H28m7-5-7 5 7 4',
+    'tandem-point': 'M6 39l28-27 11-5-5 11-28 27M14 17l4-4 15 15-4 4M20 11l4-4 15 15-4 4',
     'wide-guard': 'M9 37l21-22 13-8-7 13-22 21M10 28l11 11M29 32q11-3 15-14',
     'riposte-edge': 'M8 40l10-10m-4-4 9 9m-5-6L40 7l-6 15-12 10M30 38h15l-5-5',
     'counterweight-head': 'M9 40l22-23M23 15l8-8 15 15-8 8zM30 11l11 11',

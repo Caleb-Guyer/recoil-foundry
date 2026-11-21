@@ -1,9 +1,9 @@
 {
   "name": "recoil-foundry",
-  "version": "5.49.0",
+  "version": "5.50.0",
   "private": true,
   "type": "module",
-  "description": "A physics roguelike with firearms, melee weapons, 167 upgrades, and twenty rooms of recoil-driven combat.",
+  "description": "A physics roguelike with firearms, melee weapons, 170 upgrades, and twenty rooms of recoil-driven combat.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",

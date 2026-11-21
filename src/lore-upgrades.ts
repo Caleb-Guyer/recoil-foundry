@@ -8,6 +8,21 @@ export type Lore = readonly [source: string, author: string, text: string];
 export const UPGRADE_LORE = {
   ...TOOLROOM_LORE,
   ...SHIFT_LORE,
+  'second-beat': [
+    'Range ledger',
+    'M. Vale · maintenance',
+    'The first catch left a dent in the green plate. The second round took the same path while the plate was still ringing.\n\nI asked Orr to pull the target paper. Two clean holes, close enough to cover with one thumb.',
+  ],
+  'rebound-clutch': [
+    'Press repair slip',
+    'E. Holt · safety office',
+    'Empty swings still bottom out at the end of the rail. Against a loaded carriage, the clutch catches the return and brings the head straight back to the operator.\n\nWe tried a row of three carriages. I heard the clutch take up once. That was the part I wanted to check.',
+  ],
+  'tandem-point': [
+    'Alignment test',
+    'T. Orr · dispatch',
+    'We bolted two witness plates to the proving rail and painted their rims different colors. The front plate took a clean dent. The one behind it folded at the center.\n\nVale swapped the plates and sent the trolley through again. This time the yellow rim was at the back. I kept both plates for the new crew.',
+  ],
   'wide-guard': [
     'Blade inspection',
     'M. Vale · maintenance',

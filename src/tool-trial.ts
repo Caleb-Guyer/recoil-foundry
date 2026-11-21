@@ -1,11 +1,29 @@
 import Matter from 'matter-js';
 import type { Enemy, Input } from './game.ts';
+import { MELEE_FITTINGS } from './melee-fittings.ts';
 import { isMeleeWeapon, type StartingGun } from './starting-guns.ts';
 import { createUpgradeDemo, destroyUpgradeDemo } from './upgrade-demo.ts';
 import { TOOL_TRIAL_CONVERTED_MODS } from './tools-of-trade-test.ts';
 
 export type ToolTrialScene = 'range' | 'converted';
 export const TOOL_TRIAL_TARGETS = [430, 590, 750] as const;
+const MELEE_DRILLS = {
+  katana: {
+    targets: [350],
+    goal: 'Face the firing dummy and slash as its round comes within reach.',
+    success: 'Parry complete. You sent a round back at the firing dummy.',
+  },
+  hammer: {
+    targets: [219, 510],
+    goal: 'Hit a loose dummy from the side to send it sliding.',
+    success: 'Knockback complete. Your swing sent the dummy sliding.',
+  },
+  spear: {
+    targets: [217, 289],
+    goal: 'Line up both dummies. Hold until the charge bar is full, then release to pierce both.',
+    success: 'Pierce complete. One fully charged thrust struck both dummies.',
+  },
+} as const;
 const { Bodies, Body, Composite, Query } = Matter;
 /** A detached native physics world. No Campaign, profile or reward callback is connected. */
 export class ToolTrial {
@@ -14,10 +32,24 @@ export class ToolTrial {
   readonly scene: ToolTrialScene;
   private stopped = false;
   private mounts: { x: number; enemy?: Enemy; returnAt: number }[] = [];
-  constructor(gun: StartingGun, scene: ToolTrialScene = 'range') {
+  private complete = false;
+  get drillMessage() {
+    if (!isMeleeWeapon(this.gun)) return '';
+    if (this.gun === 'katana' && this.game.mods.includes('second-beat'))
+      return this.complete
+        ? 'Double parry complete. One slash returned both rounds.'
+        : 'Two dummies fire together. Time one slash to return both rounds.';
+    const drill = MELEE_DRILLS[this.gun];
+    return this.complete ? drill.success : drill.goal;
+  }
+  constructor(gun: StartingGun, scene: ToolTrialScene = 'range', fittings: readonly string[] = []) {
     this.gun = gun;
     this.scene = scene;
-    const mods = scene === 'converted' && !isMeleeWeapon(gun) ? TOOL_TRIAL_CONVERTED_MODS : [];
+    const mods: readonly string[] = isMeleeWeapon(gun)
+      ? MELEE_FITTINGS.filter((f) => f.weapon === gun && fittings.includes(f.id)).map((f) => f.id)
+      : scene === 'converted'
+        ? TOOL_TRIAL_CONVERTED_MODS
+        : [];
     const g = (this.game = createUpgradeDemo(mods, gun, `RF-C106-TOOLS-${gun}-${scene}`));
     for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
     g.enemies = [];
@@ -62,12 +94,19 @@ export class ToolTrial {
     Body.setVelocity(g.player, { x: 0, y: 0 });
     g.workshop.slots = [];
     g.waves.clear();
-    this.mounts = TOOL_TRIAL_TARGETS.map((x) => ({ x, returnAt: 0 }));
+    const targets =
+      gun === 'katana' && mods.includes('second-beat')
+        ? [350, 415]
+        : isMeleeWeapon(gun)
+          ? MELEE_DRILLS[gun].targets
+          : TOOL_TRIAL_TARGETS;
+    this.mounts = targets.map((x) => ({ x, returnAt: 0 }));
     this.refreshTargets();
     g.combatReport.reset();
   }
   private refreshTargets() {
     const g = this.game;
+    let spawnedEmitter = false;
     for (const mount of this.mounts) {
       if (mount.enemy && (!g.enemies.includes(mount.enemy) || mount.enemy.hp <= 0)) {
         mount.enemy = undefined;
@@ -82,22 +121,42 @@ export class ToolTrial {
         ).length
       )
         continue;
-      const enemy = g.spawnEnemy('runner', mount.x, 723);
+      const firing = this.gun === 'katana';
+      const enemy = g.spawnEnemy(firing ? 'shooter' : 'runner', mount.x, 723);
       if (!enemy) continue;
-      enemy.workshopTarget = { home: { x: mount.x, y: 723 }, moving: false };
+      enemy.workshopTarget = { home: { x: mount.x, y: 723 }, moving: false, firing };
       enemy.hp = enemy.maxHp = 160;
       enemy.spawn = 0;
       enemy.facing = -1;
       enemy.aim = { x: -1, y: 0 };
       enemy.timer = 0;
-      Body.setStatic(enemy.body, true);
+      if (firing) spawnedEmitter = true;
+      if (this.gun !== 'hammer') Body.setStatic(enemy.body, true);
       mount.enemy = enemy;
     }
+    // Restart the shared warning when either dummy returns. A partial parry
+    // can destroy just one emitter; the next pair must still arrive together.
+    if (spawnedEmitter)
+      for (const { x, enemy } of this.mounts) {
+        if (!enemy) continue;
+        enemy.state = 'idle';
+        enemy.timer = 0.75 - (x - MELEE_DRILLS.katana.targets[0]) / (8 * 60);
+      }
   }
   tick(dt: number, input: Input) {
     if (this.stopped || !Number.isFinite(dt) || dt <= 0 || this.game.mode !== 'playing') return;
     this.refreshTargets();
     this.game.tick(Math.min(dt, 1 / 30), input);
+    const strike = this.game.melee.activeStrike;
+    if (this.complete || !strike) return;
+    if (strike.weapon === 'katana')
+      this.complete = strike.parries >= (this.game.mods.includes('second-beat') ? 2 : 1);
+    if (strike.weapon === 'hammer')
+      this.complete = this.mounts.some(
+        ({ enemy }) =>
+          enemy && strike.struck.has(enemy.body) && Math.abs(enemy.body.velocity.x) >= 4,
+      );
+    if (strike.weapon === 'spear' && strike.charge >= 1) this.complete = strike.enemiesHit >= 2;
   }
   dispose() {
     if (this.stopped) return;

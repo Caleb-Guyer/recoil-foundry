@@ -12,8 +12,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 **First time playing?** [Join the playtest discussion](https://itch.io/t/7174290/recoil-foundry-free-browser-does-recoil-movement-make-sense-in-the-first-ten-minutes). Play normally, then share what was fun, what got in your way and whether you actually restarted. Short sessions and returning players are welcome too.
 
-- **167 upgrades**, including six melee fittings, 20 Factory Unbound fittings and 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
-- The Campaign picker offers six firearms and three melee weapons. Parry rounds with the Arc Katana, push enemies with the Foundry Hammer, or charge forward with the Drive Spear. Each has two exclusive fittings. Bellows Cannon, Debt Collector and Switchjack are also available in the Workshop once earned.
+- **170 upgrades**, including nine melee fittings, 20 Factory Unbound fittings and 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
+- The Campaign picker offers six firearms and three melee weapons. Parry rounds with the Arc Katana, push enemies with the Foundry Hammer, or charge forward with the Drive Spear. Each has three exclusive fittings and a private drill for trying them before unlocking the weapon. Bellows Cannon, Debt Collector and Switchjack are also available in the Workshop once earned.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.
@@ -21,7 +21,9 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 - **One next goal** on the title screen, in Pause and on results: follow automatic suggestions or track a revealed Logbook reward after your first victory.
 - An original procedural soundtrack and separate music/effects controls.
 
-**Current update: 5.49.0 — Earn Your Arsenal.** Bellows Cannon, Debt Collector and Switchjack now have distinct challenges: close-range defeats, one uninterrupted firing streak and a long recoil flight. The picker and Logbook show your best attempt, and previously earned weapons stay unlocked. All nine tools retain free private trials. [Challenge rules and save compatibility](docs/releases/5.49.0.md).
+**Current update · 5.50.0 — Melee Armory.** Parry with the Arc Katana, shove patrols with the Foundry Hammer, or pierce two enemies with a charged Drive Spear. Each tool has three exclusive fittings and a private drill. Seeker Rack can now break exposed Cooling Core relays even after the last enemy falls. [Unlocks, fittings and playable drills](docs/releases/5.50.0.md).
+
+**Earn Your Arsenal — 5.49.0.** Bellows Cannon, Debt Collector and Switchjack now have distinct challenges: close-range defeats, one uninterrupted firing streak and a long recoil flight. The picker and Logbook show your best attempt, and previously earned weapons stay unlocked. All nine tools retain free private trials. [Challenge rules and save compatibility](docs/releases/5.49.0.md).
 
 **Patch 5.46.1 - Feedback drafts.** Resuming the same attempt keeps your feedback text, category and reviewed details. New attempts and retries start fresh. [Patch details](docs/releases/5.46.1.md).
 

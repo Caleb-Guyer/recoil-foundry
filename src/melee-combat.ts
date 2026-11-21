@@ -2,9 +2,11 @@ import Matter from 'matter-js';
 import type { Game, Input } from './game.ts';
 import { isBoss } from './enemies.ts';
 import { closestBlastPoint } from './demolition.ts';
-import { clamp, distance, type Vec } from './rules.ts';
+import { clamp, direction, distance, type Vec } from './rules.ts';
 import { isMeleeWeapon, type MeleeWeapon } from './starting-guns.ts';
 import type { Prop } from './props.ts';
+
+export const FIRE_BUFFER_SECONDS = 0.12;
 
 interface Swing {
   weapon: MeleeWeapon;
@@ -12,9 +14,11 @@ interface Swing {
   reach: number;
   halfAngle: number;
   damage: number;
+  charge: number;
   until: number;
   struck: Set<Matter.Body>;
-  parried: boolean;
+  parries: number;
+  enemiesHit: number;
   triggered: boolean;
   sampledAt: number;
 }
@@ -25,37 +29,74 @@ export class MeleeCombat {
   private held = false;
   private waitRelease = false;
   private riposte = false;
+  private queuedThrust: { charge: number; direction: Vec } | null = null;
   charge = 0;
 
   constructor(game: Game) {
     this.game = game;
   }
+  get activeStrike(): Readonly<Swing> | null {
+    return this.swing;
+  }
+  get riposteReady() {
+    return this.riposte;
+  }
   reset(waitRelease = false) {
+    this.riposte = false;
+    this.cancelInput(waitRelease);
+  }
+  cancelInput(waitRelease = true) {
     this.swing = null;
-    this.held = this.riposte = false;
+    this.held = false;
     this.waitRelease = waitRelease;
     this.charge = 0;
+    this.queuedThrust = null;
   }
   input(dt: number, input: Input) {
     const g = this.game;
-    if (!isMeleeWeapon(g.startingGun)) return false;
-    const buffered = g.fireBuffer > 0;
-    g.fireBuffer = 0;
+    if (!isMeleeWeapon(g.startingGun)) return;
     if (this.waitRelease) {
+      g.fireBuffer = 0;
       if (!input.fire) this.waitRelease = false;
-      return true;
+      return;
     }
-    if (g.startingGun === 'spear') {
-      if (input.fire) {
-        this.held = true;
-        this.charge = Math.min(1, this.charge + dt / (g.mods.includes('quick-wind') ? 0.35 : 0.7));
-      } else if (this.held || buffered) {
-        if (g.time >= g.shootAt) g.fire();
-        this.held = false;
-        this.charge = 0;
+    if (g.startingGun !== 'spear') {
+      if ((input.fire || g.fireBuffer > 0) && g.time >= g.shootAt) {
+        g.fire();
+        g.fireBuffer = 0;
       }
-    } else if ((input.fire || buffered) && g.time >= g.shootAt) g.fire();
-    return true;
+      return;
+    }
+    const tap = g.fireBuffer > 0;
+    g.fireBuffer = 0;
+    if (input.fire) {
+      this.queuedThrust = null;
+      this.held = true;
+      this.charge = Math.min(1, this.charge + dt / (g.mods.includes('quick-wind') ? 0.35 : 0.7));
+      return;
+    }
+    if (this.held || tap) {
+      // A release in the normal input buffer keeps its charge and original
+      // direction, even when the player moves or turns during recovery.
+      if (g.shootAt - g.time <= FIRE_BUFFER_SECONDS) {
+        this.queuedThrust = {
+          charge: this.charge,
+          direction: direction(g.player.position, input.aim),
+        };
+      }
+      this.held = false;
+      this.charge = 0;
+    }
+    if (this.queuedThrust && g.time >= g.shootAt) {
+      const thrust = this.queuedThrust;
+      this.queuedThrust = null;
+      this.charge = thrust.charge;
+      g.fire({
+        x: g.player.position.x + thrust.direction.x,
+        y: g.player.position.y + thrust.direction.y,
+      });
+      this.charge = 0;
+    }
   }
   start(weapon: MeleeWeapon, aim: Vec, damage: number) {
     const g = this.game;
@@ -85,9 +126,11 @@ export class MeleeCombat {
         (weapon === 'spear' ? 1 + this.charge * 0.9 : 1) *
         (deep ? 1 + this.charge * 0.4 : 1) *
         (weapon === 'katana' && this.riposte ? 1.75 : 1),
+      charge: this.charge,
       until: g.time + duration,
       struck: new Set(),
-      parried: false,
+      parries: 0,
+      enemiesHit: 0,
       triggered: false,
       sampledAt: -Infinity,
     };
@@ -125,7 +168,17 @@ export class MeleeCombat {
     const enemies = g.enemies.filter(
       (e) => e.hp > 0 && !e.allied && e.spawn <= 0 && reaches(e.body),
     );
+    const tandem = swing.weapon === 'spear' && g.mods.includes('tandem-point');
+    if (tandem && enemies.length > 1) {
+      // Simultaneous contacts resolve from front to back along the thrust.
+      const depth = (e: (typeof enemies)[number]) => {
+        const contact = closestBlastPoint(origin, e.body);
+        return (contact.x - origin.x) * d.x + (contact.y - origin.y) * d.y;
+      };
+      enemies.sort((a, b) => depth(a) - depth(b) || a.id - b.id);
+    }
     const props = g.props.items.filter((p) => p.hp > 0 && reaches(p.body, p));
+    const panels = g.breaches.panels.filter((p) => reaches(p.body, p.body));
     const pieces = g.destruction.pieces.filter((p) => reaches(p.body, p.body));
     const end = g.lineEnd(origin, {
       x: origin.x + d.x * swing.reach,
@@ -158,8 +211,17 @@ export class MeleeCombat {
     for (const e of enemies) {
       swing.struck.add(e.body);
       const previousHp = e.hp;
-      const damage = g.gun.execute && e.hp < e.maxHp * 0.3 ? 1.6 * swing.damage : swing.damage;
-      g.hitEnemy(e, damage, origin);
+      const damage = swing.damage * (g.gun.execute && e.hp < e.maxHp * 0.3 ? 1.6 : 1);
+      g.hitEnemy(e, damage * (tandem && swing.enemiesHit > 0 ? 1.4 : 1), origin);
+      if (e.hp < previousHp) {
+        if (
+          swing.enemiesHit === 0 &&
+          swing.weapon === 'hammer' &&
+          g.mods.includes('rebound-clutch')
+        )
+          g.shootAt = Math.max(g.time, g.shootAt - 0.25 * g.gun.interval);
+        swing.enemiesHit++;
+      }
       if (g.finale.safe || g.mode !== 'playing') return;
       g.spoof.hit(e, previousHp, true);
       if (swing.weapon === 'hammer' && e.hp > 0 && !e.body.isStatic) {
@@ -177,11 +239,17 @@ export class MeleeCombat {
       swing.struck.add(p.body);
       g.props.hit(p, swing.damage, impulse, undefined, true);
     }
+    for (const panel of panels) {
+      swing.struck.add(panel.body);
+      g.breaches.hit(panel, swing.damage, impulse);
+    }
     for (const p of pieces) {
       swing.struck.add(p.body);
       g.destruction.hitBody(p.body, swing.damage, impulse);
     }
-    if (swing.weapon === 'katana' && !swing.parried) {
+    if (swing.weapon === 'katana') {
+      const limit = g.mods.includes('second-beat') ? 2 : 1;
+      if (swing.parries >= limit) return;
       for (const shot of g.shots) {
         if (
           shot.friendly ||
@@ -192,9 +260,9 @@ export class MeleeCombat {
         if ((shot.pos.x - origin.x) * shot.vel.x + (shot.pos.y - origin.y) * shot.vel.y >= 0)
           continue;
         if (!g.ballistics.parryRound(shot, { ...shot.pos })) continue;
-        swing.parried = true;
+        swing.parries++;
         this.riposte = g.mods.includes('riposte-edge');
-        break;
+        if (swing.parries >= limit) break;
       }
     }
   }

@@ -1,3 +1,4 @@
+import { drawMeleeStrike } from './melee-art.ts';
 import { drawOperator } from './operator-art.ts';
 import { drawOperatorSurface } from './operator-surface-art.ts';
 import { LivingFoundryScenery } from './living-foundry.ts';
@@ -1951,6 +1952,7 @@ export class Renderer {
       c.lineTo(4, 21);
       c.stroke();
     }
+    drawMeleeStrike(c, g, this.reduced);
     drawOperator(c, g, this.reduced, pressure);
     c.restore();
   }

@@ -16,7 +16,7 @@ const all = MODS.map((mod) => mod.id);
 
 test('all fittings have explicit mechanic membership or an authored inherited family', () => {
   const valid = BENCH_CATEGORIES.map((category) => category.id).filter((id) => id !== 'all');
-  assert.equal(MODS.length, 167);
+  assert.equal(MODS.length, 170);
   for (const mod of MODS) {
     const tags = benchModTags(mod.id);
     assert(tags.length > 0, mod.id);
@@ -26,6 +26,9 @@ test('all fittings have explicit mechanic membership or an authored inherited fa
       mod.id,
     );
   }
+  assert(benchModTags('second-beat').includes('defense'));
+  assert(benchModTags('rebound-clutch').includes('firing'));
+  assert(benchModTags('tandem-point').includes('precision'));
   assert(benchModTags('heat-exchanger').includes('heat'));
   assert(benchModTags('spring-step').includes('movement'));
   assert(benchModTags('reinforced-plate').includes('defense'));

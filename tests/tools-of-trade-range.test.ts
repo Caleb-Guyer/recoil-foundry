@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, type Input } from '../src/game.ts';
 import { getGun, loadCheckpoint } from '../src/rules.ts';
-import { STARTING_GUN_IDS, type StartingGun } from '../src/starting-guns.ts';
+import { MELEE_IDS, STARTING_GUN_IDS, type StartingGun } from '../src/starting-guns.ts';
 import { startingGunMenu } from '../src/starting-gun-menu.ts';
 import {
   toolsOfTradeTestFromUrl,
   TOOL_TRIAL_CONVERTED_MODS,
   TOOLS_OF_TRADE_SCENES,
 } from '../src/tools-of-trade-test.ts';
+import { MELEE_FITTINGS } from '../src/melee-fittings.ts';
 import { ToolTrial, TOOL_TRIAL_TARGETS } from '../src/tool-trial.ts';
 
 const DT = 1 / 60;
@@ -109,6 +110,58 @@ test('the detached range retains every unmodified native gun and never attacks o
   }
   assert.equal(JSON.stringify(parent.checkpointSnapshot()), before);
   cleanup(parent);
+});
+
+test('each private melee drill judges its real combat result with stock and fitted weapons', () => {
+  for (const gun of MELEE_IDS) {
+    const own = MELEE_FITTINGS.filter((f) => f.weapon === gun).map((f) => f.id);
+    for (const mods of [[], own]) {
+      const trial = new ToolTrial(gun, 'range', [...mods, 'scatter', 'invalid']);
+      const g = trial.game,
+        goal = trial.drillMessage;
+      assert.deepEqual(g.mods, mods);
+      if (gun === 'katana' && mods.length) g.hitEnemy(g.enemies[1], 200);
+      let grants = 0;
+      g.onWeaponChallengeProgress = () => {
+        grants++;
+      };
+      frames(trial, 220);
+      assert.equal(g.hp, 100);
+      assert.equal(
+        trial.drillMessage,
+        goal,
+        'waiting or taking a harmless round cannot complete a drill',
+      );
+      for (let i = 0; i < 500 && trial.drillMessage === goal; i++) {
+        const closeRound = g.shots.some(
+          (s) =>
+            !s.friendly &&
+            Math.hypot(s.pos.x - g.player.position.x, s.pos.y - g.player.position.y) < 77,
+        );
+        const fire = gun === 'katana' ? closeRound : gun === 'hammer' ? i === 1 : i < 48;
+        trial.tick(DT, { ...idle, fire });
+      }
+      assert.match(trial.drillMessage, /complete/i, gun);
+      if (gun === 'katana') assert.equal(g.melee.activeStrike?.parries, mods.length ? 2 : 1);
+      if (gun === 'hammer')
+        assert(g.enemies.some((e) => !e.body.isStatic && e.body.velocity.x > 4));
+      if (gun === 'spear') assert.equal(g.melee.activeStrike?.enemiesHit, 2);
+      assert.equal(grants, 0);
+      assert.equal(g.hp, 100);
+      trial.dispose();
+    }
+  }
+});
+
+test('a quick spear tap can land a hit without completing the full-charge piercing drill', () => {
+  const trial = new ToolTrial('spear');
+  const goal = trial.drillMessage;
+  frames(trial, 24);
+  frames(trial, 2, { fire: true });
+  frames(trial, 16);
+  assert(trial.game.enemies.some((e) => e.hp < e.maxHp));
+  assert.equal(trial.drillMessage, goal);
+  trial.dispose();
 });
 
 test('a carbine round penetrates two aligned native targets while an unmodified pistol stops at one', () => {

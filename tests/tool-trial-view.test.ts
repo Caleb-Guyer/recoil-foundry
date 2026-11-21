@@ -12,6 +12,7 @@ class DocumentSurface extends EventTarget {
 }
 class Button extends EventTarget {
   textContent = '';
+  value = '';
   dataset: Record<string, string> = {};
 }
 class Canvas extends EventTarget {
@@ -53,6 +54,9 @@ class RangeRoot {
   pause = new Button();
   reset = new Button();
   status = new Button();
+  fittings = new Button();
+  drill = new Button();
+  summary = new Button();
   touches = ['left', 'right', 'jump'].map((action) => {
     const button = new Button();
     button.dataset.toolTrialTouch = action;
@@ -72,6 +76,11 @@ class RangeRoot {
           '[data-tool-trial-toggle]': this.pause,
           '[data-tool-trial-reset]': this.reset,
           '.tool-trial-status': this.status,
+          '[data-trial-fittings]': this.innerHTML.includes('data-trial-fittings')
+            ? this.fittings
+            : null,
+          '[data-tool-drill]': this.innerHTML.includes('data-tool-drill') ? this.drill : null,
+          '[data-tool-summary]': this.summary,
         } as Record<string, unknown>
       )[selector] ?? null
     );
@@ -219,6 +228,41 @@ test('Reset cancels pending audio and input, destroys the old world and starts a
   frame();
   assert.equal(view.game.shotCount, 0);
   assert.equal(view.game.jumpAt, -100);
+});
+
+test('switching a melee fitting resets only the range and a cancelled pointer never releases the spear', (t) => {
+  const { view, root, document, frame, settle } = fixture(t, 'spear');
+  const old = view.game;
+  document.activeElement = root.fittings;
+  root.fittings.value = 'quick-wind';
+  root.fittings.dispatchEvent(new Event('change'));
+  assert.deepEqual(view.game.mods, ['quick-wind']);
+  assert.equal(old.engine.world.bodies.length, 0);
+  assert.equal(document.activeElement, root.fittings);
+  assert.match(root.summary.textContent, /0.35 seconds/);
+  assert.match(root.drill.textContent, /both dummies/);
+  root.canvas.focus();
+  settle();
+  const pointer = (name: string, id: number) =>
+    Object.assign(new Event(name, { cancelable: true }), {
+      pointerId: id,
+      button: 0,
+      clientX: 800,
+      clientY: 332,
+    });
+  root.canvas.dispatchEvent(pointer('pointerdown', 4));
+  for (let i = 0; i < 23; i++) frame();
+  assert.equal(view.game.melee.charge, 1);
+  root.canvas.dispatchEvent(pointer('pointercancel', 4));
+  frame();
+  assert.equal(view.game.shotCount, 0);
+  assert.equal(view.game.melee.charge, 0);
+  root.canvas.dispatchEvent(pointer('pointerdown', 5));
+  frame();
+  root.canvas.dispatchEvent(pointer('pointerup', 5));
+  root.canvas.dispatchEvent(pointer('lostpointercapture', 5));
+  frame();
+  assert.equal(view.game.shotCount, 1);
 });
 
 test('manual Pause cancels audio and queued bursts once, then resumes without stale held input', (t) => {

@@ -942,10 +942,13 @@ export function updateDraftDeclines(previous: readonly string[], declined: reado
 }
 // Each native tool has a few useful directions, rather than a forced build.
 // Actual owned prerequisites take priority once a gun develops a mechanism.
+const MELEE_DRAFT_FITS = {
+  katana: MELEE_FITTINGS.filter((f) => f.weapon === 'katana').map((f) => f.id),
+  hammer: MELEE_FITTINGS.filter((f) => f.weapon === 'hammer').map((f) => f.id),
+  spear: MELEE_FITTINGS.filter((f) => f.weapon === 'spear').map((f) => f.id),
+};
 const DRAFT_GUN_FITS: Readonly<Record<StartingGun, readonly string[]>> = {
-  katana: ['wide-guard', 'riposte-edge'],
-  hammer: ['counterweight-head', 'sweeping-face'],
-  spear: ['quick-wind', 'deep-drive'],
+  ...MELEE_DRAFT_FITS,
   pistol: ['magnum', 'rapid', 'airshot', 'kick', 'pierce', 'burst', 'capacitor'],
   shotgun: ['magnum', 'rapid', 'airshot', 'kick', 'collimator', 'ricochet', 'overkill-bank'],
   nailgun: ['rapid', 'airshot', 'kick', 'burst', 'arc-coil', 'coolant-rounds', 'pierce'],
@@ -965,9 +968,7 @@ const DRAFT_GUN_FITS: Readonly<Record<StartingGun, readonly string[]>> = {
   switchjack: ['magnum', 'rapid', 'airshot', 'kick', 'pierce', 'deadeye', 'capacitor'],
 };
 const DRAFT_TOOL_STRENGTHS: Readonly<Record<StartingGun, readonly string[]>> = {
-  katana: ['wide-guard', 'riposte-edge'],
-  hammer: ['counterweight-head', 'sweeping-face'],
-  spear: ['quick-wind', 'deep-drive'],
+  ...MELEE_DRAFT_FITS,
   pistol: ['pierce', 'burst', 'capacitor'],
   shotgun: ['collimator', 'ricochet', 'overkill-bank'],
   nailgun: ['burst', 'arc-coil', 'coolant-rounds'],

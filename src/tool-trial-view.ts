@@ -5,6 +5,7 @@ import { escapeLogbook } from './html.ts';
 import { Renderer } from './render.ts';
 import { drawWeapon } from './weapon-art.ts';
 import { isMeleeWeapon, STARTING_GUNS, type StartingGun } from './starting-guns.ts';
+import { MELEE_FITTINGS } from './melee-fittings.ts';
 import { ToolTrial, type ToolTrialScene } from './tool-trial.ts';
 
 export interface ToolTrialViewOptions {
@@ -20,6 +21,8 @@ export class ToolTrialView {
   private readonly root: HTMLElement;
   private readonly canvas: HTMLCanvasElement;
   private readonly closeup: HTMLCanvasElement;
+  private readonly fittingSelect: HTMLSelectElement | null;
+  private readonly drillStatus: HTMLElement | null;
   private readonly options: ToolTrialViewOptions;
   private readonly abort = new AbortController();
   private readonly gun: StartingGun;
@@ -89,17 +92,29 @@ export class ToolTrialView {
             : gun === 'debt-collector'
               ? 'Scattershot + Cutting Torch. The beam banks recoil; release to vent, or fill the chamber to vent automatically.'
               : 'Scattershot + Cutting Torch. The conversion keeps this tool’s native firing pattern.';
+    const fittings = MELEE_FITTINGS.filter((f) => f.weapon === gun);
+    const fittingControls = fittings.length
+      ? '<div class="tool-trial-drill"><p id="tool-trial-goal" data-tool-drill role="status"></p>' +
+        '<label>Practice fittings <select data-trial-fittings><option value="">Stock weapon</option>' +
+        fittings.map((f) => '<option value="' + f.id + '">' + f.name + '</option>').join('') +
+        '<option value="' +
+        fittings.map((f) => f.id).join(',') +
+        '">All three fittings</option></select></label></div>'
+      : '';
     root.innerHTML =
       '<div class="tool-trial-header"><div><p class="eyebrow">TRY TOOL</p><h2 id="dialog-title">' +
       info.name +
       '.</h2></div><button class="quiet" data-tool-trial-back>Back to tools</button></div>' +
-      '<div class="tool-trial-summary"><p>' +
+      '<div class="tool-trial-summary"><p data-tool-summary>' +
       (scene === 'converted' && !isMeleeWeapon(gun) ? convertedHelp : info.description) +
       '</p><canvas class="tool-trial-mechanism" width="420" height="140" aria-label="Live close-up of the actual weapon mechanism"></canvas></div>' +
       '<p class="tool-trial-scope">Private range · no rewards or saved progress. Targets return after you destroy them.</p>' +
+      fittingControls +
       '<canvas class="tool-trial-canvas" tabindex="0" aria-label="' +
       info.name +
-      ' practice range" aria-describedby="tool-trial-controls"></canvas>' +
+      ' practice range" aria-describedby="tool-trial-controls' +
+      (fittings.length ? ' tool-trial-goal' : '') +
+      '"></canvas>' +
       '<p id="tool-trial-controls" class="tool-trial-controls">Aim with the mouse. ' +
       firingHelp +
       ' ' +
@@ -111,10 +126,14 @@ export class ToolTrialView {
       '<div class="actions"><button class="quiet" data-tool-trial-toggle>Pause range</button><button class="quiet" data-tool-trial-reset>Reset range</button><span class="tool-trial-status" role="status" aria-live="polite">Range ready.</span></div>';
     this.canvas = root.querySelector<HTMLCanvasElement>('.tool-trial-canvas')!;
     this.closeup = root.querySelector<HTMLCanvasElement>('.tool-trial-mechanism')!;
+    this.fittingSelect = root.querySelector<HTMLSelectElement>('[data-trial-fittings]');
+    this.drillStatus = root.querySelector<HTMLElement>('[data-tool-drill]');
     this.trial = new ToolTrial(gun, scene);
+    this.updateDrill();
     this.trial.game.onSound = options.sound;
     this.renderer = new Renderer(this.canvas, this.game);
     const events = { signal: this.abort.signal };
+    this.fittingSelect?.addEventListener('change', () => this.reset(false), events);
     root
       .querySelector<HTMLButtonElement>('[data-tool-trial-back]')!
       .addEventListener('click', () => this.back(), events);
@@ -150,15 +169,24 @@ export class ToolTrialView {
       },
       events,
     );
-    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
-      this.canvas.addEventListener(
-        type,
-        () => {
-          this.firing = false;
-          this.pointerId = null;
-        },
-        events,
-      );
+    this.canvas.addEventListener(
+      'pointerup',
+      (event) => {
+        if (this.pointerId !== event.pointerId) return;
+        aim(event);
+        this.firing = false;
+        this.pointerId = null;
+      },
+      events,
+    );
+    const cancelPointer = (event: PointerEvent) => {
+      if (this.pointerId !== event.pointerId) return;
+      this.firing = this.firePressed = false;
+      this.pointerId = null;
+      if (this.gun === 'spear') this.game.melee.cancelInput();
+    };
+    this.canvas.addEventListener('pointercancel', cancelPointer, events);
+    this.canvas.addEventListener('lostpointercapture', cancelPointer, events);
     this.canvas.addEventListener('blur', () => this.resetInput(), events);
     document.addEventListener(
       'visibilitychange',
@@ -196,7 +224,14 @@ export class ToolTrialView {
     this.canvas.focus({ preventScroll: true });
   }
   keyDown(event: KeyboardEvent) {
-    if (this.stopped || event.ctrlKey || event.altKey || event.metaKey) return;
+    if (
+      this.stopped ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.metaKey ||
+      (this.fittingSelect && document.activeElement === this.fittingSelect)
+    )
+      return;
     const b = this.options.bindings;
     if (matches(b, 'retry', event.code)) {
       event.preventDefault();
@@ -221,6 +256,7 @@ export class ToolTrialView {
   }
   private resetInput() {
     this.keys.clear();
+    if (this.gun === 'spear') this.game.melee.cancelInput();
     this.firing = this.jump = this.firePressed = this.padFiring = false;
     this.touch.left = this.touch.right = this.touch.jump = false;
     if (this.pointerId !== null && this.canvas.hasPointerCapture(this.pointerId))
@@ -245,21 +281,33 @@ export class ToolTrialView {
     this.updateStatus();
     if (this.running) this.canvas.focus({ preventScroll: true });
   }
-  reset() {
+  reset(focusRange = true) {
     if (this.stopped) return;
     this.options.unlockAudio?.();
     this.options.stopAudio?.();
     this.resetInput();
     this.trial.dispose();
-    this.trial = new ToolTrial(this.gun, this.scene);
+    this.trial = new ToolTrial(this.gun, this.scene, this.fittingSelect?.value.split(',') ?? []);
+    this.updateDrill();
     this.game.onSound = this.options.sound;
     this.renderer = new Renderer(this.canvas, this.game);
     this.running = true;
     this.padActive = false;
     this.pointer = null;
     this.renderedAt = -1000;
+    if (this.fittingSelect) {
+      const chosen = MELEE_FITTINGS.filter((f) => this.game.mods.includes(f.id));
+      const summary = this.root.querySelector<HTMLElement>('[data-tool-summary]');
+      if (summary)
+        summary.textContent =
+          chosen.length === 1 ? chosen[0].description : STARTING_GUNS[this.gun].description;
+    }
     this.updateStatus('Range reset.');
-    this.canvas.focus({ preventScroll: true });
+    if (focusRange) this.canvas.focus({ preventScroll: true });
+  }
+  private updateDrill() {
+    if (this.drillStatus && this.drillStatus.textContent !== this.trial.drillMessage)
+      this.drillStatus.textContent = this.trial.drillMessage;
   }
   private updateStatus(message?: string) {
     this.root.querySelector<HTMLButtonElement>('[data-tool-trial-toggle]')!.textContent = this
@@ -327,6 +375,7 @@ export class ToolTrialView {
         this.accumulator -= 1 / 60;
       }
     }
+    this.updateDrill();
     if (now - this.renderedAt < 1000 / 30) return;
     if (this.renderer.width !== rect.width || this.renderer.height !== rect.height)
       this.renderer.resize();

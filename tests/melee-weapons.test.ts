@@ -90,7 +90,7 @@ test('Wide Guard extends parry timing and Riposte Edge spends the damage bonus o
   }
 });
 
-test('Hammer pushes real bodies and its two fittings independently increase knockback and sweep reach', () => {
+test('Hammer pushes real bodies and Counterweight and Sweeping Face independently increase knockback and reach', () => {
   for (const mods of [[], ['counterweight-head'], ['sweeping-face']]) {
     const g = equipped('hammer', mods);
     const e = target(g, 258, 300, 'runner');
@@ -105,7 +105,7 @@ test('Hammer pushes real bodies and its two fittings independently increase knoc
   }
 });
 
-test('Drive Spear charges while held, lunges on release, and uses both fittings at full reach', () => {
+test('Drive Spear charges while held and applies Quick Wind and Deep Drive to its lunge', () => {
   const thrust = (mods: string[], seconds: number) => {
     const g = equipped('spear', mods);
     const e = target(g, 260, 300, 'runner'),
@@ -141,6 +141,142 @@ test('Drive Spear charges while held, lunges on release, and uses both fittings 
   trigger(g, false);
   assert.equal(g.shotCount, 0);
   assert.equal(g.melee.charge, 0);
+});
+
+test('Second Beat returns two distinct light rounds per slash, and one earned riposte survives a pause', () => {
+  for (const upgraded of [false, true]) {
+    const g = equipped('katana', upgraded ? ['second-beat', 'riposte-edge'] : ['riposte-edge']);
+    const first = incoming(g);
+    const second = incoming(g, 254);
+    const third = incoming(g, 262);
+    g.fire();
+    assert(first.reflected);
+    assert.equal(!!second.reflected, upgraded);
+    assert(!third.reflected);
+    g.time += 0.05;
+    g.melee.update();
+    assert(!third.reflected);
+    assert(g.melee.riposteReady);
+    g.setMode('paused');
+    g.setMode('playing');
+    assert(g.melee.riposteReady);
+    assert.equal(g.melee.activeStrike, null);
+    g.shots = [];
+    const victim = target(g, 260);
+    trigger(g, false);
+    g.time += 1;
+    g.fire();
+    assert(!g.melee.riposteReady);
+    assert(Math.abs(victim.maxHp - victim.hp - g.gun.damage * 1.75) < 0.0001);
+  }
+});
+
+test('Rebound Clutch gives one recovery discount on enemy damage even when the hammer sweeps two targets', () => {
+  for (const mods of [[], ['rebound-clutch'], ['rebound-clutch', 'rapid']]) {
+    const g = equipped('hammer', mods);
+    g.fire();
+    assert(Math.abs(g.shootAt - g.time - g.gun.interval) < 0.00001);
+    g.time += 1;
+    target(g, 245, 295);
+    target(g, 266, 307);
+    g.fire();
+    assert.equal(g.melee.activeStrike?.enemiesHit, 2);
+    const recovery = g.gun.interval * (mods.includes('rebound-clutch') ? 0.75 : 1);
+    const readyAt = g.shootAt;
+    assert(Math.abs(readyAt - g.time - recovery) < 0.00001);
+    g.time += 0.04;
+    g.melee.update();
+    assert.equal(g.shootAt, readyAt);
+  }
+});
+
+test('Tandem Point boosts later enemies once, in contact order, with either facing or spawn order', () => {
+  for (const sign of [-1, 1])
+    for (const fitted of [false, true]) {
+      const g = equipped('spear', fitted ? ['tandem-point'] : []);
+      const far = target(g, 200 + sign * 96),
+        near = target(g, 200 + sign * 52);
+      const late = target(g, 200 + sign * 168);
+      g.aim = { x: 200 + sign * 300, y: 300 };
+      g.fire();
+      const first = near.maxHp - near.hp;
+      assert(first > 0);
+      const later = first * (fitted ? 1.4 : 1);
+      assert(Math.abs(far.maxHp - far.hp - later) < 0.001);
+      assert.equal(late.hp, late.maxHp);
+      Body.setPosition(g.player, { x: 200 + sign * 72, y: 300 });
+      g.time += 0.04;
+      g.melee.update();
+      assert(Math.abs(late.maxHp - late.hp - later) < 0.001);
+      assert.equal(near.maxHp - near.hp, first);
+    }
+});
+
+test('melee can open a cracked panel from either side and an intervening solid protects it', () => {
+  for (const weapon of MELEE_IDS)
+    for (const sign of [-1, 1]) {
+      const g = equipped(weapon);
+      const panel = g.breaches.spawnPanel({ x: sign > 0 ? 246 : 142, y: 265, w: 12, h: 70 });
+      const hidden = target(g, 200 + sign * 82);
+      g.aim = { x: 200 + sign * 300, y: 300 };
+      const solid = wall(g, 200 + sign * 30, 300, 8, 120);
+      g.fire();
+      assert.equal(panel.hp, panel.maxHp);
+      g.terrain = g.terrain.filter((b) => b !== solid);
+      panel.hp = 1;
+      g.time += 1;
+      g.fire();
+      assert.equal(g.breaches.panels.length, 0);
+      assert.equal(hidden.hp, hidden.maxHp);
+      g.time += 1;
+      g.fire();
+      assert(hidden.hp < hidden.maxHp);
+    }
+});
+
+test('quick taps in the recovery window survive native input ticks; earlier taps expire', () => {
+  for (const gun of ['katana', 'hammer'] as const)
+    for (const wait of [0.08, 0.28]) {
+      const g = equipped(gun);
+      target(g, 1100);
+      g.shootAt = g.time + wait;
+      for (let n = 0; n < 30; n++)
+        g.tick(1 / 60, {
+          aim: g.aim,
+          left: false,
+          right: false,
+          jump: false,
+          jumpHeld: false,
+          fire: false,
+          firePressed: n === 0,
+        });
+      assert.equal(g.shotCount, wait < 0.12 ? 1 : 0);
+    }
+});
+
+test('a buffered spear release preserves aim and charge exactly once and pause cancels it', () => {
+  for (const pause of [false, true]) {
+    const g = equipped('spear');
+    g.shootAt = g.time + 0.27;
+    for (let i = 0; i < 12; i++) trigger(g, true);
+    const charge = g.melee.charge;
+    trigger(g, false);
+    assert.equal(g.shotCount, 0);
+    if (pause) {
+      g.setMode('paused');
+      g.setMode('playing');
+    }
+    g.aim = { x: 0, y: 300 };
+    for (let i = 0; i < 6; i++) trigger(g, false);
+    assert.equal(g.shotCount, pause ? 0 : 1);
+    if (!pause) {
+      assert.equal(g.melee.activeStrike?.charge, charge);
+      assert((g.melee.activeStrike?.aim.x ?? 0) > 0.99);
+      assert(g.player.velocity.x > 0);
+    }
+    for (let i = 0; i < 30; i++) trigger(g, false);
+    assert.equal(g.shotCount, pause ? 0 : 1);
+  }
 });
 
 test('licenses progress from a close defeat to a Katana boss to the final Hammer victory; trials and incidental bosses cannot grant them', () => {

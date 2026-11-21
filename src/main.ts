@@ -4784,20 +4784,19 @@ function showDialog(kind: string) {
       };
   } else if (kind === 'update') {
     content.innerHTML =
-      '<p class="eyebrow">5.49.0 · EARN YOUR ARSENAL</p><h2 id="dialog-title">Three weapons. Three challenges.</h2>' +
-      '<p class="update-tagline">Get close. Hold your nerve. Stay airborne.</p>' +
-      '<dl class="update-notes"><div><dt>Bellows Cannon · Close Quarters.</dt><dd>' +
-      WEAPON_REQUIREMENTS.bellows +
+      '<p class="eyebrow">5.50.0 · MELEE ARMORY</p><h2 id="dialog-title">Melee comes to the Foundry.</h2>' +
+      '<p>The Campaign armory has three close-range tools. Each has three exclusive fittings and a private drill you can try before earning it.</p>' +
+      '<dl class="update-notes"><div><dt>Arc Katana</dt><dd>Slash to parry incoming light rounds. ' +
+      WEAPON_REQUIREMENTS.katana +
       '</dd></div>' +
-      '<div><dt>Debt Collector · Hold the Line.</dt><dd>' +
-      WEAPON_REQUIREMENTS['debt-collector'] +
+      '<div><dt>Foundry Hammer</dt><dd>Sweep nearby patrols off their feet. ' +
+      WEAPON_REQUIREMENTS.hammer +
       '</dd></div>' +
-      '<div><dt>Switchjack · Long Haul.</dt><dd>' +
-      WEAPON_REQUIREMENTS.switchjack +
+      '<div><dt>Drive Spear</dt><dd>Hold to charge, then release to lunge through a line of enemies. ' +
+      WEAPON_REQUIREMENTS.spear +
       '</dd></div></dl>' +
-      '<p>Use any weapon in Campaign or Daily. The Logbook shows your best attempt at each firearm challenge. Already earned tools stay unlocked.</p>' +
-      '<p>Try privately: <a href="?test=tools-of-trade&amp;gun=bellows&amp;scene=range&amp;v=1">Bellows Cannon ↗</a> · <a href="?test=tools-of-trade&amp;gun=debt-collector&amp;scene=range&amp;v=1">Debt Collector ↗</a> · <a href="?test=tools-of-trade&amp;gun=switchjack&amp;scene=range&amp;v=1">Switchjack ↗</a></p>' +
-      '<p class="practice-record-note">Tools in the Campaign picker can be tried before unlocking. Private ranges grant no rewards and leave saved progress untouched. Older Daily links retain their original weapon rotation.</p>' +
+      '<p><a href="?test=tools-of-trade&amp;gun=katana&amp;scene=range&amp;v=1">Try the Katana ↗</a> · <a href="?test=tools-of-trade&amp;gun=hammer&amp;scene=range&amp;v=1">Try the Hammer ↗</a> · <a href="?test=tools-of-trade&amp;gun=spear&amp;scene=range&amp;v=1">Try the Spear ↗</a></p>' +
+      '<p class="practice-record-note">Seeker Rack can now target exposed Cooling Core relays after the last patrol falls. Earned Bellows Cannons, Debt Collectors and Switchjacks are available in the Workshop.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -7170,7 +7169,13 @@ window.addEventListener('pointerup', (e) => {
   }
 });
 canvas.onpointercancel = (e) => {
+  const wasFiring =
+    e.pointerType === 'touch' ? touchAim.has(e.pointerId) : (mouseButtons & 1) !== 0;
   touchAim.delete(e.pointerId);
+  if (wasFiring && !touchAim.size && game.startingGun === 'spear') {
+    input.firePressed = false;
+    game.melee.cancelInput();
+  }
   mouseButtons = 0;
   pointerArmed = false;
 };

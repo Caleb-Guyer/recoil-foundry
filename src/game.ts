@@ -1,5 +1,5 @@
 import { isMeleeWeapon } from './starting-guns.ts';
-import { MeleeCombat } from './melee-combat.ts';
+import { FIRE_BUFFER_SECONDS, MeleeCombat } from './melee-combat.ts';
 import { seedLockedCombat } from './seed-lock.ts';
 import { ExperimentalWeapons } from './experimental-weapons.ts';
 import { MachineBreakdown } from './machine-breakdown.ts';
@@ -898,7 +898,8 @@ export class Game {
     if (mode !== 'playing') {
       this.weaponChallenges.pause();
       this.experimentalWeapons.pause();
-      this.melee.reset(true);
+      if (mode === 'paused') this.melee.cancelInput();
+      else this.melee.reset(true);
       this.operatorSurface.pause(mode === 'paused');
       this.stasis.held = false;
       this.mobility.pause();
@@ -2064,7 +2065,7 @@ export class Game {
     input = this.shiftMorphs.input(dt, input);
     // Keep jump taps through the tiny impact pause.
     if (input.jump) this.jumpBuffer = this.areaEvents.input(true) ? 0 : 0.12;
-    if (input.firePressed) this.fireBuffer = 0.12;
+    if (input.firePressed) this.fireBuffer = FIRE_BUFFER_SECONDS;
     if (input.portal) this.portalRequest = { ...input.portal };
     if (this.hitStop > 0) {
       this.hitStop = Math.max(0, this.hitStop - dt);
@@ -2189,7 +2190,9 @@ export class Game {
     }
     this.mobility.update(input);
     this.shiftUpgrades.afterGround(input, wasGrounded);
-    if (this.melee.input(dt, input) || this.experimentalWeapons.input(dt, input, rawWeaponFire)) {
+    if (isMeleeWeapon(this.startingGun)) {
+      this.melee.input(dt, input);
+    } else if (this.experimentalWeapons.input(dt, input, rawWeaponFire)) {
       this.fireBuffer = 0;
     } else if (this.torch.equipped) {
       this.torch.beforeStep(
@@ -2475,15 +2478,15 @@ export class Game {
     Body.setPosition(this.player, { x, y });
     Body.setVelocity(this.player, { x: vx, y: vy });
   }
-  fire() {
+  fire(aim = this.aim) {
     if (this.escape?.phase === 'extracting' || this.shutdown.complete) return;
     if (this.burstRemaining > 0) return;
     this.shootAt = this.time + this.gun.interval * (this.gun.burstCount === 3 ? 3.1 : 1);
     this.burstRemaining = this.gun.burstCount - 1;
     this.burstAt = this.time + this.gun.interval * 0.3;
-    this.fireRound();
+    this.fireRound(aim);
   }
-  fireRound() {
+  fireRound(aim = this.aim) {
     if (this.torch.equipped) {
       this.torch.beforeStep(1 / 60, true);
       this.torch.afterStep(1 / 60);
@@ -2502,7 +2505,7 @@ export class Game {
     const evolutionDamage = this.evolutions.discharge(this.shotCount);
     const toolroomDamage = this.toolroom.discharge();
     this.muzzle = 0.065;
-    const d = direction(this.player.position, this.aim);
+    const d = direction(this.player.position, aim);
     if (d.x === 0 && d.y === 0) d.x = 1;
     Object.assign(origin, this.shiftUpgrades.origin(origin, d));
     this.shiftOrigin = origin;

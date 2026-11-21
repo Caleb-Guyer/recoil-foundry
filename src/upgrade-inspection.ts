@@ -89,13 +89,16 @@ export function inspectUpgrade(
     if (startingGun === 'katana') {
       fitting('wide-guard', 'Parry window', '0.10 s', '0.22 s');
       fitting('riposte-edge', 'Next slash after parry', '100%', '175%');
+      fitting('second-beat', 'Rounds parried per slash', '1', '2');
     } else if (startingGun === 'hammer') {
       fitting('counterweight-head', 'Knockback impulse', '10', '16');
       fitting('sweeping-face', 'Sweep reach', '91', '123');
+      fitting('rebound-clutch', 'Recovery on hit', '100%', '75%');
     } else if (startingGun === 'spear') {
       fitting('quick-wind', 'Full charge', '0.70 s', '0.35 s');
       fitting('deep-drive', 'Full-charge reach', '142', '180');
       fitting('deep-drive', 'Full-charge damage', '190%', '266%');
+      fitting('tandem-point', 'Damage to later targets', '100%', '140%');
     }
     if (afterMods.includes('cutting-torch')) {
       const count = torchRayCount(after, afterMods, seed);

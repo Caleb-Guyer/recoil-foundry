@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import { Game, type Input, type Enemy } from './game.ts';
 import { getGun, type Checkpoint } from './rules.ts';
+import { meleeFittingOwner } from './melee-fittings.ts';
 import { isMeleeWeapon, type StartingGun } from './starting-guns.ts';
 import { TOOLROOM_MODS } from './toolroom-catalog.ts';
 import { isShiftMod } from './shift-catalog.ts';
@@ -91,8 +92,25 @@ export function createUpgradeDemo(
     Body.setPosition(g.player, { x: 410, y: 721 });
   if (!isShiftMod(scenario) && startingGun === 'switchjack' && !g.torch.equipped)
     Body.setPosition(g.player, { x: 330, y: 721 });
-  if (isMeleeWeapon(startingGun) && !isShiftMod(scenario))
+  if (isMeleeWeapon(startingGun) && !isShiftMod(scenario)) {
     Body.setPosition(g.player, { x: 450, y: 721 });
+    if (startingGun === 'katana' && meleeFittingOwner(scenario) === 'katana') {
+      for (const [index, dummy] of g.enemies.entries()) {
+        const x = 620 + index * 64;
+        Body.setPosition(dummy.body, { x, y: 723 });
+        Body.setStatic(dummy.body, true);
+        dummy.workshopTarget = {
+          home: { x, y: 723 },
+          moving: false,
+          firing: index === 0 || scenario === 'second-beat',
+        };
+        dummy.timer = 0.4 - (index * 64) / (8 * 60);
+      }
+    } else if (startingGun === 'spear' && scenario === 'tandem-point') {
+      const second = g.enemies[1];
+      if (second) Body.setPosition(second.body, { x: 580, y: 723 });
+    }
+  }
   return g;
 }
 
@@ -330,7 +348,24 @@ function ordinaryDemoInput(g: Game, step: number): Input {
   if (scenario && isShiftMod(scenario)) return shiftDemoInput(g, step, scenario);
   if (isMeleeWeapon(g.startingGun)) {
     const aim = g.enemies.find((e) => e.hp > 0)?.body.position ?? { x: 670, y: 720 };
-    const fire = step % 84 < (g.startingGun === 'spear' ? 46 : 26);
+    if (g.startingGun === 'katana' && meleeFittingOwner(scenario ?? '') === 'katana') {
+      const cue = scenario === 'wide-guard' ? 160 : 76;
+      const incoming = g.shots.some(
+        (s) => !s.friendly && Math.hypot(s.pos.x - p.x, s.pos.y - p.y) < cue,
+      );
+      const returning = scenario === 'riposte-edge' && g.shots.some((s) => s.reflected);
+      // Both comparison panes perform the same parry and follow-up.
+      const advance = scenario === 'riposte-edge' && (returning || g.time > 1.9);
+      return {
+        left: false,
+        right: advance && p.x < aim.x - 55,
+        fire: incoming || (advance && p.x >= aim.x - 65),
+        jump: false,
+        jumpHeld: false,
+        aim: { ...aim },
+      };
+    }
+    const fire = scenario === 'rebound-clutch' || step % 84 < (g.startingGun === 'spear' ? 46 : 26);
     return {
       left: p.x > aim.x + 55,
       right: p.x < aim.x - 55,

@@ -122,6 +122,9 @@ const mechanicIds: Readonly<Record<Exclude<BenchCategory, 'all'>, readonly strin
     'momentum-battery',
   ],
   defense: [
+    'wide-guard',
+    'riposte-edge',
+    'second-beat',
     'leech',
     'breach',
     'countershot',
@@ -172,6 +175,8 @@ const mechanicIds: Readonly<Record<Exclude<BenchCategory, 'all'>, readonly strin
   ],
   heat: ['cinder', 'flashpoint', 'thermal-runaway', 'heat-relay', 'thermal-shock', 'hot-wire'],
   precision: [
+    'deep-drive',
+    'tandem-point',
     'deadeye',
     'execute',
     'deadlock',
@@ -197,6 +202,8 @@ const mechanicIds: Readonly<Record<Exclude<BenchCategory, 'all'>, readonly strin
     'momentum-battery',
   ],
   control: [
+    'counterweight-head',
+    'sweeping-face',
     'fold',
     'rewire',
     'tether',

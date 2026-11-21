@@ -16,6 +16,13 @@ export const MELEE_FITTINGS = [
     mark: 'riposte-edge',
   },
   {
+    id: 'second-beat',
+    weapon: 'katana',
+    name: 'Second Beat',
+    description: 'A single slash can parry two incoming light rounds within its guard window.',
+    mark: 'second-beat',
+  },
+  {
     id: 'counterweight-head',
     weapon: 'hammer',
     name: 'Counterweight',
@@ -30,6 +37,14 @@ export const MELEE_FITTINGS = [
     mark: 'sweeping-face',
   },
   {
+    id: 'rebound-clutch',
+    weapon: 'hammer',
+    name: 'Rebound Clutch',
+    description:
+      'Landing a hit on an enemy cuts that swing’s recovery by 25%. Each swing earns the reduction once.',
+    mark: 'rebound-clutch',
+  },
+  {
     id: 'quick-wind',
     weapon: 'spear',
     name: 'Quick Wind',
@@ -42,6 +57,14 @@ export const MELEE_FITTINGS = [
     name: 'Deep Drive',
     description: 'Charging the spear adds up to 38 more units of reach and 40% more thrust damage.',
     mark: 'deep-drive',
+  },
+  {
+    id: 'tandem-point',
+    weapon: 'spear',
+    name: 'Tandem Point',
+    description:
+      'After a thrust damages its first enemy, it deals 40% more damage to each additional enemy it pierces.',
+    mark: 'tandem-point',
   },
 ] as const;
 const owners = new Map<string, MeleeWeapon>(MELEE_FITTINGS.map((m) => [m.id, m.weapon]));
