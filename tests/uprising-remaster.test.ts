@@ -60,6 +60,60 @@ function breakRelays(g: Game) {
     g.uprising.hit(node, node.maxHp, { x: 1, y: 0 }, undefined, true, true);
 }
 
+test('issue 13: the reported Seeker Rack build can destroy every Core Sabotage relay with no patrol left to paint', () => {
+  const cp = uprisingRemasterTestFromUrl(
+    new URL('https://test/?test=uprising-remaster&route=core-sabotage&v=1'),
+  )!.checkpoint;
+  const g = new Game();
+  cp.seed = 'RF-C111-1SSS5DQ';
+  cp.mods = [
+    'backblast',
+    'burst',
+    'airshot',
+    'magnum',
+    'leech',
+    'light',
+    'kick',
+    'capacitor',
+    'reserve-cell',
+    'rapid',
+    'seeker-rack',
+  ];
+  cp.uprising!.choices = ['rail-heist', 'core-sabotage'];
+  cp.uprising!.outcomes = [{ route: 'rail-heist', result: 'success' }];
+  g.startTest(cp);
+  assert.equal(g.level.id, 'uprising-core-sabotage');
+  assert.equal(g.stage, 9);
+  clearPatrol(g);
+  g.engine.gravity.y = 0;
+  assert(g.uprising.nodes.length >= 2);
+  for (const node of g.uprising.nodes) {
+    const aim = { ...node.body.position };
+    const from = [
+      { x: aim.x - 85, y: aim.y },
+      { x: aim.x + 85, y: aim.y },
+      { x: aim.x, y: aim.y - 85 },
+    ].find((p) => g.shiftMorphs.canLock(node, p))!;
+    assert(from);
+    Matter.Body.setPosition(g.player, from);
+    const screen = g.props.spawn('cover', (from.x + aim.x) / 2, (from.y + aim.y) / 2);
+    assert(!g.shiftMorphs.canLock(node), 'other cover blocks painting');
+    g.props.remove(screen);
+    for (let salvo = 0; node.hp > 0 && salvo < 6; salvo++) {
+      for (let i = 0; i < 64; i++) {
+        Matter.Body.setPosition(g.player, from);
+        Matter.Body.setVelocity(g.player, { x: 0, y: 0 });
+        frame(g, { aim, fire: i < 28 });
+        if (i === 25)
+          assert(g.shiftMorphs.locks.some((p) => p.target === node && p.progress === 1));
+      }
+    }
+    assert.equal(node.hp, 0);
+    assert(!g.shiftMorphs.canLock(node));
+  }
+  assert(g.uprising.remaster.extracting);
+  clean(g);
+});
 test('all eleven C105 jobs own distinct native objectives while older isolated jobs retain their controller', () => {
   for (const route of UPRISING_ROUTES) {
     const g = fixture(route.id);

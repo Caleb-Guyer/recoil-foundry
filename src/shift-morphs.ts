@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import type { Game, Input, Enemy, Shot } from './game.ts';
 import { clamp, direction, distance, type Vec } from './rules.ts';
 import { enemyShielded } from './enemies.ts';
+import type { Prop } from './props.ts';
 import { dormant } from './stasis.ts';
 import { closestBlastPoint } from './demolition.ts';
 
@@ -17,6 +18,7 @@ export const MORPH = {
   foamWidth: 84,
   foamHeight: 18,
 };
+type LockTarget = Enemy | Prop;
 interface Flight {
   kind: ShiftMorphId;
   anchor: Matter.Body;
@@ -26,11 +28,11 @@ interface Flight {
   speed: number;
   phase: 'out' | 'return';
   offset: number;
-  target?: Enemy;
+  target?: LockTarget;
   returnPaid: boolean;
 }
 interface Paint {
-  enemy: Enemy;
+  target: LockTarget;
   progress: number;
 }
 export interface FoamSupport {
@@ -49,8 +51,8 @@ export class ShiftMorphs {
   foams: FoamSupport[] = [];
   triggerHeld = false;
   private wasHeld = false;
-  private cast: { targets: Enemy[]; until: number | null; started: boolean } | null = null;
-  private salvoTargets: Enemy[] = [];
+  private cast: { targets: LockTarget[]; until: number | null; started: boolean } | null = null;
+  private salvoTargets: LockTarget[] = [];
   private shotOrder = 0;
   private foamAt = -100;
   private reportSalvo = 0;
@@ -95,17 +97,29 @@ export class ShiftMorphs {
     this.salvoTargets = [];
     this.wasHeld = this.triggerHeld = false;
   }
-  private exposed(e: Enemy, from = this.game.player.position) {
+  canLock(target: LockTarget, from = this.game.player.position) {
+    const g = this.game;
+    if (target.hp <= 0 || distance(from, target.body.position) >= 1250) return false;
+    if ('spawn' in target)
+      return (
+        target.spawn <= 0 &&
+        !target.allied &&
+        !target.courier &&
+        (target.eventRole !== 'relay' || g.areaEvents.dark) &&
+        g.enemies.includes(target) &&
+        !enemyShielded(target, direction(from, target.body.position)) &&
+        distance(g.lineEnd(from, target.body.position), target.body.position) < 1
+      );
+    const missionNode =
+      (target.uprising === 'relay' || target.uprising === 'prototype') &&
+      g.uprising.waiting &&
+      g.uprising.nodes.includes(target) &&
+      g.uprising.remaster.canHit(target);
+    const blackoutFuse = target === g.areaEvents.fuseBox && g.areaEvents.dark;
     return (
-      e.hp > 0 &&
-      e.spawn <= 0 &&
-      !e.allied &&
-      !e.courier &&
-      e.eventRole !== 'relay' &&
-      this.game.enemies.includes(e) &&
-      distance(from, e.body.position) < 1250 &&
-      distance(this.game.lineEnd(from, e.body.position), e.body.position) < 1 &&
-      !enemyShielded(e, direction(from, e.body.position))
+      (missionNode || blackoutFuse) &&
+      g.props.items.includes(target) &&
+      distance(g.lineEnd(from, target.body.position, 0, target), target.body.position) < 1
     );
   }
   input(dt: number, input: Input): Input {
@@ -119,11 +133,13 @@ export class ShiftMorphs {
       return input;
     }
     const g = this.game;
-    this.locks = this.locks.filter((p) => this.exposed(p.enemy));
+    this.locks = this.locks.filter((p) => this.canLock(p.target));
     if (input.fire && !this.cast) {
       const aim = direction(g.player.position, input.aim);
-      const target = g.enemies
-        .filter((e) => this.exposed(e))
+      const candidates: LockTarget[] = [...g.enemies, ...g.uprising.nodes];
+      if (g.areaEvents.dark && g.areaEvents.fuseBox) candidates.push(g.areaEvents.fuseBox);
+      const target = candidates
+        .filter((e) => this.canLock(e))
         .filter((e) => {
           const d = direction(g.player.position, e.body.position);
           return d.x * aim.x + d.y * aim.y > Math.cos(0.2);
@@ -132,9 +148,9 @@ export class ShiftMorphs {
           (a, b) => distance(a.body.position, input.aim) - distance(b.body.position, input.aim),
         )[0];
       if (target) {
-        let p = this.locks.find((p) => p.enemy === target);
+        let p = this.locks.find((p) => p.target === target);
         if (!p && this.locks.length < MORPH.locks) {
-          p = { enemy: target, progress: 0 };
+          p = { target, progress: 0 };
           this.locks.push(p);
         }
         if (p) p.progress = Math.min(1, p.progress + Math.min(dt, 0.1) / MORPH.paint);
@@ -142,8 +158,8 @@ export class ShiftMorphs {
     }
     if (!input.fire && this.wasHeld && !this.cast) {
       const targets = this.locks
-        .filter((p) => p.progress >= 1 && this.exposed(p.enemy))
-        .map((p) => p.enemy);
+        .filter((p) => p.progress >= 1 && this.canLock(p.target))
+        .map((p) => p.target);
       this.locks = [];
       if (targets.length) {
         this.reportSalvo++;
@@ -156,7 +172,7 @@ export class ShiftMorphs {
     if (!this.cast) return { ...input, fire: false, firePressed: false };
     const cast = this.cast,
       target =
-        cast.targets.find((e) => this.exposed(e)) ?? (cast.started ? cast.targets[0] : undefined);
+        cast.targets.find((e) => this.canLock(e)) ?? (cast.started ? cast.targets[0] : undefined);
     if (!target) {
       this.cast = null;
       return { ...input, fire: false, firePressed: false };
@@ -213,12 +229,11 @@ export class ShiftMorphs {
         .sort((a, b) => distance(a.body.position, s.pos) - distance(b.body.position, s.pos))[0];
       if (ally) anchor = ally.body;
     }
-    const target =
+    const targets =
       kind === 'seeker-rack'
-        ? this.salvoTargets.filter((e) => this.exposed(e, anchor.position))[
-            this.shotOrder++ % Math.max(1, this.salvoTargets.length)
-          ]
-        : undefined;
+        ? this.salvoTargets.filter((e) => this.canLock(e, anchor.position))
+        : [];
+    const target = targets.length ? targets[this.shotOrder++ % targets.length] : undefined;
     this.flights.set(s, {
       kind,
       anchor,
@@ -268,7 +283,7 @@ export class ShiftMorphs {
     f.previousHome = { ...f.anchor.position };
     if (f.kind === 'seeker-rack') {
       const e = f.target;
-      if (!e || !this.exposed(e, s.pos)) return;
+      if (!e || !this.canLock(e, s.pos)) return;
       const speed = Math.hypot(s.vel.x, s.vel.y),
         a = Math.atan2(s.vel.y, s.vel.x),
         d = direction(s.pos, e.body.position),

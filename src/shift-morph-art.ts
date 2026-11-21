@@ -30,7 +30,7 @@ export function drawShiftMorphs(c: CanvasRenderingContext2D, g: Game, reduced: b
     }
   }
   for (const p of m.locks) {
-    const at = p.enemy.body.position;
+    const at = p.target.body.position;
     c.strokeStyle = p.progress >= 1 ? '#e4be77' : '#91b8b9';
     c.globalAlpha = 0.85;
     c.lineWidth = 1.5;

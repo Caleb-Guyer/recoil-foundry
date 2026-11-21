@@ -1,8 +1,7 @@
 import type { Game } from './game.ts';
 import type { WorkshopScenario } from './workshop.ts';
-import { clamp, direction, distance } from './rules.ts';
+import { clamp, distance } from './rules.ts';
 import { firstSolid } from './collisions.ts';
-import { enemyShielded } from './enemies.ts';
 import { SHIFT_MODS } from './shift-catalog.ts';
 import { SHIFT, mountPoint, mountNormal } from './shift-upgrades.ts';
 import { CHARGE_TIME } from './ballistics.ts';
@@ -168,19 +167,6 @@ export function buildMotionConnections(
     });
 }
 
-function exposed(g: Game, e: Game['enemies'][number]) {
-  return (
-    e.hp > 0 &&
-    e.spawn <= 0 &&
-    !e.allied &&
-    !e.courier &&
-    e.eventRole !== 'relay' &&
-    g.enemies.includes(e) &&
-    distance(g.player.position, e.body.position) < 1250 &&
-    distance(g.lineEnd(g.player.position, e.body.position), e.body.position) < 1 &&
-    !enemyShielded(e, direction(g.player.position, e.body.position))
-  );
-}
 const count = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 function rowState(g: Game, id: string): Pick<BuildMotionRow, 'state' | 'detail' | 'progress'> {
   const s = g.shiftUpgrades,
@@ -195,7 +181,7 @@ function rowState(g: Game, id: string): Pick<BuildMotionRow, 'state' | 'detail' 
     return result('blocked', 'Another morph is currently equipped.');
   switch (id) {
     case 'seeker-rack': {
-      const locks = m.locks.filter((lock) => exposed(g, lock.enemy));
+      const locks = m.locks.filter((lock) => m.canLock(lock.target));
       const complete = locks.filter((lock) => lock.progress >= 1).length;
       if (complete)
         return result(

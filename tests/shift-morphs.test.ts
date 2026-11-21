@@ -195,6 +195,33 @@ test('Seeker homing keeps native speed and is intercepted by cover; pause cannot
   assert(!g.shiftMorphs.input(DT, idle).fire);
   clean(g);
 });
+test('an unpowered blackout fuse can be painted and activated with the Seeker Rack', () => {
+  const g = fixture(['seeker-rack']);
+  const fuse = g.props.spawn('fuse', 390, 400);
+  g.areaEvents.state = {
+    kind: 'blackout',
+    area: 0,
+    relays: [],
+    caches: [],
+    commander: false,
+    rerolls: 0,
+  };
+  g.areaEvents.active = 'blackout';
+  g.areaEvents.fuseBox = fuse;
+  g.areaEvents.powered = false;
+  const input = { ...idle, fire: true, aim: { ...fuse.body.position } };
+  for (let i = 0; i < 30; i++) g.shiftMorphs.input(DT, input);
+  assert(g.shiftMorphs.locks.some((lock) => lock.target === fuse && lock.progress === 1));
+  const released = g.shiftMorphs.input(DT, { ...input, fire: false });
+  assert(released.fire);
+  g.aim = released.aim;
+  g.fire();
+  flight(g, 35);
+  assert(g.areaEvents.powered);
+  assert(!g.shiftMorphs.canLock(fuse));
+  clean(g);
+});
+
 test('covered enemies cannot gain Seeker locks and releasing an unpainted rack cannot fire', () => {
   const g = fixture(['seeker-rack']);
   enemy(g, 800);
