@@ -1,5 +1,6 @@
 import { RoomRematch, rematchEntry, roomRematchSnapshot } from '../src/room-rematch.ts';
 import test from 'node:test';
+import { FIREARM_MODS } from '../src/rules.ts';
 import assert from 'node:assert/strict';
 import Matter from 'matter-js';
 import { Game, EXTRACTION_DURATION, type Input } from '../src/game.ts';
@@ -90,7 +91,7 @@ test('all 141-upgrade prerequisite families keep parents, fusions, fire mechanis
   const core = ['magnum', 'rapid', 'light', 'airshot', 'kick', 'scatter', 'pierce', 'leech'];
   let checked = 0,
     swaps = 0;
-  for (const mod of MODS) {
+  for (const mod of FIREARM_MODS) {
     const build = withParents(core, [mod.id]);
     assert(build, 'Missing legal parent closure for ' + mod.id);
     const required = new Set(
@@ -134,7 +135,7 @@ test('all 141-upgrade prerequisite families keep parents, fusions, fire mechanis
     }
     checked++;
   }
-  assert.equal(checked, MODS.length);
+  assert.equal(checked, FIREARM_MODS.length);
   assert(swaps > 300, 'The safety constraints still need useful choices');
 });
 

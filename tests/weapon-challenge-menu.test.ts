@@ -5,7 +5,12 @@ import { logbookCatalog } from '../src/logbook-catalog.ts';
 import { logbookArticle } from '../src/logbook-menu.ts';
 import { loadLogbook } from '../src/logbook-progress.ts';
 import { loadWeaponUnlocks, unlockedStartingGuns } from '../src/weapon-unlocks.ts';
-import { EXPERIMENTAL_GUN_IDS, type StartingGun } from '../src/starting-guns.ts';
+import {
+  EXPERIMENTAL_GUN_IDS,
+  MELEE_IDS,
+  ARMORY_TOOLS,
+  type StartingGun,
+} from '../src/starting-guns.ts';
 import { unlockGoals } from '../src/longevity.ts';
 
 function menuRoot() {
@@ -37,7 +42,7 @@ const profile = () =>
     challenges: { bellows: 2, 'debt-collector': 1, switchjack: 500 },
   });
 
-test('picker shows each best attempt outside disabled selection and keeps locked private trials usable', () => {
+test('picker replaces the bottom row with three locked melee tools and keeps private trials usable', () => {
   const p = profile(),
     root = menuRoot(),
     tried: StartingGun[] = [],
@@ -50,26 +55,21 @@ test('picker shows each best attempt outside disabled selection and keeps locked
     () => {},
     unlockedStartingGuns(p),
     {
-      profile: p,
       tryTool: (gun) => tried.push(gun),
     },
   );
-  for (const gun of EXPERIMENTAL_GUN_IDS) {
+  assert.deepEqual(
+    [...root.innerHTML.matchAll(/data-starting-gun="([^"]+)"/g)].map((m) => m[1]),
+    ARMORY_TOOLS,
+  );
+  for (const gun of MELEE_IDS) {
     assert.match(root.innerHTML, new RegExp(`data-starting-gun="${gun}"[^>]+disabled`));
-    assert.match(
-      root.innerHTML,
-      new RegExp(
-        `</button><div class="logbook-goal starting-gun-challenge" data-weapon-challenge="${gun}"`,
-      ),
-    );
     root.lockedTrials.find((trial) => trial.dataset.tryLockedGun === gun)!.onclick!();
   }
-  assert.deepEqual(tried, [...EXPERIMENTAL_GUN_IDS]);
-  assert.match(root.innerHTML, /Best attempt · 2 \/ 3 close-range defeats/);
-  assert.match(root.innerHTML, /Best attempt · 1 \/ 3 defeats in one hold/);
-  assert.match(root.innerHTML, /Best attempt · 500 \/ 500 horizontal flight units/);
-  assert.match(root.innerHTML, /Safe landing still required to unlock/);
-  assert.match(root.innerHTML, /One room; best attempt, not a total/);
+  assert.deepEqual(tried, [...MELEE_IDS]);
+  assert.match(root.innerHTML, /120 units/);
+  assert.match(root.innerHTML, /Campaign room boss with the Arc Katana/);
+  assert.match(root.innerHTML, /room 20 Campaign boss with the Foundry Hammer/);
   root.controls.get('#start-with-gun')!.onclick!();
   assert.deepEqual(started, ['pistol'], 'a full unlanded best must not select the locked gun');
   assert.equal(JSON.stringify(p), before);

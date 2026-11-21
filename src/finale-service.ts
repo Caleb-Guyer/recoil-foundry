@@ -61,9 +61,10 @@ export function finaleServiceOffers(
   overtime = false,
   legacyMods?: readonly string[],
   unlocks: readonly string[] = [],
+  gun: StartingGun = 'pistol',
 ): ReforgeSwap[] {
   const path = buildPath(mods);
-  const swaps = legalSwaps(mods, 19, legacyMods, unlocks, seed).filter(
+  const swaps = legalSwaps(mods, 19, legacyMods, unlocks, seed, gun).filter(
     (swap) =>
       !IDENTITIES.has(swap.from) &&
       !IDENTITIES.has(swap.to) &&
@@ -141,7 +142,14 @@ function validVisit(raw: unknown, cp: Checkpoint, overtime: boolean) {
   if (
     !sameOffers(
       visit.offers,
-      finaleServiceOffers(visit.baseMods, cp.seed, overtime, visit.legacyMods, visit.unlocks),
+      finaleServiceOffers(
+        visit.baseMods,
+        cp.seed,
+        overtime,
+        visit.legacyMods,
+        visit.unlocks,
+        visit.startingGun,
+      ),
     )
   )
     return false;
@@ -242,7 +250,14 @@ export class FinaleService {
       startingGun: g.startingGun,
       unlocks: [...g.unlocks],
       ...(g.legacyMods ? { legacyMods: [...g.legacyMods] } : {}),
-      offers: finaleServiceOffers(g.mods, g.seed, !!g.overtime, g.legacyMods, g.unlocks),
+      offers: finaleServiceOffers(
+        g.mods,
+        g.seed,
+        !!g.overtime,
+        g.legacyMods,
+        g.unlocks,
+        g.startingGun,
+      ),
     };
   }
   reset() {
@@ -273,7 +288,14 @@ export class FinaleService {
       same(g.legacyMods, visit.legacyMods) &&
       sameOffers(
         visit.offers,
-        finaleServiceOffers(visit.baseMods, g.seed, !!g.overtime, visit.legacyMods, visit.unlocks),
+        finaleServiceOffers(
+          visit.baseMods,
+          g.seed,
+          !!g.overtime,
+          visit.legacyMods,
+          visit.unlocks,
+          visit.startingGun,
+        ),
       )
     );
   }
@@ -306,9 +328,14 @@ export class FinaleService {
       !Number.isInteger(index) ||
       !swap ||
       !this.canChoose() ||
-      !finaleServiceOffers(g.mods, g.seed, !!g.overtime, g.legacyMods, g.unlocks).some(
-        (s) => s.from === swap.from && s.to === swap.to,
-      )
+      !finaleServiceOffers(
+        g.mods,
+        g.seed,
+        !!g.overtime,
+        g.legacyMods,
+        g.unlocks,
+        g.startingGun,
+      ).some((s) => s.from === swap.from && s.to === swap.to)
     )
       return false;
     g.mods = serviceBuild(g.mods, swap);

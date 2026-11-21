@@ -1,3 +1,4 @@
+import { MELEE_FITTINGS } from '../src/melee-fittings.ts';
 import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -48,11 +49,11 @@ test('24 distinct fittings have legal parents, real icons, lore and meaningful i
   assert.equal(TOOLROOM_IDS.length, 24);
   assert.equal(new Set(TOOLROOM_IDS).size, 24);
   assert.equal(
-    MODS.filter((m) => !isShiftMod(m.id)).length,
+    MODS.filter((m) => !isShiftMod(m.id) && !MELEE_FITTINGS.some((f) => f.id === m.id)).length,
     141,
     'the archived catalog stays intact',
   );
-  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length + MELEE_FITTINGS.length);
   for (const fitting of TOOLROOM_MODS) {
     const mods: string[] = [];
     let id = TOOLROOM_PARENTS[fitting.id];

@@ -76,7 +76,7 @@ export function uprisingRefitOffer(
   if (cached !== undefined) return cached ? { ...cached } : undefined;
   const stage = uprisingRoute(route).fork + 1;
   const path = buildPath(mods);
-  const pool = legalSwaps(mods, stage, legacyMods, unlocks, seed).filter(
+  const pool = legalSwaps(mods, stage, legacyMods, unlocks, seed, startingGun).filter(
     (swap) =>
       !IDENTITIES.has(swap.from) &&
       !IDENTITIES.has(swap.to) &&

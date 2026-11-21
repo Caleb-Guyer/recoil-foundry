@@ -908,6 +908,15 @@ export class Sound {
     } else if (kind === 'mass-impact') {
       this.tone(420, 180, 0.085, 0.045, 'triangle');
       this.crack(0.035, 0.035, 1100);
+    } else if (kind === 'katana-swing') {
+      this.crack(0.075, 0.045, 3400);
+      this.tone(610, 350, 0.07, 0.023, 'sine');
+    } else if (kind === 'hammer-swing') {
+      this.crack(0.1, 0.08, 780);
+      this.tone(125, 40, 0.14, 0.08, 'triangle');
+    } else if (kind === 'spear-thrust') {
+      this.tone(200, 550, 0.06, 0.035, 'triangle');
+      this.crack(0.085, 0.05, 1700);
     } else if (kind === 'bellows-inhale') {
       this.crack(0.18, 0.026, 420);
       this.tone(110, 230, 0.18, 0.024, 'triangle');

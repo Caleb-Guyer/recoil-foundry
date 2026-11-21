@@ -8,6 +8,36 @@ export type Lore = readonly [source: string, author: string, text: string];
 export const UPGRADE_LORE = {
   ...TOOLROOM_LORE,
   ...SHIFT_LORE,
+  'wide-guard': [
+    'Blade inspection',
+    'M. Vale · maintenance',
+    'The first guard rang too late for the operator to hear it. The second catches the round while the blade is still moving.\n\nI drew a chalk line where the spent rounds landed. Three shifts later there is still a neat white line on the floor, with all the brass on the other side.',
+  ],
+  'riposte-edge': [
+    'Return spring',
+    'E. Holt · safety office',
+    'After a clean deflection the indicator stays lit. Keep the scabbard clear until the spring has discharged.\n\nThe apprentice held the edge still until the bell stopped ringing, then split the old packing block with one clean stroke. I have signed off on the spring.',
+  ],
+  'counterweight-head': [
+    'Press shop docket',
+    'M. Vale · maintenance',
+    'We bored the head for a second weight. The test sled went straight past its chalk line.\n\nWhen the new stamp came down, the carriage rolled another two floor tiles. We moved the catch net and left the first chalk mark for the next crew.',
+  ],
+  'sweeping-face': [
+    'Die inventory',
+    'T. Orr · dispatch',
+    'The broad die arrived under a pallet of door hinges. We cleared the station on either side before anyone tried it.\n\nEven then, the far corner of the die clipped a lunch tin behind the bench. Orr has pencilled a wider circle onto the floor plan.',
+  ],
+  'quick-wind': [
+    'Drive clutch',
+    'E. Holt · safety office',
+    'The operator used to wait for two clicks. This clutch reaches tension on the first.\n\nOn the night shift, someone counted the strokes against the clock above the loading door. The clutch was ready while the old unit was still winding on the next bench.',
+  ],
+  'deep-drive': [
+    'Extension gauge',
+    'T. Orr · dispatch',
+    'Someone moved the end stop on the proving rail. The pencil mark where it used to stand is still on the floor.\n\nThe old gauge ends at that mark. We fastened a second strip to the rail so the operator can read the last part of a full stroke.',
+  ],
   collimator: [
     'Optics alignment · patient hands',
     'Dr. S. Anik · development',

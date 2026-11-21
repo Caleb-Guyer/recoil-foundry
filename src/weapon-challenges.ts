@@ -1,7 +1,10 @@
 import type { Enemy, Game } from './game.ts';
 import type { KillSource } from './commendations.ts';
 import type { ExperimentalWeapon } from './experimental-weapons.ts';
-import { distance, type Vec } from './rules.ts';
+import { isBoss } from './enemies.ts';
+import { isHunt } from './hunt-rules.ts';
+import type { MeleeWeapon } from './starting-guns.ts';
+import { distance, STAGES, type Vec } from './rules.ts';
 import { WEAPON_CHALLENGE_TARGETS } from './weapon-challenge-rules.ts';
 export { WEAPON_CHALLENGE_TARGETS } from './weapon-challenge-rules.ts';
 
@@ -35,7 +38,7 @@ export class WeaponChallenges {
     'debt-collector': 0,
     switchjack: 0,
   };
-  private completed = new Set<ExperimentalWeapon>();
+  private completed = new Set<ExperimentalWeapon | MeleeWeapon>();
 
   constructor(game: Game) {
     this.game = game;
@@ -131,6 +134,11 @@ export class WeaponChallenges {
     if (complete) this.completed.add(gun);
     this.game.onWeaponChallengeProgress(gun, current, complete);
   }
+  private license(tool: MeleeWeapon) {
+    if (this.completed.has(tool)) return;
+    this.completed.add(tool);
+    this.game.onWeaponChallengeProgress(tool, 1, true);
+  }
   defeated(e: Enemy, source?: KillSource) {
     if (
       !this.eligible ||
@@ -141,7 +149,30 @@ export class WeaponChallenges {
     )
       return;
     this.killed.add(e);
-    if (distance(this.game.player.position, e.body.position) <= 180) {
+    const g = this.game;
+    const range = distance(g.player.position, e.body.position);
+    if (!g.quickShift.state && !g.gauntlet.state) {
+      if (range <= 120) this.license('katana');
+      if (
+        !g.overtime &&
+        !/^RF-D/.test(g.seed) &&
+        g.level.boss &&
+        !g.detour &&
+        isBoss(e.kind) &&
+        !isHunt(e.kind) &&
+        e.kind !== 'welder' &&
+        e.kind !== 'auditor'
+      ) {
+        if (g.startingGun === 'katana') this.license('hammer');
+        if (
+          g.startingGun === 'hammer' &&
+          g.stage === STAGES - 1 &&
+          (e.kind === 'boss' || e.kind === 'interceptor')
+        )
+          this.license('spear');
+      }
+    }
+    if (range <= 180) {
       this.close = Math.min(WEAPON_CHALLENGE_TARGETS.bellows, this.close + 1);
       this.record('bellows', this.close, this.close === WEAPON_CHALLENGE_TARGETS.bellows);
     }

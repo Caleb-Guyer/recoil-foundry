@@ -194,7 +194,7 @@ export class BossGauntlet {
       if (validGauntletRecord(r) && !s.preview) this.result = r;
     } else {
       s.phase = 'service';
-      s.offers = gauntletOffers(s.mods, s.cleared);
+      s.offers = gauntletOffers(s.mods, s.cleared, s.gun);
     }
     return true;
   }
@@ -206,7 +206,7 @@ export class BossGauntlet {
       s.hp = Math.min(100, s.hp + GAUNTLET_REPAIR);
       s.repairs++;
     } else {
-      if (!s.offers.includes(id) || !gauntletBuild(s.mods, id)) return false;
+      if (!s.offers.includes(id) || !gauntletBuild(s.mods, id, s.gun)) return false;
       s.mods.push(id);
     }
     this.game.hp = s.hp;

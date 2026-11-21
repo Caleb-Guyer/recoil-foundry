@@ -4,7 +4,10 @@ import type { RunRecap } from './run-history.ts';
 import type { CommendationId } from './commendations.ts';
 import { WEAPON_CHALLENGE_TARGETS } from './weapon-challenge-rules.ts';
 import {
-  STARTING_GUN_IDS,
+  ALL_TOOLS,
+  MELEE_IDS,
+  isMeleeWeapon,
+  type MeleeWeapon,
   EXPERIMENTAL_GUN_IDS,
   type ExperimentalGun,
   type StartingGun,
@@ -13,6 +16,9 @@ import {
 export const WEAPON_UNLOCKS_KEY = 'rf-weapon-unlocks-v1';
 export const WEAPON_REQUIREMENTS: Record<StartingGun, string> = {
   pistol: 'Standard issue',
+  katana: 'Defeat one enemy within 120 units in Campaign or Daily.',
+  hammer: 'Defeat a Campaign room boss with the Arc Katana equipped.',
+  spear: 'Defeat the room 20 Campaign boss with the Foundry Hammer equipped.',
   shotgun: 'Beat the Campaign to unlock.',
   nailgun: 'Complete Overtime to unlock.',
   twinbore: 'Defeat the Press or Kiln in Campaign or Daily.',
@@ -23,7 +29,7 @@ export const WEAPON_REQUIREMENTS: Record<StartingGun, string> = {
   switchjack: 'Travel 500 horizontal units in one damage-free recoil-assisted flight, then land.',
 };
 const LEGACY_TOOL_LICENSES = ['twinbore', 'carbine', 'repeater', 'bellows', 'switchjack'] as const;
-export const TOOL_LICENSES = [...LEGACY_TOOL_LICENSES, 'debt-collector'] as const;
+export const TOOL_LICENSES = [...LEGACY_TOOL_LICENSES, 'debt-collector', ...MELEE_IDS] as const;
 export type ToolLicense = (typeof TOOL_LICENSES)[number];
 export interface WeaponUnlocks {
   version: 2;
@@ -174,7 +180,7 @@ export function migrateWeaponUnlocks(
   };
 }
 export function unlockedStartingGuns(p: WeaponUnlocks): StartingGun[] {
-  return STARTING_GUN_IDS.filter(
+  return ALL_TOOLS.filter(
     (id) =>
       id === 'pistol' ||
       (id === 'shotgun' && p.cleared) ||
@@ -184,12 +190,20 @@ export function unlockedStartingGuns(p: WeaponUnlocks): StartingGun[] {
 }
 export function recordWeaponChallenge(
   raw: unknown,
-  gun: ExperimentalGun,
+  gun: ExperimentalGun | MeleeWeapon,
   current: number,
   complete: boolean,
 ): WeaponUnlocks {
   const p = loadWeaponUnlocks(raw);
   if (!Number.isFinite(current) || current < 0) return p;
+  if (isMeleeWeapon(gun))
+    return complete && current >= 1
+      ? {
+          ...p,
+          started: true,
+          licenses: TOOL_LICENSES.filter((id) => id === gun || p.licenses?.includes(id)),
+        }
+      : p;
   const target = WEAPON_CHALLENGES[gun].target;
   const best = Math.max(p.challenges?.[gun] ?? 0, Math.min(target, Math.floor(current)));
   const completed = complete && current >= target;

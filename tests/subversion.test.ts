@@ -1,5 +1,6 @@
 import { isShiftMod } from '../src/shift-catalog.ts';
 import test from 'node:test';
+import { meleeFittingOwner } from '../src/melee-fittings.ts';
 import assert from 'node:assert/strict';
 import { Game, type Enemy } from '../src/game.ts';
 import {
@@ -89,7 +90,8 @@ test('all Subversion upgrade pairs respect prerequisites in either order and lea
         b = MODS[j].id;
       if (!isSubversion(a) && !isSubversion(b)) continue;
       pairs++;
-      if (!isShiftMod(a) && !isShiftMod(b)) archivedPairs++;
+      if (!isShiftMod(a) && !isShiftMod(b) && !meleeFittingOwner(a) && !meleeFittingOwner(b))
+        archivedPairs++;
       const ab = withParents([], [a, b]),
         ba = withParents([], [b, a]);
       assert.equal(!!ab, !!ba, a + '/' + b);

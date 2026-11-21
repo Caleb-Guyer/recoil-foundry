@@ -1,9 +1,4 @@
-import {
-  STARTING_GUNS,
-  STARTING_GUN_IDS,
-  isStartingGun,
-  type StartingGun,
-} from './starting-guns.ts';
+import { STARTING_GUNS, ALL_TOOLS, isStartingGun, type StartingGun } from './starting-guns.ts';
 import { MODS } from './rules.ts';
 import { escapeLogbook as escape } from './html.ts';
 import { practiceTime } from './practice-records.ts';
@@ -59,9 +54,7 @@ export function quickShiftSetupSelection(
   return { challenge, gun };
 }
 export function quickShiftSetup(root: HTMLElement, options: QuickShiftSetupOptions): MenuBack {
-  const guns = STARTING_GUN_IDS.filter(
-    (id) => id === 'pistol' || options.unlockedGuns?.includes(id),
-  );
+  const guns = ALL_TOOLS.filter((id) => id === 'pistol' || options.unlockedGuns?.includes(id));
   const showWeapons = options.showWeapons === true;
   let gun = quickShiftSetupSelection(options.seed, options.selectedGun, guns, showWeapons).gun;
   const initialChallenge = quickShiftInput(options.seed);

@@ -84,6 +84,19 @@ export function inspectUpgrade(
     const beforeKind = fireKind(mods),
       afterKind = fireKind(afterMods);
     add('Fire', beforeKind, afterKind);
+    const fitting = (id: string, label: string, normal: string, upgraded: string) =>
+      add(label, mods.includes(id) ? upgraded : normal, afterMods.includes(id) ? upgraded : normal);
+    if (startingGun === 'katana') {
+      fitting('wide-guard', 'Parry window', '0.10 s', '0.22 s');
+      fitting('riposte-edge', 'Next slash after parry', '100%', '175%');
+    } else if (startingGun === 'hammer') {
+      fitting('counterweight-head', 'Knockback impulse', '10', '16');
+      fitting('sweeping-face', 'Sweep reach', '91', '123');
+    } else if (startingGun === 'spear') {
+      fitting('quick-wind', 'Full charge', '0.70 s', '0.35 s');
+      fitting('deep-drive', 'Full-charge reach', '142', '180');
+      fitting('deep-drive', 'Full-charge damage', '190%', '266%');
+    }
     if (afterMods.includes('cutting-torch')) {
       const count = torchRayCount(after, afterMods, seed);
       add(

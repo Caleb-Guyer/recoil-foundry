@@ -148,7 +148,7 @@ export function blueprintMenu(
       pending
         ? ''
         : '<button id="blueprint-save-current" class="primary"' +
-            (validBlueprintMods(current) ? '' : ' disabled') +
+            (validBlueprintMods(current, startingGun) ? '' : ' disabled') +
             '>Save current build</button>' +
             (saveOnly ? '' : '<button id="blueprint-import" class="quiet">Import code</button>'),
       pending ? (saveOnly ? exit : () => list()) : exit,

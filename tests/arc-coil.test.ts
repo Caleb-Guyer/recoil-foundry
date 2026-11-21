@@ -1,3 +1,4 @@
+import { MELEE_FITTINGS } from '../src/melee-fittings.ts';
 import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -96,11 +97,11 @@ function tick(g: Game, n = 1, input: Partial<Input> = {}) {
 
 test('Arc Coil is shared, costs 10 percent round damage, and Daisy Chain requires its parent', () => {
   assert.equal(
-    MODS.filter((m) => !isShiftMod(m.id)).length,
+    MODS.filter((m) => !isShiftMod(m.id) && !MELEE_FITTINGS.some((f) => f.id === m.id)).length,
     141,
     'the archived catalog stays intact',
   );
-  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length + MELEE_FITTINGS.length);
   for (const path of [[], ['deadeye'], ['crossfire'], ['shellshock']]) {
     assert(availableMods(path).some((m) => m.id === 'arc-coil'));
     assert(!availableMods(path).some((m) => m.id === 'daisy-chain'));

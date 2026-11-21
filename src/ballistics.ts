@@ -517,10 +517,13 @@ export class BallisticsSystem {
   reflectRound(b: Shot, bullet: Vec) {
     // Every source of interception shares this recovery, including beam pulses,
     // pellets, echoes and returning rounds. Only a successful contact spends it.
-    if (!this.counterReady || b.friendly || b.allied || b.life <= 0 || b.blade || b.radius > 5)
-      return false;
-    const g = this.game;
+    if (!this.counterReady || !this.parryRound(b, bullet)) return false;
     this.counterRecovery = COUNTERSHOT_RECHARGE;
+    return true;
+  }
+  parryRound(b: Shot, bullet: Vec) {
+    if (b.friendly || b.allied || b.life <= 0 || b.blade || b.radius > 5) return false;
+    const g = this.game;
     const d = b.source ? direction(bullet, b.source) : direction(b.vel, { x: 0, y: 0 });
     b.pos = bullet;
     b.prev = { ...bullet };

@@ -4,7 +4,7 @@ import { bindingLabel, held, matches, type Bindings } from './keyboard.ts';
 import { escapeLogbook } from './html.ts';
 import { Renderer } from './render.ts';
 import { drawWeapon } from './weapon-art.ts';
-import { STARTING_GUNS, type StartingGun } from './starting-guns.ts';
+import { isMeleeWeapon, STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 import { ToolTrial, type ToolTrialScene } from './tool-trial.ts';
 
 export interface ToolTrialViewOptions {
@@ -64,8 +64,11 @@ export class ToolTrialView {
       b = options.bindings,
       special = ['bellows', 'debt-collector', 'switchjack'].includes(gun),
       fireControl = 'the left mouse button or ' + escapeLogbook(bindingLabel(b, 'fire')),
-      firingHelp =
-        !special || (scene === 'converted' && gun !== 'debt-collector')
+      firingHelp = isMeleeWeapon(gun)
+        ? gun === 'spear'
+          ? 'Hold ' + fireControl + ' to wind up, then release to lunge toward your aim.'
+          : 'Use ' + fireControl + ' to swing at nearby targets.'
+        : !special || (scene === 'converted' && gun !== 'debt-collector')
           ? 'Hold ' + fireControl + ' to fire.'
           : gun === 'bellows'
             ? 'Hold ' +
@@ -91,7 +94,7 @@ export class ToolTrialView {
       info.name +
       '.</h2></div><button class="quiet" data-tool-trial-back>Back to tools</button></div>' +
       '<div class="tool-trial-summary"><p>' +
-      (scene === 'converted' ? convertedHelp : info.description) +
+      (scene === 'converted' && !isMeleeWeapon(gun) ? convertedHelp : info.description) +
       '</p><canvas class="tool-trial-mechanism" width="420" height="140" aria-label="Live close-up of the actual weapon mechanism"></canvas></div>' +
       '<p class="tool-trial-scope">Private range · no rewards or saved progress. Targets return after you destroy them.</p>' +
       '<canvas class="tool-trial-canvas" tabindex="0" aria-label="' +

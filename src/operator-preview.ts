@@ -3,12 +3,7 @@ import { Game } from './game.ts';
 import { drawOperator } from './operator-art.ts';
 import { GUN_FINISHES, OUTFITS, loadCosmetics, type Cosmetics } from './cosmetics.ts';
 import type { CommendationId } from './commendations.ts';
-import {
-  STARTING_GUNS,
-  STARTING_GUN_IDS,
-  isStartingGun,
-  type StartingGun,
-} from './starting-guns.ts';
+import { STARTING_GUNS, ALL_TOOLS, isStartingGun, type StartingGun } from './starting-guns.ts';
 import { escapeLogbook as escape } from './html.ts';
 
 export const OPERATOR_PREVIEW_POSES = [
@@ -49,9 +44,7 @@ export class OperatorPreviewStage {
   disposed = false;
   constructor(options: OperatorPreviewOptions) {
     this.showTools = options.showTools === true;
-    this.guns = STARTING_GUN_IDS.filter(
-      (id) => id === 'pistol' || options.unlockedGuns?.includes(id),
-    );
+    this.guns = ALL_TOOLS.filter((id) => id === 'pistol' || options.unlockedGuns?.includes(id));
     this.earned = [...options.earned];
     this.game.startWorkshop([], [], this.allowedGun(options.gun));
     this.setAppearance(options.selection);
@@ -124,9 +117,7 @@ export class OperatorPreviewStage {
 }
 
 export function operatorPreviewMarkup(options: OperatorPreviewOptions) {
-  const guns = STARTING_GUN_IDS.filter(
-    (id) => id === 'pistol' || options.unlockedGuns?.includes(id),
-  );
+  const guns = ALL_TOOLS.filter((id) => id === 'pistol' || options.unlockedGuns?.includes(id));
   return (
     '<canvas class="operator-preview-canvas" width="720" height="440" role="img" aria-label="Outfit and tool preview"></canvas>' +
     '<div class="operator-preview-controls"><div class="operator-preview-poses" role="group" aria-label="Preview pose">' +

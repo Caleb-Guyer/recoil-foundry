@@ -1,3 +1,4 @@
+import type { StartingGun } from './starting-guns.ts';
 import {
   availableMods,
   buildPath,
@@ -43,8 +44,9 @@ export function legalSwaps(
   legacyMods?: readonly string[],
   unlocks: readonly string[] = [],
   seed = '',
+  gun: StartingGun = 'pistol',
 ): ReforgeSwap[] {
-  if (!validSavedBuild(mods, legacyMods)) return [];
+  if (!validSavedBuild(mods, legacyMods, gun)) return [];
   const path = buildPath(mods),
     swaps: ReforgeSwap[] = [];
   const required = new Set(
@@ -62,7 +64,7 @@ export function legalSwaps(
     )
       continue;
     const remaining = mods.filter((id) => id !== from);
-    for (const mod of availableMods(remaining)) {
+    for (const mod of availableMods(remaining, false, false, gun)) {
       if (
         !shiftOfferAllowed(mod.id, seed, stage) ||
         !draftUnlocked(mod.id, unlocks, seed) ||
@@ -87,9 +89,10 @@ export function reforgeOffers(
   stage: number,
   legacyMods?: readonly string[],
   unlocks: readonly string[] = [],
+  gun: StartingGun = 'pistol',
 ): ReforgeSwap[] {
   const rng = seeded(seed + ':reforge-offers:' + stage + ':' + mods.join(','));
-  const pool = sample(legalSwaps(mods, stage, legacyMods, unlocks, seed), 10000, rng);
+  const pool = sample(legalSwaps(mods, stage, legacyMods, unlocks, seed, gun), 10000, rng);
   const count = /^RF-D\d+-/.test(seed) ? 1 : 3,
     chosen: ReforgeSwap[] = [];
   // Prefer different sacrifices and rewards; a build with one removable leaf
@@ -131,7 +134,10 @@ export function validReforge(d: Checkpoint) {
         ({ 3: 'ramjet', 7: 'cinder', 11: 'crosswind' } as Record<number, string>)[d.stage])
   )
     return false;
-  return !room.open || reforgeOffers(d.mods, d.seed, d.stage, d.legacyMods, d.unlocks).length > 0;
+  return (
+    !room.open ||
+    reforgeOffers(d.mods, d.seed, d.stage, d.legacyMods, d.unlocks, d.startingGun).length > 0
+  );
 }
 
 export function reforgeTestFromUrl(url: URL): Checkpoint | null {

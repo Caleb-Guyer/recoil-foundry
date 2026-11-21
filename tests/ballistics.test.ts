@@ -1,3 +1,4 @@
+import { MELEE_FITTINGS } from '../src/melee-fittings.ts';
 import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -115,11 +116,11 @@ test('twelve upgrades have legal prerequisite chains, path locks, saves and reac
     'parallax',
   ];
   assert.equal(
-    MODS.filter((m) => !isShiftMod(m.id)).length,
+    MODS.filter((m) => !isShiftMod(m.id) && !MELEE_FITTINGS.some((f) => f.id === m.id)).length,
     141,
     'the archived catalog stays intact',
   );
-  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length + MELEE_FITTINGS.length);
   for (const id of ids) {
     const parents = ancestors(id),
       build = [...parents, id];

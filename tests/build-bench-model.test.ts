@@ -7,16 +7,16 @@ import {
   benchInspect,
   benchEdit,
 } from '../src/build-bench-model.ts';
-import { MODS, availableMods, getGun, validBuild } from '../src/rules.ts';
+import { FIREARM_MODS, MODS, availableMods, getGun, validBuild } from '../src/rules.ts';
 import { completeBuild, withParents } from '../src/branch-builds.ts';
 import { workshopBuild } from '../src/workshop-build.ts';
 import { STARTING_GUN_IDS } from '../src/starting-guns.ts';
 
 const all = MODS.map((mod) => mod.id);
 
-test('all 161 fittings have explicit mechanic membership or an authored inherited family', () => {
+test('all fittings have explicit mechanic membership or an authored inherited family', () => {
   const valid = BENCH_CATEGORIES.map((category) => category.id).filter((id) => id !== 'all');
-  assert.equal(MODS.length, 161);
+  assert.equal(MODS.length, 167);
   for (const mod of MODS) {
     const tags = benchModTags(mod.id);
     assert(tags.length > 0, mod.id);
@@ -163,8 +163,8 @@ test('removal proposals show the complete cascade before changing a build, retai
   assert(validBuild(remove.after));
 });
 
-test('every collected fitting can be legally previewed, fitted and removed for all six native guns', () => {
-  for (const mod of MODS) {
+test('every collected fitting can be legally previewed, fitted and removed for all native firearms', () => {
+  for (const mod of FIREARM_MODS) {
     const build = withParents([], [mod.id]);
     assert(build, mod.id);
     const parents = build.filter((id) => id !== mod.id);
@@ -228,7 +228,7 @@ test('fast removal previews exactly match native canonicalization throughout max
     return build;
   });
   assert.equal(maximal[0].length, 93, 'Retain the reported filter-lag reproduction');
-  const parentChains = MODS.map((mod) => {
+  const parentChains = FIREARM_MODS.map((mod) => {
     const build = withParents([], [mod.id]);
     assert(build, mod.id);
     return build;

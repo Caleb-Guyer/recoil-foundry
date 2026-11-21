@@ -12,8 +12,8 @@ A physics roguelike set inside a hostile factory. Build one gun between fights, 
 
 **First time playing?** [Join the playtest discussion](https://itch.io/t/7174290/recoil-foundry-free-browser-does-recoil-movement-make-sense-in-the-first-ten-minutes). Play normally, then share what was fun, what got in your way and whether you actually restarted. Short sessions and returning players are welcome too.
 
-- **161 upgrades**, including 20 Factory Unbound fittings and 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
-- **Nine starting guns:** begin with the pistol; earn the shotgun, nailgun, Twinbore, Coil carbine, Pressure repeater, Bellows Cannon, Debt Collector and Switchjack. Every tool has a private trial before unlocking.
+- **167 upgrades**, including six melee fittings, 20 Factory Unbound fittings and 24 earned Toolroom fittings across movement, precision, heat, damage banking, defense and firing cadence.
+- The Campaign picker offers six firearms and three melee weapons. Parry rounds with the Arc Katana, push enemies with the Foundry Hammer, or charge forward with the Drive Spear. Each has two exclusive fittings. Bellows Cannon, Debt Collector and Switchjack are also available in the Workshop once earned.
 - Shifting room layouts, physical obstacles, optional fights and surprises worth finding yourself.
 - **Factory Uprising:** choose eleven jobs across four campaign forks, visit Railworks and Foundry Core, and shape the final defense.
 - A **Daily Run** with the same seed and fixed upgrade choices for everyone.

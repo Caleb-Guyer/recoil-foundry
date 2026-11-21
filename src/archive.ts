@@ -9,7 +9,7 @@ import { recoveredLogbookTokens } from './logbook-notices.ts';
 import type { CommendationId } from './commendations.ts';
 import type { Enemy } from './game.ts';
 import { LONGEVITY_IDS } from './longevity.ts';
-import { STARTING_GUN_IDS } from './starting-guns.ts';
+import { ALL_TOOLS } from './starting-guns.ts';
 import { MACHINE_VARIANT_IDS } from './patrol-machines.ts';
 import { TOOLROOM_ROOM_IDS } from './toolroom-layouts.ts';
 import { REMIX_IDS } from './boss-remix-rules.ts';
@@ -27,7 +27,7 @@ export const VARIANT_IDS = [
 const ids = [
   'tool',
   COURIER_ARCHIVE_ID,
-  ...STARTING_GUN_IDS.filter((id) => id !== 'pistol').map((id) => 'gun:' + id),
+  ...ALL_TOOLS.filter((id) => id !== 'pistol').map((id) => 'gun:' + id),
   'trial:launch',
   'trial:cargo',
   'trial:airborne',

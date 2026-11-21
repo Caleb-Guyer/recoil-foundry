@@ -1,3 +1,4 @@
+import { drawMeleeWeapon } from './melee-art.ts';
 import { drawShiftMorphWeapon } from './shift-morph-art.ts';
 import { drawTorchWeapon } from './torch-art.ts';
 import { GUN_FINISHES, drawFinishMark } from './cosmetics.ts';
@@ -11,6 +12,7 @@ import { drawExperimentalWeapon } from './experimental-weapons-art.ts';
 // The caller supplies the player's position and aim transform. Every moving
 // part follows the simulation clock, so a paused shot stays exactly still.
 export function drawWeapon(c: CanvasRenderingContext2D, g: Game, reduced: boolean): void {
+  if (drawMeleeWeapon(c, g, reduced)) return;
   c.save();
   if (g.mods.includes('collimator')) {
     c.fillStyle = '#344d46';

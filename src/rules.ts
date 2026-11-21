@@ -1,3 +1,9 @@
+import {
+  MELEE_FITTINGS,
+  meleeFittingOwner,
+  buildMeleeWeapon,
+  toolAllowsFitting,
+} from './melee-fittings.ts';
 import { validShiftRunSave, shiftBonus } from './shift-run.ts';
 import {
   SHIFT_MODS,
@@ -40,7 +46,12 @@ import { WORKSHOP_MODS, WORKSHOP_PARENTS } from './workshop-upgrades.ts';
 import { NEW_PATH_MODS, NEW_PATH_PARENTS, NEW_PATH_IDS } from './new-paths.ts';
 import { SUBVERSION_MODS, SUBVERSION_PARENTS, isSubversion } from './subversion-rules.ts';
 import { isLegacyDaily } from './daily.ts';
-import { applyStartingGun, validStartingGunSave, type StartingGun } from './starting-guns.ts';
+import {
+  isMeleeWeapon,
+  applyStartingGun,
+  validStartingGunSave,
+  type StartingGun,
+} from './starting-guns.ts';
 import { LONGEVITY_MODS, draftUnlocked, validUnlocks } from './longevity.ts';
 import { SUPPORT_MODS, supportDraftAllowed, supportPoolAllowed } from './support-upgrades.ts';
 import {
@@ -113,7 +124,7 @@ export interface Gun {
   aftershock: boolean;
   chainReaction: boolean;
 }
-export const MODS = [
+export const FIREARM_MODS = [
   {
     id: 'magnum',
     name: 'Heavy hitter',
@@ -551,6 +562,7 @@ export const MODS = [
   },
   ...SHIFT_MODS,
 ] as const;
+export const MODS = [...FIREARM_MODS, ...MELEE_FITTINGS] as const;
 export const REPAIR_REWARD = {
   id: 'repair',
   name: 'Field repair',
@@ -565,6 +577,20 @@ export function modDescription(
   startingGun: StartingGun = 'pistol',
   seed?: string,
 ): string {
+  if (isMeleeWeapon(startingGun)) {
+    const descriptions: Record<string, string> = {
+      magnum: 'Strikes deal 75% more damage, recover more slowly and kick harder.',
+      rapid: 'Attack 60% faster. Each strike deals 28% less damage and gives a lighter kick.',
+      kick: 'Strikes deal 20% more damage with 40% more impulse.',
+      airshot: 'Deal 45% more strike damage while airborne.',
+      deadeye: 'Deal 30% more strike damage. Recovery takes 20% longer.',
+      execute: 'Strikes deal 60% more damage against enemies below 30% health.',
+      capacitor: 'Rest the trigger to charge double damage on your next strike.',
+      landing: 'Hard landings double your next strike. Other strikes hit 10% lighter.',
+      redline: 'Moving faster adds up to 50% strike damage.',
+    };
+    if (descriptions[mod.id]) return descriptions[mod.id];
+  }
   if (startingGun === 'nailgun' && mod.id === 'burst')
     return '20% shorter burst recovery. 10% lighter hits and 20% lighter kicks.';
   if (startingGun === 'debt-collector' && mod.id === 'kick')
@@ -827,11 +853,14 @@ export function availableMods(
   mods: readonly string[],
   includeSalvage = false,
   legacy = false,
+  gun: StartingGun = 'pistol',
 ): Mod[] {
   const chosen = buildPath(mods);
-  return MODS.filter((mod) => {
+  const melee = isMeleeWeapon(gun);
+  return (melee ? MODS : FIREARM_MODS).filter((mod) => {
     const branch = MOD_PATHS[mod.id];
     return (
+      (!melee || toolAllowsFitting(mod.id, gun)) &&
       (includeSalvage || !isSalvage(mod.id)) &&
       !mods.includes(mod.id) &&
       compatibleMod(mods, mod.id, legacy) &&
@@ -914,6 +943,9 @@ export function updateDraftDeclines(previous: readonly string[], declined: reado
 // Each native tool has a few useful directions, rather than a forced build.
 // Actual owned prerequisites take priority once a gun develops a mechanism.
 const DRAFT_GUN_FITS: Readonly<Record<StartingGun, readonly string[]>> = {
+  katana: ['wide-guard', 'riposte-edge'],
+  hammer: ['counterweight-head', 'sweeping-face'],
+  spear: ['quick-wind', 'deep-drive'],
   pistol: ['magnum', 'rapid', 'airshot', 'kick', 'pierce', 'burst', 'capacitor'],
   shotgun: ['magnum', 'rapid', 'airshot', 'kick', 'collimator', 'ricochet', 'overkill-bank'],
   nailgun: ['rapid', 'airshot', 'kick', 'burst', 'arc-coil', 'coolant-rounds', 'pierce'],
@@ -933,6 +965,9 @@ const DRAFT_GUN_FITS: Readonly<Record<StartingGun, readonly string[]>> = {
   switchjack: ['magnum', 'rapid', 'airshot', 'kick', 'pierce', 'deadeye', 'capacitor'],
 };
 const DRAFT_TOOL_STRENGTHS: Readonly<Record<StartingGun, readonly string[]>> = {
+  katana: ['wide-guard', 'riposte-edge'],
+  hammer: ['counterweight-head', 'sweeping-face'],
+  spear: ['quick-wind', 'deep-drive'],
   pistol: ['pierce', 'burst', 'capacitor'],
   shotgun: ['collimator', 'ricochet', 'overkill-bank'],
   nailgun: ['burst', 'arc-coil', 'coolant-rounds'],
@@ -948,6 +983,7 @@ export function draftFitReason(
   mods: readonly string[],
   startingGun: StartingGun = 'pistol',
 ): string | undefined {
+  if (meleeFittingOwner(id) === startingGun) return 'Fits ' + startingGun + ' attacks';
   if (buildFollowup(id, mods)) {
     const parent = [MOD_REQUIRES[id], ...(BRANCH_PARENTS[id] ?? [])].find(
       (candidate) => candidate && mods.includes(candidate),
@@ -1107,7 +1143,7 @@ export function rewardMods(
   excluded: readonly string[] = [],
 ): Mod[] {
   const path = buildPath(mods),
-    pool = availableMods(mods).filter(
+    pool = availableMods(mods, false, false, context.startingGun).filter(
       (mod) =>
         draftUnlocked(mod.id, context.unlocks, context.seed) &&
         toolroomStageAllowed(mod.id, context.stage, context.overtime) &&
@@ -1125,14 +1161,16 @@ export function rewardMods(
     (m) =>
       m.id === context.salvage &&
       isSalvage(m.id) &&
-      availableMods(mods, true).some((candidate) => candidate.id === m.id) &&
+      availableMods(mods, true, false, context.startingGun).some(
+        (candidate) => candidate.id === m.id,
+      ) &&
       !mods.includes(m.id) &&
       !excluded.includes(m.id),
   );
   if (count === 3 && betterDraftCampaign(context.seed ?? '')) {
     const held =
       context.held && excluded.includes(context.held)
-        ? availableMods(mods).find(
+        ? availableMods(mods, false, false, context.startingGun).find(
             (mod) =>
               mod.id === context.held &&
               draftUnlocked(mod.id, context.unlocks, context.seed) &&
@@ -1228,33 +1266,48 @@ export function rewardMods(
   }
   return offers;
 }
-export function validBuild(mods: readonly string[], legacy = false) {
+// A late optional room can outlast the legal pool of a specialized tool.
+export function canFieldRepair(mods: readonly string[], context: RewardContext) {
+  if (!context.overtime && !isMeleeWeapon(context.startingGun)) return false;
+  return rewardMods(mods, 1, () => 0, context).length === 0;
+}
+export function validBuild(
+  mods: readonly string[],
+  legacy = false,
+  gun: StartingGun = buildMeleeWeapon(mods) ?? 'pistol',
+) {
   const picked: string[] = [];
   for (const id of mods) {
-    if (!availableMods(picked, true, legacy).some((mod) => mod.id === id)) return false;
+    if (!availableMods(picked, true, legacy, gun).some((mod) => mod.id === id)) return false;
     picked.push(id);
   }
   return true;
 }
 export const validLegacyBuild = (mods: readonly string[]) =>
   !mods.some(isBranch) && validBuild(mods, true);
-export function validSavedBuild(mods: readonly string[], legacyMods?: readonly string[]) {
-  if (legacyMods === undefined) return validBuild(mods);
+export function validSavedBuild(
+  mods: readonly string[],
+  legacyMods?: readonly string[],
+  gun: StartingGun = buildMeleeWeapon(mods) ?? 'pistol',
+) {
+  if (legacyMods === undefined) return validBuild(mods, false, gun);
   if (
     !Array.isArray(legacyMods) ||
-    !validLegacyBuild(legacyMods) ||
+    legacyMods.some(isBranch) ||
+    !validBuild(legacyMods, true, gun) ||
     legacyMods.length > mods.length ||
     legacyMods.some((id, i) => mods[i] !== id)
   )
     return false;
   const picked = [...legacyMods];
   for (const id of mods.slice(legacyMods.length)) {
-    if (!availableMods(picked, true).some((m) => m.id === id)) return false;
+    if (!availableMods(picked, true, false, gun).some((m) => m.id === id)) return false;
     picked.push(id);
   }
   return true;
 }
 export function modPathLabel(id: string): string {
+  if (meleeFittingOwner(id)) return 'Melee · ' + meleeFittingOwner(id);
   if (isSubversion(id)) return 'Subversion';
   if (isSalvage(id) || isSalvage(MOD_REQUIRES[id])) return 'Salvage';
   const branch = MOD_PATHS[id];
@@ -1626,17 +1679,17 @@ function validRewardCheckpoint(d: Checkpoint) {
   } else if (r.enteringRoute !== undefined) return false;
   if (r.offers.includes('repair'))
     return (
-      !!d.overtime &&
       !r.rerolled &&
       r.offers.length === 1 &&
-      availableMods(d.mods).filter(
-        (m) =>
-          draftUnlocked(m.id, d.unlocks, d.seed) &&
-          supportPoolAllowed(m.id, d.seed) &&
-          shiftOfferAllowed(m.id, d.seed, 20),
-      ).length === 0
+      canFieldRepair(d.mods, {
+        stage: d.stage,
+        seed: d.seed,
+        unlocks: d.unlocks,
+        startingGun: d.startingGun,
+        overtime: !!d.overtime,
+      })
     );
-  const legal = availableMods(d.mods, true, !!d.legacyOffers);
+  const legal = availableMods(d.mods, true, !!d.legacyOffers, d.startingGun);
   return r.offers.every(
     (id) =>
       draftUnlocked(id, d.unlocks, d.seed) &&
@@ -1827,8 +1880,8 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
       // Older exhausted builds can contain repairs earned before later mods
       // existed. They may resume and earn those additions on their next clear.
       (overtime.repairs === 0 ||
-        (validSavedBuild(d.mods, d.legacyMods) &&
-          availableMods(d.mods)
+        (validSavedBuild(d.mods, d.legacyMods, d.startingGun ?? 'pistol') &&
+          availableMods(d.mods, false, false, d.startingGun)
             .filter(
               (m) => draftUnlocked(m.id, d.unlocks, d.seed) && supportDraftAllowed(m.id, d.seed),
             )
@@ -1902,7 +1955,7 @@ export function loadCheckpoint(value: unknown): Checkpoint | null {
     Array.isArray(d.mods) &&
     new Set(d.mods).size === d.mods.length &&
     d.mods.length <= MODS.length &&
-    validSavedBuild(d.mods, d.legacyMods) &&
+    validSavedBuild(d.mods, d.legacyMods, d.startingGun ?? 'pistol') &&
     (!d.mods.some(isFusion) || ([5, 6].includes(d.version) && (!!overtime || d.stage >= 8))) &&
     (!d.mods.some(isBranch) || ([5, 6].includes(d.version) && (!!overtime || d.stage >= 8))) &&
     Number.isInteger(d.kills) &&

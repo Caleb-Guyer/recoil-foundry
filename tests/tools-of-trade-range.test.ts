@@ -283,7 +283,7 @@ test('one Try tool action follows the selected unlocked weapon and reports selec
   root.nodes.get('starting-gun-back')!.onclick!();
   assert.equal(backs, 1);
   assert.equal((root.html.match(/id="try-tool"/g) ?? []).length, 1);
-  for (const gun of ['bellows', 'debt-collector', 'switchjack']) {
+  for (const gun of ['katana', 'hammer', 'spear']) {
     root.lockedTrials.find((button) => button.dataset.tryLockedGun === gun)!.onclick!();
     assert.equal(tried.at(-1), gun);
   }

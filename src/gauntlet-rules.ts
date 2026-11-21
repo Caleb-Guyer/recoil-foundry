@@ -136,7 +136,7 @@ export function validGauntletRecord(v: unknown): v is GauntletRecord {
     r.mods.length <= 4 &&
     r.mods.every((id) => typeof id === 'string' && /^[a-z0-9-]{1,48}$/.test(id)) &&
     new Set(r.mods).size === r.mods.length &&
-    validBuild(r.mods) &&
+    validBuild(r.mods, false, r.gun) &&
     integer(r.repairs, 0, 4) &&
     r.repairs + r.mods.length === 4 &&
     integer(r.timeMs, 1, 86400000) &&
@@ -207,14 +207,22 @@ export function gauntletEncounter(kind: GauntletChoice): Encounter {
   }
   throw new Error('Gauntlet arena unavailable.');
 }
-export function gauntletOffers(mods: readonly string[], completed: number) {
+export function gauntletOffers(
+  mods: readonly string[],
+  completed: number,
+  gun: StartingGun = 'pistol',
+) {
   return rewardMods(mods, 3, seeded('GAUNTLET-1-SERVICE-' + completed + ':' + mods.join(',')), {
     stage: Math.max(0, completed - 1),
+    startingGun: gun,
     unlocks: [],
   }).map((m) => m.id);
 }
-export function gauntletBuild(mods: readonly string[], id: string) {
-  return availableMods(mods).some((m) => m.id === id) && validBuild([...mods, id]);
+export function gauntletBuild(mods: readonly string[], id: string, gun: StartingGun = 'pistol') {
+  return (
+    availableMods(mods, false, false, gun).some((m) => m.id === id) &&
+    validBuild([...mods, id], false, gun)
+  );
 }
 export function gauntletPreviewFromUrl(url: URL): StartingGun | null {
   const p = url.searchParams;

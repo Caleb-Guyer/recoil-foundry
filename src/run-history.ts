@@ -87,6 +87,7 @@ export function loadRunHistory(value: unknown): RunRecap[] {
       !validSavedBuild(
         raw.mods,
         raw.legacyMods ?? (raw.ruleset <= 60 && validLegacyBuild(raw.mods) ? raw.mods : undefined),
+        raw.startingGun ?? 'pistol',
       ) ||
       records.some((record) => record.id === raw.id)
     )
@@ -223,7 +224,7 @@ export function canReplayRun(run: RunRecap) {
   );
 }
 export function canPracticeRunBuild(run: RunRecap, known: readonly string[]) {
-  const build = workshopBuild(run.mods, known);
+  const build = workshopBuild(run.mods, known, run.startingGun ?? 'pistol');
   return build.length === run.mods.length && build.every((id, i) => id === run.mods[i]);
 }
 export function reachedRoom(run: RunRecap) {

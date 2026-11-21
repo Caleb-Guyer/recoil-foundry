@@ -1,3 +1,4 @@
+import { toolAllowsFitting } from './melee-fittings.ts';
 import Matter from 'matter-js';
 import type { Game, Input, Shot } from './game.ts';
 import {
@@ -553,9 +554,9 @@ export class ShiftRun {
       g.mods.some(isShiftMorph)
     )
       return [];
-    return SHIFT_MORPHS.filter((id) => availableMods(g.mods, true).some((m) => m.id === id)).filter(
-      (_id, i) => i < 4,
-    );
+    return SHIFT_MORPHS.filter((id) =>
+      availableMods(g.mods, true, false, g.startingGun).some((m) => m.id === id),
+    ).filter((_id, i) => i < 4);
   }
   borrow(morph: ShiftMorphId) {
     if (!this.state || !this.leaseChoices().includes(morph)) return false;
@@ -580,10 +581,10 @@ export class ShiftRun {
       !l ||
       !this.leaseDue ||
       this.evolutionDue ||
-      !availableMods(g.mods, true).some((m) => m.id === l.morph)
+      !availableMods(g.mods, true, false, g.startingGun).some((m) => m.id === l.morph)
     )
       return false;
-    const mod = availableMods(g.mods, true).find((m) => m.id === l.morph)!;
+    const mod = availableMods(g.mods, true, false, g.startingGun).find((m) => m.id === l.morph)!;
     delete this.state!.lease;
     g.offers = [mod];
     g.chooseMod(mod.id);
@@ -591,7 +592,9 @@ export class ShiftRun {
   }
   experimentChoices(): ExperimentId[] {
     return this.junction && this.state && !this.state.experiment
-      ? (Object.keys(EXPERIMENTS) as ExperimentId[])
+      ? (Object.keys(EXPERIMENTS) as ExperimentId[]).filter((id) =>
+          toolAllowsFitting(id, this.game.startingGun),
+        )
       : [];
   }
   beginExperiment(id: ExperimentId) {
@@ -599,7 +602,7 @@ export class ShiftRun {
       s = this.state;
     if (!s || !this.experimentChoices().includes(id)) return false;
     if (!g.mods.includes(id)) {
-      if (!availableMods(g.mods, true).some((m) => m.id === id)) return false;
+      if (!availableMods(g.mods, true, false, g.startingGun).some((m) => m.id === id)) return false;
       g.mods.push(id);
       s.grants.push(id);
       g.gun = getGun(g.mods, g.startingGun);
@@ -658,7 +661,9 @@ export class ShiftRun {
   }
   offers(offers: Mod[]) {
     if (this.game.shiftRoutes.kind !== 'rework-loop') return offers;
-    const morphs = availableMods(this.game.mods, true).filter((m) => isShiftMorph(m.id));
+    const morphs = availableMods(this.game.mods, true, false, this.game.startingGun).filter((m) =>
+      isShiftMorph(m.id),
+    );
     return morphs.length
       ? [
           ...sample(morphs, 2, seeded(this.game.seed + ':rework-morph:' + this.game.stage)),

@@ -5,7 +5,7 @@ import { getLevel } from '../src/levels.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MODS,
+  FIREARM_MODS as MODS,
   availableMods,
   getGun,
   validBuild,

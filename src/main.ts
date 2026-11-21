@@ -387,7 +387,7 @@ import {
 import { BLUEPRINTS_KEY, loadBlueprints } from './blueprints.ts';
 import {
   STARTING_GUNS,
-  STARTING_GUN_IDS,
+  ALL_TOOLS,
   dailyStartingGun,
   isStartingGun,
   type StartingGun,
@@ -3352,7 +3352,7 @@ function startWorkshop(
   activeDaily = null;
   dailyResult = null;
   if (!warmup) {
-    workshopMods = workshopBuild(mods, discovered);
+    workshopMods = workshopBuild(mods, discovered, startingGun);
     workshopStartingGun = startingGun = availableStartingGun(startingGun, weaponUnlocks());
     if (!previewCommendations) write(WORKSHOP_BUILD_KEY, workshopMods);
   }
@@ -3375,7 +3375,7 @@ function startWorkshop(
 function startBuildBenchRange(mods: readonly string[] = benchDraft, gun: StartingGun = benchGun) {
   if (!linkedBuildBench) return;
   benchPreviewOpen = true;
-  benchDraft = workshopBuild(mods, linkedBuildBench.known);
+  benchDraft = workshopBuild(mods, linkedBuildBench.known, gun);
   benchGun = gun;
   resetRunGoal();
   firstSession.stop();
@@ -4370,7 +4370,7 @@ function showDialog(kind: string) {
     buildMenu = quickShiftSetup(content, {
       seed: quickSetupSeed,
       selectedGun: quickSetupGun,
-      unlockedGuns: fixture ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
+      unlockedGuns: fixture ? ALL_TOOLS : unlockedStartingGuns(weaponUnlocks()),
       showWeapons: fixture || weaponUnlocks().started,
       records: fixture ? [] : read(QUICK_SHIFT_RECORDS_KEY),
       preview: fixture,
@@ -4703,10 +4703,9 @@ function showDialog(kind: string) {
         );
       },
       kind === 'goal-campaign' ? () => showDialog('next-goal') : closeDialog,
-      toolPickerPreview ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
+      toolPickerPreview ? ALL_TOOLS : unlockedStartingGuns(weaponUnlocks()),
       {
         tryTool: (gun) => openToolTrial(gun, kind),
-        profile: weaponUnlocks(),
         onSelect: (gun) => {
           toolPickerSelection = gun;
         },
@@ -4796,9 +4795,9 @@ function showDialog(kind: string) {
       '<div><dt>Switchjack · Long Haul.</dt><dd>' +
       WEAPON_REQUIREMENTS.switchjack +
       '</dd></div></dl>' +
-      '<p>Use any weapon in Campaign or Daily. The tool picker and Logbook show your best attempt; separate attempts never add together. Already earned tools stay unlocked.</p>' +
+      '<p>Use any weapon in Campaign or Daily. The Logbook shows your best attempt at each firearm challenge. Already earned tools stay unlocked.</p>' +
       '<p>Try privately: <a href="?test=tools-of-trade&amp;gun=bellows&amp;scene=range&amp;v=1">Bellows Cannon ↗</a> · <a href="?test=tools-of-trade&amp;gun=debt-collector&amp;scene=range&amp;v=1">Debt Collector ↗</a> · <a href="?test=tools-of-trade&amp;gun=switchjack&amp;scene=range&amp;v=1">Switchjack ↗</a></p>' +
-      '<p class="practice-record-note">All nine tools can be tried before unlocking. Private ranges grant no rewards and leave saved progress untouched. Older Daily links retain their original weapon rotation.</p>' +
+      '<p class="practice-record-note">Tools in the Campaign picker can be tried before unlocking. Private ranges grant no rewards and leave saved progress untouched. Older Daily links retain their original weapon rotation.</p>' +
       '<div class="actions"><button id="back" class="primary">Back</button></div>';
     $('back').onclick = backFromUpdate;
   } else if (kind === 'credits') {
@@ -5050,8 +5049,7 @@ function showDialog(kind: string) {
           : game.workshop.active
             ? game.startingGun
             : workshopStartingGun,
-        unlockedGuns:
-          bench || operatorOutfits ? STARTING_GUN_IDS : unlockedStartingGuns(weaponUnlocks()),
+        unlockedGuns: bench || operatorOutfits ? ALL_TOOLS : unlockedStartingGuns(weaponUnlocks()),
         showStartingGuns: !!bench || operatorOutfits || weaponUnlocks().started,
         initialBrowse: bench?.initialBrowse,
         initialInspect: bench?.initialInspect,

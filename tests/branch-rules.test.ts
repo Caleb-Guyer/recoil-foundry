@@ -1,3 +1,4 @@
+import { MELEE_FITTINGS } from '../src/melee-fittings.ts';
 import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,11 +28,11 @@ import { dailyForDate } from '../src/daily.ts';
 test('all branch choices require their complete parents, respect both orders and enter at stage seven', () => {
   assert.equal(BRANCH_MODS.length, 14);
   assert.equal(
-    MODS.filter((m) => !isShiftMod(m.id)).length,
+    MODS.filter((m) => !isShiftMod(m.id) && !MELEE_FITTINGS.some((f) => f.id === m.id)).length,
     141,
     'the archived catalog stays intact',
   );
-  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length + MELEE_FITTINGS.length);
   for (const mod of BRANCH_MODS) {
     const parents = withParents([], BRANCH_PARENTS[mod.id])!;
     assert(validBuild([...parents, mod.id]));

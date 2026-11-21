@@ -1,3 +1,4 @@
+import { MELEE_FITTINGS } from '../src/melee-fittings.ts';
 import { SHIFT_MODS, isShiftMod, shiftOfferAllowed } from '../src/shift-catalog.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -102,11 +103,11 @@ test('Annex links select legal isolated presets, rejecting ambiguous or mixed ru
   g.start('normal-campaign');
   assert(!g.annex.active && !g.spoof.equipped);
   assert.equal(
-    MODS.filter((m) => !isShiftMod(m.id)).length,
+    MODS.filter((m) => !isShiftMod(m.id) && !MELEE_FITTINGS.some((f) => f.id === m.id)).length,
     141,
     'the archived catalog stays intact',
   );
-  assert.equal(MODS.length, 141 + SHIFT_MODS.length);
+  assert.equal(MODS.length, 141 + SHIFT_MODS.length + MELEE_FITTINGS.length);
   const disabled = preset();
   disabled.annex!.spoof = false;
   disabled.mods = disabled.mods.filter((id) => id !== 'spoof');

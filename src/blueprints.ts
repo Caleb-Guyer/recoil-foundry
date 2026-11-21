@@ -13,14 +13,14 @@ export interface Blueprint {
 }
 export type BlueprintSlots = (Blueprint | null)[];
 const all = MODS.map((mod) => mod.id);
-export function validBlueprintMods(value: unknown): value is string[] {
+export function validBlueprintMods(value: unknown, gun: StartingGun = 'pistol'): value is string[] {
   if (
     !Array.isArray(value) ||
     value.length > MODS.length ||
     value.some((id) => typeof id !== 'string')
   )
     return false;
-  const legal = workshopBuild(value, all);
+  const legal = workshopBuild(value, all, gun);
   return legal.length === value.length && legal.every((id, i) => id === value[i]);
 }
 export function validBlueprint(value: unknown): value is Blueprint {
@@ -34,7 +34,7 @@ export function validBlueprint(value: unknown): value is Blueprint {
     record.name.length <= BLUEPRINT_NAME_LIMIT &&
     record.name.trim() === record.name &&
     !/[\u0000-\u001f\u007f-\u009f]/.test(record.name) &&
-    validBlueprintMods(record.mods)
+    validBlueprintMods(record.mods, record.startingGun ?? 'pistol')
   );
 }
 export function loadBlueprints(value: unknown): BlueprintSlots {
@@ -71,7 +71,7 @@ export function blueprintCode(
   mods: readonly string[],
   startingGun: StartingGun = 'pistol',
 ): string {
-  if (!validBlueprintMods(mods) || !isStartingGun(startingGun))
+  if (!isStartingGun(startingGun) || !validBlueprintMods(mods, startingGun))
     throw new Error('This build cannot be shared under the current upgrade rules.');
   return (
     (startingGun === 'pistol' ? 'RF1.' : 'RF2.') +
@@ -90,7 +90,7 @@ export function parseBlueprintCode(text: string): Blueprint {
     const gun = code.startsWith('RF2.') && Array.isArray(data) ? data[0] : 'pistol';
     const mods =
       code.startsWith('RF2.') && Array.isArray(data) && data.length === 2 ? data[1] : data;
-    if (!isStartingGun(gun) || !validBlueprintMods(mods) || blueprintCode(mods, gun) !== code)
+    if (!isStartingGun(gun) || !validBlueprintMods(mods, gun) || blueprintCode(mods, gun) !== code)
       throw new Error();
     return {
       name: 'Shared build',
@@ -102,7 +102,7 @@ export function parseBlueprintCode(text: string): Blueprint {
   }
 }
 export function blueprintPreview(blueprint: Blueprint, known: readonly string[]) {
-  const mods = workshopBuild(blueprint.mods, known);
+  const mods = workshopBuild(blueprint.mods, known, blueprint.startingGun ?? 'pistol');
   const hidden = blueprint.mods.filter((id) => !known.includes(id)).length;
   return {
     mods,

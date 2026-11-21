@@ -1,3 +1,5 @@
+import { buildMeleeWeapon } from './melee-fittings.ts';
+import type { StartingGun } from './starting-guns.ts';
 import { MODS, availableMods, validSavedBuild } from './rules.ts';
 
 export const DISCOVERIES_KEY = 'rf-discovered-mods-v1';
@@ -19,11 +21,16 @@ export function discoverBuild(
 
 // Preserve acquisition order. Removing a prerequisite removes its dependents,
 // while unrelated upgrades and the other legal branches remain untouched.
-export function workshopBuild(value: unknown, known: readonly string[]): string[] {
+export function workshopBuild(
+  value: unknown,
+  known: readonly string[],
+  gun?: StartingGun,
+): string[] {
   const result: string[] = [];
   if (!Array.isArray(value)) return result;
+  gun ??= buildMeleeWeapon(value) ?? 'pistol';
   for (const id of value.slice(0, MODS.length))
-    if (known.includes(id) && availableMods(result, true).some((mod) => mod.id === id))
+    if (known.includes(id) && availableMods(result, true, false, gun).some((mod) => mod.id === id))
       result.push(id);
   return result;
 }

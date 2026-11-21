@@ -1,7 +1,7 @@
 import { WEAPON_REQUIREMENTS } from './weapon-unlocks.ts';
 import { MODS } from './rules.ts';
 import { workshopBuild } from './workshop-build.ts';
-import { STARTING_GUNS, STARTING_GUN_IDS, type StartingGun } from './starting-guns.ts';
+import { STARTING_GUNS, ALL_TOOLS, type StartingGun } from './starting-guns.ts';
 import { appearanceMenu, type AppearanceOptions } from './appearance-menu.ts';
 import { blueprintMenu, type BlueprintStore, type MenuBack } from './blueprint-menu.ts';
 import {
@@ -60,12 +60,12 @@ export function workshopMenu(
   options: BuildOptions = {},
 ): WorkshopMenuController {
   const limit = options.limit ?? MODS.length;
-  let draft = workshopBuild(initial, known);
   const unlockedGuns = options.unlockedGuns ?? ['pistol'];
   const allowStartingGuns = options.limit === undefined;
   const showGunSelector = allowStartingGuns && options.showStartingGuns !== false;
   let draftGun: StartingGun = allowStartingGuns ? (options.startingGun ?? 'pistol') : 'pistol';
   if (!unlockedGuns.includes(draftGun)) draftGun = 'pistol';
+  let draft = workshopBuild(initial, known, draftGun);
   let library: MenuBack | null = null;
   let inspected: string | null =
     options.initialInspect && known.includes(options.initialInspect)
@@ -94,7 +94,7 @@ export function workshopMenu(
     '<div class="bench-selectors">' +
     (showGunSelector
       ? '<label class="workshop-starter">Starting gun <select id="workshop-starting-gun" aria-label="Starting gun">' +
-        STARTING_GUN_IDS.map(
+        ALL_TOOLS.map(
           (id) =>
             '<option value="' +
             id +
@@ -269,7 +269,7 @@ export function workshopMenu(
     const id = clearPending ? draft[0] : row!.mod.id;
     const proposal = clearPending
       ? { after: [] as string[], removed: [...draft], canApply: true, reason: '' }
-      : benchEdit(draft, id, known, limit);
+      : benchEdit(draft, id, known, limit, draftGun);
     const removal = clearPending || (!!row?.selected && !edited);
     const names = row ? benchLinksMarkup(row.requirements, known, draft, true) : '';
     inspector.innerHTML =
@@ -337,7 +337,7 @@ export function workshopMenu(
           JSON.stringify(draft) !== JSON.stringify(edited.after)
         )
           return;
-        draft = workshopBuild(edited.before, known);
+        draft = workshopBuild(edited.before, known, draftGun);
         lastEdit = null;
         render();
         options.change?.([...draft], draftGun);
@@ -418,6 +418,7 @@ export function workshopMenu(
     gunSelect.value = draftGun;
     gunSelect.onchange = () => {
       draftGun = gunSelect.value as StartingGun;
+      draft = workshopBuild(draft, known, draftGun);
       lastEdit = null;
       clearPending = false;
       render();
@@ -496,7 +497,7 @@ export function workshopMenu(
         known,
         draft,
         (mods, startingGun) => {
-          draft = workshopBuild(mods, known);
+          draft = workshopBuild(mods, known, startingGun);
           draftGun = startingGun;
           if (gunSelect) gunSelect.value = draftGun;
           search.value = '';

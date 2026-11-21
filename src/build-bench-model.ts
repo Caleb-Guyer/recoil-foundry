@@ -286,7 +286,7 @@ function context(
   gun: StartingGun,
   limit: number,
 ): BenchContext {
-  const clean = workshopBuild(draft, known);
+  const clean = workshopBuild(draft, known, gun);
   return {
     known: new Set(known),
     selected: new Set(clean),
@@ -295,7 +295,7 @@ function context(
     draft: clean,
     gun,
     limit: boundedLimit(limit),
-    eligible: new Set(availableMods(clean, true).map((m) => m.id)),
+    eligible: new Set(availableMods(clean, true, false, gun).map((m) => m.id)),
   };
 }
 /**
@@ -429,8 +429,9 @@ export function benchEdit(
   id: string,
   known: readonly string[],
   limit: number = MODS.length,
+  gun: StartingGun = 'pistol',
 ): BenchEdit {
-  const c = context(known, draft, 'pistol', limit);
+  const c = context(known, draft, gun, limit);
   const row = inspect(id, c);
   const unchanged = (reason: string): BenchEdit => ({
     after: [...c.draft],
@@ -444,6 +445,7 @@ export function benchEdit(
     const after = workshopBuild(
       c.draft.filter((m) => m !== id),
       known,
+      gun,
     );
     return {
       after,
@@ -454,6 +456,6 @@ export function benchEdit(
     };
   }
   if (!row.canAdd) return unchanged(row.reason);
-  const after = workshopBuild([...c.draft, id], known);
+  const after = workshopBuild([...c.draft, id], known, gun);
   return { after, removed: [], added: [id], canApply: after.includes(id), reason: row.reason };
 }

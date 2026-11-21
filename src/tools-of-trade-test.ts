@@ -1,4 +1,4 @@
-import { isStartingGun, type StartingGun } from './starting-guns.ts';
+import { isMeleeWeapon, isStartingGun, type StartingGun } from './starting-guns.ts';
 import { validBuild, type Checkpoint } from './rules.ts';
 
 export const TOOLS_OF_TRADE_SCENES = ['range', 'picker', 'converted'] as const;
@@ -25,8 +25,9 @@ export function toolsOfTradeTestFromUrl(url: URL): ToolsOfTradeFixture | null {
     !(TOOLS_OF_TRADE_SCENES as readonly string[]).includes(scene)
   )
     return null;
+  if (scene === 'converted' && isMeleeWeapon(gun)) return null;
   const mods = scene === 'converted' ? [...TOOL_TRIAL_CONVERTED_MODS] : [];
-  if (!validBuild(mods)) return null;
+  if (!validBuild(mods, false, gun)) return null;
   return {
     gun,
     scene: scene as ToolsOfTradeScene,

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { type Enemy, type Game, type Input } from '../src/game.ts';
+import { isExperimentalGun } from '../src/starting-guns.ts';
 import type { ExperimentalWeapon } from '../src/experimental-weapons.ts';
 import { fixture, target, Body } from './branches-fixture.ts';
 import { loadCheckpoint } from '../src/rules.ts';
@@ -11,7 +12,9 @@ function setup() {
   Body.setPosition(g.player, { x: 200, y: 722 });
   Body.setVelocity(g.player, { x: 0, y: 0 });
   const events: { gun: ExperimentalWeapon; current: number; complete: boolean }[] = [];
-  g.onWeaponChallengeProgress = (gun, current, complete) => events.push({ gun, current, complete });
+  g.onWeaponChallengeProgress = (gun, current, complete) => {
+    if (isExperimentalGun(gun)) events.push({ gun, current, complete });
+  };
   return { g, events, completed: () => events.filter((e) => e.complete).map((e) => e.gun) };
 }
 function kill(g: Game, x = 250, options: Partial<Enemy> = {}) {

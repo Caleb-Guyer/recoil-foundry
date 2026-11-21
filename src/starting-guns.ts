@@ -52,9 +52,26 @@ export const STARTING_GUNS = {
     description:
       'Fire a slow bolt. Press fire again while it is live to relocate to it, consuming it. The route must fit your whole body; blocked attempts leave the bolt flying. Beam, Seeker Rack and Suspension replace this trigger.',
   },
+  katana: {
+    name: 'Arc Katana',
+    trait: 'Fast slashes · Timed parry',
+    description:
+      'Swing at nearby enemies. Time a slash to turn an incoming light round back on its shooter. Swing downward in the air to kick upward.',
+  },
+  hammer: {
+    name: 'Foundry Hammer',
+    trait: 'Heavy sweep · Knockback',
+    description:
+      'Strike a wide arc and shove nearby patrols away. Bosses resist the shove. A downward swing gives a heavy recoil kick.',
+  },
+  spear: {
+    name: 'Drive Spear',
+    trait: 'Directional charge · Piercing thrust',
+    description:
+      'Hold fire to wind up, then release to lunge toward your aim. A quick tap gives a short thrust. Aim upward to climb.',
+  },
 } as const;
 export type StartingGun = keyof typeof STARTING_GUNS;
-export const STARTING_GUN_IDS = Object.keys(STARTING_GUNS) as StartingGun[];
 // Freeze old Daily rotations even when later releases extend the tool catalog.
 export const ORIGINAL_GUN_IDS: readonly StartingGun[] = [
   'pistol',
@@ -66,6 +83,15 @@ export const ORIGINAL_GUN_IDS: readonly StartingGun[] = [
 ];
 export const EXPERIMENTAL_GUN_IDS = ['bellows', 'debt-collector', 'switchjack'] as const;
 export type ExperimentalGun = (typeof EXPERIMENTAL_GUN_IDS)[number];
+// Historical firearm order is part of Daily and fixture seed identities.
+export const STARTING_GUN_IDS: StartingGun[] = [...ORIGINAL_GUN_IDS, ...EXPERIMENTAL_GUN_IDS];
+export const MELEE_IDS = ['katana', 'hammer', 'spear'] as const;
+export type MeleeWeapon = (typeof MELEE_IDS)[number];
+export function isMeleeWeapon(id: unknown): id is MeleeWeapon {
+  return id === 'katana' || id === 'hammer' || id === 'spear';
+}
+export const ARMORY_TOOLS: readonly StartingGun[] = [...ORIGINAL_GUN_IDS, ...MELEE_IDS];
+export const ALL_TOOLS: readonly StartingGun[] = [...STARTING_GUN_IDS, ...MELEE_IDS];
 export function isExperimentalGun(value: unknown): value is ExperimentalGun {
   return typeof value === 'string' && (EXPERIMENTAL_GUN_IDS as readonly string[]).includes(value);
 }
@@ -76,7 +102,12 @@ export function isStartingGun(value: unknown): value is StartingGun {
 // A separate identity from upgrade ownership: no free prerequisites or picks.
 // Preserve the original pistol's exact stats and each upgrade's damage scaling.
 export function applyStartingGun(gun: Gun, id: StartingGun, mods: readonly string[]): Gun {
-  if (id === 'shotgun') {
+  if (isMeleeWeapon(id)) {
+    const strength = { katana: 1.5, hammer: 3.8, spear: 1.9 }[id];
+    gun.damage *= strength;
+    gun.interval *= { katana: 1.25, hammer: 3.2, spear: 1.65 }[id];
+    gun.recoil *= { katana: 1, hammer: 2.1, spear: 1.5 }[id];
+  } else if (id === 'shotgun') {
     const pellets = gun.pellets;
     gun.pellets += 4;
     gun.damage *= (pellets / gun.pellets) * 2.5;

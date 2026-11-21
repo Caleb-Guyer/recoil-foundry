@@ -1,3 +1,5 @@
+import { isMeleeWeapon } from './starting-guns.ts';
+import { MeleeCombat } from './melee-combat.ts';
 import { seedLockedCombat } from './seed-lock.ts';
 import { ExperimentalWeapons } from './experimental-weapons.ts';
 import { MachineBreakdown } from './machine-breakdown.ts';
@@ -172,6 +174,7 @@ import {
   distance,
   seeded,
   rewardMods,
+  canFieldRepair,
   betterDraftCampaign,
   updateDraftDeclines,
   getGun,
@@ -534,6 +537,7 @@ export class Game {
   shots: Shot[] = [];
   particles: Particle[] = [];
   combatFeel = new CombatFeel();
+  melee = new MeleeCombat(this);
   experimentalWeapons = new ExperimentalWeapons(this);
   machineBreakdown = new MachineBreakdown(this);
   operatorSurface = new OperatorSurface(this);
@@ -861,7 +865,7 @@ export class Game {
   private reportedEncounters = new Set<number>();
   onCommendation: (id: CommendationId) => void = () => {};
   onWeaponChallengeProgress: (
-    gun: 'bellows' | 'debt-collector' | 'switchjack',
+    gun: import('./starting-guns.ts').ExperimentalGun | import('./starting-guns.ts').MeleeWeapon,
     current: number,
     complete: boolean,
   ) => void = () => {};
@@ -894,6 +898,7 @@ export class Game {
     if (mode !== 'playing') {
       this.weaponChallenges.pause();
       this.experimentalWeapons.pause();
+      this.melee.reset(true);
       this.operatorSurface.pause(mode === 'paused');
       this.stasis.held = false;
       this.mobility.pause();
@@ -907,6 +912,7 @@ export class Game {
       this.materialResponse.reset();
       this.combatFeel.reset();
       this.experimentalWeapons.reset();
+      this.melee.reset();
       this.commendations.weapons.reset();
       this.welder.clear();
       this.switchboard.clear();
@@ -978,7 +984,7 @@ export class Game {
   ) {
     this.workshop.scenario = isWorkshopScenario(scenario) ? scenario : 'standard';
     this.workshop.discovered = loadDiscoveries(discovered);
-    const build = workshopBuild(mods, this.workshop.discovered);
+    const build = workshopBuild(mods, this.workshop.discovered, startingGun);
     this.start(
       'WORKSHOP',
       {
@@ -1443,6 +1449,7 @@ export class Game {
     this.particles = [];
     this.combatFeel.reset();
     this.experimentalWeapons.reset();
+    this.melee.reset();
     this.trail = [];
     this.clear = false;
     this.coyote = 0;
@@ -1865,6 +1872,7 @@ export class Game {
     this.particles = [];
     this.combatFeel.reset();
     this.experimentalWeapons.reset();
+    this.melee.reset();
     this.burstRemaining = 0;
     this.fireBuffer = this.jumpBuffer = 0;
     this.blast.life = this.muzzle = this.hitStop = 0;
@@ -2181,7 +2189,7 @@ export class Game {
     }
     this.mobility.update(input);
     this.shiftUpgrades.afterGround(input, wasGrounded);
-    if (this.experimentalWeapons.input(dt, input, rawWeaponFire)) {
+    if (this.melee.input(dt, input) || this.experimentalWeapons.input(dt, input, rawWeaponFire)) {
       this.fireBuffer = 0;
     } else if (this.torch.equipped) {
       this.torch.beforeStep(
@@ -2201,6 +2209,7 @@ export class Game {
       this.fire();
       this.fireBuffer = 0;
     }
+    this.melee.update();
     this.loaderArena.update();
     this.mutations.update();
     this.teamwork.tick(dt);
@@ -2497,22 +2506,25 @@ export class Game {
     if (d.x === 0 && d.y === 0) d.x = 1;
     Object.assign(origin, this.shiftUpgrades.origin(origin, d));
     this.shiftOrigin = origin;
+    const spear = this.startingGun === 'spear';
+    const launchDirection = spear ? { x: -d.x, y: -d.y } : d;
     const impulse =
       this.gun.recoil *
-      this.mobility.shot(d) *
-      (this.grounded ? 0.21 * this.toolroom.groundScale : 1) *
+      (spear ? 0.55 + 1.4 * this.melee.charge : 1) *
+      this.mobility.shot(launchDirection) *
+      (this.grounded && !spear ? 0.21 * this.toolroom.groundScale : 1) *
       (charged ? 1.25 : 1) *
       (rail ? RAIL_RECOIL : 1);
     const beforeRecoil = this.player.velocity.y;
     if (!this.experimentalWeapons.captureRecoil(d, impulse)) {
-      const shiftDelta = this.shiftUpgrades.recoilDelta(d, impulse);
+      const shiftDelta = this.shiftUpgrades.recoilDelta(launchDirection, impulse);
       Body.setVelocity(this.player, {
         x: clamp(this.player.velocity.x + shiftDelta.x, -23, 23),
         y: clamp(this.player.velocity.y + shiftDelta.y, -21, 20),
       });
       this.commendations.mastery.recoiled(beforeRecoil - this.player.velocity.y);
       this.weaponChallenges.recoiled(beforeRecoil - this.player.velocity.y);
-      this.salvage.launch(d, impulse);
+      this.salvage.launch(launchDirection, impulse);
     }
     this.onHaptic('shot', Math.min(1, 0.3 + impulse / 12));
     this.feedback(
@@ -2522,33 +2534,39 @@ export class Game {
       d,
     );
     this.onSound(
-      this.massDriver.equipped
-        ? 'mass-shot'
-        : this.chargedFlash
-          ? 'charged'
-          : this.gun.shellshock
-            ? 'shell-shot'
-            : this.experimentalWeapons.kind === 'bellows'
-              ? 'bellows-shot'
-              : this.experimentalWeapons.kind === 'debt-collector'
-                ? 'debt-shot'
-                : this.experimentalWeapons.kind === 'switchjack'
-                  ? 'switchjack-shot'
-                  : this.mods.includes('magnum')
-                    ? 'heavy'
-                    : this.startingGun === 'shotgun'
-                      ? 'shotgun-shot'
-                      : this.startingGun === 'nailgun'
-                        ? 'nail-shot'
-                        : this.startingGun === 'carbine'
-                          ? 'carbine-shot'
-                          : this.startingGun === 'twinbore'
-                            ? 'twinbore-shot'
-                            : this.startingGun === 'repeater'
-                              ? 'repeater-shot'
-                              : this.mods.includes('scatter')
-                                ? 'scatter'
-                                : 'shot',
+      isMeleeWeapon(this.startingGun)
+        ? this.startingGun === 'katana'
+          ? 'katana-swing'
+          : this.startingGun === 'hammer'
+            ? 'hammer-swing'
+            : 'spear-thrust'
+        : this.massDriver.equipped
+          ? 'mass-shot'
+          : this.chargedFlash
+            ? 'charged'
+            : this.gun.shellshock
+              ? 'shell-shot'
+              : this.experimentalWeapons.kind === 'bellows'
+                ? 'bellows-shot'
+                : this.experimentalWeapons.kind === 'debt-collector'
+                  ? 'debt-shot'
+                  : this.experimentalWeapons.kind === 'switchjack'
+                    ? 'switchjack-shot'
+                    : this.mods.includes('magnum')
+                      ? 'heavy'
+                      : this.startingGun === 'shotgun'
+                        ? 'shotgun-shot'
+                        : this.startingGun === 'nailgun'
+                          ? 'nail-shot'
+                          : this.startingGun === 'carbine'
+                            ? 'carbine-shot'
+                            : this.startingGun === 'twinbore'
+                              ? 'twinbore-shot'
+                              : this.startingGun === 'repeater'
+                                ? 'repeater-shot'
+                                : this.mods.includes('scatter')
+                                  ? 'scatter'
+                                  : 'shot',
     );
     this.combatFeel.pumpAt = null;
     this.combatFeel.pumpStartedAt = -100;
@@ -2569,6 +2587,12 @@ export class Game {
       (capacitor ? 2 : 1) *
       evolutionDamage *
       toolroomDamage;
+    if (isMeleeWeapon(this.startingGun)) {
+      this.melee.start(this.startingGun, d, baseDamage);
+      this.evolutions.settle();
+      this.shiftOrigin = null;
+      return;
+    }
     const bank = this.support.discharge(
       baseDamage *
         this.gun.pellets *
@@ -4539,7 +4563,9 @@ export class Game {
       this.region === 'annex' &&
       (this.stage === 7 || this.stage === 8);
     if (annexIntroduction && !this.courierReward && !this.offers.some((m) => isSubversion(m.id))) {
-      const candidates = availableMods(this.mods).filter((m) => isSubversion(m.id));
+      const candidates = availableMods(this.mods, false, false, this.startingGun).filter((m) =>
+        isSubversion(m.id),
+      );
       let replacement = this.offers.length - 1;
       while (replacement >= 0 && isSalvage(this.offers[replacement].id)) replacement--;
       if (candidates.length && replacement >= 0) {
@@ -4554,10 +4580,13 @@ export class Game {
       !this.mods.includes('spoof') &&
       !this.offers.some((m) => m.id === 'spoof')
     ) {
-      const spoof = availableMods(this.mods).find((m) => m.id === 'spoof');
+      const spoof = availableMods(this.mods, false, false, this.startingGun).find(
+        (m) => m.id === 'spoof',
+      );
       if (spoof) this.offers.splice(Math.max(0, this.offers.length - 1), 1, spoof);
     }
-    if (this.overtime && this.offers.length === 0) this.offers = [REPAIR_REWARD];
+    if (!this.offers.length && (this.overtime || isMeleeWeapon(this.startingGun)))
+      this.offers = [REPAIR_REWARD];
     this.offers = this.shiftRun.offers(this.offers);
     this.rewardTaken = false;
     this.rewardRerolled = false;
@@ -4599,6 +4628,7 @@ export class Game {
             stage: this.stage,
             seed: this.seed,
             unlocks: this.unlocks,
+            startingGun: this.startingGun,
             overtime: !!this.overtime,
           },
         ),
@@ -4612,6 +4642,7 @@ export class Game {
         stage: this.stage,
         seed: this.seed,
         unlocks: this.unlocks,
+        startingGun: this.startingGun,
         overtime: !!this.overtime,
       }),
       excluded,
@@ -4744,21 +4775,25 @@ export class Game {
       (isBranch(id) && !this.overtime && this.stage < BRANCH_STAGE) ||
       (!(
         id === 'repair' &&
-        this.overtime &&
-        availableMods(this.mods).filter(
-          (m) =>
-            draftUnlocked(m.id, this.unlocks, this.seed) &&
-            supportPoolAllowed(m.id, this.seed) &&
-            shiftOfferAllowed(m.id, this.seed, 20),
-        ).length === 0
+        canFieldRepair(this.mods, {
+          stage: this.stage,
+          seed: this.seed,
+          unlocks: this.unlocks,
+          startingGun: this.startingGun,
+          overtime: !!this.overtime,
+        })
       ) &&
-        !availableMods(this.mods, true, !!this.legacyOffers?.includes(id)).some((m) => m.id === id))
+        !availableMods(this.mods, true, !!this.legacyOffers?.includes(id), this.startingGun).some(
+          (m) => m.id === id,
+        ))
     )
       return;
     if (this.enteringDetour && !this.canDetour) return;
     this.rewardTaken = true;
-    if (id === 'repair' && this.overtime) this.overtime.repairs++;
-    else this.mods.push(id);
+    if (id === 'repair') {
+      if (this.overtime) this.overtime.repairs++;
+      else this.missedUpgrades++;
+    } else this.mods.push(id);
     this.shiftRun.fitted();
     if (this.legacyOffers?.includes(id)) this.legacyMods = [...this.mods];
     this.legacyOffers = undefined;

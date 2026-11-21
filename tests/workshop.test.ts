@@ -52,7 +52,7 @@ test('every Workshop selection uses normal paths, prerequisites, fusion and gun 
   for (const known of [all, ['mass-driver', 'drop-forge', 'fold'], []]) {
     const selected: string[] = [];
     for (const mod of MODS) {
-      const candidate = workshopBuild([...selected, mod.id], known);
+      const candidate = workshopBuild([...selected, mod.id], known, 'pistol');
       const allowed =
         known.includes(mod.id) && availableMods(selected, true).some((m) => m.id === mod.id);
       assert.equal(candidate.includes(mod.id), allowed || selected.includes(mod.id));

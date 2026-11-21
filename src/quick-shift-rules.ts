@@ -173,7 +173,7 @@ export function quickShiftLegalMods(
     !validQuickShiftChallenge(challenge) ||
     !integer(completed, 0, 4) ||
     !isStartingGun(gun) ||
-    !validQuickShiftBuild(mods)
+    !validQuickShiftBuild(mods, gun)
   )
     return [];
   return rewardMods(
@@ -197,7 +197,7 @@ export function quickShiftOffers(
     !integer(completed, 0, 4) ||
     !integer(pick, 0, completed === 0 ? 2 : 1) ||
     !isStartingGun(gun) ||
-    !validQuickShiftBuild(mods) ||
+    !validQuickShiftBuild(mods, gun) ||
     mods.length !== (completed === 0 ? pick : 3 + 2 * (completed - 1) + pick)
   )
     return [];
@@ -224,15 +224,18 @@ function rememberBuild(key: string, valid: boolean) {
   return valid;
 }
 /** Acquisition order matters: no child fitting can manufacture its parent. */
-export function validQuickShiftBuild(value: unknown): value is string[] {
+export function validQuickShiftBuild(
+  value: unknown,
+  gun: StartingGun = 'pistol',
+): value is string[] {
   if (
     !Array.isArray(value) ||
     value.length > QUICK_SHIFT_MAX_MODS ||
     value.some((id) => typeof id !== 'string' || !standardId(id)) ||
-    !validBuild(value)
+    !validBuild(value, false, gun)
   )
     return false;
-  const key = value.join(',');
+  const key = gun + ':' + value.join(',');
   const cached = buildValidation.get(key);
   if (cached !== undefined) return cached;
   const acquired: string[] = [];
@@ -242,7 +245,12 @@ export function validQuickShiftBuild(value: unknown): value is string[] {
       acquired,
       MODS.length,
       seeded('QUICK-SHIFT-BUILD-1'),
-      { stage: QUICK_SHIFT_DRAFT_STAGES[completed], seed: 'RF-C108-QVALIDATE', unlocks: [] },
+      {
+        stage: QUICK_SHIFT_DRAFT_STAGES[completed],
+        seed: 'RF-C108-QVALIDATE',
+        unlocks: [],
+        startingGun: gun,
+      },
       LONGEVITY_IDS,
     );
     if (!legal.some((mod) => mod.id === id)) return rememberBuild(key, false);
@@ -298,7 +306,7 @@ export function validQuickShiftRecord(value: unknown): value is QuickShiftRecord
     integer(record.hits, 0, 100000) &&
     integer(record.shots, 0, 1000000) &&
     integer(record.kills, 0, 100000) &&
-    validQuickShiftBuild(record.mods) &&
+    validQuickShiftBuild(record.mods, record.gun) &&
     record.mods.length === 3 + 2 * Math.min(record.rooms, 4)
   );
 }

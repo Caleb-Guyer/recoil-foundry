@@ -1,7 +1,7 @@
 import Matter from 'matter-js';
 import { Game, type Input, type Enemy } from './game.ts';
 import { getGun, type Checkpoint } from './rules.ts';
-import type { StartingGun } from './starting-guns.ts';
+import { isMeleeWeapon, type StartingGun } from './starting-guns.ts';
 import { TOOLROOM_MODS } from './toolroom-catalog.ts';
 import { isShiftMod } from './shift-catalog.ts';
 import { mountPoint } from './shift-upgrades.ts';
@@ -91,6 +91,8 @@ export function createUpgradeDemo(
     Body.setPosition(g.player, { x: 410, y: 721 });
   if (!isShiftMod(scenario) && startingGun === 'switchjack' && !g.torch.equipped)
     Body.setPosition(g.player, { x: 330, y: 721 });
+  if (isMeleeWeapon(startingGun) && !isShiftMod(scenario))
+    Body.setPosition(g.player, { x: 450, y: 721 });
   return g;
 }
 
@@ -326,6 +328,19 @@ function ordinaryDemoInput(g: Game, step: number): Input {
     shortNative = g.experimentalWeapons.kind === 'bellows';
   const scenario = scenarios.get(g);
   if (scenario && isShiftMod(scenario)) return shiftDemoInput(g, step, scenario);
+  if (isMeleeWeapon(g.startingGun)) {
+    const aim = g.enemies.find((e) => e.hp > 0)?.body.position ?? { x: 670, y: 720 };
+    const fire = step % 84 < (g.startingGun === 'spear' ? 46 : 26);
+    return {
+      left: p.x > aim.x + 55,
+      right: p.x < aim.x - 55,
+      fire,
+      firePressed: step % 84 === 0,
+      jump: false,
+      jumpHeld: false,
+      aim: { ...aim },
+    };
+  }
   if (
     scenario &&
     [

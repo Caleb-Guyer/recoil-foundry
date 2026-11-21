@@ -181,7 +181,7 @@ test('the Logbook keeps extra tools hidden until the first attempt, then shows t
   ).filter((e) => e.weapon);
   assert.deepEqual(
     locked.map((e) => e.state),
-    Array(8).fill('locked'),
+    Array(11).fill('locked'),
   );
   const won = logbookCatalog(
     [],
@@ -194,6 +194,18 @@ test('the Logbook keeps extra tools hidden until the first attempt, then shows t
   ).filter((e) => e.weapon);
   assert.deepEqual(
     won.map((e) => e.state),
-    ['known', 'locked', 'locked', 'locked', 'locked', 'locked', 'known', 'locked'],
+    [
+      'known',
+      'locked',
+      'locked',
+      'locked',
+      'locked',
+      'locked',
+      'known',
+      'locked',
+      'locked',
+      'locked',
+      'locked',
+    ],
   );
 });

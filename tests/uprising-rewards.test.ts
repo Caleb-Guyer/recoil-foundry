@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { FIREARM_MODS } from '../src/rules.ts';
 import assert from 'node:assert/strict';
 import {
   UPRISING_REPAIR,
@@ -103,7 +104,7 @@ test('every upgrade family keeps prerequisite parents, path, earned fusions and 
   const core = ['magnum', 'rapid', 'light', 'airshot', 'kick', 'scatter', 'pierce', 'leech'];
   let checked = 0,
     offered = 0;
-  for (const mod of MODS) {
+  for (const mod of FIREARM_MODS) {
     const mods = withParents(core, [mod.id]);
     assert(mods, mod.id);
     const context = { ...source('roof-relief'), mods, unlocks: [...LONGEVITY_IDS] };
@@ -129,8 +130,8 @@ test('every upgrade family keeps prerequisite parents, path, earned fusions and 
     for (const id of [...protectedFire, ...mods.filter(isFusion)])
       assert.equal(next.includes(id), mods.includes(id), mod.id + ' changed ' + id);
   }
-  assert.equal(checked, MODS.length);
-  assert(offered > MODS.length * 0.8, 'constraints still allow useful refits');
+  assert.equal(checked, FIREARM_MODS.length);
+  assert(offered > FIREARM_MODS.length * 0.8, 'constraints still allow useful refits');
 });
 
 test('refits obey current-stage branches and earned unlocks instead of inventing advanced fittings', () => {

@@ -1,16 +1,9 @@
-import {
-  WEAPON_REQUIREMENTS,
-  weaponChallengeStatus,
-  loadWeaponUnlocks,
-  type WeaponUnlocks,
-} from './weapon-unlocks.ts';
-import { escapeLogbook } from './html.ts';
-import { STARTING_GUN_IDS, STARTING_GUNS, type StartingGun } from './starting-guns.ts';
+import { WEAPON_REQUIREMENTS } from './weapon-unlocks.ts';
+import { ARMORY_TOOLS, STARTING_GUNS, type StartingGun } from './starting-guns.ts';
 
 export interface StartingGunMenuOptions {
   tryTool?: (gun: StartingGun) => void;
   onSelect?: (gun: StartingGun) => void;
-  profile?: WeaponUnlocks;
 }
 export function startingGunMenu(
   root: HTMLElement,
@@ -20,21 +13,15 @@ export function startingGunMenu(
   unlocked: readonly StartingGun[] = ['pistol'],
   options: StartingGunMenuOptions = {},
 ) {
-  if (!unlocked.includes(selected)) selected = 'pistol';
+  if (!unlocked.includes(selected) || !ARMORY_TOOLS.includes(selected)) selected = 'pistol';
   root.innerHTML =
-    '<p class="eyebrow">CAMPAIGN · STARTING GUN</p><h2 id="dialog-title">Choose your tool.</h2>' +
-    '<p class="starting-gun-intro">Build it your way. Every gun uses the same upgrade pool.</p>' +
-    '<div class="starting-gun-choices" role="group" aria-label="Starting gun">' +
-    STARTING_GUN_IDS.map((id) => {
+    '<p class="eyebrow">CAMPAIGN · STARTING WEAPON</p><h2 id="dialog-title">Choose your tool.</h2>' +
+    '<p class="starting-gun-intro">Choose a firearm or a melee weapon. Each melee weapon has its own fittings.</p>' +
+    '<div class="starting-gun-choices" role="group" aria-label="Starting weapon">' +
+    ARMORY_TOOLS.map((id) => {
       const gun = STARTING_GUNS[id];
       const locked = !unlocked.includes(id);
-      const challenge = locked
-        ? weaponChallengeStatus(id, options.profile ?? loadWeaponUnlocks(null))
-        : null;
-      const challengeProgress = challenge
-        ? `<div class="logbook-goal starting-gun-challenge" data-weapon-challenge="${id}"><strong>${escapeLogbook(challenge.name)}</strong><progress max="${challenge.target}" value="${challenge.current}" aria-label="${escapeLogbook(gun.name + ' best attempt: ' + challenge.requirement)}"></progress><span>Best attempt · ${challenge.current} / ${challenge.target} ${escapeLogbook(challenge.unit)}</span><p>${id === 'switchjack' ? 'One damage-free flight, then a safe landing. ' : 'One room; best attempt, not a total. '}Campaign or Daily.${id === 'switchjack' && !challenge.complete && challenge.current >= challenge.target ? ' Safe landing still required to unlock.' : ''}</p></div>`
-        : '';
-      return `<div class="starting-gun-option"><button type="button" class="starting-gun-choice" data-starting-gun="${id}" aria-pressed="${id === selected}" aria-label="${gun.name}. ${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}. ${gun.description}" ${locked ? 'disabled' : ''}><canvas width="640" height="320" aria-hidden="true" data-reward-image="gun:${id}"></canvas><strong>${gun.name}</strong><span>${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}</span></button>${challengeProgress}${locked && options.tryTool ? `<button type="button" class="quiet starting-gun-try" data-try-locked-gun="${id}" aria-label="Try ${gun.name} in a private range">Try tool</button>` : ''}</div>`;
+      return `<div class="starting-gun-option"><button type="button" class="starting-gun-choice" data-starting-gun="${id}" aria-pressed="${id === selected}" aria-label="${gun.name}. ${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}. ${gun.description}" ${locked ? 'disabled' : ''}><canvas width="640" height="320" aria-hidden="true" data-reward-image="gun:${id}"></canvas><strong>${gun.name}</strong><span>${locked ? 'Locked · ' + WEAPON_REQUIREMENTS[id] : gun.trait}</span></button>${locked && options.tryTool ? `<button type="button" class="quiet starting-gun-try" data-try-locked-gun="${id}" aria-label="Try ${gun.name} in a private range">Try tool</button>` : ''}</div>`;
     }).join('') +
     '</div><p class="starting-gun-detail" id="starting-gun-detail" aria-live="polite">' +
     STARTING_GUNS[selected].description +
@@ -63,7 +50,7 @@ export function startingGunMenu(
   root.querySelectorAll<HTMLButtonElement>('[data-try-locked-gun]').forEach((button) => {
     button.onclick = () => {
       const gun = button.dataset.tryLockedGun as StartingGun;
-      if (STARTING_GUN_IDS.includes(gun)) options.tryTool?.(gun);
+      if (ARMORY_TOOLS.includes(gun)) options.tryTool?.(gun);
     };
   });
   root.querySelector<HTMLButtonElement>('#starting-gun-back')!.onclick = back;

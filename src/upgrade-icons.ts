@@ -2,6 +2,12 @@ import type { Mod } from './rules.ts';
 
 export function modMark(mod: Mod) {
   const paths: Record<string, string> = {
+    'wide-guard': 'M9 37l21-22 13-8-7 13-22 21M10 28l11 11M29 32q11-3 15-14',
+    'riposte-edge': 'M8 40l10-10m-4-4 9 9m-5-6L40 7l-6 15-12 10M30 38h15l-5-5',
+    'counterweight-head': 'M9 40l22-23M23 15l8-8 15 15-8 8zM30 11l11 11',
+    'sweeping-face': 'M11 37l18-18M21 16l8-8 15 15-8 8zM27 40q13-1 21-13',
+    'quick-wind': 'M8 38l24-24 12-6-6 12-24 24M7 17h12M10 11h12',
+    'deep-drive': 'M6 40l25-25 16-8-8 16L13 43M31 15l8 8M22 31l5 5',
     'polarity-rounds': 'M5 15h16v16H5zM35 15h16v16H35zM9 23h8M13 19v8M39 23h8M24 18l8 5-8 5',
     'ricochet-harness': 'M8 6v36M12 35l16-22 16 22M20 13h8v8M39 31l5 4 4-5',
     'spring-rivets': 'M6 39h44M12 34l19-6-19-6 19-6M31 10v18M25 10h12M37 19l10-10M41 9h6v6',

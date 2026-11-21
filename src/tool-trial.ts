@@ -1,6 +1,6 @@
 import Matter from 'matter-js';
 import type { Enemy, Input } from './game.ts';
-import type { StartingGun } from './starting-guns.ts';
+import { isMeleeWeapon, type StartingGun } from './starting-guns.ts';
 import { createUpgradeDemo, destroyUpgradeDemo } from './upgrade-demo.ts';
 import { TOOL_TRIAL_CONVERTED_MODS } from './tools-of-trade-test.ts';
 
@@ -17,7 +17,7 @@ export class ToolTrial {
   constructor(gun: StartingGun, scene: ToolTrialScene = 'range') {
     this.gun = gun;
     this.scene = scene;
-    const mods = scene === 'converted' ? TOOL_TRIAL_CONVERTED_MODS : [];
+    const mods = scene === 'converted' && !isMeleeWeapon(gun) ? TOOL_TRIAL_CONVERTED_MODS : [];
     const g = (this.game = createUpgradeDemo(mods, gun, `RF-C106-TOOLS-${gun}-${scene}`));
     for (const e of g.enemies) Composite.remove(g.engine.world, e.body);
     g.enemies = [];

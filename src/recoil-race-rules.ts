@@ -1,5 +1,5 @@
 import { isRecoilTrial, loadRecoilProfile, type RecoilTrialKind } from './recoil-trial-rules.ts';
-import { isStartingGun, STARTING_GUN_IDS, type StartingGun } from './starting-guns.ts';
+import { isStartingGun, ALL_TOOLS, type StartingGun } from './starting-guns.ts';
 import { trialEntry, trialExit } from './recoil-trial-layouts.ts';
 
 export const RECOIL_GHOSTS_KEY = 'rf-recoil-ghosts-v1';
@@ -8,7 +8,7 @@ export const GHOST_DURATION = 180000;
 export const GHOST_FRAME_LIMIT = 2048;
 export const RECOIL_CODE_LIMIT = 512;
 export const RECOIL_SPLITS = { launch: 6, cargo: 5, airborne: 3 } as const;
-export const RECOIL_GHOST_CAPACITY = Object.keys(RECOIL_SPLITS).length * STARTING_GUN_IDS.length;
+export const RECOIL_GHOST_CAPACITY = Object.keys(RECOIL_SPLITS).length * ALL_TOOLS.length;
 // Simulation milliseconds, world position, aim in degrees, airborne/left/firing/reset bits.
 export type GhostFrame = [number, number, number, number, number];
 export interface RecoilChallenge {

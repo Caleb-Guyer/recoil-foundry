@@ -2,15 +2,17 @@ import { COMMENDATIONS, type CommendationId } from './commendations.ts';
 import { GUN_FINISHES, OUTFITS } from './cosmetics.ts';
 import { LONGEVITY_MODS } from './longevity.ts';
 import { UPRISING_CONTRACTS } from './uprising-model.ts';
-import { STARTING_GUNS, STARTING_GUN_IDS } from './starting-guns.ts';
+import { STARTING_GUNS, ALL_TOOLS, isMeleeWeapon, isExperimentalGun } from './starting-guns.ts';
 
 export const RUN_REWARDS_KEY = 'rf-run-rewards-v1';
 export const REWARD_CATALOG = [
-  ...STARTING_GUN_IDS.filter((id) => id !== 'pistol').map((gun) => ({
+  ...ALL_TOOLS.filter((id) => id !== 'pistol').map((gun) => ({
     id: 'gun:' + gun,
     name: STARTING_GUNS[gun].name,
-    label: 'Starting gun unlocked',
-    detail: 'Available for Campaign and Workshop.',
+    label: isMeleeWeapon(gun) ? 'Melee weapon unlocked' : 'Starting gun unlocked',
+    detail: isExperimentalGun(gun)
+      ? 'Available in the Workshop and Quick Shift.'
+      : 'Available for Campaign and Workshop.',
     image: 'gun:' + gun,
   })),
   ...(['gun', 'outfit'] as const).flatMap((slot) =>
